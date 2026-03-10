@@ -19,17 +19,25 @@ import {
   type AnalysisResult,
 } from "@/lib/api";
 import { saveAnalysisRun } from "@/lib/analysisRuns";
+import {
+  createAnalysisJob,
+  markAnalysisJobCompleted,
+  markAnalysisJobFailed,
+  markAnalysisJobRunning,
+} from "@/lib/analysisJobs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 const ANALYSIS_STAGES = [
   "Uploading dataset",
+  "Creating analysis job",
   "Parsing conversations",
   "Calculating consistency score",
   "Measuring response stability",
   "Comparing intents",
   "Estimating token waste",
   "Generating recommendations",
+  "Saving results",
 ];
 
 interface AnalysisContextValue {
@@ -82,15 +90,13 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       setLoadingStep((current) =>
         current < ANALYSIS_STAGES.length - 1 ? current + 1 : current
       );
-      setLoadingProgress((current) => Math.min(92, current + 12));
+      setLoadingProgress((current) => Math.min(92, current + 10));
     }, 850);
 
     return () => window.clearInterval(interval);
   }, [loading]);
 
   useEffect(() => {
-    // não carregar automaticamente a última análise do Supabase
-    // apenas restaura cache local de sessão se existir
     const cached = loadResult();
     if (cached && isSessionCached()) {
       setResult(cached);
@@ -118,6 +124,15 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      if (!user?.id || !workspace?.id) {
+        toast({
+          title: "Missing workspace context",
+          description: "You must be logged in and attached to a workspace.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       lastConversationsRef.current = conversations;
 
       const inputHash = hashDataset(
@@ -126,27 +141,50 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
 
       setLoading(true);
 
+      let jobId: string | null = null;
+
       try {
+        const job = await createAnalysisJob({
+          workspaceId: workspace.id,
+          createdBy: user.id,
+          inputHash,
+          datasetPayload: conversations,
+        });
+
+        jobId = job.id;
+
+        await markAnalysisJobRunning(job.id);
+
         const data = await analyzeConversations(conversations);
 
         saveResult(data, inputHash);
         setResult(data);
         setDataSource("fresh");
 
-        if (user?.id && workspace?.id) {
-          await saveAnalysisRun({
-            workspaceId: workspace.id,
-            createdBy: user.id,
-            inputHash,
-            result: toPersistableResult(data),
-          });
-        }
+        const savedRun = await saveAnalysisRun({
+          workspaceId: workspace.id,
+          createdBy: user.id,
+          inputHash,
+          result: toPersistableResult(data),
+        });
+
+        await markAnalysisJobCompleted(job.id, savedRun?.id ?? null);
 
         toast({ title: "Analysis complete" });
       } catch (error: unknown) {
+        const message = getErrorMessage(error);
+
+        if (jobId) {
+          try {
+            await markAnalysisJobFailed(jobId, message);
+          } catch (jobError) {
+            console.error("Failed to mark analysis job as failed", jobError);
+          }
+        }
+
         toast({
           title: "Analysis failed",
-          description: getErrorMessage(error),
+          description: message,
           variant: "destructive",
         });
       } finally {
@@ -221,11 +259,25 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
             setDataSource("fresh");
 
             if (user?.id && workspace?.id) {
-              await saveAnalysisRun({
+              const inputHash = hashDataset(JSON.stringify(mapped));
+
+              const job = await createAnalysisJob({
                 workspaceId: workspace.id,
                 createdBy: user.id,
+                inputHash,
+                datasetPayload: null as unknown as unknown[],
+              });
+
+              await markAnalysisJobRunning(job.id);
+
+              const savedRun = await saveAnalysisRun({
+                workspaceId: workspace.id,
+                createdBy: user.id,
+                inputHash,
                 result: toPersistableResult(mapped),
               });
+
+              await markAnalysisJobCompleted(job.id, savedRun?.id ?? null);
             }
 
             toast({ title: "Analysis result imported" });
