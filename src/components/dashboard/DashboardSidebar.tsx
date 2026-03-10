@@ -1,6 +1,7 @@
 import { NavLink as RouterNavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
+  History,
   MessageSquare,
   Target,
   BarChart3,
@@ -11,6 +12,7 @@ import {
 
 const navItems = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
+  { title: "History", url: "/dashboard/history", icon: History },
   { title: "Conversations", url: "/dashboard/conversations", icon: MessageSquare },
   { title: "Intents", url: "/dashboard/intents", icon: Target },
   { title: "Metrics", url: "/dashboard/metrics", icon: BarChart3 },

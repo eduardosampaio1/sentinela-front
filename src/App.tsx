@@ -3,10 +3,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import DashboardLayout from "./pages/DashboardLayout";
 import DashboardOverview from "./pages/DashboardOverview";
+import HistoryPage from "./pages/HistoryPage";
 import Conversations from "./pages/Conversations";
 import IntentsPage from "./pages/IntentsPage";
 import MetricsPage from "./pages/MetricsPage";
@@ -14,6 +16,7 @@ import AlertsPage from "./pages/AlertsPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -26,8 +29,17 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
+
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<DashboardOverview />} />
+            <Route path="history" element={<HistoryPage />} />
             <Route path="conversations" element={<Conversations />} />
             <Route path="intents" element={<IntentsPage />} />
             <Route path="metrics" element={<MetricsPage />} />
@@ -35,6 +47,7 @@ const App = () => (
             <Route path="reports" element={<ReportsPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

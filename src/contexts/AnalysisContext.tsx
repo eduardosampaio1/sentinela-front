@@ -1,4 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   analyzeConversations,
   hashDataset,
@@ -9,6 +18,8 @@ import {
   saveResult,
   type AnalysisResult,
 } from "@/lib/api";
+import { saveAnalysisRun } from "@/lib/analysisRuns";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 const ANALYSIS_STAGES = [
@@ -33,6 +44,8 @@ interface AnalysisContextValue {
   handleFileUpload: (file: File) => void;
   handlePasteAnalysis: (text: string) => void;
   importAnalysisResult: (text: string) => void;
+  clearAnalysis: () => void;
+  loadStoredAnalysis: (analysis: AnalysisResult) => void;
 }
 
 const AnalysisContext = createContext<AnalysisContextValue | null>(null);
@@ -43,28 +56,51 @@ function getErrorMessage(error: unknown) {
   return "Unknown error";
 }
 
+function toPersistableResult(result: AnalysisResult): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(result)) as Record<string, unknown>;
+}
+
 export function AnalysisProvider({ children }: { children: ReactNode }) {
-  const [result, setResult] = useState<AnalysisResult | null>(() => loadResult());
-  const [dataSource, setDataSource] = useState<"cached" | "fresh">(() => (isSessionCached() ? "cached" : "fresh"));
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [dataSource, setDataSource] = useState<"cached" | "fresh">("fresh");
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
+
   const lastConversationsRef = useRef<unknown[] | null>(null);
+
   const { toast } = useToast();
+  const { user, workspace } = useAuth();
 
   useEffect(() => {
     if (!loading) return undefined;
+
     setLoadingStep(0);
     setLoadingProgress(10);
+
     const interval = window.setInterval(() => {
-      setLoadingStep((current) => (current < ANALYSIS_STAGES.length - 1 ? current + 1 : current));
+      setLoadingStep((current) =>
+        current < ANALYSIS_STAGES.length - 1 ? current + 1 : current
+      );
       setLoadingProgress((current) => Math.min(92, current + 12));
     }, 850);
+
     return () => window.clearInterval(interval);
   }, [loading]);
 
+  useEffect(() => {
+    // não carregar automaticamente a última análise do Supabase
+    // apenas restaura cache local de sessão se existir
+    const cached = loadResult();
+    if (cached && isSessionCached()) {
+      setResult(cached);
+      setDataSource("cached");
+    }
+  }, []);
+
   const finishLoading = useCallback(() => {
     setLoadingProgress(100);
+
     window.setTimeout(() => {
       setLoading(false);
       setLoadingStep(0);
@@ -72,28 +108,53 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     }, 350);
   }, []);
 
-  const runAnalysis = useCallback(async (conversations: unknown[]) => {
-    if (conversations.length < 2) {
-      toast({ title: "Minimum 2 conversations required", variant: "destructive" });
-      return;
-    }
+  const runAnalysis = useCallback(
+    async (conversations: unknown[]) => {
+      if (conversations.length < 2) {
+        toast({
+          title: "Minimum 2 conversations required",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    lastConversationsRef.current = conversations;
-    const inputHash = hashDataset(conversations.map((item) => JSON.stringify(item)).join("\n"));
-    setLoading(true);
+      lastConversationsRef.current = conversations;
 
-    try {
-      const data = await analyzeConversations(conversations);
-      saveResult(data, inputHash);
-      setResult(data);
-      setDataSource("fresh");
-      toast({ title: "Analysis complete" });
-    } catch (error: unknown) {
-      toast({ title: "Analysis failed", description: getErrorMessage(error), variant: "destructive" });
-    } finally {
-      finishLoading();
-    }
-  }, [finishLoading, toast]);
+      const inputHash = hashDataset(
+        conversations.map((item) => JSON.stringify(item)).join("\n")
+      );
+
+      setLoading(true);
+
+      try {
+        const data = await analyzeConversations(conversations);
+
+        saveResult(data, inputHash);
+        setResult(data);
+        setDataSource("fresh");
+
+        if (user?.id && workspace?.id) {
+          await saveAnalysisRun({
+            workspaceId: workspace.id,
+            createdBy: user.id,
+            inputHash,
+            result: toPersistableResult(data),
+          });
+        }
+
+        toast({ title: "Analysis complete" });
+      } catch (error: unknown) {
+        toast({
+          title: "Analysis failed",
+          description: getErrorMessage(error),
+          variant: "destructive",
+        });
+      } finally {
+        finishLoading();
+      }
+    },
+    [finishLoading, toast, user?.id, workspace?.id]
+  );
 
   const handleRerun = useCallback(() => {
     if (lastConversationsRef.current) {
@@ -108,65 +169,143 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     });
   }, [runAnalysis, toast]);
 
-  const handleFileUpload = useCallback((file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
+  const handleFileUpload = useCallback(
+    (file: File) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        try {
+          const text = reader.result as string;
+          const conversations = parseConversationsInput(text);
+          void runAnalysis(conversations);
+        } catch (error: unknown) {
+          toast({
+            title: "Invalid JSON file",
+            description: getErrorMessage(error),
+            variant: "destructive",
+          });
+        }
+      };
+
+      reader.readAsText(file);
+    },
+    [runAnalysis, toast]
+  );
+
+  const handlePasteAnalysis = useCallback(
+    (text: string) => {
       try {
-        const text = reader.result as string;
         const conversations = parseConversationsInput(text);
         void runAnalysis(conversations);
       } catch (error: unknown) {
-        toast({ title: "Invalid JSON file", description: getErrorMessage(error), variant: "destructive" });
+        toast({
+          title: "Invalid dataset JSON",
+          description: getErrorMessage(error),
+          variant: "destructive",
+        });
       }
-    };
-    reader.readAsText(file);
-  }, [runAnalysis, toast]);
+    },
+    [runAnalysis, toast]
+  );
 
-  const handlePasteAnalysis = useCallback((text: string) => {
-    try {
-      const conversations = parseConversationsInput(text);
-      void runAnalysis(conversations);
-    } catch (error: unknown) {
-      toast({ title: "Invalid dataset JSON", description: getErrorMessage(error), variant: "destructive" });
-    }
-  }, [runAnalysis, toast]);
+  const importAnalysisResult = useCallback(
+    (text: string) => {
+      try {
+        setLoading(true);
+        const mapped = parseAnalysisImport(text);
 
-  const importAnalysisResult = useCallback((text: string) => {
-    try {
-      setLoading(true);
-      const mapped = parseAnalysisImport(text);
-      window.setTimeout(() => {
-        saveResult(mapped);
-        setResult(mapped);
-        setDataSource("fresh");
-        toast({ title: "Analysis result imported" });
-        finishLoading();
-      }, 1100);
-    } catch (error: unknown) {
-      setLoading(false);
-      toast({ title: "Invalid analysis result", description: getErrorMessage(error), variant: "destructive" });
-    }
-  }, [finishLoading, toast]);
+        window.setTimeout(async () => {
+          try {
+            saveResult(mapped);
+            setResult(mapped);
+            setDataSource("fresh");
 
-  const value = useMemo(() => ({
-    result,
-    dataSource,
-    loading,
-    loadingMessage: ANALYSIS_STAGES[loadingStep] ?? ANALYSIS_STAGES[0],
-    loadingStep,
-    loadingProgress,
-    runAnalysis,
-    handleRerun,
-    handleFileUpload,
-    handlePasteAnalysis,
-    importAnalysisResult,
-  }), [dataSource, handleFileUpload, handlePasteAnalysis, handleRerun, importAnalysisResult, loading, loadingProgress, loadingStep, result, runAnalysis]);
+            if (user?.id && workspace?.id) {
+              await saveAnalysisRun({
+                workspaceId: workspace.id,
+                createdBy: user.id,
+                result: toPersistableResult(mapped),
+              });
+            }
 
-  return <AnalysisContext.Provider value={value}>{children}</AnalysisContext.Provider>;
+            toast({ title: "Analysis result imported" });
+          } catch (error: unknown) {
+            toast({
+              title: "Failed to persist imported analysis",
+              description: getErrorMessage(error),
+              variant: "destructive",
+            });
+          } finally {
+            finishLoading();
+          }
+        }, 1100);
+      } catch (error: unknown) {
+        setLoading(false);
+        toast({
+          title: "Invalid analysis result",
+          description: getErrorMessage(error),
+          variant: "destructive",
+        });
+      }
+    },
+    [finishLoading, toast, user?.id, workspace?.id]
+  );
+
+  const clearAnalysis = useCallback(() => {
+    setResult(null);
+    setDataSource("fresh");
+  }, []);
+
+  const loadStoredAnalysis = useCallback((analysis: AnalysisResult) => {
+    saveResult(analysis);
+    setResult(analysis);
+    setDataSource("cached");
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      result,
+      dataSource,
+      loading,
+      loadingMessage: ANALYSIS_STAGES[loadingStep] ?? ANALYSIS_STAGES[0],
+      loadingStep,
+      loadingProgress,
+      runAnalysis,
+      handleRerun,
+      handleFileUpload,
+      handlePasteAnalysis,
+      importAnalysisResult,
+      clearAnalysis,
+      loadStoredAnalysis,
+    }),
+    [
+      result,
+      dataSource,
+      loading,
+      loadingStep,
+      loadingProgress,
+      runAnalysis,
+      handleRerun,
+      handleFileUpload,
+      handlePasteAnalysis,
+      importAnalysisResult,
+      clearAnalysis,
+      loadStoredAnalysis,
+    ]
+  );
+
+  return (
+    <AnalysisContext.Provider value={value}>
+      {children}
+    </AnalysisContext.Provider>
+  );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAnalysis() {
   const context = useContext(AnalysisContext);
-  if (!context) throw new Error("useAnalysis must be used within AnalysisProvider");
+  if (!context) {
+    throw new Error("useAnalysis must be used within AnalysisProvider");
+  }
   return context;
 }
