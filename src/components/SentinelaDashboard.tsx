@@ -6,6 +6,7 @@ import AnalysisLoadingOverlay from "@/components/dashboard/AnalysisLoadingOverla
 import MetricInfo from "@/components/dashboard/MetricInfo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   AlertTriangle,
   ArrowRight,
@@ -78,6 +79,8 @@ function MetricCard({
 }
 
 export default function SentinelaDashboard() {
+  const { workspace, workspaceLoading } = useAuth();
+  
   const {
     result,
     handleFileUpload,
@@ -121,6 +124,14 @@ export default function SentinelaDashboard() {
   const savings = result ? estimateSavingsOpportunity(result) : { monthlySavings: 0, savingPercent: 0 };
   const unstableIntents = result ? getTopUnstableIntents(result.intents, 5) : [];
   const topRecommendations = result ? getTopRecommendations(result.alerts, 4) : [];
+  
+  if (workspaceLoading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center text-muted-foreground">
+        Loading workspace...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

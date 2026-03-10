@@ -16,6 +16,7 @@ interface AuthContextValue {
   session: Session | null;
   workspace: Workspace | null;
   loading: boolean;
+  workspaceLoading: boolean;
   refreshWorkspace: () => Promise<void>;
 }
 
@@ -26,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
+  const [workspaceLoading, setWorkspaceLoading] = useState(false);
 
   const refreshWorkspace = useCallback(async () => {
     if (!user) {
@@ -33,12 +35,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    setWorkspaceLoading(true);
+
     try {
       const ensuredWorkspace = await ensureUserWorkspace(user.id, user.email);
       setWorkspace(ensuredWorkspace);
     } catch (error) {
       console.error("Failed to refresh workspace", error);
       setWorkspace(null);
+    } finally {
+      setWorkspaceLoading(false);
     }
   }, [user]);
 
@@ -56,7 +62,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(currentSession);
         setUser(currentUser);
 
+        // Libera a aplicação assim que a sessão for conhecida
+        setLoading(false);
+
+        // Workspace carrega em paralelo, sem travar a rota
         if (currentUser) {
+          setWorkspaceLoading(true);
           try {
             const ensuredWorkspace = await ensureUserWorkspace(
               currentUser.id,
@@ -71,22 +82,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (mounted) {
               setWorkspace(null);
             }
+          } finally {
+            if (mounted) {
+              setWorkspaceLoading(false);
+            }
           }
         } else {
-          if (mounted) {
-            setWorkspace(null);
-          }
+          setWorkspace(null);
+          setWorkspaceLoading(false);
         }
       } catch (error) {
         console.error("Failed to bootstrap auth session", error);
-      } finally {
         if (mounted) {
           setLoading(false);
+          setWorkspaceLoading(false);
         }
       }
     }
 
-    bootstrap();
+    void bootstrap();
 
     const {
       data: { subscription },
@@ -96,7 +110,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(nextSession);
       setUser(nextUser);
 
+      // sessão resolvida → não travar mais a app
+      setLoading(false);
+
       if (nextUser) {
+        setWorkspaceLoading(true);
         try {
           const ensuredWorkspace = await ensureUserWorkspace(
             nextUser.id,
@@ -106,12 +124,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           console.error("Failed to ensure workspace on auth state change", error);
           setWorkspace(null);
+        } finally {
+          setWorkspaceLoading(false);
         }
       } else {
         setWorkspace(null);
+        setWorkspaceLoading(false);
       }
-
-      setLoading(false);
     });
 
     return () => {
@@ -126,9 +145,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       workspace,
       loading,
+      workspaceLoading,
       refreshWorkspace,
     }),
-    [user, session, workspace, loading, refreshWorkspace]
+    [user, session, workspace, loading, workspaceLoading, refreshWorkspace]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
