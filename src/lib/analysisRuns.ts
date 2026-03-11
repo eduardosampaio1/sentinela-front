@@ -52,3 +52,14 @@ export async function getLatestAnalysisRun(workspaceId: string) {
   if (error) throw error;
   return data;
 }
+
+export async function getAnalysisRunById(runId: string) {
+  const { data, error } = await supabase
+    .from("analysis_runs")
+    .select("*")
+    .eq("id", runId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}

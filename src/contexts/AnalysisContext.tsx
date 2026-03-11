@@ -17,10 +17,11 @@ import {
   saveResult,
   type AnalysisResult,
 } from "@/lib/api";
-import { saveAnalysisRun } from "@/lib/analysisRuns";
+import { saveAnalysisRun, getAnalysisRunById } from "@/lib/analysisRuns";
 import {
   createAnalysisJob,
   uploadDatasetToStorage,
+  getAnalysisJobById,
   type AnalysisJobRecord,
 } from "@/lib/analysisJobs";
 import { useAuth } from "@/contexts/AuthContext";
@@ -110,6 +111,50 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const pollJobStatus = useCallback(async (jobId: string) => {
+    const intervalId = setInterval(async () => {
+      try {
+        const job = await getAnalysisJobById(jobId);
+        
+        if (!job) return;
+
+        if (job.status === "running") {
+          setLoadingStep(3);
+        }
+
+        if (job.status === "completed" && job.analysis_run_id) {
+          clearInterval(intervalId);
+          const run = await getAnalysisRunById(job.analysis_run_id);
+          
+          if (run?.raw_result) {
+            const analysisResult = run.raw_result as unknown as AnalysisResult;
+            setResult(analysisResult);
+            saveResult(analysisResult);
+            setDataSource("fresh");
+            setLoading(false);
+            setActiveJob(null);
+            toast({ title: "Análise concluída com sucesso!" });
+          }
+        }
+
+        if (job.status === "failed") {
+          clearInterval(intervalId);
+          setLoading(false);
+          setActiveJob(null);
+          toast({
+            title: "Falha na análise",
+            description: job.error_message || "Erro desconhecido no processamento.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Erro durante o polling do job:", error);
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [toast]);
+
   const finishLoading = useCallback(() => {
     setLoadingProgress(100);
 
@@ -143,7 +188,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       setLoading(true);
 
       try {
-        const inputHash = hashDataset(conversationsToJsonl(conversations));
+        const inputHash = await hashDataset(conversationsToJsonl(conversations));
         const file = buildDatasetFile(conversations);
 
         const uploaded = await uploadDatasetToStorage({
@@ -161,22 +206,22 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         });
 
         setActiveJob(job);
+        pollJobStatus(job.id);
 
         toast({
           title: "Analysis job created",
-          description: "Your dataset was queued successfully. Processing will start soon.",
+          description: "Your dataset was queued successfully.",
         });
       } catch (error: unknown) {
+        setLoading(false);
         toast({
           title: "Failed to queue analysis",
           description: getErrorMessage(error),
           variant: "destructive",
         });
-      } finally {
-        finishLoading();
       }
     },
-    [finishLoading, toast, user?.id, workspace?.id]
+    [pollJobStatus, toast, user?.id, workspace?.id]
   );
 
   const handleRerun = useCallback(() => {
@@ -231,7 +276,6 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     [runAnalysis, toast]
   );
 
-  // continua útil para importar resultado pronto sem depender do worker
   const importAnalysisResult = useCallback(
     (text: string) => {
       try {
@@ -245,7 +289,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
             setDataSource("fresh");
 
             if (user?.id && workspace?.id) {
-              const inputHash = hashDataset(JSON.stringify(mapped));
+              const inputHash = await hashDataset(JSON.stringify(mapped));
 
               await saveAnalysisRun({
                 workspaceId: workspace.id,

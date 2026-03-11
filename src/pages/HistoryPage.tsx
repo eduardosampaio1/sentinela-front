@@ -9,11 +9,14 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock3,
+  Filter,
   GitCompareArrows,
   History,
   Loader2,
+  Search,
   ShieldAlert,
   Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,6 +42,8 @@ type RunMetrics = {
   alerts: number;
 };
 
+type InsightTone = "good" | "bad" | "neutral";
+
 function formatDate(value?: string | null) {
   if (!value) return "N/A";
   const date = new Date(value);
@@ -59,6 +64,12 @@ function formatShortDate(value?: string | null) {
 function formatMetric(value?: number | null, decimals = 2) {
   if (value === null || value === undefined || Number.isNaN(value)) return "N/A";
   return value.toFixed(decimals);
+}
+
+function formatCompactMetric(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) return "N/A";
+  if (Math.abs(value) >= 1000) return value.toLocaleString();
+  return value.toFixed(2);
 }
 
 function toPercent(value?: number | null) {
@@ -132,6 +143,12 @@ function extractMetrics(run: HistoryRun): RunMetrics {
         : null,
     alerts: Array.isArray(raw.alerts) ? raw.alerts.length : 0,
   };
+}
+
+function average(values: Array<number | null>) {
+  const valid = values.filter((v): v is number => typeof v === "number");
+  if (!valid.length) return null;
+  return valid.reduce((acc, curr) => acc + curr, 0) / valid.length;
 }
 
 function getDelta(current?: number | null, previous?: number | null) {
@@ -224,25 +241,28 @@ function buildInsight(current: HistoryRun, previous?: HistoryRun | null) {
   if (!previous || !previousMetrics) {
     return {
       title: "Baseline created",
-      text: "This is your first observable checkpoint. Future runs will expose whether the model is evolving or regressing.",
-      tone: "neutral" as const,
+      text: "This is your first checkpoint. The next runs will show whether the system is stabilizing or regressing.",
+      tone: "neutral" as InsightTone,
     };
   }
 
-  const riskCompare = compareRisk(current.risk_level, previous.risk_level);
   const consistencyDelta = getDelta(
     currentMetrics.consistency,
     previousMetrics.consistency
   );
   const wasteDelta = getDelta(currentMetrics.tokenWaste, previousMetrics.tokenWaste);
+  const similarityDelta = getDelta(
+    currentMetrics.crossIntentSimilarity,
+    previousMetrics.crossIntentSimilarity
+  );
 
   if (riskScore(current.risk_level) > riskScore(previous.risk_level)) {
     return {
       title: "Regression detected",
       text: `Risk moved from ${riskLabel(previous.risk_level)} to ${riskLabel(
         current.risk_level
-      )}. Treat this run as a deterioration until proven otherwise.`,
-      tone: "bad" as const,
+      )}. This is not a cosmetic variation; the system likely became less reliable.`,
+      tone: "bad" as InsightTone,
     };
   }
 
@@ -255,8 +275,8 @@ function buildInsight(current: HistoryRun, previous?: HistoryRun | null) {
       title: "Healthy optimization",
       text: `Consistency improved by ${consistencyDelta.toFixed(
         2
-      )} without increasing token waste. This looks like real progress, not noise.`,
-      tone: "good" as const,
+      )} without increasing waste. This looks like a meaningful quality gain.`,
+      tone: "good" as InsightTone,
     };
   }
 
@@ -265,28 +285,51 @@ function buildInsight(current: HistoryRun, previous?: HistoryRun | null) {
       title: "Efficiency degraded",
       text: `Token waste increased by ${wasteDelta.toFixed(
         2
-      )}. Even if quality held, operational cost likely worsened.`,
-      tone: "bad" as const,
+      )}. Even if quality held, operational cost likely got worse.`,
+      tone: "bad" as InsightTone,
+    };
+  }
+
+  if (similarityDelta !== null && similarityDelta > 0.03) {
+    return {
+      title: "Intent collision pressure rising",
+      text: `Cross-intent similarity increased by ${similarityDelta.toFixed(
+        2
+      )}. This may indicate more overlap and ambiguity between intents.`,
+      tone: "neutral" as InsightTone,
     };
   }
 
   return {
     title: "Mixed signal",
-    text: `Current status is inconclusive. Risk comparison: ${riskCompare.label}. The system changed, but not enough to call it a solid improvement.`,
-    tone: "neutral" as const,
+    text: "The latest run changed, but not enough to call it a clearly better state. Keep comparing consecutive runs before assuming improvement.",
+    tone: "neutral" as InsightTone,
   };
 }
 
-function average(values: Array<number | null>) {
-  const valid = values.filter((v): v is number => typeof v === "number");
-  if (!valid.length) return null;
-  return valid.reduce((acc, curr) => acc + curr, 0) / valid.length;
-}
-
-function statusToneClass(tone: "good" | "bad" | "neutral") {
+function getInsightToneClass(tone: InsightTone) {
   if (tone === "good") return "border-emerald-500/20 bg-emerald-500/10";
   if (tone === "bad") return "border-red-500/20 bg-red-500/10";
   return "border-amber-500/20 bg-amber-500/10";
+}
+
+function getRunSearchBlob(run: HistoryRun) {
+  const metrics = extractMetrics(run);
+
+  return [
+    run.id,
+    run.engine_version ?? "",
+    run.risk_level ?? "",
+    String(run.n_conversations ?? ""),
+    String(run.n_intents ?? ""),
+    formatMetric(metrics.consistency),
+    formatMetric(metrics.tokenWaste),
+    formatMetric(metrics.globalConfidence),
+    formatMetric(metrics.crossIntentSimilarity),
+    String(metrics.alerts),
+  ]
+    .join(" ")
+    .toLowerCase();
 }
 
 export default function HistoryPage() {
@@ -298,6 +341,8 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
+  const [riskFilter, setRiskFilter] = useState<"ALL" | "LOW" | "MEDIUM" | "HIGH">("ALL");
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -349,6 +394,21 @@ export default function HistoryPage() {
     setSelectedRuns([]);
   }
 
+  const filteredRuns = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    return runs.filter((run) => {
+      const matchesRisk =
+        riskFilter === "ALL" ? true : riskLabel(run.risk_level) === riskFilter;
+
+      const matchesSearch = normalizedSearch
+        ? getRunSearchBlob(run).includes(normalizedSearch)
+        : true;
+
+      return matchesRisk && matchesSearch;
+    });
+  }, [runs, riskFilter, search]);
+
   const selectedRunObjects = useMemo(
     () => runs.filter((run) => selectedRuns.includes(run.id)),
     [runs, selectedRuns]
@@ -368,6 +428,9 @@ export default function HistoryPage() {
     runs.map((run) => extractMetrics(run).consistency)
   );
   const averageWaste = average(runs.map((run) => extractMetrics(run).tokenWaste));
+  const averageConfidence = average(
+    runs.map((run) => extractMetrics(run).globalConfidence)
+  );
   const highRiskCount = runs.filter(
     (run) => riskLabel(run.risk_level) === "HIGH"
   ).length;
@@ -378,13 +441,13 @@ export default function HistoryPage() {
     <div className="space-y-6">
       <section className="overflow-hidden rounded-3xl border border-border bg-card">
         <div className="relative">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_35%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.10),transparent_30%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_35%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_30%)]" />
           <div className="relative p-6 lg:p-7">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                   <Activity className="h-3.5 w-3.5" />
-                  Observability Center
+                  AI Observability
                 </div>
 
                 <div className="space-y-2">
@@ -392,9 +455,8 @@ export default function HistoryPage() {
                     Analysis History
                   </h1>
                   <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                    Monitor run health, detect regressions, and compare two uploaded
-                    bases as if this were an observability surface instead of a raw
-                    database table.
+                    Monitor run health, detect regressions, and compare uploaded
+                    bases as an observability workflow instead of a passive archive.
                   </p>
                 </div>
 
@@ -415,7 +477,7 @@ export default function HistoryPage() {
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[520px] xl:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[560px] xl:grid-cols-4">
                 <div className="rounded-2xl border border-border bg-background/60 p-4">
                   <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                     Total runs
@@ -436,10 +498,10 @@ export default function HistoryPage() {
 
                 <div className="rounded-2xl border border-border bg-background/60 p-4">
                   <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                    Avg waste
+                    Avg confidence
                   </div>
                   <div className="mt-2 text-2xl font-semibold text-foreground">
-                    {formatMetric(averageWaste)}
+                    {formatMetric(averageConfidence)}
                   </div>
                 </div>
 
@@ -597,7 +659,7 @@ export default function HistoryPage() {
                 </h2>
               </div>
 
-              <div className={`rounded-2xl border p-4 ${statusToneClass(insight.tone)}`}>
+              <div className={`rounded-2xl border p-4 ${getInsightToneClass(insight.tone)}`}>
                 <div className="text-sm font-semibold text-foreground">
                   {insight.title}
                 </div>
@@ -606,25 +668,32 @@ export default function HistoryPage() {
                 </p>
               </div>
 
-              <div className="mt-4 space-y-3">
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-border bg-background/40 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-muted-foreground">Engine</span>
-                    <span className="text-sm font-medium text-foreground">
-                      {latestRun.engine_version ?? "N/A"}
-                    </span>
+                  <div className="text-xs text-muted-foreground">Engine</div>
+                  <div className="mt-1 text-sm font-medium text-foreground">
+                    {latestRun.engine_version ?? "N/A"}
                   </div>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="text-sm text-muted-foreground">Conversations</span>
-                    <span className="text-sm font-medium text-foreground">
-                      {latestRun.n_conversations ?? 0}
-                    </span>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-background/40 p-4">
+                  <div className="text-xs text-muted-foreground">Conversations</div>
+                  <div className="mt-1 text-sm font-medium text-foreground">
+                    {latestRun.n_conversations ?? 0}
                   </div>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="text-sm text-muted-foreground">Intents</span>
-                    <span className="text-sm font-medium text-foreground">
-                      {latestRun.n_intents ?? 0}
-                    </span>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-background/40 p-4">
+                  <div className="text-xs text-muted-foreground">Intents</div>
+                  <div className="mt-1 text-sm font-medium text-foreground">
+                    {latestRun.n_intents ?? 0}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-background/40 p-4">
+                  <div className="text-xs text-muted-foreground">Avg waste</div>
+                  <div className="mt-1 text-sm font-medium text-foreground">
+                    {formatMetric(averageWaste)}
                   </div>
                 </div>
               </div>
@@ -636,20 +705,18 @@ export default function HistoryPage() {
       {recentTimeline.length > 0 && (
         <section className="rounded-3xl border border-border bg-card p-5">
           <div className="mb-4 flex items-center gap-2">
-            <History className="h-4 w-4 text-primary" />
+            <TrendingUp className="h-4 w-4 text-primary" />
             <h2 className="text-base font-semibold text-foreground">Trend line</h2>
           </div>
 
           <div className="grid gap-3 lg:grid-cols-2">
             <div className="rounded-2xl border border-border bg-background/40 p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-medium text-foreground">
-                    Consistency over recent runs
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Quick visual to spot stability or drift
-                  </div>
+              <div className="mb-4">
+                <div className="text-sm font-medium text-foreground">
+                  Consistency over recent runs
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Fast signal for stability and drift
                 </div>
               </div>
 
@@ -659,6 +726,7 @@ export default function HistoryPage() {
                   .reverse()
                   .map((run) => {
                     const metrics = extractMetrics(run);
+
                     return (
                       <div key={`consistency-${run.id}`} className="flex-1">
                         <div className="flex h-28 items-end">
@@ -680,20 +748,19 @@ export default function HistoryPage() {
             </div>
 
             <div className="rounded-2xl border border-border bg-background/40 p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-medium text-foreground">
-                    Risk and waste monitor
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Smaller is better for waste
-                  </div>
+              <div className="mb-4">
+                <div className="text-sm font-medium text-foreground">
+                  Waste monitor
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Smaller is better
                 </div>
               </div>
 
               <div className="space-y-3">
                 {recentTimeline.map((run) => {
                   const metrics = extractMetrics(run);
+
                   return (
                     <div key={`waste-${run.id}`} className="space-y-2">
                       <div className="flex items-center justify-between gap-3">
@@ -711,6 +778,7 @@ export default function HistoryPage() {
                           {formatMetric(metrics.tokenWaste)}
                         </span>
                       </div>
+
                       <div className="h-2 overflow-hidden rounded-full bg-muted/60">
                         <div
                           className="h-full rounded-full bg-amber-400/80"
@@ -750,6 +818,7 @@ export default function HistoryPage() {
                 <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                   Run {idx === 0 ? "A" : "B"}
                 </div>
+
                 <div className="mt-2 flex items-center gap-2">
                   <span
                     className={`h-2.5 w-2.5 rounded-full ${getRiskDotClass(
@@ -760,6 +829,7 @@ export default function HistoryPage() {
                     {formatDate(run.created_at)}
                   </span>
                 </div>
+
                 <div className="mt-3 text-sm text-muted-foreground">
                   Engine: {run.engine_version ?? "N/A"}
                 </div>
@@ -851,29 +921,81 @@ export default function HistoryPage() {
               </div>
             </div>
           </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => handleOpenRun(compareA)}>
+              Open Run A
+            </Button>
+            <Button variant="outline" onClick={() => handleOpenRun(compareB)}>
+              Open Run B
+            </Button>
+          </div>
         </section>
       )}
 
       <section className="rounded-3xl border border-border bg-card p-5">
-        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="mb-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <h2 className="text-base font-semibold text-foreground">Runs</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Select up to 2 runs. If you choose a third, the oldest selected run is replaced.
+              Search, filter, compare, and reopen analyses without treating history as dead storage.
             </p>
           </div>
 
-          {selectedRuns.length > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="text-xs text-muted-foreground">
-                {selectedRuns.length}/2 selected
-              </div>
-              <Button variant="outline" size="sm" onClick={clearSelection}>
-                Clear
-              </Button>
+          <div className="flex w-full flex-col gap-3 md:flex-row xl:w-auto">
+            <div className="relative min-w-[260px]">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search engine, risk, metrics..."
+                className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary"
+              />
             </div>
-          )}
+
+            <div className="relative min-w-[170px]">
+              <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <select
+                value={riskFilter}
+                onChange={(e) =>
+                  setRiskFilter(e.target.value as "ALL" | "LOW" | "MEDIUM" | "HIGH")
+                }
+                className="h-10 w-full appearance-none rounded-xl border border-border bg-background pl-9 pr-3 text-sm text-foreground outline-none transition focus:border-primary"
+              >
+                <option value="ALL">All risk levels</option>
+                <option value="LOW">Low risk</option>
+                <option value="MEDIUM">Medium risk</option>
+                <option value="HIGH">High risk</option>
+              </select>
+            </div>
+          </div>
         </div>
+
+        {(selectedRuns.length > 0 || search || riskFilter !== "ALL") && (
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            {selectedRuns.length > 0 && (
+              <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs text-primary">
+                {selectedRuns.length}/2 selected
+              </span>
+            )}
+
+            {search && (
+              <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted-foreground">
+                Search: {search}
+              </span>
+            )}
+
+            {riskFilter !== "ALL" && (
+              <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted-foreground">
+                Risk: {riskFilter}
+              </span>
+            )}
+
+            <Button variant="outline" size="sm" onClick={clearSelection}>
+              Clear comparison
+            </Button>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -884,24 +1006,24 @@ export default function HistoryPage() {
           <div className="text-sm text-red-400">
             Failed to load history: {error}
           </div>
-        ) : runs.length === 0 ? (
+        ) : filteredRuns.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-14 text-center">
             <History className="h-10 w-10 text-muted-foreground" />
             <div className="text-lg font-semibold text-foreground">
-              No analysis history yet
+              No matching runs found
             </div>
             <p className="max-w-xl text-sm text-muted-foreground">
-              Run your first dataset analysis and it will appear here.
+              Your current filters removed every run. That is useful feedback too:
+              either your history is too small, or your filters are too strict.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {runs.map((run, index) => {
+            {filteredRuns.map((run) => {
+              const runIndex = runs.findIndex((item) => item.id === run.id);
               const metrics = extractMetrics(run);
-              const previous = runs[index + 1];
-              const previousMetricsForCard = previous
-                ? extractMetrics(previous)
-                : null;
+              const previous = runIndex >= 0 ? runs[runIndex + 1] : undefined;
+              const previousMetricsForCard = previous ? extractMetrics(previous) : null;
               const isSelected = selectedRuns.includes(run.id);
 
               return (
@@ -953,7 +1075,7 @@ export default function HistoryPage() {
                                   {riskLabel(run.risk_level)}
                                 </span>
 
-                                {index === 0 && (
+                                {runIndex === 0 && (
                                   <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
                                     Latest
                                   </span>
@@ -976,6 +1098,7 @@ export default function HistoryPage() {
                               >
                                 {isSelected ? "Selected" : "Compare"}
                               </Button>
+
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -986,7 +1109,7 @@ export default function HistoryPage() {
                             </div>
                           </div>
 
-                          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
                             <div className="rounded-xl border border-border bg-card/70 p-3">
                               <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                                 Consistency
@@ -1021,7 +1144,7 @@ export default function HistoryPage() {
 
                             <div className="rounded-xl border border-border bg-card/70 p-3">
                               <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                                Global confidence
+                                Confidence
                               </div>
                               <div className="mt-1 text-lg font-semibold text-foreground">
                                 {formatMetric(metrics.globalConfidence)}
@@ -1080,6 +1203,18 @@ export default function HistoryPage() {
                               </div>
                               <div className="mt-1 text-xs text-muted-foreground">
                                 {toPercent(metrics.crossIntentSimilarity)}
+                              </div>
+                            </div>
+
+                            <div className="rounded-xl border border-border bg-card/70 p-3">
+                              <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                                Alerts
+                              </div>
+                              <div className="mt-1 text-lg font-semibold text-foreground">
+                                {formatCompactMetric(metrics.alerts)}
+                              </div>
+                              <div className="mt-1 text-xs text-muted-foreground">
+                                Total triggered issues
                               </div>
                             </div>
                           </div>
