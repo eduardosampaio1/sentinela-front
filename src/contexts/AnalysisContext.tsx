@@ -9,7 +9,6 @@ import {
   type ReactNode,
 } from "react";
 import {
-  analyzeConversations,
   hashDataset,
   isSessionCached,
   loadResult,
@@ -21,9 +20,8 @@ import {
 import { saveAnalysisRun } from "@/lib/analysisRuns";
 import {
   createAnalysisJob,
-  markAnalysisJobCompleted,
-  markAnalysisJobFailed,
-  markAnalysisJobRunning,
+  uploadDatasetToStorage,
+  type AnalysisJobRecord,
 } from "@/lib/analysisJobs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -31,13 +29,8 @@ import { useToast } from "@/hooks/use-toast";
 const ANALYSIS_STAGES = [
   "Uploading dataset",
   "Creating analysis job",
-  "Parsing conversations",
-  "Calculating consistency score",
-  "Measuring response stability",
-  "Comparing intents",
-  "Estimating token waste",
-  "Generating recommendations",
-  "Saving results",
+  "Queueing request",
+  "Waiting for worker",
 ];
 
 interface AnalysisContextValue {
@@ -54,6 +47,7 @@ interface AnalysisContextValue {
   importAnalysisResult: (text: string) => void;
   clearAnalysis: () => void;
   loadStoredAnalysis: (analysis: AnalysisResult) => void;
+  activeJob: AnalysisJobRecord | null;
 }
 
 const AnalysisContext = createContext<AnalysisContextValue | null>(null);
@@ -62,6 +56,17 @@ function getErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
   return "Unknown error";
+}
+
+function conversationsToJsonl(conversations: unknown[]) {
+  return conversations.map((item) => JSON.stringify(item)).join("\n");
+}
+
+function buildDatasetFile(conversations: unknown[], filename = "dataset.jsonl") {
+  const jsonl = conversationsToJsonl(conversations);
+  return new File([jsonl], filename, {
+    type: "application/x-ndjson",
+  });
 }
 
 function toPersistableResult(result: AnalysisResult): Record<string, unknown> {
@@ -74,6 +79,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [activeJob, setActiveJob] = useState<AnalysisJobRecord | null>(null);
 
   const lastConversationsRef = useRef<unknown[] | null>(null);
 
@@ -90,7 +96,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       setLoadingStep((current) =>
         current < ANALYSIS_STAGES.length - 1 ? current + 1 : current
       );
-      setLoadingProgress((current) => Math.min(92, current + 10));
+      setLoadingProgress((current) => Math.min(92, current + 18));
     }, 850);
 
     return () => window.clearInterval(interval);
@@ -134,57 +140,36 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       }
 
       lastConversationsRef.current = conversations;
-
-      const inputHash = hashDataset(
-        conversations.map((item) => JSON.stringify(item)).join("\n")
-      );
-
       setLoading(true);
 
-      let jobId: string | null = null;
-
       try {
+        const inputHash = hashDataset(conversationsToJsonl(conversations));
+        const file = buildDatasetFile(conversations);
+
+        const uploaded = await uploadDatasetToStorage({
+          workspaceId: workspace.id,
+          inputHash,
+          file,
+        });
+
         const job = await createAnalysisJob({
           workspaceId: workspace.id,
           createdBy: user.id,
+          sourceFilename: file.name,
           inputHash,
-          datasetPayload: conversations,
+          datasetPath: uploaded.fullPath,
         });
 
-        jobId = job.id;
-
-        await markAnalysisJobRunning(job.id);
-
-        const data = await analyzeConversations(conversations);
-
-        saveResult(data, inputHash);
-        setResult(data);
-        setDataSource("fresh");
-
-        const savedRun = await saveAnalysisRun({
-          workspaceId: workspace.id,
-          createdBy: user.id,
-          inputHash,
-          result: toPersistableResult(data),
-        });
-
-        await markAnalysisJobCompleted(job.id, savedRun?.id ?? null);
-
-        toast({ title: "Analysis complete" });
-      } catch (error: unknown) {
-        const message = getErrorMessage(error);
-
-        if (jobId) {
-          try {
-            await markAnalysisJobFailed(jobId, message);
-          } catch (jobError) {
-            console.error("Failed to mark analysis job as failed", jobError);
-          }
-        }
+        setActiveJob(job);
 
         toast({
-          title: "Analysis failed",
-          description: message,
+          title: "Analysis job created",
+          description: "Your dataset was queued successfully. Processing will start soon.",
+        });
+      } catch (error: unknown) {
+        toast({
+          title: "Failed to queue analysis",
+          description: getErrorMessage(error),
           variant: "destructive",
         });
       } finally {
@@ -246,6 +231,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     [runAnalysis, toast]
   );
 
+  // continua útil para importar resultado pronto sem depender do worker
   const importAnalysisResult = useCallback(
     (text: string) => {
       try {
@@ -261,23 +247,12 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
             if (user?.id && workspace?.id) {
               const inputHash = hashDataset(JSON.stringify(mapped));
 
-              const job = await createAnalysisJob({
-                workspaceId: workspace.id,
-                createdBy: user.id,
-                inputHash,
-                datasetPayload: null as unknown as unknown[],
-              });
-
-              await markAnalysisJobRunning(job.id);
-
-              const savedRun = await saveAnalysisRun({
+              await saveAnalysisRun({
                 workspaceId: workspace.id,
                 createdBy: user.id,
                 inputHash,
                 result: toPersistableResult(mapped),
               });
-
-              await markAnalysisJobCompleted(job.id, savedRun?.id ?? null);
             }
 
             toast({ title: "Analysis result imported" });
@@ -290,7 +265,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
           } finally {
             finishLoading();
           }
-        }, 1100);
+        }, 900);
       } catch (error: unknown) {
         setLoading(false);
         toast({
@@ -306,6 +281,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const clearAnalysis = useCallback(() => {
     setResult(null);
     setDataSource("fresh");
+    setActiveJob(null);
   }, []);
 
   const loadStoredAnalysis = useCallback((analysis: AnalysisResult) => {
@@ -329,6 +305,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       importAnalysisResult,
       clearAnalysis,
       loadStoredAnalysis,
+      activeJob,
     }),
     [
       result,
@@ -343,6 +320,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       importAnalysisResult,
       clearAnalysis,
       loadStoredAnalysis,
+      activeJob,
     ]
   );
 
