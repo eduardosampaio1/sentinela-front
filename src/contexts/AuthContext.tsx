@@ -36,12 +36,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setWorkspaceLoading(true);
-
     try {
       const ensuredWorkspace = await ensureUserWorkspace(user.id, user.email);
       setWorkspace(ensuredWorkspace);
     } catch (error) {
-      console.error("Failed to refresh workspace", error);
+      console.error(error);
       setWorkspace(null);
     } finally {
       setWorkspaceLoading(false);
@@ -51,86 +50,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    async function bootstrap() {
-      try {
-        const { data } = await supabase.auth.getSession();
-        const currentSession = data.session;
-        const currentUser = currentSession?.user ?? null;
+    const handleAuthChange = async (currSession: Session | null) => {
+      const currUser = currSession?.user ?? null;
 
-        if (!mounted) return;
+      if (mounted) {
+        setSession(currSession);
+        setUser(currUser);
+      }
 
-        setSession(currentSession);
-        setUser(currentUser);
-
-        // Libera a aplicação assim que a sessão for conhecida
-        setLoading(false);
-
-        // Workspace carrega em paralelo, sem travar a rota
-        if (currentUser) {
-          setWorkspaceLoading(true);
-          try {
-            const ensuredWorkspace = await ensureUserWorkspace(
-              currentUser.id,
-              currentUser.email
-            );
-
-            if (mounted) {
-              setWorkspace(ensuredWorkspace);
-            }
-          } catch (error) {
-            console.error("Failed to ensure workspace on bootstrap", error);
-            if (mounted) {
-              setWorkspace(null);
-            }
-          } finally {
-            if (mounted) {
-              setWorkspaceLoading(false);
-            }
+      if (currUser) {
+        if (mounted) setWorkspaceLoading(true);
+        try {
+          const ensuredWorkspace = await ensureUserWorkspace(
+            currUser.id,
+            currUser.email
+          );
+          if (mounted) setWorkspace(ensuredWorkspace);
+        } catch (error) {
+          console.error(error);
+          if (mounted) setWorkspace(null);
+        } finally {
+          if (mounted) {
+            setWorkspaceLoading(false);
+            setLoading(false);
           }
-        } else {
+        }
+      } else {
+        if (mounted) {
           setWorkspace(null);
           setWorkspaceLoading(false);
-        }
-      } catch (error) {
-        console.error("Failed to bootstrap auth session", error);
-        if (mounted) {
           setLoading(false);
-          setWorkspaceLoading(false);
         }
       }
-    }
+    };
 
-    void bootstrap();
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (mounted) {
+        handleAuthChange(initialSession);
+      }
+    });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
-      const nextUser = nextSession?.user ?? null;
-
-      setSession(nextSession);
-      setUser(nextUser);
-
-      // sessão resolvida → não travar mais a app
-      setLoading(false);
-
-      if (nextUser) {
-        setWorkspaceLoading(true);
-        try {
-          const ensuredWorkspace = await ensureUserWorkspace(
-            nextUser.id,
-            nextUser.email
-          );
-          setWorkspace(ensuredWorkspace);
-        } catch (error) {
-          console.error("Failed to ensure workspace on auth state change", error);
-          setWorkspace(null);
-        } finally {
-          setWorkspaceLoading(false);
-        }
-      } else {
-        setWorkspace(null);
-        setWorkspaceLoading(false);
-      }
+      handleAuthChange(nextSession);
     });
 
     return () => {

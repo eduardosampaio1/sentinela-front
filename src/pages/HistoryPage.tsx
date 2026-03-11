@@ -24,6 +24,7 @@ function formatDate(value?: string | null) {
   return date.toLocaleString();
 }
 
+
 export default function HistoryPage() {
   const navigate = useNavigate();
   const { workspace } = useAuth();
@@ -31,6 +32,7 @@ export default function HistoryPage() {
 
   const [runs, setRuns] = useState<HistoryRun[]>([]);
   const [loading, setLoading] = useState(true);
+  
   const [error, setError] = useState<string | null>(null);
 
 useEffect(() => {

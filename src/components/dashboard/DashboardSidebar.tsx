@@ -9,6 +9,9 @@ import {
   Settings,
   AlertTriangle,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const navItems = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
@@ -21,8 +24,28 @@ const navItems = [
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 
+
+
 const DashboardSidebar = () => {
   const location = useLocation();
+
+   const navigate = useNavigate();
+
+async function handleLogout() {
+  await supabase.auth.signOut();
+  navigate("/login");
+}
+
+<div className="p-3 border-t border-sidebar-border">
+  <button
+    type="button"
+    onClick={handleLogout}
+    className="flex w-full items-center gap-3 px-3 py-2 rounded-md text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-colors"
+  >
+    <LogOut className="w-4 h-4" />
+    Logout
+  </button>
+</div>
 
   return (
     <aside className="w-60 min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col shrink-0">
