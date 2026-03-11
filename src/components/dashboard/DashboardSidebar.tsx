@@ -8,9 +8,9 @@ import {
   FileText,
   Settings,
   AlertTriangle,
+  LogOut,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const navItems = [
@@ -24,28 +24,20 @@ const navItems = [
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 
-
-
 const DashboardSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
-   const navigate = useNavigate();
-
-async function handleLogout() {
-  await supabase.auth.signOut();
-  navigate("/login");
-}
-
-<div className="p-3 border-t border-sidebar-border">
-  <button
-    type="button"
-    onClick={handleLogout}
-    className="flex w-full items-center gap-3 px-3 py-2 rounded-md text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-colors"
-  >
-    <LogOut className="w-4 h-4" />
-    Logout
-  </button>
-</div>
+  async function handleLogout() {
+    try {
+      // Desloga do Supabase (limpa sessão no servidor e storage local)
+      await supabase.auth.signOut();
+      // Redireciona para login
+      navigate("/login");
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    }
+  }
 
   return (
     <aside className="w-60 min-h-screen bg-sidebar border-r border-sidebar-border flex flex-col shrink-0">
@@ -53,7 +45,8 @@ async function handleLogout() {
         <span className="text-base font-bold text-sidebar-accent-foreground">Sentinela</span>
       </div>
 
-      <nav className="flex-1 py-4 px-3 space-y-1">
+      {/* Área de Navegação principal */}
+      <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive =
             item.url === "/dashboard"
@@ -76,6 +69,18 @@ async function handleLogout() {
           );
         })}
       </nav>
+
+      {/* Botão de Logout fixado no rodapé da Sidebar */}
+      <div className="p-3 border-t border-sidebar-border">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 px-3 py-2 rounded-md text-sm text-sidebar-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Logout
+        </button>
+      </div>
     </aside>
   );
 };
