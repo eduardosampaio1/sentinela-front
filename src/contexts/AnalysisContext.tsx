@@ -157,7 +157,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
           createdBy: user.id,
           sourceFilename: file.name,
           inputHash,
-          datasetPath: uploaded.fullPath,
+          datasetPath: uploaded.path,
         });
 
         setActiveJob(job);
