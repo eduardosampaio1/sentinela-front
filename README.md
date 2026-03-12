@@ -1,73 +1,259 @@
-# Welcome to your Lovable project
+Esse README atual está **100% genérico do Lovable** e hoje ele **não representa mais o projeto**. Na prática, ele passa a impressão errada: parece um template gerado por IA e não um produto real. Para um projeto como o **Sentinela**, isso enfraquece o repositório.
 
-## Project info
+Vou te entregar uma versão **profissional, limpa e alinhada com o que você construiu**.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+---
 
-## How can I edit this code?
+# Sentinela — AI Interaction Observability Platform
 
-There are several ways of editing your application.
+Sentinela é uma plataforma de **observabilidade para sistemas de IA conversacional**.
+Ela analisa interações entre usuários e modelos de linguagem (LLMs) para identificar:
 
-**Use Lovable**
+* inconsistências de resposta
+* desperdício de tokens
+* deriva de intenção
+* baixa cobertura de intents
+* riscos operacionais em assistentes de IA
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+O objetivo é fornecer **visibilidade operacional sobre sistemas de IA**, da mesma forma que ferramentas como Datadog ou New Relic fazem para software tradicional.
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+# Arquitetura
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+O projeto é dividido em três componentes principais:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Frontend
 
-Follow these steps:
+Interface web para upload e análise de datasets.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Tecnologias:
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+* React
+* TypeScript
+* Vite
+* TailwindCSS
+* shadcn/ui
 
-# Step 3: Install the necessary dependencies.
-npm i
+Responsabilidades:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+* upload de datasets JSONL
+* visualização de métricas
+* exibição de alertas
+* histórico de análises
+* comparação entre execuções
+
+---
+
+### Engine (Backend)
+
+Motor analítico responsável pelos cálculos do Sentinela.
+
+Responsabilidades:
+
+* ingestão de datasets
+* análise semântica
+* clustering de respostas
+* cálculo de métricas operacionais
+* geração de alertas
+
+Tecnologias:
+
+* Python
+* FastAPI
+* FAISS (similaridade vetorial)
+* Numpy
+
+Deploy:
+
+* Render
+
+---
+
+### Banco de dados
+
+Utilizado para persistência de execuções e histórico.
+
+Tecnologia:
+
+* Supabase (PostgreSQL)
+
+Dados armazenados:
+
+* execuções de análise
+* resultados
+* datasets
+* métricas
+
+---
+
+# Infraestrutura
+
+| Componente    | Tecnologia    |
+| ------------- | ------------- |
+| Frontend      | Vercel        |
+| Engine        | Render        |
+| Database      | Supabase      |
+| Vector Search | FAISS         |
+| Runtime       | Python + Node |
+
+---
+
+# Métricas analisadas pelo Sentinela
+
+O motor calcula diversas métricas operacionais de IA:
+
+### Consistency Score
+
+Mede se o modelo responde de forma consistente para uma mesma intenção.
+
+### Token Waste Estimate
+
+Estimativa de desperdício de tokens por redundância de respostas.
+
+### Cross-Intent Similarity
+
+Detecta quando diferentes intenções produzem respostas semelhantes.
+
+### Intent Coverage
+
+Avalia distribuição de intents no dataset.
+
+### Response Variance
+
+Mede a variabilidade das respostas para uma mesma pergunta.
+
+### Global Confidence
+
+Score agregado da qualidade da IA analisada.
+
+---
+
+# Como rodar o frontend localmente
+
+Pré-requisitos:
+
+* Node.js 18+
+* npm
+
+Clone o repositório:
+
+```bash
+git clone <repo_url>
+```
+
+Entre no diretório:
+
+```bash
+cd sentinela-frontend
+```
+
+Instale dependências:
+
+```bash
+npm install
+```
+
+Execute o projeto:
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+O servidor de desenvolvimento será iniciado em:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+http://localhost:5173
+```
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Estrutura do projeto
 
-## What technologies are used for this project?
+```
+src/
 
-This project is built with:
+components/
+UI e componentes da interface
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+pages/
+Páginas da aplicação
 
-## How can I deploy this project?
+contexts/
+Gerenciamento de estado global
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+services/
+Integração com APIs
 
-## Can I connect a custom domain to my Lovable project?
+types/
+Definições de tipos TypeScript
+```
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Fluxo de uso da plataforma
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1. Usuário faz upload de um dataset JSONL
+2. Frontend envia o dataset para a Engine
+3. Engine executa a análise
+4. Métricas e alertas são gerados
+5. Resultados são exibidos no dashboard
+
+---
+
+# Exemplo de dataset aceito
+
+Formato JSONL:
+
+```
+{"conversation_id": "1", "intent": "saldo", "response": "Seu saldo é R$1200"}
+{"conversation_id": "2", "intent": "saldo", "response": "Você possui R$1200 em conta"}
+{"conversation_id": "3", "intent": "transferencia", "response": "Para transferir escolha o destinatário"}
+```
+
+---
+
+# Roadmap do Sentinela
+
+Versões planejadas:
+
+### V1 — Observe & Point
+
+Observabilidade e detecção de problemas.
+
+### V2 — Observe, Point & Block
+
+Capacidade de bloquear respostas problemáticas.
+
+### V3 — Observe, Point, Block & Correct
+
+Correção automática de respostas.
+
+### V4 — Observe, Point, Block, Correct & Auto-Adapt
+
+IA auto-adaptativa baseada nas análises.
+
+---
+
+# Licença
+
+MIT License
+
+---
+
+# Autor
+
+Eduardo Sampaio
+
+AI Product Leader
+Especialista em produtos de IA e observabilidade de LLMs.
+
+---
+
+Se quiser, posso também te ajudar a criar **mais três coisas que fariam seu GitHub parecer um projeto de startup séria**:
+
+1️⃣ **README com badges (deploy, version, build)**
+2️⃣ **Architecture diagram do Sentinela**
+3️⃣ **README do motor (engine)** separado
+
+Isso deixa o repositório **10x mais profissional** quando alguém entra nele.
