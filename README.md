@@ -1,9 +1,3 @@
-Esse README atual está **100% genérico do Lovable** e hoje ele **não representa mais o projeto**. Na prática, ele passa a impressão errada: parece um template gerado por IA e não um produto real. Para um projeto como o **Sentinela**, isso enfraquece o repositório.
-
-Vou te entregar uma versão **profissional, limpa e alinhada com o que você construiu**.
-
----
-
 # Sentinela — AI Interaction Observability Platform
 
 Sentinela é uma plataforma de **observabilidade para sistemas de IA conversacional**.
@@ -247,13 +241,3 @@ Eduardo Sampaio
 
 AI Product Leader
 Especialista em produtos de IA e observabilidade de LLMs.
-
----
-
-Se quiser, posso também te ajudar a criar **mais três coisas que fariam seu GitHub parecer um projeto de startup séria**:
-
-1️⃣ **README com badges (deploy, version, build)**
-2️⃣ **Architecture diagram do Sentinela**
-3️⃣ **README do motor (engine)** separado
-
-Isso deixa o repositório **10x mais profissional** quando alguém entra nele.
