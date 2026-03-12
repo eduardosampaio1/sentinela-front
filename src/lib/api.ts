@@ -1,4 +1,6 @@
-const API_URL = "https://sentinela-idmf.onrender.com/analyze-jsonl";
+const API_BASE_URL = import.meta.env.VITE_SENTINELA_API_URL || "https://sentinela-idmf.onrender.com";
+const ANALYZE_URL = `${API_BASE_URL}/analyze-jsonl`;
+const INTERPRET_URL = `${API_BASE_URL}/interpret-analysis`;
 
 export interface AnalysisAlert {
   severity: string;
@@ -42,6 +44,14 @@ export interface AnalysisResult {
   intents?: IntentMetric[];
   analyzed_at: string;
   analysis_id?: string;
+
+  /**
+   * IMPORTANTE:
+   * esse campo precisa vir do analysis_runs.id para o cache do LLM ficar definitivo.
+   * Se ele não existir, o front cai no fallback enviando analysis_result.
+   */
+  analysis_run_id?: string;
+
   _warnings: string[];
   _cache_key?: string;
   _meta?: {
@@ -50,6 +60,37 @@ export interface AnalysisResult {
     cross_threshold_source?: string | null;
     mode?: string | null;
   };
+}
+
+export interface InterpretationRisk {
+  title: string;
+  severity: "low" | "medium" | "high" | "critical";
+  evidence: string;
+  impact: string;
+}
+
+export interface InterpretationPriorityAction {
+  priority: number;
+  action: string;
+  reason: string;
+  expected_effect: string;
+}
+
+export interface AnalysisInterpretation {
+  executive_diagnosis: string;
+  risk_level: "low" | "medium" | "high" | "critical";
+  main_risks: InterpretationRisk[];
+  systemic_pattern: string;
+  priority_actions: InterpretationPriorityAction[];
+  strategic_recommendation: string;
+}
+
+export interface InterpretAnalysisResponse {
+  cached: boolean;
+  analysis_run_id?: string;
+  model: string;
+  prompt_version: string;
+  report: AnalysisInterpretation;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -177,6 +218,7 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
     intents: mappedIntents,
     analyzed_at: new Date().toISOString(),
     analysis_id: typeof field("analysis_id", undefined) === "string" ? String(field("analysis_id")) : undefined,
+    analysis_run_id: typeof field("analysis_run_id", undefined) === "string" ? String(field("analysis_run_id")) : undefined,
     _warnings: warnings,
     _cache_key: typeof field("dataset_hash", undefined) === "string"
       ? String(field("dataset_hash"))
@@ -203,7 +245,7 @@ export async function analyzeConversations(conversations: unknown[]): Promise<An
   const formData = new FormData();
   formData.append("file", blob, "batch.jsonl");
 
-  const response = await fetch(API_URL, {
+  const response = await fetch(ANALYZE_URL, {
     method: "POST",
     headers: { Accept: "application/json" },
     body: formData,
@@ -216,6 +258,32 @@ export async function analyzeConversations(conversations: unknown[]): Promise<An
 
   const data = (await response.json()) as Record<string, unknown>;
   return mapApiToDashboard(data);
+}
+
+export async function interpretAnalysis(result: AnalysisResult): Promise<InterpretAnalysisResponse> {
+  const payload: Record<string, unknown> = {};
+
+  if (result.analysis_run_id) {
+    payload.analysis_run_id = result.analysis_run_id;
+  } else {
+    payload.analysis_result = result;
+  }
+
+  const response = await fetch(INTERPRET_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
+  }
+
+  return (await response.json()) as InterpretAnalysisResponse;
 }
 
 const CACHE_PREFIX = "sentinela:analysis:";
@@ -235,32 +303,28 @@ export function hashDataset(jsonlContent: string): string {
 
 export function saveResult(result: AnalysisResult, inputHash?: string) {
   const next = { ...result };
-  if (!next._cache_key && inputHash) next._cache_key = inputHash;
+  if (inputHash) next._cache_key = inputHash;
+
   const key = cacheKeyFor(next);
-  try {
-    sessionStorage.setItem(key, JSON.stringify(next));
-    sessionStorage.setItem(LAST_KEY_STORAGE, key);
-  } catch {
-    // ignore cache storage errors
-  }
-  localStorage.setItem("sentinela_last_analysis", JSON.stringify(next));
+  sessionStorage.setItem(key, JSON.stringify(next));
+  sessionStorage.setItem(LAST_KEY_STORAGE, key);
 }
 
 export function loadResult(): AnalysisResult | null {
-  try {
-    const lastKey = sessionStorage.getItem(LAST_KEY_STORAGE);
-    if (lastKey) {
-      const cached = sessionStorage.getItem(lastKey);
-      if (cached) return sanitizeResult(JSON.parse(cached));
-    }
+  const lastKey = sessionStorage.getItem(LAST_KEY_STORAGE);
+  if (!lastKey) return null;
 
-    const raw = localStorage.getItem("sentinela_last_analysis");
-    if (!raw) return null;
+  const raw = sessionStorage.getItem(lastKey);
+  if (!raw) return null;
+
+  try {
     return sanitizeResult(JSON.parse(raw));
   } catch {
     return null;
   }
 }
+
+export const loadLastResult = loadResult;
 
 export function isSessionCached(): boolean {
   const lastKey = sessionStorage.getItem(LAST_KEY_STORAGE);
@@ -290,6 +354,7 @@ function sanitizeResult(parsed: unknown): AnalysisResult {
     intents: Array.isArray(record.intents) ? (record.intents as IntentMetric[]) : [],
     analyzed_at: typeof record.analyzed_at === "string" ? record.analyzed_at : new Date().toISOString(),
     analysis_id: typeof record.analysis_id === "string" ? record.analysis_id : undefined,
+    analysis_run_id: typeof record.analysis_run_id === "string" ? record.analysis_run_id : undefined,
     _warnings: Array.isArray(record._warnings) ? record._warnings.map(String) : [],
     _cache_key: typeof record._cache_key === "string" ? record._cache_key : undefined,
     _meta: asRecord(record._meta) as AnalysisResult["_meta"],

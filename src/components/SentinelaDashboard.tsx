@@ -4,12 +4,15 @@ import EmptyState from "@/components/dashboard/EmptyState";
 import AnalysisIngestionCard from "@/components/dashboard/AnalysisIngestionCard";
 import AnalysisLoadingOverlay from "@/components/dashboard/AnalysisLoadingOverlay";
 import MetricInfo from "@/components/dashboard/MetricInfo";
+import InterpretationCard from "@/components/dashboard/InterpretationCard";
+import InterpretationSkeleton from "@/components/dashboard/InterpretationSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   AlertTriangle,
   ArrowRight,
+  Bot,
   CircleDollarSign,
   Gauge,
   Radar,
@@ -18,6 +21,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { AlertItem } from "@/lib/types";
+import type { AnalysisInterpretation } from "@/lib/api";
+import { interpretAnalysis } from "@/lib/api";
 import {
   computeReliabilityIndex,
   estimateSavingsOpportunity,
@@ -50,7 +55,10 @@ const metricTooltips = {
 function ScoreBar({ value, tone }: { value: number; tone: string }) {
   return (
     <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted">
-      <div className={`h-full rounded-full transition-all duration-700 ${progressColor(tone)}`} style={{ width: `${Math.max(6, Math.min(value, 100))}%` }} />
+      <div
+        className={`h-full rounded-full transition-all duration-700 ${progressColor(tone)}`}
+        style={{ width: `${Math.max(6, Math.min(value, 100))}%` }}
+      />
     </div>
   );
 }
@@ -79,8 +87,8 @@ function MetricCard({
 }
 
 export default function SentinelaDashboard() {
-  const { workspace, workspaceLoading } = useAuth();
-  
+  const { workspaceLoading } = useAuth();
+
   const {
     result,
     handleFileUpload,
@@ -91,7 +99,14 @@ export default function SentinelaDashboard() {
     loadingMessage,
     loadingProgress,
   } = useAnalysis();
+
   const [resolvedIds, setResolvedIds] = useState<string[]>([]);
+  const [interpretation, setInterpretation] = useState<AnalysisInterpretation | null>(null);
+  const [interpretationModel, setInterpretationModel] = useState<string>("");
+  const [interpretationPromptVersion, setInterpretationPromptVersion] = useState<string>("");
+  const [interpretationCached, setInterpretationCached] = useState<boolean>(false);
+  const [isInterpreting, setIsInterpreting] = useState(false);
+  const [interpretationError, setInterpretationError] = useState<string>("");
 
   const normalizedAlerts: AlertItem[] = useMemo(() => {
     if (!result) return [];
@@ -102,14 +117,17 @@ export default function SentinelaDashboard() {
   }, [resolvedIds, result]);
 
   const openAlerts = normalizedAlerts.filter((alert) => alert.status !== "resolved");
-  const criticalAlertsCount = result?.critical_alerts_count ?? openAlerts.filter((alert) => alert.severity === "critical").length;
+  const criticalAlertsCount =
+    result?.critical_alerts_count ?? openAlerts.filter((alert) => alert.severity === "critical").length;
 
   const wasteRate = result ? estimateWasteRate(result) : undefined;
-  const reliability = result ? computeReliabilityIndex({
-    consistency_score: result.consistency_score,
-    cross_intent_similarity: result.cross_intent_similarity,
-    waste_rate: wasteRate,
-  }) : 0;
+  const reliability = result
+    ? computeReliabilityIndex({
+        consistency_score: result.consistency_score,
+        cross_intent_similarity: result.cross_intent_similarity,
+        waste_rate: wasteRate,
+      })
+    : 0;
 
   const consistencyHealth = getConsistencyHealth(result?.consistency_score);
   const confidenceHealth = getConsistencyHealth(result?.global_confidence);
@@ -124,7 +142,27 @@ export default function SentinelaDashboard() {
   const savings = result ? estimateSavingsOpportunity(result) : { monthlySavings: 0, savingPercent: 0 };
   const unstableIntents = result ? getTopUnstableIntents(result.intents, 5) : [];
   const topRecommendations = result ? getTopRecommendations(result.alerts, 4) : [];
-  
+
+  async function handleInterpretWithAI() {
+    if (!result || isInterpreting) return;
+
+    setInterpretationError("");
+    setIsInterpreting(true);
+
+    try {
+      const response = await interpretAnalysis(result);
+      setInterpretation(response.report);
+      setInterpretationModel(response.model);
+      setInterpretationPromptVersion(response.prompt_version);
+      setInterpretationCached(response.cached);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to interpret analysis.";
+      setInterpretationError(message);
+    } finally {
+      setIsInterpreting(false);
+    }
+  }
+
   if (workspaceLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center text-muted-foreground">
@@ -181,35 +219,83 @@ export default function SentinelaDashboard() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-primary">
                   <Sparkles className="h-5 w-5" />
-                  <span className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">AI Health Summary</span>
+                  <span className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                    AI Health Summary
+                  </span>
                 </div>
                 <h2 className="text-3xl font-semibold text-foreground">{summary?.title}</h2>
                 <p className="max-w-3xl text-sm leading-6 text-muted-foreground">{summary?.detail}</p>
               </div>
 
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <Button onClick={handleInterpretWithAI} disabled={isInterpreting}>
+                  <Bot className="mr-2 h-4 w-4" />
+                  {interpretation ? "Interpretation already generated" : "Interpret with AI"}
+                </Button>
+
+                {result.analysis_run_id ? (
+                  <span className="text-xs text-muted-foreground">
+                    This interpretation is tied to the saved analysis and should not be generated twice.
+                  </span>
+                ) : (
+                  <span className="text-xs text-amber-300">
+                    Fallback mode: no analysis_run_id found yet. Interpretation works, but durable cache depends on linking the saved analysis id.
+                  </span>
+                )}
+              </div>
+
+              {isInterpreting ? <InterpretationSkeleton /> : null}
+
+              {!isInterpreting && interpretation ? (
+                <InterpretationCard
+                  interpretation={interpretation}
+                  model={interpretationModel}
+                  promptVersion={interpretationPromptVersion}
+                  cached={interpretationCached}
+                />
+              ) : null}
+
+              {!isInterpreting && interpretationError ? (
+                <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
+                  {interpretationError}
+                </div>
+              ) : null}
+
               <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
                   <div className="text-xs uppercase tracking-wide text-muted-foreground">Overall health</div>
-                  <div className={`mt-2 text-2xl font-semibold ${healthColor(reliabilityHealth)}`}>{reliabilityHealth}</div>
-                  <p className="mt-1 text-xs text-muted-foreground">A blended view of consistency, separation and efficiency.</p>
+                  <div className={`mt-2 text-2xl font-semibold ${healthColor(reliabilityHealth)}`}>
+                    {reliabilityHealth}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    A blended view of consistency, separation and efficiency.
+                  </p>
                 </div>
                 <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
                   <div className="text-xs uppercase tracking-wide text-muted-foreground">Could save</div>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-2xl font-semibold text-foreground">{formatMoney(savings.monthlySavings)}</span>
+                    <span className="text-2xl font-semibold text-foreground">
+                      {formatMoney(savings.monthlySavings)}
+                    </span>
                     <span className="text-sm text-emerald-400">~{savings.savingPercent}%</span>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">Estimated optimization upside if reuse and instability are reduced.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Estimated optimization upside if reuse and instability are reduced.
+                  </p>
                 </div>
                 <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
                   <div className="text-xs uppercase tracking-wide text-muted-foreground">Critical alerts</div>
                   <div className="mt-2 text-2xl font-semibold text-red-400">{criticalAlertsCount}</div>
-                  <p className="mt-1 text-xs text-muted-foreground">Use this as a triage signal, not as the full diagnosis.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Use this as a triage signal, not as the full diagnosis.
+                  </p>
                 </div>
                 <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
                   <div className="text-xs uppercase tracking-wide text-muted-foreground">Last analysis</div>
                   <div className="mt-2 text-base font-semibold text-foreground">{formatDate(result.analyzed_at)}</div>
-                  <p className="mt-1 text-xs text-muted-foreground">Cached data can be useful, but fresh data should drive decisions.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Cached data can be useful, but fresh data should drive decisions.
+                  </p>
                 </div>
               </div>
             </div>
@@ -219,7 +305,9 @@ export default function SentinelaDashboard() {
                 <Gauge className="h-5 w-5 text-primary" />
                 <div>
                   <div className="text-sm font-semibold text-foreground">What needs attention first</div>
-                  <div className="text-xs text-muted-foreground">The dashboard should point to action, not force interpretation.</div>
+                  <div className="text-xs text-muted-foreground">
+                    The dashboard should point to action, not force interpretation.
+                  </div>
                 </div>
               </div>
               <div className="space-y-3">
@@ -311,7 +399,9 @@ export default function SentinelaDashboard() {
                 <Radar className="h-5 w-5 text-primary" />
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">Where the model breaks</h3>
-                  <p className="text-sm text-muted-foreground">The lowest stability intents deserve attention before everything else.</p>
+                  <p className="text-sm text-muted-foreground">
+                    The lowest stability intents deserve attention before everything else.
+                  </p>
                 </div>
               </div>
               <div className="space-y-3">
@@ -321,7 +411,9 @@ export default function SentinelaDashboard() {
                     <div key={intent.intent} className="rounded-2xl border border-border/70 bg-background/60 p-4">
                       <div className="mb-3 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-sm text-muted-foreground">{index + 1}</div>
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-sm text-muted-foreground">
+                            {index + 1}
+                          </div>
                           <div>
                             <div className="font-mono text-sm text-foreground">{intent.intent}</div>
                             <div className="text-xs text-muted-foreground">
@@ -329,7 +421,9 @@ export default function SentinelaDashboard() {
                             </div>
                           </div>
                         </div>
-                        <Badge variant="secondary" className={healthColor(String(tone))}>{formatPercent(intent.consistency_score)}</Badge>
+                        <Badge variant="secondary" className={healthColor(String(tone))}>
+                          {formatPercent(intent.consistency_score)}
+                        </Badge>
                       </div>
                       <ScoreBar value={intent.consistency_score ?? 0} tone={String(tone)} />
                     </div>
@@ -344,7 +438,9 @@ export default function SentinelaDashboard() {
                   <ShieldAlert className="h-5 w-5 text-primary" />
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">AI issues detected</h3>
-                    <p className="text-sm text-muted-foreground">Deduplicated to reduce noise and make action clearer.</p>
+                    <p className="text-sm text-muted-foreground">
+                      Deduplicated to reduce noise and make action clearer.
+                    </p>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -355,7 +451,9 @@ export default function SentinelaDashboard() {
                           <div className="text-sm font-medium text-foreground">{alert.problem}</div>
                           <div className="text-xs text-muted-foreground">{alert.intent || "Global issue"}</div>
                         </div>
-                        <Badge variant="secondary" className={healthColor(alert.severity.toUpperCase())}>{alert.severity}</Badge>
+                        <Badge variant="secondary" className={healthColor(alert.severity.toUpperCase())}>
+                          {alert.severity}
+                        </Badge>
                       </div>
                       <p className="mt-2 text-sm text-muted-foreground">{alert.recommendation}</p>
                       <Button
@@ -367,7 +465,9 @@ export default function SentinelaDashboard() {
                       </Button>
                     </div>
                   )) : (
-                    <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">No open alerts in the current view.</div>
+                    <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+                      No open alerts in the current view.
+                    </div>
                   )}
                 </div>
               </div>
