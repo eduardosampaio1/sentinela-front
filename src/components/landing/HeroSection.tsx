@@ -4,6 +4,7 @@ import { ArrowRight, Upload, Plug, ShieldCheck, Activity } from "lucide-react";
 import dashboardMockup from "@/assets/dashboard-mockup.png";
 import { useAuth } from "@/contexts/AuthContext";
 
+
 const HeroSection = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
