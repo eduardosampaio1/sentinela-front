@@ -4,11 +4,14 @@ import "./index.css";
 
 import { AuthProvider } from "./contexts/AuthContext";
 import { AnalysisProvider } from "./contexts/AnalysisContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
 createRoot(document.getElementById("root")!).render(
-  <AuthProvider>
-    <AnalysisProvider>
-      <App />
-    </AnalysisProvider>
-  </AuthProvider>
+  <LanguageProvider>
+    <AuthProvider>
+      <AnalysisProvider>
+        <App />
+      </AnalysisProvider>
+    </AuthProvider>
+  </LanguageProvider>
 );

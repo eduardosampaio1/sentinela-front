@@ -41,7 +41,7 @@ export default function ConversationsPage() {
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const analysis = (result ?? null) as (Record<string, unknown> & {
+  const analysis = (result ?? null) as unknown as (Record<string, unknown> & {
     created_at?: string;
     engine_version?: string;
     n_conversations?: number;
@@ -235,7 +235,8 @@ export default function ConversationsPage() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-border">
+        <div className="overflow-x-auto rounded-2xl border border-border">
+          <div className="min-w-[960px]">
           <div className="grid grid-cols-[1.2fr,0.7fr,0.7fr,0.6fr,0.7fr,0.8fr] gap-3 bg-muted/40 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <div>Conversation / Intent</div>
             <div>Issue</div>
@@ -279,6 +280,7 @@ export default function ConversationsPage() {
               );
             })
           )}
+          </div>
         </div>
       </div>
 

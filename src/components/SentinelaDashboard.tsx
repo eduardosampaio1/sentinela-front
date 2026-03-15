@@ -1,28 +1,30 @@
-import { useMemo, useState } from "react";
-import { useAnalysis } from "@/contexts/AnalysisContext";
-import EmptyState from "@/components/dashboard/EmptyState";
-import AnalysisIngestionCard from "@/components/dashboard/AnalysisIngestionCard";
-import AnalysisLoadingOverlay from "@/components/dashboard/AnalysisLoadingOverlay";
-import MetricInfo from "@/components/dashboard/MetricInfo";
-import InterpretationCard from "@/components/dashboard/InterpretationCard";
-import InterpretationSkeleton from "@/components/dashboard/InterpretationSkeleton";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowRight,
   Bot,
-  CircleDollarSign,
   Gauge,
   Radar,
   RefreshCcw,
   ShieldAlert,
   Sparkles,
 } from "lucide-react";
+import { useAnalysis } from "@/contexts/AnalysisContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import EmptyState from "@/components/dashboard/EmptyState";
+import AnalysisIngestionCard from "@/components/dashboard/AnalysisIngestionCard";
+import AnalysisLoadingOverlay from "@/components/dashboard/AnalysisLoadingOverlay";
+import InterpretationCard from "@/components/dashboard/InterpretationCard";
+import InterpretationSkeleton from "@/components/dashboard/InterpretationSkeleton";
+import MetricInfo from "@/components/dashboard/MetricInfo";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { AlertItem } from "@/lib/types";
 import type { AnalysisInterpretation } from "@/lib/api";
 import { interpretAnalysis } from "@/lib/api";
+import { demoAnalysis } from "@/lib/demoAnalysis";
 import {
   computeReliabilityIndex,
   estimateSavingsOpportunity,
@@ -36,21 +38,10 @@ import {
   getSimilarityHealth,
   getTopRecommendations,
   getTopUnstableIntents,
-  getWasteHealth,
   healthColor,
   normalizeAlerts,
   progressColor,
 } from "@/lib/metrics";
-
-const metricTooltips = {
-  consistency: "How often the assistant stays structurally consistent inside the same intent. Higher is better.",
-  confidence: "How confident the engine is in the diagnosis itself. This is not the same thing as model quality.",
-  stability: "How much responses fluctuate inside the same intent. Higher is better.",
-  variance: "The inverse of stability. Lower is better because it means less oscillation.",
-  similarity: "How similar different intents are to each other. Lower is better because intents should remain distinct.",
-  waste: "Estimated waste created by redundant or unnecessarily long responses. This should be framed as optimization potential, not exact billing.",
-  coverage: "How much of the expected intent space is represented in the current dataset.",
-};
 
 function ScoreBar({ value, tone }: { value: number; tone: string }) {
   return (
@@ -77,10 +68,10 @@ function MetricCard({
   tooltip?: string;
 }) {
   return (
-    <div className="rounded-3xl border border-border bg-card/70 p-5 shadow-sm transition hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
+    <div className="min-w-0 rounded-3xl border border-border bg-card/70 p-4 shadow-sm transition hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 sm:p-5">
       <MetricInfo title={title} tooltip={tooltip} />
-      <div className={`text-3xl font-bold ${healthColor(tone)}`}>{value}</div>
-      <div className="mt-2 text-sm text-muted-foreground">{helper}</div>
+      <div className={`break-words text-3xl font-bold ${healthColor(tone)}`}>{value}</div>
+      <div className="mt-2 break-words text-sm text-muted-foreground">{helper}</div>
       <ScoreBar value={Number.parseFloat(value) || 0} tone={tone} />
     </div>
   );
@@ -88,7 +79,9 @@ function MetricCard({
 
 export default function SentinelaDashboard() {
   const { workspaceLoading } = useAuth();
-
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { language, t } = useLanguage();
   const {
     result,
     handleFileUpload,
@@ -98,18 +91,20 @@ export default function SentinelaDashboard() {
     loading,
     loadingMessage,
     loadingProgress,
+    loadStoredAnalysis,
   } = useAnalysis();
 
   const [resolvedIds, setResolvedIds] = useState<string[]>([]);
   const [interpretation, setInterpretation] = useState<AnalysisInterpretation | null>(null);
-  const [interpretationModel, setInterpretationModel] = useState<string>("");
-  const [interpretationPromptVersion, setInterpretationPromptVersion] = useState<string>("");
-  const [interpretationCached, setInterpretationCached] = useState<boolean>(false);
+  const [interpretationModel, setInterpretationModel] = useState("");
+  const [interpretationPromptVersion, setInterpretationPromptVersion] = useState("");
+  const [interpretationCached, setInterpretationCached] = useState(false);
   const [isInterpreting, setIsInterpreting] = useState(false);
-  const [interpretationError, setInterpretationError] = useState<string>("");
+  const [interpretationError, setInterpretationError] = useState("");
 
   const normalizedAlerts: AlertItem[] = useMemo(() => {
     if (!result) return [];
+
     return normalizeAlerts(result.alerts as unknown as Array<Record<string, unknown>>).map((alert) => ({
       ...alert,
       status: resolvedIds.includes(alert.id) ? ("resolved" as const) : ("open" as const),
@@ -119,7 +114,6 @@ export default function SentinelaDashboard() {
   const openAlerts = normalizedAlerts.filter((alert) => alert.status !== "resolved");
   const criticalAlertsCount =
     result?.critical_alerts_count ?? openAlerts.filter((alert) => alert.severity === "critical").length;
-
   const wasteRate = result ? estimateWasteRate(result) : undefined;
   const reliability = result
     ? computeReliabilityIndex({
@@ -135,13 +129,27 @@ export default function SentinelaDashboard() {
   const varianceHealth = getSimilarityHealth(100 - (result?.response_variance ?? 100));
   const similarityHealth = getSimilarityHealth(result?.cross_intent_similarity);
   const coverageHealth = getConsistencyHealth(result?.intent_coverage_score);
-  const wasteHealth = getWasteHealth(wasteRate);
   const reliabilityHealth = getConsistencyHealth(reliability);
 
-  const summary = result ? getExecutiveSummary(result) : null;
+  const summary = result ? getExecutiveSummary(result, language) : null;
   const savings = result ? estimateSavingsOpportunity(result) : { monthlySavings: 0, savingPercent: 0 };
   const unstableIntents = result ? getTopUnstableIntents(result.intents, 5) : [];
   const topRecommendations = result ? getTopRecommendations(result.alerts, 4) : [];
+  const firstActions = topRecommendations.slice(0, 3);
+  const topAlert = openAlerts[0];
+  const isDemoMode = searchParams.get("demo") === "1";
+
+  useEffect(() => {
+    if (!isDemoMode || result) return;
+
+    loadStoredAnalysis(demoAnalysis);
+    navigate("/dashboard", { replace: true });
+  }, [isDemoMode, loadStoredAnalysis, navigate, result]);
+
+  function handleLoadDemo() {
+    loadStoredAnalysis(demoAnalysis);
+    navigate("/dashboard", { replace: true });
+  }
 
   async function handleInterpretWithAI() {
     if (!result || isInterpreting) return;
@@ -156,7 +164,13 @@ export default function SentinelaDashboard() {
       setInterpretationPromptVersion(response.prompt_version);
       setInterpretationCached(response.cached);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to interpret analysis.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : language === "pt-BR"
+            ? "Nao foi possivel interpretar a analise."
+            : "Failed to interpret analysis.";
+
       setInterpretationError(message);
     } finally {
       setIsInterpreting(false);
@@ -166,263 +180,315 @@ export default function SentinelaDashboard() {
   if (workspaceLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center text-muted-foreground">
-        Loading workspace...
+        {t("dashboard.loadingWorkspace")}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <AnalysisLoadingOverlay open={loading} message={loadingMessage} progress={loadingProgress} />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Overview</h1>
-          <p className="text-sm text-muted-foreground">
-            Make the diagnosis readable. The numbers matter, but the story behind them matters more.
-          </p>
+      <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            {t("common.overview")}
+          </h1>
+          <p className="text-sm text-muted-foreground">{t("dashboard.headingBody")}</p>
         </div>
 
         {result ? (
-          <Button variant="secondary" onClick={handleRerun} disabled={loading}>
-            <RefreshCcw className="mr-2 h-4 w-4" /> Run again with last dataset
+          <Button variant="secondary" onClick={handleRerun} disabled={loading} className="w-full sm:w-auto">
+            <RefreshCcw className="mr-2 h-4 w-4" /> {t("dashboard.rerun")}
           </Button>
         ) : null}
       </div>
 
       <AnalysisIngestionCard
         loading={loading}
-        hasResult={!!result}
+        hasResult={Boolean(result)}
         onFileUpload={handleFileUpload}
         onRunFromPaste={handlePasteAnalysis}
         onImportResult={importAnalysisResult}
+        onLoadDemo={handleLoadDemo}
       />
 
       {!result ? (
         <EmptyState
-          title="No analysis loaded yet"
-          description="Upload a dataset or import a result JSON to start populating the dashboard."
+          title={t("dashboard.emptyTitle")}
+          description={t("dashboard.emptyBody")}
+          primaryLabel={t("dashboard.loadSample")}
+          secondaryLabel={t("dashboard.useOwnData")}
+          onPrimaryClick={handleLoadDemo}
+          onSecondaryClick={() => navigate("/dashboard")}
         />
       ) : (
         <>
-          <section className="grid gap-4 xl:grid-cols-[1.4fr_0.9fr]">
-            <div className="rounded-3xl border border-border bg-card/70 p-6 shadow-sm">
+          <section className="grid min-w-0 gap-4 xl:grid-cols-[1.4fr_0.9fr]">
+            <div className="min-w-0 rounded-3xl border border-border bg-card/70 p-4 shadow-sm sm:p-6">
               <div className="mb-5 flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="border-primary/30 bg-primary/5 text-primary">
-                  {result.engine_version ?? "Engine version unavailable"}
+                <Badge variant="outline" className="max-w-full border-primary/30 bg-primary/5 text-primary">
+                  <span className="truncate">{result.engine_version ?? t("dashboard.engineUnavailable")}</span>
                 </Badge>
-                <Badge variant="secondary">Risk {result.risk_level ?? "N/A"}</Badge>
-                <Badge variant="secondary">{result.n_conversations ?? 0} conversations</Badge>
-                <Badge variant="secondary">{result.n_intents ?? 0} intents</Badge>
+                <Badge variant="secondary">{t("dashboard.risk")} {result.risk_level ?? t("common.notAvailable")}</Badge>
+                <Badge variant="secondary">{result.n_conversations ?? 0} {t("dashboard.conversationsLabel")}</Badge>
+                <Badge variant="secondary">{result.n_intents ?? 0} {t("dashboard.intentsLabel")}</Badge>
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-primary">
-                  <Sparkles className="h-5 w-5" />
+                  <Sparkles className="h-5 w-5 shrink-0" />
                   <span className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                    AI Health Summary
+                    {t("dashboard.firstRead")}
                   </span>
                 </div>
-                <h2 className="text-3xl font-semibold text-foreground">{summary?.title}</h2>
-                <p className="max-w-3xl text-sm leading-6 text-muted-foreground">{summary?.detail}</p>
+                <h2 className="break-words text-2xl font-semibold text-foreground sm:text-3xl">{summary?.title}</h2>
+                <p className="max-w-3xl break-words text-sm leading-6 text-muted-foreground">{summary?.detail}</p>
               </div>
 
-              <div className="mt-5 flex flex-wrap items-center gap-3">
-                <Button onClick={handleInterpretWithAI} disabled={isInterpreting}>
-                  <Bot className="mr-2 h-4 w-4" />
-                  {interpretation ? "Interpretation already generated" : "Interpret with AI"}
-                </Button>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="min-w-0 rounded-2xl border border-border/70 bg-background/60 p-4">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">{t("dashboard.overallHealth")}</div>
+                  <div className={`mt-2 break-words text-2xl font-semibold ${healthColor(reliabilityHealth)}`}>
+                    {reliabilityHealth}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{t("dashboard.overallHealthBody")}</p>
+                </div>
 
-                {result.analysis_run_id ? (
-                  <span className="text-xs text-muted-foreground">
-                    This interpretation is tied to the saved analysis and should not be generated twice.
-                  </span>
-                ) : (
-                  <span className="text-xs text-amber-300">
-                    Fallback mode: no analysis_run_id found yet. Interpretation works, but durable cache depends on linking the saved analysis id.
-                  </span>
+                <div className="min-w-0 rounded-2xl border border-border/70 bg-background/60 p-4">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">{t("dashboard.couldSave")}</div>
+                  <div className="mt-2 flex flex-wrap items-baseline gap-2">
+                    <span className="break-words text-2xl font-semibold text-foreground">
+                      {formatMoney(savings.monthlySavings, language)}
+                    </span>
+                    <span className="text-sm text-emerald-400">~{savings.savingPercent}%</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{t("dashboard.couldSaveBody")}</p>
+                </div>
+
+                <div className="min-w-0 rounded-2xl border border-border/70 bg-background/60 p-4">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {t("dashboard.criticalAlertsLabel")}
+                  </div>
+                  <div className="mt-2 text-2xl font-semibold text-red-400">{criticalAlertsCount}</div>
+                  <p className="mt-1 text-xs text-muted-foreground">{t("dashboard.criticalAlertsBody")}</p>
+                </div>
+
+                <div className="min-w-0 rounded-2xl border border-border/70 bg-background/60 p-4">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {t("dashboard.lastAnalysisLabel")}
+                  </div>
+                  <div className="mt-2 break-words text-base font-semibold text-foreground">
+                    {formatDate(result.analyzed_at, language)}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{t("dashboard.lastAnalysisBody")}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="min-w-0 rounded-3xl border border-border bg-card/70 p-4 shadow-sm sm:p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <Gauge className="h-5 w-5 shrink-0 text-primary" />
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-foreground">{t("dashboard.firstActions")}</div>
+                  <div className="text-xs text-muted-foreground">{t("dashboard.firstActionsBody")}</div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {firstActions.length > 0 ? firstActions.map((recommendation, index) => (
+                  <div key={recommendation} className="rounded-2xl border border-border/70 bg-background/60 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-sm text-muted-foreground">
+                        {index + 1}
+                      </div>
+                      <div className="min-w-0 break-words text-sm text-muted-foreground">{recommendation}</div>
+                    </div>
+                  </div>
+                )) : unstableIntents.length > 0 ? unstableIntents.slice(0, 3).map((intent) => (
+                  <div key={intent.intent} className="rounded-2xl border border-border/70 bg-background/60 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <div className="break-words font-mono text-sm text-foreground">{intent.intent}</div>
+                        <div className="break-words text-xs text-muted-foreground">
+                          {(intent.n_conversations ?? 0)} {t("dashboard.convsShort")} - {t("dashboard.varianceShort")}{" "}
+                          {formatPercent(intent.response_variance, 2, language)}
+                        </div>
+                      </div>
+                      <div className={`text-lg font-semibold ${healthColor(getConsistencyHealth(intent.consistency_score))} sm:text-right`}>
+                        {formatPercent(intent.consistency_score, 2, language)}
+                      </div>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+                    {t("dashboard.noPrioritizedActions")}
+                  </div>
                 )}
               </div>
 
-              {isInterpreting ? <InterpretationSkeleton /> : null}
+              <div className="mt-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-amber-300">
+                  <AlertTriangle className="h-4 w-4 shrink-0" /> {t("dashboard.whyMatters")}
+                </div>
+                <p className="mt-2 break-words text-sm leading-6 text-muted-foreground">
+                  {topAlert
+                    ? `${topAlert.problem}: ${topAlert.recommendation}`
+                    : t("dashboard.whyMattersFallback", {
+                        amount: formatMoney(savings.monthlySavings, language),
+                        percent: savings.savingPercent,
+                      })}
+                </p>
+              </div>
+            </div>
+          </section>
 
-              {!isInterpreting && interpretation ? (
+          <section className="rounded-3xl border border-border bg-card/70 p-4 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-foreground">{t("dashboard.aiInterpretationTitle")}</div>
+                <p className="text-sm text-muted-foreground">{t("dashboard.aiInterpretationBody")}</p>
+              </div>
+
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <Button className="w-full sm:w-auto" onClick={handleInterpretWithAI} disabled={isInterpreting}>
+                  <Bot className="mr-2 h-4 w-4" />
+                  {interpretation ? t("dashboard.aiRefreshInterpretation") : t("dashboard.aiInterpretation")}
+                </Button>
+                {result.analysis_run_id ? (
+                  <span className="text-xs text-muted-foreground">{t("dashboard.savedReuse")}</span>
+                ) : (
+                  <span className="text-xs text-amber-300">{t("dashboard.unsavedReuse")}</span>
+                )}
+              </div>
+            </div>
+
+            {isInterpreting ? <InterpretationSkeleton /> : null}
+
+            {!isInterpreting && interpretation ? (
+              <div className="mt-5">
                 <InterpretationCard
                   interpretation={interpretation}
                   model={interpretationModel}
                   promptVersion={interpretationPromptVersion}
                   cached={interpretationCached}
                 />
-              ) : null}
+              </div>
+            ) : null}
 
-              {!isInterpreting && interpretationError ? (
-                <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
-                  {interpretationError}
-                </div>
-              ) : null}
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground">Overall health</div>
-                  <div className={`mt-2 text-2xl font-semibold ${healthColor(reliabilityHealth)}`}>
-                    {reliabilityHealth}
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    A blended view of consistency, separation and efficiency.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground">Could save</div>
-                  <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-2xl font-semibold text-foreground">
-                      {formatMoney(savings.monthlySavings)}
-                    </span>
-                    <span className="text-sm text-emerald-400">~{savings.savingPercent}%</span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Estimated optimization upside if reuse and instability are reduced.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground">Critical alerts</div>
-                  <div className="mt-2 text-2xl font-semibold text-red-400">{criticalAlertsCount}</div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Use this as a triage signal, not as the full diagnosis.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground">Last analysis</div>
-                  <div className="mt-2 text-base font-semibold text-foreground">{formatDate(result.analyzed_at)}</div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Cached data can be useful, but fresh data should drive decisions.
-                  </p>
-                </div>
+            {!isInterpreting && interpretationError ? (
+              <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
+                {interpretationError}
               </div>
-            </div>
-
-            <div className="rounded-3xl border border-border bg-card/70 p-6 shadow-sm">
-              <div className="mb-5 flex items-center gap-3">
-                <Gauge className="h-5 w-5 text-primary" />
-                <div>
-                  <div className="text-sm font-semibold text-foreground">What needs attention first</div>
-                  <div className="text-xs text-muted-foreground">
-                    The dashboard should point to action, not force interpretation.
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-3">
-                {unstableIntents.length > 0 ? unstableIntents.slice(0, 3).map((intent) => (
-                  <div key={intent.intent} className="rounded-2xl border border-border/70 bg-background/60 p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <div className="font-mono text-sm text-foreground">{intent.intent}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {(intent.n_conversations ?? 0)} convs · variance {formatPercent(intent.response_variance)}
-                        </div>
-                      </div>
-                      <div className={`text-right text-lg font-semibold ${healthColor(getConsistencyHealth(intent.consistency_score))}`}>
-                        {formatPercent(intent.consistency_score)}
-                      </div>
-                    </div>
-                  </div>
-                )) : (
-                  <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-                    No per-intent stability data was returned in this run.
-                  </div>
-                )}
-              </div>
-              <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-emerald-400">
-                  <CircleDollarSign className="h-4 w-4" /> Potential savings narrative
-                </div>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  If you reduce generic responses and bring the worst intents closer to the healthy range, this run suggests up to
-                  <span className="font-semibold text-foreground"> {formatMoney(savings.monthlySavings)} </span>
-                  in optimization upside and about
-                  <span className="font-semibold text-foreground"> {savings.savingPercent}% </span>
-                  less waste.
-                </p>
-              </div>
-            </div>
+            ) : null}
           </section>
 
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <MetricCard
-              title="Consistency score"
-              value={formatPercent(result.consistency_score)}
-              helper={getMetricNarrative("consistency", result.consistency_score).detail}
+              title={t("metrics.consistencyScore")}
+              value={formatPercent(result.consistency_score, 2, language)}
+              helper={getMetricNarrative("consistency", result.consistency_score, language).detail}
               tone={String(consistencyHealth)}
-              tooltip={metricTooltips.consistency}
+              tooltip={language === "pt-BR"
+                ? "Mostra com que frequencia o assistente permanece consistente dentro do mesmo intent. Quanto maior, melhor."
+                : "How often the assistant stays structurally consistent inside the same intent. Higher is better."}
             />
             <MetricCard
-              title="Diagnostic confidence"
-              value={formatPercent(result.global_confidence)}
-              helper={getMetricNarrative("confidence", result.global_confidence).detail}
+              title={language === "pt-BR" ? "Confianca do diagnostico" : "Diagnostic confidence"}
+              value={formatPercent(result.global_confidence, 2, language)}
+              helper={getMetricNarrative("confidence", result.global_confidence, language).detail}
               tone={String(confidenceHealth)}
-              tooltip={metricTooltips.confidence}
+              tooltip={language === "pt-BR"
+                ? "Mostra a confianca do motor no proprio diagnostico. Nao e a mesma coisa que qualidade do modelo."
+                : "How confident the engine is in the diagnosis itself. This is not the same thing as model quality."}
             />
             <MetricCard
-              title="Response stability"
-              value={formatPercent(result.response_stability_score)}
-              helper={getMetricNarrative("stability", result.response_stability_score).detail}
+              title={t("metrics.responseStability")}
+              value={formatPercent(result.response_stability_score, 2, language)}
+              helper={getMetricNarrative("stability", result.response_stability_score, language).detail}
               tone={String(stabilityHealth)}
-              tooltip={metricTooltips.stability}
+              tooltip={language === "pt-BR"
+                ? "Mostra o quanto as respostas flutuam dentro do mesmo intent. Quanto maior, melhor."
+                : "How much responses fluctuate inside the same intent. Higher is better."}
             />
             <MetricCard
-              title="Response variance"
-              value={formatPercent(result.response_variance)}
-              helper="Lower is better. High variance means the assistant swings too much inside the same intent."
+              title={language === "pt-BR" ? "Variancia de resposta" : "Response variance"}
+              value={formatPercent(result.response_variance, 2, language)}
+              helper={language === "pt-BR"
+                ? "Quanto menor, melhor. Variancia alta significa que o assistente oscila demais dentro do mesmo intent."
+                : "Lower is better. High variance means the assistant swings too much inside the same intent."}
               tone={String(varianceHealth)}
-              tooltip={metricTooltips.variance}
+              tooltip={language === "pt-BR"
+                ? "E o inverso da estabilidade. Quanto menor, melhor, porque significa menos oscilacao."
+                : "The inverse of stability. Lower is better because it means less oscillation."}
             />
             <MetricCard
-              title="Cross-intent similarity"
-              value={formatPercent(result.cross_intent_similarity)}
-              helper={getMetricNarrative("similarity", result.cross_intent_similarity).detail}
+              title={t("metrics.crossIntentSimilarity")}
+              value={formatPercent(result.cross_intent_similarity, 2, language)}
+              helper={getMetricNarrative("similarity", result.cross_intent_similarity, language).detail}
               tone={String(similarityHealth)}
-              tooltip={metricTooltips.similarity}
+              tooltip={language === "pt-BR"
+                ? "Mostra o quanto intents diferentes estao parecidos entre si. Quanto menor, melhor."
+                : "How similar different intents are to each other. Lower is better because intents should remain distinct."}
             />
             <MetricCard
-              title="Intent coverage"
-              value={result.intent_coverage_score !== undefined ? formatPercent(result.intent_coverage_score) : "N/A"}
-              helper={result.intent_coverage_score !== undefined
-                ? getMetricNarrative("coverage", result.intent_coverage_score).detail
-                : "Coverage data was not returned by the current analysis run."}
+              title={language === "pt-BR" ? "Cobertura de intents" : "Intent coverage"}
+              value={
+                result.intent_coverage_score !== undefined
+                  ? formatPercent(result.intent_coverage_score, 2, language)
+                  : t("common.notAvailable")
+              }
+              helper={
+                result.intent_coverage_score !== undefined
+                  ? getMetricNarrative("coverage", result.intent_coverage_score, language).detail
+                  : language === "pt-BR"
+                    ? "Os dados atuais nao retornaram cobertura de intents."
+                    : "Coverage data was not returned by the current analysis run."
+              }
               tone={String(coverageHealth)}
-              tooltip={metricTooltips.coverage}
+              tooltip={language === "pt-BR"
+                ? "Mostra quanto do espaco esperado de intents aparece no dataset atual."
+                : "How much of the expected intent space is represented in the current dataset."}
             />
           </section>
 
-          <section className="grid gap-4 xl:grid-cols-[1.2fr_0.9fr]">
-            <div className="rounded-3xl border border-border bg-card/70 p-6 shadow-sm">
+          <section className="rounded-3xl border border-border/70 bg-background/40 px-4 py-3">
+            <div className="text-sm font-medium text-foreground">{t("dashboard.detailedBreakdown")}</div>
+            <p className="text-sm text-muted-foreground">{t("dashboard.detailedBreakdownBody")}</p>
+          </section>
+
+          <section className="grid min-w-0 gap-4 xl:grid-cols-[1.2fr_0.9fr]">
+            <div className="min-w-0 rounded-3xl border border-border bg-card/70 p-4 shadow-sm sm:p-6">
               <div className="mb-4 flex items-center gap-3">
-                <Radar className="h-5 w-5 text-primary" />
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">Where the model breaks</h3>
-                  <p className="text-sm text-muted-foreground">
-                    The lowest stability intents deserve attention before everything else.
-                  </p>
+                <Radar className="h-5 w-5 shrink-0 text-primary" />
+                <div className="min-w-0">
+                  <h3 className="text-lg font-semibold text-foreground">{t("dashboard.whereModelBreaks")}</h3>
+                  <p className="text-sm text-muted-foreground">{t("dashboard.whereModelBreaksBody")}</p>
                 </div>
               </div>
+
               <div className="space-y-3">
                 {unstableIntents.map((intent, index) => {
                   const tone = getConsistencyHealth(intent.consistency_score);
+
                   return (
                     <div key={intent.intent} className="rounded-2xl border border-border/70 bg-background/60 p-4">
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-sm text-muted-foreground">
+                      <div className="mb-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-sm text-muted-foreground">
                             {index + 1}
                           </div>
-                          <div>
-                            <div className="font-mono text-sm text-foreground">{intent.intent}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {intent.n_conversations ?? 0} convs · mean chars {intent.mean_assistant_chars ?? "N/A"} · std {intent.std_assistant_chars ?? "N/A"}
+                          <div className="min-w-0">
+                            <div className="break-words font-mono text-sm text-foreground">{intent.intent}</div>
+                            <div className="break-words text-xs text-muted-foreground">
+                              {intent.n_conversations ?? 0} {t("dashboard.convsShort")} - {t("dashboard.meanChars")}{" "}
+                              {intent.mean_assistant_chars ?? t("common.notAvailable")} - {t("dashboard.stdChars")}{" "}
+                              {intent.std_assistant_chars ?? t("common.notAvailable")}
                             </div>
                           </div>
                         </div>
                         <Badge variant="secondary" className={healthColor(String(tone))}>
-                          {formatPercent(intent.consistency_score)}
+                          {formatPercent(intent.consistency_score, 2, language)}
                         </Badge>
                       </div>
                       <ScoreBar value={intent.consistency_score ?? 0} tone={String(tone)} />
@@ -433,48 +499,47 @@ export default function SentinelaDashboard() {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-3xl border border-border bg-card/70 p-6 shadow-sm">
+              <div className="rounded-3xl border border-border bg-card/70 p-4 shadow-sm sm:p-6">
                 <div className="mb-4 flex items-center gap-3">
-                  <ShieldAlert className="h-5 w-5 text-primary" />
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">AI issues detected</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Deduplicated to reduce noise and make action clearer.
-                    </p>
+                  <ShieldAlert className="h-5 w-5 shrink-0 text-primary" />
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold text-foreground">{t("dashboard.aiIssues")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("dashboard.aiIssuesBody")}</p>
                   </div>
                 </div>
+
                 <div className="space-y-3">
                   {openAlerts.length > 0 ? openAlerts.slice(0, 4).map((alert) => (
                     <div key={alert.id} className="rounded-2xl border border-border/70 bg-background/60 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="text-sm font-medium text-foreground">{alert.problem}</div>
-                          <div className="text-xs text-muted-foreground">{alert.intent || "Global issue"}</div>
+                      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="break-words text-sm font-medium text-foreground">{alert.problem}</div>
+                          <div className="text-xs text-muted-foreground">{alert.intent || t("common.globalIssue")}</div>
                         </div>
                         <Badge variant="secondary" className={healthColor(alert.severity.toUpperCase())}>
                           {alert.severity}
                         </Badge>
                       </div>
-                      <p className="mt-2 text-sm text-muted-foreground">{alert.recommendation}</p>
+                      <p className="mt-2 break-words text-sm text-muted-foreground">{alert.recommendation}</p>
                       <Button
                         variant="ghost"
-                        className="mt-3 h-auto px-0 text-sm text-primary"
+                        className="mt-3 h-auto px-0 text-left text-sm text-primary"
                         onClick={() => setResolvedIds((current) => [...current, alert.id])}
                       >
-                        Mark resolved <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                        {t("dashboard.markResolved")} <ArrowRight className="ml-1 h-3.5 w-3.5" />
                       </Button>
                     </div>
                   )) : (
                     <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-                      No open alerts in the current view.
+                      {t("dashboard.noOpenAlerts")}
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-amber-500/20 bg-amber-500/5 p-6 shadow-sm">
+              <div className="rounded-3xl border border-amber-500/20 bg-amber-500/5 p-4 shadow-sm sm:p-6">
                 <div className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-300">
-                  <AlertTriangle className="h-4 w-4" /> Recommended next moves
+                  <AlertTriangle className="h-4 w-4 shrink-0" /> {t("dashboard.recommendedMoves")}
                 </div>
                 <div className="space-y-2 text-sm text-muted-foreground">
                   {topRecommendations.length > 0 ? topRecommendations.map((recommendation) => (
@@ -482,7 +547,7 @@ export default function SentinelaDashboard() {
                       {recommendation}
                     </div>
                   )) : (
-                    <div>No recommendations available in this run.</div>
+                    <div>{t("dashboard.noRecommendations")}</div>
                   )}
                 </div>
               </div>

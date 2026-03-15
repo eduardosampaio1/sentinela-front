@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AnalysisIngestionCardProps {
   loading: boolean;
@@ -12,6 +13,7 @@ interface AnalysisIngestionCardProps {
   onFileUpload: (file: File) => void;
   onRunFromPaste: (text: string) => void;
   onImportResult: (text: string) => void;
+  onLoadDemo?: () => void;
 }
 
 export default function AnalysisIngestionCard({
@@ -20,7 +22,9 @@ export default function AnalysisIngestionCard({
   onFileUpload,
   onRunFromPaste,
   onImportResult,
+  onLoadDemo,
 }: AnalysisIngestionCardProps) {
+  const { t } = useLanguage();
   const [rawInput, setRawInput] = useState("");
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(hasResult);
@@ -47,25 +51,30 @@ export default function AnalysisIngestionCard({
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-primary/30 bg-primary/5 text-primary">Load analysis</Badge>
+            <Badge variant="outline" className="border-primary/30 bg-primary/5 text-primary">{t("dashboard.firstRunBadge")}</Badge>
             {selectedFileName ? <Badge variant="secondary">{selectedFileName}</Badge> : null}
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Run a new dataset or import a ready result</h2>
+            <h2 className="text-lg font-semibold text-foreground">{t("dashboard.firstRunTitle")}</h2>
             <p className="text-sm text-muted-foreground">
-              Upload JSONL to call the engine, or paste a result JSON if you want to render the dashboard directly.
+              {t("dashboard.firstRunBody")}
             </p>
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {onLoadDemo ? (
+            <Button variant="outline" onClick={onLoadDemo} disabled={loading}>
+              <WandSparkles className="mr-2 h-4 w-4" /> {t("dashboard.loadSample")}
+            </Button>
+          ) : null}
           {collapsed ? (
             <Button variant="secondary" onClick={openComposer} disabled={loading}>
-              <ChevronDown className="mr-2 h-4 w-4" /> Reopen input
+              <ChevronDown className="mr-2 h-4 w-4" /> {t("dashboard.openInput")}
             </Button>
           ) : (
             <Button variant="ghost" onClick={closeComposer} disabled={loading}>
-              <ChevronUp className="mr-2 h-4 w-4" /> Collapse
+              <ChevronUp className="mr-2 h-4 w-4" /> {t("dashboard.hideInput")}
             </Button>
           )}
         </div>
@@ -86,13 +95,13 @@ export default function AnalysisIngestionCard({
                 <Upload className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <div className="text-sm font-semibold text-foreground">Upload dataset</div>
+                <div className="text-sm font-semibold text-foreground">{t("dashboard.analyzeFile")}</div>
                 <p className="text-sm text-muted-foreground">
-                  Best for JSONL or NDJSON files coming straight from your logs.
+                  {t("dashboard.analyzeFileBody")}
                 </p>
               </div>
               <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-                <FileJson2 className="h-3.5 w-3.5" /> Accepts .json, .jsonl and .ndjson
+                <FileJson2 className="h-3.5 w-3.5" /> {t("dashboard.fileHint")}
               </div>
               <Input
                 ref={fileInputRef}
@@ -108,12 +117,15 @@ export default function AnalysisIngestionCard({
 
             <div className="rounded-3xl border border-border bg-background/50 p-4">
               <div className="mb-3 flex items-center gap-2 text-sm font-medium text-foreground">
-                <ClipboardPaste className="h-4 w-4 text-primary" /> Paste content
+                <ClipboardPaste className="h-4 w-4 text-primary" /> {t("dashboard.pasteTitle")}
               </div>
+              <p className="mb-3 text-sm text-muted-foreground">
+                {t("dashboard.pasteBody")}
+              </p>
               <Textarea
                 value={rawInput}
                 onChange={(event) => setRawInput(event.target.value)}
-                placeholder="Paste JSONL dataset or analysis result JSON here..."
+                placeholder={t("dashboard.pastePlaceholder")}
                 className="min-h-[180px] resize-none border-border/60 bg-card"
               />
               <div className="mt-3 flex flex-wrap gap-2">
@@ -125,7 +137,7 @@ export default function AnalysisIngestionCard({
                   }}
                   disabled={loading || !canRun}
                 >
-                  <Play className="mr-2 h-4 w-4" /> Run analysis
+                  <Play className="mr-2 h-4 w-4" /> {t("dashboard.analyzePasted")}
                 </Button>
                 <Button
                   variant="secondary"
@@ -136,7 +148,7 @@ export default function AnalysisIngestionCard({
                   }}
                   disabled={loading || !canRun}
                 >
-                  <WandSparkles className="mr-2 h-4 w-4" /> Import result JSON
+                  <WandSparkles className="mr-2 h-4 w-4" /> {t("dashboard.openSaved")}
                 </Button>
               </div>
             </div>

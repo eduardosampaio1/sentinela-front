@@ -1,4 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_SENTINELA_API_URL || "https://sentinela-idmf.onrender.com";
+import { supabase } from "@/lib/supabase";
+
+const API_BASE_URL =
+  import.meta.env.VITE_SENTINELA_API_URL || "https://sentinela-idmf.onrender.com";
 const ANALYZE_URL = `${API_BASE_URL}/analyze-jsonl`;
 const INTERPRET_URL = `${API_BASE_URL}/interpret-analysis`;
 
@@ -105,7 +108,9 @@ function normalizePercent(value: unknown): number | undefined {
 
 function extractIntentFromText(text?: string): string | undefined {
   if (!text) return undefined;
-  const match = text.match(/(?:INTENT\s+(?:CRITICAL|WARN|WARNING|HIGH|LOW):\s*|INTENT:\s*)([A-Z0-9_]+)/i);
+  const match = text.match(
+    /(?:INTENT\s+(?:CRITICAL|WARN|WARNING|HIGH|LOW):\s*|INTENT:\s*)([A-Z0-9_]+)/i,
+  );
   return match?.[1];
 }
 
@@ -113,8 +118,12 @@ function humanizeAlertTitle(alert: Record<string, unknown>, score?: number): str
   const raw = String(alert.title ?? "").trim();
   const upper = raw.toUpperCase();
 
-  if (upper.includes("CROSS_INTENT") || upper.includes("CROSS-INTENT")) return "Cross-intent reuse detected";
-  if (upper.includes("SCORE_BELOW_CRIT")) return `Very low consistency score${score != null ? ` (${score.toFixed(2)}%)` : ""}`;
+  if (upper.includes("CROSS_INTENT") || upper.includes("CROSS-INTENT")) {
+    return "Cross-intent reuse detected";
+  }
+  if (upper.includes("SCORE_BELOW_CRIT")) {
+    return `Very low consistency score${score != null ? ` (${score.toFixed(2)}%)` : ""}`;
+  }
   if (upper.startsWith("INTENT ")) return raw;
   return raw || "Behavioral issue detected";
 }
@@ -127,7 +136,9 @@ function humanizeRecommendation(alert: Record<string, unknown>): string {
   if (!hint) return "Review prompt structure and response behavior for this intent.";
   if (/Very similar answers across intents/i.test(hint)) return hint;
   if (/Reduce variance and align to template/i.test(hint)) return hint;
-  if (/SCORE_BELOW_CRIT/i.test(hint)) return "Normalize prompt templates and reduce variation between responses for this intent.";
+  if (/SCORE_BELOW_CRIT/i.test(hint)) {
+    return "Normalize prompt templates and reduce variation between responses for this intent.";
+  }
   return hint;
 }
 
@@ -135,6 +146,27 @@ function normalizeSeverity(value: unknown): string {
   const severity = String(value ?? "warning").toLowerCase();
   if (severity === "warn") return "high";
   return severity;
+}
+
+async function getAuthHeaders(extra?: HeadersInit): Promise<HeadersInit> {
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error) {
+    throw new Error(`Erro ao obter sessão: ${error.message}`);
+  }
+
+  const token = session?.access_token;
+  if (!token) {
+    throw new Error("Usuário não autenticado.");
+  }
+
+  return {
+    ...extra,
+    Authorization: `Bearer ${token}`,
+  };
 }
 
 export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult {
@@ -155,14 +187,18 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
     const record = asRecord(item);
     const stability = normalizePercent(record.response_stability_score);
     const variance = normalizePercent(record.response_variance);
+
     return {
       intent: String(record.intent ?? "UNKNOWN_INTENT"),
       consistency_score: stability,
       response_stability_score: stability,
       response_variance: variance,
-      n_conversations: typeof record.n_conversations === "number" ? record.n_conversations : undefined,
-      mean_assistant_chars: typeof record.mean_assistant_chars === "number" ? record.mean_assistant_chars : undefined,
-      std_assistant_chars: typeof record.std_assistant_chars === "number" ? record.std_assistant_chars : undefined,
+      n_conversations:
+        typeof record.n_conversations === "number" ? record.n_conversations : undefined,
+      mean_assistant_chars:
+        typeof record.mean_assistant_chars === "number" ? record.mean_assistant_chars : undefined,
+      std_assistant_chars:
+        typeof record.std_assistant_chars === "number" ? record.std_assistant_chars : undefined,
       severity: typeof record.severity === "string" ? record.severity : undefined,
     };
   });
@@ -173,43 +209,79 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
 
   const alerts: AnalysisAlert[] = rawAlerts.flatMap((item) => {
     const alert = asRecord(item);
-    const title = humanizeAlertTitle(alert, intentScoreMap.get(String(alert.intent ?? extractIntentFromText(String(alert.title ?? "")))));
+    const title = humanizeAlertTitle(
+      alert,
+      intentScoreMap.get(String(alert.intent ?? extractIntentFromText(String(alert.title ?? "")))),
+    );
     const recommendation = humanizeRecommendation(alert);
-    const intent = String(alert.intent ?? extractIntentFromText(String(alert.title ?? "")) ?? extractIntentFromText(String(alert.hint ?? "")) ?? "").trim();
+    const intent = String(
+      alert.intent ??
+        extractIntentFromText(String(alert.title ?? "")) ??
+        extractIntentFromText(String(alert.hint ?? "")) ??
+        "",
+    ).trim();
     const severity = normalizeSeverity(alert.severity);
     const dedupeKey = `${severity}|${intent}|${title}|${recommendation}`;
+
     if (dedupe.has(dedupeKey)) return [];
     dedupe.add(dedupeKey);
 
-    return [{
-      severity,
-      intent: intent || undefined,
-      title,
-      hint: typeof alert.hint === "string" ? alert.hint : undefined,
-      recommendation,
-    }];
+    return [
+      {
+        severity,
+        intent: intent || undefined,
+        title,
+        hint: typeof alert.hint === "string" ? alert.hint : undefined,
+        recommendation,
+      },
+    ];
   });
 
   const criticalCountRaw = field("critical_alerts_count", undefined);
-  const criticalAlertsCount = typeof criticalCountRaw === "number"
-    ? criticalCountRaw
-    : alerts.filter((alert) => alert.severity === "critical").length;
+  const criticalAlertsCount =
+    typeof criticalCountRaw === "number"
+      ? criticalCountRaw
+      : alerts.filter((alert) => alert.severity === "critical").length;
 
   const result: AnalysisResult = {
-    engine_version: typeof field("engine_version", undefined) === "string" ? String(field("engine_version")) : undefined,
+    engine_version:
+      typeof field("engine_version", undefined) === "string"
+        ? String(field("engine_version"))
+        : undefined,
     consistency_score: normalizePercent(field("consistency_score", 0)) ?? 0,
     global_confidence: normalizePercent(field("global_confidence", undefined)),
-    risk_level: typeof field("risk_level", undefined) === "string" ? String(field("risk_level")) : undefined,
-    n_conversations: typeof field("n_conversations", undefined) === "number" ? (field("n_conversations") as number) : undefined,
-    n_intents: typeof field("n_intents", undefined) === "number" ? (field("n_intents") as number) : undefined,
-    token_waste_estimate: typeof field("token_waste_estimate", 0) === "number" ? Number(field("token_waste_estimate", 0)) : 0,
+    risk_level:
+      typeof field("risk_level", undefined) === "string"
+        ? String(field("risk_level"))
+        : undefined,
+    n_conversations:
+      typeof field("n_conversations", undefined) === "number"
+        ? (field("n_conversations") as number)
+        : undefined,
+    n_intents:
+      typeof field("n_intents", undefined) === "number"
+        ? (field("n_intents") as number)
+        : undefined,
+    token_waste_estimate:
+      typeof field("token_waste_estimate", 0) === "number"
+        ? Number(field("token_waste_estimate", 0))
+        : 0,
     cross_intent_similarity: normalizePercent(field("cross_intent_similarity", 0)) ?? 0,
     response_variance: normalizePercent(field("response_variance", undefined)),
     response_stability_score: normalizePercent(field("response_stability_score", undefined)),
     intent_coverage_score: normalizePercent(field("intent_coverage_score", undefined)),
-    covered_intents: typeof field("covered_intents", undefined) === "number" ? (field("covered_intents") as number) : undefined,
-    total_intents: typeof field("total_intents", undefined) === "number" ? (field("total_intents") as number) : undefined,
-    min_samples_per_intent: typeof field("min_samples_per_intent", undefined) === "number" ? (field("min_samples_per_intent") as number) : undefined,
+    covered_intents:
+      typeof field("covered_intents", undefined) === "number"
+        ? (field("covered_intents") as number)
+        : undefined,
+    total_intents:
+      typeof field("total_intents", undefined) === "number"
+        ? (field("total_intents") as number)
+        : undefined,
+    min_samples_per_intent:
+      typeof field("min_samples_per_intent", undefined) === "number"
+        ? (field("min_samples_per_intent") as number)
+        : undefined,
     underrepresented_intents: Array.isArray(field("underrepresented_intents", []))
       ? (field("underrepresented_intents", []) as unknown[]).map((value) => String(value))
       : [],
@@ -217,19 +289,32 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
     alerts,
     intents: mappedIntents,
     analyzed_at: new Date().toISOString(),
-    analysis_id: typeof field("analysis_id", undefined) === "string" ? String(field("analysis_id")) : undefined,
-    analysis_run_id: typeof field("analysis_run_id", undefined) === "string" ? String(field("analysis_run_id")) : undefined,
-    _warnings: warnings,
-    _cache_key: typeof field("dataset_hash", undefined) === "string"
-      ? String(field("dataset_hash"))
-      : typeof field("analysis_id", undefined) === "string"
+    analysis_id:
+      typeof field("analysis_id", undefined) === "string"
         ? String(field("analysis_id"))
         : undefined,
+    analysis_run_id:
+      typeof field("analysis_run_id", undefined) === "string"
+        ? String(field("analysis_run_id"))
+        : undefined,
+    _warnings: warnings,
+    _cache_key:
+      typeof field("dataset_hash", undefined) === "string"
+        ? String(field("dataset_hash"))
+        : typeof field("analysis_id", undefined) === "string"
+          ? String(field("analysis_id"))
+          : undefined,
     _meta: asRecord(field("_meta", {})) as AnalysisResult["_meta"],
   };
 
-  if (result._meta?.engine_version && result.engine_version && result._meta.engine_version !== result.engine_version) {
-    warnings.push(`Engine version mismatch: payload=${result.engine_version}, meta=${result._meta.engine_version}`);
+  if (
+    result._meta?.engine_version &&
+    result.engine_version &&
+    result._meta.engine_version !== result.engine_version
+  ) {
+    warnings.push(
+      `Engine version mismatch: payload=${result.engine_version}, meta=${result._meta.engine_version}`,
+    );
   }
 
   if ((result.risk_level ?? "").toLowerCase() === "high" && alerts.length === 0) {
@@ -247,7 +332,7 @@ export async function analyzeConversations(conversations: unknown[]): Promise<An
 
   const response = await fetch(ANALYZE_URL, {
     method: "POST",
-    headers: { Accept: "application/json" },
+    headers: await getAuthHeaders({ Accept: "application/json" }),
     body: formData,
   });
 
@@ -260,7 +345,9 @@ export async function analyzeConversations(conversations: unknown[]): Promise<An
   return mapApiToDashboard(data);
 }
 
-export async function interpretAnalysis(result: AnalysisResult): Promise<InterpretAnalysisResponse> {
+export async function interpretAnalysis(
+  result: AnalysisResult,
+): Promise<InterpretAnalysisResponse> {
   const payload: Record<string, unknown> = {};
 
   if (result.analysis_run_id) {
@@ -271,10 +358,10 @@ export async function interpretAnalysis(result: AnalysisResult): Promise<Interpr
 
   const response = await fetch(INTERPRET_URL, {
     method: "POST",
-    headers: {
+    headers: await getAuthHeaders({
       "Content-Type": "application/json",
       Accept: "application/json",
-    },
+    }),
     body: JSON.stringify(payload),
   });
 
@@ -340,21 +427,28 @@ function sanitizeResult(parsed: unknown): AnalysisResult {
     risk_level: typeof record.risk_level === "string" ? record.risk_level : undefined,
     n_conversations: typeof record.n_conversations === "number" ? record.n_conversations : undefined,
     n_intents: typeof record.n_intents === "number" ? record.n_intents : undefined,
-    token_waste_estimate: typeof record.token_waste_estimate === "number" ? record.token_waste_estimate : 0,
+    token_waste_estimate:
+      typeof record.token_waste_estimate === "number" ? record.token_waste_estimate : 0,
     cross_intent_similarity: normalizePercent(record.cross_intent_similarity) ?? 0,
     response_variance: normalizePercent(record.response_variance),
     response_stability_score: normalizePercent(record.response_stability_score),
     intent_coverage_score: normalizePercent(record.intent_coverage_score),
     covered_intents: typeof record.covered_intents === "number" ? record.covered_intents : undefined,
     total_intents: typeof record.total_intents === "number" ? record.total_intents : undefined,
-    min_samples_per_intent: typeof record.min_samples_per_intent === "number" ? record.min_samples_per_intent : undefined,
-    underrepresented_intents: Array.isArray(record.underrepresented_intents) ? record.underrepresented_intents.map(String) : [],
-    critical_alerts_count: typeof record.critical_alerts_count === "number" ? record.critical_alerts_count : 0,
+    min_samples_per_intent:
+      typeof record.min_samples_per_intent === "number" ? record.min_samples_per_intent : undefined,
+    underrepresented_intents: Array.isArray(record.underrepresented_intents)
+      ? record.underrepresented_intents.map(String)
+      : [],
+    critical_alerts_count:
+      typeof record.critical_alerts_count === "number" ? record.critical_alerts_count : 0,
     alerts: Array.isArray(record.alerts) ? (record.alerts as AnalysisAlert[]) : [],
     intents: Array.isArray(record.intents) ? (record.intents as IntentMetric[]) : [],
-    analyzed_at: typeof record.analyzed_at === "string" ? record.analyzed_at : new Date().toISOString(),
+    analyzed_at:
+      typeof record.analyzed_at === "string" ? record.analyzed_at : new Date().toISOString(),
     analysis_id: typeof record.analysis_id === "string" ? record.analysis_id : undefined,
-    analysis_run_id: typeof record.analysis_run_id === "string" ? record.analysis_run_id : undefined,
+    analysis_run_id:
+      typeof record.analysis_run_id === "string" ? record.analysis_run_id : undefined,
     _warnings: Array.isArray(record._warnings) ? record._warnings.map(String) : [],
     _cache_key: typeof record._cache_key === "string" ? record._cache_key : undefined,
     _meta: asRecord(record._meta) as AnalysisResult["_meta"],
@@ -363,13 +457,18 @@ function sanitizeResult(parsed: unknown): AnalysisResult {
 
 export function parseConversationsInput(raw: string): unknown[] {
   const trimmed = raw.trim();
+
   try {
     const parsed = JSON.parse(trimmed) as unknown;
     const parsedRecord = asRecord(parsed);
+
     if (Array.isArray(parsed)) return parsed;
-    if (parsedRecord && Array.isArray(parsedRecord.conversations)) return parsedRecord.conversations as unknown[];
+    if (parsedRecord && Array.isArray(parsedRecord.conversations)) {
+      return parsedRecord.conversations as unknown[];
+    }
   } catch {
     const lines = trimmed.split("\n").filter((line) => line.trim());
+
     if (lines.length >= 2) {
       return lines.map((line, index) => {
         try {
@@ -379,8 +478,12 @@ export function parseConversationsInput(raw: string): unknown[] {
         }
       });
     }
-    throw new Error('JSON must be an array, an object with a "conversations" key, or JSONL format.');
+
+    throw new Error(
+      'JSON must be an array, an object with a "conversations" key, or JSONL format.',
+    );
   }
+
   throw new Error('JSON must be an array or an object with a "conversations" key.');
 }
 

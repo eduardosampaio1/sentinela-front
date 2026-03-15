@@ -1,21 +1,28 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isDemoFlow = searchParams.get("demo") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "github" | null>(
-    null
+    null,
   );
+  const { t } = useLanguage();
+
+  const nextPath = isDemoFlow ? "/dashboard?demo=1" : "/dashboard";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,7 +37,7 @@ export default function Login() {
 
         if (error) throw error;
 
-        navigate("/dashboard");
+        navigate(nextPath);
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -58,7 +65,7 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}${nextPath}`,
         },
       });
 
@@ -78,7 +85,7 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "github",
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}${nextPath}`,
         },
       });
 
@@ -92,22 +99,34 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-hero flex items-center justify-center px-6">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-hero px-4 sm:px-6">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
+        <div className="mb-8 text-center">
+          <div className="mb-4 flex justify-end">
+            <LanguageSwitcher />
+          </div>
           <Link to="/" className="text-2xl font-bold text-foreground">
             Sentinela
           </Link>
 
-          <h1 className="text-xl font-semibold mt-6 mb-2">
-            {mode === "login" ? "Acesse seu workspace" : "Crie sua conta"}
+          <h1 className="mt-6 mb-2 text-xl font-semibold">
+            {mode === "login" ? t("auth.loginTitle") : t("auth.signupTitle")}
           </h1>
 
           <p className="text-sm text-muted-foreground">
             {mode === "login"
-              ? "Entre com suas credenciais para continuar."
-              : "Crie uma conta para começar a usar o Sentinela."}
+              ? t("auth.loginBody")
+              : t("auth.signupBody")}
           </p>
+
+          {isDemoFlow ? (
+            <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-left">
+              <div className="text-sm font-medium text-foreground">{t("auth.demoTitle")}</div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t("auth.demoBody")}
+              </p>
+            </div>
+          ) : null}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -124,7 +143,7 @@ export default function Login() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+            <Label htmlFor="password">{t("auth.password")}</Label>
             <Input
               id="password"
               type="password"
@@ -141,33 +160,31 @@ export default function Login() {
             className="w-full"
           >
             {loading
-              ? "Carregando..."
+              ? "Loading..."
               : mode === "login"
-              ? "Entrar"
-              : "Criar conta"}
+                ? (isDemoFlow ? t("auth.continueToDemo") : t("auth.signIn"))
+                : t("auth.createAccount")}
           </Button>
         </form>
 
-        <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-border"></div>
-          <span className="text-xs text-muted-foreground">
-            ou continue com
-          </span>
-          <div className="flex-1 h-px bg-border"></div>
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground">{t("auth.orContinue")}</span>
+          <div className="h-px flex-1 bg-border" />
         </div>
 
         <div className="space-y-3">
           <Button
             type="button"
             variant="outline"
-            className="w-full flex items-center gap-2"
+            className="flex w-full items-center gap-2"
             onClick={handleGoogleLogin}
             disabled={loading || oauthLoading !== null}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 48 48"
-              className="w-5 h-5"
+              className="h-5 w-5"
               aria-hidden="true"
             >
               <path
@@ -187,46 +204,46 @@ export default function Login() {
                 d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.3 5.6-6 7.1l6.2 5.2C39.1 36.7 44 31 44 24c0-1.2-.1-2.3-.4-3.5z"
               />
             </svg>
-            {oauthLoading === "google" ? "Redirecionando..." : "Continuar com Google"}
+            {oauthLoading === "google" ? "Redirecting..." : t("auth.continueGoogle")}
           </Button>
 
           <Button
             type="button"
             variant="outline"
-            className="w-full flex items-center gap-2"
+            className="flex w-full items-center gap-2"
             onClick={handleGithubLogin}
             disabled={loading || oauthLoading !== null}
           >
             <img
               src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
               alt="GitHub"
-              className="w-5 h-5"
+              className="h-5 w-5"
             />
-            {oauthLoading === "github" ? "Redirecionando..." : "Continuar com GitHub"}
+            {oauthLoading === "github" ? "Redirecting..." : t("auth.continueGitHub")}
           </Button>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           {mode === "login" ? (
             <>
-              Não tem uma conta?{" "}
+              {t("auth.noAccount")}{" "}
               <button
                 type="button"
                 className="text-primary underline"
                 onClick={() => setMode("signup")}
               >
-                Criar conta
+                {t("auth.createOne")}
               </button>
             </>
           ) : (
             <>
-              Já tem uma conta?{" "}
+              {t("auth.hasAccount")}{" "}
               <button
                 type="button"
                 className="text-primary underline"
                 onClick={() => setMode("login")}
               >
-                Entrar
+                {t("auth.signInLink")}
               </button>
             </>
           )}

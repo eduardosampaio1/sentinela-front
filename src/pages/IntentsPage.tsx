@@ -1,13 +1,21 @@
-import { useMemo, useState } from "react";
-import { useAnalysis } from "@/contexts/AnalysisContext";
 import EmptyState from "@/components/dashboard/EmptyState";
 import MetricInfo from "@/components/dashboard/MetricInfo";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAnalysis } from "@/contexts/AnalysisContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { formatPercent, getConsistencyHealth, healthColor, progressColor } from "@/lib/metrics";
+import { useMemo, useState } from "react";
 
-const IntentsPage = () => {
+export default function IntentsPage() {
   const { result, dataSource } = useAnalysis();
+  const { t } = useLanguage();
   const [sortBy, setSortBy] = useState("stability-asc");
 
   const intents = result?.intents ?? [];
@@ -24,7 +32,7 @@ const IntentsPage = () => {
   if (!result) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Intents</h1>
+        <h1 className="text-2xl font-bold">{t("intentsPage.title")}</h1>
         <EmptyState />
       </div>
     );
@@ -32,36 +40,36 @@ const IntentsPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Intents</h1>
-          <p className="text-sm text-muted-foreground">This should behave like a ranked backlog, not just a list of labels and percentages.</p>
+          <h1 className="text-2xl font-bold">{t("intentsPage.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("intentsPage.subtitle")}</p>
         </div>
         <Badge variant={dataSource === "fresh" ? "default" : "secondary"} className="text-xs">
-          {dataSource === "fresh" ? "Fresh" : "Cached"}
+          {dataSource === "fresh" ? t("common.fresh") : t("common.cached")}
         </Badge>
       </div>
 
       {!intents.length ? (
-        <EmptyState title="No intent detail available" description="The current analysis did not return per-intent stability metrics." />
+        <EmptyState title={t("intentsPage.emptyTitle")} description={t("intentsPage.emptyBody")} />
       ) : (
         <>
           <div className="flex justify-end">
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[220px] rounded-2xl border-border bg-card/70">
+              <SelectTrigger className="w-full rounded-2xl border-border bg-card/70 sm:w-[220px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="stability-asc">Lowest stability first</SelectItem>
-                <SelectItem value="stability-desc">Highest stability first</SelectItem>
-                <SelectItem value="variance">Highest variance first</SelectItem>
-                <SelectItem value="volume">Highest volume first</SelectItem>
+                <SelectItem value="stability-asc">{t("intentsPage.sortLowestStability")}</SelectItem>
+                <SelectItem value="stability-desc">{t("intentsPage.sortHighestStability")}</SelectItem>
+                <SelectItem value="variance">{t("intentsPage.sortHighestVariance")}</SelectItem>
+                <SelectItem value="volume">{t("intentsPage.sortHighestVolume")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="rounded-3xl border border-border bg-card/70 p-5 shadow-sm">
-            <MetricInfo title="Intent priority board" tooltip="Sort by the combination that matters to you: instability, variance or sheer volume." />
+            <MetricInfo title={t("intentsPage.priorityBoard")} tooltip={t("intentsPage.priorityBoardTip")} />
             <div className="space-y-3">
               {sorted.map((intent, index) => {
                 const stability = intent.response_stability_score ?? intent.consistency_score ?? 0;
@@ -74,13 +82,17 @@ const IntentsPage = () => {
                         <div>
                           <div className="font-mono text-sm text-foreground">{intent.intent}</div>
                           <div className="text-xs text-muted-foreground">
-                            {intent.n_conversations ?? 0} convs · mean chars {intent.mean_assistant_chars ?? "N/A"} · std {intent.std_assistant_chars ?? "N/A"}
+                            {intent.n_conversations ?? 0} {t("intentsPage.convs")} · {t("intentsPage.meanChars")} {intent.mean_assistant_chars ?? t("common.notAvailable")} · {t("intentsPage.stdChars")} {intent.std_assistant_chars ?? t("common.notAvailable")}
                           </div>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Badge variant="secondary" className={healthColor(String(tone))}>Stability {formatPercent(stability)}</Badge>
-                        <Badge variant="outline">Variance {formatPercent(intent.response_variance)}</Badge>
+                        <Badge variant="secondary" className={healthColor(String(tone))}>
+                          {t("intentsPage.stability")} {formatPercent(stability)}
+                        </Badge>
+                        <Badge variant="outline">
+                          {t("intentsPage.variance")} {formatPercent(intent.response_variance)}
+                        </Badge>
                         {intent.severity ? <Badge variant="outline">{intent.severity}</Badge> : null}
                       </div>
                     </div>
@@ -97,6 +109,4 @@ const IntentsPage = () => {
       )}
     </div>
   );
-};
-
-export default IntentsPage;
+}

@@ -17,7 +17,7 @@ import {
   saveResult,
   type AnalysisResult,
 } from "@/lib/api";
-import { saveAnalysisRun, getAnalysisRunById } from "@/lib/analysisRuns";
+import { saveAnalysisRun, getAnalysisRunById, getLatestAnalysisRun } from "@/lib/analysisRuns";
 import {
   createAnalysisJob,
   uploadDatasetToStorage,
@@ -36,6 +36,7 @@ const ANALYSIS_STAGES = [
 
 interface AnalysisContextValue {
   result: AnalysisResult | null;
+  hasHistory: boolean;
   dataSource: "cached" | "fresh";
   loading: boolean;
   loadingMessage: string;
@@ -76,6 +77,7 @@ function toPersistableResult(result: AnalysisResult): Record<string, unknown> {
 
 export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [hasHistory, setHasHistory] = useState(false);
   const [dataSource, setDataSource] = useState<"cached" | "fresh">("fresh");
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
@@ -86,6 +88,14 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
 
   const { toast } = useToast();
   const { user, workspace } = useAuth();
+  const historyStorageKey = workspace?.id ? `sentinela:history:${workspace.id}` : null;
+
+  const markHasHistory = useCallback(() => {
+    setHasHistory(true);
+    if (historyStorageKey) {
+      window.localStorage.setItem(historyStorageKey, "1");
+    }
+  }, [historyStorageKey]);
 
   useEffect(() => {
     if (!loading) return undefined;
@@ -108,8 +118,42 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     if (cached && isSessionCached()) {
       setResult(cached);
       setDataSource("cached");
+      setHasHistory(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (!workspace?.id) {
+      setHasHistory(false);
+      return;
+    }
+
+    const storageKey = `sentinela:history:${workspace.id}`;
+    const localFlag = window.localStorage.getItem(storageKey) === "1";
+    if (localFlag) {
+      setHasHistory(true);
+    }
+
+    let mounted = true;
+
+    void getLatestAnalysisRun(workspace.id)
+      .then((latestRun) => {
+        if (!mounted) return;
+        if (latestRun) {
+          setHasHistory(true);
+          window.localStorage.setItem(storageKey, "1");
+        } else if (!localFlag) {
+          setHasHistory(false);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [workspace?.id]);
 
   const pollJobStatus = useCallback(async (jobId: string) => {
     const intervalId = setInterval(async () => {
@@ -131,6 +175,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
             setResult(analysisResult);
             saveResult(analysisResult);
             setDataSource("fresh");
+            markHasHistory();
             setLoading(false);
             setActiveJob(null);
             toast({ title: "Análise concluída com sucesso!" });
@@ -287,6 +332,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
             saveResult(mapped);
             setResult(mapped);
             setDataSource("fresh");
+            markHasHistory();
 
             if (user?.id && workspace?.id) {
               const inputHash = await hashDataset(JSON.stringify(mapped));
@@ -319,7 +365,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    [finishLoading, toast, user?.id, workspace?.id]
+    [finishLoading, markHasHistory, toast, user?.id, workspace?.id]
   );
 
   const clearAnalysis = useCallback(() => {
@@ -332,11 +378,13 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     saveResult(analysis);
     setResult(analysis);
     setDataSource("cached");
-  }, []);
+    markHasHistory();
+  }, [markHasHistory]);
 
   const value = useMemo(
     () => ({
       result,
+      hasHistory,
       dataSource,
       loading,
       loadingMessage: ANALYSIS_STAGES[loadingStep] ?? ANALYSIS_STAGES[0],
@@ -353,6 +401,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     }),
     [
       result,
+      hasHistory,
       dataSource,
       loading,
       loadingStep,
