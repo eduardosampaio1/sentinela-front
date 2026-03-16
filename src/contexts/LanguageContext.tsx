@@ -1,5 +1,4 @@
 import en from "@/i18n/en.json";
-import ptBr from "@/i18n/pt-br.json";
 import {
   createContext,
   useContext,
@@ -9,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 
-export type Language = "en" | "pt-BR";
+export type Language = "en";
 
 interface TranslationBranch {
   [key: string]: string | TranslationBranch;
@@ -24,7 +23,6 @@ interface LanguageContextValue {
 const STORAGE_KEY = "sentinela:language";
 const translations = {
   en: en as TranslationBranch,
-  "pt-BR": ptBr as TranslationBranch,
 } as const;
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -66,14 +64,11 @@ function interpolate(template: string, params?: Record<string, string | number>)
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored === "pt-BR" ? "pt-BR" : "en";
-  });
+  const [language, setLanguage] = useState<Language>("en");
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, language);
-    document.documentElement.lang = language === "pt-BR" ? "pt-BR" : "en";
+    window.localStorage.setItem(STORAGE_KEY, "en");
+    document.documentElement.lang = "en";
   }, [language]);
 
   const value = useMemo(

@@ -1,108 +1,56 @@
 import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { Check } from "lucide-react";
 import { Link } from "react-router-dom";
 
+const copy = {
+  title: "Pricing built for staged adoption",
+  body:
+    "Start with analysis, then grow into repeatable governance when the operational need is clear.",
+  highlight: "Best for active teams",
+  plans: [
+    {
+      name: "Free",
+      price: "$0",
+      period: "",
+      features: [
+        "Up to 100 conversations",
+        "Core diagnostic metrics",
+        "Critical alert highlights",
+        "No retention required to test",
+      ],
+      cta: "Start free",
+      highlight: false,
+    },
+    {
+      name: "Growth",
+      price: "$149",
+      period: "/month",
+      features: [
+        "Up to 10k conversations",
+        "History and run comparison",
+        "Full dashboard visibility",
+        "Exportable reports for stakeholders",
+      ],
+      cta: "Start Growth",
+      highlight: true,
+    },
+    {
+      name: "Enterprise",
+      price: "Custom",
+      period: "",
+      features: [
+        "Higher-volume monitoring",
+        "Custom governance workflows",
+        "Dedicated support path",
+        "Integration planning with your team",
+      ],
+      cta: "Talk to us",
+      highlight: false,
+    },
+  ],
+};
+
 export default function PricingSection() {
-  const { language } = useLanguage();
-
-  const copy =
-    language === "pt-BR"
-      ? {
-          title: "Preço pensado para adoção em etapas",
-          body:
-            "Comece com análise e evolua para governança recorrente quando a necessidade operacional ficar clara.",
-          highlight: "Melhor para times ativos",
-          plans: [
-            {
-              name: "Gratuito",
-              price: "$0",
-              period: "",
-              features: [
-                "Até 100 conversas",
-                "Métricas diagnósticas centrais",
-                "Destaque para alertas críticos",
-                "Sem retenção obrigatória para testar",
-              ],
-              cta: "Começar grátis",
-              highlight: false,
-            },
-            {
-              name: "Growth",
-              price: "$149",
-              period: "/mês",
-              features: [
-                "Até 10 mil conversas",
-                "Histórico e comparação de execuções",
-                "Visibilidade completa do dashboard",
-                "Relatórios exportáveis para stakeholders",
-              ],
-              cta: "Começar Growth",
-              highlight: true,
-            },
-            {
-              name: "Enterprise",
-              price: "Custom",
-              period: "",
-              features: [
-                "Monitoramento em maior volume",
-                "Fluxos de governança customizados",
-                "Canal dedicado de suporte",
-                "Planejamento de integrações com seu time",
-              ],
-              cta: "Falar com o time",
-              highlight: false,
-            },
-          ],
-        }
-      : {
-          title: "Pricing built for staged adoption",
-          body:
-            "Start with analysis, then grow into repeatable governance when the operational need is clear.",
-          highlight: "Best for active teams",
-          plans: [
-            {
-              name: "Free",
-              price: "$0",
-              period: "",
-              features: [
-                "Up to 100 conversations",
-                "Core diagnostic metrics",
-                "Critical alert highlights",
-                "No retention required to test",
-              ],
-              cta: "Start free",
-              highlight: false,
-            },
-            {
-              name: "Growth",
-              price: "$149",
-              period: "/month",
-              features: [
-                "Up to 10k conversations",
-                "History and run comparison",
-                "Full dashboard visibility",
-                "Exportable reports for stakeholders",
-              ],
-              cta: "Start Growth",
-              highlight: true,
-            },
-            {
-              name: "Enterprise",
-              price: "Custom",
-              period: "",
-              features: [
-                "Higher-volume monitoring",
-                "Custom governance workflows",
-                "Dedicated support path",
-                "Integration planning with your team",
-              ],
-              cta: "Talk to us",
-              highlight: false,
-            },
-          ],
-        };
-
   return (
     <section id="pricing" className="bg-card/30 py-20 sm:py-24">
       <div className="container mx-auto px-4 sm:px-6">

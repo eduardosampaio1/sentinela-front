@@ -5,23 +5,19 @@ import dashboardMockup from "@/assets/dashboard-mockup.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-
 const HeroSection = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const { language, t } = useLanguage();
-  const featurePills =
-    language === "pt-BR"
-      ? ["Detecte deriva cedo", "Compare datasets ao longo do tempo", "Reduza desperdício"]
-      : ["Detect drift early", "Compare datasets over time", "Reduce wasted spend"];
+  const { t } = useLanguage();
+  const featurePills = ["Detect drift early", "Compare datasets over time", "Reduce wasted spend"];
 
   function handlePrimaryClick() {
     if (loading) return;
-    navigate(user ? "/dashboard" : "/login");
+    navigate(user ? "/home" : "/login");
   }
 
   function handleSecondaryClick() {
-    navigate(user ? "/dashboard?demo=1" : "/login?demo=1");
+    navigate(user ? "/home" : "/login?demo=1");
   }
 
   return (

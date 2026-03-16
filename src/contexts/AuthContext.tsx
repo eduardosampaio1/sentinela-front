@@ -9,15 +9,28 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { ensureUserWorkspace, type Workspace } from "@/lib/workspaces";
+import {
+  createWorkspace as createWorkspaceRecord,
+  getStoredWorkspaceId,
+  listUserWorkspaces,
+  renameWorkspace as renameWorkspaceRecord,
+  setStoredWorkspaceId,
+  softDeleteWorkspace,
+  type Workspace,
+} from "@/lib/workspaces";
 
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
   workspace: Workspace | null;
+  workspaces: Workspace[];
   loading: boolean;
   workspaceLoading: boolean;
   refreshWorkspace: () => Promise<void>;
+  switchWorkspace: (workspaceId: string) => Promise<void>;
+  createWorkspace: (name: string) => Promise<Workspace | null>;
+  renameWorkspace: (workspaceId: string, name: string) => Promise<void>;
+  deleteWorkspace: (workspaceId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -26,26 +39,102 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
+
+  const syncWorkspaceState = useCallback(
+    async (currUser: User, preferredWorkspaceId?: string | null) => {
+      setWorkspaceLoading(true);
+      try {
+        const preferredId = preferredWorkspaceId ?? getStoredWorkspaceId();
+        const listed = await listUserWorkspaces(currUser.id);
+
+        if (listed.length === 0) {
+          setWorkspaces([]);
+          setWorkspace(null);
+          setStoredWorkspaceId(null);
+          return;
+        }
+
+        const selectedWorkspace =
+          (preferredId ? listed.find((item) => item.id === preferredId) : null) ??
+          listed[0];
+
+        setWorkspaces(listed);
+        setWorkspace(selectedWorkspace);
+        setStoredWorkspaceId(selectedWorkspace.id);
+      } catch (error) {
+        console.error(error);
+        setWorkspace(null);
+        setWorkspaces([]);
+      } finally {
+        setWorkspaceLoading(false);
+      }
+    },
+    []
+  );
 
   const refreshWorkspace = useCallback(async () => {
     if (!user) {
       setWorkspace(null);
+      setWorkspaces([]);
       return;
     }
+    await syncWorkspaceState(user);
+  }, [syncWorkspaceState, user]);
 
-    setWorkspaceLoading(true);
-    try {
-      const ensuredWorkspace = await ensureUserWorkspace(user.id, user.email);
-      setWorkspace(ensuredWorkspace);
-    } catch (error) {
-      console.error(error);
-      setWorkspace(null);
-    } finally {
-      setWorkspaceLoading(false);
-    }
-  }, [user]);
+  const switchWorkspace = useCallback(
+    async (workspaceId: string) => {
+      if (!user) return;
+      const existing = workspaces.find((item) => item.id === workspaceId);
+      if (existing) {
+        setWorkspace(existing);
+        setStoredWorkspaceId(existing.id);
+        return;
+      }
+      await syncWorkspaceState(user, workspaceId);
+    },
+    [syncWorkspaceState, user, workspaces]
+  );
+
+  const createWorkspace = useCallback(
+    async (name: string) => {
+      if (!user) return null;
+      const created = await createWorkspaceRecord({
+        userId: user.id,
+        name,
+        email: user.email,
+      });
+      await syncWorkspaceState(user, created.id);
+      return created;
+    },
+    [syncWorkspaceState, user]
+  );
+
+  const renameWorkspace = useCallback(
+    async (workspaceId: string, name: string) => {
+      if (!user) return;
+      await renameWorkspaceRecord(workspaceId, name);
+      await syncWorkspaceState(user, workspaceId);
+    },
+    [syncWorkspaceState, user]
+  );
+
+  const deleteWorkspace = useCallback(
+    async (workspaceId: string) => {
+      if (!user) return;
+      await softDeleteWorkspace(workspaceId);
+
+      const fallbackWorkspace =
+        workspace?.id === workspaceId
+          ? workspaces.find((item) => item.id !== workspaceId)?.id ?? null
+          : workspace?.id ?? null;
+
+      await syncWorkspaceState(user, fallbackWorkspace);
+    },
+    [syncWorkspaceState, user, workspace?.id, workspaces]
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -59,26 +148,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (currUser) {
-        if (mounted) setWorkspaceLoading(true);
         try {
-          const ensuredWorkspace = await ensureUserWorkspace(
-            currUser.id,
-            currUser.email
-          );
-          if (mounted) setWorkspace(ensuredWorkspace);
+          await syncWorkspaceState(currUser, getStoredWorkspaceId());
         } catch (error) {
           console.error(error);
-          if (mounted) setWorkspace(null);
+          if (mounted) {
+            setWorkspace(null);
+            setWorkspaces([]);
+          }
         } finally {
           if (mounted) {
-            setWorkspaceLoading(false);
             setLoading(false);
           }
         }
       } else {
         if (mounted) {
           setWorkspace(null);
+          setWorkspaces([]);
           setWorkspaceLoading(false);
+          setStoredWorkspaceId(null);
           setLoading(false);
         }
       }
@@ -100,18 +188,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [syncWorkspaceState]);
 
   const value = useMemo(
     () => ({
       user,
       session,
       workspace,
+      workspaces,
       loading,
       workspaceLoading,
       refreshWorkspace,
+      switchWorkspace,
+      createWorkspace,
+      renameWorkspace,
+      deleteWorkspace,
     }),
-    [user, session, workspace, loading, workspaceLoading, refreshWorkspace]
+    [
+      user,
+      session,
+      workspace,
+      workspaces,
+      loading,
+      workspaceLoading,
+      refreshWorkspace,
+      switchWorkspace,
+      createWorkspace,
+      renameWorkspace,
+      deleteWorkspace,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

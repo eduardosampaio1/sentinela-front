@@ -3,7 +3,6 @@ import EmptyState from "@/components/dashboard/EmptyState";
 import MetricInfo from "@/components/dashboard/MetricInfo";
 import { Badge } from "@/components/ui/badge";
 import { useAnalysis } from "@/contexts/AnalysisContext";
-import { useLanguage } from "@/contexts/LanguageContext";
 import {
   computeReliabilityIndex,
   estimateSavingsOpportunity,
@@ -37,77 +36,44 @@ function Card({ children }: { children: ReactNode }) {
 
 export default function MetricsPage() {
   const { result, dataSource } = useAnalysis();
-  const { language } = useLanguage();
-
-  const text =
-    language === "pt-BR"
-      ? {
-          title: "Métricas",
-          subtitle:
-            "Transforme os números brutos em algo que produto ou operações realmente consigam priorizar.",
-          fresh: "Novo",
-          cached: "Em cache",
-          metricHealth: "Mapa de saúde das métricas",
-          metricHealthTip:
-            "Este radar deixa os trade-offs visíveis. Uma boa execução precisa se manter equilibrada.",
-          optimization: "Potencial de otimização",
-          optimizationTip:
-            "Use como direcionamento de priorização, não como cobrança exata.",
-          savingsBody: "Economia potencial se os padrões mais fracos forem corrigidos.",
-          wasteRate: "Taxa estimada de desperdício",
-          wasteHint: "Segundo a heurística atual, esta execução pode destravar",
-          wasteHintTail: "menos desperdício.",
-          weakest: "Intents mais frágeis por estabilidade",
-          weakestTip:
-            "Os piores intents merecem atenção primeiro porque derrubam confiança rapidamente.",
-          cards: [
-            "Pontuação de consistência",
-            "Estabilidade de resposta",
-            "Similaridade entre intents",
-            "Índice de confiabilidade",
-          ],
-          reliabilityHelper:
-            "Pontuação executiva combinada. Útil para triagem, mas nunca melhor do que ler as métricas de base.",
-          radarLabels: ["Consistência", "Confiança", "Estabilidade", "Cobertura", "Separação"],
-        }
-      : {
-          title: "Metrics",
-          subtitle:
-            "Translate the raw numbers into something a product or operations leader can actually act on.",
-          fresh: "Fresh",
-          cached: "Cached",
-          metricHealth: "Metric health map",
-          metricHealthTip:
-            "This radar makes trade-offs visible. A good run should stay balanced, not spike in only one area.",
-          optimization: "Optimization upside",
-          optimizationTip:
-            "This is an estimate to help prioritization. Treat it as directional, not as exact billing.",
-          savingsBody: "Potential savings if the weakest patterns are corrected.",
-          wasteRate: "Estimated waste rate",
-          wasteHint: "Improving this run could unlock about",
-          wasteHintTail: "less waste according to the current heuristics.",
-          weakest: "Weakest intents by stability",
-          weakestTip:
-            "The worst intents deserve attention first because they can drag user trust down quickly.",
-          cards: [
-            "Consistency score",
-            "Response stability",
-            "Cross-intent similarity",
-            "Reliability index",
-          ],
-          reliabilityHelper:
-            "A blended executive score. Useful for triage, but never better than reading the underlying metrics.",
-          radarLabels: ["Consistency", "Confidence", "Stability", "Coverage", "Separation"],
-        };
 
   if (!result) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">{text.title}</h1>
+        <h1 className="text-2xl font-bold">Metrics</h1>
         <EmptyState />
       </div>
     );
   }
+
+  const text = {
+    title: "Metrics",
+    subtitle:
+      "Translate raw numbers into signals that product and operations can prioritize.",
+    fresh: "Fresh",
+    cached: "Cached",
+    metricHealth: "Metric health map",
+    metricHealthTip:
+      "This radar makes trade-offs visible. A healthy run should stay balanced across dimensions.",
+    optimization: "Optimization upside",
+    optimizationTip:
+      "Use this estimate for prioritization. Treat it as directional, not exact billing.",
+    savingsBody: "Potential savings if weak response patterns are corrected.",
+    wasteRate: "Estimated waste rate",
+    wasteHint: "Improving this run could unlock about",
+    wasteHintTail: "less waste with current heuristics.",
+    weakest: "Weakest intents by stability",
+    weakestTip: "Address weak intents first to reduce trust and support risk.",
+    cards: [
+      "Consistency score",
+      "Response stability",
+      "Cross-intent similarity",
+      "Reliability index",
+    ],
+    reliabilityHelper:
+      "A blended executive score useful for triage. Always confirm with base metrics.",
+    radarLabels: ["Consistency", "Confidence", "Stability", "Coverage", "Separation"],
+  };
 
   const wasteRate = estimateWasteRate(result);
   const savings = estimateSavingsOpportunity(result);

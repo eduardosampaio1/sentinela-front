@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  analyzeConversations,
   hashDataset,
   isSessionCached,
   loadResult,
@@ -17,13 +18,8 @@ import {
   saveResult,
   type AnalysisResult,
 } from "@/lib/api";
-import { saveAnalysisRun, getAnalysisRunById, getLatestAnalysisRun } from "@/lib/analysisRuns";
-import {
-  createAnalysisJob,
-  uploadDatasetToStorage,
-  getAnalysisJobById,
-  type AnalysisJobRecord,
-} from "@/lib/analysisJobs";
+import { saveAnalysisRun, getLatestAnalysisRun } from "@/lib/analysisRuns";
+import { type AnalysisJobRecord } from "@/lib/analysisJobs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -37,6 +33,8 @@ const ANALYSIS_STAGES = [
 interface AnalysisContextValue {
   result: AnalysisResult | null;
   hasHistory: boolean;
+  analysisCompleted: boolean;
+  historyResolved: boolean;
   dataSource: "cached" | "fresh";
   loading: boolean;
   loadingMessage: string;
@@ -64,13 +62,6 @@ function conversationsToJsonl(conversations: unknown[]) {
   return conversations.map((item) => JSON.stringify(item)).join("\n");
 }
 
-function buildDatasetFile(conversations: unknown[], filename = "dataset.jsonl") {
-  const jsonl = conversationsToJsonl(conversations);
-  return new File([jsonl], filename, {
-    type: "application/x-ndjson",
-  });
-}
-
 function toPersistableResult(result: AnalysisResult): Record<string, unknown> {
   return JSON.parse(JSON.stringify(result)) as Record<string, unknown>;
 }
@@ -78,6 +69,7 @@ function toPersistableResult(result: AnalysisResult): Record<string, unknown> {
 export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [hasHistory, setHasHistory] = useState(false);
+  const [historyResolved, setHistoryResolved] = useState(false);
   const [dataSource, setDataSource] = useState<"cached" | "fresh">("fresh");
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
@@ -125,9 +117,13 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!workspace?.id) {
       setHasHistory(false);
+      setResult(null);
+      setDataSource("fresh");
+      setHistoryResolved(true);
       return;
     }
 
+    setHistoryResolved(false);
     const storageKey = `sentinela:history:${workspace.id}`;
     const localFlag = window.localStorage.getItem(storageKey) === "1";
     if (localFlag) {
@@ -142,63 +138,30 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         if (latestRun) {
           setHasHistory(true);
           window.localStorage.setItem(storageKey, "1");
+          if (latestRun.raw_result && typeof latestRun.raw_result === "object") {
+            const latestResult = latestRun.raw_result as AnalysisResult;
+            saveResult(latestResult);
+            setResult(latestResult);
+            setDataSource("cached");
+          }
         } else if (!localFlag) {
           setHasHistory(false);
+          setResult(null);
+          setDataSource("fresh");
         }
+        setHistoryResolved(true);
       })
       .catch((error) => {
         console.error(error);
+        if (mounted) {
+          setHistoryResolved(true);
+        }
       });
 
     return () => {
       mounted = false;
     };
   }, [workspace?.id]);
-
-  const pollJobStatus = useCallback(async (jobId: string) => {
-    const intervalId = setInterval(async () => {
-      try {
-        const job = await getAnalysisJobById(jobId);
-        
-        if (!job) return;
-
-        if (job.status === "running") {
-          setLoadingStep(3);
-        }
-
-        if (job.status === "completed" && job.analysis_run_id) {
-          clearInterval(intervalId);
-          const run = await getAnalysisRunById(job.analysis_run_id);
-          
-          if (run?.raw_result) {
-            const analysisResult = run.raw_result as unknown as AnalysisResult;
-            setResult(analysisResult);
-            saveResult(analysisResult);
-            setDataSource("fresh");
-            markHasHistory();
-            setLoading(false);
-            setActiveJob(null);
-            toast({ title: "Análise concluída com sucesso!" });
-          }
-        }
-
-        if (job.status === "failed") {
-          clearInterval(intervalId);
-          setLoading(false);
-          setActiveJob(null);
-          toast({
-            title: "Falha na análise",
-            description: job.error_message || "Erro desconhecido no processamento.",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error("Erro durante o polling do job:", error);
-      }
-    }, 3000);
-
-    return () => clearInterval(intervalId);
-  }, [toast]);
 
   const finishLoading = useCallback(() => {
     setLoadingProgress(100);
@@ -233,40 +196,37 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       setLoading(true);
 
       try {
+        const apiResult = await analyzeConversations(conversations);
         const inputHash = await hashDataset(conversationsToJsonl(conversations));
-        const file = buildDatasetFile(conversations);
 
-        const uploaded = await uploadDatasetToStorage({
-          workspaceId: workspace.id,
-          inputHash,
-          file,
-        });
+        setResult(apiResult);
+        saveResult(apiResult, inputHash);
+        setDataSource("fresh");
+        markHasHistory();
+        setActiveJob(null);
 
-        const job = await createAnalysisJob({
+        await saveAnalysisRun({
           workspaceId: workspace.id,
           createdBy: user.id,
-          sourceFilename: file.name,
+          sourceFilename: "dataset.jsonl",
           inputHash,
-          datasetPath: uploaded.path,
+          result: toPersistableResult(apiResult),
         });
-
-        setActiveJob(job);
-        pollJobStatus(job.id);
 
         toast({
-          title: "Analysis job created",
-          description: "Your dataset was queued successfully.",
+          title: "Analysis completed successfully.",
         });
+        finishLoading();
       } catch (error: unknown) {
-        setLoading(false);
+        finishLoading();
         toast({
-          title: "Failed to queue analysis",
+          title: "Analysis failed",
           description: getErrorMessage(error),
           variant: "destructive",
         });
       }
     },
-    [pollJobStatus, toast, user?.id, workspace?.id]
+    [finishLoading, markHasHistory, toast, user?.id, workspace?.id]
   );
 
   const handleRerun = useCallback(() => {
@@ -385,6 +345,8 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     () => ({
       result,
       hasHistory,
+      analysisCompleted: hasHistory || Boolean(result),
+      historyResolved,
       dataSource,
       loading,
       loadingMessage: ANALYSIS_STAGES[loadingStep] ?? ANALYSIS_STAGES[0],
@@ -402,6 +364,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     [
       result,
       hasHistory,
+      historyResolved,
       dataSource,
       loading,
       loadingStep,

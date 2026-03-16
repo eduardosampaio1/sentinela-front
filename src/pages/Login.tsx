@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,15 +16,13 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState<"google" | "github" | null>(
-    null,
-  );
+  const [oauthLoading, setOauthLoading] = useState<"google" | "github" | null>(null);
   const { t } = useLanguage();
 
-  const nextPath = isDemoFlow ? "/dashboard?demo=1" : "/dashboard";
+  const nextPath = isDemoFlow ? "/home?demo=1" : "/home";
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
     setLoading(true);
 
     try {
@@ -34,24 +31,20 @@ export default function Login() {
           email,
           password,
         });
-
         if (error) throw error;
-
         navigate(nextPath);
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
         });
-
         if (error) throw error;
 
-        alert("Conta criada com sucesso. Agora faça login.");
+        alert("Account created successfully. Please sign in.");
         setMode("login");
       }
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Erro inesperado de autenticação";
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unexpected authentication error.";
       alert(message);
     } finally {
       setLoading(false);
@@ -61,18 +54,15 @@ export default function Login() {
   async function handleGoogleLogin() {
     try {
       setOauthLoading("google");
-
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}${nextPath}`,
         },
       });
-
       if (error) throw error;
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Erro ao entrar com Google";
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Google sign-in failed.";
       alert(message);
       setOauthLoading(null);
     }
@@ -81,18 +71,15 @@ export default function Login() {
   async function handleGithubLogin() {
     try {
       setOauthLoading("github");
-
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "github",
         options: {
           redirectTo: `${window.location.origin}${nextPath}`,
         },
       });
-
       if (error) throw error;
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Erro ao entrar com GitHub";
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "GitHub sign-in failed.";
       alert(message);
       setOauthLoading(null);
     }
@@ -109,22 +96,18 @@ export default function Login() {
             Sentinela
           </Link>
 
-          <h1 className="mt-6 mb-2 text-xl font-semibold">
+          <h1 className="mb-2 mt-6 text-xl font-semibold">
             {mode === "login" ? t("auth.loginTitle") : t("auth.signupTitle")}
           </h1>
 
           <p className="text-sm text-muted-foreground">
-            {mode === "login"
-              ? t("auth.loginBody")
-              : t("auth.signupBody")}
+            {mode === "login" ? t("auth.loginBody") : t("auth.signupBody")}
           </p>
 
           {isDemoFlow ? (
             <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-left">
               <div className="text-sm font-medium text-foreground">{t("auth.demoTitle")}</div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t("auth.demoBody")}
-              </p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("auth.demoBody")}</p>
             </div>
           ) : null}
         </div>
@@ -136,8 +119,8 @@ export default function Login() {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="voce@empresa.com"
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@company.com"
               autoComplete="email"
             />
           </div>
@@ -148,21 +131,19 @@ export default function Login() {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="********"
               autoComplete={mode === "login" ? "current-password" : "new-password"}
             />
           </div>
 
-          <Button
-            type="submit"
-            disabled={loading || oauthLoading !== null}
-            className="w-full"
-          >
+          <Button type="submit" disabled={loading || oauthLoading !== null} className="w-full">
             {loading
               ? "Loading..."
               : mode === "login"
-                ? (isDemoFlow ? t("auth.continueToDemo") : t("auth.signIn"))
+                ? isDemoFlow
+                  ? t("auth.continueToDemo")
+                  : t("auth.signIn")
                 : t("auth.createAccount")}
           </Button>
         </form>

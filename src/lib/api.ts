@@ -1,9 +1,9 @@
 import { supabase } from "@/lib/supabase";
 
 const API_BASE_URL =
-  import.meta.env.VITE_SENTINELA_API_URL || "https://sentinela-idmf.onrender.com";
-const ANALYZE_URL = `${API_BASE_URL}/analyze-jsonl`;
-const INTERPRET_URL = `${API_BASE_URL}/interpret-analysis`;
+  import.meta.env.VITE_SENTINELA_API_URL || "https://sentinela-gateway.onrender.com";
+const ANALYZE_URL = `${API_BASE_URL}/analyses`;
+const INTERPRET_URL = `${API_BASE_URL}/interpret`;
 
 export interface AnalysisAlert {
   severity: string;
@@ -11,6 +11,35 @@ export interface AnalysisAlert {
   title: string;
   hint?: string;
   recommendation?: string;
+}
+
+export interface ArgosIssue {
+  issue_id?: string;
+  issue_type?: string;
+  severity?: string;
+  confidence?: number;
+  title?: string;
+  summary?: string;
+  category?: string;
+  recommendation?: string;
+  [key: string]: unknown;
+}
+
+export interface ArgosV2Payload {
+  contract_version?: string;
+  analysis_version?: string;
+  signal_version?: string;
+  scoring_version?: string;
+  scores?: Record<string, number>;
+  signals?: Record<string, Record<string, number>>;
+  issues?: ArgosIssue[];
+  evidence?: Record<string, unknown>;
+  recommendations?: Array<Record<string, unknown>>;
+  business_impact?: Record<string, unknown>;
+  executive_summary?: string;
+  metadata?: Record<string, unknown>;
+  score_registry?: Array<Record<string, unknown>>;
+  signal_registry?: Array<Record<string, unknown>>;
 }
 
 export interface IntentMetric {
@@ -49,11 +78,17 @@ export interface AnalysisResult {
   analysis_id?: string;
 
   /**
-   * IMPORTANTE:
-   * esse campo precisa vir do analysis_runs.id para o cache do LLM ficar definitivo.
-   * Se ele não existir, o front cai no fallback enviando analysis_result.
+   * Important:
+   * this field should come from analysis_runs.id so interpretation cache can be deterministic.
+   * If missing, the frontend falls back to sending the full analysis_result payload.
    */
   analysis_run_id?: string;
+  issues?: Array<Record<string, unknown>>;
+  insights?: Record<string, unknown>;
+  argos_v2?: ArgosV2Payload;
+  business_impact?: Record<string, unknown>;
+  executive_summary?: string;
+  baseline_comparison?: Record<string, unknown>;
 
   _warnings: string[];
   _cache_key?: string;
@@ -80,12 +115,18 @@ export interface InterpretationPriorityAction {
 }
 
 export interface AnalysisInterpretation {
-  executive_diagnosis: string;
-  risk_level: "low" | "medium" | "high" | "critical";
-  main_risks: InterpretationRisk[];
-  systemic_pattern: string;
-  priority_actions: InterpretationPriorityAction[];
-  strategic_recommendation: string;
+  executive_diagnosis?: string;
+  risk_level?: "low" | "medium" | "high" | "critical";
+  main_risks?: InterpretationRisk[];
+  systemic_pattern?: string;
+  priority_actions?: InterpretationPriorityAction[];
+  strategic_recommendation?: string;
+  summary?: string;
+  key_findings?: string[];
+  operational_risks?: string[];
+  business_implications?: string[];
+  recommended_priorities?: string[];
+  confidence_notes?: string;
 }
 
 export interface InterpretAnalysisResponse {
@@ -148,6 +189,83 @@ function normalizeSeverity(value: unknown): string {
   return severity;
 }
 
+function normalizeRiskLevel(value: unknown): "low" | "medium" | "high" | "critical" {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (normalized === "critical") return "critical";
+  if (normalized === "high") return "high";
+  if (normalized === "medium") return "medium";
+  return "low";
+}
+
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => String(item ?? "").trim())
+    .filter(Boolean);
+}
+
+function normalizeInterpretation(payload: unknown): AnalysisInterpretation {
+  const raw = asRecord(payload);
+  const summary = String(
+    raw.summary ??
+      raw.executive_diagnosis ??
+      raw.systemic_pattern ??
+      raw.strategic_recommendation ??
+      "",
+  ).trim();
+
+  const keyFindings = toStringArray(raw.key_findings);
+  const operationalRisks = toStringArray(raw.operational_risks);
+  const businessImplications = toStringArray(raw.business_implications);
+  const recommendedPriorities = toStringArray(raw.recommended_priorities);
+
+  const normalizedMainRisks: InterpretationRisk[] = Array.isArray(raw.main_risks)
+    ? raw.main_risks
+        .map((item) => asRecord(item))
+        .map((item) => ({
+          title: String(item.title ?? item.evidence ?? "Risk").trim() || "Risk",
+          severity: normalizeRiskLevel(item.severity),
+          evidence: String(item.evidence ?? item.title ?? "").trim(),
+          impact: String(item.impact ?? "").trim(),
+        }))
+    : [];
+
+  const normalizedPriorityActions: InterpretationPriorityAction[] = Array.isArray(raw.priority_actions)
+    ? raw.priority_actions
+        .map((item) => asRecord(item))
+        .map((item, index) => ({
+          priority:
+            typeof item.priority === "number" && Number.isFinite(item.priority)
+              ? item.priority
+              : index + 1,
+          action: String(item.action ?? "").trim(),
+          reason: String(item.reason ?? "").trim(),
+          expected_effect: String(item.expected_effect ?? "").trim(),
+        }))
+        .filter((item) => Boolean(item.action))
+    : [];
+
+  return {
+    executive_diagnosis: String(raw.executive_diagnosis ?? summary).trim(),
+    risk_level: normalizeRiskLevel(raw.risk_level),
+    main_risks: normalizedMainRisks,
+    systemic_pattern: String(raw.systemic_pattern ?? raw.confidence_notes ?? "").trim(),
+    priority_actions: normalizedPriorityActions,
+    strategic_recommendation: String(
+      raw.strategic_recommendation ??
+        recommendedPriorities[0] ??
+        keyFindings[0] ??
+        "",
+    ).trim(),
+    summary,
+    key_findings: keyFindings,
+    operational_risks: operationalRisks,
+    business_implications: businessImplications,
+    recommended_priorities: recommendedPriorities,
+    confidence_notes: String(raw.confidence_notes ?? "").trim(),
+  };
+}
+
 async function getAuthHeaders(extra?: HeadersInit): Promise<HeadersInit> {
   const {
     data: { session },
@@ -155,18 +273,22 @@ async function getAuthHeaders(extra?: HeadersInit): Promise<HeadersInit> {
   } = await supabase.auth.getSession();
 
   if (error) {
-    throw new Error(`Erro ao obter sessão: ${error.message}`);
+    throw new Error(`Failed to load session: ${error.message}`);
   }
 
   const token = session?.access_token;
   if (!token) {
-    throw new Error("Usuário não autenticado.");
+    throw new Error("User is not authenticated.");
   }
 
   return {
     ...extra,
     Authorization: `Bearer ${token}`,
   };
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult {
@@ -243,6 +365,30 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
       ? criticalCountRaw
       : alerts.filter((alert) => alert.severity === "critical").length;
 
+  const argosV2 = asRecord(raw.argos_v2) as ArgosV2Payload;
+  const argosMetadata = asRecord(argosV2.metadata);
+  const baselineFromMetadata = asRecord(argosMetadata.baseline_comparison);
+  const baselineTop = asRecord(raw.baseline_comparison);
+  const baselineComparison =
+    Object.keys(baselineTop).length > 0
+      ? baselineTop
+      : Object.keys(baselineFromMetadata).length > 0
+        ? baselineFromMetadata
+        : undefined;
+  const topLevelBusinessImpact = asRecord(raw.business_impact);
+  const argosBusinessImpact = asRecord(argosV2.business_impact);
+  const businessImpact =
+    Object.keys(topLevelBusinessImpact).length > 0
+      ? topLevelBusinessImpact
+      : Object.keys(argosBusinessImpact).length > 0
+        ? argosBusinessImpact
+        : undefined;
+  const topLevelExecutiveSummary = String(raw.executive_summary ?? "").trim();
+  const argosExecutiveSummary = String(argosV2.executive_summary ?? "").trim();
+  const executiveSummary = topLevelExecutiveSummary || argosExecutiveSummary || undefined;
+  const rawIssues = Array.isArray(raw.issues) ? (raw.issues as Array<Record<string, unknown>>) : [];
+  const rawInsights = asRecord(raw.insights);
+
   const result: AnalysisResult = {
     engine_version:
       typeof field("engine_version", undefined) === "string"
@@ -297,6 +443,12 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
       typeof field("analysis_run_id", undefined) === "string"
         ? String(field("analysis_run_id"))
         : undefined,
+    issues: rawIssues,
+    insights: Object.keys(rawInsights).length > 0 ? rawInsights : undefined,
+    argos_v2: Object.keys(argosV2).length > 0 ? argosV2 : undefined,
+    business_impact: businessImpact,
+    executive_summary: executiveSummary,
+    baseline_comparison: baselineComparison,
     _warnings: warnings,
     _cache_key:
       typeof field("dataset_hash", undefined) === "string"
@@ -330,47 +482,124 @@ export async function analyzeConversations(conversations: unknown[]): Promise<An
   const formData = new FormData();
   formData.append("file", blob, "batch.jsonl");
 
-  const response = await fetch(ANALYZE_URL, {
+  const createResponse = await fetch(`${ANALYZE_URL}/`, {
     method: "POST",
     headers: await getAuthHeaders({ Accept: "application/json" }),
     body: formData,
   });
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
+  if (!createResponse.ok) {
+    const text = await createResponse.text().catch(() => "");
+    throw new Error(`HTTP ${createResponse.status}: ${text || createResponse.statusText}`);
   }
 
-  const data = (await response.json()) as Record<string, unknown>;
-  return mapApiToDashboard(data);
+  const created = (await createResponse.json()) as Record<string, unknown>;
+  const analysisId = String(created.analysis_id ?? "").trim();
+  if (!analysisId) {
+    throw new Error("Analysis API did not return analysis_id.");
+  }
+
+  const maxAttempts = 90;
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const statusResponse = await fetch(`${ANALYZE_URL}/${analysisId}`, {
+      method: "GET",
+      headers: await getAuthHeaders({ Accept: "application/json" }),
+    });
+
+    if (!statusResponse.ok) {
+      const text = await statusResponse.text().catch(() => "");
+      throw new Error(`HTTP ${statusResponse.status}: ${text || statusResponse.statusText}`);
+    }
+
+    const statusPayload = (await statusResponse.json()) as Record<string, unknown>;
+    const status = String(statusPayload.status ?? "").toLowerCase();
+
+    if (status === "completed") {
+      const resultResponse = await fetch(`${ANALYZE_URL}/${analysisId}/result`, {
+        method: "GET",
+        headers: await getAuthHeaders({ Accept: "application/json" }),
+      });
+      if (!resultResponse.ok) {
+        const text = await resultResponse.text().catch(() => "");
+        throw new Error(`HTTP ${resultResponse.status}: ${text || resultResponse.statusText}`);
+      }
+
+      const data = (await resultResponse.json()) as Record<string, unknown>;
+      if (!data.analysis_id) data.analysis_id = analysisId;
+      return mapApiToDashboard(data);
+    }
+
+    if (status === "failed" || status === "not_found") {
+      throw new Error(`Analysis job failed with status: ${status}`);
+    }
+
+    await wait(1000);
+  }
+
+  throw new Error("Analysis timed out while waiting for completion.");
 }
 
 export async function interpretAnalysis(
   result: AnalysisResult,
 ): Promise<InterpretAnalysisResponse> {
-  const payload: Record<string, unknown> = {};
-
-  if (result.analysis_run_id) {
-    payload.analysis_run_id = result.analysis_run_id;
-  } else {
-    payload.analysis_result = result;
+  const analysisId = String(result.analysis_id ?? "").trim();
+  if (!analysisId) {
+    throw new Error("Interpretation requires analysis_id from a completed analysis.");
   }
 
-  const response = await fetch(INTERPRET_URL, {
+  const startResponse = await fetch(`${INTERPRET_URL}/${analysisId}`, {
     method: "POST",
-    headers: await getAuthHeaders({
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    }),
-    body: JSON.stringify(payload),
+    headers: await getAuthHeaders({ Accept: "application/json" }),
   });
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
+  if (!startResponse.ok) {
+    const text = await startResponse.text().catch(() => "");
+    throw new Error(`HTTP ${startResponse.status}: ${text || startResponse.statusText}`);
   }
 
-  return (await response.json()) as InterpretAnalysisResponse;
+  const startPayload = (await startResponse.json()) as Record<string, unknown>;
+  const immediate = asRecord(startPayload.interpretation);
+  if (Object.keys(immediate).length > 0 && String(immediate.interpretation_status ?? "") === "completed") {
+    const immediatePayload = asRecord(immediate.interpretation_payload);
+    return {
+      cached: true,
+      analysis_run_id: result.analysis_run_id,
+      model: String(immediate.interpretation_model ?? "gemini"),
+      prompt_version: "v2",
+      report: normalizeInterpretation(immediatePayload),
+    };
+  }
+
+  const maxAttempts = 90;
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const statusResponse = await fetch(`${INTERPRET_URL}/${analysisId}`, {
+      method: "GET",
+      headers: await getAuthHeaders({ Accept: "application/json" }),
+    });
+    if (!statusResponse.ok) {
+      const text = await statusResponse.text().catch(() => "");
+      throw new Error(`HTTP ${statusResponse.status}: ${text || statusResponse.statusText}`);
+    }
+
+    const payload = (await statusResponse.json()) as Record<string, unknown>;
+    const interpretationStatus = String(payload.interpretation_status ?? "").toLowerCase();
+    if (interpretationStatus === "completed") {
+      return {
+        cached: false,
+        analysis_run_id: result.analysis_run_id,
+        model: String(payload.interpretation_model ?? "gemini"),
+        prompt_version: "v2",
+        report: normalizeInterpretation(payload.interpretation_payload),
+      };
+    }
+
+    if (interpretationStatus === "failed") {
+      throw new Error(String(payload.interpretation_error ?? "Interpretation failed."));
+    }
+
+    await wait(1000);
+  }
+
+  throw new Error("Interpretation timed out while waiting for completion.");
 }
 
 const CACHE_PREFIX = "sentinela:analysis:";
@@ -420,6 +649,29 @@ export function isSessionCached(): boolean {
 
 function sanitizeResult(parsed: unknown): AnalysisResult {
   const record = asRecord(parsed);
+  const argosV2 = asRecord(record.argos_v2) as ArgosV2Payload;
+  const argosMetadata = asRecord(argosV2.metadata);
+  const baselineFromMetadata = asRecord(argosMetadata.baseline_comparison);
+  const baselineTop = asRecord(record.baseline_comparison);
+  const baselineComparison =
+    Object.keys(baselineTop).length > 0
+      ? baselineTop
+      : Object.keys(baselineFromMetadata).length > 0
+        ? baselineFromMetadata
+        : undefined;
+  const topBusinessImpact = asRecord(record.business_impact);
+  const argosBusinessImpact = asRecord(argosV2.business_impact);
+  const businessImpact =
+    Object.keys(topBusinessImpact).length > 0
+      ? topBusinessImpact
+      : Object.keys(argosBusinessImpact).length > 0
+        ? argosBusinessImpact
+        : undefined;
+  const executiveSummary =
+    String(record.executive_summary ?? "").trim() ||
+    String(argosV2.executive_summary ?? "").trim() ||
+    undefined;
+
   return {
     engine_version: typeof record.engine_version === "string" ? record.engine_version : undefined,
     consistency_score: normalizePercent(record.consistency_score) ?? 0,
@@ -449,6 +701,12 @@ function sanitizeResult(parsed: unknown): AnalysisResult {
     analysis_id: typeof record.analysis_id === "string" ? record.analysis_id : undefined,
     analysis_run_id:
       typeof record.analysis_run_id === "string" ? record.analysis_run_id : undefined,
+    issues: Array.isArray(record.issues) ? (record.issues as Array<Record<string, unknown>>) : [],
+    insights: Object.keys(asRecord(record.insights)).length > 0 ? asRecord(record.insights) : undefined,
+    argos_v2: Object.keys(argosV2).length > 0 ? argosV2 : undefined,
+    business_impact: businessImpact,
+    executive_summary: executiveSummary,
+    baseline_comparison: baselineComparison,
     _warnings: Array.isArray(record._warnings) ? record._warnings.map(String) : [],
     _cache_key: typeof record._cache_key === "string" ? record._cache_key : undefined,
     _meta: asRecord(record._meta) as AnalysisResult["_meta"],
@@ -457,6 +715,35 @@ function sanitizeResult(parsed: unknown): AnalysisResult {
 
 export function parseConversationsInput(raw: string): unknown[] {
   const trimmed = raw.trim();
+  if (!trimmed) {
+    throw new Error("Dataset input is empty.");
+  }
+
+  const getLineFromPosition = (text: string, position: number) => {
+    return text.slice(0, Math.max(0, position)).split(/\r?\n/).length;
+  };
+
+  const friendlyJsonError = (message: string, text: string) => {
+    const positionMatch = message.match(/position\s+(\d+)/i);
+    const lower = message.toLowerCase();
+
+    if (positionMatch) {
+      const position = Number(positionMatch[1]);
+      const line = getLineFromPosition(text, Number.isFinite(position) ? position : 0);
+      if (lower.includes("expected ','")) {
+        return `Invalid JSON: missing comma at line ${line}.`;
+      }
+      if (lower.includes("unexpected end")) {
+        return `Invalid JSON: missing closing bracket or brace near line ${line}.`;
+      }
+      return `Invalid JSON near line ${line}: ${message}`;
+    }
+
+    if (lower.includes("unexpected end")) {
+      return "Invalid JSON: missing closing bracket or brace.";
+    }
+    return `Invalid JSON: ${message}`;
+  };
 
   try {
     const parsed = JSON.parse(trimmed) as unknown;
@@ -466,7 +753,12 @@ export function parseConversationsInput(raw: string): unknown[] {
     if (parsedRecord && Array.isArray(parsedRecord.conversations)) {
       return parsedRecord.conversations as unknown[];
     }
-  } catch {
+  } catch (error) {
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+      const message = error instanceof Error ? error.message : "Unknown JSON parsing error.";
+      throw new Error(friendlyJsonError(message, trimmed));
+    }
+
     const lines = trimmed.split("\n").filter((line) => line.trim());
 
     if (lines.length >= 2) {
@@ -474,17 +766,17 @@ export function parseConversationsInput(raw: string): unknown[] {
         try {
           return JSON.parse(line) as unknown;
         } catch {
-          throw new Error(`Invalid JSON on line ${index + 1}`);
+          throw new Error(`Invalid JSONL/NDJSON on line ${index + 1}.`);
         }
       });
     }
 
     throw new Error(
-      'JSON must be an array, an object with a "conversations" key, or JSONL format.',
+      'Invalid dataset format. Provide JSON array, {"conversations":[...]} object, JSONL, or NDJSON.',
     );
   }
 
-  throw new Error('JSON must be an array or an object with a "conversations" key.');
+  throw new Error('Invalid dataset format. Provide JSON array or {"conversations":[...]} object.');
 }
 
 export function parseAnalysisImport(raw: string): AnalysisResult {

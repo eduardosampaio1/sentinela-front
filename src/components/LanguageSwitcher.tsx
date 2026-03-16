@@ -6,7 +6,6 @@ interface LanguageSwitcherProps {
 
 const options = [
   { value: "en", label: "EN" },
-  { value: "pt-BR", label: "PT-BR" },
 ] as const;
 
 export default function LanguageSwitcher({ className = "" }: LanguageSwitcherProps) {

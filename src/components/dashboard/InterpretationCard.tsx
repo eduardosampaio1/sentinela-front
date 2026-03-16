@@ -25,6 +25,45 @@ export default function InterpretationCard({
   cached = false,
 }: Props) {
   const { t } = useLanguage();
+  const diagnosis =
+    interpretation.executive_diagnosis ||
+    interpretation.summary ||
+    "The interpretation completed, but no executive summary was returned.";
+  const systemicPattern =
+    interpretation.systemic_pattern ||
+    interpretation.confidence_notes ||
+    "Use the key findings and recommendations below to prioritize investigation.";
+  const mainRisks = Array.isArray(interpretation.main_risks) ? interpretation.main_risks : [];
+  const fallbackRisks =
+    mainRisks.length > 0
+      ? mainRisks
+      : (interpretation.operational_risks ?? []).map((text) => ({
+          title: text,
+          severity: interpretation.risk_level ?? "medium",
+          evidence: text,
+          impact: "May affect consistency, containment, or user trust.",
+        }));
+  const priorityActions = Array.isArray(interpretation.priority_actions)
+    ? interpretation.priority_actions
+    : [];
+  const fallbackActions =
+    priorityActions.length > 0
+      ? priorityActions
+      : (interpretation.recommended_priorities ?? []).map((action, index) => ({
+          priority: index + 1,
+          action,
+          reason: interpretation.key_findings?.[index] ?? "Based on current diagnostics.",
+          expected_effect:
+            interpretation.business_implications?.[index] ??
+            "Expected to reduce risk or improve performance.",
+        }));
+  const strategicRecommendation =
+    interpretation.strategic_recommendation ||
+    interpretation.recommended_priorities?.[0] ||
+    interpretation.business_implications?.[0] ||
+    diagnosis;
+  const keyFindings = interpretation.key_findings ?? [];
+  const businessImplications = interpretation.business_implications ?? [];
 
   return (
     <div className="mt-5 rounded-3xl border border-primary/20 bg-primary/5 p-4 shadow-sm sm:p-5">
@@ -46,10 +85,10 @@ export default function InterpretationCard({
           </span>
         </div>
         <h3 className="break-words text-xl font-semibold text-foreground sm:text-2xl">
-          {interpretation.executive_diagnosis}
+          {diagnosis}
         </h3>
         <p className="text-sm leading-6 text-muted-foreground">
-          {interpretation.systemic_pattern}
+          {systemicPattern}
         </p>
       </div>
 
@@ -61,7 +100,7 @@ export default function InterpretationCard({
           </div>
 
           <div className="space-y-3">
-            {interpretation.main_risks.length > 0 ? interpretation.main_risks.map((risk, index) => (
+            {fallbackRisks.length > 0 ? fallbackRisks.map((risk, index) => (
               <div
                 key={`${risk.title}-${index}`}
                 className={`rounded-2xl border p-4 ${severityTone(risk.severity)}`}
@@ -92,7 +131,7 @@ export default function InterpretationCard({
           </div>
 
           <div className="space-y-3">
-            {interpretation.priority_actions.length > 0 ? interpretation.priority_actions.map((action) => (
+            {fallbackActions.length > 0 ? fallbackActions.map((action) => (
               <div key={`${action.priority}-${action.action}`} className="rounded-2xl border border-border/70 p-4">
                 <div className="flex items-center gap-2">
                   <div className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-xs text-muted-foreground">
@@ -116,10 +155,35 @@ export default function InterpretationCard({
         </div>
       </div>
 
+      {keyFindings.length > 0 || businessImplications.length > 0 ? (
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          {keyFindings.length > 0 ? (
+            <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
+              <div className="text-sm font-medium text-foreground">Key Findings</div>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                {keyFindings.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {businessImplications.length > 0 ? (
+            <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
+              <div className="text-sm font-medium text-foreground">Business Implications</div>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                {businessImplications.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
         <div className="text-sm font-medium text-emerald-300">{t("interpretation.strategicRecommendation")}</div>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          {interpretation.strategic_recommendation}
+          {strategicRecommendation}
         </p>
       </div>
     </div>
