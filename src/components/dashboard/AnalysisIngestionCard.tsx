@@ -20,6 +20,7 @@ import { parseConversationsInput } from "@/lib/api";
 interface AnalysisIngestionCardProps {
   loading: boolean;
   hasResult: boolean;
+  openComposerSignal?: number;
   onFileUpload: (file: File) => void;
   onRunFromPaste: (text: string) => void;
   onImportResult: (text: string) => void;
@@ -38,6 +39,7 @@ const EXAMPLE_DATASET = `[
 export default function AnalysisIngestionCard({
   loading,
   hasResult,
+  openComposerSignal = 0,
   onFileUpload,
   onRunFromPaste,
   onImportResult,
@@ -55,6 +57,11 @@ export default function AnalysisIngestionCard({
   useEffect(() => {
     if (hasResult && !loading) setCollapsed(true);
   }, [hasResult, loading]);
+
+  useEffect(() => {
+    if (openComposerSignal <= 0) return;
+    setCollapsed(false);
+  }, [openComposerSignal]);
 
   useEffect(() => {
     const trimmed = rawInput.trim();

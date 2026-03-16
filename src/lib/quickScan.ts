@@ -1,5 +1,17 @@
-const API_BASE_URL =
-  import.meta.env.VITE_SENTINELA_API_URL || "https://sentinela-gateway.onrender.com";
+const DEFAULT_GATEWAY_API_URL = "https://sentinela-gateway.onrender.com";
+
+function normalizeApiBaseUrl(value: unknown): string {
+  return String(value ?? "").trim().replace(/\/+$/, "");
+}
+
+const configuredApiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_SENTINELA_API_URL);
+const API_BASE_CANDIDATES = Array.from(
+  new Set(
+    [configuredApiBaseUrl, DEFAULT_GATEWAY_API_URL]
+      .map(normalizeApiBaseUrl)
+      .filter(Boolean),
+  ),
+);
 
 export interface QuickScanConfidenceFactors {
   sampleComponent: number;
@@ -286,23 +298,27 @@ export async function runQuickScan(text: string): Promise<QuickScanResult> {
   const trimmed = text.trim();
   if (!trimmed) return fallbackQuickScan(trimmed);
 
-  try {
-    const response = await fetch(`${API_BASE_URL}/quick-scan`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ text: trimmed }),
-    });
+  for (const baseUrl of API_BASE_CANDIDATES) {
+    try {
+      const response = await fetch(`${baseUrl}/quick-scan`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ text: trimmed }),
+      });
 
-    if (!response.ok) {
-      return fallbackQuickScan(trimmed);
+      if (!response.ok) {
+        continue;
+      }
+
+      const payload = await response.json();
+      return normalizeQuickScanPayload(payload);
+    } catch {
+      continue;
     }
-
-    const payload = await response.json();
-    return normalizeQuickScanPayload(payload);
-  } catch {
-    return fallbackQuickScan(trimmed);
   }
+
+  return fallbackQuickScan(trimmed);
 }
