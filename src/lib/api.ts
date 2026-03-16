@@ -1,9 +1,23 @@
 import { supabase } from "@/lib/supabase";
 
-const API_BASE_URL =
-  import.meta.env.VITE_SENTINELA_API_URL || "https://sentinela-gateway.onrender.com";
-const ANALYZE_URL = `${API_BASE_URL}/analyses`;
-const INTERPRET_URL = `${API_BASE_URL}/interpret`;
+const DEFAULT_GATEWAY_API_URL = "https://sentinela-gateway.onrender.com";
+
+function normalizeApiBaseUrl(value: unknown): string {
+  return String(value ?? "").trim().replace(/\/+$/, "");
+}
+
+const configuredApiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_SENTINELA_API_URL);
+const API_BASE_CANDIDATES = Array.from(
+  new Set(
+    [configuredApiBaseUrl, DEFAULT_GATEWAY_API_URL]
+      .map(normalizeApiBaseUrl)
+      .filter(Boolean),
+  ),
+);
+
+function shouldFallbackToNextBase(status: number): boolean {
+  return status === 404 || status === 405 || status === 502 || status === 503 || status === 504;
+}
 
 export interface AnalysisAlert {
   severity: string;
@@ -291,6 +305,94 @@ function wait(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+function summarizeHttpError(status: number, bodyText: string, fallbackMessage: string): string {
+  const normalized = bodyText.trim();
+  if (normalized.length === 0) return `HTTP ${status}: ${fallbackMessage}`;
+  return `HTTP ${status}: ${normalized}`;
+}
+
+async function createAnalysisWithFallback(
+  formData: FormData,
+): Promise<{ analysisId: string; baseUrl: string }> {
+  const headers = await getAuthHeaders({ Accept: "application/json" });
+  const attemptErrors: string[] = [];
+
+  for (const baseUrl of API_BASE_CANDIDATES) {
+    try {
+      const response = await fetch(`${baseUrl}/analyses/`, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        const summary = summarizeHttpError(response.status, text, response.statusText);
+        attemptErrors.push(`[${baseUrl}] ${summary}`);
+        if (shouldFallbackToNextBase(response.status)) {
+          continue;
+        }
+        throw new Error(summary);
+      }
+
+      const created = (await response.json()) as Record<string, unknown>;
+      const analysisId = String(created.analysis_id ?? "").trim();
+      if (!analysisId) {
+        throw new Error("Analysis API did not return analysis_id.");
+      }
+
+      return { analysisId, baseUrl };
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("HTTP")) {
+        throw error;
+      }
+      attemptErrors.push(`[${baseUrl}] ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  throw new Error(
+    `Analysis endpoint unavailable on configured API base(s): ${attemptErrors.join(" | ")}`,
+  );
+}
+
+async function startInterpretationWithFallback(
+  analysisId: string,
+): Promise<{ baseUrl: string; payload: Record<string, unknown> }> {
+  const headers = await getAuthHeaders({ Accept: "application/json" });
+  const attemptErrors: string[] = [];
+
+  for (const baseUrl of API_BASE_CANDIDATES) {
+    try {
+      const response = await fetch(`${baseUrl}/interpret/${analysisId}`, {
+        method: "POST",
+        headers,
+      });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        const summary = summarizeHttpError(response.status, text, response.statusText);
+        attemptErrors.push(`[${baseUrl}] ${summary}`);
+        if (shouldFallbackToNextBase(response.status)) {
+          continue;
+        }
+        throw new Error(summary);
+      }
+
+      const payload = (await response.json()) as Record<string, unknown>;
+      return { baseUrl, payload };
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("HTTP")) {
+        throw error;
+      }
+      attemptErrors.push(`[${baseUrl}] ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  throw new Error(
+    `Interpretation endpoint unavailable on configured API base(s): ${attemptErrors.join(" | ")}`,
+  );
+}
+
 export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult {
   const warnings: string[] = [];
   const field = (key: string, fallback: unknown = undefined) => {
@@ -481,27 +583,11 @@ export async function analyzeConversations(conversations: unknown[]): Promise<An
   const blob = new Blob([jsonlContent], { type: "application/x-ndjson" });
   const formData = new FormData();
   formData.append("file", blob, "batch.jsonl");
-
-  const createResponse = await fetch(`${ANALYZE_URL}/`, {
-    method: "POST",
-    headers: await getAuthHeaders({ Accept: "application/json" }),
-    body: formData,
-  });
-
-  if (!createResponse.ok) {
-    const text = await createResponse.text().catch(() => "");
-    throw new Error(`HTTP ${createResponse.status}: ${text || createResponse.statusText}`);
-  }
-
-  const created = (await createResponse.json()) as Record<string, unknown>;
-  const analysisId = String(created.analysis_id ?? "").trim();
-  if (!analysisId) {
-    throw new Error("Analysis API did not return analysis_id.");
-  }
+  const { analysisId, baseUrl } = await createAnalysisWithFallback(formData);
 
   const maxAttempts = 90;
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const statusResponse = await fetch(`${ANALYZE_URL}/${analysisId}`, {
+    const statusResponse = await fetch(`${baseUrl}/analyses/${analysisId}`, {
       method: "GET",
       headers: await getAuthHeaders({ Accept: "application/json" }),
     });
@@ -515,7 +601,7 @@ export async function analyzeConversations(conversations: unknown[]): Promise<An
     const status = String(statusPayload.status ?? "").toLowerCase();
 
     if (status === "completed") {
-      const resultResponse = await fetch(`${ANALYZE_URL}/${analysisId}/result`, {
+      const resultResponse = await fetch(`${baseUrl}/analyses/${analysisId}/result`, {
         method: "GET",
         headers: await getAuthHeaders({ Accept: "application/json" }),
       });
@@ -546,17 +632,7 @@ export async function interpretAnalysis(
   if (!analysisId) {
     throw new Error("Interpretation requires analysis_id from a completed analysis.");
   }
-
-  const startResponse = await fetch(`${INTERPRET_URL}/${analysisId}`, {
-    method: "POST",
-    headers: await getAuthHeaders({ Accept: "application/json" }),
-  });
-  if (!startResponse.ok) {
-    const text = await startResponse.text().catch(() => "");
-    throw new Error(`HTTP ${startResponse.status}: ${text || startResponse.statusText}`);
-  }
-
-  const startPayload = (await startResponse.json()) as Record<string, unknown>;
+  const { baseUrl, payload: startPayload } = await startInterpretationWithFallback(analysisId);
   const immediate = asRecord(startPayload.interpretation);
   if (Object.keys(immediate).length > 0 && String(immediate.interpretation_status ?? "") === "completed") {
     const immediatePayload = asRecord(immediate.interpretation_payload);
@@ -571,7 +647,7 @@ export async function interpretAnalysis(
 
   const maxAttempts = 90;
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const statusResponse = await fetch(`${INTERPRET_URL}/${analysisId}`, {
+    const statusResponse = await fetch(`${baseUrl}/interpret/${analysisId}`, {
       method: "GET",
       headers: await getAuthHeaders({ Accept: "application/json" }),
     });

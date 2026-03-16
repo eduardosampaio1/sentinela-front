@@ -2,14 +2,22 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import QuickScanPanel from "@/components/dashboard-v2/QuickScanPanel";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { buildWorkspaceHomePath } from "@/lib/workspaceRouting";
 
 export default function QuickScanStandalonePage() {
   const navigate = useNavigate();
+  const { user, workspace } = useAuth();
+
+  const homePath = buildWorkspaceHomePath({
+    email: user?.email,
+    workspace,
+  });
 
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-5xl space-y-5 px-4 py-8 sm:px-6">
-        <Button variant="ghost" onClick={() => navigate("/home")} className="px-2">
+        <Button variant="ghost" onClick={() => navigate(homePath)} className="px-2">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
         </Button>
@@ -23,7 +31,7 @@ export default function QuickScanStandalonePage() {
 
         <QuickScanPanel
           showDeepAnalysisCta
-          onRunDeeperAnalysis={() => navigate("/home?start=dataset")}
+          onRunDeeperAnalysis={() => navigate(`${homePath}?start=dataset`)}
         />
       </div>
     </div>

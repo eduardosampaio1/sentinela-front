@@ -49,6 +49,14 @@ const App = () => (
               }
             />
             <Route
+              path="/:projectsSlug/:workspaceSlug"
+              element={
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/quick-scan"
               element={
                 <ProtectedRoute>

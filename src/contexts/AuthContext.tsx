@@ -31,6 +31,7 @@ interface AuthContextValue {
   createWorkspace: (name: string) => Promise<Workspace | null>;
   renameWorkspace: (workspaceId: string, name: string) => Promise<void>;
   deleteWorkspace: (workspaceId: string) => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -136,6 +137,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [syncWorkspaceState, user, workspace?.id, workspaces]
   );
 
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
+    setWorkspace(null);
+    setWorkspaces([]);
+    setStoredWorkspaceId(null);
+  }, []);
+
   useEffect(() => {
     let mounted = true;
 
@@ -203,6 +211,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       createWorkspace,
       renameWorkspace,
       deleteWorkspace,
+      signOut,
     }),
     [
       user,
@@ -216,6 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       createWorkspace,
       renameWorkspace,
       deleteWorkspace,
+      signOut,
     ]
   );
 

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Clock3, Compass, FlaskConical, UploadCloud } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Clock3, Compass, FlaskConical, LogOut, UploadCloud } from "lucide-react";
 import AnalysisIngestionCard from "@/components/dashboard/AnalysisIngestionCard";
 import AnalysisLoadingOverlay from "@/components/dashboard/AnalysisLoadingOverlay";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   type AnalysisRunSummary,
 } from "@/lib/analysisRuns";
 import type { AnalysisResult } from "@/lib/api";
+import { buildWorkspaceHomePath } from "@/lib/workspaceRouting";
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -27,9 +28,10 @@ function normalizeWorkspaceName(name: string) {
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
-  const { workspace, workspaces, workspaceLoading, createWorkspace } = useAuth();
+  const { workspace, workspaces, workspaceLoading, createWorkspace, signOut, user } = useAuth();
   const {
     analysisCompleted,
     historyResolved,
@@ -47,12 +49,22 @@ export default function HomePage() {
   const [loadingRecentRuns, setLoadingRecentRuns] = useState(false);
   const [recentRunsError, setRecentRunsError] = useState<string | null>(null);
   const [datasetModeOpen, setDatasetModeOpen] = useState(false);
+  const [openComposerSignal, setOpenComposerSignal] = useState(0);
   const [ensuringWorkspace, setEnsuringWorkspace] = useState(false);
+  const ingestionCardRef = useRef<HTMLDivElement | null>(null);
 
   const startMode = searchParams.get("start");
   const workspaceDisplayName = useMemo(
     () => normalizeWorkspaceName(workspace?.name ?? "Workspace"),
     [workspace?.name],
+  );
+  const canonicalHomePath = useMemo(
+    () =>
+      buildWorkspaceHomePath({
+        email: user?.email,
+        workspace,
+      }),
+    [user?.email, workspace],
   );
 
   const loadRecentRuns = useCallback(async () => {
@@ -77,6 +89,13 @@ export default function HomePage() {
   useEffect(() => {
     void loadRecentRuns();
   }, [loadRecentRuns]);
+
+  useEffect(() => {
+    if (!workspace || workspaceLoading) return;
+    if (location.pathname === canonicalHomePath) return;
+    const next = `${canonicalHomePath}${location.search || ""}`;
+    navigate(next, { replace: true });
+  }, [canonicalHomePath, location.pathname, location.search, navigate, workspace, workspaceLoading]);
 
   const ensureWorkspaceForDataset = useCallback(async () => {
     if (workspace?.id) return workspace.id;
@@ -104,6 +123,11 @@ export default function HomePage() {
     try {
       await ensureWorkspaceForDataset();
       setDatasetModeOpen(true);
+      setOpenComposerSignal((current) => current + 1);
+      toast({
+        title: "Dataset input ready",
+        description: "Upload a dataset file or paste JSON to start analysis.",
+      });
     } catch (error) {
       toast({
         title: "Workspace setup failed",
@@ -112,6 +136,17 @@ export default function HomePage() {
       });
     }
   }, [ensureWorkspaceForDataset, toast]);
+
+  useEffect(() => {
+    if (!datasetModeOpen) return;
+    const timer = window.setTimeout(() => {
+      ingestionCardRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 60);
+    return () => window.clearTimeout(timer);
+  }, [datasetModeOpen, openComposerSignal]);
 
   useEffect(() => {
     if (startMode !== "dataset") return;
@@ -145,6 +180,11 @@ export default function HomePage() {
     }
   }
 
+  async function handleLogout() {
+    await signOut();
+    navigate("/login", { replace: true });
+  }
+
   if (workspaceLoading || !historyResolved) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -158,6 +198,12 @@ export default function HomePage() {
       <AnalysisLoadingOverlay open={loading} message={loadingMessage} progress={loadingProgress} />
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-6">
         <section className="rounded-3xl border border-border bg-card/80 p-6 shadow-sm sm:p-8">
+          <div className="mb-4 flex justify-end">
+            <Button variant="outline" size="sm" onClick={() => void handleLogout()}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
           <p className="text-xs uppercase tracking-[0.14em] text-primary">Sentinela Home</p>
           <h1 className="mt-2 text-3xl font-semibold text-foreground">Understand your AI behavior before incidents scale</h1>
           <p className="mt-3 max-w-4xl text-sm text-muted-foreground">
@@ -205,13 +251,16 @@ export default function HomePage() {
         </section>
 
         {datasetModeOpen ? (
-          <AnalysisIngestionCard
-            loading={loading}
-            hasResult={Boolean(result)}
-            onFileUpload={handleFileUpload}
-            onRunFromPaste={handlePasteAnalysis}
-            onImportResult={importAnalysisResult}
-          />
+          <div ref={ingestionCardRef}>
+            <AnalysisIngestionCard
+              loading={loading}
+              hasResult={Boolean(result)}
+              openComposerSignal={openComposerSignal}
+              onFileUpload={handleFileUpload}
+              onRunFromPaste={handlePasteAnalysis}
+              onImportResult={importAnalysisResult}
+            />
+          </div>
         ) : null}
 
         <section className="rounded-3xl border border-border bg-card/80 p-6 shadow-sm">
