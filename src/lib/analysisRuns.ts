@@ -1,5 +1,15 @@
 import { supabase } from "./supabase";
 
+export interface AnalysisRunSummary {
+  id: string;
+  created_at: string;
+  engine_version: string | null;
+  risk_level: string | null;
+  n_conversations: number | null;
+  n_intents: number | null;
+  raw_result?: Record<string, unknown> | null;
+}
+
 export async function saveAnalysisRun(params: {
   workspaceId: string;
   createdBy: string;
@@ -62,4 +72,16 @@ export async function getAnalysisRunById(runId: string) {
 
   if (error) throw error;
   return data;
+}
+
+export async function listAnalysisRuns(workspaceId: string, limit = 6) {
+  const { data, error } = await supabase
+    .from("analysis_runs")
+    .select("id, created_at, engine_version, risk_level, n_conversations, n_intents, raw_result")
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (Array.isArray(data) ? data : []) as AnalysisRunSummary[];
 }

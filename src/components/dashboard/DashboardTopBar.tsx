@@ -1,18 +1,30 @@
 import { Menu } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useAuth } from "@/contexts/AuthContext";
 import { useAnalysis } from "@/contexts/AnalysisContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import WorkspaceSelector from "@/components/dashboard/WorkspaceSelector";
 
 interface DashboardTopBarProps {
   onOpenSidebar: () => void;
 }
 
 const DashboardTopBar = ({ onOpenSidebar }: DashboardTopBarProps) => {
-  const { workspace } = useAuth();
+  const location = useLocation();
   const { result } = useAnalysis();
   const { t } = useLanguage();
+
+  const sectionLabel = (() => {
+    if (location.pathname.startsWith("/dashboard/analysis")) return "Analysis";
+    if (location.pathname.startsWith("/dashboard/guardrails")) return "Guardrails";
+    if (location.pathname.startsWith("/dashboard/diagnostics")) return "Diagnostics";
+    if (location.pathname.startsWith("/dashboard/optimization")) return "Optimization";
+    if (location.pathname.startsWith("/dashboard/history")) return "History";
+    if (location.pathname.startsWith("/dashboard/workspaces")) return "Workspaces";
+    if (location.pathname.startsWith("/dashboard/settings")) return "Settings";
+    return "Dashboard";
+  })();
 
   return (
     <header className="sticky top-0 z-30 flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur sm:px-6">
@@ -25,11 +37,9 @@ const DashboardTopBar = ({ onOpenSidebar }: DashboardTopBarProps) => {
         >
           <Menu className="h-4 w-4" />
         </button>
-        <div>
-          <div className="text-sm font-medium text-foreground">
-            {workspace?.name ?? t("dashboard.workspaceFallback")}
-          </div>
-          <div className="text-xs text-muted-foreground">{result ? t("common.overview") : t("dashboard.firstRunBadge")}</div>
+        <div className="min-w-0">
+          <WorkspaceSelector />
+          <div className="text-xs text-muted-foreground">{result ? sectionLabel : t("dashboard.firstRunBadge")}</div>
         </div>
       </div>
 

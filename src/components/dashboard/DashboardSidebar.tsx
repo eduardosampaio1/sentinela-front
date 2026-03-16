@@ -1,13 +1,13 @@
 import { NavLink as RouterNavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
+  Radar,
+  ShieldAlert,
+  Activity,
+  BrainCircuit,
   History,
-  MessageSquare,
-  Target,
-  BarChart3,
-  FileText,
+  FolderOpen,
   Settings,
-  AlertTriangle,
   LogOut,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -15,14 +15,14 @@ import { useAnalysis } from "@/contexts/AnalysisContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const navItems = [
-  { titleKey: "common.overview", url: "/dashboard", icon: LayoutDashboard, availableWithoutResult: true },
-  { titleKey: "common.history", url: "/dashboard/history", icon: History },
-  { titleKey: "common.conversations", url: "/dashboard/conversations", icon: MessageSquare },
-  { titleKey: "common.intents", url: "/dashboard/intents", icon: Target },
-  { titleKey: "common.metrics", url: "/dashboard/metrics", icon: BarChart3 },
-  { titleKey: "common.alerts", url: "/dashboard/alerts", icon: AlertTriangle },
-  { titleKey: "common.reports", url: "/dashboard/reports", icon: FileText },
-  { titleKey: "common.settings", url: "/dashboard/settings", icon: Settings, availableWithoutResult: true },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, availableWithoutResult: true },
+  { title: "Analysis", url: "/dashboard/analysis", icon: Radar, availableWithoutResult: true },
+  { title: "Guardrails", url: "/dashboard/guardrails", icon: ShieldAlert, availableWithoutResult: true },
+  { title: "Diagnostics", url: "/dashboard/diagnostics", icon: Activity, availableWithoutResult: true },
+  { title: "Optimization", url: "/dashboard/optimization", icon: BrainCircuit, availableWithoutResult: true },
+  { title: "History", url: "/dashboard/history", icon: History, availableWithoutResult: true },
+  { title: "Workspaces", url: "/dashboard/workspaces", icon: FolderOpen, availableWithoutResult: true },
+  { title: "Settings", url: "/dashboard/settings", icon: Settings, availableWithoutResult: true },
 ];
 
 interface DashboardSidebarProps {
@@ -42,7 +42,7 @@ const DashboardSidebar = ({ mobileOpen, onClose }: DashboardSidebarProps) => {
       await supabase.auth.signOut();
       navigate("/login");
     } catch (error) {
-      console.error("Erro ao sair:", error);
+      console.error("Sign out failed:", error);
     }
   }
 
@@ -60,7 +60,7 @@ const DashboardSidebar = ({ mobileOpen, onClose }: DashboardSidebarProps) => {
         }`}
       >
       <div className="flex h-14 items-center border-b border-sidebar-border px-5">
-        <span className="text-base font-bold text-sidebar-accent-foreground">Sentinela</span>
+        <span className="text-base font-bold text-sidebar-accent-foreground">Sentinela AI</span>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
@@ -88,7 +88,7 @@ const DashboardSidebar = ({ mobileOpen, onClose }: DashboardSidebarProps) => {
               }`}
             >
               <item.icon className="h-4 w-4" />
-              {t(item.titleKey)}
+              {item.title}
             </RouterNavLink>
           );
         })}
