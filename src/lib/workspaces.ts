@@ -273,27 +273,34 @@ export async function renameWorkspace(workspaceId: string, name: string) {
     updated_at: new Date().toISOString(),
   };
 
-  let { data, error } = await supabase
+  let { error } = await supabase
     .from("workspaces")
     .update(payload)
     .eq("id", workspaceId)
-    .is("deleted_at", null)
-    .select()
-    .single();
+    .is("deleted_at", null);
 
   if (error && isSchemaError(error)) {
     const fallback = await supabase
       .from("workspaces")
       .update({ name: normalizedName })
-      .eq("id", workspaceId)
-      .select()
-      .single();
-    data = fallback.data as WorkspaceRow;
+      .eq("id", workspaceId);
     error = fallback.error;
   }
 
   if (error) throw error;
-  return normalizeWorkspace((data ?? {}) as WorkspaceRow);
+
+  const confirmation = await supabase
+    .from("workspaces")
+    .select("id,name")
+    .eq("id", workspaceId)
+    .maybeSingle();
+
+  if (confirmation.error) throw confirmation.error;
+  if (!confirmation.data || String(confirmation.data.name ?? "").trim() !== normalizedName) {
+    throw new Error(
+      "Workspace rename was not persisted. Ensure update policy is enabled for workspace owners.",
+    );
+  }
 }
 
 export async function softDeleteWorkspace(workspaceId: string) {
@@ -312,6 +319,18 @@ export async function softDeleteWorkspace(workspaceId: string) {
     return;
   }
   if (error) throw error;
+
+  const confirmation = await supabase
+    .from("workspaces")
+    .select("id,deleted_at")
+    .eq("id", workspaceId)
+    .maybeSingle();
+  if (confirmation.error) throw confirmation.error;
+  if (!confirmation.data || !confirmation.data.deleted_at) {
+    throw new Error(
+      "Workspace delete was not persisted. Ensure update policy is enabled for workspace owners.",
+    );
+  }
 }
 
 export async function ensureUserWorkspace(

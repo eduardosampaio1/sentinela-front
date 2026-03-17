@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Clock3, Compass, FlaskConical, LogOut, UploadCloud } from "lucide-react";
 import AnalysisIngestionCard from "@/components/dashboard/AnalysisIngestionCard";
 import AnalysisLoadingOverlay from "@/components/dashboard/AnalysisLoadingOverlay";
@@ -13,7 +13,7 @@ import {
   type AnalysisRunSummary,
 } from "@/lib/analysisRuns";
 import type { AnalysisResult } from "@/lib/api";
-import { buildWorkspaceHomePath } from "@/lib/workspaceRouting";
+import { buildWorkspaceHomePath, workspaceSlug } from "@/lib/workspaceRouting";
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -29,9 +29,10 @@ function normalizeWorkspaceName(name: string) {
 export default function HomePage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams<{ projectsSlug?: string; workspaceSlug?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
-  const { workspace, workspaces, workspaceLoading, createWorkspace, signOut, user } = useAuth();
+  const { workspace, workspaces, workspaceLoading, createWorkspace, signOut, user, switchWorkspace } = useAuth();
   const {
     analysisCompleted,
     historyResolved,
@@ -66,6 +67,20 @@ export default function HomePage() {
       }),
     [user?.email, workspace],
   );
+  const routeWorkspaceSlug = useMemo(
+    () => String(params.workspaceSlug ?? "").trim().toLowerCase(),
+    [params.workspaceSlug],
+  );
+  const activeWorkspaceSlug = useMemo(
+    () => workspaceSlug(workspace).trim().toLowerCase(),
+    [workspace],
+  );
+  const workspaceSlugMismatch = Boolean(
+    routeWorkspaceSlug &&
+      workspace &&
+      activeWorkspaceSlug &&
+      activeWorkspaceSlug !== routeWorkspaceSlug,
+  );
 
   const loadRecentRuns = useCallback(async () => {
     if (!workspace?.id) {
@@ -91,11 +106,29 @@ export default function HomePage() {
   }, [loadRecentRuns]);
 
   useEffect(() => {
+    if (!routeWorkspaceSlug || workspaceLoading || workspaces.length === 0) return;
+    const matched = workspaces.find(
+      (item) => workspaceSlug(item).trim().toLowerCase() === routeWorkspaceSlug,
+    );
+    if (!matched || matched.id === workspace?.id) return;
+    void switchWorkspace(matched.id);
+  }, [routeWorkspaceSlug, switchWorkspace, workspace?.id, workspaceLoading, workspaces]);
+
+  useEffect(() => {
     if (!workspace || workspaceLoading) return;
+    if (workspaceSlugMismatch) return;
     if (location.pathname === canonicalHomePath) return;
     const next = `${canonicalHomePath}${location.search || ""}`;
     navigate(next, { replace: true });
-  }, [canonicalHomePath, location.pathname, location.search, navigate, workspace, workspaceLoading]);
+  }, [
+    canonicalHomePath,
+    location.pathname,
+    location.search,
+    navigate,
+    workspace,
+    workspaceLoading,
+    workspaceSlugMismatch,
+  ]);
 
   const ensureWorkspaceForDataset = useCallback(async () => {
     if (workspace?.id) return workspace.id;

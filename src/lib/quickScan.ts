@@ -7,7 +7,7 @@ function normalizeApiBaseUrl(value: unknown): string {
 const configuredApiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_SENTINELA_API_URL);
 const API_BASE_CANDIDATES = Array.from(
   new Set(
-    [configuredApiBaseUrl, DEFAULT_GATEWAY_API_URL]
+    [DEFAULT_GATEWAY_API_URL, configuredApiBaseUrl]
       .map(normalizeApiBaseUrl)
       .filter(Boolean),
   ),

@@ -106,15 +106,6 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   }, [loading]);
 
   useEffect(() => {
-    const cached = loadResult();
-    if (cached && isSessionCached()) {
-      setResult(cached);
-      setDataSource("cached");
-      setHasHistory(true);
-    }
-  }, []);
-
-  useEffect(() => {
     if (!workspace?.id) {
       setHasHistory(false);
       setResult(null);
@@ -124,8 +115,19 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     }
 
     setHistoryResolved(false);
+    setHasHistory(false);
+    setResult(null);
+    setDataSource("fresh");
+
     const storageKey = `sentinela:history:${workspace.id}`;
     const localFlag = window.localStorage.getItem(storageKey) === "1";
+    const cachedWorkspaceResult = loadResult(workspace.id);
+    const hasScopedSessionCache = isSessionCached(workspace.id);
+    if (cachedWorkspaceResult && hasScopedSessionCache) {
+      setResult(cachedWorkspaceResult);
+      setDataSource("cached");
+      setHasHistory(true);
+    }
     if (localFlag) {
       setHasHistory(true);
     }
@@ -140,11 +142,11 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
           window.localStorage.setItem(storageKey, "1");
           if (latestRun.raw_result && typeof latestRun.raw_result === "object") {
             const latestResult = latestRun.raw_result as AnalysisResult;
-            saveResult(latestResult);
+            saveResult(latestResult, undefined, workspace.id);
             setResult(latestResult);
             setDataSource("cached");
           }
-        } else if (!localFlag) {
+        } else if (!localFlag && !hasScopedSessionCache) {
           setHasHistory(false);
           setResult(null);
           setDataSource("fresh");
@@ -200,7 +202,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         const inputHash = await hashDataset(conversationsToJsonl(conversations));
 
         setResult(apiResult);
-        saveResult(apiResult, inputHash);
+        saveResult(apiResult, inputHash, workspace.id);
         setDataSource("fresh");
         markHasHistory();
         setActiveJob(null);
@@ -289,7 +291,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
 
         window.setTimeout(async () => {
           try {
-            saveResult(mapped);
+            saveResult(mapped, undefined, workspace?.id);
             setResult(mapped);
             setDataSource("fresh");
             markHasHistory();
@@ -335,11 +337,11 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadStoredAnalysis = useCallback((analysis: AnalysisResult) => {
-    saveResult(analysis);
+    saveResult(analysis, undefined, workspace?.id);
     setResult(analysis);
     setDataSource("cached");
     markHasHistory();
-  }, [markHasHistory]);
+  }, [markHasHistory, workspace?.id]);
 
   const value = useMemo(
     () => ({

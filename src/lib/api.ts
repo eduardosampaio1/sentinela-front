@@ -9,7 +9,7 @@ function normalizeApiBaseUrl(value: unknown): string {
 const configuredApiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_SENTINELA_API_URL);
 const API_BASE_CANDIDATES = Array.from(
   new Set(
-    [configuredApiBaseUrl, DEFAULT_GATEWAY_API_URL]
+    [DEFAULT_GATEWAY_API_URL, configuredApiBaseUrl]
       .map(normalizeApiBaseUrl)
       .filter(Boolean),
   ),
@@ -679,7 +679,14 @@ export async function interpretAnalysis(
 }
 
 const CACHE_PREFIX = "sentinela:analysis:";
-const LAST_KEY_STORAGE = "sentinela:last_cache_key";
+const LAST_KEY_STORAGE_PREFIX = "sentinela:last_cache_key";
+
+function workspaceScopedLastKey(workspaceId?: string | null): string {
+  if (workspaceId && workspaceId.trim()) {
+    return `${LAST_KEY_STORAGE_PREFIX}:${workspaceId.trim()}`;
+  }
+  return LAST_KEY_STORAGE_PREFIX;
+}
 
 function cacheKeyFor(result: AnalysisResult): string {
   return CACHE_PREFIX + (result._cache_key || result.analysis_id || "latest");
@@ -693,17 +700,22 @@ export function hashDataset(jsonlContent: string): string {
   return Math.abs(hash).toString(36);
 }
 
-export function saveResult(result: AnalysisResult, inputHash?: string) {
+export function saveResult(
+  result: AnalysisResult,
+  inputHash?: string,
+  workspaceId?: string | null,
+) {
   const next = { ...result };
   if (inputHash) next._cache_key = inputHash;
 
   const key = cacheKeyFor(next);
   sessionStorage.setItem(key, JSON.stringify(next));
-  sessionStorage.setItem(LAST_KEY_STORAGE, key);
+  sessionStorage.setItem(workspaceScopedLastKey(workspaceId), key);
 }
 
-export function loadResult(): AnalysisResult | null {
-  const lastKey = sessionStorage.getItem(LAST_KEY_STORAGE);
+export function loadResult(workspaceId?: string | null): AnalysisResult | null {
+  const scopedKey = workspaceScopedLastKey(workspaceId);
+  const lastKey = sessionStorage.getItem(scopedKey);
   if (!lastKey) return null;
 
   const raw = sessionStorage.getItem(lastKey);
@@ -718,8 +730,8 @@ export function loadResult(): AnalysisResult | null {
 
 export const loadLastResult = loadResult;
 
-export function isSessionCached(): boolean {
-  const lastKey = sessionStorage.getItem(LAST_KEY_STORAGE);
+export function isSessionCached(workspaceId?: string | null): boolean {
+  const lastKey = sessionStorage.getItem(workspaceScopedLastKey(workspaceId));
   return !!lastKey && !!sessionStorage.getItem(lastKey);
 }
 
