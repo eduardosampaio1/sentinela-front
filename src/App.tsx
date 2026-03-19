@@ -8,6 +8,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const HomePage = lazy(() => import("./pages/HomePage"));
+const HomeWelcomePage = lazy(() => import("./pages/HomeWelcomePage"));
+const HomeDeepPage = lazy(() => import("./pages/HomeDeepPage"));
 const QuickScanStandalonePage = lazy(() => import("./pages/QuickScanStandalonePage"));
 const DashboardLayout = lazy(() => import("./pages/DashboardLayout"));
 const DashboardOverview = lazy(() => import("./pages/DashboardOverview"));
@@ -49,6 +51,22 @@ const App = () => (
               }
             />
             <Route
+              path="/home/welcome"
+              element={
+                <ProtectedRoute>
+                  <HomeWelcomePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/home/deep"
+              element={
+                <ProtectedRoute>
+                  <HomeDeepPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/:projectsSlug/:workspaceSlug"
               element={
                 <ProtectedRoute>
@@ -61,6 +79,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <QuickScanStandalonePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspaces"
+              element={
+                <ProtectedRoute>
+                  <WorkspacesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/manage-context"
+              element={
+                <ProtectedRoute>
+                  <Navigate to="/workspaces" replace />
                 </ProtectedRoute>
               }
             />
@@ -86,7 +120,8 @@ const App = () => (
               <Route path="nomos" element={<Navigate to="/dashboard/diagnostics" replace />} />
               <Route path="metis" element={<Navigate to="/dashboard/optimization" replace />} />
               <Route path="history" element={<HistoryPage />} />
-              <Route path="workspaces" element={<WorkspacesPage />} />
+              <Route path="workspaces" element={<Navigate to="/workspaces" replace />} />
+              <Route path="manage-context" element={<Navigate to="/workspaces" replace />} />
               <Route path="conversations" element={<Navigate to="/dashboard/analysis" replace />} />
               <Route path="intents" element={<Navigate to="/dashboard/diagnostics" replace />} />
               <Route path="metrics" element={<Navigate to="/dashboard/analysis" replace />} />

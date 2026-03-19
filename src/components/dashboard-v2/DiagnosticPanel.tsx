@@ -1,5 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 import { formatPercent } from "@/lib/dashboardModel";
+import AccordionPanel from "@/components/ui/AccordionPanel";
 
 interface DiagnosticPanelProps {
   title: string;
@@ -22,11 +23,17 @@ export default function DiagnosticPanel({
   emptyText,
 }: DiagnosticPanelProps) {
   return (
-    <section className="rounded-3xl border border-border bg-card/70 p-4 shadow-sm sm:p-5">
-      <div className="mb-3">
-        <h2 className="text-base font-semibold text-foreground">{title}</h2>
-        <p className="text-sm text-muted-foreground">{subtitle}</p>
-      </div>
+    <AccordionPanel
+      title={title}
+      icon={<AlertTriangle className="h-4 w-4" />}
+      badge={
+        <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[10px] text-muted-foreground">
+          {items.length}
+        </span>
+      }
+      defaultOpen={false}
+    >
+      <p className="mb-3 text-sm text-muted-foreground">{subtitle}</p>
 
       {items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
@@ -45,7 +52,7 @@ export default function DiagnosticPanel({
           ))}
         </div>
       )}
-    </section>
+    </AccordionPanel>
   );
 }
 

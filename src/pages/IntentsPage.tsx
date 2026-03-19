@@ -1,3 +1,5 @@
+import { useMemo, useState } from "react";
+import { ListTree } from "lucide-react";
 import EmptyState from "@/components/dashboard/EmptyState";
 import MetricInfo from "@/components/dashboard/MetricInfo";
 import { Badge } from "@/components/ui/badge";
@@ -8,22 +10,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import AccordionPanel from "@/components/ui/AccordionPanel";
 import { useAnalysis } from "@/contexts/AnalysisContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatPercent, getConsistencyHealth, healthColor, progressColor } from "@/lib/metrics";
-import { useMemo, useState } from "react";
 
 export default function IntentsPage() {
   const { result, dataSource } = useAnalysis();
   const { t } = useLanguage();
   const [sortBy, setSortBy] = useState("stability-asc");
 
-  const intents = result?.intents ?? [];
+  const intents = useMemo(() => result?.intents ?? [], [result?.intents]);
 
   const sorted = useMemo(() => {
     const items = [...intents];
-    if (sortBy === "stability-asc") items.sort((a, b) => (a.response_stability_score ?? a.consistency_score ?? 0) - (b.response_stability_score ?? b.consistency_score ?? 0));
-    if (sortBy === "stability-desc") items.sort((a, b) => (b.response_stability_score ?? b.consistency_score ?? 0) - (a.response_stability_score ?? a.consistency_score ?? 0));
+    if (sortBy === "stability-asc") {
+      items.sort(
+        (a, b) =>
+          (a.response_stability_score ?? a.consistency_score ?? 0) -
+          (b.response_stability_score ?? b.consistency_score ?? 0),
+      );
+    }
+    if (sortBy === "stability-desc") {
+      items.sort(
+        (a, b) =>
+          (b.response_stability_score ?? b.consistency_score ?? 0) -
+          (a.response_stability_score ?? a.consistency_score ?? 0),
+      );
+    }
     if (sortBy === "variance") items.sort((a, b) => (b.response_variance ?? 0) - (a.response_variance ?? 0));
     if (sortBy === "volume") items.sort((a, b) => (b.n_conversations ?? 0) - (a.n_conversations ?? 0));
     return items;
@@ -53,8 +67,17 @@ export default function IntentsPage() {
       {!intents.length ? (
         <EmptyState title={t("intentsPage.emptyTitle")} description={t("intentsPage.emptyBody")} />
       ) : (
-        <>
-          <div className="flex justify-end">
+        <AccordionPanel
+          title="Intent Analysis"
+          icon={<ListTree className="h-4 w-4" />}
+          badge={
+            <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[10px] text-muted-foreground">
+              {intents.length}
+            </span>
+          }
+          defaultOpen={false}
+        >
+          <div className="mb-4 flex justify-end">
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full rounded-2xl border-border bg-card/70 sm:w-[220px]">
                 <SelectValue />
@@ -78,11 +101,15 @@ export default function IntentsPage() {
                   <div key={intent.intent} className="rounded-2xl border border-border/70 bg-background/60 p-4">
                     <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-sm text-muted-foreground">{index + 1}</div>
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-sm text-muted-foreground">
+                          {index + 1}
+                        </div>
                         <div>
                           <div className="font-mono text-sm text-foreground">{intent.intent}</div>
                           <div className="text-xs text-muted-foreground">
-                            {intent.n_conversations ?? 0} {t("intentsPage.convs")} · {t("intentsPage.meanChars")} {intent.mean_assistant_chars ?? t("common.notAvailable")} · {t("intentsPage.stdChars")} {intent.std_assistant_chars ?? t("common.notAvailable")}
+                            {intent.n_conversations ?? 0} {t("intentsPage.convs")} | {t("intentsPage.meanChars")}{" "}
+                            {intent.mean_assistant_chars ?? t("common.notAvailable")} | {t("intentsPage.stdChars")}{" "}
+                            {intent.std_assistant_chars ?? t("common.notAvailable")}
                           </div>
                         </div>
                       </div>
@@ -98,14 +125,17 @@ export default function IntentsPage() {
                     </div>
 
                     <div className="h-2 overflow-hidden rounded-full bg-muted">
-                      <div className={`h-full ${progressColor(String(tone))}`} style={{ width: `${Math.max(6, stability)}%` }} />
+                      <div
+                        className={`h-full ${progressColor(String(tone))}`}
+                        style={{ width: `${Math.max(6, stability)}%` }}
+                      />
                     </div>
                   </div>
                 );
               })}
             </div>
           </div>
-        </>
+        </AccordionPanel>
       )}
     </div>
   );

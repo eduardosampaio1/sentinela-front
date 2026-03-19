@@ -70,7 +70,7 @@ function riskPillClass(risk?: string | null) {
 
 export default function HistoryPage() {
   const navigate = useNavigate();
-  const { workspace } = useAuth();
+  const { workspace, project, environment, contextLoading } = useAuth();
   const { loadStoredAnalysis } = useAnalysis();
 
   const [runs, setRuns] = useState<HistoryRun[]>([]);
@@ -81,7 +81,7 @@ export default function HistoryPage() {
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!workspace?.id) {
+    if (!workspace?.id || !project?.id || !environment?.id) {
       setRuns([]);
       return;
     }
@@ -93,6 +93,8 @@ export default function HistoryPage() {
       .from("analysis_runs")
       .select("id, created_at, engine_version, risk_level, n_conversations, n_intents, raw_result")
       .eq("workspace_id", workspace.id)
+      .eq("project_id", project.id)
+      .eq("environment_id", environment.id)
       .order("created_at", { ascending: false })
       .then(({ data, error: fetchError }) => {
         if (fetchError) throw fetchError;
@@ -104,7 +106,7 @@ export default function HistoryPage() {
       .finally(() => {
         setLoading(false);
       });
-  }, [workspace?.id]);
+  }, [environment?.id, project?.id, workspace?.id]);
 
   const filteredRuns = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -180,6 +182,9 @@ export default function HistoryPage() {
         <h1 className="text-2xl font-semibold text-foreground">Analysis timeline and regressions</h1>
         <p className="max-w-3xl text-sm text-muted-foreground">
           Track run-to-run behavior changes, compare recent analyses, and reopen any previous result.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Context: {workspace?.name ?? "N/A"} / {project?.name ?? "N/A"} / {environment?.name ?? "N/A"}
         </p>
       </header>
 
@@ -273,7 +278,7 @@ export default function HistoryPage() {
           </div>
         </div>
 
-        {loading ? (
+        {loading || contextLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading history...

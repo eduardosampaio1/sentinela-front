@@ -70,6 +70,9 @@ export interface IntentMetric {
 }
 
 export interface AnalysisResult {
+  workspace_id?: string;
+  project_id?: string;
+  environment_id?: string;
   engine_version?: string;
   consistency_score: number;
   global_confidence?: number;
@@ -357,13 +360,21 @@ async function createAnalysisWithFallback(
 
 async function startInterpretationWithFallback(
   analysisId: string,
+  workspaceId?: string | null,
+  projectId?: string | null,
+  environmentId?: string | null,
 ): Promise<{ baseUrl: string; payload: Record<string, unknown> }> {
   const headers = await getAuthHeaders({ Accept: "application/json" });
   const attemptErrors: string[] = [];
+  const scopedParams = new URLSearchParams();
+  if (workspaceId && workspaceId.trim()) scopedParams.set("workspace_id", workspaceId.trim());
+  if (projectId && projectId.trim()) scopedParams.set("project_id", projectId.trim());
+  if (environmentId && environmentId.trim()) scopedParams.set("environment_id", environmentId.trim());
+  const scopedSuffix = scopedParams.toString() ? `?${scopedParams.toString()}` : "";
 
   for (const baseUrl of API_BASE_CANDIDATES) {
     try {
-      const response = await fetch(`${baseUrl}/interpret/${analysisId}`, {
+      const response = await fetch(`${baseUrl}/interpret/${analysisId}${scopedSuffix}`, {
         method: "POST",
         headers,
       });
@@ -492,6 +503,18 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
   const rawInsights = asRecord(raw.insights);
 
   const result: AnalysisResult = {
+    workspace_id:
+      typeof field("workspace_id", undefined) === "string"
+        ? String(field("workspace_id"))
+        : undefined,
+    project_id:
+      typeof field("project_id", undefined) === "string"
+        ? String(field("project_id"))
+        : undefined,
+    environment_id:
+      typeof field("environment_id", undefined) === "string"
+        ? String(field("environment_id"))
+        : undefined,
     engine_version:
       typeof field("engine_version", undefined) === "string"
         ? String(field("engine_version"))
@@ -578,16 +601,37 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
   return result;
 }
 
-export async function analyzeConversations(conversations: unknown[]): Promise<AnalysisResult> {
+export async function analyzeConversations(
+  conversations: unknown[],
+  options?: { workspaceId?: string | null; projectId?: string | null; environmentId?: string | null },
+): Promise<AnalysisResult> {
+  const workspaceId = String(options?.workspaceId ?? "").trim();
+  const projectId = String(options?.projectId ?? "").trim();
+  const environmentId = String(options?.environmentId ?? "").trim();
   const jsonlContent = conversations.map((conversation) => JSON.stringify(conversation)).join("\n");
   const blob = new Blob([jsonlContent], { type: "application/x-ndjson" });
   const formData = new FormData();
   formData.append("file", blob, "batch.jsonl");
+  if (workspaceId) {
+    formData.append("workspace_id", workspaceId);
+  }
+  if (projectId) {
+    formData.append("project_id", projectId);
+  }
+  if (environmentId) {
+    formData.append("environment_id", environmentId);
+  }
   const { analysisId, baseUrl } = await createAnalysisWithFallback(formData);
+
+  const scopeParams = new URLSearchParams();
+  if (workspaceId) scopeParams.set("workspace_id", workspaceId);
+  if (projectId) scopeParams.set("project_id", projectId);
+  if (environmentId) scopeParams.set("environment_id", environmentId);
+  const scopedQuery = scopeParams.toString() ? `?${scopeParams.toString()}` : "";
 
   const maxAttempts = 90;
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const statusResponse = await fetch(`${baseUrl}/analyses/${analysisId}`, {
+    const statusResponse = await fetch(`${baseUrl}/analyses/${analysisId}${scopedQuery}`, {
       method: "GET",
       headers: await getAuthHeaders({ Accept: "application/json" }),
     });
@@ -601,7 +645,7 @@ export async function analyzeConversations(conversations: unknown[]): Promise<An
     const status = String(statusPayload.status ?? "").toLowerCase();
 
     if (status === "completed") {
-      const resultResponse = await fetch(`${baseUrl}/analyses/${analysisId}/result`, {
+      const resultResponse = await fetch(`${baseUrl}/analyses/${analysisId}/result${scopedQuery}`, {
         method: "GET",
         headers: await getAuthHeaders({ Accept: "application/json" }),
       });
@@ -627,12 +671,25 @@ export async function analyzeConversations(conversations: unknown[]): Promise<An
 
 export async function interpretAnalysis(
   result: AnalysisResult,
+  workspaceId?: string | null,
+  projectId?: string | null,
+  environmentId?: string | null,
 ): Promise<InterpretAnalysisResponse> {
   const analysisId = String(result.analysis_id ?? "").trim();
   if (!analysisId) {
     throw new Error("Interpretation requires analysis_id from a completed analysis.");
   }
-  const { baseUrl, payload: startPayload } = await startInterpretationWithFallback(analysisId);
+  const { baseUrl, payload: startPayload } = await startInterpretationWithFallback(
+    analysisId,
+    workspaceId,
+    projectId,
+    environmentId,
+  );
+  const scopeParams = new URLSearchParams();
+  if (workspaceId && workspaceId.trim()) scopeParams.set("workspace_id", workspaceId.trim());
+  if (projectId && projectId.trim()) scopeParams.set("project_id", projectId.trim());
+  if (environmentId && environmentId.trim()) scopeParams.set("environment_id", environmentId.trim());
+  const scopedSuffix = scopeParams.toString() ? `?${scopeParams.toString()}` : "";
   const immediate = asRecord(startPayload.interpretation);
   if (Object.keys(immediate).length > 0 && String(immediate.interpretation_status ?? "") === "completed") {
     const immediatePayload = asRecord(immediate.interpretation_payload);
@@ -647,7 +704,7 @@ export async function interpretAnalysis(
 
   const maxAttempts = 90;
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const statusResponse = await fetch(`${baseUrl}/interpret/${analysisId}`, {
+    const statusResponse = await fetch(`${baseUrl}/interpret/${analysisId}${scopedSuffix}`, {
       method: "GET",
       headers: await getAuthHeaders({ Accept: "application/json" }),
     });
@@ -681,9 +738,35 @@ export async function interpretAnalysis(
 const CACHE_PREFIX = "sentinela:analysis:";
 const LAST_KEY_STORAGE_PREFIX = "sentinela:last_cache_key";
 
-function workspaceScopedLastKey(workspaceId?: string | null): string {
-  if (workspaceId && workspaceId.trim()) {
-    return `${LAST_KEY_STORAGE_PREFIX}:${workspaceId.trim()}`;
+type AnalysisCacheScope =
+  | string
+  | {
+      workspaceId?: string | null;
+      projectId?: string | null;
+      environmentId?: string | null;
+    }
+  | null
+  | undefined;
+
+function normalizeCacheScope(scope?: AnalysisCacheScope) {
+  if (typeof scope === "string") {
+    return {
+      workspaceId: scope.trim(),
+      projectId: "",
+      environmentId: "",
+    };
+  }
+  return {
+    workspaceId: String(scope?.workspaceId ?? "").trim(),
+    projectId: String(scope?.projectId ?? "").trim(),
+    environmentId: String(scope?.environmentId ?? "").trim(),
+  };
+}
+
+function workspaceScopedLastKey(scope?: AnalysisCacheScope): string {
+  const normalized = normalizeCacheScope(scope);
+  if (normalized.workspaceId) {
+    return `${LAST_KEY_STORAGE_PREFIX}:${normalized.workspaceId}:${normalized.projectId || "none"}:${normalized.environmentId || "none"}`;
   }
   return LAST_KEY_STORAGE_PREFIX;
 }
@@ -703,18 +786,18 @@ export function hashDataset(jsonlContent: string): string {
 export function saveResult(
   result: AnalysisResult,
   inputHash?: string,
-  workspaceId?: string | null,
+  scope?: AnalysisCacheScope,
 ) {
   const next = { ...result };
   if (inputHash) next._cache_key = inputHash;
 
   const key = cacheKeyFor(next);
   sessionStorage.setItem(key, JSON.stringify(next));
-  sessionStorage.setItem(workspaceScopedLastKey(workspaceId), key);
+  sessionStorage.setItem(workspaceScopedLastKey(scope), key);
 }
 
-export function loadResult(workspaceId?: string | null): AnalysisResult | null {
-  const scopedKey = workspaceScopedLastKey(workspaceId);
+export function loadResult(scope?: AnalysisCacheScope): AnalysisResult | null {
+  const scopedKey = workspaceScopedLastKey(scope);
   const lastKey = sessionStorage.getItem(scopedKey);
   if (!lastKey) return null;
 
@@ -730,8 +813,8 @@ export function loadResult(workspaceId?: string | null): AnalysisResult | null {
 
 export const loadLastResult = loadResult;
 
-export function isSessionCached(workspaceId?: string | null): boolean {
-  const lastKey = sessionStorage.getItem(workspaceScopedLastKey(workspaceId));
+export function isSessionCached(scope?: AnalysisCacheScope): boolean {
+  const lastKey = sessionStorage.getItem(workspaceScopedLastKey(scope));
   return !!lastKey && !!sessionStorage.getItem(lastKey);
 }
 
@@ -761,6 +844,9 @@ function sanitizeResult(parsed: unknown): AnalysisResult {
     undefined;
 
   return {
+    workspace_id: typeof record.workspace_id === "string" ? record.workspace_id : undefined,
+    project_id: typeof record.project_id === "string" ? record.project_id : undefined,
+    environment_id: typeof record.environment_id === "string" ? record.environment_id : undefined,
     engine_version: typeof record.engine_version === "string" ? record.engine_version : undefined,
     consistency_score: normalizePercent(record.consistency_score) ?? 0,
     global_confidence: normalizePercent(record.global_confidence),

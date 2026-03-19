@@ -1,4 +1,3 @@
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,8 +40,12 @@ export default function SettingsPage() {
             <Globe2 className="h-4 w-4 text-muted-foreground" />
             {t("settings.language")}
           </h2>
-          <p className="max-w-md text-sm text-muted-foreground">{t("settings.languageBody")}</p>
-          <LanguageSwitcher />
+          <p className="max-w-md text-sm text-muted-foreground">
+            {t("settings.languageBody")}
+          </p>
+          <Badge variant="outline" className="w-fit">
+            English
+          </Badge>
         </section>
       </div>
 

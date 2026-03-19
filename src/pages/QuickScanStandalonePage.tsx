@@ -9,17 +9,19 @@ export default function QuickScanStandalonePage() {
   const navigate = useNavigate();
   const { user, workspace } = useAuth();
 
-  const homePath = buildWorkspaceHomePath({
-    email: user?.email,
-    workspace,
-  });
+  const homePath = workspace
+    ? buildWorkspaceHomePath({
+        email: user?.email,
+        workspace,
+      })
+    : "/home/welcome";
 
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-5xl space-y-5 px-4 py-8 sm:px-6">
         <Button variant="ghost" onClick={() => navigate(homePath)} className="px-2">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
+          Back
         </Button>
 
         <section className="rounded-3xl border border-border bg-card/80 p-6 shadow-sm">
@@ -31,7 +33,7 @@ export default function QuickScanStandalonePage() {
 
         <QuickScanPanel
           showDeepAnalysisCta
-          onRunDeeperAnalysis={() => navigate(`${homePath}?start=dataset`)}
+          onRunDeeperAnalysis={() => navigate("/home/deep")}
         />
       </div>
     </div>

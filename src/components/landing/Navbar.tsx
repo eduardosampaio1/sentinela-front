@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck } from "lucide-react";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Navbar = () => {
@@ -36,7 +35,6 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <LanguageSwitcher className="hidden md:inline-flex" />
           <Link to="/login">
             <Button variant="ghost" size="sm" className="hidden text-muted-foreground hover:text-foreground sm:inline-flex">
               {t("common.login")}

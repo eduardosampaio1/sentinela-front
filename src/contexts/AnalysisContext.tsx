@@ -79,8 +79,19 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const lastConversationsRef = useRef<unknown[] | null>(null);
 
   const { toast } = useToast();
-  const { user, workspace } = useAuth();
-  const historyStorageKey = workspace?.id ? `sentinela:history:${workspace.id}` : null;
+  const { user, workspace, project, environment } = useAuth();
+  const historyStorageKey =
+    workspace?.id && project?.id && environment?.id
+      ? `sentinela:history:${workspace.id}:${project.id}:${environment.id}`
+      : null;
+  const contextScope = useMemo(
+    () => ({
+      workspaceId: workspace?.id ?? null,
+      projectId: project?.id ?? null,
+      environmentId: environment?.id ?? null,
+    }),
+    [environment?.id, project?.id, workspace?.id],
+  );
 
   const markHasHistory = useCallback(() => {
     setHasHistory(true);
@@ -106,7 +117,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   }, [loading]);
 
   useEffect(() => {
-    if (!workspace?.id) {
+    if (!workspace?.id || !project?.id || !environment?.id) {
       setHasHistory(false);
       setResult(null);
       setDataSource("fresh");
@@ -119,10 +130,10 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     setResult(null);
     setDataSource("fresh");
 
-    const storageKey = `sentinela:history:${workspace.id}`;
+    const storageKey = `sentinela:history:${workspace.id}:${project.id}:${environment.id}`;
     const localFlag = window.localStorage.getItem(storageKey) === "1";
-    const cachedWorkspaceResult = loadResult(workspace.id);
-    const hasScopedSessionCache = isSessionCached(workspace.id);
+    const cachedWorkspaceResult = loadResult(contextScope);
+    const hasScopedSessionCache = isSessionCached(contextScope);
     if (cachedWorkspaceResult && hasScopedSessionCache) {
       setResult(cachedWorkspaceResult);
       setDataSource("cached");
@@ -134,7 +145,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
 
     let mounted = true;
 
-    void getLatestAnalysisRun(workspace.id)
+    void getLatestAnalysisRun(workspace.id, project.id, environment.id)
       .then((latestRun) => {
         if (!mounted) return;
         if (latestRun) {
@@ -142,7 +153,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
           window.localStorage.setItem(storageKey, "1");
           if (latestRun.raw_result && typeof latestRun.raw_result === "object") {
             const latestResult = latestRun.raw_result as AnalysisResult;
-            saveResult(latestResult, undefined, workspace.id);
+            saveResult(latestResult, undefined, contextScope);
             setResult(latestResult);
             setDataSource("cached");
           }
@@ -163,7 +174,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, [workspace?.id]);
+  }, [contextScope, environment?.id, project?.id, workspace?.id]);
 
   const finishLoading = useCallback(() => {
     setLoadingProgress(100);
@@ -185,10 +196,10 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (!user?.id || !workspace?.id) {
+      if (!user?.id || !workspace?.id || !project?.id || !environment?.id) {
         toast({
           title: "Missing workspace context",
-          description: "You must be logged in and attached to a workspace.",
+          description: "You must be logged in and attached to workspace, system, and environment.",
           variant: "destructive",
         });
         return;
@@ -198,17 +209,23 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       setLoading(true);
 
       try {
-        const apiResult = await analyzeConversations(conversations);
+        const apiResult = await analyzeConversations(conversations, {
+          workspaceId: workspace.id,
+          projectId: project.id,
+          environmentId: environment.id,
+        });
         const inputHash = await hashDataset(conversationsToJsonl(conversations));
 
         setResult(apiResult);
-        saveResult(apiResult, inputHash, workspace.id);
+        saveResult(apiResult, inputHash, contextScope);
         setDataSource("fresh");
         markHasHistory();
         setActiveJob(null);
 
         await saveAnalysisRun({
           workspaceId: workspace.id,
+          projectId: project.id,
+          environmentId: environment.id,
           createdBy: user.id,
           sourceFilename: "dataset.jsonl",
           inputHash,
@@ -228,7 +245,16 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    [finishLoading, markHasHistory, toast, user?.id, workspace?.id]
+    [
+      contextScope,
+      environment?.id,
+      finishLoading,
+      markHasHistory,
+      project?.id,
+      toast,
+      user?.id,
+      workspace?.id,
+    ]
   );
 
   const handleRerun = useCallback(() => {
@@ -291,16 +317,18 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
 
         window.setTimeout(async () => {
           try {
-            saveResult(mapped, undefined, workspace?.id);
+            saveResult(mapped, undefined, contextScope);
             setResult(mapped);
             setDataSource("fresh");
             markHasHistory();
 
-            if (user?.id && workspace?.id) {
+            if (user?.id && workspace?.id && project?.id && environment?.id) {
               const inputHash = await hashDataset(JSON.stringify(mapped));
 
               await saveAnalysisRun({
                 workspaceId: workspace.id,
+                projectId: project.id,
+                environmentId: environment.id,
                 createdBy: user.id,
                 inputHash,
                 result: toPersistableResult(mapped),
@@ -327,7 +355,16 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    [finishLoading, markHasHistory, toast, user?.id, workspace?.id]
+    [
+      contextScope,
+      environment?.id,
+      finishLoading,
+      markHasHistory,
+      project?.id,
+      toast,
+      user?.id,
+      workspace?.id,
+    ]
   );
 
   const clearAnalysis = useCallback(() => {
@@ -337,11 +374,11 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadStoredAnalysis = useCallback((analysis: AnalysisResult) => {
-    saveResult(analysis, undefined, workspace?.id);
+    saveResult(analysis, undefined, contextScope);
     setResult(analysis);
     setDataSource("cached");
     markHasHistory();
-  }, [markHasHistory, workspace?.id]);
+  }, [contextScope, markHasHistory]);
 
   const value = useMemo(
     () => ({

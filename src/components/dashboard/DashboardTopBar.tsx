@@ -1,7 +1,7 @@
+import { useEffect, useRef, useState } from "react";
 import { Menu } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useAnalysis } from "@/contexts/AnalysisContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import WorkspaceSelector from "@/components/dashboard/WorkspaceSelector";
@@ -14,6 +14,32 @@ const DashboardTopBar = ({ onOpenSidebar }: DashboardTopBarProps) => {
   const location = useLocation();
   const { result } = useAnalysis();
   const { t } = useLanguage();
+  const [hideOnScroll, setHideOnScroll] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    function handleScroll() {
+      const currentY = window.scrollY || 0;
+      const delta = currentY - lastScrollY.current;
+
+      if (currentY < 24) {
+        setHideOnScroll(false);
+        lastScrollY.current = currentY;
+        return;
+      }
+
+      if (delta > 8) {
+        setHideOnScroll(true);
+      } else if (delta < -8) {
+        setHideOnScroll(false);
+      }
+
+      lastScrollY.current = currentY;
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const sectionLabel = (() => {
     if (location.pathname.startsWith("/dashboard/analysis")) return "Analysis";
@@ -21,25 +47,33 @@ const DashboardTopBar = ({ onOpenSidebar }: DashboardTopBarProps) => {
     if (location.pathname.startsWith("/dashboard/diagnostics")) return "Diagnostics";
     if (location.pathname.startsWith("/dashboard/optimization")) return "Optimization";
     if (location.pathname.startsWith("/dashboard/history")) return "History";
-    if (location.pathname.startsWith("/dashboard/workspaces")) return "Workspaces";
+    if (location.pathname.startsWith("/dashboard/workspaces")) return "Manage Context";
+    if (location.pathname.startsWith("/dashboard/manage-context")) return "Manage Context";
+    if (location.pathname.startsWith("/manage-context")) return "Manage Context";
+    if (location.pathname.startsWith("/workspaces")) return "Manage Context";
     if (location.pathname.startsWith("/dashboard/settings")) return "Settings";
     return "Dashboard";
   })();
 
   return (
-    <header className="sticky top-0 z-30 flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur sm:px-6">
+    <header
+      className={`sticky top-0 z-30 flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-border/45 bg-card/62 px-4 py-3 backdrop-blur-lg transition-transform duration-300 sm:px-6 ${
+        hideOnScroll ? "-translate-y-full" : "translate-y-0"
+      }`}
+    >
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onOpenSidebar}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background text-foreground md:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-background/60 text-foreground md:hidden"
           aria-label={t("dashboard.mobileMenu")}
         >
           <Menu className="h-4 w-4" />
         </button>
-        <div className="min-w-0">
-          <WorkspaceSelector />
-          <div className="text-xs text-muted-foreground">{result ? sectionLabel : t("dashboard.firstRunBadge")}</div>
+        <div className="min-w-0 space-y-1">
+          <div className="text-[11px] font-medium tracking-[0.03em] text-primary">Sentinela ARGOS</div>
+          <WorkspaceSelector compact showManageLink={false} />
+          <div className="text-xs text-muted-foreground/90">{result ? sectionLabel : t("dashboard.firstRunBadge")}</div>
         </div>
       </div>
 
@@ -49,7 +83,6 @@ const DashboardTopBar = ({ onOpenSidebar }: DashboardTopBarProps) => {
             {t("dashboard.demoMode")}
           </Badge>
         ) : null}
-        <LanguageSwitcher />
       </div>
     </header>
   );
