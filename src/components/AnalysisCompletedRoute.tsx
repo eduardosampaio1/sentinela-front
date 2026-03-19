@@ -8,9 +8,9 @@ export default function AnalysisCompletedRoute({
   children: JSX.Element;
 }) {
   const { analysisCompleted, historyResolved } = useAnalysis();
-  const { workspaceLoading } = useAuth();
+  const { workspaceLoading, contextLoading } = useAuth();
 
-  if (workspaceLoading || !historyResolved) {
+  if (workspaceLoading || contextLoading || !historyResolved) {
     return <div className="p-10 text-center text-muted-foreground">Loading analysis context...</div>;
   }
 

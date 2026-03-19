@@ -1,8 +1,10 @@
 import { useMemo } from "react";
+import { Siren } from "lucide-react";
 import { useAnalysis } from "@/contexts/AnalysisContext";
 import EmptyState from "@/components/dashboard/EmptyState";
 import MetricInfo from "@/components/dashboard/MetricInfo";
 import { Badge } from "@/components/ui/badge";
+import AccordionPanel from "@/components/ui/AccordionPanel";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { normalizeAlerts } from "@/lib/metrics";
 
@@ -29,6 +31,9 @@ const AlertsPage = () => {
   }
 
   const cards = Object.entries(grouped);
+  const hasCritical = cards.some(([, alerts]) =>
+    alerts.some((alert) => String(alert.severity).toLowerCase() === "critical"),
+  );
 
   return (
     <div className="space-y-6">
@@ -45,24 +50,42 @@ const AlertsPage = () => {
       {!cards.length ? (
         <EmptyState title={t("alertsPage.emptyTitle")} description={t("alertsPage.emptyBody")} />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {cards.map(([key, alerts]) => {
-            const first = alerts[0];
-            return (
-              <div key={key} className="rounded-3xl border border-border bg-card/70 p-5 shadow-sm">
-                <MetricInfo title={first.problem} tooltip={t("alertsPage.groupingTip")} />
-                <div className="mb-3 flex items-center gap-2">
-                  <Badge variant="secondary">{first.severity}</Badge>
-                  <Badge variant="outline">{first.intent || t("common.globalIssue")}</Badge>
-                  <Badge variant="outline">
-                    {alerts.length} {alerts.length > 1 ? t("alertsPage.occurrences") : t("alertsPage.occurrence")}
-                  </Badge>
+        <AccordionPanel
+          title="Active Alerts"
+          icon={<Siren className="h-4 w-4" />}
+          badge={
+            <div className="flex items-center gap-1.5">
+              {hasCritical ? (
+                <span className="rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[10px] font-medium tracking-[0.04em] text-red-200">
+                  CRITICAL
+                </span>
+              ) : null}
+              <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[10px] text-muted-foreground">
+                {cards.length}
+              </span>
+            </div>
+          }
+          defaultOpen={hasCritical}
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            {cards.map(([key, alerts]) => {
+              const first = alerts[0];
+              return (
+                <div key={key} className="rounded-3xl border border-border bg-card/70 p-5 shadow-sm">
+                  <MetricInfo title={first.problem} tooltip={t("alertsPage.groupingTip")} />
+                  <div className="mb-3 flex items-center gap-2">
+                    <Badge variant="secondary">{first.severity}</Badge>
+                    <Badge variant="outline">{first.intent || t("common.globalIssue")}</Badge>
+                    <Badge variant="outline">
+                      {alerts.length} {alerts.length > 1 ? t("alertsPage.occurrences") : t("alertsPage.occurrence")}
+                    </Badge>
+                  </div>
+                  <p className="text-sm leading-6 text-muted-foreground">{first.recommendation}</p>
                 </div>
-                <p className="text-sm leading-6 text-muted-foreground">{first.recommendation}</p>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </AccordionPanel>
       )}
     </div>
   );

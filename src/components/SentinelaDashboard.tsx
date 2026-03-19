@@ -1,30 +1,37 @@
-import { useMemo, useState } from "react";
-import { Bot, RefreshCcw } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Download } from "lucide-react";
 import { useAnalysis } from "@/contexts/AnalysisContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { interpretAnalysis, type AnalysisInterpretation } from "@/lib/api";
+import { downloadAnalysisReportPdf } from "@/lib/analysisReportPdf";
 import {
   detectedProblems,
   interactionPanelModel,
-  keyMetricsCards,
-  riskOverviewModel,
   recommendedActions,
-  stabilityTrendModel,
 } from "@/lib/dashboardModel";
+import { listAnalysisRuns } from "@/lib/analysisRuns";
+import {
+  buildDecisionLayerModel,
+  buildInterpretationPanelModel,
+  buildRecurrenceSummary,
+  buildSystemStatePanelModel,
+  rankHotspotsByImpact,
+} from "@/lib/decisionLayerModel";
 import AnalysisLoadingOverlay from "@/components/dashboard/AnalysisLoadingOverlay";
-import InterpretationCard from "@/components/dashboard/InterpretationCard";
-import InterpretationSkeleton from "@/components/dashboard/InterpretationSkeleton";
 import { Button } from "@/components/ui/button";
-import SystemOverviewBlock from "@/components/dashboard-v2/SystemOverviewBlock";
-import SignalScoreCard from "@/components/dashboard-v2/SignalScoreCard";
 import ProblemsPanel from "@/components/dashboard-v2/ProblemsPanel";
 import RecommendationsPanel from "@/components/dashboard-v2/RecommendationsPanel";
 import InteractionAnalysisPanel from "@/components/dashboard-v2/InteractionAnalysisPanel";
-import RiskOverviewPanel from "@/components/dashboard-v2/RiskOverviewPanel";
-import StabilityTrendPanel from "@/components/dashboard-v2/StabilityTrendPanel";
+import VerdictStrip from "@/components/dashboard-decision/VerdictStrip";
+import TopRecommendationHero from "@/components/dashboard-decision/TopRecommendationHero";
+import CoreMetricsRow from "@/components/dashboard-decision/CoreMetricsRow";
+import AIInterpretationPanel from "@/components/dashboard-decision/AIInterpretationPanel";
+import WhySystemStatePanel from "@/components/dashboard-decision/WhySystemStatePanel";
+import TechnicalDetailsPanel from "@/components/dashboard-decision/TechnicalDetailsPanel";
+import ImproveAnalysisPanel from "@/components/dashboard-decision/ImproveAnalysisPanel";
 
 export default function SentinelaDashboard() {
-  const { workspace } = useAuth();
+  const { workspace, project, environment } = useAuth();
   const {
     result,
     loading,
@@ -36,28 +43,79 @@ export default function SentinelaDashboard() {
   const [isInterpreting, setIsInterpreting] = useState(false);
   const [interpretationError, setInterpretationError] = useState("");
   const [interpretation, setInterpretation] = useState<AnalysisInterpretation | null>(null);
-  const [interpretationModel, setInterpretationModel] = useState("");
-  const [interpretationPromptVersion, setInterpretationPromptVersion] = useState("");
-  const [interpretationCached, setInterpretationCached] = useState(false);
   const [interpretationAt, setInterpretationAt] = useState<string>("");
+  const [historyRuns, setHistoryRuns] = useState<Array<{ id: string; raw_result?: Record<string, unknown> | null }>>([]);
 
-  const riskOverview = useMemo(() => riskOverviewModel(result), [result]);
-  const stabilityTrend = useMemo(() => stabilityTrendModel(result), [result]);
-  const keyMetrics = useMemo(() => keyMetricsCards(result), [result]);
-  const problems = useMemo(() => detectedProblems(result), [result]);
+  const problems = useMemo(() => rankHotspotsByImpact(detectedProblems(result)), [result]);
   const recommendations = useMemo(() => recommendedActions(result), [result]);
   const interactionModel = useMemo(() => interactionPanelModel(result), [result]);
+  const recurrence = useMemo(
+    () =>
+      buildRecurrenceSummary({
+        currentProblems: problems,
+        currentRecommendations: recommendations,
+        historyRuns,
+        currentRunId: result?.analysis_run_id,
+      }),
+    [historyRuns, problems, recommendations, result?.analysis_run_id],
+  );
+  const decisionLayer = useMemo(
+    () =>
+      buildDecisionLayerModel({
+        result,
+        problems,
+        recommendations,
+        recurrence,
+      }),
+    [problems, recommendations, recurrence, result],
+  );
+  const interpretationModel = useMemo(
+    () => buildInterpretationPanelModel(interpretation, decisionLayer.hero.headline),
+    [decisionLayer.hero.headline, interpretation],
+  );
+  const systemStateModel = useMemo(
+    () => buildSystemStatePanelModel(result, problems),
+    [problems, result],
+  );
+
+  useEffect(() => {
+    if (!workspace?.id || !project?.id || !environment?.id) {
+      setHistoryRuns([]);
+      return;
+    }
+
+    let mounted = true;
+    void listAnalysisRuns(workspace.id, project.id, environment.id, 6)
+      .then((runs) => {
+        if (!mounted) return;
+        setHistoryRuns(
+          runs.map((run) => ({
+            id: run.id,
+            raw_result: run.raw_result,
+          })),
+        );
+      })
+      .catch(() => {
+        if (mounted) setHistoryRuns([]);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [environment?.id, project?.id, workspace?.id]);
 
   async function handleInterpret() {
     if (!result || isInterpreting) return;
     setInterpretationError("");
     setIsInterpreting(true);
     try {
-      const response = await interpretAnalysis(result);
+      const response = await interpretAnalysis(
+        result,
+        workspace?.id,
+        project?.id,
+        environment?.id,
+      );
       setInterpretation(response.report);
-      setInterpretationModel(response.model);
-      setInterpretationPromptVersion(response.prompt_version);
-      setInterpretationCached(response.cached);
       setInterpretationAt(new Date().toISOString());
     } catch (error) {
       setInterpretationError(
@@ -68,91 +126,71 @@ export default function SentinelaDashboard() {
     }
   }
 
+  function handleDownloadReport() {
+    if (!result) return;
+    downloadAnalysisReportPdf(result, workspace?.name);
+  }
+
+  function handlePrimaryRecommendationAction() {
+    const target = document.getElementById("action-details");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function handleRefreshInterpretation() {
+    if (!result || isInterpreting) return;
+    void handleInterpret();
+  }
+
+  const secondaryRecommendations = recommendations.slice(1);
+
   return (
-    <div className="min-w-0 space-y-6">
+    <div className="mx-auto min-w-0 w-full max-w-6xl space-y-8 pb-12">
       <AnalysisLoadingOverlay open={loading} message={loadingMessage} progress={loadingProgress} />
 
-      <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            AI System Health
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Clear diagnosis of current risks, quality, and recommended next actions.
-          </p>
-        </div>
+      <VerdictStrip model={decisionLayer.verdict} />
+      <TopRecommendationHero
+        model={decisionLayer.hero}
+        onPrimaryAction={handlePrimaryRecommendationAction}
+        onSecondaryAction={handleRerun}
+        secondaryDisabled={loading}
+      />
+      <CoreMetricsRow items={decisionLayer.coreMetrics} />
 
-        {result ? (
-          <Button variant="secondary" onClick={handleRerun} disabled={loading} className="w-full sm:w-auto">
-            <RefreshCcw className="mr-2 h-4 w-4" />
-            Re-run Analysis
-          </Button>
-        ) : null}
-      </div>
+      <AIInterpretationPanel
+        model={interpretationModel}
+        loading={isInterpreting}
+        error={interpretationError}
+        generatedAt={interpretationAt}
+        onGenerate={handleInterpret}
+        onRefresh={handleRefreshInterpretation}
+      />
 
-      <RiskOverviewPanel model={riskOverview} />
-      <StabilityTrendPanel model={stabilityTrend} />
-
-      <SystemOverviewBlock workspaceName={workspace?.name} result={result} />
-
-      <section className="rounded-3xl border border-border bg-card/70 p-4 shadow-sm sm:p-5">
-        <div className="mb-4">
-          <h2 className="text-base font-semibold text-foreground">Key Metrics</h2>
-          <p className="text-sm text-muted-foreground">
-            Main quality and efficiency signals to track performance over time.
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {keyMetrics.map((item) => (
-            <SignalScoreCard key={item.id} item={item} />
-          ))}
-        </div>
-      </section>
-
-      <ProblemsPanel items={problems} />
-      <RecommendationsPanel items={recommendations} />
+      <WhySystemStatePanel model={systemStateModel} />
       <InteractionAnalysisPanel model={interactionModel} />
 
-      <section className="rounded-3xl border border-border bg-card/70 p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">AI Interpretation</h2>
-            <p className="text-sm text-muted-foreground">
-              Optional explanation generated from the current analysis payload.
-            </p>
-            {interpretationAt ? (
-              <p className="mt-1 text-xs text-muted-foreground">
-                Last interpretation: {new Date(interpretationAt).toLocaleString()}
-              </p>
-            ) : null}
-          </div>
-          <Button onClick={handleInterpret} disabled={!result || isInterpreting}>
-            <Bot className="mr-2 h-4 w-4" />
-            {isInterpreting
-              ? "Generating..."
-              : interpretation
-                ? "Refresh Interpretation"
-                : "Generate Interpretation"}
-          </Button>
-        </div>
-
-        {isInterpreting ? <InterpretationSkeleton /> : null}
-
-        {!isInterpreting && interpretation ? (
-          <InterpretationCard
-            interpretation={interpretation}
-            model={interpretationModel}
-            promptVersion={interpretationPromptVersion}
-            cached={interpretationCached}
-          />
-        ) : null}
-
-        {!isInterpreting && interpretationError ? (
-          <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-            {interpretationError}
-          </div>
-        ) : null}
+      <section id="action-details" className="space-y-6">
+        <ProblemsPanel items={problems} />
+        <RecommendationsPanel
+          items={secondaryRecommendations}
+          title="Additional Recommendations"
+          subtitle="Secondary actions ranked after the primary recommendation."
+          emptyText="No additional actions ranked below the primary recommendation."
+        />
       </section>
+
+      <TechnicalDetailsPanel result={result} />
+      <ImproveAnalysisPanel suggestions={systemStateModel.enrichmentSuggestions} />
+
+      {result ? (
+        <section className="rounded-xl border border-border/40 bg-card/35 p-3">
+          <Button variant="outline" onClick={handleDownloadReport}>
+            <Download className="mr-2 h-4 w-4" />
+            Download PDF
+          </Button>
+        </section>
+      ) : null}
     </div>
   );
 }

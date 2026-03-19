@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
+import { BarChart3, CircleDashed, Coins, ListOrdered } from "lucide-react";
 import EmptyState from "@/components/dashboard/EmptyState";
 import MetricInfo from "@/components/dashboard/MetricInfo";
+import AccordionPanel from "@/components/ui/AccordionPanel";
 import { Badge } from "@/components/ui/badge";
 import { useAnalysis } from "@/contexts/AnalysisContext";
 import {
@@ -139,7 +141,16 @@ export default function MetricsPage() {
         </Badge>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+      <AccordionPanel
+        title="Semantic Consistency"
+        icon={<CircleDashed className="h-4 w-4" />}
+        badge={
+          <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[10px] text-muted-foreground">
+            {formatPercent(result.consistency_score)}
+          </span>
+        }
+        defaultOpen={false}
+      >
         <Card>
           <MetricInfo title={text.metricHealth} tooltip={text.metricHealthTip} />
           <div className="h-[280px] sm:h-[320px]">
@@ -160,7 +171,18 @@ export default function MetricsPage() {
             </ResponsiveContainer>
           </div>
         </Card>
+      </AccordionPanel>
 
+      <AccordionPanel
+        title="Token & Cost Breakdown"
+        icon={<Coins className="h-4 w-4" />}
+        badge={
+          <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[10px] text-muted-foreground">
+            {wasteRate !== undefined ? formatPercent(wasteRate) : "N/A"}
+          </span>
+        }
+        defaultOpen={false}
+      >
         <Card>
           <MetricInfo title={text.optimization} tooltip={text.optimizationTip} />
           <div className="space-y-5">
@@ -190,53 +212,76 @@ export default function MetricsPage() {
             </div>
           </div>
         </Card>
-      </div>
+      </AccordionPanel>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => (
-          <Card key={card.title}>
-            <MetricInfo title={card.title} />
-            <div className={`text-3xl font-bold ${healthColor(String(card.tone))}`}>{card.value}</div>
-            <div className="mt-2 text-sm text-muted-foreground">{card.helper}</div>
-          </Card>
-        ))}
-      </div>
-
-      <Card>
-        <MetricInfo title={text.weakest} tooltip={text.weakestTip} />
-        <div className="h-[300px] overflow-x-auto sm:h-[340px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={intentBars} layout="vertical" margin={{ top: 8, right: 16, bottom: 8, left: 24 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" domain={[0, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-              <YAxis dataKey="intent" type="category" width={140} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-              <RechartsTooltip
-                contentStyle={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 12,
-                }}
-              />
-              <Bar dataKey="stability" radius={[0, 8, 8, 0]}>
-                {intentBars.map((item) => (
-                  <Cell
-                    key={item.intent}
-                    fill={
-                      item.stability >= 75
-                        ? "#22c55e"
-                        : item.stability >= 60
-                          ? "#facc15"
-                          : item.stability >= 40
-                            ? "#fb923c"
-                            : "#f87171"
-                    }
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+      <AccordionPanel
+        title="Core Metric Signals"
+        icon={<BarChart3 className="h-4 w-4" />}
+        badge={
+          <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[10px] text-muted-foreground">
+            {cards.length}
+          </span>
+        }
+        defaultOpen={false}
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {cards.map((card) => (
+            <Card key={card.title}>
+              <MetricInfo title={card.title} />
+              <div className={`text-3xl font-bold ${healthColor(String(card.tone))}`}>{card.value}</div>
+              <div className="mt-2 text-sm text-muted-foreground">{card.helper}</div>
+            </Card>
+          ))}
         </div>
-      </Card>
+      </AccordionPanel>
+
+      <AccordionPanel
+        title="Weakest Intents"
+        icon={<ListOrdered className="h-4 w-4" />}
+        badge={
+          <span className="rounded-full border border-border/60 bg-background/35 px-2 py-0.5 text-[10px] text-muted-foreground">
+            {intentBars.length}
+          </span>
+        }
+        defaultOpen={false}
+      >
+        <Card>
+          <MetricInfo title={text.weakest} tooltip={text.weakestTip} />
+          <div className="h-[300px] overflow-x-auto sm:h-[340px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={intentBars} layout="vertical" margin={{ top: 8, right: 16, bottom: 8, left: 24 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" domain={[0, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                <YAxis dataKey="intent" type="category" width={140} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                <RechartsTooltip
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 12,
+                  }}
+                />
+                <Bar dataKey="stability" radius={[0, 8, 8, 0]}>
+                  {intentBars.map((item) => (
+                    <Cell
+                      key={item.intent}
+                      fill={
+                        item.stability >= 75
+                          ? "#22c55e"
+                          : item.stability >= 60
+                            ? "#facc15"
+                            : item.stability >= 40
+                              ? "#fb923c"
+                              : "#f87171"
+                      }
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </AccordionPanel>
     </div>
   );
 }
+

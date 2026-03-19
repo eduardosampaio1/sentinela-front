@@ -4,7 +4,6 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Login() {
@@ -89,9 +88,6 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-hero px-4 sm:px-6">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mb-4 flex justify-end">
-            <LanguageSwitcher />
-          </div>
           <Link to="/" className="text-2xl font-bold text-foreground">
             Sentinela
           </Link>

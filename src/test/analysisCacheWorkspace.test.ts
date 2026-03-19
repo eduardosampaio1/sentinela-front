@@ -40,4 +40,31 @@ describe("workspace-scoped analysis cache", () => {
     expect(loaded).toBeNull();
     expect(isSessionCached("workspace-b")).toBe(false);
   });
+
+  it("does not leak cache between projects inside the same workspace", () => {
+    saveResult(
+      { ...BASE_RESULT, analysis_id: "analysis-project-a" },
+      "hash-project-a",
+      { workspaceId: "workspace-a", projectId: "project-a", environmentId: "prod" },
+    );
+    saveResult(
+      { ...BASE_RESULT, analysis_id: "analysis-project-b" },
+      "hash-project-b",
+      { workspaceId: "workspace-a", projectId: "project-b", environmentId: "prod" },
+    );
+
+    const loadedA = loadResult({
+      workspaceId: "workspace-a",
+      projectId: "project-a",
+      environmentId: "prod",
+    });
+    const loadedB = loadResult({
+      workspaceId: "workspace-a",
+      projectId: "project-b",
+      environmentId: "prod",
+    });
+
+    expect(loadedA?.analysis_id).toBe("analysis-project-a");
+    expect(loadedB?.analysis_id).toBe("analysis-project-b");
+  });
 });
