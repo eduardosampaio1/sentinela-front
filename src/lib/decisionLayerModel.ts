@@ -1,5 +1,16 @@
-import type { AnalysisInterpretation, AnalysisResult } from "@/lib/api";
-import type { ProblemItem, RecommendationItem } from "@/lib/dashboardModel";
+import type { AnalysisInterpretation, AnalysisResult } from "./api";
+import {
+  asNumber as readNumber,
+  asRecord as readRecord,
+  getBaselineComparison,
+  getBehaviorScore,
+  getBusinessImpact,
+  getConfidencePercent,
+  getCostPerUsefulOutcome,
+  getEvidence,
+  getSemanticDrift,
+} from "./analysisAdapter";
+import type { ProblemItem, RecommendationItem } from "./dashboardModel";
 
 type Direction = "higher_better" | "lower_better";
 
@@ -101,12 +112,11 @@ const HIGH_IMPACT_AREA_KEYWORDS = [
 ];
 
 function asRecord(value: unknown): Record<string, unknown> {
-  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
+  return readRecord(value);
 }
 
 function asNumber(value: unknown): number | null {
-  if (typeof value !== "number" || Number.isNaN(value)) return null;
-  return value;
+  return readNumber(value);
 }
 
 function normalizePercentLike(value: unknown): number | null {
@@ -142,71 +152,35 @@ function pickFirstPercent(record: Record<string, unknown>, keys: string[]) {
 }
 
 function extractBehaviorScore(result: AnalysisResult | null): number | null {
-  if (!result) return null;
-  const scores = asRecord(asRecord(result.argos_v2).scores);
-  const fromBehavior = pickFirstPercent(scores, ["BEHAVIOR_SCORE", "behavior_score"]);
-  if (fromBehavior !== null) return fromBehavior;
-  return pickFirstPercent(scores, ["AI_HEALTH_SCORE", "ai_health_score"]);
+  return getBehaviorScore(result);
 }
 
 function extractDrift(result: AnalysisResult | null): number | null {
-  if (!result) return null;
-  const semanticSignals = asRecord(asRecord(asRecord(result.argos_v2).signals).semantic);
-  return pickFirstPercent(semanticSignals, [
-    "semantic_drift",
-    "semantic_dispersion",
-    "semantic_entropy",
-    "drift",
-  ]);
+  return getSemanticDrift(result);
 }
 
 function extractCostMetric(result: AnalysisResult | null): number | null {
-  if (!result) return null;
-  const argos = asRecord(result.argos_v2);
-  const scores = asRecord(argos.scores);
-  const businessImpact = asRecord(argos.business_impact);
-  const topBusinessImpact = asRecord(result.business_impact);
-
-  const scoreValue = pickFirstNumber(scores, [
-    "COST_PER_USEFUL_OUTCOME",
-    "cost_per_useful_outcome",
-    "costPerUsefulOutcome",
-  ]);
-  if (scoreValue !== null) return Number(scoreValue.toFixed(4));
-
-  const businessValue = pickFirstNumber(businessImpact, [
-    "cost_per_useful_outcome",
-    "costPerUsefulOutcome",
-  ]);
-  if (businessValue !== null) return Number(businessValue.toFixed(4));
-
-  const topLevelValue = pickFirstNumber(topBusinessImpact, [
-    "cost_per_useful_outcome",
-    "costPerUsefulOutcome",
-  ]);
-  if (topLevelValue !== null) return Number(topLevelValue.toFixed(4));
-
-  return null;
+  return getCostPerUsefulOutcome(result);
 }
 
 function extractConfidence(result: AnalysisResult | null): number | null {
-  if (!result) return null;
-  return clampPercent(normalizePercentLike(result.global_confidence));
+  return getConfidencePercent(result);
+}
+
+function formatUsd(value: number): string {
+  return `US$ ${value.toFixed(2)}`;
 }
 
 function formatMetricValue(metric: CoreMetricCardModel): string {
   if (metric.value === null) return "N/A";
   if (metric.id === "cost-per-useful-outcome") {
-    const absValue = Math.abs(metric.value);
-    if (absValue >= 1000) return metric.value.toFixed(0);
-    if (absValue >= 100) return metric.value.toFixed(1);
-    return metric.value.toFixed(2);
+    return formatUsd(metric.value);
   }
   return `${metric.value.toFixed(1)}%`;
 }
 
 function behaviorNote(value: number | null) {
-  if (value === null) return { note: "Decision confidence is limited", tone: "neutral" as const };
+  if (value === null) return { note: "Requires outcome and cost signals", tone: "neutral" as const };
   if (value < 45) return { note: "Below safe range", tone: "risk" as const };
   if (value < 70) return { note: "Performance pressure detected", tone: "watch" as const };
   return { note: "Behavior currently reliable", tone: "safe" as const };
@@ -451,9 +425,7 @@ function buildVerdictModel(inputs: VerdictInputs): VerdictStripModel {
 
 function extractRegressionFlag(result: AnalysisResult | null) {
   if (!result) return false;
-  const topBaseline = asRecord(result.baseline_comparison);
-  const metadataBaseline = asRecord(asRecord(asRecord(result.argos_v2).metadata).baseline_comparison);
-  const baseline = Object.keys(topBaseline).length > 0 ? topBaseline : metadataBaseline;
+  const baseline = getBaselineComparison(result);
   if (Object.keys(baseline).length === 0) return false;
 
   const aiHealthDelta = asNumber(baseline.delta_ai_health_score);
@@ -652,7 +624,7 @@ export function buildDecisionLayerModel(params: {
       displayValue: "",
       direction: "lower_better",
       missing: costPerUsefulOutcome === null,
-      missingLabel: costPerUsefulOutcome === null ? "Not provided by engine" : undefined,
+      missingLabel: costPerUsefulOutcome === null ? "Unavailable for current input maturity" : undefined,
       emphasis: costPerUsefulOutcome === null ? "reduced" : "normal",
       operationalNote: costMeta.note,
       tone: costMeta.tone,

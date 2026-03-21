@@ -1,4 +1,11 @@
-import type { AnalysisResult } from "@/lib/api";
+import type { AnalysisResult } from "./api";
+import {
+  getAIHealthScore,
+  getArgosV2,
+  getBaselineComparison,
+  getConfidencePercent,
+  getSignalValue as readSignalValue,
+} from "./analysisAdapter";
 
 type TrendDirection = "up" | "down" | "flat";
 type IndicatorTone = "healthy" | "watch" | "risk";
@@ -115,35 +122,12 @@ function normalizeSeverity(value: unknown): "low" | "medium" | "high" | "critica
   return "low";
 }
 
-function getArgosV2(result: AnalysisResult | null): Record<string, unknown> {
-  if (!result) return {};
-  return asRecord(result.argos_v2);
-}
-
-function getSignals(result: AnalysisResult | null): Record<string, unknown> {
-  return asRecord(getArgosV2(result).signals);
-}
-
 function getSignalValue(
   result: AnalysisResult | null,
   category: string,
   keyCandidates: string[],
 ): number | null {
-  const categoryRecord = asRecord(getSignals(result)[category]);
-  for (const key of keyCandidates) {
-    const value = toScore(categoryRecord[key]);
-    if (value !== null) return clampScore(value);
-  }
-  return null;
-}
-
-function getBaselineComparison(result: AnalysisResult | null): Record<string, unknown> {
-  if (!result) return {};
-  const top = asRecord(result.baseline_comparison);
-  if (Object.keys(top).length > 0) return top;
-  const argos = getArgosV2(result);
-  const metadata = asRecord(argos.metadata);
-  return asRecord(metadata.baseline_comparison);
+  return readSignalValue(result, category, keyCandidates);
 }
 
 function trendFromDelta(delta: number | null): TrendDirection {
@@ -187,10 +171,7 @@ function formatRelativeTime(isoDate?: string): string {
 }
 
 function confidenceLevel(result: AnalysisResult | null): string {
-  if (!result) return "Unknown";
-  const rawConfidence = toScore(result.global_confidence);
-  const aiHealth = toScore(asRecord(getArgosV2(result).scores).AI_HEALTH_SCORE);
-  const source = rawConfidence ?? aiHealth;
+  const source = getConfidencePercent(result) ?? getAIHealthScore(result);
   if (source === null) return "Unknown";
   if (source >= 75) return "High";
   if (source >= 50) return "Medium";
@@ -198,11 +179,7 @@ function confidenceLevel(result: AnalysisResult | null): string {
 }
 
 function pickAiHealthScore(result: AnalysisResult | null): number | null {
-  if (!result) return null;
-  const argosScores = asRecord(getArgosV2(result).scores);
-  const aiHealth = toScore(argosScores.AI_HEALTH_SCORE);
-  if (aiHealth !== null) return clampScore(aiHealth);
-  return toScore(result.global_confidence);
+  return getAIHealthScore(result);
 }
 
 function riskLabel(risk?: string): string {
