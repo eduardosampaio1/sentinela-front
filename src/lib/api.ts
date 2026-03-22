@@ -629,9 +629,9 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
   const topLevelExecutiveSummary = String(raw.executive_summary ?? "").trim();
   const argosExecutiveSummary = String(argosV2.executive_summary ?? "").trim();
   const executiveSummary = topLevelExecutiveSummary || argosExecutiveSummary || undefined;
+  const topLevelAnalysisRunId = firstNonEmptyString(raw.analysis_run_id, raw.job_id);
   const resolvedAnalysisRunId = firstNonEmptyString(
-    raw.analysis_run_id,
-    raw.job_id,
+    topLevelAnalysisRunId,
     argosMetadata.analysis_run_id,
     argosMetadata.job_id,
     argosMetadata.run_id,
@@ -659,6 +659,11 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
     pushUniqueWarning(
       warnings,
       "Missing analysis_run_id. Interpretation cache and run-level history may be degraded.",
+    );
+  } else if (!topLevelAnalysisRunId) {
+    pushUniqueWarning(
+      warnings,
+      "Missing top-level analysis_run_id. Falling back to argos_v2 metadata for run-level history.",
     );
   }
 
@@ -1142,6 +1147,13 @@ function sanitizeResult(parsed: unknown): AnalysisResult {
     String(record.executive_summary ?? "").trim() ||
     String(argosV2.executive_summary ?? "").trim() ||
     undefined;
+  const resolvedAnalysisRunId = firstNonEmptyString(
+    record.analysis_run_id,
+    record.job_id,
+    argosMetadata.analysis_run_id,
+    argosMetadata.job_id,
+    argosMetadata.run_id,
+  );
 
   return {
     workspace_id: typeof record.workspace_id === "string" ? record.workspace_id : undefined,
@@ -1173,8 +1185,7 @@ function sanitizeResult(parsed: unknown): AnalysisResult {
     analyzed_at:
       typeof record.analyzed_at === "string" ? record.analyzed_at : new Date().toISOString(),
     analysis_id: typeof record.analysis_id === "string" ? record.analysis_id : undefined,
-    analysis_run_id:
-      typeof record.analysis_run_id === "string" ? record.analysis_run_id : undefined,
+    analysis_run_id: resolvedAnalysisRunId,
     issues: Array.isArray(record.issues) ? (record.issues as Array<Record<string, unknown>>) : [],
     insights: Object.keys(asRecord(record.insights)).length > 0 ? asRecord(record.insights) : undefined,
     argos_v2: Object.keys(argosV2).length > 0 ? argosV2 : undefined,

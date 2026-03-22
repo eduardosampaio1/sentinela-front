@@ -166,11 +166,11 @@ export function getCostPerUsefulOutcome(result: AnalysisResult | null): number |
   const scores = getScores(result);
   const businessImpact = getBusinessImpact(result);
   const candidates = [
+    businessImpact.cost_per_useful_outcome,
+    businessImpact.costPerUsefulOutcome,
     scores.COST_PER_USEFUL_OUTCOME,
     scores.cost_per_useful_outcome,
     scores.costPerUsefulOutcome,
-    businessImpact.cost_per_useful_outcome,
-    businessImpact.costPerUsefulOutcome,
   ];
 
   for (const candidate of candidates) {
