@@ -23,18 +23,27 @@ export default function TechnicalDetailsPanel({ result }: TechnicalDetailsPanelP
 
   return (
     <AccordionPanel
-      title="Technical Details"
+      title="Technical details"
       icon={<ScrollText className="h-4 w-4" />}
+      badge={
+        <span className="rounded-full border border-border/60 bg-background/35 px-3 py-1 text-[11px] text-muted-foreground">
+          {details.length} fields
+        </span>
+      }
       defaultOpen={false}
     >
-      <div className="grid gap-2 sm:grid-cols-2">
+      <p className="mb-4 text-sm leading-6 text-muted-foreground">
+        Operational traceability for the current run. This is the dock for identifiers, timestamps, and engine lineage.
+      </p>
+
+      <div className="grid gap-3 sm:grid-cols-2">
         {details.map((item) => (
           <article
             key={item.label}
-            className={`rounded-lg border border-border/35 bg-background/25 px-2.5 py-2 ${item.value ? "" : "opacity-70 saturate-75"}`}
+            className={`rounded-[22px] border border-border/45 bg-background/25 p-4 ${item.value ? "" : "opacity-70 saturate-75"}`}
           >
-            <p className="text-[11px] text-muted-foreground">{item.label}</p>
-            <p className="mt-1 text-xs text-foreground">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{item.label}</p>
+            <p className="mt-3 break-all font-mono text-sm leading-6 text-foreground">
               {item.value ?? <MissingDataBadge />}
             </p>
           </article>

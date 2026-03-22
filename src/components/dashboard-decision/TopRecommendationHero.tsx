@@ -1,4 +1,4 @@
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ArrowRight, RefreshCw } from "lucide-react";
 import type { TopRecommendationHeroModel } from "@/lib/decisionLayerModel";
 import { Button } from "@/components/ui/button";
 
@@ -16,44 +16,68 @@ export default function TopRecommendationHero({
   secondaryDisabled,
 }: TopRecommendationHeroProps) {
   return (
-    <section className="relative overflow-hidden rounded-[30px] border border-primary/25 bg-[linear-gradient(145deg,rgba(10,16,30,0.92),rgba(9,20,36,0.86))] p-6 shadow-[0_30px_70px_-38px_rgba(7,172,215,0.65)] sm:p-8">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_8%,rgba(6,182,212,0.2),transparent_42%),radial-gradient(circle_at_92%_88%,rgba(59,130,246,0.12),transparent_40%)]" />
-      <div className="relative z-10 flex flex-col gap-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
+    <section className="dashboard-panel-strong dashboard-subtle-grid overflow-hidden p-6 sm:p-7">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-4xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-primary/35 bg-primary/12 px-2.5 py-0.5 text-[10px] font-medium tracking-[0.04em] text-primary">
-                Top recommendation
+              <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+                05 Top recommendation
               </span>
               {model.escalated ? (
-                <span className="rounded-full border border-red-500/30 bg-red-500/15 px-2.5 py-0.5 text-[10px] font-medium tracking-[0.04em] text-red-200">
-                  Act now
+                <span className="animate-signal-pulse rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-red-200">
+                  Immediate action
                 </span>
               ) : null}
             </div>
-            <h1 className="max-w-4xl text-[1.8rem] font-semibold leading-[1.16] tracking-tight text-foreground sm:text-[2.2rem]">
+
+            <h1 className="mt-4 max-w-4xl font-display text-[2.2rem] font-semibold leading-[1.08] tracking-tight text-foreground sm:text-[2.85rem]">
               {model.headline}
             </h1>
+
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
+              This is the highest-leverage move based on the current run. Use it to decide what changes now, and what can wait.
+            </p>
           </div>
 
-          <AlertTriangle className="mt-1 h-5 w-5 shrink-0 text-primary/90" />
+          <div className="rounded-[24px] border border-border/55 bg-background/35 p-4 xl:max-w-[300px]">
+            <div className="flex items-center gap-2 text-primary">
+              <AlertTriangle className="h-4 w-4" />
+              <p className="text-sm font-medium">Action framing</p>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              Treat this as the next operational move, not a generic suggestion list.
+            </p>
+          </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
-          {model.supportingBlocks.slice(0, 2).map((text) => (
-            <p
-              key={text}
-              className="rounded-xl border border-border/45 bg-background/40 px-3.5 py-2.5 text-sm leading-snug text-muted-foreground"
-            >
-              {text}
-            </p>
+        <div className="grid gap-3 lg:grid-cols-3">
+          {model.supportingBlocks.slice(0, 3).map((text, index) => (
+            <article key={text} className="rounded-[22px] border border-border/55 bg-background/35 p-4">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                Action note {index + 1}
+              </p>
+              <p className="mt-3 text-sm leading-6 text-foreground">{text}</p>
+            </article>
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={onPrimaryAction}>{model.primaryCtaLabel}</Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            onClick={onPrimaryAction}
+            className="rounded-2xl px-5 shadow-[0_24px_48px_-28px_rgba(34,211,238,0.9)]"
+          >
+            {model.primaryCtaLabel}
+            <ArrowRight className="h-4 w-4" />
+          </Button>
           {model.secondaryCtaLabel && onSecondaryAction ? (
-            <Button variant="ghost" onClick={onSecondaryAction} disabled={secondaryDisabled}>
+            <Button
+              variant="outline"
+              onClick={onSecondaryAction}
+              disabled={secondaryDisabled}
+              className="rounded-2xl border-border/60 bg-background/30"
+            >
+              <RefreshCw className="h-4 w-4" />
               {model.secondaryCtaLabel}
             </Button>
           ) : null}

@@ -1,4 +1,4 @@
-import { TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 import {
   formatPercent,
   indicatorLabel,
@@ -17,9 +17,9 @@ function trendIcon(trend: SignalCardModel["trend"]) {
 }
 
 function indicatorClass(indicator: SignalCardModel["indicator"]) {
-  if (indicator === "healthy") return "text-emerald-300 border-emerald-500/30 bg-emerald-500/10";
-  if (indicator === "risk") return "text-red-300 border-red-500/30 bg-red-500/10";
-  return "text-amber-300 border-amber-500/30 bg-amber-500/10";
+  if (indicator === "healthy") return "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
+  if (indicator === "risk") return "border-red-500/30 bg-red-500/10 text-red-200";
+  return "border-amber-500/30 bg-amber-500/10 text-amber-200";
 }
 
 export default function SignalScoreCard({ item }: SignalScoreCardProps) {
@@ -31,29 +31,36 @@ export default function SignalScoreCard({ item }: SignalScoreCardProps) {
         : Math.max(6, Math.min(100 - item.score, 100));
 
   return (
-    <article className="rounded-2xl border border-border bg-card/70 p-4 shadow-sm">
+    <article className="dashboard-panel-muted overflow-hidden p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-sm font-medium text-foreground">{item.title}</h3>
-        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${indicatorClass(item.indicator)}`}>
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Signal card</p>
+          <h3 className="mt-2 text-base font-semibold text-foreground">{item.title}</h3>
+        </div>
+        <span className={`rounded-full border px-3 py-1 text-[11px] font-medium ${indicatorClass(item.indicator)}`}>
           {indicatorLabel(item.indicator)}
         </span>
       </div>
 
-      <div className="mt-3 flex items-end justify-between gap-3">
-        <div className="text-2xl font-semibold text-foreground">{formatPercent(item.score)}</div>
-        <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+      <div className="mt-5 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Current score</p>
+          <div className="mt-2 font-display text-[2.2rem] font-semibold tracking-tight text-foreground">
+            {formatPercent(item.score)}
+          </div>
+        </div>
+        <div className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-background/30 px-3 py-1 text-xs text-muted-foreground">
           {trendIcon(item.trend)}
           {trendLabel(item.trend)}
         </div>
       </div>
 
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted/70">
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted/70">
         <div
-          className="h-full rounded-full bg-primary/80 transition-all duration-500"
+          className="h-full rounded-full bg-gradient-to-r from-primary/65 to-sky-400/80 transition-all duration-500"
           style={{ width: `${progress}%` }}
         />
       </div>
     </article>
   );
 }
-

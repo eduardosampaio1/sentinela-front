@@ -10,19 +10,19 @@ interface BehaviorScoreRadialCardProps {
 const BEHAVIOR_TARGET = 70;
 
 function statusLabel(metric: CoreMetricCardModel | null) {
-  if (!metric || metric.missing) return "UNKNOWN";
-  if (metric.tone === "risk") return "POOR";
-  if (metric.tone === "watch") return "WATCH";
-  if (metric.tone === "safe") return "GOOD";
-  return "UNKNOWN";
+  if (!metric || metric.missing) return "Unknown";
+  if (metric.tone === "risk") return "Under target";
+  if (metric.tone === "watch") return "Needs attention";
+  if (metric.tone === "safe") return "Operating well";
+  return "Unknown";
 }
 
 function statusClass(metric: CoreMetricCardModel | null) {
-  if (!metric || metric.missing) return "border-border/50 bg-muted/20 text-muted-foreground";
-  if (metric.tone === "risk") return "border-red-500/35 bg-red-500/10 text-red-300";
-  if (metric.tone === "watch") return "border-amber-500/35 bg-amber-500/10 text-amber-300";
-  if (metric.tone === "safe") return "border-emerald-500/35 bg-emerald-500/10 text-emerald-300";
-  return "border-border/50 bg-muted/20 text-muted-foreground";
+  if (!metric || metric.missing) return "border-border/60 bg-background/30 text-muted-foreground";
+  if (metric.tone === "risk") return "border-red-500/30 bg-red-500/12 text-red-200";
+  if (metric.tone === "watch") return "border-amber-500/30 bg-amber-500/12 text-amber-200";
+  if (metric.tone === "safe") return "border-emerald-500/30 bg-emerald-500/12 text-emerald-200";
+  return "border-border/60 bg-background/30 text-muted-foreground";
 }
 
 function ringColor(metric: CoreMetricCardModel | null) {
@@ -39,18 +39,16 @@ function percentageValue(value: number | null) {
 }
 
 function formatDeltaVsTarget(value: number | null) {
-  if (value === null || Number.isNaN(value)) return "Not provided by engine";
+  if (value === null || Number.isNaN(value)) return "Target unavailable";
   const delta = value - BEHAVIOR_TARGET;
   const sign = delta > 0 ? "+" : "";
-  return `${sign}${delta.toFixed(1)}%`;
+  return `${sign}${delta.toFixed(1)} pts vs target`;
 }
 
 function chipValue(metric: CoreMetricCardModel | null, kind: "percent" | "cost") {
-  if (!metric || metric.missing) return "Not provided by engine";
-  if (kind === "cost") {
-    return metric.displayValue;
-  }
-  return metric.value === null ? "Not provided by engine" : `${metric.value.toFixed(1)}%`;
+  if (!metric || metric.missing) return "Not provided";
+  if (kind === "cost") return metric.displayValue;
+  return metric.value === null ? "Not provided" : `${metric.value.toFixed(1)}%`;
 }
 
 export default function BehaviorScoreRadialCard({
@@ -59,42 +57,62 @@ export default function BehaviorScoreRadialCard({
   costMetric,
 }: BehaviorScoreRadialCardProps) {
   const normalized = percentageValue(behaviorMetric?.value ?? null);
-  const radius = 46;
-  const strokeWidth = 10;
+  const radius = 56;
+  const strokeWidth = 12;
   const circumference = 2 * Math.PI * radius;
   const progressOffset =
     normalized === null ? circumference : circumference - (normalized / 100) * circumference;
 
   return (
-    <article className="rounded-[20px] border border-primary/30 bg-[linear-gradient(140deg,rgba(13,20,37,0.9),rgba(12,24,42,0.72))] p-4 shadow-[0_24px_56px_-38px_rgba(6,182,212,0.7)] sm:p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-xs font-medium tracking-[0.03em] text-muted-foreground">Behavior Score</p>
+    <article className="dashboard-panel-strong overflow-hidden p-5 sm:p-6">
+      <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+        <div className="max-w-md space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium tracking-[0.04em] ${statusClass(behaviorMetric)}`}>
+            <span className="dashboard-kicker">01 Priority metric</span>
+            <span className={`rounded-full border px-3 py-1 text-[11px] font-medium ${statusClass(behaviorMetric)}`}>
               {statusLabel(behaviorMetric)}
             </span>
             {behaviorMetric?.missing ? <MissingDataBadge label={behaviorMetric.missingLabel} /> : null}
           </div>
-          <p className="text-sm text-muted-foreground">
-            Delta vs target:{" "}
-            <span className="font-medium text-foreground">{formatDeltaVsTarget(behaviorMetric?.value ?? null)}</span>
-          </p>
+
+          <div>
+            <h3 className="font-display text-[1.9rem] font-semibold tracking-tight text-foreground sm:text-[2.2rem]">
+              Behavior Score
+            </h3>
+            <p className="mt-2 max-w-lg text-sm leading-7 text-muted-foreground">
+              This is the leading signal for whether the AI is still delivering useful, stable behavior.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <article className="rounded-[20px] border border-border/55 bg-background/35 p-3.5">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Target gap</p>
+              <p className="mt-2 text-sm font-medium text-foreground">{formatDeltaVsTarget(behaviorMetric?.value ?? null)}</p>
+            </article>
+            <article className="rounded-[20px] border border-border/55 bg-background/35 p-3.5">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Drift</p>
+              <p className="mt-2 text-sm font-medium text-foreground">{chipValue(driftMetric, "percent")}</p>
+            </article>
+            <article className="rounded-[20px] border border-border/55 bg-background/35 p-3.5">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">CPUO</p>
+              <p className="mt-2 text-sm font-medium text-foreground">{chipValue(costMetric, "cost")}</p>
+            </article>
+          </div>
         </div>
 
-        <div className="relative flex h-32 w-32 items-center justify-center">
-          <svg className="h-32 w-32 -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+        <div className="dashboard-orb animate-float-drift mx-auto flex h-[200px] w-[200px] items-center justify-center xl:mx-0">
+          <svg className="h-[200px] w-[200px] -rotate-90" viewBox="0 0 160 160" aria-hidden="true">
             <circle
-              cx="60"
-              cy="60"
+              cx="80"
+              cy="80"
               r={radius}
               fill="none"
-              stroke="hsl(var(--border) / 0.5)"
+              stroke="hsl(var(--border) / 0.45)"
               strokeWidth={strokeWidth}
             />
             <circle
-              cx="60"
-              cy="60"
+              cx="80"
+              cy="80"
               r={radius}
               fill="none"
               stroke={ringColor(behaviorMetric)}
@@ -105,27 +123,15 @@ export default function BehaviorScoreRadialCard({
               style={{ transition: "stroke-dashoffset 420ms ease" }}
             />
           </svg>
+
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-[1.55rem] font-semibold leading-none text-foreground">
+            <p className="font-display text-[3.1rem] font-semibold leading-none text-foreground">
               {behaviorMetric?.missing || normalized === null ? "N/A" : Math.round(normalized)}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">/100</p>
+            <p className="mt-1 text-xs uppercase tracking-[0.24em] text-muted-foreground">out of 100</p>
           </div>
         </div>
-      </div>
-
-      <div className="mt-4 grid gap-2 sm:grid-cols-3">
-        <span className="rounded-md border border-border/50 bg-background/25 px-2.5 py-1.5 text-xs text-muted-foreground">
-          Consistency: <span className="text-foreground">{chipValue(behaviorMetric, "percent")}</span>
-        </span>
-        <span className="rounded-md border border-border/50 bg-background/25 px-2.5 py-1.5 text-xs text-muted-foreground">
-          Separation: <span className="text-foreground">{chipValue(driftMetric, "percent")}</span>
-        </span>
-        <span className="rounded-md border border-border/50 bg-background/25 px-2.5 py-1.5 text-xs text-muted-foreground">
-          Efficiency: <span className="text-foreground">{chipValue(costMetric, "cost")}</span>
-        </span>
       </div>
     </article>
   );
 }
-

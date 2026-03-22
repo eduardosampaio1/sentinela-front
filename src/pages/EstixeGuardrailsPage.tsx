@@ -1,6 +1,7 @@
 import { ShieldAlert } from "lucide-react";
 import { useAnalysis } from "@/contexts/AnalysisContext";
 import { estixeSignals } from "@/lib/dashboardModel";
+import DashboardModuleHero from "@/components/dashboard/DashboardModuleHero";
 import SignalSummaryPanel from "@/components/dashboard-v2/SignalSummaryPanel";
 
 export default function EstixeGuardrailsPage() {
@@ -8,20 +9,26 @@ export default function EstixeGuardrailsPage() {
   const items = estixeSignals(result);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-start gap-2">
-        <ShieldAlert className="mt-1 h-5 w-5 text-primary" />
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Guardrails</h1>
-          <p className="text-sm text-muted-foreground">
-            Safety and policy signals that indicate where intervention may be needed.
-          </p>
-        </div>
-      </div>
+    <div className="page-stack">
+      <DashboardModuleHero
+        eyebrow="Guardrails module"
+        title="Safety and policy pressure"
+        description="Review the safety signals, policy drift indicators, and intervention thresholds that decide whether this system can still be trusted in production."
+        icon={<ShieldAlert className="h-5 w-5" />}
+        chips={[
+          { label: items.length > 0 ? "Signals detected" : "Awaiting safety signal", tone: items.length > 0 ? "watch" : "neutral" },
+          { label: "Intervention-ready", tone: "primary" },
+        ]}
+        stats={[
+          { label: "Guardrail signals", value: String(items.length), helper: "Signals currently exposed by the engine." },
+          { label: "Analysis run", value: result?.analysis_run_id ?? "Unavailable", helper: "Current run backing this safety surface." },
+          { label: "Purpose", value: "Trust", helper: "Use this module before shipping changes or increasing traffic." },
+        ]}
+      />
 
       <SignalSummaryPanel
-        title="Guardrail Signals"
-        subtitle="Safety signals, risk patterns, and policy drift indicators."
+        title="Guardrail signals"
+        subtitle="Safety signals, risk patterns, and policy drift indicators. Open the deck to inspect each current pressure point."
         items={items}
         emptyText="Signals will appear when detected."
       />

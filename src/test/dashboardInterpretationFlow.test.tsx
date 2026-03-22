@@ -32,8 +32,29 @@ vi.mock("@/lib/analysisReportPdf", () => ({
 
 vi.mock("@/lib/dashboardModel", () => ({
   detectedProblems: () => [],
+  healthHeaderModel: () => ({
+    aiHealthScore: 72,
+    riskLevel: "Moderate Risk",
+    confidence: 81,
+    status: "High",
+    summary: "System summary",
+  }),
   interactionPanelModel: () => ({ title: "Interaction Panel" }),
   recommendedActions: () => [],
+  riskOverviewModel: () => ({
+    riskLevel: "Moderate Risk",
+    aiHealthScore: 72,
+    confidence: 81,
+    trend: "Stable",
+    topRisks: [],
+  }),
+  stabilityTrendModel: () => ({
+    trend: "Stable",
+    regressionDetected: false,
+    baselineAvailable: false,
+    summary: "Trend summary",
+    metrics: [],
+  }),
 }));
 
 vi.mock("@/lib/decisionLayerModel", () => ({
@@ -78,6 +99,18 @@ vi.mock("@/components/dashboard-v2/RecommendationsPanel", () => ({
 
 vi.mock("@/components/dashboard-v2/InteractionAnalysisPanel", () => ({
   default: () => <div>Interaction Panel</div>,
+}));
+
+vi.mock("@/components/dashboard-v2/RiskOverviewPanel", () => ({
+  default: () => <div>Risk Overview Panel</div>,
+}));
+
+vi.mock("@/components/dashboard-v2/StabilityTrendPanel", () => ({
+  default: () => <div>Stability Trend Panel</div>,
+}));
+
+vi.mock("@/components/dashboard-v2/SystemOverviewBlock", () => ({
+  default: () => <div>System Overview Block</div>,
 }));
 
 vi.mock("@/components/dashboard-decision/VerdictStrip", () => ({
