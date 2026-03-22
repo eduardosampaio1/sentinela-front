@@ -664,6 +664,13 @@ function firstNonEmpty(candidates: Array<string | null | undefined>) {
   return null;
 }
 
+function firstNonEmptyFull(candidates: Array<string | null | undefined>) {
+  for (const candidate of candidates) {
+    if (!emptyOrMissing(candidate)) return String(candidate).replace(/\s+/g, " ").trim();
+  }
+  return null;
+}
+
 export function buildInterpretationPanelModel(
   interpretation: AnalysisInterpretation | null,
   heroHeadline: string,
@@ -676,12 +683,12 @@ export function buildInterpretationPanelModel(
     };
   }
 
-  const summaryRaw = firstNonEmpty([interpretation.executive_diagnosis, interpretation.summary]);
-  const businessImpactRaw = firstNonEmpty([
+  const summaryRaw = firstNonEmptyFull([interpretation.executive_diagnosis, interpretation.summary]);
+  const businessImpactRaw = firstNonEmptyFull([
     interpretation.business_implications?.[0],
     interpretation.main_risks?.[0]?.impact,
   ]);
-  const riskProjectionRaw = firstNonEmpty([
+  const riskProjectionRaw = firstNonEmptyFull([
     interpretation.systemic_pattern,
     interpretation.operational_risks?.[0],
     interpretation.confidence_notes,

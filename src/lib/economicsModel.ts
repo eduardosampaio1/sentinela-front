@@ -45,6 +45,7 @@ export interface EconomicsPanelModel {
 
 function formatUsd(value: number | null): string {
   if (value === null || !Number.isFinite(value)) return "Unavailable";
+  if (value > 0 && value < 0.01) return "US$ <0.01";
   return `US$ ${value.toFixed(2)}`;
 }
 

@@ -128,4 +128,59 @@ describe("economics rendering", () => {
       "US$ 12.00",
     );
   });
+
+  it("shows sub-cent token projections without collapsing them to zero", () => {
+    const economics = buildEconomicsPanelModel(
+      mapApiToDashboard({
+        analysis_id: "analysis-eco-2",
+        analyzed_at: "2026-03-22T12:00:00.000Z",
+        consistency_score: 72,
+        global_confidence: 0.81,
+        risk_level: "HIGH",
+        n_conversations: 10,
+        n_intents: 3,
+        token_waste_estimate: 0,
+        cross_intent_similarity: 0,
+        critical_alerts_count: 0,
+        alerts: [],
+        business_impact: {
+          ai_health_score: 62.05,
+          estimated_handoff_cost: 24,
+          token_cost_waste: 0.0007,
+          conversion_risk: 0.365,
+          token_cost_monthly: 0.0007,
+          token_cost_yearly: 0.0085,
+          handoff_cost_monthly: 24,
+          handoff_cost_yearly: 288,
+          cost_per_useful_outcome: 8.0044,
+          useful_outcomes: 6,
+          useful_rate: 0.6,
+          observed_token_cost_total: 0.0265,
+          observed_handoff_cost_total: 48,
+          total_estimated_cost: 48.0265,
+          actual_handoffs: 4,
+        },
+        argos_v2: {
+          contract_version: "2.0",
+          scores: {
+            AI_HEALTH_SCORE: 62.05,
+          },
+          signals: {},
+          issues: [],
+          evidence: {},
+          recommendations: [],
+          business_impact: {},
+          metadata: {},
+        },
+      }),
+    );
+
+    expect(economics.details.find((metric) => metric.id === "token-waste-cost")?.displayValue).toBe("US$ <0.01");
+    expect(economics.details.find((metric) => metric.id === "projected-token-cost-month")?.displayValue).toBe(
+      "US$ <0.01",
+    );
+    expect(economics.details.find((metric) => metric.id === "projected-token-cost-year")?.displayValue).toBe(
+      "US$ <0.01",
+    );
+  });
 });
