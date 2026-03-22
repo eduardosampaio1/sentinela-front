@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import type { AnalysisResult } from "@/lib/api";
+import { buildEconomicsPanelModel } from "@/lib/economicsModel";
 
 function asDisplay(value: unknown, suffix = ""): string {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -7,6 +8,13 @@ function asDisplay(value: unknown, suffix = ""): string {
   }
   if (typeof value === "string" && value.trim()) {
     return value.trim();
+  }
+  return "N/A";
+}
+
+function asUsd(value: unknown): string {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return `USD ${value.toFixed(2)}`;
   }
   return "N/A";
 }
@@ -62,6 +70,7 @@ export function downloadAnalysisReportPdf(
   const analysisId = safeText(result.analysis_id) || "N/A";
   const reportFilename =
     safeText(result.analysis_id) || `analysis-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}`;
+  const economicsModel = buildEconomicsPanelModel(result);
 
   doc.setFont("helvetica", "bold");
   writeWrapped("Sentinela Analysis Report", 18);
@@ -121,6 +130,18 @@ export function downloadAnalysisReportPdf(
       y += rowGap;
     });
   }
+
+
+  writeSectionTitle("Economics Overview");
+  const heroMetrics = economicsModel.hero;
+  heroMetrics.forEach((metric) => {
+    writeMetric(metric.label, metric.displayValue);
+  });
+
+  writeSectionTitle("Economics Breakdown");
+  economicsModel.details.forEach((metric) => {
+    writeMetric(metric.label, metric.displayValue);
+  });
 
   const scoreMap =
     result.argos_v2 && result.argos_v2.scores && typeof result.argos_v2.scores === "object"

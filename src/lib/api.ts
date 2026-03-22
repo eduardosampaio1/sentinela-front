@@ -9,7 +9,7 @@ function normalizeApiBaseUrl(value: unknown): string {
 const configuredApiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_SENTINELA_API_URL);
 const API_BASE_CANDIDATES = Array.from(
   new Set(
-    [DEFAULT_GATEWAY_API_URL, configuredApiBaseUrl]
+    [configuredApiBaseUrl, DEFAULT_GATEWAY_API_URL]
       .map(normalizeApiBaseUrl)
       .filter(Boolean),
   ),
@@ -18,6 +18,39 @@ const API_BASE_CANDIDATES = Array.from(
 function shouldFallbackToNextBase(status: number): boolean {
   return status === 404 || status === 405 || status === 502 || status === 503 || status === 504;
 }
+
+const REQUIRED_TOP_LEVEL_FIELDS = [
+  "analysis_id",
+  "workspace_id",
+  "project_id",
+  "environment_id",
+  "engine_version",
+  "consistency_score",
+  "global_confidence",
+  "risk_level",
+  "n_conversations",
+  "n_intents",
+  "token_waste_estimate",
+  "cross_intent_similarity",
+  "response_stability_score",
+  "alerts",
+  "argos_v2",
+] as const;
+
+const REQUIRED_ARGOS_V2_FIELDS = [
+  "contract_version",
+  "analysis_version",
+  "signal_version",
+  "scoring_version",
+  "scores",
+  "signals",
+  "issues",
+  "evidence",
+  "recommendations",
+  "business_impact",
+  "executive_summary",
+  "metadata",
+] as const;
 
 export interface AnalysisAlert {
   severity: string;
@@ -154,6 +187,19 @@ export interface InterpretAnalysisResponse {
   report: AnalysisInterpretation;
 }
 
+export interface GetInterpretationResponse {
+  found: boolean;
+  status: "not_requested" | "queued" | "running" | "completed" | "failed";
+  analysis_run_id?: string;
+  model?: string;
+  provider?: string;
+  prompt_version?: string;
+  created_at?: string;
+  updated_at?: string;
+  error?: string;
+  report?: AnalysisInterpretation;
+}
+
 function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
 }
@@ -162,6 +208,17 @@ function normalizePercent(value: unknown): number | undefined {
   if (typeof value !== "number" || Number.isNaN(value)) return undefined;
   if (value >= 0 && value <= 1) return Number((value * 100).toFixed(2));
   return Number(value.toFixed(2));
+}
+
+function pushUniqueWarning(warnings: string[], warning: string) {
+  if (!warnings.includes(warning)) warnings.push(warning);
+}
+
+function firstNonEmptyString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return undefined;
 }
 
 function extractIntentFromText(text?: string): string | undefined {
@@ -223,19 +280,23 @@ function toStringArray(value: unknown): string[] {
 
 function normalizeInterpretation(payload: unknown): AnalysisInterpretation {
   const raw = asRecord(payload);
+  
+  // BUG FIX: Garante que 'hasContent' seja true se houver qualquer dado no payload
   const summary = String(
     raw.summary ??
-      raw.executive_diagnosis ??
-      raw.systemic_pattern ??
-      raw.strategic_recommendation ??
-      "",
+    raw.executive_summary ?? 
+    raw.executive_diagnosis ??
+    raw.systemic_pattern ??
+    (Object.keys(raw).length > 0 ? "Análise concluída. Veja os detalhes abaixo." : "")
   ).trim();
 
+  // 1. Processa arrays de strings simples
   const keyFindings = toStringArray(raw.key_findings);
   const operationalRisks = toStringArray(raw.operational_risks);
   const businessImplications = toStringArray(raw.business_implications);
   const recommendedPriorities = toStringArray(raw.recommended_priorities);
 
+  // 2. Processa o array de objetos de riscos
   const normalizedMainRisks: InterpretationRisk[] = Array.isArray(raw.main_risks)
     ? raw.main_risks
         .map((item) => asRecord(item))
@@ -247,6 +308,7 @@ function normalizeInterpretation(payload: unknown): AnalysisInterpretation {
         }))
     : [];
 
+  // 3. Processa o array de objetos de ações prioritárias
   const normalizedPriorityActions: InterpretationPriorityAction[] = Array.isArray(raw.priority_actions)
     ? raw.priority_actions
         .map((item) => asRecord(item))
@@ -262,6 +324,7 @@ function normalizeInterpretation(payload: unknown): AnalysisInterpretation {
         .filter((item) => Boolean(item.action))
     : [];
 
+  // 4. Retorna o objeto final organizado
   return {
     executive_diagnosis: String(raw.executive_diagnosis ?? summary).trim(),
     risk_level: normalizeRiskLevel(raw.risk_level),
@@ -272,7 +335,7 @@ function normalizeInterpretation(payload: unknown): AnalysisInterpretation {
       raw.strategic_recommendation ??
         recommendedPriorities[0] ??
         keyFindings[0] ??
-        "",
+        ""
     ).trim(),
     summary,
     key_findings: keyFindings,
@@ -404,6 +467,54 @@ async function startInterpretationWithFallback(
   );
 }
 
+
+
+async function fetchInterpretationWithFallback(
+  analysisId: string,
+  workspaceId?: string | null,
+  projectId?: string | null,
+  environmentId?: string | null,
+): Promise<{ baseUrl: string; payload: Record<string, unknown> }> {
+  const headers = await getAuthHeaders({ Accept: "application/json" });
+  const attemptErrors: string[] = [];
+  const scopedParams = new URLSearchParams();
+  if (workspaceId && workspaceId.trim()) scopedParams.set("workspace_id", workspaceId.trim());
+  if (projectId && projectId.trim()) scopedParams.set("project_id", projectId.trim());
+  if (environmentId && environmentId.trim()) scopedParams.set("environment_id", environmentId.trim());
+  const scopedSuffix = scopedParams.toString() ? `?${scopedParams.toString()}` : "";
+
+  for (const baseUrl of API_BASE_CANDIDATES) {
+    try {
+      const response = await fetch(`${baseUrl}/interpret/${analysisId}${scopedSuffix}`, {
+        method: "GET",
+        headers,
+      });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        const summary = summarizeHttpError(response.status, text, response.statusText);
+        attemptErrors.push(`[${baseUrl}] ${summary}`);
+        if (shouldFallbackToNextBase(response.status)) {
+          continue;
+        }
+        throw new Error(summary);
+      }
+
+      const payload = (await response.json()) as Record<string, unknown>;
+      return { baseUrl, payload };
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("HTTP")) {
+        throw error;
+      }
+      attemptErrors.push(`[${baseUrl}] ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  throw new Error(
+    `Interpretation status endpoint unavailable on configured API base(s): ${attemptErrors.join(" | ")}`,
+  );
+}
+
 export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult {
   const warnings: string[] = [];
   const field = (key: string, fallback: unknown = undefined) => {
@@ -499,8 +610,46 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
   const topLevelExecutiveSummary = String(raw.executive_summary ?? "").trim();
   const argosExecutiveSummary = String(argosV2.executive_summary ?? "").trim();
   const executiveSummary = topLevelExecutiveSummary || argosExecutiveSummary || undefined;
+  const resolvedAnalysisRunId = firstNonEmptyString(
+    raw.analysis_run_id,
+    raw.job_id,
+    argosMetadata.analysis_run_id,
+    argosMetadata.job_id,
+    argosMetadata.run_id,
+  );
   const rawIssues = Array.isArray(raw.issues) ? (raw.issues as Array<Record<string, unknown>>) : [];
   const rawInsights = asRecord(raw.insights);
+
+  for (const requiredField of REQUIRED_TOP_LEVEL_FIELDS) {
+    if (!(requiredField in raw)) {
+      pushUniqueWarning(warnings, `Missing required top-level field: ${requiredField}`);
+    }
+  }
+
+  if (Object.keys(argosV2).length === 0) {
+    pushUniqueWarning(warnings, "Missing argos_v2 payload.");
+  } else {
+    for (const requiredField of REQUIRED_ARGOS_V2_FIELDS) {
+      if (!(requiredField in argosV2)) {
+        pushUniqueWarning(warnings, `Missing required argos_v2 field: ${requiredField}`);
+      }
+    }
+  }
+
+  if (!resolvedAnalysisRunId) {
+    pushUniqueWarning(
+      warnings,
+      "Missing analysis_run_id. Interpretation cache and run-level history may be degraded.",
+    );
+  }
+
+  if (!executiveSummary) {
+    pushUniqueWarning(warnings, "Missing executive_summary on both top-level payload and argos_v2.");
+  }
+
+  if (!businessImpact) {
+    pushUniqueWarning(warnings, "Missing business_impact on both top-level payload and argos_v2.");
+  }
 
   const result: AnalysisResult = {
     workspace_id:
@@ -564,10 +713,7 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
       typeof field("analysis_id", undefined) === "string"
         ? String(field("analysis_id"))
         : undefined,
-    analysis_run_id:
-      typeof field("analysis_run_id", undefined) === "string"
-        ? String(field("analysis_run_id"))
-        : undefined,
+    analysis_run_id: resolvedAnalysisRunId,
     issues: rawIssues,
     insights: Object.keys(rawInsights).length > 0 ? rawInsights : undefined,
     argos_v2: Object.keys(argosV2).length > 0 ? argosV2 : undefined,
@@ -669,64 +815,193 @@ export async function analyzeConversations(
   throw new Error("Analysis timed out while waiting for completion.");
 }
 
+export async function getInterpretation(
+  result: AnalysisResult,
+  workspaceId?: string | null,
+  projectId?: string | null,
+  environmentId?: string | null,
+): Promise<GetInterpretationResponse> {
+  const analysisId = String(result.analysis_id ?? "").trim();
+  if (!analysisId) {
+    throw new Error("Interpretation lookup requires analysis_id from a completed analysis.");
+  }
+
+  const { payload } = await fetchInterpretationWithFallback(
+    analysisId,
+    workspaceId,
+    projectId,
+    environmentId,
+  );
+
+  const interpretationStatus = String(payload.interpretation_status ?? "not_requested").trim().toLowerCase();
+  const rawInterpretation = asRecord(payload.interpretation);
+  const nestedPayload = asRecord(rawInterpretation.interpretation_payload);
+  const topLevelPayload = asRecord(payload.interpretation_payload);
+  const resolvedPayload =
+    Object.keys(topLevelPayload).length > 0
+      ? topLevelPayload
+      : Object.keys(nestedPayload).length > 0
+        ? nestedPayload
+        : {};
+
+  const resolvedStatus = (() => {
+    if (interpretationStatus === "completed") return "completed";
+    if (interpretationStatus === "queued") return "queued";
+    if (interpretationStatus === "running") return "running";
+    if (interpretationStatus === "failed") return "failed";
+    return "not_requested";
+  })();
+
+  const resolvedModel = firstNonEmptyString(
+    payload.interpretation_model,
+    rawInterpretation.interpretation_model,
+    resolvedPayload._model,
+    "gemini",
+  );
+  const resolvedProvider = firstNonEmptyString(
+    payload.interpretation_provider,
+    rawInterpretation.interpretation_provider,
+    resolvedPayload._provider,
+    "google",
+  );
+  const resolvedPromptVersion = firstNonEmptyString(
+    payload.interpretation_prompt_version,
+    rawInterpretation.interpretation_prompt_version,
+    resolvedPayload._prompt_version,
+    "unknown",
+  );
+  const resolvedCreatedAt = firstNonEmptyString(
+    payload.interpretation_created_at,
+    rawInterpretation.created_at,
+    payload.created_at,
+  );
+  const resolvedUpdatedAt = firstNonEmptyString(
+    payload.interpretation_updated_at,
+    rawInterpretation.updated_at,
+    payload.updated_at,
+  );
+
+  return {
+    found: resolvedStatus !== "not_requested",
+    status: resolvedStatus,
+    analysis_run_id: firstNonEmptyString(
+      payload.analysis_run_id,
+      rawInterpretation.analysis_run_id,
+      result.analysis_run_id,
+    ),
+    model: resolvedModel,
+    provider: resolvedProvider,
+    prompt_version: resolvedPromptVersion,
+    created_at: resolvedCreatedAt,
+    updated_at: resolvedUpdatedAt,
+    error: firstNonEmptyString(payload.interpretation_error, rawInterpretation.interpretation_error),
+    report: resolvedStatus === "completed" ? normalizeInterpretation(resolvedPayload) : undefined,
+  };
+}
+
 export async function interpretAnalysis(
   result: AnalysisResult,
   workspaceId?: string | null,
   projectId?: string | null,
   environmentId?: string | null,
 ): Promise<InterpretAnalysisResponse> {
+  const existing = await getInterpretation(result, workspaceId, projectId, environmentId);
+
+  if (existing.status === "completed" && existing.report) {
+    return {
+      cached: true,
+      analysis_run_id: existing.analysis_run_id ?? result.analysis_run_id,
+      model: existing.model ?? "gemini",
+      prompt_version: existing.prompt_version ?? "unknown",
+      report: existing.report,
+    };
+  }
+
+  if (existing.status === "queued" || existing.status === "running") {
+    const maxAttempts = 90;
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const polled = await getInterpretation(result, workspaceId, projectId, environmentId);
+      if (polled.status === "completed" && polled.report) {
+        return {
+          cached: false,
+          analysis_run_id: polled.analysis_run_id ?? result.analysis_run_id,
+          model: polled.model ?? "gemini",
+          prompt_version: polled.prompt_version ?? "unknown",
+          report: polled.report,
+        };
+      }
+      if (polled.status === "failed") {
+        throw new Error(polled.error || "Interpretation failed.");
+      }
+      await wait(1000);
+    }
+    throw new Error("Interpretation timed out while waiting for completion.");
+  }
+
   const analysisId = String(result.analysis_id ?? "").trim();
   if (!analysisId) {
     throw new Error("Interpretation requires analysis_id from a completed analysis.");
   }
-  const { baseUrl, payload: startPayload } = await startInterpretationWithFallback(
+
+  const { payload: startPayload } = await startInterpretationWithFallback(
     analysisId,
     workspaceId,
     projectId,
     environmentId,
   );
-  const scopeParams = new URLSearchParams();
-  if (workspaceId && workspaceId.trim()) scopeParams.set("workspace_id", workspaceId.trim());
-  if (projectId && projectId.trim()) scopeParams.set("project_id", projectId.trim());
-  if (environmentId && environmentId.trim()) scopeParams.set("environment_id", environmentId.trim());
-  const scopedSuffix = scopeParams.toString() ? `?${scopeParams.toString()}` : "";
-  const immediate = asRecord(startPayload.interpretation);
-  if (Object.keys(immediate).length > 0 && String(immediate.interpretation_status ?? "") === "completed") {
-    const immediatePayload = asRecord(immediate.interpretation_payload);
+
+  const startedInterpretation = asRecord(startPayload.interpretation);
+  const immediatePayload = asRecord(startPayload.interpretation_payload);
+  const nestedImmediatePayload = asRecord(startedInterpretation.interpretation_payload);
+  const resolvedImmediatePayload =
+    Object.keys(immediatePayload).length > 0
+      ? immediatePayload
+      : Object.keys(nestedImmediatePayload).length > 0
+        ? nestedImmediatePayload
+        : {};
+  const startedStatus = String(
+    startPayload.interpretation_status ?? startedInterpretation.interpretation_status ?? "",
+  ).trim().toLowerCase();
+
+  if (startedStatus === "completed" && Object.keys(resolvedImmediatePayload).length > 0) {
     return {
       cached: true,
-      analysis_run_id: result.analysis_run_id,
-      model: String(immediate.interpretation_model ?? "gemini"),
-      prompt_version: "v2",
-      report: normalizeInterpretation(immediatePayload),
+      analysis_run_id: firstNonEmptyString(
+        startPayload.analysis_run_id,
+        startedInterpretation.analysis_run_id,
+        result.analysis_run_id,
+      ),
+      model:
+        firstNonEmptyString(
+          startPayload.interpretation_model,
+          startedInterpretation.interpretation_model,
+          resolvedImmediatePayload._model,
+        ) ?? "gemini",
+      prompt_version:
+        firstNonEmptyString(
+          startPayload.interpretation_prompt_version,
+          startedInterpretation.interpretation_prompt_version,
+          resolvedImmediatePayload._prompt_version,
+        ) ?? "unknown",
+      report: normalizeInterpretation(resolvedImmediatePayload),
     };
   }
 
   const maxAttempts = 90;
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const statusResponse = await fetch(`${baseUrl}/interpret/${analysisId}${scopedSuffix}`, {
-      method: "GET",
-      headers: await getAuthHeaders({ Accept: "application/json" }),
-    });
-    if (!statusResponse.ok) {
-      const text = await statusResponse.text().catch(() => "");
-      throw new Error(`HTTP ${statusResponse.status}: ${text || statusResponse.statusText}`);
-    }
-
-    const payload = (await statusResponse.json()) as Record<string, unknown>;
-    const interpretationStatus = String(payload.interpretation_status ?? "").toLowerCase();
-    if (interpretationStatus === "completed") {
+    const polled = await getInterpretation(result, workspaceId, projectId, environmentId);
+    if (polled.status === "completed" && polled.report) {
       return {
         cached: false,
-        analysis_run_id: result.analysis_run_id,
-        model: String(payload.interpretation_model ?? "gemini"),
-        prompt_version: "v2",
-        report: normalizeInterpretation(payload.interpretation_payload),
+        analysis_run_id: polled.analysis_run_id ?? result.analysis_run_id,
+        model: polled.model ?? "gemini",
+        prompt_version: polled.prompt_version ?? "unknown",
+        report: polled.report,
       };
     }
 
-    if (interpretationStatus === "failed") {
-      throw new Error(String(payload.interpretation_error ?? "Interpretation failed."));
+    if (polled.status === "failed") {
+      throw new Error(polled.error || "Interpretation failed.");
     }
 
     await wait(1000);

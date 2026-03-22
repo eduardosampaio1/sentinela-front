@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import { useAnalysis } from "@/contexts/AnalysisContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { interpretAnalysis, type AnalysisInterpretation } from "@/lib/api";
+import {
+  getInterpretation,
+  interpretAnalysis,
+  type AnalysisInterpretation,
+  type GetInterpretationResponse,
+} from "@/lib/api";
 import { downloadAnalysisReportPdf } from "@/lib/analysisReportPdf";
 import {
   detectedProblems,
@@ -29,6 +34,8 @@ import AIInterpretationPanel from "@/components/dashboard-decision/AIInterpretat
 import WhySystemStatePanel from "@/components/dashboard-decision/WhySystemStatePanel";
 import TechnicalDetailsPanel from "@/components/dashboard-decision/TechnicalDetailsPanel";
 import ImproveAnalysisPanel from "@/components/dashboard-decision/ImproveAnalysisPanel";
+import EconomicsPanel from "@/components/dashboard-decision/EconomicsPanel";
+import { buildEconomicsPanelModel } from "@/lib/economicsModel";
 
 export default function SentinelaDashboard() {
   const { workspace, project, environment } = useAuth();
@@ -44,6 +51,7 @@ export default function SentinelaDashboard() {
   const [interpretationError, setInterpretationError] = useState("");
   const [interpretation, setInterpretation] = useState<AnalysisInterpretation | null>(null);
   const [interpretationAt, setInterpretationAt] = useState<string>("");
+  const [interpretationStatus, setInterpretationStatus] = useState<GetInterpretationResponse["status"]>("not_requested");
   const [historyRuns, setHistoryRuns] = useState<Array<{ id: string; raw_result?: Record<string, unknown> | null }>>([]);
 
   const problems = useMemo(() => rankHotspotsByImpact(detectedProblems(result)), [result]);
@@ -77,6 +85,13 @@ export default function SentinelaDashboard() {
     () => buildSystemStatePanelModel(result, problems),
     [problems, result],
   );
+  const economicsModel = useMemo(() => buildEconomicsPanelModel(result), [result]);
+  const interpretationLocked = interpretationStatus === "queued" || interpretationStatus === "running" || interpretationStatus === "completed";
+  const canGenerateInterpretation = Boolean(result?.analysis_id) && 
+    !isInterpreting && 
+    interpretationStatus !== "completed" && 
+    interpretationStatus !== "running" && 
+    interpretationStatus !== "queued";
 
   useEffect(() => {
     if (!workspace?.id || !project?.id || !environment?.id) {
@@ -104,23 +119,61 @@ export default function SentinelaDashboard() {
     };
   }, [environment?.id, project?.id, workspace?.id]);
 
-  async function handleInterpret() {
+
+  useEffect(() => {
+    if (!result?.analysis_id || !workspace?.id || !project?.id || !environment?.id) {
+      setInterpretation(null);
+      setInterpretationAt("");
+      setInterpretationStatus("not_requested");
+      setInterpretationError("");
+      return;
+    }
+
+    let mounted = true;
+    setInterpretationError("");
+
+    void getInterpretation(result, workspace.id, project.id, environment.id)
+      .then((response) => {
+        if (!mounted) return;
+        setInterpretationStatus(response.status);
+        setInterpretationAt(response.updated_at ?? response.created_at ?? "");
+        if (response.report) {
+          setInterpretation(response.report);
+        } else {
+          setInterpretation(null);
+        }
+      })
+      .catch((error) => {
+        if (!mounted) return;
+        setInterpretation(null);
+        setInterpretationAt("");
+        setInterpretationStatus("not_requested");
+        setInterpretationError(error instanceof Error ? error.message : "Could not load interpretation.");
+      });
+
+    return () => {
+      mounted = false;
+    };
+}, [environment?.id, project?.id, result, workspace?.id]);
+
+async function handleInterpret() {
     if (!result || isInterpreting) return;
     setInterpretationError("");
-    setIsInterpreting(true);
+    setIsInterpreting(true); // Regra: Clicou -> Trava imediatamente
     try {
-      const response = await interpretAnalysis(
+      await interpretAnalysis(
         result,
         workspace?.id,
         project?.id,
         environment?.id,
       );
-      setInterpretation(response.report);
-      setInterpretationAt(new Date().toISOString());
+            
+      setInterpretationStatus("completed");
     } catch (error) {
       setInterpretationError(
         error instanceof Error ? error.message : "Could not generate interpretation.",
       );
+      setInterpretationStatus("failed"); 
     } finally {
       setIsInterpreting(false);
     }
@@ -138,10 +191,6 @@ export default function SentinelaDashboard() {
     }
   }
 
-  function handleRefreshInterpretation() {
-    if (!result || isInterpreting) return;
-    void handleInterpret();
-  }
 
   const secondaryRecommendations = recommendations.slice(1);
 
@@ -163,11 +212,14 @@ export default function SentinelaDashboard() {
         loading={isInterpreting}
         error={interpretationError}
         generatedAt={interpretationAt}
+        status={interpretationStatus}
+        canGenerate={canGenerateInterpretation}
+        isLocked={interpretationLocked}
         onGenerate={handleInterpret}
-        onRefresh={handleRefreshInterpretation}
       />
 
       <WhySystemStatePanel model={systemStateModel} />
+      <EconomicsPanel model={economicsModel} />
       <InteractionAnalysisPanel model={interactionModel} />
 
       <section id="action-details" className="space-y-6">
