@@ -1,3 +1,4 @@
+import { AlertTriangle, ShieldCheck, Siren, Sparkles } from "lucide-react";
 import type { VerdictStripModel } from "@/lib/decisionLayerModel";
 
 interface VerdictStripProps {
@@ -5,43 +6,66 @@ interface VerdictStripProps {
 }
 
 function verdictClass(verdict: VerdictStripModel["verdict"]) {
-  if (verdict === "Critical") return "border-red-500/25 bg-red-500/10 text-red-200";
-  if (verdict === "Degraded") return "border-amber-500/25 bg-amber-500/10 text-amber-200";
-  if (verdict === "Watch") return "border-sky-500/25 bg-sky-500/10 text-sky-200";
-  return "border-emerald-500/25 bg-emerald-500/10 text-emerald-200";
+  if (verdict === "Critical") return "border-red-500/25 bg-red-500/12 text-red-200";
+  if (verdict === "Degraded") return "border-amber-500/25 bg-amber-500/12 text-amber-200";
+  if (verdict === "Watch") return "border-sky-500/25 bg-sky-500/12 text-sky-200";
+  return "border-emerald-500/25 bg-emerald-500/12 text-emerald-200";
 }
 
 function certaintyClass(certainty: VerdictStripModel["certainty"]) {
   if (certainty === "low") return "border-amber-500/30 bg-amber-500/10 text-amber-200";
-  if (certainty === "unknown") return "border-border/70 bg-muted/50 text-muted-foreground";
+  if (certainty === "unknown") return "border-border/70 bg-background/35 text-muted-foreground";
   if (certainty === "medium") return "border-sky-500/30 bg-sky-500/10 text-sky-200";
   return "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
 }
 
+function verdictIcon(verdict: VerdictStripModel["verdict"]) {
+  if (verdict === "Critical") return <Siren className="h-5 w-5" />;
+  if (verdict === "Healthy") return <ShieldCheck className="h-5 w-5" />;
+  if (verdict === "Degraded") return <AlertTriangle className="h-5 w-5" />;
+  return <Sparkles className="h-5 w-5" />;
+}
+
 export default function VerdictStrip({ model }: VerdictStripProps) {
   return (
-    <section className="rounded-xl border border-border/45 bg-card/45 px-3 py-2 backdrop-blur-md">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span
-            className={`rounded-full border px-2 py-0.5 text-[10px] font-medium tracking-[0.04em] ${verdictClass(model.verdict)}`}
-          >
-            {model.verdict}
+    <section className="dashboard-panel overflow-hidden p-4 sm:p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-start gap-3">
+          <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-primary/20 bg-primary/10 text-primary shadow-[0_20px_48px_-32px_rgba(34,211,238,0.95)]">
+            {verdictIcon(model.verdict)}
           </span>
-          <p className="truncate text-xs text-muted-foreground sm:text-[0.82rem]">{model.message}</p>
+
+          <div className="min-w-0">
+            <p className="dashboard-kicker">Executive verdict</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className={`rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.14em] ${verdictClass(model.verdict)}`}>
+                {model.verdict}
+              </span>
+              {model.escalated ? (
+                <span className="animate-signal-pulse rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-red-200">
+                  Escalated
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">{model.message}</p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {model.escalated ? (
-            <span className="rounded-full border border-red-500/25 bg-red-500/10 px-2 py-0.5 text-[10px] font-medium tracking-[0.04em] text-red-200">
-              Escalated
+        <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[320px]">
+          <article className="rounded-[20px] border border-border/55 bg-background/35 p-3.5">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Confidence</p>
+            <span className={`mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-medium ${certaintyClass(model.certainty)}`}>
+              {model.certaintyLabel}
             </span>
-          ) : null}
-          <span
-            className={`rounded-full border px-2 py-0.5 text-[10px] tracking-[0.05em] ${certaintyClass(model.certainty)}`}
-          >
-            {model.certaintyLabel}
-          </span>
+          </article>
+          <article className="rounded-[20px] border border-border/55 bg-background/35 p-3.5">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Decision posture</p>
+            <p className="mt-3 text-sm leading-6 text-foreground">
+              {model.escalated
+                ? "Escalate this run before scaling traffic or assuming the system is stable."
+                : "Stay in control, verify the recommendation, and move only after checking the evidence dock."}
+            </p>
+          </article>
         </div>
       </div>
     </section>

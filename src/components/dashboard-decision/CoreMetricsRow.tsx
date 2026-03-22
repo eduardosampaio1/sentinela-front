@@ -13,10 +13,10 @@ const SUPPORT_METRIC_ORDER: Array<CoreMetricCardModel["id"]> = [
 ];
 
 function supportToneClass(tone: CoreMetricCardModel["tone"]) {
-  if (tone === "risk") return "text-red-300";
-  if (tone === "watch") return "text-amber-300";
-  if (tone === "safe") return "text-emerald-300";
-  return "text-muted-foreground";
+  if (tone === "risk") return "border-red-500/25 bg-red-500/10 text-red-200";
+  if (tone === "watch") return "border-amber-500/25 bg-amber-500/10 text-amber-200";
+  if (tone === "safe") return "border-emerald-500/25 bg-emerald-500/10 text-emerald-200";
+  return "border-border/55 bg-background/35 text-muted-foreground";
 }
 
 function compactMainValue(metric: CoreMetricCardModel) {
@@ -31,10 +31,11 @@ function compactMainValue(metric: CoreMetricCardModel) {
     if (metric.tone === "watch") return "Moderate";
     return "High";
   }
-  if (metric.id === "cost-per-useful-outcome") {
-    return metric.displayValue;
-  }
   return metric.displayValue;
+}
+
+function priorityLabel(index: number) {
+  return `${String(index).padStart(2, "0")} Priority`;
 }
 
 export default function CoreMetricsRow({ items }: CoreMetricsRowProps) {
@@ -46,35 +47,56 @@ export default function CoreMetricsRow({ items }: CoreMetricsRowProps) {
     .filter((item): item is CoreMetricCardModel => Boolean(item));
 
   return (
-    <section className="rounded-[24px] border border-border/50 bg-card/55 p-4 shadow-sm backdrop-blur-md sm:p-5">
-      <div className="mb-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Core metrics</h2>
+    <section className="space-y-4">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="dashboard-kicker">Executive scoreboard</p>
+          <h2 className="font-display text-3xl font-semibold tracking-tight text-foreground">The five signals that decide the next move</h2>
+        </div>
+        <p className="max-w-xl text-sm leading-6 text-muted-foreground">
+          Read these in order: behavior first, then drift, cost per useful outcome, confidence, and only then the recommended action.
+        </p>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-12">
-        <div className="md:col-span-6">
-          <BehaviorScoreRadialCard
-            behaviorMetric={behaviorMetric}
-            driftMetric={driftMetric}
-            costMetric={costMetric}
-          />
-        </div>
+      <div className="grid gap-4 xl:grid-cols-[1.45fr_0.95fr]">
+        <BehaviorScoreRadialCard
+          behaviorMetric={behaviorMetric}
+          driftMetric={driftMetric}
+          costMetric={costMetric}
+        />
 
-        {supportMetrics.map((item) => (
-          <article
-            key={item.id}
-            className={`rounded-[18px] border border-border/50 bg-background/30 p-3.5 md:col-span-2 ${item.missing ? "opacity-70 saturate-75" : ""}`}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
-              {item.missing ? <MissingDataBadge label={item.missingLabel} /> : null}
-            </div>
-            <p className="mt-2 text-xl font-semibold tracking-tight text-foreground">{compactMainValue(item)}</p>
-            <p className={`mt-1 text-xs leading-snug ${supportToneClass(item.tone)}`}>
-              {item.missing ? "Not provided by engine" : item.operationalNote}
-            </p>
-          </article>
-        ))}
+        <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+          {supportMetrics.map((item, index) => (
+            <article
+              key={item.id}
+              className={`dashboard-panel-muted overflow-hidden p-4 sm:p-5 ${item.missing ? "opacity-75 saturate-75" : ""}`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{priorityLabel(index + 2)}</p>
+                  <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-foreground">{item.label}</h3>
+                </div>
+                <span className={`rounded-full border px-3 py-1 text-[11px] font-medium ${supportToneClass(item.tone)}`}>
+                  {compactMainValue(item)}
+                </span>
+              </div>
+
+              <div className="mt-6 flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-[0.72rem] uppercase tracking-[0.18em] text-muted-foreground">Current value</p>
+                  <p className="mt-2 font-display text-[2.35rem] font-semibold tracking-tight text-foreground">
+                    {item.displayValue}
+                  </p>
+                </div>
+                {item.missing ? <MissingDataBadge label={item.missingLabel} /> : null}
+              </div>
+
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                {item.missing ? "This signal was not provided by the engine for the current run." : item.operationalNote}
+              </p>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );
