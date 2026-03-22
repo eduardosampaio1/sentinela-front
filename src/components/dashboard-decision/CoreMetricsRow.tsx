@@ -32,7 +32,7 @@ function compactMainValue(metric: CoreMetricCardModel) {
     return "High";
   }
   if (metric.id === "cost-per-useful-outcome") {
-    return `$${metric.displayValue}`;
+    return metric.displayValue;
   }
   return metric.displayValue;
 }

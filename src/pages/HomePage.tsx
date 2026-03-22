@@ -99,6 +99,10 @@ export default function HomePage() {
   const [recentRunsError, setRecentRunsError] = useState<string | null>(null);
   const [datasetModeOpen, setDatasetModeOpen] = useState(false);
   const [openComposerSignal, setOpenComposerSignal] = useState(0);
+  const [pendingDashboardRedirect, setPendingDashboardRedirect] = useState<{
+    previousAnalysisId: string;
+    sawLoading: boolean;
+  } | null>(null);
   const [ensuringContext, setEnsuringContext] = useState(false);
   const [checkingUsage, setCheckingUsage] = useState(true);
   const [hasAnyUsage, setHasAnyUsage] = useState(false);
@@ -170,6 +174,11 @@ export default function HomePage() {
   useEffect(() => {
     void loadRecentRuns();
   }, [loadRecentRuns]);
+
+  useEffect(() => {
+    if (!result?.analysis_id) return;
+    void loadRecentRuns();
+  }, [loadRecentRuns, result?.analysis_id]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -306,6 +315,31 @@ export default function HomePage() {
   }, [datasetModeOpen, openComposerSignal]);
 
   useEffect(() => {
+    if (pendingDashboardRedirect === null) return;
+    if (loading) {
+      if (!pendingDashboardRedirect.sawLoading) {
+        setPendingDashboardRedirect({
+          ...pendingDashboardRedirect,
+          sawLoading: true,
+        });
+      }
+      return;
+    }
+
+    const currentAnalysisId =
+      typeof result?.analysis_id === "string" ? result.analysis_id.trim() : "";
+    if (currentAnalysisId && currentAnalysisId !== pendingDashboardRedirect.previousAnalysisId) {
+      setPendingDashboardRedirect(null);
+      navigate("/dashboard");
+      return;
+    }
+
+    if (pendingDashboardRedirect.sawLoading) {
+      setPendingDashboardRedirect(null);
+    }
+  }, [loading, navigate, pendingDashboardRedirect, result?.analysis_id]);
+
+  useEffect(() => {
     if (startMode !== "dataset") return;
     void openDatasetFlow();
     setSearchParams((current) => {
@@ -354,6 +388,31 @@ export default function HomePage() {
     await signOut();
     navigate("/login", { replace: true });
   }
+
+  const startDashboardRedirect = useCallback(() => {
+    const currentAnalysisId =
+      typeof result?.analysis_id === "string" ? result.analysis_id.trim() : "";
+    setPendingDashboardRedirect({
+      previousAnalysisId: currentAnalysisId,
+      sawLoading: false,
+    });
+  }, [result?.analysis_id]);
+
+  const handleFileUploadAndRedirect = useCallback(
+    (file: File) => {
+      startDashboardRedirect();
+      handleFileUpload(file);
+    },
+    [handleFileUpload, startDashboardRedirect],
+  );
+
+  const handlePasteAnalysisAndRedirect = useCallback(
+    (text: string) => {
+      startDashboardRedirect();
+      handlePasteAnalysis(text);
+    },
+    [handlePasteAnalysis, startDashboardRedirect],
+  );
 
   if (workspaceLoading || contextLoading || !historyResolved || checkingUsage) {
     return (
@@ -533,8 +592,8 @@ export default function HomePage() {
               loading={loading}
               hasResult={Boolean(result)}
               openComposerSignal={openComposerSignal}
-              onFileUpload={handleFileUpload}
-              onRunFromPaste={handlePasteAnalysis}
+              onFileUpload={handleFileUploadAndRedirect}
+              onRunFromPaste={handlePasteAnalysisAndRedirect}
               onImportResult={importAnalysisResult}
             />
           </div>

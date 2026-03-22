@@ -50,6 +50,7 @@ function renderHome(initialPath = "/home") {
 
 describe("home page onboarding flow", () => {
   beforeEach(() => {
+    Element.prototype.scrollIntoView = vi.fn();
     listAnalysisRunsMock.mockReset().mockResolvedValue([]);
     getAnalysisRunByIdMock.mockReset();
     hasUserAnalysisRunsMock.mockReset().mockResolvedValue(true);
@@ -140,5 +141,100 @@ describe("home page onboarding flow", () => {
     await waitFor(() => expect(screen.getByText("Operational Entry")).toBeInTheDocument());
     expect(screen.getByText("Context Snapshot")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open Dashboard" })).toBeEnabled();
+  });
+
+  it("reloads recent runs after a fresh analysis result arrives", async () => {
+    const view = renderHome("/home");
+    await waitFor(() => expect(listAnalysisRunsMock).toHaveBeenCalledTimes(1));
+
+    analysisState = {
+      ...analysisState,
+      analysisCompleted: true,
+      result: {
+        analysis_id: "analysis-new-001",
+        analysis_run_id: "run-new-001",
+      },
+    };
+
+    view.rerender(
+      <MemoryRouter initialEntries={["/home"]}>
+        <Routes>
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/home/deep" element={<div>Deep Analysis Setup</div>} />
+          <Route path="/:projectsSlug/:workspaceSlug" element={<HomePage />} />
+          <Route path="/dashboard" element={<div>Dashboard View</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(listAnalysisRunsMock).toHaveBeenCalledTimes(2));
+  });
+
+  it("redirects to dashboard after a new pasted analysis completes", async () => {
+    const handlePasteAnalysisMock = vi.fn();
+    analysisState = {
+      ...analysisState,
+      handlePasteAnalysis: handlePasteAnalysisMock,
+    };
+
+    const view = renderHome("/home");
+    await waitFor(() => expect(listAnalysisRunsMock).toHaveBeenCalled());
+
+    fireEvent.click(screen.getAllByRole("button", { name: "New Analysis" })[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText("Paste JSON / JSONL / NDJSON")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: {
+        value:
+          '[{"conversation_id":"1","intent":"billing","user":"Need invoice","assistant":"Sure"},{"conversation_id":"2","intent":"billing","user":"Need invoice copy","assistant":"Sure"}]',
+      },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Analyze pasted dataset" }));
+    expect(handlePasteAnalysisMock).toHaveBeenCalledTimes(1);
+
+    analysisState = {
+      ...analysisState,
+      loading: true,
+    };
+
+    view.rerender(
+      <MemoryRouter initialEntries={["/home"]}>
+        <Routes>
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/home/deep" element={<div>Deep Analysis Setup</div>} />
+          <Route path="/:projectsSlug/:workspaceSlug" element={<HomePage />} />
+          <Route path="/dashboard" element={<div>Dashboard View</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    analysisState = {
+      ...analysisState,
+      result: {
+        analysis_id: "analysis-fresh-002",
+        analysis_run_id: "run-fresh-002",
+      },
+      analysisCompleted: true,
+      loading: false,
+    };
+
+    view.rerender(
+      <MemoryRouter initialEntries={["/home"]}>
+        <Routes>
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/home/deep" element={<div>Deep Analysis Setup</div>} />
+          <Route path="/:projectsSlug/:workspaceSlug" element={<HomePage />} />
+          <Route path="/dashboard" element={<div>Dashboard View</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Dashboard View")).toBeInTheDocument();
+    });
   });
 });

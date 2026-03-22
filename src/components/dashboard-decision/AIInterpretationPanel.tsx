@@ -23,7 +23,6 @@ function hasInterpretationContent(model: InterpretationPanelModel) {
 function buttonLabel(status: InterpretationStatus, hasContent: boolean, loading: boolean) {
   if (loading || status === "queued" || status === "running") return "Generating...";
   if (status === "completed" && hasContent) return "Interpretation Locked";
-  if (status === "failed") return "Interpretation Locked";
   return "Generate Interpretation";
 }
 

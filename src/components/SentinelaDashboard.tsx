@@ -159,21 +159,33 @@ export default function SentinelaDashboard() {
 async function handleInterpret() {
     if (!result || isInterpreting) return;
     setInterpretationError("");
-    setIsInterpreting(true); // Regra: Clicou -> Trava imediatamente
+    setIsInterpreting(true);
     try {
-      await interpretAnalysis(
+      const generated = await interpretAnalysis(
         result,
         workspace?.id,
         project?.id,
         environment?.id,
       );
-            
+
+      setInterpretation(generated.report);
       setInterpretationStatus("completed");
+      try {
+        const persisted = await getInterpretation(
+          result,
+          workspace?.id,
+          project?.id,
+          environment?.id,
+        );
+        setInterpretationAt(persisted.updated_at ?? persisted.created_at ?? new Date().toISOString());
+      } catch {
+        setInterpretationAt(new Date().toISOString());
+      }
     } catch (error) {
       setInterpretationError(
         error instanceof Error ? error.message : "Could not generate interpretation.",
       );
-      setInterpretationStatus("failed"); 
+      setInterpretationStatus("failed");
     } finally {
       setIsInterpreting(false);
     }

@@ -222,19 +222,39 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         markHasHistory();
         setActiveJob(null);
 
-        await saveAnalysisRun({
-          workspaceId: workspace.id,
-          projectId: project.id,
-          environmentId: environment.id,
-          createdBy: user.id,
-          sourceFilename: "dataset.jsonl",
-          inputHash,
-          result: toPersistableResult(apiResult),
-        });
+        let persistenceError: unknown = null;
+        try {
+          const savedRun = await saveAnalysisRun({
+            workspaceId: workspace.id,
+            projectId: project.id,
+            environmentId: environment.id,
+            createdBy: user.id,
+            sourceFilename: "dataset.jsonl",
+            inputHash,
+            result: toPersistableResult(apiResult),
+          });
+          if (savedRun?.id) {
+            const persistedResult = {
+              ...apiResult,
+              analysis_run_id: savedRun.id,
+            };
+            setResult(persistedResult);
+            saveResult(persistedResult, inputHash, contextScope);
+          }
+        } catch (persistError) {
+          persistenceError = persistError;
+        }
 
         toast({
           title: "Analysis completed successfully.",
         });
+        if (persistenceError) {
+          toast({
+            title: "History sync failed",
+            description: getErrorMessage(persistenceError),
+            variant: "destructive",
+          });
+        }
         finishLoading();
       } catch (error: unknown) {
         finishLoading();
@@ -325,7 +345,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
             if (user?.id && workspace?.id && project?.id && environment?.id) {
               const inputHash = await hashDataset(JSON.stringify(mapped));
 
-              await saveAnalysisRun({
+              const savedRun = await saveAnalysisRun({
                 workspaceId: workspace.id,
                 projectId: project.id,
                 environmentId: environment.id,
@@ -333,6 +353,14 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
                 inputHash,
                 result: toPersistableResult(mapped),
               });
+              if (savedRun?.id) {
+                const persistedResult = {
+                  ...mapped,
+                  analysis_run_id: savedRun.id,
+                };
+                saveResult(persistedResult, undefined, contextScope);
+                setResult(persistedResult);
+              }
             }
 
             toast({ title: "Analysis result imported" });

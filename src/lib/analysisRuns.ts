@@ -19,6 +19,26 @@ interface AnalysisScope {
   environmentId: string;
 }
 
+function withEmbeddedAnalysisRunId<T extends { id: string; raw_result?: Record<string, unknown> | null }>(
+  run: T | null | undefined,
+): T | null | undefined {
+  if (!run) return run;
+  if (!run.raw_result || typeof run.raw_result !== "object") return run;
+
+  const rawResult = run.raw_result as Record<string, unknown>;
+  const existingRunId =
+    typeof rawResult.analysis_run_id === "string" ? rawResult.analysis_run_id.trim() : "";
+  if (existingRunId) return run;
+
+  return {
+    ...run,
+    raw_result: {
+      ...rawResult,
+      analysis_run_id: run.id,
+    },
+  };
+}
+
 export async function saveAnalysisRun(params: {
   workspaceId: string;
   projectId: string;
@@ -60,7 +80,7 @@ export async function saveAnalysisRun(params: {
     .single();
 
   if (error) throw error;
-  return data;
+  return data ? withEmbeddedAnalysisRunId(data) : data;
 }
 
 function applyScopeFilters<T>(query: T, scope: AnalysisScope) {
@@ -86,7 +106,7 @@ export async function getLatestAnalysisRun(
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return data ? withEmbeddedAnalysisRunId(data) : data;
 }
 
 export async function getAnalysisRunById(
@@ -100,7 +120,7 @@ export async function getAnalysisRunById(
 
   const { data, error } = await query.maybeSingle();
   if (error) throw error;
-  return data;
+  return data ? withEmbeddedAnalysisRunId(data) : data;
 }
 
 export async function listAnalysisRuns(
@@ -123,7 +143,7 @@ export async function listAnalysisRuns(
     .limit(limit);
 
   if (error) throw error;
-  return (Array.isArray(data) ? data : []) as AnalysisRunSummary[];
+  return (Array.isArray(data) ? data.map((run) => withEmbeddedAnalysisRunId(run)) : []) as AnalysisRunSummary[];
 }
 
 export async function hasUserAnalysisRuns(userId: string): Promise<boolean> {

@@ -65,11 +65,31 @@ export function getBaselineComparison(result: AnalysisResult | null): Record<str
   return asRecord(getMetadata(result).baseline_comparison);
 }
 
+function mergeBusinessImpactRecords(
+  top: Record<string, unknown>,
+  argos: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged = {
+    ...argos,
+    ...top,
+  };
+  const mergedDetails = {
+    ...asRecord(argos.details),
+    ...asRecord(top.details),
+  };
+
+  if (Object.keys(mergedDetails).length > 0) {
+    merged.details = mergedDetails;
+  }
+
+  return merged;
+}
+
 export function getBusinessImpact(result: AnalysisResult | null): Record<string, unknown> {
   if (!result) return {};
   const top = asRecord(result.business_impact);
-  if (Object.keys(top).length > 0) return top;
-  return asRecord(getArgosV2(result).business_impact);
+  const argos = asRecord(getArgosV2(result).business_impact);
+  return mergeBusinessImpactRecords(top, argos);
 }
 
 export function getExecutiveSummary(result: AnalysisResult | null): string | null {

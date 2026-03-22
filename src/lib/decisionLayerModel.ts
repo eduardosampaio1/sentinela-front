@@ -763,11 +763,7 @@ export function buildSystemStatePanelModel(
   ];
 
   const argosEvidence = asRecord(asRecord(result?.argos_v2).evidence);
-  const businessImpact = asRecord(
-    Object.keys(asRecord(result?.business_impact)).length > 0
-      ? asRecord(result?.business_impact)
-      : asRecord(asRecord(result?.argos_v2).business_impact),
-  );
+  const businessImpact = asRecord(getBusinessImpact(result));
 
   const suggestions: string[] = [];
   if (!("expected_behavior" in argosEvidence)) {

@@ -204,6 +204,26 @@ function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
 }
 
+function mergeBusinessImpactPayloads(
+  top: Record<string, unknown>,
+  argos: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged = {
+    ...argos,
+    ...top,
+  };
+  const mergedDetails = {
+    ...asRecord(argos.details),
+    ...asRecord(top.details),
+  };
+
+  if (Object.keys(mergedDetails).length > 0) {
+    merged.details = mergedDetails;
+  }
+
+  return merged;
+}
+
 function normalizePercent(value: unknown): number | undefined {
   if (typeof value !== "number" || Number.isNaN(value)) return undefined;
   if (value >= 0 && value <= 1) return Number((value * 100).toFixed(2));
@@ -601,11 +621,10 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
         : undefined;
   const topLevelBusinessImpact = asRecord(raw.business_impact);
   const argosBusinessImpact = asRecord(argosV2.business_impact);
+  const mergedBusinessImpact = mergeBusinessImpactPayloads(topLevelBusinessImpact, argosBusinessImpact);
   const businessImpact =
-    Object.keys(topLevelBusinessImpact).length > 0
-      ? topLevelBusinessImpact
-      : Object.keys(argosBusinessImpact).length > 0
-        ? argosBusinessImpact
+    Object.keys(mergedBusinessImpact).length > 0
+      ? mergedBusinessImpact
         : undefined;
   const topLevelExecutiveSummary = String(raw.executive_summary ?? "").trim();
   const argosExecutiveSummary = String(argosV2.executive_summary ?? "").trim();
@@ -806,7 +825,14 @@ export async function analyzeConversations(
     }
 
     if (status === "failed" || status === "not_found") {
-      throw new Error(`Analysis job failed with status: ${status}`);
+      const errorRecord = asRecord(statusPayload.error);
+      const errorMessage =
+        firstNonEmptyString(
+          errorRecord.message,
+          statusPayload.detail,
+          typeof statusPayload.error === "string" ? statusPayload.error : undefined,
+        ) ?? `Analysis job failed with status: ${status}`;
+      throw new Error(errorMessage);
     }
 
     await wait(1000);
@@ -1107,11 +1133,10 @@ function sanitizeResult(parsed: unknown): AnalysisResult {
         : undefined;
   const topBusinessImpact = asRecord(record.business_impact);
   const argosBusinessImpact = asRecord(argosV2.business_impact);
+  const mergedBusinessImpact = mergeBusinessImpactPayloads(topBusinessImpact, argosBusinessImpact);
   const businessImpact =
-    Object.keys(topBusinessImpact).length > 0
-      ? topBusinessImpact
-      : Object.keys(argosBusinessImpact).length > 0
-        ? argosBusinessImpact
+    Object.keys(mergedBusinessImpact).length > 0
+      ? mergedBusinessImpact
         : undefined;
   const executiveSummary =
     String(record.executive_summary ?? "").trim() ||

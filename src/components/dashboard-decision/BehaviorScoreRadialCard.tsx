@@ -48,7 +48,7 @@ function formatDeltaVsTarget(value: number | null) {
 function chipValue(metric: CoreMetricCardModel | null, kind: "percent" | "cost") {
   if (!metric || metric.missing) return "Not provided by engine";
   if (kind === "cost") {
-    return `$${metric.displayValue}`;
+    return metric.displayValue;
   }
   return metric.value === null ? "Not provided by engine" : `${metric.value.toFixed(1)}%`;
 }
