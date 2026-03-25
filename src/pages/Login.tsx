@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+
+import AuthExperienceShell from "@/components/auth/AuthExperienceShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { buildAuthCallbackUrl, buildPasswordResetUrl, normalizeNextPath } from "@/lib/authFlow";
+import { supabase } from "@/lib/supabase";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,36 +18,61 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "github" | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const { t } = useLanguage();
 
-  const nextPath = isDemoFlow ? "/home?demo=1" : "/home";
+  const fallbackPath = isDemoFlow ? "/home?demo=1" : "/home";
+  const nextPath = normalizeNextPath(searchParams.get("next"), fallbackPath);
+  const verificationPath = email.trim()
+    ? `/auth/verify-email?email=${encodeURIComponent(email.trim())}`
+    : "/auth/verify-email";
+  const authNotice = useMemo(() => {
+    if (searchParams.get("passwordReset") === "1") {
+      return "Password updated. Sign in with your new password.";
+    }
+    if (searchParams.get("reason") === "session-expired") {
+      return "Your session expired. Sign in again to continue.";
+    }
+    return null;
+  }, [searchParams]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setLoading(true);
+    setErrorMessage(null);
+    setNotice(null);
 
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: email.trim(),
           password,
         });
         if (error) throw error;
         navigate(nextPath);
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
           password,
+          options: {
+            emailRedirectTo: buildAuthCallbackUrl(nextPath),
+          },
         });
         if (error) throw error;
-
-        alert("Account created successfully. Please sign in.");
+        if (data.session) {
+          navigate(nextPath);
+          return;
+        }
+        setNotice("Account created. Check your e-mail to verify the account before signing in.");
         setMode("login");
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unexpected authentication error.";
-      alert(message);
+      setErrorMessage(
+        error instanceof Error ? error.message : "Unexpected authentication error.",
+      );
     } finally {
       setLoading(false);
     }
@@ -53,16 +81,16 @@ export default function Login() {
   async function handleGoogleLogin() {
     try {
       setOauthLoading("google");
+      setErrorMessage(null);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}${nextPath}`,
+          redirectTo: buildAuthCallbackUrl(nextPath),
         },
       });
       if (error) throw error;
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Google sign-in failed.";
-      alert(message);
+      setErrorMessage(error instanceof Error ? error.message : "Google sign-in failed.");
       setOauthLoading(null);
     }
   }
@@ -70,45 +98,89 @@ export default function Login() {
   async function handleGithubLogin() {
     try {
       setOauthLoading("github");
+      setErrorMessage(null);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "github",
         options: {
-          redirectTo: `${window.location.origin}${nextPath}`,
+          redirectTo: buildAuthCallbackUrl(nextPath),
         },
       });
       if (error) throw error;
     } catch (error) {
-      const message = error instanceof Error ? error.message : "GitHub sign-in failed.";
-      alert(message);
+      setErrorMessage(error instanceof Error ? error.message : "GitHub sign-in failed.");
       setOauthLoading(null);
     }
   }
 
+  async function handlePasswordReset() {
+    if (!email.trim()) {
+      setErrorMessage("Enter your account e-mail to receive the reset link.");
+      return;
+    }
+
+    setResetLoading(true);
+    setErrorMessage(null);
+    setNotice(null);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: buildPasswordResetUrl(),
+      });
+      if (error) throw error;
+      setNotice("Password reset e-mail sent. Check your inbox for the recovery link or code.");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Password reset request failed.");
+    } finally {
+      setResetLoading(false);
+    }
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-hero px-4 sm:px-6">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <Link to="/" className="text-2xl font-bold text-foreground">
+    <AuthExperienceShell
+      eyebrow="Workspace Authentication"
+      title="Enter Sentinela through verified identity, scoped sessions, and controlled recovery."
+      description="This entry point restores sessions, routes recovery safely, and keeps users inside validated Sentinela paths instead of loose public redirects."
+      status={notice ?? authNotice}
+      error={errorMessage}
+      highlights={[
+        {
+          title: "Workspace-bound sessions",
+          description: "The app expects authenticated sessions before reaching protected routes and preserves the intended internal destination.",
+        },
+        {
+          title: "Signed recovery flow",
+          description: "Password reset uses Supabase recovery tokens and falls back to an inbox OTP when necessary.",
+        },
+        {
+          title: "Verified access",
+          description: "New accounts can verify the inbox manually or through the auth callback without opening cross-origin redirects.",
+        },
+      ]}
+      cardClassName="max-w-none"
+    >
+      <div className="space-y-6">
+        <div className="text-left">
+          <Link to="/" className="font-display text-2xl font-semibold text-foreground">
             Sentinela
           </Link>
-
-          <h1 className="mb-2 mt-6 text-xl font-semibold">
+          <h2 className="mt-6 text-2xl font-semibold text-foreground">
             {mode === "login" ? t("auth.loginTitle") : t("auth.signupTitle")}
-          </h1>
-
-          <p className="text-sm text-muted-foreground">
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
             {mode === "login" ? t("auth.loginBody") : t("auth.signupBody")}
           </p>
-
-          {isDemoFlow ? (
-            <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-left">
-              <div className="text-sm font-medium text-foreground">{t("auth.demoTitle")}</div>
-              <p className="mt-1 text-sm text-muted-foreground">{t("auth.demoBody")}</p>
-            </div>
-          ) : null}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {isDemoFlow ? (
+          <div className="rounded-3xl border border-primary/20 bg-primary/10 p-5 text-left">
+            <div className="text-sm font-medium text-foreground">{t("auth.demoTitle")}</div>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("auth.demoBody")}</p>
+          </div>
+        ) : null}
+
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 rounded-3xl border border-border/60 bg-background/45 p-5"
+        >
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -144,9 +216,27 @@ export default function Login() {
           </Button>
         </form>
 
-        <div className="my-6 flex items-center gap-3">
+        {mode === "login" ? (
+          <div className="flex flex-col gap-3 rounded-3xl border border-border/60 bg-background/45 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              type="button"
+              className="text-left text-sm text-primary underline underline-offset-4"
+              onClick={handlePasswordReset}
+              disabled={loading || resetLoading || oauthLoading !== null}
+            >
+              {resetLoading ? "Sending reset..." : "Forgot your password?"}
+            </button>
+            <Link to={verificationPath} className="text-sm text-muted-foreground underline underline-offset-4">
+              Verify e-mail
+            </Link>
+          </div>
+        ) : null}
+
+        <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-border" />
-          <span className="text-xs text-muted-foreground">{t("auth.orContinue")}</span>
+          <span className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+            {t("auth.orContinue")}
+          </span>
           <div className="h-px flex-1 bg-border" />
         </div>
 
@@ -200,10 +290,10 @@ export default function Login() {
           </Button>
         </div>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm text-muted-foreground">
           {mode === "login" ? (
             <>
-              {t("auth.noAccount")}{" "}
+              {t("auth.noAccount")} {" "}
               <button
                 type="button"
                 className="text-primary underline"
@@ -214,7 +304,7 @@ export default function Login() {
             </>
           ) : (
             <>
-              {t("auth.hasAccount")}{" "}
+              {t("auth.hasAccount")} {" "}
               <button
                 type="button"
                 className="text-primary underline"
@@ -226,6 +316,6 @@ export default function Login() {
           )}
         </p>
       </div>
-    </div>
+    </AuthExperienceShell>
   );
 }
