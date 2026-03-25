@@ -1,17 +1,17 @@
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
-import "./index.css";
+import { Providers } from "./app/providers";
+import { App } from "./app/App";
+import "./styles/tokens.css";
+import "./styles/globals.css";
 
-import { AuthProvider } from "./contexts/AuthContext";
-import { AnalysisProvider } from "./contexts/AnalysisContext";
-import { LanguageProvider } from "./contexts/LanguageContext";
+const rootEl = document.getElementById("root");
+if (!rootEl) throw new Error("Root element not found");
 
-createRoot(document.getElementById("root")!).render(
-  <LanguageProvider>
-    <AuthProvider>
-      <AnalysisProvider>
-        <App />
-      </AnalysisProvider>
-    </AuthProvider>
-  </LanguageProvider>
+createRoot(rootEl).render(
+  <StrictMode>
+    <Providers>
+      <App />
+    </Providers>
+  </StrictMode>
 );
