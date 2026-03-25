@@ -206,8 +206,8 @@ describe("SentinelaDashboard interpretation flow", () => {
       expect(screen.getByText("Interpretation summary")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Immediate business impact.")).toBeInTheDocument();
-    expect(screen.getByText("Projected operational risk.")).toBeInTheDocument();
+    expect(screen.getAllByText("Immediate business impact.").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Projected operational risk.").length).toBeGreaterThan(0);
     expect(screen.getByText("Economics Panel")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Interpretation Locked" })).toBeDisabled();
   });

@@ -19,6 +19,10 @@ function supportToneClass(tone: CoreMetricCardModel["tone"]) {
   return "border-border/55 bg-background/35 text-muted-foreground";
 }
 
+function priorityLabel(index: number) {
+  return `${String(index).padStart(2, "0")} Priority`;
+}
+
 function compactMainValue(metric: CoreMetricCardModel) {
   if (metric.missing) return "Not provided by engine";
   if (metric.id === "drift") {
@@ -31,68 +35,72 @@ function compactMainValue(metric: CoreMetricCardModel) {
     if (metric.tone === "watch") return "Moderate";
     return "High";
   }
+  if (metric.id === "cost-per-useful-outcome") {
+    return metric.displayValue;
+  }
   return metric.displayValue;
 }
 
-function priorityLabel(index: number) {
-  return `${String(index).padStart(2, "0")} Priority`;
+function helperLabel(metric: CoreMetricCardModel) {
+  if (metric.id === "drift") return "How far current behavior is moving away from the expected baseline.";
+  if (metric.id === "cost-per-useful-outcome") return "Direct connection between quality and money spent.";
+  if (metric.id === "confidence") return "How reliable the current analysis readout is.";
+  return metric.operationalNote;
 }
 
 export default function CoreMetricsRow({ items }: CoreMetricsRowProps) {
   const behaviorMetric = items.find((item) => item.id === "behavior-score") ?? null;
-  const driftMetric = items.find((item) => item.id === "drift") ?? null;
-  const costMetric = items.find((item) => item.id === "cost-per-useful-outcome") ?? null;
   const supportMetrics = SUPPORT_METRIC_ORDER
     .map((id) => items.find((item) => item.id === id))
     .filter((item): item is CoreMetricCardModel => Boolean(item));
 
   return (
-    <section className="space-y-4">
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="dashboard-kicker">Executive scoreboard</p>
-          <h2 className="font-display text-3xl font-semibold tracking-tight text-foreground">The five signals that decide the next move</h2>
+    <section className="rounded-[24px] border border-border/50 bg-card/60 p-4 shadow-sm backdrop-blur-md sm:p-5">
+      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">Executive scorecard</p>
+          <h2 className="text-lg font-semibold text-foreground sm:text-xl">The five signals that decide the next move</h2>
         </div>
         <p className="max-w-xl text-sm leading-6 text-muted-foreground">
           Read these in order: behavior first, then drift, cost per useful outcome, confidence, and only then the recommended action.
         </p>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.45fr_0.95fr]">
-        <BehaviorScoreRadialCard
-          behaviorMetric={behaviorMetric}
-          driftMetric={driftMetric}
-          costMetric={costMetric}
-        />
+      <div className="grid gap-3 xl:grid-cols-[1.25fr_0.95fr]">
+        <div>
+          <BehaviorScoreRadialCard behaviorMetric={behaviorMetric} />
+        </div>
 
-        <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+        <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
           {supportMetrics.map((item, index) => (
             <article
               key={item.id}
-              className={`dashboard-panel-muted overflow-hidden p-4 sm:p-5 ${item.missing ? "opacity-75 saturate-75" : ""}`}
+              className={`rounded-[20px] border border-border/50 bg-background/30 p-4 ${item.missing ? "opacity-70 saturate-75" : ""}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{priorityLabel(index + 2)}</p>
-                  <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight text-foreground">{item.label}</h3>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                    {priorityLabel(index + 2)}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-foreground">{item.label}</p>
                 </div>
-                <span className={`rounded-full border px-3 py-1 text-[11px] font-medium ${supportToneClass(item.tone)}`}>
+                <span
+                  className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${supportToneClass(item.tone)}`}
+                >
                   {compactMainValue(item)}
                 </span>
               </div>
 
-              <div className="mt-6 flex items-end justify-between gap-3">
+              <div className="mt-5 flex items-end justify-between gap-3">
                 <div>
                   <p className="text-[0.72rem] uppercase tracking-[0.18em] text-muted-foreground">Current value</p>
-                  <p className="mt-2 font-display text-[2.35rem] font-semibold tracking-tight text-foreground">
-                    {item.displayValue}
-                  </p>
+                  <p className="mt-2 text-[1.8rem] font-semibold tracking-tight text-foreground">{item.displayValue}</p>
                 </div>
                 {item.missing ? <MissingDataBadge label={item.missingLabel} /> : null}
               </div>
 
-              <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                {item.missing ? "This signal was not provided by the engine for the current run." : item.operationalNote}
+              <p className="mt-3 text-xs leading-6 text-muted-foreground">
+                {item.missing ? "This signal was not provided by the engine for the current run." : helperLabel(item)}
               </p>
             </article>
           ))}
