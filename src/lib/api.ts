@@ -378,7 +378,7 @@ async function getAuthHeaders(extra?: HeadersInit): Promise<HeadersInit> {
 
   const token = session?.access_token;
   if (!token) {
-    throw new Error("User is not authenticated.");
+    throw new Error("User session expired. Please sign in again.");
   }
 
   return {
@@ -397,6 +397,33 @@ function summarizeHttpError(status: number, bodyText: string, fallbackMessage: s
   return `HTTP ${status}: ${normalized}`;
 }
 
+function isInvalidSessionResponse(status: number, bodyText: string): boolean {
+  if (status !== 401) return false;
+  const normalized = bodyText.trim();
+  if (!normalized) return false;
+  try {
+    const payload = JSON.parse(normalized) as Record<string, unknown>;
+    const detail =
+      payload.detail && typeof payload.detail === "object"
+        ? (payload.detail as Record<string, unknown>)
+        : payload;
+    const code =
+      typeof detail.code === "string"
+        ? detail.code
+        : typeof payload.code === "string"
+          ? payload.code
+          : "";
+    return code === "auth_session_invalid" || code === "auth_required";
+  } catch {
+    return normalized.includes("auth_session_invalid") || normalized.includes("auth_required");
+  }
+}
+
+async function invalidateSessionIfNeeded(status: number, bodyText: string): Promise<void> {
+  if (!isInvalidSessionResponse(status, bodyText)) return;
+  await supabase.auth.signOut().catch(() => undefined);
+}
+
 async function createAnalysisWithFallback(
   formData: FormData,
 ): Promise<{ analysisId: string; baseUrl: string }> {
@@ -413,6 +440,7 @@ async function createAnalysisWithFallback(
 
       if (!response.ok) {
         const text = await response.text().catch(() => "");
+        await invalidateSessionIfNeeded(response.status, text);
         const summary = summarizeHttpError(response.status, text, response.statusText);
         attemptErrors.push(`[${baseUrl}] ${summary}`);
         if (shouldFallbackToNextBase(response.status)) {
@@ -464,6 +492,7 @@ async function startInterpretationWithFallback(
 
       if (!response.ok) {
         const text = await response.text().catch(() => "");
+        await invalidateSessionIfNeeded(response.status, text);
         const summary = summarizeHttpError(response.status, text, response.statusText);
         attemptErrors.push(`[${baseUrl}] ${summary}`);
         if (shouldFallbackToNextBase(response.status)) {
@@ -512,6 +541,7 @@ async function fetchInterpretationWithFallback(
 
       if (!response.ok) {
         const text = await response.text().catch(() => "");
+        await invalidateSessionIfNeeded(response.status, text);
         const summary = summarizeHttpError(response.status, text, response.statusText);
         attemptErrors.push(`[${baseUrl}] ${summary}`);
         if (shouldFallbackToNextBase(response.status)) {
@@ -806,10 +836,11 @@ export async function analyzeConversations(
       headers: await getAuthHeaders({ Accept: "application/json" }),
     });
 
-    if (!statusResponse.ok) {
-      const text = await statusResponse.text().catch(() => "");
-      throw new Error(`HTTP ${statusResponse.status}: ${text || statusResponse.statusText}`);
-    }
+      if (!statusResponse.ok) {
+        const text = await statusResponse.text().catch(() => "");
+        await invalidateSessionIfNeeded(statusResponse.status, text);
+        throw new Error(`HTTP ${statusResponse.status}: ${text || statusResponse.statusText}`);
+      }
 
     const statusPayload = (await statusResponse.json()) as Record<string, unknown>;
     const status = String(statusPayload.status ?? "").toLowerCase();
@@ -821,6 +852,7 @@ export async function analyzeConversations(
       });
       if (!resultResponse.ok) {
         const text = await resultResponse.text().catch(() => "");
+        await invalidateSessionIfNeeded(resultResponse.status, text);
         throw new Error(`HTTP ${resultResponse.status}: ${text || resultResponse.statusText}`);
       }
 
