@@ -391,7 +391,44 @@ function wait(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+function extractErrorMessageFromBody(bodyText: string): string | undefined {
+  const normalized = bodyText.trim();
+  if (!normalized) return undefined;
+
+  try {
+    const payload = JSON.parse(normalized) as Record<string, unknown>;
+    const detail =
+      payload.detail && typeof payload.detail === "object"
+        ? (payload.detail as Record<string, unknown>)
+        : payload;
+    const code = firstNonEmptyString(detail.code, payload.code);
+    const message = firstNonEmptyString(
+      detail.message,
+      payload.message,
+      detail.error_description,
+      payload.error_description,
+      detail.error,
+      payload.error,
+      typeof payload.detail === "string" ? payload.detail : undefined,
+    );
+
+    if (code === "supabase_auth_not_configured") {
+      return "Analysis backend authentication is not configured.";
+    }
+    if (code === "supabase_rest_not_configured") {
+      return "Analysis backend storage is not configured.";
+    }
+
+    return message;
+  } catch {
+    return undefined;
+  }
+}
+
 function summarizeHttpError(status: number, bodyText: string, fallbackMessage: string): string {
+  const extracted = extractErrorMessageFromBody(bodyText);
+  if (extracted) return `HTTP ${status}: ${extracted}`;
+
   const normalized = bodyText.trim();
   if (normalized.length === 0) return `HTTP ${status}: ${fallbackMessage}`;
   return `HTTP ${status}: ${normalized}`;
