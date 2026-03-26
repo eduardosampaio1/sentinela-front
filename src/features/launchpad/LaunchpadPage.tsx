@@ -87,10 +87,12 @@ export function LaunchpadPage() {
   const { analysisCompleted, loading, loadingStep, loadingProgress } = useAnalysis();
   const navigate = useNavigate();
 
+  const prevCompleted = useRef(analysisCompleted);
   useEffect(() => {
-    if (analysisCompleted) {
+    if (analysisCompleted && !prevCompleted.current) {
       navigate("/dashboard");
     }
+    prevCompleted.current = analysisCompleted;
   }, [analysisCompleted, navigate]);
 
   return (
