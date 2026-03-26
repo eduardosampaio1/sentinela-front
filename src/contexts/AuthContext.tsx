@@ -35,6 +35,12 @@ import {
   type SystemProject,
 } from "@/lib/systemRegistry";
 
+type FullContextResult = {
+  workspace: Workspace;
+  project: SystemProject;
+  environment: SystemEnvironment;
+};
+
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
@@ -61,6 +67,12 @@ interface AuthContextValue {
   createEnvironment: (name: string) => Promise<SystemEnvironment | null>;
   renameEnvironment: (environmentId: string, name: string) => Promise<void>;
   deleteEnvironment: (environmentId: string) => Promise<void>;
+  createFullContext: (params: {
+    workspaceName: string;
+    projectName: string;
+    environmentName: string;
+    environmentType?: string;
+  }) => Promise<FullContextResult | null>;
   signOut: () => Promise<void>;
 }
 
@@ -401,6 +413,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [project?.id, syncProjectEnvironment, workspace],
   );
 
+  const createFullContext = useCallback(
+    async (params: {
+      workspaceName: string;
+      projectName: string;
+      environmentName: string;
+      environmentType?: string;
+    }) => {
+      if (!user) return null;
+
+      const createdWorkspace = await createWorkspaceRecord({
+        userId: user.id,
+        name: params.workspaceName,
+        email: user.email,
+      });
+
+      const createdProject = await createSystemProject({
+        workspaceId: createdWorkspace.id,
+        name: params.projectName,
+      });
+
+      const createdEnvironment = await createSystemEnvironment({
+        projectId: createdProject.id,
+        name: params.environmentName,
+        environmentType: params.environmentType ?? "production",
+      });
+
+      const listedWorkspaces = await listUserWorkspaces(user.id);
+
+      setWorkspaces(listedWorkspaces);
+      setWorkspace(createdWorkspace);
+      setStoredWorkspaceId(createdWorkspace.id);
+
+      setProjects([createdProject]);
+      setProject(createdProject);
+      setStoredProjectId(createdWorkspace.id, createdProject.id);
+
+      setEnvironments([createdEnvironment]);
+      setEnvironment(createdEnvironment);
+      setStoredEnvironmentId(createdProject.id, createdEnvironment.id);
+
+      return {
+        workspace: createdWorkspace,
+        project: createdProject,
+        environment: createdEnvironment,
+      } satisfies FullContextResult;
+    },
+    [user],
+  );
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setWorkspace(null);
@@ -491,6 +552,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       createEnvironment,
       renameEnvironment,
       deleteEnvironment,
+      createFullContext,
       signOut,
     }),
     [
@@ -519,18 +581,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       createEnvironment,
       renameEnvironment,
       deleteEnvironment,
+      createFullContext,
       signOut,
     ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
-// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within AuthProvider");
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return ctx;
+  return context;
 }

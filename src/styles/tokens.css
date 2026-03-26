@@ -1,0 +1,114 @@
+/* ===================================================
+   Sentinela Design Tokens
+   Dark enterprise theme
+   =================================================== */
+
+:root {
+  /* ---- Color Palette ---- */
+  --color-bg: #070C18;
+  --color-surface: #0D1525;
+  --color-surface-elevated: #111D30;
+  --color-surface-hover: #152035;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Primary */
+  --color-primary: #22D3EE;
+  --color-primary-muted: rgba(34, 211, 238, 0.12);
+  --color-primary-hover: #06B6D4;
+  --color-primary-glow: rgba(34, 211, 238, 0.15);
+
+  /* Semantic */
+  --color-success: #34D399;
+  --color-success-muted: rgba(52, 211, 153, 0.12);
+  --color-warning: #FCD34D;
+  --color-warning-muted: rgba(252, 211, 77, 0.12);
+  --color-danger: #F87171;
+  --color-danger-muted: rgba(248, 113, 113, 0.12);
+  --color-orange: #FB923C;
+  --color-orange-muted: rgba(251, 146, 60, 0.12);
+
+  /* Text */
+  --color-text-primary: #F1F5F9;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #475569;
+  --color-text-disabled: #2D3748;
+
+  /* ---- Typography ---- */
+  --font-family-base: "Plus Jakarta Sans", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-family-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 22px;
+  --font-size-2xl: 28px;
+  --font-size-3xl: 36px;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.375;
+  --line-height-base: 1.5;
+  --line-height-relaxed: 1.625;
+
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+  --letter-spacing-section: 0.22em;
+
+  /* ---- Spacing ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* ---- Border Radius ---- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ---- Shadows ---- */
+  --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 48px rgba(0, 0, 0, 0.5);
+  --shadow-glow-primary: 0 0 24px rgba(34, 211, 238, 0.15);
+  --shadow-glow-success: 0 0 24px rgba(52, 211, 153, 0.15);
+  --shadow-glow-danger: 0 0 24px rgba(248, 113, 113, 0.15);
+
+  /* ---- Transitions (skill: 150–300ms; ease-out enter, ease-in exit) ---- */
+  --transition-fast: 150ms cubic-bezier(0, 0, 0.2, 1);    /* ease-out */
+  --transition-base: 200ms cubic-bezier(0, 0, 0.2, 1);    /* ease-out */
+  --transition-slow: 300ms cubic-bezier(0, 0, 0.2, 1);    /* ease-out */
+  --transition-exit: 150ms cubic-bezier(0.4, 0, 1, 1);    /* ease-in  */
+  --transition-bounce: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---- Z-Index ---- */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-overlay: 100;
+  --z-modal: 200;
+  --z-toast: 300;
+  --z-tooltip: 400;
+
+  /* ---- Layout ---- */
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 64px;
+  --topbar-height: 56px;
+  --page-max-width: 1280px;
+  --page-padding-x: 24px;
+  --page-padding-y: 32px;
+}
