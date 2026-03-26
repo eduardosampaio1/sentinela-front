@@ -16,7 +16,7 @@ function Section({ title, description, children }: { title: string; description?
     <div className="card-base p-6">
       <div className="mb-5 pb-5 border-b border-[rgba(255,255,255,0.05)]">
         <h2 className="text-base font-semibold text-[#F1F5F9]">{title}</h2>
-        {description && <p className="text-sm text-[#475569] mt-1">{description}</p>}
+        {description && <p className="text-sm text-[#94A3B8] mt-1">{description}</p>}
       </div>
       {children}
     </div>
@@ -80,16 +80,16 @@ export function SettingsPage() {
           <Section title="Profile" description="Your account information.">
             <div className="space-y-4">
               <div>
-                <Label className="text-sm text-[#475569]">Full name</Label>
+                <Label className="text-sm text-[#94A3B8]">Full name</Label>
                 <p className="text-sm text-[#F1F5F9] mt-1">{displayName}</p>
               </div>
               <div>
-                <Label className="text-sm text-[#475569]">Email</Label>
+                <Label className="text-sm text-[#94A3B8]">Email</Label>
                 <p className="text-sm text-[#F1F5F9] mt-1">{user?.email ?? "—"}</p>
               </div>
               <div>
-                <Label className="text-sm text-[#475569]">User ID</Label>
-                <p className="text-xs font-mono text-[#2D3748] mt-1">{user?.id ?? "—"}</p>
+                <Label className="text-sm text-[#94A3B8]">User ID</Label>
+                <p className="text-xs font-mono text-[#475569] mt-1">{user?.id ?? "—"}</p>
               </div>
             </div>
           </Section>
@@ -129,7 +129,7 @@ export function SettingsPage() {
             </form>
 
             <div className="mt-6 pt-5 border-t border-[rgba(255,255,255,0.05)]">
-              <Button onClick={handleSignOut} variant="ghost" size="sm" className="rounded-xl text-[#475569] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]">
+              <Button onClick={handleSignOut} variant="ghost" size="sm" className="rounded-xl text-[#94A3B8] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]">
                 <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25" />
                 </svg>
@@ -143,7 +143,7 @@ export function SettingsPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-[#F87171]">Delete account</p>
-                <p className="text-xs text-[#475569] mt-1">
+                <p className="text-xs text-[#94A3B8] mt-1">
                   Permanently delete your account and all associated data. This action cannot be undone.
                 </p>
               </div>

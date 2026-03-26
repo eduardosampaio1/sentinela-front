@@ -68,14 +68,14 @@ function IntentRow({ intent }: { intent: DomainIntentScore }) {
       <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
         {intent.nConversations !== undefined && (
           <div className="text-right">
-            <p className="text-xs text-[#2D3748]">Conv.</p>
-            <p className="text-xs font-medium text-[#475569]">{intent.nConversations}</p>
+            <p className="text-xs text-[#475569]">Conv.</p>
+            <p className="text-xs font-medium text-[#94A3B8]">{intent.nConversations}</p>
           </div>
         )}
         {intent.responseVariance !== undefined && (
           <div className="text-right">
-            <p className="text-xs text-[#2D3748]">Variance</p>
-            <p className="text-xs font-medium text-[#475569]">
+            <p className="text-xs text-[#475569]">Variance</p>
+            <p className="text-xs font-medium text-[#94A3B8]">
               {intent.responseVariance.toFixed(1)}%
             </p>
           </div>
@@ -105,7 +105,7 @@ export function IntentsBreakdown() {
         <div>
           <p className="section-label">Intents breakdown</p>
           {intents.length > 0 && (
-            <p className="text-xs text-[#475569] mt-0.5">{intents.length} intents analyzed</p>
+            <p className="text-xs text-[#94A3B8] mt-0.5">{intents.length} intents analyzed</p>
           )}
         </div>
       </div>
@@ -120,11 +120,11 @@ export function IntentsBreakdown() {
         <div>
           {/* Header */}
           <div className="flex items-center gap-4 pb-2 border-b border-[rgba(255,255,255,0.06)] mb-1">
-            <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748] w-36 flex-shrink-0">Intent</p>
-            <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748] flex-1">Score</p>
+            <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] w-36 flex-shrink-0">Intent</p>
+            <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] flex-1">Score</p>
             <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
-              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748] w-12 text-right">Conv.</p>
-              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748] w-14 text-right">Variance</p>
+              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] w-12 text-right">Conv.</p>
+              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] w-14 text-right">Variance</p>
             </div>
           </div>
 

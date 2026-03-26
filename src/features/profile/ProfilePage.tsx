@@ -23,7 +23,7 @@ function Section({
     <div className="card-base p-6">
       <div className="mb-5 pb-5 border-b border-[rgba(255,255,255,0.05)]">
         <h2 className="text-base font-semibold text-[#F1F5F9]">{title}</h2>
-        {description && <p className="text-sm text-[#475569] mt-1">{description}</p>}
+        {description && <p className="text-sm text-[#94A3B8] mt-1">{description}</p>}
       </div>
       {children}
     </div>
@@ -115,28 +115,28 @@ export function ProfilePage() {
               <Avatar name={displayName !== "—" ? displayName : undefined} email={user?.email} />
               <div>
                 <p className="text-base font-semibold text-[#F1F5F9]">{displayName}</p>
-                <p className="text-sm text-[#475569]">{user?.email ?? "—"}</p>
+                <p className="text-sm text-[#94A3B8]">{user?.email ?? "—"}</p>
                 {memberSince && (
-                  <p className="text-xs text-[#2D3748] mt-1">Member since {memberSince}</p>
+                  <p className="text-xs text-[#475569] mt-1">Member since {memberSince}</p>
                 )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-widest font-semibold text-[#2D3748]">Full name</p>
+                <p className="text-xs uppercase tracking-widest font-semibold text-[#475569]">Full name</p>
                 <p className="text-sm text-[#94A3B8]">{displayName}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-widest font-semibold text-[#2D3748]">Email address</p>
+                <p className="text-xs uppercase tracking-widest font-semibold text-[#475569]">Email address</p>
                 <p className="text-sm text-[#94A3B8]">{user?.email ?? "—"}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-widest font-semibold text-[#2D3748]">User ID</p>
-                <p className="text-xs font-mono text-[#2D3748] break-all">{user?.id ?? "—"}</p>
+                <p className="text-xs uppercase tracking-widest font-semibold text-[#475569]">User ID</p>
+                <p className="text-xs font-mono text-[#475569] break-all">{user?.id ?? "—"}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-widest font-semibold text-[#2D3748]">Auth provider</p>
+                <p className="text-xs uppercase tracking-widest font-semibold text-[#475569]">Auth provider</p>
                 <p className="text-sm text-[#94A3B8]">
                   {user?.app_metadata?.provider ?? "email"}
                 </p>
@@ -163,7 +163,7 @@ export function ProfilePage() {
                     setPasswordError(null);
                   }}
                   placeholder="Minimum 8 characters"
-                  className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#2D3748] rounded-xl h-11"
+                  className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] rounded-xl h-11"
                 />
               </div>
               <div className="space-y-1.5">
@@ -179,7 +179,7 @@ export function ProfilePage() {
                     setPasswordError(null);
                   }}
                   placeholder="Repeat the new password"
-                  className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#2D3748] rounded-xl h-11"
+                  className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] rounded-xl h-11"
                 />
               </div>
 

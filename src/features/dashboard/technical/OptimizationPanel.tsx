@@ -83,7 +83,7 @@ export function OptimizationPanel() {
           {/* Intent coverage */}
           {data.intentCoverageScore !== null && (
             <div className="space-y-2">
-              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748]">Dataset coverage</p>
+              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569]">Dataset coverage</p>
               <div className="flex items-center gap-4">
                 <div className="flex-1 h-2 bg-[rgba(255,255,255,0.04)] rounded-full overflow-hidden">
                   <div
@@ -98,7 +98,7 @@ export function OptimizationPanel() {
                 </p>
               </div>
               {data.coveredIntents !== null && data.totalIntents !== null && (
-                <p className="text-xs text-[#475569]">
+                <p className="text-xs text-[#94A3B8]">
                   {data.coveredIntents} of {data.totalIntents} intents adequately covered.
                   {data.minSamplesPerIntent !== null && ` Min samples per intent: ${data.minSamplesPerIntent}.`}
                 </p>
@@ -109,7 +109,7 @@ export function OptimizationPanel() {
           {/* Underrepresented intents */}
           {data.underrepresentedIntents.length > 0 && (
             <div>
-              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748] mb-2">
+              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] mb-2">
                 Underrepresented intents ({data.underrepresentedIntents.length})
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -122,7 +122,7 @@ export function OptimizationPanel() {
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-[#475569] mt-2">
+              <p className="text-xs text-[#94A3B8] mt-2">
                 Add more samples for these intents to improve model reliability.
               </p>
             </div>
@@ -131,7 +131,7 @@ export function OptimizationPanel() {
           {/* Optimization recommendations */}
           {data.optimizationRecs.length > 0 && (
             <div>
-              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748] mb-2">Recommendations</p>
+              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] mb-2">Recommendations</p>
               <div className="space-y-2">
                 {data.optimizationRecs.map((rec, idx) => (
                   <div key={idx} className="flex items-start gap-3 py-2 border-b border-[rgba(255,255,255,0.04)] last:border-b-0">
@@ -140,7 +140,7 @@ export function OptimizationPanel() {
                     </span>
                     <div>
                       <p className="text-sm font-medium text-[#94A3B8]">{rec.title ?? rec.action}</p>
-                      {rec.reason && <p className="text-xs text-[#475569] mt-0.5">{rec.reason}</p>}
+                      {rec.reason && <p className="text-xs text-[#94A3B8] mt-0.5">{rec.reason}</p>}
                     </div>
                   </div>
                 ))}

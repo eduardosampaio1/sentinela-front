@@ -44,7 +44,7 @@ export function RiskCard({ risk }: RiskCardProps) {
             </svg>
           </div>
           <p className="text-sm font-medium text-[#34D399]">No dominant risk detected</p>
-          <p className="text-xs text-[#475569] mt-1">System appears to be within safe operating range.</p>
+          <p className="text-xs text-[#94A3B8] mt-1">System appears to be within safe operating range.</p>
         </div>
       </div>
     );
@@ -72,7 +72,7 @@ export function RiskCard({ risk }: RiskCardProps) {
 
       <div className="space-y-3">
         <div>
-          <p className="text-[11px] uppercase tracking-wide font-semibold text-[#2D3748] mb-1">Evidence</p>
+          <p className="text-[11px] uppercase tracking-wide font-semibold text-[#475569] mb-1">Evidence</p>
           <p className="text-sm text-[#94A3B8] leading-relaxed">{risk.evidence}</p>
         </div>
 

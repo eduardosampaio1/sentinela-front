@@ -11,7 +11,7 @@ export function NotFoundPage() {
         {/* Icon */}
         <div className="w-16 h-16 rounded-2xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] flex items-center justify-center mx-auto mb-8">
           <svg
-            className="w-8 h-8 text-[#475569]"
+            className="w-8 h-8 text-[#94A3B8]"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -33,14 +33,14 @@ export function NotFoundPage() {
           This page doesn't exist
         </h1>
 
-        <p className="text-sm text-[#475569] leading-relaxed mb-3">
+        <p className="text-sm text-[#94A3B8] leading-relaxed mb-3">
           The URL{" "}
-          <span className="font-mono text-[#2D3748] text-xs">{location.pathname}</span>{" "}
+          <span className="font-mono text-[#475569] text-xs">{location.pathname}</span>{" "}
           could not be matched to any page in Sentinela. It may have been moved,
           renamed, or the link may be broken.
         </p>
 
-        <p className="text-xs text-[#2D3748] mb-8">
+        <p className="text-xs text-[#475569] mb-8">
           Your analyses, workspace, and account data are unaffected.
         </p>
 
@@ -57,7 +57,7 @@ export function NotFoundPage() {
             <Button
               size="sm"
               variant="ghost"
-              className="rounded-xl text-[#475569] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]"
+              className="rounded-xl text-[#94A3B8] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]"
             >
               Dashboard
             </Button>

@@ -40,19 +40,19 @@ export function ServerErrorPage() {
           An unexpected server error occurred
         </h1>
 
-        <p className="text-sm text-[#475569] leading-relaxed mb-3">
+        <p className="text-sm text-[#94A3B8] leading-relaxed mb-3">
           The platform encountered an internal error processing this request.
           Your data and analysis history are unaffected — this is an infrastructure
           issue, not a data loss event.
         </p>
 
-        <p className="text-xs text-[#2D3748] mb-8">
+        <p className="text-xs text-[#475569] mb-8">
           If this error repeats after reloading, it may indicate a temporary service
           disruption. Try again in a few minutes or navigate back to the Launchpad.
         </p>
 
         {technicalDetail && (
-          <p className="text-xs text-[#2D3748] font-mono bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-xl px-4 py-3 mb-8 text-left break-words">
+          <p className="text-xs text-[#475569] font-mono bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-xl px-4 py-3 mb-8 text-left break-words">
             {technicalDetail}
           </p>
         )}
@@ -69,7 +69,7 @@ export function ServerErrorPage() {
             <Button
               size="sm"
               variant="ghost"
-              className="rounded-xl text-[#475569] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]"
+              className="rounded-xl text-[#94A3B8] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]"
             >
               Back to Launchpad
             </Button>

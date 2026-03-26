@@ -126,7 +126,7 @@ export function LoginPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-[#F1F5F9]">
           Enter your analysis workspace
         </h1>
-        <p className="text-sm text-[#475569]">
+        <p className="text-sm text-[#94A3B8]">
           Don't have an account?{" "}
           <Link to="/register" className="text-[#22D3EE] hover:text-[#06B6D4] transition-colors">
             Create one for free
@@ -159,7 +159,7 @@ export function LoginPage() {
             autoComplete="email"
             autoFocus
             disabled={loading}
-            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#2D3748] focus:border-[#22D3EE] focus:ring-[#22D3EE]/20 rounded-xl h-11 ${
+            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#22D3EE] focus:ring-[#22D3EE]/20 rounded-xl h-11 ${
               fieldErrors.email ? "border-[#F87171] focus:border-[#F87171]" : ""
             }`}
           />
@@ -175,7 +175,7 @@ export function LoginPage() {
             </Label>
             <Link
               to="/forgot-password"
-              className="text-xs text-[#475569] hover:text-[#94A3B8] transition-colors"
+              className="text-xs text-[#94A3B8] hover:text-[#94A3B8] transition-colors"
             >
               Forgot password?
             </Link>
@@ -191,7 +191,7 @@ export function LoginPage() {
             placeholder="••••••••"
             autoComplete="current-password"
             disabled={loading}
-            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#2D3748] focus:border-[#22D3EE] focus:ring-[#22D3EE]/20 rounded-xl h-11 ${
+            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#22D3EE] focus:ring-[#22D3EE]/20 rounded-xl h-11 ${
               fieldErrors.password ? "border-[#F87171] focus:border-[#F87171]" : ""
             }`}
           />
@@ -219,7 +219,7 @@ export function LoginPage() {
       {/* OAuth divider */}
       <div className="my-6 flex items-center gap-3">
         <div className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
-        <span className="text-xs text-[#2D3748]">or continue with</span>
+        <span className="text-xs text-[#475569]">or continue with</span>
         <div className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
       </div>
 

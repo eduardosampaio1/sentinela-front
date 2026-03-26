@@ -42,7 +42,7 @@ export function PageHeader({
           )}
         </div>
         {description && (
-          <p className="text-sm text-[#475569] leading-relaxed">{description}</p>
+          <p className="text-sm text-[#94A3B8] leading-relaxed">{description}</p>
         )}
       </div>
       {actions && (
@@ -70,7 +70,7 @@ export function SectionHeader({
       <div>
         <p className="section-label">{label}</p>
         {description && (
-          <p className="text-xs text-[#475569] mt-0.5">{description}</p>
+          <p className="text-xs text-[#94A3B8] mt-0.5">{description}</p>
         )}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}

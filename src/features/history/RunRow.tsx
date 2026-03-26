@@ -38,7 +38,7 @@ function scoreBg(score: number): string {
 // ─── Risk badge ───────────────────────────────────────────────────────────────
 
 function RiskBadge({ level }: { level?: string | null }) {
-  if (!level) return <span className="text-xs text-[#2D3748]">—</span>;
+  if (!level) return <span className="text-xs text-[#475569]">—</span>;
 
   const upper = level.toUpperCase();
   const styles: Record<string, string> = {
@@ -60,7 +60,7 @@ function RiskBadge({ level }: { level?: string | null }) {
 
 function ScorePill({ score }: { score: number | null }) {
   if (score === null) {
-    return <span className="text-xs text-[#2D3748]">—</span>;
+    return <span className="text-xs text-[#475569]">—</span>;
   }
 
   return (
@@ -125,7 +125,7 @@ export function RunRow({ run }: RunRowProps) {
       {/* Date / time */}
       <div className="w-32 flex-shrink-0">
         <p className="text-sm font-medium text-[#94A3B8] leading-tight">{dateFormatted}</p>
-        <p className="text-[11px] text-[#2D3748] mt-0.5">{formatRelativeTime(run.created_at)}</p>
+        <p className="text-[11px] text-[#475569] mt-0.5">{formatRelativeTime(run.created_at)}</p>
       </div>
 
       {/* Risk level */}
@@ -141,34 +141,34 @@ export function RunRow({ run }: RunRowProps) {
       {/* Conversation stats */}
       <div className="flex items-center gap-5 flex-1 min-w-0">
         <div>
-          <p className="text-[10px] text-[#2D3748] uppercase tracking-widest font-semibold">
+          <p className="text-[10px] text-[#475569] uppercase tracking-widest font-semibold">
             Convs
           </p>
-          <p className="text-sm font-medium text-[#475569]">
+          <p className="text-sm font-medium text-[#94A3B8]">
             {run.n_conversations ?? "—"}
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-[#2D3748] uppercase tracking-widest font-semibold">
+          <p className="text-[10px] text-[#475569] uppercase tracking-widest font-semibold">
             Intents
           </p>
-          <p className="text-sm font-medium text-[#475569]">
+          <p className="text-sm font-medium text-[#94A3B8]">
             {run.n_intents ?? "—"}
           </p>
         </div>
         {run.engine_version && (
           <div className="hidden md:block">
-            <p className="text-[10px] text-[#2D3748] uppercase tracking-widest font-semibold">
+            <p className="text-[10px] text-[#475569] uppercase tracking-widest font-semibold">
               Engine
             </p>
-            <p className="text-xs font-mono text-[#2D3748]">{run.engine_version}</p>
+            <p className="text-xs font-mono text-[#475569]">{run.engine_version}</p>
           </div>
         )}
       </div>
 
       {/* CTA */}
       <div className="w-16 flex-shrink-0 flex justify-end">
-        <div className="flex items-center gap-1.5 text-[#475569] group-hover:text-[#22D3EE] transition-colors">
+        <div className="flex items-center gap-1.5 text-[#94A3B8] group-hover:text-[#22D3EE] transition-colors">
           <span className="text-xs font-medium">{hasResult ? "View" : "Details"}</span>
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />

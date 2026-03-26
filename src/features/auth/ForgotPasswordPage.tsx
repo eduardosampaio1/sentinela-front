@@ -78,7 +78,7 @@ export function ForgotPasswordPage() {
             </Button>
             <Link
               to="/login"
-              className="block text-center text-sm text-[#475569] hover:text-[#94A3B8] transition-colors"
+              className="block text-center text-sm text-[#94A3B8] hover:text-[#94A3B8] transition-colors"
             >
               Back to sign in
             </Link>
@@ -94,7 +94,7 @@ export function ForgotPasswordPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-[#F1F5F9]">
           Reset your password
         </h1>
-        <p className="text-sm text-[#475569]">
+        <p className="text-sm text-[#94A3B8]">
           Enter your email and we'll send you reset instructions.
         </p>
       </div>
@@ -122,7 +122,7 @@ export function ForgotPasswordPage() {
             autoComplete="email"
             autoFocus
             disabled={loading}
-            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#2D3748] focus:border-[#22D3EE] rounded-xl h-11 ${
+            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#22D3EE] rounded-xl h-11 ${
               emailError ? "border-[#F87171]" : ""
             }`}
           />
@@ -147,7 +147,7 @@ export function ForgotPasswordPage() {
         <div className="text-center">
           <Link
             to="/login"
-            className="text-sm text-[#475569] hover:text-[#94A3B8] transition-colors"
+            className="text-sm text-[#94A3B8] hover:text-[#94A3B8] transition-colors"
           >
             Back to sign in
           </Link>

@@ -94,11 +94,11 @@ export function VerdictBanner({ verdict, analyzedAt, runId }: VerdictBannerProps
 
           {/* Certainty */}
           <div className="flex items-center gap-2 mt-3">
-            <span className="text-xs text-[#475569]">{verdict.certaintyLabel}</span>
+            <span className="text-xs text-[#94A3B8]">{verdict.certaintyLabel}</span>
             {verdict.score !== null && verdict.score !== undefined && (
               <>
-                <span className="text-[#2D3748]">·</span>
-                <span className="text-xs text-[#475569]">
+                <span className="text-[#475569]">·</span>
+                <span className="text-xs text-[#94A3B8]">
                   Score: <span className={cn("font-semibold", config.text)}>{verdict.score.toFixed(1)}%</span>
                 </span>
               </>
@@ -110,7 +110,7 @@ export function VerdictBanner({ verdict, analyzedAt, runId }: VerdictBannerProps
         {(analyzedAt || runId) && (
           <div className="text-right flex-shrink-0 hidden sm:block">
             {analyzedAt && (
-              <p className="text-xs text-[#475569]">
+              <p className="text-xs text-[#94A3B8]">
                 {new Date(analyzedAt).toLocaleString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -120,7 +120,7 @@ export function VerdictBanner({ verdict, analyzedAt, runId }: VerdictBannerProps
               </p>
             )}
             {runId && (
-              <p className="text-[10px] font-mono text-[#2D3748] mt-0.5 truncate max-w-[140px]">
+              <p className="text-[10px] font-mono text-[#475569] mt-0.5 truncate max-w-[140px]">
                 {runId.slice(0, 8)}…
               </p>
             )}

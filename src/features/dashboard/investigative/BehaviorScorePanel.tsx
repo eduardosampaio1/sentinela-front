@@ -10,7 +10,7 @@ function ScoreGauge({ value, label, direction }: { value: number | null; label: 
 
   const color =
     value === null
-      ? "#2D3748"
+      ? "#475569"
       : direction === "higher_better"
         ? value >= 70 ? "#34D399" : value >= 45 ? "#FCD34D" : "#F87171"
         : value <= 35 ? "#34D399" : value <= 55 ? "#FCD34D" : "#F87171";
@@ -36,7 +36,7 @@ function ScoreGauge({ value, label, direction }: { value: number | null; label: 
           </span>
         </div>
       </div>
-      <p className="text-xs text-[#475569]">{label}</p>
+      <p className="text-xs text-[#94A3B8]">{label}</p>
     </div>
   );
 }
@@ -93,7 +93,7 @@ export function BehaviorScorePanel() {
               { label: "Consistency score", value: data.consistencyScore !== undefined ? `${data.consistencyScore.toFixed(1)}%` : "—" },
             ].map((stat) => (
               <div key={stat.label}>
-                <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748] mb-0.5">{stat.label}</p>
+                <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] mb-0.5">{stat.label}</p>
                 <p className="text-sm font-semibold text-[#94A3B8]">{stat.value}</p>
               </div>
             ))}

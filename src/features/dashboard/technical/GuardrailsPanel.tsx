@@ -62,7 +62,7 @@ export function GuardrailsPanel() {
           {/* Guardrail signals */}
           {data.guardrailSignals.length > 0 && (
             <div>
-              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748] mb-2">Engine signals</p>
+              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] mb-2">Engine signals</p>
               <div className="space-y-1.5">
                 {data.guardrailSignals.map(([key, value]) => {
                   const pct = typeof value === "number"
@@ -70,7 +70,7 @@ export function GuardrailsPanel() {
                     : null;
                   return (
                     <div key={key} className="flex items-center gap-3">
-                      <p className="text-xs text-[#475569] w-40 flex-shrink-0 capitalize">
+                      <p className="text-xs text-[#94A3B8] w-40 flex-shrink-0 capitalize">
                         {key.replace(/_/g, " ")}
                       </p>
                       <div className="flex-1 h-1.5 bg-[rgba(255,255,255,0.04)] rounded-full overflow-hidden">
@@ -79,7 +79,7 @@ export function GuardrailsPanel() {
                           style={{ width: pct !== null ? `${Math.max(2, pct)}%` : "2%" }}
                         />
                       </div>
-                      <p className="text-xs text-[#475569] w-12 text-right">
+                      <p className="text-xs text-[#94A3B8] w-12 text-right">
                         {pct !== null ? `${pct.toFixed(1)}%` : "—"}
                       </p>
                     </div>
@@ -92,14 +92,14 @@ export function GuardrailsPanel() {
           {/* Guardrail issues */}
           {data.guardrailIssues.length > 0 && (
             <div>
-              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748] mb-2">Issues</p>
+              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] mb-2">Issues</p>
               <div className="space-y-2">
                 {data.guardrailIssues.map((issue, idx) => (
                   <div key={idx} className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-4 py-3">
                     <p className="text-sm font-semibold text-[#F1F5F9]">{issue.title}</p>
                     {issue.summary && <p className="text-xs text-[#94A3B8] mt-1">{issue.summary}</p>}
                     {issue.recommendation && (
-                      <p className="text-xs text-[#475569] mt-1">
+                      <p className="text-xs text-[#94A3B8] mt-1">
                         <span className="text-[#22D3EE]">Action: </span>
                         {issue.recommendation}
                       </p>
@@ -113,7 +113,7 @@ export function GuardrailsPanel() {
           {/* Compliance alerts */}
           {data.complianceAlerts.length > 0 && (
             <div>
-              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748] mb-2">Alerts</p>
+              <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] mb-2">Alerts</p>
               <div className="space-y-2">
                 {data.complianceAlerts.map((alert) => (
                   <div key={alert.id} className="rounded-xl border border-[rgba(252,211,77,0.1)] bg-[rgba(252,211,77,0.03)] px-4 py-3">

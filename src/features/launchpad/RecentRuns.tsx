@@ -19,7 +19,7 @@ interface RunSummary {
 }
 
 function RiskBadge({ level }: { level?: string }) {
-  if (!level) return <span className="text-xs text-[#475569]">—</span>;
+  if (!level) return <span className="text-xs text-[#94A3B8]">—</span>;
 
   const styles: Record<string, string> = {
     CRITICAL: "badge-critical",
@@ -145,20 +145,20 @@ export function RecentRuns({ maxRuns = 5 }: RecentRunsProps) {
             <div className="flex-1 flex items-center gap-6 min-w-0">
               {run.nConversations !== undefined && (
                 <div className="text-left">
-                  <p className="text-xs text-[#475569]">Conversations</p>
+                  <p className="text-xs text-[#94A3B8]">Conversations</p>
                   <p className="text-sm font-medium text-[#94A3B8]">{run.nConversations}</p>
                 </div>
               )}
               {run.nIntents !== undefined && (
                 <div className="text-left">
-                  <p className="text-xs text-[#475569]">Intents</p>
+                  <p className="text-xs text-[#94A3B8]">Intents</p>
                   <p className="text-sm font-medium text-[#94A3B8]">{run.nIntents}</p>
                 </div>
               )}
               {run.engineVersion && (
                 <div className="text-left hidden sm:block">
-                  <p className="text-xs text-[#475569]">Engine</p>
-                  <p className="text-xs font-mono text-[#475569]">{run.engineVersion}</p>
+                  <p className="text-xs text-[#94A3B8]">Engine</p>
+                  <p className="text-xs font-mono text-[#94A3B8]">{run.engineVersion}</p>
                 </div>
               )}
             </div>
@@ -171,7 +171,7 @@ export function RecentRuns({ maxRuns = 5 }: RecentRunsProps) {
             {/* Arrow */}
             {run.rawResult && (
               <svg
-                className="w-4 h-4 text-[#2D3748] group-hover:text-[#22D3EE] transition-colors flex-shrink-0"
+                className="w-4 h-4 text-[#475569] group-hover:text-[#22D3EE] transition-colors flex-shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

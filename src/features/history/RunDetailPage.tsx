@@ -45,9 +45,9 @@ function riskStyle(level?: string | null) {
 function MetricTile({ label, value, sub }: { label: string; value: React.ReactNode; sub?: string }) {
   return (
     <div className="card-base p-4 flex flex-col gap-1">
-      <p className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748]">{label}</p>
+      <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">{label}</p>
       <div className="text-xl font-bold text-[#F1F5F9] leading-tight">{value}</div>
-      {sub && <p className="text-xs text-[#475569]">{sub}</p>}
+      {sub && <p className="text-xs text-[#94A3B8]">{sub}</p>}
     </div>
   );
 }
@@ -81,7 +81,7 @@ function ScoreRing({ score, label }: { score: number; label: string }) {
           {score}
         </span>
       </div>
-      <p className="text-[11px] text-[#475569] text-center">{label}</p>
+      <p className="text-[11px] text-[#94A3B8] text-center">{label}</p>
     </div>
   );
 }
@@ -108,10 +108,10 @@ function AlertRow({ alert }: { alert: DomainAnalysis["alerts"][number] }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-[#94A3B8]">{alert.title}</p>
         {alert.problem && alert.problem !== alert.title && (
-          <p className="text-xs text-[#475569] mt-0.5 leading-relaxed">{alert.problem}</p>
+          <p className="text-xs text-[#94A3B8] mt-0.5 leading-relaxed">{alert.problem}</p>
         )}
         {alert.recommendation && (
-          <p className="text-xs text-[#2D3748] mt-1 leading-relaxed">
+          <p className="text-xs text-[#475569] mt-1 leading-relaxed">
             <span className="text-[#22D3EE] font-medium">Action: </span>{alert.recommendation}
           </p>
         )}
@@ -137,10 +137,10 @@ function RecommendationRow({ rec, index }: { rec: DomainAnalysis["recommendation
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-[#94A3B8]">{rec.title ?? rec.action}</p>
         {rec.reason && (
-          <p className="text-xs text-[#475569] mt-0.5 leading-relaxed">{rec.reason}</p>
+          <p className="text-xs text-[#94A3B8] mt-0.5 leading-relaxed">{rec.reason}</p>
         )}
         {rec.expectedImpact && (
-          <p className="text-xs text-[#2D3748] mt-1">
+          <p className="text-xs text-[#475569] mt-1">
             <span className="text-[#34D399] font-medium">Expected: </span>{rec.expectedImpact}
           </p>
         )}
@@ -218,7 +218,7 @@ export function RunDetailPage() {
         <div className="mb-6">
           <Link
             to="/dashboard/history"
-            className="inline-flex items-center gap-1.5 text-xs text-[#475569] hover:text-[#94A3B8] transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-[#94A3B8] hover:text-[#94A3B8] transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -268,9 +268,9 @@ export function RunDetailPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                  <p className="text-sm text-[#475569]">{timeFormatted}</p>
+                  <p className="text-sm text-[#94A3B8]">{timeFormatted}</p>
                   {run.engine_version && (
-                    <span className="text-xs font-mono text-[#2D3748] bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] px-2 py-0.5 rounded">
+                    <span className="text-xs font-mono text-[#475569] bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] px-2 py-0.5 rounded">
                       {run.engine_version}
                     </span>
                   )}
@@ -369,7 +369,7 @@ export function RunDetailPage() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {tiles.map((t) => (
                         <div key={t.label} className="space-y-0.5">
-                          <p className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748]">{t.label}</p>
+                          <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">{t.label}</p>
                           <p className="text-base font-bold text-[#F1F5F9]">{String(t.value)}</p>
                         </div>
                       ))}
@@ -387,14 +387,14 @@ export function RunDetailPage() {
                 <div className="card-base overflow-hidden">
                   <div className="px-4 py-3.5 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between">
                     <p className="section-label">Alerts</p>
-                    <span className="text-xs text-[#475569]">{domain.alerts.length} total</span>
+                    <span className="text-xs text-[#94A3B8]">{domain.alerts.length} total</span>
                   </div>
                   <div className="max-h-[400px] overflow-y-auto">
                     {domain.alerts.slice(0, 20).map((alert) => (
                       <AlertRow key={alert.id} alert={alert} />
                     ))}
                     {domain.alerts.length > 20 && (
-                      <p className="text-xs text-[#2D3748] text-center py-3">
+                      <p className="text-xs text-[#475569] text-center py-3">
                         +{domain.alerts.length - 20} more alerts — restore to dashboard to see all
                       </p>
                     )}
@@ -407,7 +407,7 @@ export function RunDetailPage() {
                 <div className="card-base overflow-hidden">
                   <div className="px-4 py-3.5 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between">
                     <p className="section-label">Recommendations</p>
-                    <span className="text-xs text-[#475569]">{domain.recommendations.length} actions</span>
+                    <span className="text-xs text-[#94A3B8]">{domain.recommendations.length} actions</span>
                   </div>
                   <div className="max-h-[400px] overflow-y-auto">
                     {domain.recommendations.slice(0, 10).map((rec, i) => (
@@ -421,7 +421,7 @@ export function RunDetailPage() {
             {/* No domain data but run exists */}
             {!domain && run.raw_result === null && (
               <div className="card-base p-6 text-center">
-                <p className="text-sm text-[#475569]">
+                <p className="text-sm text-[#94A3B8]">
                   This run was recorded without result data — it may have been a partial or failed analysis.
                 </p>
               </div>

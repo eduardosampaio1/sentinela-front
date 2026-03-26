@@ -84,13 +84,13 @@ function ErrorFallback({
           The interface encountered an unexpected problem
         </h1>
 
-        <p className="text-sm text-[#475569] leading-relaxed mb-2">
+        <p className="text-sm text-[#94A3B8] leading-relaxed mb-2">
           A component failed to render correctly. Your data is safe — this is a display
           error, not a data loss event.
         </p>
 
         {error.message && (
-          <p className="text-xs text-[#2D3748] font-mono bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-xl px-4 py-3 mb-8 text-left break-words">
+          <p className="text-xs text-[#475569] font-mono bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-xl px-4 py-3 mb-8 text-left break-words">
             {error.message}
           </p>
         )}
@@ -107,7 +107,7 @@ function ErrorFallback({
             onClick={onReload}
             size="sm"
             variant="ghost"
-            className="rounded-xl text-[#475569] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]"
+            className="rounded-xl text-[#94A3B8] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]"
           >
             Reload page
           </Button>

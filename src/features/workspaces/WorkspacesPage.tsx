@@ -161,17 +161,17 @@ function WorkspaceCard({ workspace, isActive, onSelect, onRename, onDelete }: {
           <p className={cn("text-sm font-semibold truncate", isActive ? "text-[#22D3EE]" : "text-[#F1F5F9]")}>
             {workspace.name}
           </p>
-          <p className="text-xs text-[#2D3748] font-mono truncate">{workspace.id.slice(0, 12)}…</p>
+          <p className="text-xs text-[#475569] font-mono truncate">{workspace.id.slice(0, 12)}…</p>
         </div>
       </div>
 
       <div className="flex items-center gap-1.5 flex-shrink-0">
         {!isActive && (
-          <Button size="sm" variant="ghost" onClick={onSelect} className="rounded-lg text-xs text-[#475569] hover:text-[#94A3B8]">
+          <Button size="sm" variant="ghost" onClick={onSelect} className="rounded-lg text-xs text-[#94A3B8] hover:text-[#94A3B8]">
             Select
           </Button>
         )}
-        <Button size="sm" variant="ghost" onClick={onRename} className="rounded-lg text-xs text-[#475569] hover:text-[#94A3B8]">
+        <Button size="sm" variant="ghost" onClick={onRename} className="rounded-lg text-xs text-[#94A3B8] hover:text-[#94A3B8]">
           Rename
         </Button>
         <Button size="sm" variant="ghost" onClick={onDelete} className="rounded-lg text-xs text-[#F87171] hover:text-[#F87171] hover:bg-[rgba(248,113,113,0.08)]">
@@ -261,7 +261,7 @@ export function WorkspacesPage() {
                 />
               ))}
               {workspaces.length === 0 && (
-                <p className="text-sm text-[#475569] text-center py-6 px-2 leading-relaxed">
+                <p className="text-sm text-[#94A3B8] text-center py-6 px-2 leading-relaxed">
                   No workspaces yet. Create one to start organizing your AI systems.
                 </p>
               )}
@@ -305,7 +305,7 @@ export function WorkspacesPage() {
                         e.stopPropagation();
                         setRenameTarget({ type: "project", id: proj.id, name: proj.name, label: "system" });
                       }}
-                      className="text-[10px] text-[#475569] hover:text-[#94A3B8] px-1"
+                      className="text-[10px] text-[#94A3B8] hover:text-[#94A3B8] px-1"
                     >
                       Rename
                     </button>
@@ -319,7 +319,7 @@ export function WorkspacesPage() {
                 </div>
               ))}
               {projects.length === 0 && (
-                <p className="text-sm text-[#475569] text-center py-6 px-2 leading-relaxed">
+                <p className="text-sm text-[#94A3B8] text-center py-6 px-2 leading-relaxed">
                   {workspace ? "No AI systems registered in this workspace yet." : "Select a workspace to see its systems."}
                 </p>
               )}
@@ -357,7 +357,7 @@ export function WorkspacesPage() {
                       {env.name}
                     </p>
                     {env.environmentType && (
-                      <span className="text-[10px] text-[#2D3748] px-1.5 py-0.5 rounded bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)]">
+                      <span className="text-[10px] text-[#475569] px-1.5 py-0.5 rounded bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)]">
                         {env.environmentType}
                       </span>
                     )}
@@ -368,7 +368,7 @@ export function WorkspacesPage() {
                         e.stopPropagation();
                         setRenameTarget({ type: "env", id: env.id, name: env.name, label: "environment" });
                       }}
-                      className="text-[10px] text-[#475569] hover:text-[#94A3B8] px-1"
+                      className="text-[10px] text-[#94A3B8] hover:text-[#94A3B8] px-1"
                     >
                       Rename
                     </button>
@@ -382,7 +382,7 @@ export function WorkspacesPage() {
                 </div>
               ))}
               {environments.length === 0 && (
-                <p className="text-sm text-[#475569] text-center py-6 px-2 leading-relaxed">
+                <p className="text-sm text-[#94A3B8] text-center py-6 px-2 leading-relaxed">
                   {project ? "No environments configured for this system yet." : "Select a system to see its environments."}
                 </p>
               )}

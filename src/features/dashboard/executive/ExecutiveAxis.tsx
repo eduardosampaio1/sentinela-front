@@ -14,7 +14,7 @@ const TONE_COLORS = {
   safe: "text-[#34D399]",
   watch: "text-[#FCD34D]",
   risk: "text-[#F87171]",
-  neutral: "text-[#475569]",
+  neutral: "text-[#94A3B8]",
 };
 
 function CoreMetricCard({ metric }: { metric: CoreMetricViewModel }) {
@@ -24,7 +24,7 @@ function CoreMetricCard({ metric }: { metric: CoreMetricViewModel }) {
       <p
         className={cn(
           "text-2xl font-bold tracking-tight leading-none",
-          metric.missing ? "text-[#2D3748]" : TONE_COLORS[metric.tone]
+          metric.missing ? "text-[#475569]" : TONE_COLORS[metric.tone]
         )}
       >
         {metric.displayValue}
@@ -35,7 +35,7 @@ function CoreMetricCard({ metric }: { metric: CoreMetricViewModel }) {
             "bg-[#34D399]": metric.tone === "safe",
             "bg-[#FCD34D]": metric.tone === "watch",
             "bg-[#F87171]": metric.tone === "risk",
-            "bg-[#475569]": metric.tone === "neutral",
+            "bg-[#94A3B8]": metric.tone === "neutral",
           })}
           aria-hidden="true"
         />

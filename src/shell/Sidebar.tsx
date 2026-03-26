@@ -81,7 +81,7 @@ function SidebarNavItem({
   if (isDisabled) {
     return (
       <div
-        className="flex items-center gap-3 px-3 py-2 rounded-xl text-[#2D3748] cursor-not-allowed select-none"
+        className="flex items-center gap-3 px-3 py-2 rounded-xl text-[#475569] cursor-not-allowed select-none"
         aria-disabled="true"
         title="Run an analysis first to access this view"
       >
@@ -102,7 +102,7 @@ function SidebarNavItem({
         "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150",
         isActive
           ? "bg-[rgba(34,211,238,0.10)] text-[#22D3EE] shadow-[inset_0_0_0_1px_rgba(34,211,238,0.12)]"
-          : "text-[#475569] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]"
+          : "text-[#94A3B8] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]"
       )}
     >
       <Icon
@@ -134,7 +134,7 @@ function ContextBlock() {
       className="w-full text-left px-4 py-3 border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.02)] transition-colors group"
       title="Change active context"
     >
-      <p className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748] mb-1.5">
+      <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mb-1.5">
         Active context
       </p>
       {workspace && (
@@ -143,7 +143,7 @@ function ContextBlock() {
         </p>
       )}
       {project && (
-        <p className="text-xs text-[#475569] truncate mt-0.5 leading-tight">
+        <p className="text-xs text-[#94A3B8] truncate mt-0.5 leading-tight">
           {project.name}
         </p>
       )}
@@ -220,7 +220,7 @@ function UserBlock() {
             {displayName}
           </p>
           {user?.email && displayName !== user.email && (
-            <p className="text-[10px] text-[#2D3748] truncate leading-tight">
+            <p className="text-[10px] text-[#475569] truncate leading-tight">
               {user.email}
             </p>
           )}
@@ -229,7 +229,7 @@ function UserBlock() {
         {/* Sign out */}
         <button
           onClick={handleSignOut}
-          className="w-6 h-6 flex items-center justify-center rounded-lg text-[#2D3748] hover:text-[#F87171] hover:bg-[rgba(248,113,113,0.08)] transition-colors opacity-0 group-hover:opacity-100"
+          className="w-6 h-6 flex items-center justify-center rounded-lg text-[#475569] hover:text-[#F87171] hover:bg-[rgba(248,113,113,0.08)] transition-colors opacity-0 group-hover:opacity-100"
           aria-label="Sign out"
           title="Sign out"
         >

@@ -60,7 +60,7 @@ export function AnalysisLauncher() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-base font-semibold text-[#F1F5F9]">New analysis</h2>
-          <p className="text-xs text-[#475569] mt-0.5">Upload or paste a conversation dataset to begin</p>
+          <p className="text-xs text-[#94A3B8] mt-0.5">Upload or paste a conversation dataset to begin</p>
         </div>
 
         {/* Mode toggle */}
@@ -73,7 +73,7 @@ export function AnalysisLauncher() {
                 "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
                 mode === m
                   ? "bg-[#0D1525] text-[#F1F5F9] shadow-sm"
-                  : "text-[#475569] hover:text-[#94A3B8]"
+                  : "text-[#94A3B8] hover:text-[#94A3B8]"
               )}
               disabled={loading}
             >
@@ -120,7 +120,7 @@ export function AnalysisLauncher() {
               "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
               dragging
                 ? "bg-[rgba(34,211,238,0.15)] text-[#22D3EE]"
-                : "bg-[rgba(255,255,255,0.04)] text-[#475569] group-hover:text-[#22D3EE] group-hover:bg-[rgba(34,211,238,0.08)]"
+                : "bg-[rgba(255,255,255,0.04)] text-[#94A3B8] group-hover:text-[#22D3EE] group-hover:bg-[rgba(34,211,238,0.08)]"
             )}
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -132,7 +132,7 @@ export function AnalysisLauncher() {
             <p className="text-sm font-medium text-[#94A3B8]">
               {dragging ? "Drop file to analyze" : "Drop file here or click to browse"}
             </p>
-            <p className="text-xs text-[#475569] mt-1">Accepts .json and .jsonl files</p>
+            <p className="text-xs text-[#94A3B8] mt-1">Accepts .json and .jsonl files</p>
           </div>
         </div>
       ) : (
@@ -143,10 +143,10 @@ export function AnalysisLauncher() {
             placeholder='[{"role":"user","content":"..."},{"role":"assistant","content":"..."}]'
             rows={8}
             disabled={loading}
-            className="bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#2D3748] focus:border-[#22D3EE] resize-none font-mono text-xs rounded-xl leading-relaxed"
+            className="bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#22D3EE] resize-none font-mono text-xs rounded-xl leading-relaxed"
           />
           <div className="flex items-center justify-between">
-            <p className="text-xs text-[#475569]">
+            <p className="text-xs text-[#94A3B8]">
               Paste a JSON array of conversation objects
             </p>
             <Button

@@ -83,7 +83,7 @@ export function RegisterPage() {
   };
 
   const inputClass = (field: keyof FieldErrors) =>
-    `bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#2D3748] focus:border-[#22D3EE] focus:ring-[#22D3EE]/20 rounded-xl h-11 ${
+    `bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#22D3EE] focus:ring-[#22D3EE]/20 rounded-xl h-11 ${
       fieldErrors[field] ? "border-[#F87171] focus:border-[#F87171]" : ""
     }`;
 
@@ -93,7 +93,7 @@ export function RegisterPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-[#F1F5F9]">
           Create your workspace
         </h1>
-        <p className="text-sm text-[#475569]">
+        <p className="text-sm text-[#94A3B8]">
           Start monitoring your AI system quality in minutes.{" "}
           <Link to="/login" className="text-[#22D3EE] hover:text-[#06B6D4] transition-colors">
             Already have an account?
@@ -186,7 +186,7 @@ export function RegisterPage() {
           )}
         </Button>
 
-        <p className="text-xs text-[#2D3748] text-center">
+        <p className="text-xs text-[#475569] text-center">
           By creating an account, you agree to our terms of service and privacy policy.
         </p>
       </form>

@@ -5,7 +5,7 @@ const TONE_RING_COLOR = {
   safe: "#34D399",
   watch: "#FCD34D",
   risk: "#F87171",
-  neutral: "#475569",
+  neutral: "#94A3B8",
 };
 
 const CERTAINTY_LABEL = {
@@ -81,7 +81,7 @@ export function ConfidenceCard({ confidence }: ConfidenceCardProps) {
           >
             {CERTAINTY_LABEL[confidence.certainty]}
           </p>
-          <p className="text-xs text-[#475569]">
+          <p className="text-xs text-[#94A3B8]">
             Global confidence score for this analysis run
           </p>
         </div>
@@ -90,13 +90,13 @@ export function ConfidenceCard({ confidence }: ConfidenceCardProps) {
       {/* Limiting factors */}
       {confidence.limitingFactors.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748]">Factors</p>
+          <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569]">Factors</p>
           {confidence.limitingFactors.map((factor, i) => (
             <div
               key={i}
               className={cn(
                 "flex items-start gap-2 text-xs",
-                confidence.tone === "safe" ? "text-[#475569]" : "text-[#94A3B8]"
+                confidence.tone === "safe" ? "text-[#94A3B8]" : "text-[#94A3B8]"
               )}
             >
               <span

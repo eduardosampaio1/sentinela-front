@@ -32,22 +32,22 @@ export function DiagnosticsPanel() {
       <div className="flex flex-wrap gap-4 mb-4 pb-4 border-b border-[rgba(255,255,255,0.05)]">
         {data.engineVersion && (
           <div>
-            <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748]">Engine</p>
-            <p className="text-xs font-mono text-[#475569]">{data.engineVersion}</p>
+            <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569]">Engine</p>
+            <p className="text-xs font-mono text-[#94A3B8]">{data.engineVersion}</p>
           </div>
         )}
         {data.analysisId && (
           <div>
-            <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748]">Analysis ID</p>
-            <p className="text-xs font-mono text-[#475569] truncate max-w-[200px]">
+            <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569]">Analysis ID</p>
+            <p className="text-xs font-mono text-[#94A3B8] truncate max-w-[200px]">
               {data.analysisId.slice(0, 16)}…
             </p>
           </div>
         )}
         {data.analyzedAt && (
           <div>
-            <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748]">Analyzed at</p>
-            <p className="text-xs text-[#475569]">
+            <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569]">Analyzed at</p>
+            <p className="text-xs text-[#94A3B8]">
               {new Date(data.analyzedAt).toLocaleString("en-US", {
                 month: "short",
                 day: "numeric",
@@ -62,7 +62,7 @@ export function DiagnosticsPanel() {
       {/* Executive summary */}
       {data.executiveSummary && (
         <div className="mb-4 pb-4 border-b border-[rgba(255,255,255,0.05)]">
-          <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748] mb-2">Executive summary</p>
+          <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] mb-2">Executive summary</p>
           <p className="text-sm text-[#94A3B8] leading-relaxed">{data.executiveSummary}</p>
         </div>
       )}
@@ -76,7 +76,7 @@ export function DiagnosticsPanel() {
         />
       ) : (
         <div className="space-y-3">
-          <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748]">
+          <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569]">
             Engine issues ({data.issues.length})
           </p>
           {data.issues.map((issue, idx) => {
@@ -95,10 +95,10 @@ export function DiagnosticsPanel() {
                     {issue.title ?? issue.issueType ?? `Issue ${idx + 1}`}
                   </p>
                   {issue.severity && (
-                    <span className="text-[10px] font-bold text-[#475569] uppercase">{issue.severity}</span>
+                    <span className="text-[10px] font-bold text-[#94A3B8] uppercase">{issue.severity}</span>
                   )}
                   {issue.category && (
-                    <span className="text-[10px] text-[#2D3748] px-1.5 py-0.5 rounded bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)]">
+                    <span className="text-[10px] text-[#475569] px-1.5 py-0.5 rounded bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)]">
                       {issue.category}
                     </span>
                   )}
@@ -107,13 +107,13 @@ export function DiagnosticsPanel() {
                   <p className="text-xs text-[#94A3B8]">{issue.summary}</p>
                 )}
                 {issue.recommendation && (
-                  <p className="text-xs text-[#475569] mt-1">
+                  <p className="text-xs text-[#94A3B8] mt-1">
                     <span className="font-medium text-[#22D3EE]">Action: </span>
                     {issue.recommendation}
                   </p>
                 )}
                 {issue.confidence !== undefined && (
-                  <p className="text-xs text-[#2D3748]">Confidence: {(issue.confidence * 100).toFixed(0)}%</p>
+                  <p className="text-xs text-[#475569]">Confidence: {(issue.confidence * 100).toFixed(0)}%</p>
                 )}
               </div>
             );

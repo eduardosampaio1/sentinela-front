@@ -143,7 +143,7 @@ export function TopBar({ title, actions, className }: TopBarProps) {
             <DropdownMenuLabel className="text-[#94A3B8] font-normal py-3">
               <p className="text-sm font-semibold text-[#F1F5F9] truncate">{displayName}</p>
               {user?.email && (
-                <p className="text-xs text-[#475569] truncate mt-0.5">{user.email}</p>
+                <p className="text-xs text-[#94A3B8] truncate mt-0.5">{user.email}</p>
               )}
             </DropdownMenuLabel>
 

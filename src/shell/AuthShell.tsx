@@ -75,7 +75,7 @@ export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-[#F1F5F9]">{feature.title}</p>
-                    <p className="text-xs text-[#475569] leading-relaxed">{feature.description}</p>
+                    <p className="text-xs text-[#94A3B8] leading-relaxed">{feature.description}</p>
                   </div>
                 </div>
               ))}
@@ -83,7 +83,7 @@ export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
           </div>
 
           {/* Footer */}
-          <p className="text-xs text-[#2D3748] relative z-10">
+          <p className="text-xs text-[#475569] relative z-10">
             AI observability · Built for production teams
           </p>
         </div>

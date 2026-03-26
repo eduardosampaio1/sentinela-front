@@ -58,10 +58,10 @@ export function ErrorState({
         <p className="text-sm text-[#94A3B8] max-w-sm leading-relaxed">{message}</p>
       )}
       {code !== undefined && (
-        <p className="text-xs text-[#475569] font-mono mt-1">Error code: {code}</p>
+        <p className="text-xs text-[#94A3B8] font-mono mt-1">Error code: {code}</p>
       )}
       {hint && (
-        <p className="text-xs text-[#2D3748] mt-1.5 max-w-xs leading-relaxed">{hint}</p>
+        <p className="text-xs text-[#475569] mt-1.5 max-w-xs leading-relaxed">{hint}</p>
       )}
       <div className="mb-5" />
 

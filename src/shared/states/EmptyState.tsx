@@ -35,7 +35,7 @@ export function EmptyState({
 
   const defaultIcon = (
     <svg
-      className="w-5 h-5 text-[#2D3748]"
+      className="w-5 h-5 text-[#475569]"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -61,7 +61,7 @@ export function EmptyState({
       <div
         className={cn(
           iconSize,
-          "flex items-center justify-center rounded-2xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] mb-5 text-[#475569]"
+          "flex items-center justify-center rounded-2xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] mb-5 text-[#94A3B8]"
         )}
       >
         {icon ?? defaultIcon}
@@ -70,12 +70,12 @@ export function EmptyState({
       {/* Text */}
       <h3 className={cn(titleSize, "font-semibold text-[#F1F5F9] mb-2")}>{title}</h3>
       {description && (
-        <p className="text-sm text-[#475569] max-w-sm leading-relaxed mb-1">
+        <p className="text-sm text-[#94A3B8] max-w-sm leading-relaxed mb-1">
           {description}
         </p>
       )}
       {hint && (
-        <p className="text-xs text-[#2D3748] max-w-xs leading-relaxed mt-1 mb-5">
+        <p className="text-xs text-[#475569] max-w-xs leading-relaxed mt-1 mb-5">
           {hint}
         </p>
       )}

@@ -32,7 +32,7 @@ function ContextStrip() {
       <div className="flex items-center gap-6 min-w-0 flex-1">
         {workspace && (
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748] mb-0.5">Workspace</p>
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mb-0.5">Workspace</p>
             <p className="text-sm font-semibold text-[#F1F5F9] truncate">{workspace.name}</p>
           </div>
         )}
@@ -43,7 +43,7 @@ function ContextStrip() {
 
         {project && (
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748] mb-0.5">System</p>
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mb-0.5">System</p>
             <p className="text-sm font-medium text-[#94A3B8] truncate">{project.name}</p>
           </div>
         )}
@@ -54,7 +54,7 @@ function ContextStrip() {
 
         {environment && (
           <div className="hidden sm:block">
-            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748] mb-0.5">Environment</p>
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mb-0.5">Environment</p>
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[rgba(34,211,238,0.08)] border border-[rgba(34,211,238,0.12)]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#22D3EE]" aria-hidden="true" />
               <span className="text-xs font-medium text-[#22D3EE]">{environment.name}</span>
@@ -73,7 +73,7 @@ function ContextStrip() {
         onClick={() => navigate("/workspaces")}
         variant="ghost"
         size="sm"
-        className="rounded-xl text-[#475569] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)] flex-shrink-0 ml-4"
+        className="rounded-xl text-[#94A3B8] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)] flex-shrink-0 ml-4"
       >
         Change
       </Button>
@@ -116,7 +116,7 @@ export function LaunchpadPage() {
                 <h1 className="text-xl font-semibold tracking-tight text-[#F1F5F9] mb-1.5">
                   Analyze your AI system
                 </h1>
-                <p className="text-sm text-[#475569] leading-relaxed max-w-xl">
+                <p className="text-sm text-[#94A3B8] leading-relaxed max-w-xl">
                   Upload a conversation dataset to produce a full diagnostic report —
                   behavior score, risk classification, economic impact, and prioritized
                   recommendations. Results are saved to your workspace history.
@@ -151,7 +151,7 @@ export function LaunchpadPage() {
             </svg>
             <div>
               <p className="text-xs font-semibold text-[#22D3EE] mb-1">Dataset format</p>
-              <p className="text-xs text-[#475569] leading-relaxed">
+              <p className="text-xs text-[#94A3B8] leading-relaxed">
                 Accepts <span className="text-[#94A3B8] font-mono">.json</span> or{" "}
                 <span className="text-[#94A3B8] font-mono">.jsonl</span> files containing conversation records.
                 Each record must include user and assistant turns. A minimum of 2 conversations

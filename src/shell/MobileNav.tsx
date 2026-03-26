@@ -16,7 +16,7 @@ export function MobileMenuButton({ onClick }: HamburgerProps) {
   return (
     <button
       onClick={onClick}
-      className="md:hidden w-8 h-8 flex items-center justify-center rounded-xl text-[#475569] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)] transition-colors mr-1 flex-shrink-0"
+      className="md:hidden w-8 h-8 flex items-center justify-center rounded-xl text-[#94A3B8] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)] transition-colors mr-1 flex-shrink-0"
       aria-label="Open navigation menu"
     >
       <svg className="w-4.5 h-4.5 w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>

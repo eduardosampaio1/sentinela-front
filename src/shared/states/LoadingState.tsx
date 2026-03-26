@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface LoadingStateProps {
@@ -52,12 +53,23 @@ export function LoadingState({
       <div className="text-center space-y-1">
         <p className={cn(textSize, "font-medium text-[#F1F5F9]")}>{message}</p>
         {description && (
-          <p className="text-xs text-[#475569]">{description}</p>
+          <p className="text-xs text-[#94A3B8]">{description}</p>
         )}
       </div>
     </div>
   );
 }
+
+// ─── Sentinel worker messages ─────────────────────────────────────────────────
+
+const SENTINEL_WATCH_MESSAGES = [
+  "Sentinel is on watch. Scanning the data perimeter...",
+  "Patrolling your dataset for hidden anomalies...",
+  "Sentinel's gaze is fixed on your records. Analyzing...",
+  "Deep-scanning the horizon. Sentinel is mapping your data...",
+  "Sentinel is securing the perimeter. Processing high-volume logs...",
+  "Calibrating sensors. Sentinel is pinpointing insights...",
+];
 
 // ─── Full-screen overlay (during analysis processing) ─────────────────────────
 
@@ -74,6 +86,39 @@ export function LoadingOverlay({
   currentStep = 0,
   progress,
 }: LoadingOverlayProps) {
+  const isWaitingForWorker = currentStep >= 3;
+
+  const [watchIndex, setWatchIndex] = useState(0);
+  const [fadeIn, setFadeIn] = useState(true);
+
+  // Cycle messages with fade while waiting for worker
+  useEffect(() => {
+    if (!isWaitingForWorker) return;
+
+    const cycle = setInterval(() => {
+      setFadeIn(false);
+      const timer = setTimeout(() => {
+        setWatchIndex((i) => (i + 1) % SENTINEL_WATCH_MESSAGES.length);
+        setFadeIn(true);
+      }, 400);
+      return () => clearTimeout(timer);
+    }, 3500);
+
+    return () => clearInterval(cycle);
+  }, [isWaitingForWorker]);
+
+  // Reset on entering worker wait stage
+  useEffect(() => {
+    if (isWaitingForWorker) {
+      setWatchIndex(0);
+      setFadeIn(true);
+    }
+  }, [isWaitingForWorker]);
+
+  const displayMessage = isWaitingForWorker
+    ? SENTINEL_WATCH_MESSAGES[watchIndex]
+    : (message ?? steps?.[currentStep] ?? "Processing dataset");
+
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#070C18]/92 backdrop-blur-sm">
       <div className="flex flex-col items-center gap-6 max-w-sm w-full px-8">
@@ -87,11 +132,33 @@ export function LoadingOverlay({
           />
         </div>
 
-        {/* Message */}
-        <div className="text-center space-y-1.5">
-          <p className="text-base font-semibold text-[#F1F5F9]">{message}</p>
-          {steps && steps[currentStep] && (
-            <p className="text-sm text-[#94A3B8]">{steps[currentStep]}</p>
+        {/* Dynamic message with fade transition */}
+        <div className="text-center space-y-1.5 min-h-[3.5rem] flex flex-col items-center justify-center">
+          <p
+            className="text-base font-semibold text-[#F1F5F9]"
+            style={{
+              opacity: isWaitingForWorker ? (fadeIn ? 1 : 0) : 1,
+              transition: "opacity 400ms ease-in-out",
+            }}
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {displayMessage}
+          </p>
+          {isWaitingForWorker ? (
+            <p
+              className="text-xs text-[#475569]"
+              style={{
+                opacity: fadeIn ? 1 : 0,
+                transition: "opacity 400ms ease-in-out",
+              }}
+            >
+              This may take a minute — hang tight.
+            </p>
+          ) : (
+            steps && steps[currentStep] && (
+              <p className="text-sm text-[#94A3B8]">{steps[currentStep]}</p>
+            )
           )}
         </div>
 
@@ -122,7 +189,7 @@ export function LoadingOverlay({
                     ? "text-[#34D399]"
                     : index === currentStep
                       ? "text-[#F1F5F9]"
-                      : "text-[#2D3748]"
+                      : "text-[#475569]"
                 )}
               >
                 <span
@@ -147,4 +214,3 @@ export function LoadingOverlay({
     </div>
   );
 }
-

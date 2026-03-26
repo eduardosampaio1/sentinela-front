@@ -5,7 +5,7 @@ const TONE_COLORS = {
   observed: "text-[#22D3EE]",
   derived: "text-[#FCD34D]",
   projected: "text-[#94A3B8]",
-  neutral: "text-[#475569]",
+  neutral: "text-[#94A3B8]",
 };
 
 const TONE_LABELS = {
@@ -26,8 +26,8 @@ export function EconomicsCard({ economics, collapsed = false }: EconomicsCardPro
       <div className="card-base p-5">
         <p className="section-label mb-3">Economic impact</p>
         <div className="py-4 text-center">
-          <p className="text-sm text-[#475569]">Economic data not available for this run.</p>
-          <p className="text-xs text-[#2D3748] mt-1">Add cost and outcome signals to your dataset to enable this view.</p>
+          <p className="text-sm text-[#94A3B8]">Economic data not available for this run.</p>
+          <p className="text-xs text-[#475569] mt-1">Add cost and outcome signals to your dataset to enable this view.</p>
         </div>
       </div>
     );
@@ -44,18 +44,18 @@ export function EconomicsCard({ economics, collapsed = false }: EconomicsCardPro
             key={metric.id}
             className="rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] px-3 py-3"
           >
-            <p className="text-[10px] uppercase tracking-wider font-semibold text-[#475569] mb-1.5 leading-tight">
+            <p className="text-[10px] uppercase tracking-wider font-semibold text-[#94A3B8] mb-1.5 leading-tight">
               {metric.label}
             </p>
             <p
               className={cn(
                 "font-bold leading-none mb-1",
-                metric.value === null ? "text-[#2D3748] text-sm" : "text-[#F1F5F9] text-base"
+                metric.value === null ? "text-[#475569] text-sm" : "text-[#F1F5F9] text-base"
               )}
             >
               {metric.displayValue}
             </p>
-            <p className="text-[10px] text-[#2D3748] leading-snug">{metric.supportingText}</p>
+            <p className="text-[10px] text-[#475569] leading-snug">{metric.supportingText}</p>
           </div>
         ))}
       </div>
@@ -84,7 +84,7 @@ export function EconomicsCard({ economics, collapsed = false }: EconomicsCardPro
                   >
                     {TONE_LABELS[metric.tone]}
                   </span>
-                  <p className="text-xs text-[#475569] truncate">{metric.label}</p>
+                  <p className="text-xs text-[#94A3B8] truncate">{metric.label}</p>
                 </div>
                 <p className="text-sm font-semibold text-[#94A3B8] flex-shrink-0">{metric.displayValue}</p>
               </div>
@@ -96,7 +96,7 @@ export function EconomicsCard({ economics, collapsed = false }: EconomicsCardPro
       {economics.notes.length > 0 && !collapsed && (
         <div className="mt-4 space-y-0.5">
           {economics.notes.map((note) => (
-            <p key={note} className="text-[10px] text-[#2D3748]">{note}</p>
+            <p key={note} className="text-[10px] text-[#475569]">{note}</p>
           ))}
         </div>
       )}

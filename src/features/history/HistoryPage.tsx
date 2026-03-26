@@ -68,7 +68,7 @@ function FilterChip<T extends string>({
         "px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all",
         active
           ? "bg-[rgba(34,211,238,0.10)] text-[#22D3EE] border-[rgba(34,211,238,0.20)]"
-          : "bg-transparent text-[#475569] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] hover:text-[#94A3B8]"
+          : "bg-transparent text-[#94A3B8] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] hover:text-[#94A3B8]"
       )}
       style={active && color ? { color, background: `${color}18`, borderColor: `${color}35` } : undefined}
     >
@@ -93,7 +93,7 @@ function FilterBar({ riskFilter, scoreFilter, onRiskChange, onScoreChange, total
     <div className="flex items-center gap-4 flex-wrap mb-4">
       {/* Risk filters */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748] mr-1">Risk</span>
+        <span className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mr-1">Risk</span>
         {(["all", "critical", "high", "medium", "low"] as RiskFilter[]).map((v) => {
           const riskColors: Record<string, string> = {
             critical: "#F87171",
@@ -118,7 +118,7 @@ function FilterBar({ riskFilter, scoreFilter, onRiskChange, onScoreChange, total
 
       {/* Score filters */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748] mr-1">Score</span>
+        <span className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mr-1">Score</span>
         {([
           { v: "all" as ScoreFilter, label: "All" },
           { v: "high" as ScoreFilter,     label: "≥80", color: "#34D399" },
@@ -141,12 +141,12 @@ function FilterBar({ riskFilter, scoreFilter, onRiskChange, onScoreChange, total
         <>
           <div className="w-px h-4 bg-[rgba(255,255,255,0.06)] hidden sm:block" />
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[#475569]">
+            <span className="text-xs text-[#94A3B8]">
               {filteredCount} of {totalCount}
             </span>
             <button
               onClick={() => { onRiskChange("all"); onScoreChange("all"); }}
-              className="text-[11px] text-[#2D3748] hover:text-[#475569] transition-colors"
+              className="text-[11px] text-[#475569] hover:text-[#94A3B8] transition-colors"
             >
               Clear
             </button>
@@ -163,18 +163,18 @@ function TableHeader() {
   return (
     <div className="flex items-center gap-4 px-5 py-3 border-b border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)]">
       <div className="w-32 flex-shrink-0">
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748]">Date</p>
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">Date</p>
       </div>
       <div className="w-24 flex-shrink-0">
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748]">Risk</p>
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">Risk</p>
       </div>
       <div className="w-20 flex-shrink-0">
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748]">Score</p>
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">Score</p>
       </div>
       <div className="flex items-center gap-5 flex-1">
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748]">Conversations</p>
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748]">Intents</p>
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#2D3748] hidden md:block">Engine</p>
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">Conversations</p>
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">Intents</p>
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] hidden md:block">Engine</p>
       </div>
       <div className="w-16 flex-shrink-0" />
     </div>
@@ -246,7 +246,7 @@ export function HistoryPage() {
             !noContext && (
               <button
                 onClick={fetchRuns}
-                className="flex items-center gap-1.5 text-xs text-[#475569] hover:text-[#94A3B8] transition-colors"
+                className="flex items-center gap-1.5 text-xs text-[#94A3B8] hover:text-[#94A3B8] transition-colors"
                 aria-label="Refresh history"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -317,7 +317,7 @@ export function HistoryPage() {
                 filteredRuns.map((run) => <RunRow key={run.id} run={run} />)
               ) : (
                 <div className="py-10 text-center">
-                  <p className="text-sm text-[#475569]">No runs match the selected filters.</p>
+                  <p className="text-sm text-[#94A3B8]">No runs match the selected filters.</p>
                   <button
                     onClick={() => { setRiskFilter("all"); setScoreFilter("all"); }}
                     className="text-xs text-[#22D3EE] mt-2 hover:underline"
