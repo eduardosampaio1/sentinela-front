@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAnalysis } from "@/hooks/useAnalysis";
 import { LoadingState } from "@/shared/states/LoadingState";
 
-// ---- Lazy-loaded pages ----
+// ─── Lazy page imports ─────────────────────────────────────────────────────────
 
 const LandingPage = lazy(() =>
   import("@/features/landing/LandingPage").then((m) => ({ default: m.LandingPage }))
@@ -35,17 +35,26 @@ const DashboardPage = lazy(() =>
 const HistoryPage = lazy(() =>
   import("@/features/history/HistoryPage").then((m) => ({ default: m.HistoryPage }))
 );
+const RunDetailPage = lazy(() =>
+  import("@/features/history/RunDetailPage").then((m) => ({ default: m.RunDetailPage }))
+);
 const WorkspacesPage = lazy(() =>
   import("@/features/workspaces/WorkspacesPage").then((m) => ({ default: m.WorkspacesPage }))
 );
 const SettingsPage = lazy(() =>
   import("@/features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage }))
 );
+const ProfilePage = lazy(() =>
+  import("@/features/profile/ProfilePage").then((m) => ({ default: m.ProfilePage }))
+);
 const NotFoundPage = lazy(() =>
   import("@/features/errors/NotFoundPage").then((m) => ({ default: m.NotFoundPage }))
 );
+const ServerErrorPage = lazy(() =>
+  import("@/features/errors/ServerErrorPage").then((m) => ({ default: m.ServerErrorPage }))
+);
 
-// Standalone panel pages (route-accessible sub-panels)
+// Dashboard sub-panels (route-accessible deep views)
 const DiagnosticsPanel = lazy(() =>
   import("@/features/dashboard/technical/DiagnosticsPanel").then((m) => ({
     default: function DiagnosticsPanelPage() {
@@ -80,31 +89,31 @@ const OptimizationPanel = lazy(() =>
   }))
 );
 
-// ---- Route guards ----
+// ─── Shared loading screen ─────────────────────────────────────────────────────
+
+function FullScreenLoader({ message }: { message?: string }) {
+  return (
+    <div className="min-h-screen bg-[#070C18] flex items-center justify-center">
+      <LoadingState message={message ?? "Loading"} size="md" />
+    </div>
+  );
+}
 
 function PageSuspense({ children }: { children: ReactNode }) {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-[#070C18] flex items-center justify-center">
-          <LoadingState message="Loading" size="md" />
-        </div>
-      }
-    >
+    <Suspense fallback={<FullScreenLoader />}>
       {children}
     </Suspense>
   );
 }
 
+// ─── Route guards ──────────────────────────────────────────────────────────────
+
 function ProtectedRoute() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#070C18] flex items-center justify-center">
-        <LoadingState message="Verifying session" size="md" />
-      </div>
-    );
+    return <FullScreenLoader message="Verifying your session" />;
   }
 
   if (!user) {
@@ -118,11 +127,7 @@ function PublicOnlyRoute() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#070C18] flex items-center justify-center">
-        <LoadingState message="Loading" size="md" />
-      </div>
-    );
+    return <FullScreenLoader />;
   }
 
   if (user) {
@@ -136,11 +141,7 @@ function AnalysisCompletedRoute() {
   const { analysisCompleted, historyResolved } = useAnalysis();
 
   if (!historyResolved) {
-    return (
-      <div className="min-h-screen bg-[#070C18] flex items-center justify-center">
-        <LoadingState message="Loading analysis" size="md" />
-      </div>
-    );
+    return <FullScreenLoader message="Restoring analysis context" />;
   }
 
   if (!analysisCompleted) {
@@ -150,16 +151,16 @@ function AnalysisCompletedRoute() {
   return <Outlet />;
 }
 
-// ---- Router configuration ----
+// ─── Route tree ───────────────────────────────────────────────────────────────
 
 const routes: RouteObject[] = [
-  // Public landing
+  // ── Public landing ────────────────────────────────────────────────────────
   {
     path: "/",
     element: <PageSuspense><LandingPage /></PageSuspense>,
   },
 
-  // Public auth routes (redirect to /home if already logged in)
+  // ── Auth (public-only: redirect to /home if already logged in) ────────────
   {
     element: <PublicOnlyRoute />,
     children: [
@@ -178,78 +179,55 @@ const routes: RouteObject[] = [
     ],
   },
 
-  // Session expired (public)
+  // ── Session expired (public) ──────────────────────────────────────────────
   {
     path: "/session-expired",
     element: <PageSuspense><SessionExpiredPage /></PageSuspense>,
   },
 
-  // Protected routes
+  // ── Protected routes ──────────────────────────────────────────────────────
   {
     element: <ProtectedRoute />,
     children: [
-      // Launchpad
-      {
-        path: "/home",
-        element: <PageSuspense><LaunchpadPage /></PageSuspense>,
-      },
-      {
-        path: "/home/welcome",
-        element: <PageSuspense><LaunchpadPage /></PageSuspense>,
-      },
+      // Launchpad — primary entry for authenticated users
+      { path: "/home", element: <PageSuspense><LaunchpadPage /></PageSuspense> },
+      { path: "/home/welcome", element: <PageSuspense><LaunchpadPage /></PageSuspense> },
 
-      // Dashboard routes (require analysis)
+      // Profile
+      { path: "/profile", element: <PageSuspense><ProfilePage /></PageSuspense> },
+
+      // Workspaces
+      { path: "/workspaces", element: <PageSuspense><WorkspacesPage /></PageSuspense> },
+
+      // History (accessible without an active analysis)
+      { path: "/dashboard/history", element: <PageSuspense><HistoryPage /></PageSuspense> },
+      { path: "/dashboard/history/:id", element: <PageSuspense><RunDetailPage /></PageSuspense> },
+
+      // Settings
+      { path: "/dashboard/settings", element: <PageSuspense><SettingsPage /></PageSuspense> },
+
+      // Dashboard — requires an active analysis to be loaded
       {
         element: <AnalysisCompletedRoute />,
         children: [
-          {
-            path: "/dashboard",
-            element: <PageSuspense><DashboardPage /></PageSuspense>,
-          },
-          {
-            path: "/dashboard/analysis",
-            element: <PageSuspense><DashboardPage /></PageSuspense>,
-          },
-          {
-            path: "/dashboard/diagnostics",
-            element: <PageSuspense><DiagnosticsPanel /></PageSuspense>,
-          },
-          {
-            path: "/dashboard/guardrails",
-            element: <PageSuspense><GuardrailsPanel /></PageSuspense>,
-          },
-          {
-            path: "/dashboard/optimization",
-            element: <PageSuspense><OptimizationPanel /></PageSuspense>,
-          },
+          { path: "/dashboard", element: <PageSuspense><DashboardPage /></PageSuspense> },
+          { path: "/dashboard/analysis", element: <PageSuspense><DashboardPage /></PageSuspense> },
+          { path: "/dashboard/diagnostics", element: <PageSuspense><DiagnosticsPanel /></PageSuspense> },
+          { path: "/dashboard/guardrails", element: <PageSuspense><GuardrailsPanel /></PageSuspense> },
+          { path: "/dashboard/optimization", element: <PageSuspense><OptimizationPanel /></PageSuspense> },
         ],
-      },
-
-      // History (accessible without analysis)
-      {
-        path: "/dashboard/history",
-        element: <PageSuspense><HistoryPage /></PageSuspense>,
-      },
-
-      // Settings
-      {
-        path: "/dashboard/settings",
-        element: <PageSuspense><SettingsPage /></PageSuspense>,
-      },
-
-      // Workspaces
-      {
-        path: "/workspaces",
-        element: <PageSuspense><WorkspacesPage /></PageSuspense>,
       },
     ],
   },
 
-  // 404
-  {
-    path: "*",
-    element: <PageSuspense><NotFoundPage /></PageSuspense>,
-  },
+  // ── Legacy redirect aliases ────────────────────────────────────────────────
+  { path: "/manage-context", element: <Navigate to="/workspaces" replace /> },
+  { path: "/dashboard/workspaces", element: <Navigate to="/workspaces" replace /> },
+  { path: "/dashboard/manage-context", element: <Navigate to="/workspaces" replace /> },
+
+  // ── Error pages ────────────────────────────────────────────────────────────
+  { path: "/error", element: <PageSuspense><ServerErrorPage /></PageSuspense> },
+  { path: "*", element: <PageSuspense><NotFoundPage /></PageSuspense> },
 ];
 
 export const router = createBrowserRouter(routes);

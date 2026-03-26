@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { Workspace } from "@/lib/workspaces";
-import type { SystemProject, SystemEnvironment } from "@/lib/systemRegistry";
+
+// ─── Create dialog ─────────────────────────────────────────────────────────────
 
 interface CreateDialogProps {
   open: boolean;
@@ -41,7 +42,7 @@ function CreateDialog({ open, onOpenChange, title, placeholder, onConfirm }: Cre
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setName(""); }}>
+    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) { setName(""); setError(null); } }}>
       <DialogContent className="bg-[#0D1525] border-[rgba(255,255,255,0.08)] rounded-2xl max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-[#F1F5F9]">{title}</DialogTitle>
@@ -60,7 +61,7 @@ function CreateDialog({ open, onOpenChange, title, placeholder, onConfirm }: Cre
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="rounded-xl bg-[#22D3EE] text-[#070C18]">
-              {loading ? "Creating..." : "Create"}
+              {loading ? "Creating…" : "Create"}
             </Button>
           </DialogFooter>
         </form>
@@ -68,6 +69,75 @@ function CreateDialog({ open, onOpenChange, title, placeholder, onConfirm }: Cre
     </Dialog>
   );
 }
+
+// ─── Rename dialog ─────────────────────────────────────────────────────────────
+
+interface RenameDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  entityLabel: string;
+  currentName: string;
+  onConfirm: (name: string) => Promise<void>;
+}
+
+function RenameDialog({ open, onOpenChange, entityLabel, currentName, onConfirm }: RenameDialogProps) {
+  const [name, setName] = useState(currentName);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Sync when dialog reopens with a different entity
+  function handleOpenChange(v: boolean) {
+    onOpenChange(v);
+    if (!v) { setError(null); }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed) { setError("Name is required."); return; }
+    if (trimmed === currentName) { onOpenChange(false); return; }
+    setLoading(true);
+    setError(null);
+    try {
+      await onConfirm(trimmed);
+      onOpenChange(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to rename.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="bg-[#0D1525] border-[rgba(255,255,255,0.08)] rounded-2xl max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-[#F1F5F9]">Rename {entityLabel}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoFocus
+            onFocus={(e) => e.target.select()}
+            className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] rounded-xl"
+          />
+          {error && <p className="text-xs text-[#F87171]">{error}</p>}
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl text-[#94A3B8]">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading || !name.trim()} className="rounded-xl bg-[#22D3EE] text-[#070C18]">
+              {loading ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Workspace card ────────────────────────────────────────────────────────────
 
 function WorkspaceCard({ workspace, isActive, onSelect, onRename, onDelete }: {
   workspace: Workspace;
@@ -112,6 +182,17 @@ function WorkspaceCard({ workspace, isActive, onSelect, onRename, onDelete }: {
   );
 }
 
+// ─── Rename target state ───────────────────────────────────────────────────────
+
+interface RenameTarget {
+  type: "workspace" | "project" | "env";
+  id: string;
+  name: string;
+  label: string;
+}
+
+// ─── WorkspacesPage ────────────────────────────────────────────────────────────
+
 export function WorkspacesPage() {
   const {
     workspace, workspaces,
@@ -126,8 +207,16 @@ export function WorkspacesPage() {
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showCreateEnvironment, setShowCreateEnvironment] = useState(false);
 
+  const [renameTarget, setRenameTarget] = useState<RenameTarget | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ type: "workspace" | "project" | "env"; id: string; name: string } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  async function handleRename(newName: string) {
+    if (!renameTarget) return;
+    if (renameTarget.type === "workspace") await renameWorkspace(renameTarget.id, newName);
+    else if (renameTarget.type === "project") await renameProject(renameTarget.id, newName);
+    else await renameEnvironment(renameTarget.id, newName);
+  }
 
   async function handleDelete() {
     if (!confirmDelete) return;
@@ -147,11 +236,12 @@ export function WorkspacesPage() {
       <PageFrame maxWidth="xl">
         <PageHeader
           title="Workspaces"
-          description="Organize your analysis context by workspace, project, and environment."
+          description="Define your analysis scope. Each run is linked to a workspace → system → environment context, enabling isolated history and comparison across contexts."
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Workspaces column */}
+
+          {/* ── Workspaces column ── */}
           <div className="card-base p-5">
             <div className="flex items-center justify-between mb-4">
               <p className="section-label">Workspaces</p>
@@ -166,20 +256,19 @@ export function WorkspacesPage() {
                   workspace={ws}
                   isActive={ws.id === workspace?.id}
                   onSelect={() => switchWorkspace(ws.id)}
-                  onRename={() => {
-                    const name = window.prompt("New workspace name:", ws.name);
-                    if (name?.trim()) void renameWorkspace(ws.id, name.trim());
-                  }}
+                  onRename={() => setRenameTarget({ type: "workspace", id: ws.id, name: ws.name, label: "workspace" })}
                   onDelete={() => setConfirmDelete({ type: "workspace", id: ws.id, name: ws.name })}
                 />
               ))}
               {workspaces.length === 0 && (
-                <p className="text-sm text-[#475569] text-center py-4">No workspaces yet</p>
+                <p className="text-sm text-[#475569] text-center py-6 px-2 leading-relaxed">
+                  No workspaces yet. Create one to start organizing your AI systems.
+                </p>
               )}
             </div>
           </div>
 
-          {/* Projects column */}
+          {/* ── Systems column ── */}
           <div className="card-base p-5">
             <div className="flex items-center justify-between mb-4">
               <p className="section-label">Systems</p>
@@ -214,31 +303,30 @@ export function WorkspacesPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        const name = window.prompt("New name:", proj.name);
-                        if (name?.trim()) void renameProject(proj.id, name.trim());
+                        setRenameTarget({ type: "project", id: proj.id, name: proj.name, label: "system" });
                       }}
                       className="text-[10px] text-[#475569] hover:text-[#94A3B8] px-1"
                     >
-                      Edit
+                      Rename
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: "project", id: proj.id, name: proj.name }); }}
                       className="text-[10px] text-[#F87171] hover:text-[#F87171] px-1"
                     >
-                      Del
+                      Delete
                     </button>
                   </div>
                 </div>
               ))}
               {projects.length === 0 && (
-                <p className="text-sm text-[#475569] text-center py-4">
-                  {workspace ? "No systems in this workspace" : "Select a workspace first"}
+                <p className="text-sm text-[#475569] text-center py-6 px-2 leading-relaxed">
+                  {workspace ? "No AI systems registered in this workspace yet." : "Select a workspace to see its systems."}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Environments column */}
+          {/* ── Environments column ── */}
           <div className="card-base p-5">
             <div className="flex items-center justify-between mb-4">
               <p className="section-label">Environments</p>
@@ -278,32 +366,31 @@ export function WorkspacesPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        const name = window.prompt("New name:", env.name);
-                        if (name?.trim()) void renameEnvironment(env.id, name.trim());
+                        setRenameTarget({ type: "env", id: env.id, name: env.name, label: "environment" });
                       }}
                       className="text-[10px] text-[#475569] hover:text-[#94A3B8] px-1"
                     >
-                      Edit
+                      Rename
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setConfirmDelete({ type: "env", id: env.id, name: env.name }); }}
-                      className="text-[10px] text-[#F87171] px-1"
+                      className="text-[10px] text-[#F87171] hover:text-[#F87171] px-1"
                     >
-                      Del
+                      Delete
                     </button>
                   </div>
                 </div>
               ))}
               {environments.length === 0 && (
-                <p className="text-sm text-[#475569] text-center py-4">
-                  {project ? "No environments in this system" : "Select a system first"}
+                <p className="text-sm text-[#475569] text-center py-6 px-2 leading-relaxed">
+                  {project ? "No environments configured for this system yet." : "Select a system to see its environments."}
                 </p>
               )}
             </div>
           </div>
         </div>
 
-        {/* Dialogs */}
+        {/* ── Create dialogs ── */}
         <CreateDialog
           open={showCreateWorkspace}
           onOpenChange={setShowCreateWorkspace}
@@ -311,7 +398,6 @@ export function WorkspacesPage() {
           placeholder="My Organization"
           onConfirm={async (name) => { await createWorkspace(name); }}
         />
-
         <CreateDialog
           open={showCreateProject}
           onOpenChange={setShowCreateProject}
@@ -319,7 +405,6 @@ export function WorkspacesPage() {
           placeholder="Customer Support Bot"
           onConfirm={async (name) => { await createProject(name); }}
         />
-
         <CreateDialog
           open={showCreateEnvironment}
           onOpenChange={setShowCreateEnvironment}
@@ -328,11 +413,23 @@ export function WorkspacesPage() {
           onConfirm={async (name) => { await createEnvironment(name); }}
         />
 
+        {/* ── Rename dialog ── */}
+        {renameTarget && (
+          <RenameDialog
+            open={!!renameTarget}
+            onOpenChange={(open) => { if (!open) setRenameTarget(null); }}
+            entityLabel={renameTarget.label}
+            currentName={renameTarget.name}
+            onConfirm={handleRename}
+          />
+        )}
+
+        {/* ── Delete confirm ── */}
         <ConfirmDialog
           open={!!confirmDelete}
           onOpenChange={(open) => !open && setConfirmDelete(null)}
           title={`Delete ${confirmDelete?.name ?? "item"}?`}
-          description="This action cannot be undone. All associated data will be removed."
+          description="This action is permanent and cannot be undone. All analyses, history, and data associated with this item will be removed from your account."
           confirmLabel="Delete"
           variant="destructive"
           loading={deleteLoading}
