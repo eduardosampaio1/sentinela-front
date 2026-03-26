@@ -794,7 +794,7 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
         ? (field("min_samples_per_intent") as number)
         : undefined,
     underrepresented_intents: Array.isArray(field("underrepresented_intents", []))
-      ? (field("underrepresented_intents", []) as unknown[]).map((value) => String(value))
+      ? (field("underrepresented_intents", []) as unknown[]).map((v: unknown): string => { if (typeof v === "string") return v; if (v && typeof v === "object" && "intent" in (v as object)) return String((v as Record<string,unknown>).intent); return String(v); })
       : [],
     critical_alerts_count: criticalAlertsCount,
     alerts,
@@ -1245,7 +1245,7 @@ function sanitizeResult(parsed: unknown): AnalysisResult {
     min_samples_per_intent:
       typeof record.min_samples_per_intent === "number" ? record.min_samples_per_intent : undefined,
     underrepresented_intents: Array.isArray(record.underrepresented_intents)
-      ? record.underrepresented_intents.map(String)
+      ? record.underrepresented_intents.map((v: unknown): string => { if (typeof v === "string") return v; if (v && typeof v === "object" && "intent" in (v as object)) return String((v as Record<string,unknown>).intent); return String(v); })
       : [],
     critical_alerts_count:
       typeof record.critical_alerts_count === "number" ? record.critical_alerts_count : 0,
