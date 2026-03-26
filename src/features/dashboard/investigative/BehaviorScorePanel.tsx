@@ -78,7 +78,7 @@ export function BehaviorScorePanel() {
             <ScoreGauge value={data.behaviorScore} label="Behavior Score" direction="higher_better" />
             <ScoreGauge value={data.semanticDrift} label="Semantic Drift" direction="lower_better" />
             <ScoreGauge
-              value={data.consistencyScore ? data.consistencyScore * (data.consistencyScore <= 1 ? 100 : 1) : null}
+              value={data.consistencyScore ?? null}
               label="Consistency"
               direction="higher_better"
             />
@@ -89,8 +89,8 @@ export function BehaviorScorePanel() {
             {[
               { label: "Conversations", value: data.nConversations?.toString() ?? "—" },
               { label: "Intents", value: data.nIntents?.toString() ?? "—" },
-              { label: "Response stability", value: data.responseStabilityScore !== null && data.responseStabilityScore !== undefined ? `${(data.responseStabilityScore * 100).toFixed(1)}%` : "—" },
-              { label: "Consistency score", value: data.consistencyScore !== undefined ? `${(data.consistencyScore * 100).toFixed(1)}%` : "—" },
+              { label: "Response stability", value: data.responseStabilityScore !== null && data.responseStabilityScore !== undefined ? `${data.responseStabilityScore.toFixed(1)}%` : "—" },
+              { label: "Consistency score", value: data.consistencyScore !== undefined ? `${data.consistencyScore.toFixed(1)}%` : "—" },
             ].map((stat) => (
               <div key={stat.label}>
                 <p className="text-[10px] uppercase tracking-wide font-semibold text-[#2D3748] mb-0.5">{stat.label}</p>

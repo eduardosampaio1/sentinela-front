@@ -76,7 +76,7 @@ function IntentRow({ intent }: { intent: DomainIntentScore }) {
           <div className="text-right">
             <p className="text-xs text-[#2D3748]">Variance</p>
             <p className="text-xs font-medium text-[#475569]">
-              {(intent.responseVariance * 100).toFixed(1)}%
+              {intent.responseVariance.toFixed(1)}%
             </p>
           </div>
         )}

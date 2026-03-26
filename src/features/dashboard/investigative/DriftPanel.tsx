@@ -78,7 +78,7 @@ export function DriftPanel() {
             <div className="mb-4 flex items-center justify-between">
               <p className="text-xs text-[#475569]">Cross-intent similarity</p>
               <p className="text-sm font-semibold text-[#94A3B8]">
-                {(data.crossIntentSimilarity * 100).toFixed(1)}%
+                {data.crossIntentSimilarity.toFixed(1)}%
               </p>
             </div>
           )}
