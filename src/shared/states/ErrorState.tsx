@@ -1,10 +1,13 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
+// ─── Full error state ─────────────────────────────────────────────────────────
+
 interface ErrorStateProps {
   title?: string;
   message?: string;
   code?: string | number;
+  hint?: string;
   onRetry?: () => void;
   onDismiss?: () => void;
   className?: string;
@@ -12,9 +15,10 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-  title = "Something went wrong",
+  title = "Failed to load data",
   message,
   code,
+  hint,
   onRetry,
   onDismiss,
   className,
@@ -32,7 +36,7 @@ export function ErrorState({
       role="alert"
     >
       {/* Icon */}
-      <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-[rgba(248,113,113,0.08)] border border-[rgba(248,113,113,0.15)] mb-5">
+      <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-[rgba(248,113,113,0.08)] border border-[rgba(248,113,113,0.12)] mb-5">
         <svg
           className="w-5 h-5 text-[#F87171]"
           fill="none"
@@ -51,12 +55,15 @@ export function ErrorState({
       {/* Text */}
       <h3 className="text-base font-semibold text-[#F1F5F9] mb-1">{title}</h3>
       {message && (
-        <p className="text-sm text-[#94A3B8] max-w-sm leading-relaxed mb-1">{message}</p>
+        <p className="text-sm text-[#94A3B8] max-w-sm leading-relaxed">{message}</p>
       )}
       {code !== undefined && (
-        <p className="text-xs text-[#475569] font-mono mb-5">Error code: {code}</p>
+        <p className="text-xs text-[#475569] font-mono mt-1">Error code: {code}</p>
       )}
-      {!code && message && <div className="mb-4" />}
+      {hint && (
+        <p className="text-xs text-[#2D3748] mt-1.5 max-w-xs leading-relaxed">{hint}</p>
+      )}
+      <div className="mb-5" />
 
       {/* Actions */}
       {(onRetry || onDismiss) && (
@@ -66,7 +73,7 @@ export function ErrorState({
               onClick={onRetry}
               variant="outline"
               size="sm"
-              className="rounded-xl border-[rgba(248,113,113,0.3)] text-[#F87171] hover:bg-[rgba(248,113,113,0.1)] hover:text-[#F87171]"
+              className="rounded-xl border-[rgba(248,113,113,0.25)] text-[#F87171] hover:bg-[rgba(248,113,113,0.08)] hover:text-[#F87171]"
             >
               Try again
             </Button>
@@ -87,6 +94,8 @@ export function ErrorState({
   );
 }
 
+// ─── Inline error (form fields, banners) ──────────────────────────────────────
+
 interface InlineErrorProps {
   message: string;
   onDismiss?: () => void;
@@ -97,7 +106,7 @@ export function InlineError({ message, onDismiss, className }: InlineErrorProps)
   return (
     <div
       className={cn(
-        "flex items-start gap-3 p-3 rounded-xl bg-[rgba(248,113,113,0.08)] border border-[rgba(248,113,113,0.15)]",
+        "flex items-start gap-3 p-3.5 rounded-xl bg-[rgba(248,113,113,0.07)] border border-[rgba(248,113,113,0.14)]",
         className
       )}
       role="alert"
@@ -115,11 +124,11 @@ export function InlineError({ message, onDismiss, className }: InlineErrorProps)
           d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
         />
       </svg>
-      <p className="text-sm text-[#F87171] flex-1">{message}</p>
+      <p className="text-sm text-[#F87171] flex-1 leading-snug">{message}</p>
       {onDismiss && (
         <button
           onClick={onDismiss}
-          className="text-[#F87171] opacity-60 hover:opacity-100 transition-opacity"
+          className="text-[#F87171] opacity-50 hover:opacity-100 transition-opacity flex-shrink-0"
           aria-label="Dismiss error"
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

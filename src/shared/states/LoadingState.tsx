@@ -9,7 +9,7 @@ interface LoadingStateProps {
 }
 
 export function LoadingState({
-  message = "Loading",
+  message = "Preparing data",
   description,
   className,
   size = "md",
@@ -44,9 +44,7 @@ export function LoadingState({
         <div className={cn("spinner", spinnerSize)} aria-hidden="true" />
         <div
           className={cn(
-            "absolute inset-0 rounded-full",
-            size === "lg" ? "w-10 h-10" : "w-8 h-8",
-            "opacity-20 bg-[#22D3EE] blur-xl"
+            "absolute inset-0 rounded-full opacity-20 bg-[#22D3EE] blur-xl",
           )}
           aria-hidden="true"
         />
@@ -61,6 +59,8 @@ export function LoadingState({
   );
 }
 
+// ─── Full-screen overlay (during analysis processing) ─────────────────────────
+
 interface LoadingOverlayProps {
   message?: string;
   steps?: string[];
@@ -69,14 +69,15 @@ interface LoadingOverlayProps {
 }
 
 export function LoadingOverlay({
-  message = "Processing",
+  message = "Processing dataset",
   steps,
   currentStep = 0,
   progress,
 }: LoadingOverlayProps) {
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#070C18]/90 backdrop-blur-sm">
-      <div className="flex flex-col items-center gap-6 max-w-sm w-full px-6">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#070C18]/92 backdrop-blur-sm">
+      <div className="flex flex-col items-center gap-6 max-w-sm w-full px-8">
+
         {/* Spinner */}
         <div className="relative">
           <div className="w-14 h-14 spinner" />
@@ -87,7 +88,7 @@ export function LoadingOverlay({
         </div>
 
         {/* Message */}
-        <div className="text-center space-y-1">
+        <div className="text-center space-y-1.5">
           <p className="text-base font-semibold text-[#F1F5F9]">{message}</p>
           {steps && steps[currentStep] && (
             <p className="text-sm text-[#94A3B8]">{steps[currentStep]}</p>
@@ -98,40 +99,42 @@ export function LoadingOverlay({
         {progress !== undefined && (
           <div className="w-full bg-[rgba(255,255,255,0.06)] rounded-full h-1 overflow-hidden">
             <div
-              className="progress-bar h-full"
+              className="progress-bar h-full transition-all duration-300"
               style={{ width: `${Math.max(4, progress)}%` }}
               role="progressbar"
               aria-valuenow={progress}
               aria-valuemin={0}
               aria-valuemax={100}
+              aria-label={`Analysis progress: ${progress}%`}
             />
           </div>
         )}
 
-        {/* Steps list */}
+        {/* Step checklist */}
         {steps && steps.length > 0 && (
-          <ul className="w-full space-y-1">
+          <ul className="w-full space-y-1.5" aria-label="Analysis steps">
             {steps.map((step, index) => (
               <li
                 key={step}
                 className={cn(
-                  "text-xs flex items-center gap-2 transition-colors",
+                  "text-xs flex items-center gap-2.5 transition-colors",
                   index < currentStep
                     ? "text-[#34D399]"
                     : index === currentStep
                       ? "text-[#F1F5F9]"
-                      : "text-[#475569]"
+                      : "text-[#2D3748]"
                 )}
               >
                 <span
                   className={cn(
-                    "w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold border",
+                    "w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold border flex-shrink-0",
                     index < currentStep
                       ? "border-[#34D399] text-[#34D399]"
                       : index === currentStep
                         ? "border-[#22D3EE] text-[#22D3EE]"
-                        : "border-[#2D3748] text-[#2D3748]"
+                        : "border-[#1A2540] text-[#1A2540]"
                   )}
+                  aria-hidden="true"
                 >
                   {index < currentStep ? "✓" : index + 1}
                 </span>
@@ -144,3 +147,4 @@ export function LoadingOverlay({
     </div>
   );
 }
+

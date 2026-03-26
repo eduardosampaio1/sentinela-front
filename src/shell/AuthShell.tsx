@@ -40,10 +40,12 @@ export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
 
             {/* Headline */}
             <h2 className="text-3xl font-bold tracking-tight text-[#F1F5F9] mb-4 leading-tight">
-              Monitor and improve your conversational AI
+              The decision layer for your AI system
             </h2>
             <p className="text-[#94A3B8] text-base leading-relaxed mb-10">
-              Analyze datasets, detect degradation, understand risks, and take action before quality drops affect your users.
+              Upload conversation data and get an instant assessment — risk level,
+              behavior score, economic impact, and prioritized actions. Built for
+              teams running AI in production.
             </p>
 
             {/* Features */}
@@ -51,18 +53,18 @@ export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
               {[
                 {
                   icon: "M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z",
-                  title: "AI health diagnosis",
-                  description: "Know in seconds if your system is healthy, degraded, or at risk.",
+                  title: "System health in seconds",
+                  description: "Know immediately if your AI is healthy, degraded, or at risk — before your users notice.",
                 },
                 {
                   icon: "M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5",
-                  title: "Economic impact analysis",
-                  description: "Measure cost per useful outcome and identify waste patterns.",
+                  title: "Cost and efficiency analysis",
+                  description: "Quantify cost per useful outcome, token waste, and the real economic impact of AI failures.",
                 },
                 {
                   icon: "M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126Z",
-                  title: "Actionable recommendations",
-                  description: "Get specific actions to fix issues, not just alerts.",
+                  title: "Actionable, not just observational",
+                  description: "Every finding comes with a ranked recommendation. Know what to fix and why.",
                 },
               ].map((feature) => (
                 <div key={feature.title} className="flex items-start gap-3">
@@ -82,7 +84,7 @@ export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
 
           {/* Footer */}
           <p className="text-xs text-[#2D3748] relative z-10">
-            Enterprise AI observability platform
+            AI observability · Built for production teams
           </p>
         </div>
       )}
