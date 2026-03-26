@@ -121,7 +121,12 @@ export function AIInterpretationPanel() {
     setError(null);
 
     try {
-      const response = await interpretAnalysis(result);
+      const response = await interpretAnalysis(
+        result,
+        result.workspace_id ?? null,
+        result.project_id ?? null,
+        result.environment_id ?? null,
+      );
       if (response.report) {
         setInterpretation(response.report);
         setStatus("completed");

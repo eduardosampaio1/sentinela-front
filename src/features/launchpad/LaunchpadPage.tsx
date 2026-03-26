@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 function ContextStrip() {
   const { workspace, project, environment } = useAuth();
   const navigate = useNavigate();
+
 
   const hasContext = workspace || project || environment;
   const isComplete = workspace && project && environment;
@@ -84,6 +86,12 @@ function ContextStrip() {
 export function LaunchpadPage() {
   const { analysisCompleted, loading, loadingStep, loadingProgress } = useAnalysis();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (analysisCompleted) {
+      navigate("/dashboard");
+    }
+  }, [analysisCompleted, navigate]);
 
   return (
     <>
