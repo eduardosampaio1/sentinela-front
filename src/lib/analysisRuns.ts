@@ -57,6 +57,7 @@ export async function saveAnalysisRun(params: {
       created_by: params.createdBy,
       source_filename: params.sourceFilename ?? null,
       input_hash: params.inputHash ?? null,
+      analysis_id: (typeof params.result.analysis_id === "string" && params.result.analysis_id.trim()) ? params.result.analysis_id.trim() : crypto.randomUUID(),
       engine_version:
         typeof params.result.engine_version === "string"
           ? params.result.engine_version
