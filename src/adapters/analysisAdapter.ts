@@ -80,8 +80,16 @@ function getMetadata(result: AnalysisResult): Record<string, unknown> {
 function getBusinessImpactRaw(result: AnalysisResult): Record<string, unknown> {
   const top = asRecord(result.business_impact);
   const argos = asRecord(getArgosV2(result).business_impact);
-  const merged = { ...argos, ...top };
-  const mergedDetails = { ...asRecord(argos.details), ...asRecord(top.details) };
+  // Fallback: Pydantic-serialized canonical results store business_impact inside
+  // economics_snapshot.snapshot (no argos_v2 key present in that format).
+  const econSnapshot = asRecord((result as Record<string, unknown>).economics_snapshot);
+  const snapshot = asRecord(econSnapshot.snapshot);
+  const merged = { ...snapshot, ...argos, ...top };
+  const mergedDetails = {
+    ...asRecord(snapshot.details),
+    ...asRecord(argos.details),
+    ...asRecord(top.details),
+  };
   if (Object.keys(mergedDetails).length > 0) merged.details = mergedDetails;
   return merged;
 }
@@ -270,12 +278,28 @@ function codeToLabel(code: string | undefined): string | undefined {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/** Returns true if a title is a generic "Issue N" fallback baked in by older backend versions. */
+function isGenericIssueTitle(title: string | undefined): boolean {
+  return !title || /^Issue\s+\d+$/i.test(title.trim());
+}
+
 function normalizeIssue(raw: unknown): DomainIssue {
   const r = asRecord(raw);
 
-  const code = asString(r.code) ?? asString(r.issue_type);
+  // Engine uses `issue_type`; contract serialization uses `code`.
+  // Also try to extract a code from the fingerprint_id (e.g. "template_collapse:abc123").
+  const code =
+    asString(r.code) ??
+    asString(r.issue_type) ??
+    (() => {
+      const fid = asString(r.fingerprint_id) ?? asString(r.issue_id);
+      if (fid && fid.includes(":")) return fid.split(":")[0];
+      return undefined;
+    })();
+
+  const rawTitle = asString(r.title);
   const title =
-    asString(r.title) ??
+    (!isGenericIssueTitle(rawTitle) ? rawTitle : undefined) ??
     codeToLabel(code) ??
     asString(r.summary);
 
