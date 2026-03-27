@@ -1,10 +1,16 @@
 // ============================================================
 // Economics Adapter
-// Builds EconomicsViewModel from DomainAnalysis
+// Builds EconomicsViewModel + PotentialSavingsViewModel from DomainAnalysis
 // ============================================================
 
 import type { DomainAnalysis } from "@/domain/analysis.types";
-import type { EconomicsViewModel, EconomicsHeroMetric, EconomicsDetailMetric } from "@/domain/verdict.types";
+import type {
+  EconomicsViewModel,
+  EconomicsHeroMetric,
+  EconomicsDetailMetric,
+  PotentialSavingsViewModel,
+  SavingsDriver,
+} from "@/domain/verdict.types";
 
 function formatUsd(value: number | null): string {
   if (value === null || !Number.isFinite(value)) return "Unavailable";
@@ -15,6 +21,75 @@ function formatUsd(value: number | null): string {
 function formatPercent(value: number | null): string {
   if (value === null || !Number.isFinite(value)) return "Unavailable";
   return `${value.toFixed(1)}%`;
+}
+
+// ---- Potential Savings ViewModel (Sprint 3) ----
+
+export function buildPotentialSavingsViewModel(analysis: DomainAnalysis): PotentialSavingsViewModel {
+  const bi = analysis.businessImpact ?? {};
+  const impact = bi.economicImpact ?? null;
+  const explanation = bi.economicExplanation ?? null;
+  const available = impact !== null && (impact.avoidedCost > 0.001);
+
+  const savingsPercent =
+    impact && impact.currentCost > 0
+      ? Math.min(100, Math.round((impact.avoidedCost / impact.currentCost) * 100))
+      : null;
+
+  const confidenceLabel: Record<string, string> = {
+    high: "High confidence",
+    medium: "Medium confidence",
+    low: "Low confidence — limited data",
+  };
+
+  const drivers: SavingsDriver[] = impact
+    ? [
+        {
+          id: "token-waste",
+          label: "Token waste",
+          value: impact.drivers.tokenWaste,
+          displayValue: formatUsd(impact.drivers.tokenWaste),
+          description: "Cost of verbose or semantically inefficient responses.",
+          recommendationHint: "Standardize prompt templates to reduce output verbosity.",
+        },
+        {
+          id: "handoff-inefficiency",
+          label: "Handoff inefficiency",
+          value: impact.drivers.handoffInefficiency,
+          displayValue: formatUsd(impact.drivers.handoffInefficiency),
+          description: "Gap between projected escalation cost and observed handoff spend.",
+          recommendationHint: "Improve containment by addressing high-risk intents first.",
+        },
+        {
+          id: "low-useful-rate",
+          label: "Low useful rate",
+          value: impact.drivers.lowUsefulRate,
+          displayValue: formatUsd(impact.drivers.lowUsefulRate),
+          description: "Cost allocated to interactions that did not produce a useful outcome.",
+          recommendationHint: "Increase useful rate by improving intent resolution accuracy.",
+        },
+      ].filter((d) => d.value > 0.0001)
+    : [];
+
+  return {
+    available,
+    currentCost: impact?.currentCost ?? null,
+    optimizedCost: impact?.optimizedCostEstimate ?? null,
+    avoidedCost: impact?.avoidedCost ?? null,
+    avoidedCostRange: bi.avoidedCostRange ?? null,
+    displayCurrentCost: formatUsd(impact?.currentCost ?? null),
+    displayOptimizedCost: formatUsd(impact?.optimizedCostEstimate ?? null),
+    displayAvoidedCost: formatUsd(impact?.avoidedCost ?? null),
+    savingsPercent,
+    drivers,
+    confidence: explanation?.confidence ?? "low",
+    confidenceLabel: confidenceLabel[explanation?.confidence ?? "low"] ?? "Low confidence",
+    explanation: explanation?.summary ?? "",
+    disclaimer:
+      "Estimated based on detected patterns — actual savings depend on implementation.",
+    lowDataWarning: explanation?.lowDataWarning ?? null,
+    modelVersion: bi.economicModelVersion ?? "v1",
+  };
 }
 
 export function buildEconomicsViewModel(analysis: DomainAnalysis): EconomicsViewModel {

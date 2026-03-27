@@ -7,13 +7,60 @@ import { InlineError } from "@/shared/states/ErrorState";
 
 type Mode = "upload" | "paste";
 
+// ── Dataset size estimation ────────────────────────────────────────────────────
+
+interface DatasetEta {
+  count: number;
+  approxLabel: string;
+  eta: string;
+  isHeavy: boolean;
+}
+
+function estimateRecordCount(text: string): number {
+  const trimmed = text.trim();
+  if (trimmed.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed.length;
+    } catch {
+      // fall through to line count
+    }
+  }
+  return trimmed.split("\n").filter((l) => l.trim().length > 0).length;
+}
+
+function getDatasetEta(count: number): DatasetEta | null {
+  if (count >= 100_000) return { count, approxLabel: `~${Math.round(count / 1000)}K conversations`, eta: "30–90 min", isHeavy: true };
+  if (count >= 50_000)  return { count, approxLabel: `~${Math.round(count / 1000)}K conversations`, eta: "15–40 min", isHeavy: true };
+  if (count >= 10_000)  return { count, approxLabel: `~${Math.round(count / 1000)}K conversations`, eta: "3–8 min",   isHeavy: true };
+  if (count >= 5_000)   return { count, approxLabel: `~${Math.round(count / 1000)}K conversations`, eta: "30 s–2 min", isHeavy: false };
+  return null;
+}
+
 export function AnalysisLauncher() {
   const { handleFileUpload, handlePasteAnalysis, loading } = useAnalysis();
   const [mode, setMode] = useState<Mode>("upload");
   const [pastedText, setPastedText] = useState("");
   const [dragging, setDragging] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [datasetEta, setDatasetEta] = useState<DatasetEta | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function readAndDispatchFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result as string;
+      try {
+        const count = estimateRecordCount(text);
+        setDatasetEta(getDatasetEta(count));
+      } catch {
+        setDatasetEta(null);
+      }
+      handleFileUpload(file);
+    };
+    reader.onerror = () => handleFileUpload(file);
+    reader.readAsText(file);
+  }
 
   function handleDragOver(e: DragEvent) {
     e.preventDefault();
@@ -34,14 +81,16 @@ export function AnalysisLauncher() {
       return;
     }
     setValidationError(null);
-    handleFileUpload(file);
+    setDatasetEta(null);
+    readAndDispatchFile(file);
   }
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setValidationError(null);
-    handleFileUpload(file);
+    setDatasetEta(null);
+    readAndDispatchFile(file);
     // Reset input so same file can be re-selected
     e.target.value = "";
   }
@@ -52,6 +101,12 @@ export function AnalysisLauncher() {
       return;
     }
     setValidationError(null);
+    try {
+      const count = estimateRecordCount(pastedText);
+      setDatasetEta(getDatasetEta(count));
+    } catch {
+      setDatasetEta(null);
+    }
     handlePasteAnalysis(pastedText);
   }
 
@@ -89,6 +144,32 @@ export function AnalysisLauncher() {
           onDismiss={() => setValidationError(null)}
           className="mb-4"
         />
+      )}
+
+      {datasetEta && loading && (
+        <div
+          className={cn(
+            "mb-4 flex items-start gap-2.5 rounded-xl px-4 py-3 border",
+            datasetEta.isHeavy
+              ? "bg-[rgba(252,211,77,0.06)] border-[rgba(252,211,77,0.12)]"
+              : "bg-[rgba(34,211,238,0.06)] border-[rgba(34,211,238,0.12)]"
+          )}
+        >
+          <svg
+            className={cn("w-4 h-4 flex-shrink-0 mt-0.5", datasetEta.isHeavy ? "text-[#FCD34D]" : "text-[#22D3EE]")}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+          <div>
+            <p className={cn("text-xs font-semibold", datasetEta.isHeavy ? "text-[#FCD34D]" : "text-[#22D3EE]")}>
+              Large dataset detected — {datasetEta.approxLabel}
+            </p>
+            <p className="text-[11px] text-[#475569] mt-0.5">
+              Estimated processing time: {datasetEta.eta}
+            </p>
+          </div>
+        </div>
       )}
 
       {mode === "upload" ? (

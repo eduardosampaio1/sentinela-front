@@ -74,6 +74,32 @@ export interface DomainRecommendation {
   expectedImpact?: string;
 }
 
+export interface EconomicSavingsDrivers {
+  tokenWaste: number;
+  handoffInefficiency: number;
+  lowUsefulRate: number;
+}
+
+export interface EconomicSavingsRange {
+  min: number;
+  max: number;
+}
+
+export interface EconomicImpact {
+  currentCost: number;
+  optimizedCostEstimate: number;
+  avoidedCost: number;
+  avoidedCostRange: EconomicSavingsRange;
+  drivers: EconomicSavingsDrivers;
+}
+
+export interface EconomicExplanation {
+  summary: string;
+  assumptions: string[];
+  confidence: "high" | "medium" | "low";
+  lowDataWarning?: string | null;
+}
+
 export interface DomainBusinessImpact {
   costPerUsefulOutcome?: number | null;
   usefulRate?: number | null;
@@ -89,12 +115,19 @@ export interface DomainBusinessImpact {
   handoffCostMonthly?: number | null;
   handoffCostYearly?: number | null;
   actualHandoffs?: number | null;
+  // Sprint 3: ROI Engine
+  avoidedCost?: number | null;
+  optimizedCostEstimate?: number | null;
+  avoidedCostRange?: EconomicSavingsRange | null;
+  economicImpact?: EconomicImpact | null;
+  economicExplanation?: EconomicExplanation | null;
+  economicModelVersion?: string | null;
 }
 
 export interface DomainAnalysis {
-  // Identity
-  analysisId?: string;
-  analysisRunId?: string;
+  // Identity — required: every analysis must have stable identity for cache/interp/navigation
+  analysisId: string;
+  analysisRunId: string;
   datasetHash?: string;
   analyzedAt: string;
   engineVersion?: string;
@@ -142,7 +175,42 @@ export interface DomainAnalysis {
   semanticDrift?: number | null;
   aiHealthScore?: number | null;
 
+  // Sprint 4: Structured recommendation contract
+  sprint4?: Sprint4Raw | null;
+
   // Meta
   warnings: string[];
   cacheKey?: string;
+}
+
+// Sprint 4 raw domain types (before view model mapping)
+export interface Sprint4Raw {
+  top: Sprint4RecommendationRaw | null;
+  secondary: Sprint4RecommendationRaw[];
+  modelVersion: string;
+}
+
+export interface Sprint4RecommendationRaw {
+  id: string;
+  priority: number;
+  title: string;
+  problem: string;
+  impact: {
+    type: string;
+    estimatedSavings: number | null;
+    riskReduction: string;
+  };
+  evidence: {
+    usefulRate?: number;
+    actualHandoffs?: number;
+    signals?: string[];
+  };
+  action: {
+    summary: string;
+    steps: string[];
+    category: string;
+  };
+  confidence: number;
+  priorityScore: number;
+  actionCategory: string;
 }

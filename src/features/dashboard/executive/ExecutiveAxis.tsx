@@ -8,6 +8,7 @@ import { RiskCard } from "./RiskCard";
 import { RecommendationCard } from "./RecommendationCard";
 import { EconomicsCard } from "./EconomicsCard";
 import { ConfidenceCard } from "./ConfidenceCard";
+import { TopRecommendationHero } from "./TopRecommendationHero";
 import type { CoreMetricViewModel } from "@/domain/verdict.types";
 
 const TONE_COLORS = {
@@ -60,7 +61,7 @@ export function ExecutiveAxis({ className }: ExecutiveAxisProps) {
 
   if (!viewModel) return null;
 
-  const { verdict, topRisk, recommendation, economics, confidence, coreMetrics } = viewModel;
+  const { verdict, topRisk, recommendation, economics, confidence, coreMetrics, sprint4 } = viewModel;
 
   return (
     <div className={cn("space-y-5", className)}>
@@ -83,6 +84,11 @@ export function ExecutiveAxis({ className }: ExecutiveAxisProps) {
         <RiskCard risk={topRisk} />
         <RecommendationCard recommendation={recommendation} />
       </div>
+
+      {/* Sprint 4: Structured recommendation hero */}
+      {sprint4.top && (
+        <TopRecommendationHero sprint4={sprint4} />
+      )}
 
       {/* Economics + Confidence row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
