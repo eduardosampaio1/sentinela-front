@@ -1,6 +1,8 @@
 import type { CoreMetricCardModel } from "@/lib/decisionLayerModel";
 import MissingDataBadge from "@/components/dashboard-decision/MissingDataBadge";
 import BehaviorScoreRadialCard from "@/components/dashboard-decision/BehaviorScoreRadialCard";
+import MetricTooltip from "@/components/ui/MetricTooltip";
+import { METRIC_TOOLTIPS } from "@/lib/metricTooltips";
 
 interface CoreMetricsRowProps {
   items: CoreMetricCardModel[];
@@ -39,6 +41,13 @@ function compactMainValue(metric: CoreMetricCardModel) {
     return metric.displayValue;
   }
   return metric.displayValue;
+}
+
+function tooltipFor(id: CoreMetricCardModel["id"]) {
+  if (id === "drift") return METRIC_TOOLTIPS.drift;
+  if (id === "cost-per-useful-outcome") return METRIC_TOOLTIPS.cpuo;
+  if (id === "confidence") return METRIC_TOOLTIPS.confidence;
+  return undefined;
 }
 
 function helperLabel(metric: CoreMetricCardModel) {
@@ -82,7 +91,12 @@ export default function CoreMetricsRow({ items }: CoreMetricsRowProps) {
                   <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                     {priorityLabel(index + 2)}
                   </p>
-                  <p className="mt-1 text-sm font-medium text-foreground">{item.label}</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-foreground">
+                    {item.label}
+                    {tooltipFor(item.id) ? (
+                      <MetricTooltip text={tooltipFor(item.id)!} side="top" />
+                    ) : null}
+                  </p>
                 </div>
                 <span
                   className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${supportToneClass(item.tone)}`}

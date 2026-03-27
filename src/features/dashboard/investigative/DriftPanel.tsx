@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils";
 import { useAnalysis } from "@/hooks/useAnalysis";
 import { adaptAnalysisResult } from "@/adapters/analysisAdapter";
 import { EmptyState } from "@/shared/states/EmptyState";
+import MetricTooltip from "@/components/ui/MetricTooltip";
+import { METRIC_TOOLTIPS } from "@/lib/metricTooltips";
 
 export function DriftPanel() {
   const { result } = useAnalysis();
@@ -48,7 +50,10 @@ export function DriftPanel() {
 
   return (
     <div className="card-base p-5">
-      <p className="section-label mb-4">Semantic drift</p>
+      <p className="section-label mb-4 flex items-center gap-1.5">
+        Semantic drift
+        <MetricTooltip text={METRIC_TOOLTIPS.semanticDrift} side="right" />
+      </p>
 
       {!hasDriftData ? (
         <EmptyState
@@ -62,7 +67,10 @@ export function DriftPanel() {
           <div className={cn("rounded-xl border px-4 py-3.5 mb-4", driftConfig.bg)}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-[#94A3B8] mb-1">Semantic drift magnitude</p>
+                <p className="flex items-center gap-1 text-xs text-[#94A3B8] mb-1">
+                  Semantic drift magnitude
+                  <MetricTooltip text={METRIC_TOOLTIPS.semanticDrift} side="top" />
+                </p>
                 <p className={cn("text-3xl font-bold", driftConfig.text)}>
                   {data.semanticDrift !== null ? `${data.semanticDrift.toFixed(1)}%` : "N/A"}
                 </p>
@@ -76,7 +84,10 @@ export function DriftPanel() {
           {/* Cross-intent similarity */}
           {data.crossIntentSimilarity !== undefined && (
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-xs text-[#94A3B8]">Cross-intent similarity</p>
+              <p className="flex items-center gap-1 text-xs text-[#94A3B8]">
+                Cross-intent similarity
+                <MetricTooltip text={METRIC_TOOLTIPS.crossIntentSimilarity} side="top" />
+              </p>
               <p className="text-sm font-semibold text-[#94A3B8]">
                 {data.crossIntentSimilarity.toFixed(1)}%
               </p>

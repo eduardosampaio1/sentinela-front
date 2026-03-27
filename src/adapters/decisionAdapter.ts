@@ -383,7 +383,7 @@ function buildCoreMetrics(analysis: DomainAnalysis, problems: ProblemItem[]): Co
       id: "cost-per-useful-outcome",
       label: "Cost per Useful Outcome",
       value: cpuo,
-      displayValue: cpuo !== null ? `US$ ${cpuo.toFixed(2)}` : "N/A",
+      displayValue: cpuo !== null ? `US$ ${Math.round(cpuo)}` : "N/A",
       direction: "lower_better",
       missing: cpuo === null,
       missingLabel: cpuo === null ? "Unavailable for current input maturity" : undefined,

@@ -3,8 +3,10 @@ import { cn } from "@/lib/utils";
 import { useAnalysis } from "@/hooks/useAnalysis";
 import { adaptAnalysisResult, extractBehaviorScore, extractSemanticDrift } from "@/adapters/analysisAdapter";
 import { EmptyState } from "@/shared/states/EmptyState";
+import MetricTooltip from "@/components/ui/MetricTooltip";
+import { METRIC_TOOLTIPS } from "@/lib/metricTooltips";
 
-function ScoreGauge({ value, label, direction }: { value: number | null; label: string; direction: "higher_better" | "lower_better" }) {
+function ScoreGauge({ value, label, direction, tooltip }: { value: number | null; label: string; direction: "higher_better" | "lower_better"; tooltip?: string }) {
   const fillPercent = value !== null ? Math.max(0, Math.min(100, value)) : 0;
   const displayFill = direction === "lower_better" ? 100 - fillPercent : fillPercent;
 
@@ -36,7 +38,10 @@ function ScoreGauge({ value, label, direction }: { value: number | null; label: 
           </span>
         </div>
       </div>
-      <p className="text-xs text-[#94A3B8]">{label}</p>
+      <p className="flex items-center justify-center gap-1 text-xs text-[#94A3B8]">
+        {label}
+        {tooltip ? <MetricTooltip text={tooltip} side="bottom" /> : null}
+      </p>
     </div>
   );
 }
@@ -75,25 +80,29 @@ export function BehaviorScorePanel() {
         <>
           {/* Score gauges */}
           <div className="flex items-center justify-around gap-4 mb-5">
-            <ScoreGauge value={data.behaviorScore} label="Behavior Score" direction="higher_better" />
-            <ScoreGauge value={data.semanticDrift} label="Semantic Drift" direction="lower_better" />
+            <ScoreGauge value={data.behaviorScore} label="Behavior Score" direction="higher_better" tooltip={METRIC_TOOLTIPS.behaviorScore} />
+            <ScoreGauge value={data.semanticDrift} label="Semantic Drift" direction="lower_better" tooltip={METRIC_TOOLTIPS.semanticDrift} />
             <ScoreGauge
               value={data.consistencyScore ?? null}
               label="Consistency"
               direction="higher_better"
+              tooltip={METRIC_TOOLTIPS.consistency}
             />
           </div>
 
           {/* Stats row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-[rgba(255,255,255,0.05)] pt-4">
             {[
-              { label: "Conversations", value: data.nConversations?.toString() ?? "—" },
-              { label: "Intents", value: data.nIntents?.toString() ?? "—" },
-              { label: "Response stability", value: data.responseStabilityScore !== null && data.responseStabilityScore !== undefined ? `${data.responseStabilityScore.toFixed(1)}%` : "—" },
-              { label: "Consistency score", value: data.consistencyScore !== undefined ? `${data.consistencyScore.toFixed(1)}%` : "—" },
+              { label: "Conversations", value: data.nConversations?.toString() ?? "—", tooltip: undefined },
+              { label: "Intents", value: data.nIntents?.toString() ?? "—", tooltip: undefined },
+              { label: "Response stability", value: data.responseStabilityScore !== null && data.responseStabilityScore !== undefined ? `${data.responseStabilityScore.toFixed(1)}%` : "—", tooltip: METRIC_TOOLTIPS.responseStability },
+              { label: "Consistency score", value: data.consistencyScore !== undefined ? `${data.consistencyScore.toFixed(1)}%` : "—", tooltip: METRIC_TOOLTIPS.consistency },
             ].map((stat) => (
               <div key={stat.label}>
-                <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] mb-0.5">{stat.label}</p>
+                <p className="flex items-center gap-1 text-[10px] uppercase tracking-wide font-semibold text-[#475569] mb-0.5">
+                  {stat.label}
+                  {stat.tooltip ? <MetricTooltip text={stat.tooltip} side="top" /> : null}
+                </p>
                 <p className="text-sm font-semibold text-[#94A3B8]">{stat.value}</p>
               </div>
             ))}

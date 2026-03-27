@@ -1,5 +1,7 @@
 import type { CoreMetricCardModel } from "@/lib/decisionLayerModel";
 import MissingDataBadge from "@/components/dashboard-decision/MissingDataBadge";
+import MetricTooltip from "@/components/ui/MetricTooltip";
+import { METRIC_TOOLTIPS } from "@/lib/metricTooltips";
 
 interface BehaviorScoreRadialCardProps {
   behaviorMetric: CoreMetricCardModel | null;
@@ -76,8 +78,9 @@ export default function BehaviorScoreRadialCard({
           </div>
 
           <div>
-            <h3 className="font-display text-[1.9rem] font-semibold tracking-tight text-foreground sm:text-[2.2rem]">
+            <h3 className="flex items-center gap-2 font-display text-[1.9rem] font-semibold tracking-tight text-foreground sm:text-[2.2rem]">
               Behavior Score
+              <MetricTooltip text={METRIC_TOOLTIPS.behaviorScore} side="right" />
             </h3>
             <p className="mt-2 max-w-lg text-sm leading-7 text-muted-foreground">
               This is the leading signal for whether the AI is still delivering useful, stable behavior.
@@ -86,15 +89,24 @@ export default function BehaviorScoreRadialCard({
 
           <div className="grid gap-3 sm:grid-cols-3">
             <article className="rounded-[20px] border border-border/55 bg-background/35 p-3.5">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Target gap</p>
+              <p className="flex items-center gap-1 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                Target gap
+                <MetricTooltip text={METRIC_TOOLTIPS.targetGap} side="bottom" />
+              </p>
               <p className="mt-2 text-sm font-medium text-foreground">{formatDeltaVsTarget(behaviorMetric?.value ?? null)}</p>
             </article>
             <article className="rounded-[20px] border border-border/55 bg-background/35 p-3.5">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Drift</p>
+              <p className="flex items-center gap-1 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                Drift
+                <MetricTooltip text={METRIC_TOOLTIPS.drift} side="bottom" />
+              </p>
               <p className="mt-2 text-sm font-medium text-foreground">{chipValue(driftMetric, "percent")}</p>
             </article>
             <article className="rounded-[20px] border border-border/55 bg-background/35 p-3.5">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">CPUO</p>
+              <p className="flex items-center gap-1 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                CPUO
+                <MetricTooltip text={METRIC_TOOLTIPS.cpuo} side="bottom" />
+              </p>
               <p className="mt-2 text-sm font-medium text-foreground">{chipValue(costMetric, "cost")}</p>
             </article>
           </div>

@@ -14,8 +14,11 @@ import type {
 
 function formatUsd(value: number | null): string {
   if (value === null || !Number.isFinite(value)) return "Unavailable";
-  if (value > 0 && value < 0.01) return "US$ <0.01";
-  return `US$ ${value.toFixed(2)}`;
+  if (value > 0 && value < 1) return "US$ <1";
+  const rounded = Math.round(value);
+  if (rounded >= 1_000_000) return `US$ ${(rounded / 1_000_000).toFixed(1)}M`;
+  if (rounded >= 10_000) return `US$ ${(rounded / 1_000).toFixed(1)}k`;
+  return `US$ ${rounded}`;
 }
 
 function formatPercent(value: number | null): string {

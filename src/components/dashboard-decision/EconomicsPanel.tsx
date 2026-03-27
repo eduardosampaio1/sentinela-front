@@ -1,6 +1,8 @@
 import { Coins } from "lucide-react";
 import type { EconomicsPanelModel } from "@/lib/economicsModel";
 import AccordionPanel from "@/components/ui/AccordionPanel";
+import MetricTooltip from "@/components/ui/MetricTooltip";
+import { METRIC_TOOLTIPS } from "@/lib/metricTooltips";
 
 interface Props {
   model: EconomicsPanelModel;
@@ -12,6 +14,24 @@ interface SummaryMetric {
   value: number | null;
   displayValue: string;
   supportingText: string;
+}
+
+function economicsTooltip(id: string): string | undefined {
+  const map: Record<string, string> = {
+    "cpuo": METRIC_TOOLTIPS.cpuo,
+    "useful-rate": METRIC_TOOLTIPS.usefulRate,
+    "observed-total-cost": METRIC_TOOLTIPS.observedTotalCost,
+    "token-waste-cost": METRIC_TOOLTIPS.tokenWasteCost,
+    "observed-token-cost": METRIC_TOOLTIPS.observedTokenCost,
+    "observed-handoff-cost": METRIC_TOOLTIPS.observedHandoffCost,
+    "handoff-cost-estimated": METRIC_TOOLTIPS.estimatedHandoffCost,
+    "conversion-risk": METRIC_TOOLTIPS.conversionRisk,
+    "projected-token-cost-month": METRIC_TOOLTIPS.projectedTokenCostMonth,
+    "projected-token-cost-year": METRIC_TOOLTIPS.projectedTokenCostYear,
+    "projected-handoff-cost-month": METRIC_TOOLTIPS.projectedHandoffCostMonth,
+    "projected-handoff-cost-year": METRIC_TOOLTIPS.projectedHandoffCostYear,
+  };
+  return map[id];
 }
 
 function toneClass(tone: string) {
@@ -67,10 +87,13 @@ export default function EconomicsPanel({ model }: Props) {
               <div key={metric.id} className="rounded-2xl border border-border/40 bg-background/40 p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                       {index + 1}. {metric.label}
+                      {economicsTooltip(metric.id) ? (
+                        <MetricTooltip text={economicsTooltip(metric.id)!} side="top" />
+                      ) : null}
                     </div>
-                    <div className="mt-3 text-4xl font-semibold tracking-tight text-foreground">
+                    <div className="mt-3 whitespace-nowrap text-4xl font-semibold tracking-tight text-foreground">
                       {metric.displayValue}
                     </div>
                   </div>
@@ -85,15 +108,21 @@ export default function EconomicsPanel({ model }: Props) {
 
           <div className="mt-4 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
             <div className="rounded-2xl border border-border/40 bg-background/30 p-5">
-              <div className="text-xs font-semibold uppercase tracking-[0.32em] text-primary/80">Spending signal</div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.32em] text-primary/80">
+                Spending signal
+                <MetricTooltip text={METRIC_TOOLTIPS.spendingSignal} side="top" />
+              </div>
               <p className="mt-3 text-sm leading-6 text-foreground">
                 Cost per useful outcome, useful rate, and waste cost together show whether quality is translating into efficient spend.
               </p>
             </div>
 
             <div className="rounded-2xl border border-border/40 bg-background/30 p-5">
-              <div className="text-xs font-semibold uppercase tracking-[0.32em] text-primary/80">Observed total cost</div>
-              <div className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
+              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.32em] text-primary/80">
+                Observed total cost
+                <MetricTooltip text={METRIC_TOOLTIPS.observedTotalCost} side="top" />
+              </div>
+              <div className="mt-3 whitespace-nowrap text-3xl font-semibold tracking-tight text-foreground">
                 {observedTotalMetric?.displayValue ?? "Unavailable"}
               </div>
               <p className="mt-3 text-sm text-muted-foreground">
@@ -106,12 +135,17 @@ export default function EconomicsPanel({ model }: Props) {
             {model.details.map((metric) => (
               <div key={metric.id} className={`rounded-2xl border p-5 ${toneClass(metric.tone)}`}>
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-lg font-semibold text-foreground">{metric.label}</div>
+                  <div className="flex items-center gap-1.5 text-lg font-semibold text-foreground">
+                    {metric.label}
+                    {economicsTooltip(metric.id) ? (
+                      <MetricTooltip text={economicsTooltip(metric.id)!} side="top" />
+                    ) : null}
+                  </div>
                   <div className="rounded-full border border-border/40 px-2 py-1 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
                     {metricToneChip(metric.tone)}
                   </div>
                 </div>
-                <div className="mt-4 text-3xl font-semibold tracking-tight text-foreground">
+                <div className="mt-4 whitespace-nowrap text-3xl font-semibold tracking-tight text-foreground">
                   {metric.displayValue}
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground">{metric.supportingText}</p>

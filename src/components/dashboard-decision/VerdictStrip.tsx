@@ -1,5 +1,7 @@
 import { AlertTriangle, ShieldCheck, Siren, Sparkles } from "lucide-react";
 import type { VerdictStripModel } from "@/lib/decisionLayerModel";
+import MetricTooltip from "@/components/ui/MetricTooltip";
+import { METRIC_TOOLTIPS } from "@/lib/metricTooltips";
 
 interface VerdictStripProps {
   model: VerdictStripModel;
@@ -43,7 +45,10 @@ export default function VerdictStrip({ model }: VerdictStripProps) {
           </span>
 
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">Executive verdict</p>
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">
+              Executive verdict
+              <MetricTooltip text={METRIC_TOOLTIPS.verdict} side="right" />
+            </p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span
                 className={`rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.14em] ${verdictClass(model.verdict)}`}
@@ -62,7 +67,10 @@ export default function VerdictStrip({ model }: VerdictStripProps) {
 
         <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[320px]">
           <article className="rounded-[20px] border border-border/55 bg-background/35 p-3.5">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Confidence</p>
+            <p className="flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              Confidence
+              <MetricTooltip text={METRIC_TOOLTIPS.certainty} side="top" />
+            </p>
             <span className={`mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-medium ${certaintyClass(model.certainty)}`}>
               {model.certaintyLabel}
             </span>
@@ -70,7 +78,10 @@ export default function VerdictStrip({ model }: VerdictStripProps) {
           </article>
 
           <article className="rounded-[20px] border border-border/55 bg-background/35 p-3.5">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Decision posture</p>
+            <p className="flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              Decision posture
+              <MetricTooltip text={METRIC_TOOLTIPS.decisionPosture} side="top" />
+            </p>
             <p className="mt-3 text-sm leading-6 text-foreground">
               {model.escalated
                 ? "Escalate this run before scaling traffic or assuming the system is stable."
