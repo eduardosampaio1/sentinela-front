@@ -209,17 +209,61 @@ function normalizeAlert(raw: unknown): DomainAlert {
 
 // ---- Issue normalization ----
 
+/** Converts snake/SCREAMING_SNAKE code to human-readable label.
+ *  "HIGH_VARIANCE" → "High Variance"
+ *  "cross_intent_reuse" → "Cross Intent Reuse"
+ */
+function codeToLabel(code: string | undefined): string | undefined {
+  if (!code) return undefined;
+  return code
+    .replace(/[-_]+/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function normalizeIssue(raw: unknown): DomainIssue {
   const r = asRecord(raw);
+
+  const code = asString(r.code) ?? asString(r.issue_type);
+  const title =
+    asString(r.title) ??
+    codeToLabel(code) ??
+    asString(r.summary);
+
+  // recommended_actions can be a list or a single string
+  const rawActions = r.recommended_actions;
+  const recommendedActions: string[] = Array.isArray(rawActions)
+    ? (rawActions as unknown[]).map((a) => String(a)).filter(Boolean)
+    : [];
+
+  const recommendation =
+    asString(r.recommendation) ??
+    asString(r.recommended_action) ??
+    recommendedActions[0];
+
+  const evidence =
+    typeof r.evidence === "object" && r.evidence !== null && !Array.isArray(r.evidence)
+      ? (r.evidence as Record<string, unknown>)
+      : undefined;
+
+  const relatedIntents: string[] = Array.isArray(r.related_intents)
+    ? (r.related_intents as unknown[]).map((i) => String(i)).filter(Boolean)
+    : [];
+
   return {
-    issueId: asString(r.issue_id),
-    issueType: asString(r.issue_type),
+    issueId: asString(r.fingerprint_id) ?? asString(r.issue_id),
+    issueType: code,
+    code,
     severity: asString(r.severity),
     confidence: asNumber(r.confidence) ?? undefined,
-    title: asString(r.title) ?? asString(r.summary),
+    title,
     summary: asString(r.summary),
     category: asString(r.category),
-    recommendation: asString(r.recommendation),
+    metric: asString(r.metric),
+    evidence,
+    relatedIntents: relatedIntents.length > 0 ? relatedIntents : undefined,
+    recommendation,
+    recommendedActions: recommendedActions.length > 0 ? recommendedActions : undefined,
   };
 }
 

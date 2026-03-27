@@ -452,7 +452,11 @@ export function downloadExecutiveReportPdf(
     issues.slice(0, 30).forEach((iss, i) => {
       const title = iss.title || iss.issueType || iss.category || `Issue ${i + 1}`;
       const sev   = iss.severity || "info";
-      const detail = [iss.summary, iss.recommendation].filter(Boolean).join(" — ");
+      // Build a rich detail line: summary + action
+      const action = (iss.recommendedActions && iss.recommendedActions.length > 0)
+        ? `Action: ${iss.recommendedActions[0]}`
+        : iss.recommendation ? `Action: ${iss.recommendation}` : undefined;
+      const detail = [iss.summary, action].filter(Boolean).join("  ·  ");
       alertRow(ctx, i, title, sev, detail || undefined);
     });
   }

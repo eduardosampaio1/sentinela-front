@@ -46,14 +46,24 @@ export interface DomainArgosSignals {
 }
 
 export interface DomainIssue {
-  issueId?: string;
-  issueType?: string;
+  // Identity
+  issueId?: string;       // fingerprint_id
+  issueType?: string;     // issue_type or code (e.g. "HIGH_VARIANCE")
+  code?: string;          // raw code key from engine
+  // Classification
   severity?: string;
-  confidence?: number;
-  title?: string;
-  summary?: string;
   category?: string;
-  recommendation?: string;
+  metric?: string;        // which metric triggered this issue
+  // Content
+  title?: string;         // human-readable title
+  summary?: string;       // description of the problem
+  confidence?: number;
+  // Evidence & Impact
+  evidence?: Record<string, unknown>;   // metric values as proof
+  relatedIntents?: string[];            // affected intents
+  // Actions
+  recommendation?: string;             // single recommendation text
+  recommendedActions?: string[];        // ordered list of action items
 }
 
 export interface DomainRecommendation {
