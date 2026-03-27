@@ -84,16 +84,31 @@ function ContextStrip() {
 // ─── LaunchpadPage ─────────────────────────────────────────────────────────────
 
 export function LaunchpadPage() {
-  const { analysisCompleted, loading, loadingStep, loadingProgress } = useAnalysis();
+  const { analysisCompleted, loading, loadingStep, loadingProgress, result } = useAnalysis();
   const navigate = useNavigate();
 
-  const prevCompleted = useRef(analysisCompleted);
+  // Navigate to dashboard when a fresh analysis finishes successfully.
+  // We watch the loading cycle (true → false) instead of `analysisCompleted`
+  // because `analysisCompleted` may already be true (hasHistory) before the run
+  // starts, making the false→true edge never fire for repeat users.
+  // We also capture the result at load-start so we can detect whether a NEW
+  // result was produced (vs a failed run that leaves the old result in place).
+  const prevLoading = useRef(loading);
+  const resultAtLoadStart = useRef<typeof result | undefined>(undefined);
   useEffect(() => {
-    if (analysisCompleted && !prevCompleted.current) {
-      navigate("/dashboard");
+    if (loading && !prevLoading.current) {
+      // Loading just started — snapshot the current result to compare later.
+      resultAtLoadStart.current = result;
     }
-    prevCompleted.current = analysisCompleted;
-  }, [analysisCompleted, navigate]);
+    if (!loading && prevLoading.current) {
+      // Loading just ended — navigate only if a new result was produced.
+      if (result !== null && result !== resultAtLoadStart.current) {
+        navigate("/dashboard");
+      }
+      resultAtLoadStart.current = undefined;
+    }
+    prevLoading.current = loading;
+  }, [loading, navigate, result]);
 
   return (
     <>
