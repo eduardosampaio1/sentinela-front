@@ -8,9 +8,10 @@ import { AIInterpretationPanel } from "./interpretation/AIInterpretationPanel";
 import { EconomicsCard } from "./executive/EconomicsCard";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { adaptAnalysisResult } from "@/adapters/analysisAdapter";
 import { buildEconomicsViewModel } from "@/adapters/economicsAdapter";
+import { downloadExecutiveReportPdf } from "@/lib/reportPdf";
 
 // ─── Empty state ─────────────────────────────────────────────────────────────
 
@@ -78,11 +79,24 @@ export function DashboardPage() {
   const { result, loading, dataSource } = useAnalysis();
   const navigate = useNavigate();
 
+  const domain = useMemo(() => (result ? adaptAnalysisResult(result) : null), [result]);
+
   const economics = useMemo(() => {
-    if (!result) return null;
-    const domain = adaptAnalysisResult(result);
+    if (!domain) return null;
     return buildEconomicsViewModel(domain);
-  }, [result]);
+  }, [domain]);
+
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (!domain) return;
+    setDownloading(true);
+    try {
+      downloadExecutiveReportPdf(domain, economics, null);
+    } finally {
+      setDownloading(false);
+    }
+  }, [domain, economics]);
 
   if (!result) {
     return (
@@ -102,6 +116,18 @@ export function DashboardPage() {
               Cached
             </span>
           )}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleDownloadPdf}
+            disabled={downloading}
+            className="rounded-xl text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[rgba(255,255,255,0.04)] text-xs gap-1.5"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            {downloading ? "Generating…" : "Export PDF"}
+          </Button>
           <Button
             size="sm"
             onClick={() => navigate("/home")}

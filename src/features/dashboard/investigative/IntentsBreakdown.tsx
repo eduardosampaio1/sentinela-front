@@ -46,8 +46,8 @@ function IntentRow({ intent }: { intent: DomainIntentScore }) {
   return (
     <div className="flex items-center gap-4 py-2.5 border-b border-[rgba(255,255,255,0.04)] last:border-b-0">
       {/* Intent name */}
-      <div className="flex items-center gap-2 min-w-0 w-36 flex-shrink-0">
-        <p className="text-sm text-[#94A3B8] truncate">{intent.intent}</p>
+      <div className="flex items-center gap-2 min-w-0 w-56 flex-shrink-0">
+        <p className="text-sm text-[#94A3B8] truncate" title={intent.intent}>{intent.intent}</p>
         {severityBadge(intent.severity)}
       </div>
 
@@ -120,7 +120,7 @@ export function IntentsBreakdown() {
         <div>
           {/* Header */}
           <div className="flex items-center gap-4 pb-2 border-b border-[rgba(255,255,255,0.06)] mb-1">
-            <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] w-36 flex-shrink-0">Intent</p>
+            <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] w-56 flex-shrink-0">Intent</p>
             <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] flex-1">Score</p>
             <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
               <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569] w-12 text-right">Conv.</p>

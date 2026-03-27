@@ -37,10 +37,13 @@ export function DiagnosticsPanel() {
           </div>
         )}
         {data.analysisId && (
-          <div>
+          <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-wide font-semibold text-[#475569]">Analysis ID</p>
-            <p className="text-xs font-mono text-[#94A3B8] truncate max-w-[200px]">
-              {data.analysisId.slice(0, 16)}…
+            <p
+              className="text-xs font-mono text-[#94A3B8] truncate max-w-[280px]"
+              title={data.analysisId}
+            >
+              {data.analysisId}
             </p>
           </div>
         )}

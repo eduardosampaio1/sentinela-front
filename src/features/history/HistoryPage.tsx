@@ -11,6 +11,7 @@ import { listAnalysisRuns } from "@/lib/analysisRuns";
 import type { AnalysisRunSummary } from "@/lib/analysisRuns";
 import { cn } from "@/lib/utils";
 import { RunRow } from "./RunRow";
+import { RunComparePanel } from "./RunComparePanel";
 
 // ─── Filter types ─────────────────────────────────────────────────────────────
 
@@ -159,9 +160,12 @@ function FilterBar({ riskFilter, scoreFilter, onRiskChange, onScoreChange, total
 
 // ─── Table header ─────────────────────────────────────────────────────────────
 
-function TableHeader() {
+function TableHeader({ compareMode }: { compareMode: boolean }) {
   return (
     <div className="flex items-center gap-4 px-5 py-3 border-b border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)]">
+      {/* Checkbox spacer in compare mode */}
+      {compareMode && <div className="w-4 flex-shrink-0" />}
+
       <div className="w-32 flex-shrink-0">
         <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">Date</p>
       </div>
@@ -181,6 +185,111 @@ function TableHeader() {
   );
 }
 
+// ─── Compare toggle button ────────────────────────────────────────────────────
+
+function CompareToggleButton({
+  active,
+  onClick,
+}: {
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-1.5 text-xs font-medium transition-all px-3 py-1.5 rounded-lg border",
+        active
+          ? "bg-[rgba(34,211,238,0.10)] text-[#22D3EE] border-[rgba(34,211,238,0.20)] hover:bg-[rgba(34,211,238,0.15)]"
+          : "text-[#94A3B8] border-[rgba(255,255,255,0.08)] hover:text-[#94A3B8] hover:border-[rgba(255,255,255,0.14)] bg-transparent"
+      )}
+      aria-label={active ? "Cancel compare mode" : "Enter compare mode"}
+      aria-pressed={active}
+    >
+      {/* Split-view icon */}
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 4H5a1 1 0 00-1 1v14a1 1 0 001 1h4M15 4h4a1 1 0 011 1v14a1 1 0 01-1 1h-4M12 4v16" />
+      </svg>
+      {active ? "Cancel" : "Compare"}
+    </button>
+  );
+}
+
+// ─── Floating selection bar ───────────────────────────────────────────────────
+
+function FloatingSelectionBar({
+  selectedCount,
+  onCompare,
+  onClear,
+}: {
+  selectedCount: number;
+  onCompare: () => void;
+  onClear: () => void;
+}) {
+  const ready = selectedCount === 2;
+  const label =
+    selectedCount === 0
+      ? "Select 2 runs to compare"
+      : selectedCount === 1
+      ? "1 run selected — select one more"
+      : "2 runs selected — ready to compare";
+
+  return (
+    <div
+      className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl"
+      style={{
+        background: "#0D1424",
+        border: "1px solid rgba(34,211,238,0.15)",
+        boxShadow: "0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(34,211,238,0.06)",
+      }}
+      role="status"
+      aria-live="polite"
+    >
+      {/* Status indicator */}
+      <div className="flex items-center gap-2">
+        <div
+          className={cn(
+            "w-1.5 h-1.5 rounded-full transition-colors",
+            ready ? "bg-[#34D399]" : "bg-[#475569]"
+          )}
+        />
+        <span className={cn("text-xs font-medium", ready ? "text-[#F1F5F9]" : "text-[#94A3B8]")}>
+          {label}
+        </span>
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-4 bg-[rgba(255,255,255,0.08)]" />
+
+      {/* Compare now */}
+      <button
+        onClick={onCompare}
+        disabled={!ready}
+        className={cn(
+          "flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all",
+          ready
+            ? "bg-[rgba(34,211,238,0.12)] text-[#22D3EE] border border-[rgba(34,211,238,0.25)] hover:bg-[rgba(34,211,238,0.18)] cursor-pointer"
+            : "bg-[rgba(255,255,255,0.03)] text-[#475569] border border-[rgba(255,255,255,0.06)] opacity-50 cursor-not-allowed"
+        )}
+        aria-disabled={!ready}
+      >
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 4H5a1 1 0 00-1 1v14a1 1 0 001 1h4M15 4h4a1 1 0 011 1v14a1 1 0 01-1 1h-4M12 4v16" />
+        </svg>
+        Compare now
+      </button>
+
+      {/* Clear */}
+      <button
+        onClick={onClear}
+        className="text-[11px] text-[#475569] hover:text-[#94A3B8] transition-colors"
+      >
+        Clear
+      </button>
+    </div>
+  );
+}
+
 // ─── HistoryPage ──────────────────────────────────────────────────────────────
 
 export function HistoryPage() {
@@ -193,6 +302,11 @@ export function HistoryPage() {
 
   const [riskFilter, setRiskFilter] = useState<RiskFilter>("all");
   const [scoreFilter, setScoreFilter] = useState<ScoreFilter>("all");
+
+  // Compare mode state
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [compareRuns, setCompareRuns] = useState<[AnalysisRunSummary, AnalysisRunSummary] | null>(null);
 
   const noContext = !workspace?.id || !project?.id || !environment?.id;
 
@@ -230,7 +344,60 @@ export function HistoryPage() {
     );
   }, [runs, riskFilter, scoreFilter]);
 
-  const hasActiveFilters = riskFilter !== "all" || scoreFilter !== "all";
+  // ── Compare mode handlers ──────────────────────────────────────────────────
+
+  function handleToggleCompareMode() {
+    if (compareMode) {
+      // Turning off — clear selection
+      setCompareMode(false);
+      setSelectedIds([]);
+    } else {
+      setCompareMode(true);
+    }
+  }
+
+  function handleToggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) {
+        // Deselect
+        return prev.filter((x) => x !== id);
+      }
+      if (prev.length < 2) {
+        // Add
+        return [...prev, id];
+      }
+      // Already 2 selected — do nothing
+      return prev;
+    });
+  }
+
+  function handleClearSelection() {
+    setSelectedIds([]);
+  }
+
+  function handleCompareNow() {
+    if (selectedIds.length !== 2) return;
+    const [idA, idB] = selectedIds;
+    const runA = runs.find((r) => r.id === idA);
+    const runB = runs.find((r) => r.id === idB);
+    if (!runA || !runB) return;
+
+    // Ensure A is older (earlier created_at) and B is newer
+    const [older, newer] =
+      new Date(runA.created_at) <= new Date(runB.created_at)
+        ? [runA, runB]
+        : [runB, runA];
+
+    setCompareRuns([older, newer]);
+  }
+
+  function handleCloseCompare() {
+    setCompareRuns(null);
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  const showFloatingBar = compareMode && selectedIds.length > 0;
 
   return (
     <AppShell topBarTitle="History">
@@ -244,16 +411,22 @@ export function HistoryPage() {
           }
           actions={
             !noContext && (
-              <button
-                onClick={fetchRuns}
-                className="flex items-center gap-1.5 text-xs text-[#94A3B8] hover:text-[#94A3B8] transition-colors"
-                aria-label="Refresh history"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                </svg>
-                Refresh
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Compare toggle */}
+                <CompareToggleButton active={compareMode} onClick={handleToggleCompareMode} />
+
+                {/* Refresh */}
+                <button
+                  onClick={fetchRuns}
+                  className="flex items-center gap-1.5 text-xs text-[#94A3B8] hover:text-[#94A3B8] transition-colors"
+                  aria-label="Refresh history"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                  Refresh
+                </button>
+              </div>
             )
           }
         />
@@ -301,6 +474,18 @@ export function HistoryPage() {
         {/* Table + filters */}
         {!noContext && !loading && !error && runs.length > 0 && (
           <>
+            {/* Compare mode hint banner */}
+            {compareMode && (
+              <div className="flex items-center gap-2 mb-4 px-4 py-2.5 rounded-xl bg-[rgba(34,211,238,0.05)] border border-[rgba(34,211,238,0.12)]">
+                <svg className="w-3.5 h-3.5 text-[#22D3EE] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-xs text-[#22D3EE]">
+                  Select 2 runs to compare them side by side. Click a row to toggle selection.
+                </span>
+              </div>
+            )}
+
             <FilterBar
               riskFilter={riskFilter}
               scoreFilter={scoreFilter}
@@ -310,11 +495,29 @@ export function HistoryPage() {
               filteredCount={filteredRuns.length}
             />
 
-            <div className="card-base overflow-hidden">
-              <TableHeader />
+            <div
+              className="card-base overflow-hidden"
+              // Add bottom padding when floating bar is visible so content isn't obscured
+              style={showFloatingBar ? { paddingBottom: "5rem" } : undefined}
+            >
+              <TableHeader compareMode={compareMode} />
 
               {filteredRuns.length > 0 ? (
-                filteredRuns.map((run) => <RunRow key={run.id} run={run} />)
+                filteredRuns.map((run) => {
+                  const isSelected = selectedIds.includes(run.id);
+                  const compareDimmed = compareMode && selectedIds.length === 2 && !isSelected;
+
+                  return (
+                    <RunRow
+                      key={run.id}
+                      run={run}
+                      compareMode={compareMode}
+                      selected={isSelected}
+                      compareDimmed={compareDimmed}
+                      onToggleSelect={handleToggleSelect}
+                    />
+                  );
+                })
               ) : (
                 <div className="py-10 text-center">
                   <p className="text-sm text-[#94A3B8]">No runs match the selected filters.</p>
@@ -330,6 +533,24 @@ export function HistoryPage() {
           </>
         )}
       </PageFrame>
+
+      {/* Floating selection bar */}
+      {showFloatingBar && (
+        <FloatingSelectionBar
+          selectedCount={selectedIds.length}
+          onCompare={handleCompareNow}
+          onClear={handleClearSelection}
+        />
+      )}
+
+      {/* Compare panel */}
+      {compareRuns && (
+        <RunComparePanel
+          runA={compareRuns[0]}
+          runB={compareRuns[1]}
+          onClose={handleCloseCompare}
+        />
+      )}
     </AppShell>
   );
 }

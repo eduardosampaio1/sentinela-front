@@ -43,6 +43,16 @@ function asString(value: unknown): string | undefined {
   return undefined;
 }
 
+
+// Engine version display names
+const ENGINE_DISPLAY_NAMES: Record<string, string> = {
+  '1.8.0-SCALE': 'ARGOS MK 3.5',
+};
+function normalizeEngineVersion(v: string | undefined): string | undefined {
+  if (!v) return undefined;
+  return ENGINE_DISPLAY_NAMES[v] ?? v;
+}
+
 function asArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
@@ -303,7 +313,7 @@ export function adaptAnalysisResult(result: AnalysisResult): DomainAnalysis {
     analysisRunId: extractAnalysisRunId(result),
     datasetHash: asString(result._cache_key),
     analyzedAt: result.analyzed_at ?? new Date().toISOString(),
-    engineVersion: asString(result.engine_version),
+    engineVersion: normalizeEngineVersion(asString(result.engine_version)),
 
     // Context
     workspaceId: asString(result.workspace_id),

@@ -84,13 +84,41 @@ function ScorePill({ score }: { score: number | null }) {
   );
 }
 
+// ─── Checkbox ─────────────────────────────────────────────────────────────────
+
+function CompareCheckbox({ checked, disabled }: { checked: boolean; disabled: boolean }) {
+  return (
+    <div
+      className={cn(
+        "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all",
+        checked
+          ? "bg-[rgba(34,211,238,0.15)] border-[#22D3EE]"
+          : "bg-transparent border-[rgba(255,255,255,0.14)]",
+        disabled && "opacity-40"
+      )}
+      aria-hidden="true"
+    >
+      {checked && (
+        <svg className="w-2.5 h-2.5 text-[#22D3EE]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      )}
+    </div>
+  );
+}
+
 // ─── RunRow ───────────────────────────────────────────────────────────────────
 
 interface RunRowProps {
   run: AnalysisRunSummary;
+  compareMode?: boolean;
+  selected?: boolean;
+  /** True when 2 runs are already selected and this is not one of them — dims and disables the row */
+  compareDimmed?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
-export function RunRow({ run }: RunRowProps) {
+export function RunRow({ run, compareMode = false, selected = false, compareDimmed = false, onToggleSelect }: RunRowProps) {
   const navigate = useNavigate();
   const hasResult = !!run.raw_result;
   const behaviorScore = extractBehaviorScore(run.raw_result);
@@ -101,20 +129,36 @@ export function RunRow({ run }: RunRowProps) {
     year: "numeric",
   });
 
+  // Dimmed when the parent signals 2 are already selected and this isn't one
+  const dimmed = compareDimmed;
+
   function handleClick() {
-    navigate(`/dashboard/history/${run.id}`);
+    if (compareMode) {
+      if (dimmed) return; // already 2 selected, this row is not one of them
+      onToggleSelect?.(run.id);
+    } else {
+      navigate(`/dashboard/history/${run.id}`);
+    }
   }
 
   return (
     <div
       className={cn(
-        "flex items-center gap-4 px-5 py-4 border-b border-[rgba(255,255,255,0.04)] last:border-b-0 transition-colors cursor-pointer hover:bg-[rgba(255,255,255,0.02)] group",
-        !hasResult && "opacity-60"
+        "flex items-center gap-4 px-5 py-4 border-b border-[rgba(255,255,255,0.04)] last:border-b-0 transition-all cursor-pointer hover:bg-[rgba(255,255,255,0.02)] group",
+        !hasResult && !compareMode && "opacity-60",
+        // Compare mode selection styles
+        compareMode && selected && "bg-[rgba(34,211,238,0.04)] border-l-2 border-l-[#22D3EE]",
+        compareMode && dimmed && "opacity-40 pointer-events-none",
       )}
       onClick={handleClick}
-      role="button"
-      tabIndex={0}
-      aria-label={`View analysis run from ${dateFormatted}`}
+      role={compareMode ? "checkbox" : "button"}
+      aria-checked={compareMode ? selected : undefined}
+      tabIndex={dimmed ? -1 : 0}
+      aria-label={
+        compareMode
+          ? `${selected ? "Deselect" : "Select"} run from ${dateFormatted} for comparison`
+          : `View analysis run from ${dateFormatted}`
+      }
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -122,6 +166,13 @@ export function RunRow({ run }: RunRowProps) {
         }
       }}
     >
+      {/* Checkbox (compare mode only) */}
+      {compareMode && (
+        <div className="flex-shrink-0">
+          <CompareCheckbox checked={selected} disabled={dimmed} />
+        </div>
+      )}
+
       {/* Date / time */}
       <div className="w-32 flex-shrink-0">
         <p className="text-sm font-medium text-[#94A3B8] leading-tight">{dateFormatted}</p>
@@ -166,15 +217,26 @@ export function RunRow({ run }: RunRowProps) {
         )}
       </div>
 
-      {/* CTA */}
-      <div className="w-16 flex-shrink-0 flex justify-end">
-        <div className="flex items-center gap-1.5 text-[#94A3B8] group-hover:text-[#22D3EE] transition-colors">
-          <span className="text-xs font-medium">{hasResult ? "View" : "Details"}</span>
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
+      {/* CTA — hidden in compare mode */}
+      {!compareMode && (
+        <div className="w-16 flex-shrink-0 flex justify-end">
+          <div className="flex items-center gap-1.5 text-[#94A3B8] group-hover:text-[#22D3EE] transition-colors">
+            <span className="text-xs font-medium">{hasResult ? "View" : "Details"}</span>
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Compare mode: show selected indicator instead */}
+      {compareMode && (
+        <div className="w-16 flex-shrink-0 flex justify-end">
+          {selected && (
+            <span className="text-[11px] font-semibold text-[#22D3EE]">Selected</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
