@@ -10,6 +10,7 @@ export interface AnalysisRunSummary {
   risk_level: string | null;
   n_conversations: number | null;
   n_intents: number | null;
+  status?: string | null;
   raw_result?: Record<string, unknown> | null;
 }
 

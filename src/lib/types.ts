@@ -26,6 +26,7 @@ export interface IntentScore {
 
 export interface AnalysisResponse {
   analysis_id?: string;
+  analysis_run_id?: string;
   dataset_hash?: string;
   created_at?: string;
   engine_version?: string;

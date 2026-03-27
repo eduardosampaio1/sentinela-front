@@ -35,6 +35,28 @@ function scoreBg(score: number): string {
   return "rgba(248,113,113,0.08)";
 }
 
+// ─── Status badge — Sprint 5 ──────────────────────────────────────────────────
+
+const STATUS_CONFIG: Record<string, { label: string; styles: string }> = {
+  completed:  { label: "Completed",  styles: "bg-[rgba(52,211,153,0.08)] text-[#34D399] border-[rgba(52,211,153,0.15)]" },
+  analyzing:  { label: "Analyzing",  styles: "bg-[rgba(167,139,250,0.08)] text-[#A78BFA] border-[rgba(167,139,250,0.15)]" },
+  embedding:  { label: "Embedding",  styles: "bg-[rgba(34,211,238,0.08)] text-[#22D3EE] border-[rgba(34,211,238,0.15)]" },
+  finalizing: { label: "Finalizing", styles: "bg-[rgba(74,222,128,0.06)] text-[#4ADE80] border-[rgba(74,222,128,0.12)]" },
+  processing: { label: "Processing", styles: "bg-[rgba(34,211,238,0.08)] text-[#22D3EE] border-[rgba(34,211,238,0.15)]" },
+  queued:     { label: "Queued",     styles: "bg-[rgba(148,163,184,0.08)] text-[#94A3B8] border-[rgba(148,163,184,0.15)]" },
+  failed:     { label: "Failed",     styles: "bg-[rgba(248,113,113,0.08)] text-[#F87171] border-[rgba(248,113,113,0.15)]" },
+};
+
+function StatusBadge({ status }: { status?: string | null }) {
+  const key = (status ?? "completed").toLowerCase();
+  const cfg = STATUS_CONFIG[key] ?? STATUS_CONFIG.completed;
+  return (
+    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border", cfg.styles)}>
+      {cfg.label}
+    </span>
+  );
+}
+
 // ─── Risk badge ───────────────────────────────────────────────────────────────
 
 function RiskBadge({ level }: { level?: string | null }) {
@@ -125,7 +147,10 @@ export function RunRow({ run }: RunRowProps) {
       {/* Date / time */}
       <div className="w-32 flex-shrink-0">
         <p className="text-sm font-medium text-[#94A3B8] leading-tight">{dateFormatted}</p>
-        <p className="text-[11px] text-[#2D3748] mt-0.5">{formatRelativeTime(run.created_at)}</p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <p className="text-[11px] text-[#2D3748]">{formatRelativeTime(run.created_at)}</p>
+          <StatusBadge status={run.status ?? "completed"} />
+        </div>
       </div>
 
       {/* Risk level */}

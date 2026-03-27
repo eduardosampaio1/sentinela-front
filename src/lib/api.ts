@@ -187,6 +187,43 @@ export interface InterpretAnalysisResponse {
   report: AnalysisInterpretation;
 }
 
+// Sprint 5: Job stage update (received from polling status endpoint)
+export interface JobExecutionProfile {
+  datasetSize: number;
+  datasetSizeBand: string;
+  runMode: string;
+  estimatedDurationLabel: string;
+  isHeavy: boolean;
+}
+
+export interface JobStageUpdate {
+  status: string;
+  jobStage: string;
+  jobStageLabel: string;
+  jobStageDetail: string;
+  executionProfile: JobExecutionProfile | null;
+  datasetSize: number;
+}
+
+// Max polling attempts per run mode (1s interval each)
+const MAX_ATTEMPTS_BY_MODE: Record<string, number> = {
+  light:       90,    // ~1.5 min
+  standard:    180,   // ~3 min
+  heavy_async: 600,   // ~10 min
+  mass:        6000,  // ~100 min
+};
+
+function parseExecutionProfile(raw: Record<string, unknown>): JobExecutionProfile | null {
+  if (!raw || typeof raw !== "object") return null;
+  return {
+    datasetSize: Number(raw.dataset_size ?? 0),
+    datasetSizeBand: String(raw.dataset_size_band ?? ""),
+    runMode: String(raw.run_mode ?? "standard"),
+    estimatedDurationLabel: String(raw.estimated_duration_label ?? ""),
+    isHeavy: Boolean(raw.is_heavy ?? false),
+  };
+}
+
 export interface GetInterpretationResponse {
   found: boolean;
   status: "not_requested" | "queued" | "running" | "completed" | "failed";
@@ -773,7 +810,12 @@ export function mapApiToDashboard(raw: Record<string, unknown>): AnalysisResult 
 
 export async function analyzeConversations(
   conversations: unknown[],
-  options?: { workspaceId?: string | null; projectId?: string | null; environmentId?: string | null },
+  options?: {
+    workspaceId?: string | null;
+    projectId?: string | null;
+    environmentId?: string | null;
+    onStageUpdate?: (update: JobStageUpdate) => void;
+  },
 ): Promise<AnalysisResult> {
   const workspaceId = String(options?.workspaceId ?? "").trim();
   const projectId = String(options?.projectId ?? "").trim();
@@ -799,7 +841,10 @@ export async function analyzeConversations(
   if (environmentId) scopeParams.set("environment_id", environmentId);
   const scopedQuery = scopeParams.toString() ? `?${scopeParams.toString()}` : "";
 
-  const maxAttempts = 90;
+  // Sprint 5: Adaptive polling timeout based on execution profile
+  let maxAttempts = 90;
+  const onStageUpdate = options?.onStageUpdate;
+
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const statusResponse = await fetch(`${baseUrl}/analyses/${analysisId}${scopedQuery}`, {
       method: "GET",
@@ -813,6 +858,25 @@ export async function analyzeConversations(
 
     const statusPayload = (await statusResponse.json()) as Record<string, unknown>;
     const status = String(statusPayload.status ?? "").toLowerCase();
+
+    // Parse and expose stage update on first poll (or every poll)
+    if (onStageUpdate) {
+      const profile = parseExecutionProfile(
+        (statusPayload.execution_profile ?? {}) as Record<string, unknown>
+      );
+      // Expand maxAttempts once we know the run mode
+      if (attempt === 0 && profile?.runMode) {
+        maxAttempts = MAX_ATTEMPTS_BY_MODE[profile.runMode] ?? 90;
+      }
+      onStageUpdate({
+        status,
+        jobStage: String(statusPayload.job_stage ?? status),
+        jobStageLabel: String(statusPayload.job_stage_label ?? ""),
+        jobStageDetail: String(statusPayload.job_stage_detail ?? ""),
+        executionProfile: profile,
+        datasetSize: Number(statusPayload.dataset_size ?? 0),
+      });
+    }
 
     if (status === "completed") {
       const resultResponse = await fetch(`${baseUrl}/analyses/${analysisId}/result${scopedQuery}`, {

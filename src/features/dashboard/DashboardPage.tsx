@@ -6,11 +6,12 @@ import { InvestigativeAxis } from "./investigative/InvestigativeAxis";
 import { TechnicalAxis } from "./technical/TechnicalAxis";
 import { AIInterpretationPanel } from "./interpretation/AIInterpretationPanel";
 import { EconomicsCard } from "./executive/EconomicsCard";
+import { PotentialSavingsCard } from "./executive/PotentialSavingsCard";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import { adaptAnalysisResult } from "@/adapters/analysisAdapter";
-import { buildEconomicsViewModel } from "@/adapters/economicsAdapter";
+import { buildEconomicsViewModel, buildPotentialSavingsViewModel } from "@/adapters/economicsAdapter";
 
 // ─── Empty state ─────────────────────────────────────────────────────────────
 
@@ -78,10 +79,13 @@ export function DashboardPage() {
   const { result, loading, dataSource } = useAnalysis();
   const navigate = useNavigate();
 
-  const economics = useMemo(() => {
-    if (!result) return null;
+  const { economics, potentialSavings } = useMemo(() => {
+    if (!result) return { economics: null, potentialSavings: null };
     const domain = adaptAnalysisResult(result);
-    return buildEconomicsViewModel(domain);
+    return {
+      economics: buildEconomicsViewModel(domain),
+      potentialSavings: buildPotentialSavingsViewModel(domain),
+    };
   }, [result]);
 
   if (!result) {
@@ -121,12 +125,13 @@ export function DashboardPage() {
         {/* ── Investigative axis: scroll zone ── */}
         <InvestigativeAxis className="mt-2" />
 
-        {/* ── Full economic breakdown ── */}
-        {economics && (
+        {/* ── Potential savings (ROI Engine) ── */}
+        {potentialSavings && (
           <div className="mt-6">
-            <SectionDivider label="Economic breakdown" />
-            <div className="mt-4">
-              <EconomicsCard economics={economics} collapsed={false} />
+            <SectionDivider label="Economic impact" />
+            <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <PotentialSavingsCard savings={potentialSavings} />
+              {economics && <EconomicsCard economics={economics} collapsed={false} />}
             </div>
           </div>
         )}

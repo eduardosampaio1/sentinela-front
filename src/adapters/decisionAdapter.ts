@@ -3,7 +3,7 @@
 // Builds DecisionViewModel from DomainAnalysis
 // ============================================================
 
-import type { DomainAnalysis } from "@/domain/analysis.types";
+import type { DomainAnalysis, Sprint4RecommendationRaw } from "@/domain/analysis.types";
 import type {
   DecisionViewModel,
   VerdictModel,
@@ -16,6 +16,8 @@ import type {
   RecommendationItem,
   ConfidenceCertainty,
   MetricTone,
+  Sprint4ViewModel,
+  StructuredRecommendation,
 } from "@/domain/verdict.types";
 import { buildEconomicsViewModel } from "./economicsAdapter";
 
@@ -471,6 +473,8 @@ export function buildDecisionViewModel(
     escalated: verdict.verdict === "Critical" || recurrence.recurring,
   };
 
+  const sprint4 = buildSprint4ViewModel(analysis);
+
   return {
     verdict,
     topRisk,
@@ -479,5 +483,39 @@ export function buildDecisionViewModel(
     confidence,
     coreMetrics,
     recurrence,
+    sprint4,
+  };
+}
+
+// ---- Sprint 4 view model builder ----
+
+function mapSprint4Rec(raw: Sprint4RecommendationRaw): StructuredRecommendation {
+  return {
+    id: raw.id,
+    priority: raw.priority,
+    title: raw.title,
+    problem: raw.problem,
+    impact: {
+      type: raw.impact.type,
+      estimatedSavings: raw.impact.estimatedSavings,
+      riskReduction: raw.impact.riskReduction as "high" | "medium" | "low",
+    },
+    evidence: raw.evidence,
+    action: raw.action,
+    confidence: raw.confidence,
+    priorityScore: raw.priorityScore,
+    actionCategory: raw.actionCategory,
+  };
+}
+
+function buildSprint4ViewModel(analysis: DomainAnalysis): Sprint4ViewModel {
+  const s4 = analysis.sprint4;
+  if (!s4) {
+    return { top: null, secondary: [], modelVersion: "sprint4-v1" };
+  }
+  return {
+    top: s4.top ? mapSprint4Rec(s4.top) : null,
+    secondary: s4.secondary.map(mapSprint4Rec),
+    modelVersion: s4.modelVersion,
   };
 }

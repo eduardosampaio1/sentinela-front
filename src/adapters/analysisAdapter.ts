@@ -13,6 +13,8 @@ import type {
   DomainBusinessImpact,
   DomainArgosScores,
   DomainArgosSignals,
+  Sprint4Raw,
+  Sprint4RecommendationRaw,
 } from "@/domain/analysis.types";
 
 // ---- Utility helpers ----
@@ -159,6 +161,46 @@ function extractBusinessImpact(result: AnalysisResult): DomainBusinessImpact {
     return normalizeToPercent(raw);
   })();
 
+  // Sprint 3: ROI fields — read from business_impact or top-level payload
+  const economicImpactRaw = asRecord(bi.economic_impact);
+  const economicExplanationRaw = asRecord(bi.economic_explanation);
+  const avoidedCostRangeRaw = asRecord(bi.avoided_cost_range ?? economicImpactRaw.avoided_cost_range);
+  const driversRaw = asRecord(economicImpactRaw.drivers);
+
+  const avoidedCost = asNumber(bi.avoided_cost ?? economicImpactRaw.avoided_cost);
+  const optimizedCostEstimate = asNumber(bi.optimized_cost_estimate ?? economicImpactRaw.optimized_cost_estimate);
+  const avoidedCostRange =
+    avoidedCostRangeRaw && asNumber(avoidedCostRangeRaw.min) !== null
+      ? { min: asNumber(avoidedCostRangeRaw.min) ?? 0, max: asNumber(avoidedCostRangeRaw.max) ?? 0 }
+      : null;
+
+  const economicImpact =
+    avoidedCost !== null
+      ? {
+          currentCost: asNumber(economicImpactRaw.current_cost) ?? pickNum(["total_estimated_cost", "totalEstimatedCost"]) ?? 0,
+          optimizedCostEstimate: optimizedCostEstimate ?? 0,
+          avoidedCost,
+          avoidedCostRange: avoidedCostRange ?? { min: 0, max: 0 },
+          drivers: {
+            tokenWaste: asNumber(driversRaw.token_waste) ?? 0,
+            handoffInefficiency: asNumber(driversRaw.handoff_inefficiency) ?? 0,
+            lowUsefulRate: asNumber(driversRaw.low_useful_rate) ?? 0,
+          },
+        }
+      : null;
+
+  const economicExplanation =
+    Object.keys(economicExplanationRaw).length > 0
+      ? {
+          summary: asString(economicExplanationRaw.summary) ?? "",
+          assumptions: Array.isArray(economicExplanationRaw.assumptions)
+            ? (economicExplanationRaw.assumptions as unknown[]).map(String)
+            : [],
+          confidence: (asString(economicExplanationRaw.confidence) ?? "low") as "high" | "medium" | "low",
+          lowDataWarning: asString(economicExplanationRaw.low_data_warning) ?? null,
+        }
+      : null;
+
   return {
     costPerUsefulOutcome: cpuo,
     usefulRate,
@@ -174,6 +216,13 @@ function extractBusinessImpact(result: AnalysisResult): DomainBusinessImpact {
     handoffCostMonthly: pickNum(["handoff_cost_monthly", "handoffCostMonthly"]),
     handoffCostYearly: pickNum(["handoff_cost_yearly", "handoffCostYearly"]),
     actualHandoffs: pickNum(["actual_handoffs", "actualHandoffs"]),
+    // Sprint 3
+    avoidedCost,
+    optimizedCostEstimate,
+    avoidedCostRange,
+    economicImpact,
+    economicExplanation,
+    economicModelVersion: asString(bi.economic_model_version) ?? null,
   };
 }
 
@@ -281,6 +330,57 @@ function extractAnalysisRunId(result: AnalysisResult): string | undefined {
   return undefined;
 }
 
+// ---- Sprint 4: Structured recommendation extractor ----
+
+function normalizeSprint4Rec(raw: unknown): Sprint4RecommendationRaw | null {
+  const r = asRecord(raw);
+  if (!r || typeof r.id !== "string") return null;
+  const impact = asRecord(r.impact);
+  const evidence = asRecord(r.evidence);
+  const action = asRecord(r.action);
+  return {
+    id: asString(r.id) ?? "",
+    priority: asNumber(r.priority) ?? 1,
+    title: asString(r.title) ?? "",
+    problem: asString(r.problem) ?? asString(r.title) ?? "",
+    impact: {
+      type: asString(impact.type) ?? "quality",
+      estimatedSavings: asNumber(impact.estimated_savings),
+      riskReduction: (asString(impact.risk_reduction) ?? "low") as "high" | "medium" | "low",
+    },
+    evidence: {
+      usefulRate: asNumber(evidence.useful_rate) ?? undefined,
+      actualHandoffs: asNumber(evidence.actual_handoffs) ?? undefined,
+      signals: Array.isArray(evidence.signals) ? (evidence.signals as unknown[]).map(String) : undefined,
+    },
+    action: {
+      summary: asString(action.summary) ?? "",
+      steps: Array.isArray(action.steps) ? (action.steps as unknown[]).map(String) : [],
+      category: asString(action.category) ?? "",
+    },
+    confidence: asNumber(r.confidence) ?? 0,
+    priorityScore: asNumber(r.priority_score) ?? 0,
+    actionCategory: asString(r.action_category) ?? "",
+  };
+}
+
+function extractSprint4(result: AnalysisResult): Sprint4Raw | null {
+  const mk3 = asRecord(getArgosV2(result).argos_mk3);
+  const s4 = asRecord(mk3.sprint4);
+  if (!s4 || Object.keys(s4).length === 0) return null;
+
+  const top = normalizeSprint4Rec(s4.top);
+  const secondary = asArray<unknown>(s4.secondary)
+    .map(normalizeSprint4Rec)
+    .filter((r): r is Sprint4RecommendationRaw => r !== null);
+
+  return {
+    top,
+    secondary,
+    modelVersion: asString(s4.model_version) ?? "sprint4-v1",
+  };
+}
+
 // ---- Main adapter function ----
 
 export function adaptAnalysisResult(result: AnalysisResult): DomainAnalysis {
@@ -298,9 +398,9 @@ export function adaptAnalysisResult(result: AnalysisResult): DomainAnalysis {
   })();
 
   return {
-    // Identity
-    analysisId: asString(result.analysis_id),
-    analysisRunId: extractAnalysisRunId(result),
+    // Identity — always populated: generate UUID if engine didn't provide one
+    analysisId: asString(result.analysis_id) ?? crypto.randomUUID(),
+    analysisRunId: extractAnalysisRunId(result) ?? crypto.randomUUID(),
     datasetHash: asString(result._cache_key),
     analyzedAt: result.analyzed_at ?? new Date().toISOString(),
     engineVersion: asString(result.engine_version),
@@ -347,6 +447,9 @@ export function adaptAnalysisResult(result: AnalysisResult): DomainAnalysis {
     behaviorScore: extractBehaviorScore(result),
     semanticDrift: extractSemanticDrift(result),
     aiHealthScore: extractAIHealthScore(result),
+
+    // Sprint 4: Structured recommendation contract
+    sprint4: extractSprint4(result),
 
     // Meta
     warnings: result._warnings ?? [],

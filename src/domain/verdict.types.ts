@@ -66,6 +66,75 @@ export interface EconomicsViewModel {
   notes: string[];
 }
 
+// --- Potential Savings (Sprint 3) ---
+
+export interface SavingsDriver {
+  id: "token-waste" | "handoff-inefficiency" | "low-useful-rate";
+  label: string;
+  value: number;
+  displayValue: string;
+  description: string;
+  recommendationHint?: string;
+}
+
+export interface PotentialSavingsViewModel {
+  available: boolean;
+  currentCost: number | null;
+  optimizedCost: number | null;
+  avoidedCost: number | null;
+  avoidedCostRange: { min: number; max: number } | null;
+  displayCurrentCost: string;
+  displayOptimizedCost: string;
+  displayAvoidedCost: string;
+  savingsPercent: number | null;
+  drivers: SavingsDriver[];
+  confidence: "high" | "medium" | "low";
+  confidenceLabel: string;
+  explanation: string;
+  disclaimer: string;
+  lowDataWarning: string | null;
+  modelVersion: string;
+}
+
+// --- Sprint 4: Structured Recommendation ---
+
+export interface StructuredRecommendationImpact {
+  type: string;
+  estimatedSavings: number | null;
+  riskReduction: "high" | "medium" | "low";
+}
+
+export interface StructuredRecommendationEvidence {
+  usefulRate?: number;
+  actualHandoffs?: number;
+  signals?: string[];
+}
+
+export interface StructuredRecommendationAction {
+  summary: string;
+  steps: string[];
+  category: string;
+}
+
+export interface StructuredRecommendation {
+  id: string;
+  priority: number;
+  title: string;
+  problem: string;
+  impact: StructuredRecommendationImpact;
+  evidence: StructuredRecommendationEvidence;
+  action: StructuredRecommendationAction;
+  confidence: number;
+  priorityScore: number;
+  actionCategory: string;
+}
+
+export interface Sprint4ViewModel {
+  top: StructuredRecommendation | null;
+  secondary: StructuredRecommendation[];
+  modelVersion: string;
+}
+
 // --- Confidence ---
 
 export interface ConfidenceModel {
@@ -100,6 +169,7 @@ export interface DecisionViewModel {
   confidence: ConfidenceModel;
   coreMetrics: CoreMetricViewModel[];
   recurrence: RecurrenceModel;
+  sprint4: Sprint4ViewModel;
 }
 
 export interface RecurrenceModel {

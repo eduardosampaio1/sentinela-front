@@ -17,18 +17,24 @@ import {
   parseConversationsInput,
   saveResult,
   type AnalysisResult,
+  type JobStageUpdate,
+  type JobExecutionProfile,
 } from "@/lib/api";
 import { saveAnalysisRun, getLatestAnalysisRun } from "@/lib/analysisRuns";
 import { type AnalysisJobRecord } from "@/lib/analysisJobs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
-const ANALYSIS_STAGES = [
-  "Uploading dataset",
-  "Creating analysis job",
-  "Queueing request",
-  "Waiting for worker",
-];
+// Sprint 5: stage → progress mapping (never fake percentages)
+const STAGE_PROGRESS: Record<string, number> = {
+  queued:     10,
+  preparing:  20,
+  embedding:  40,
+  analyzing:  75,
+  finalizing: 90,
+  completed:  100,
+  failed:     0,
+};
 
 interface AnalysisContextValue {
   result: AnalysisResult | null;
@@ -40,6 +46,11 @@ interface AnalysisContextValue {
   loadingMessage: string;
   loadingStep: number;
   loadingProgress: number;
+  // Sprint 5: real job stage
+  jobStage: string;
+  jobStageLabel: string;
+  jobStageDetail: string;
+  executionProfile: JobExecutionProfile | null;
   runAnalysis: (conversations: unknown[]) => Promise<void>;
   handleRerun: () => void;
   handleFileUpload: (file: File) => void;
@@ -75,6 +86,11 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [loadingStep, setLoadingStep] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [activeJob, setActiveJob] = useState<AnalysisJobRecord | null>(null);
+  // Sprint 5: real job stage from API
+  const [jobStage, setJobStage] = useState("queued");
+  const [jobStageLabel, setJobStageLabel] = useState("Preparing analysis job");
+  const [jobStageDetail, setJobStageDetail] = useState("Your dataset has been received and is being scheduled.");
+  const [executionProfile, setExecutionProfile] = useState<JobExecutionProfile | null>(null);
 
   const lastConversationsRef = useRef<unknown[] | null>(null);
 
@@ -100,20 +116,15 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     }
   }, [historyStorageKey]);
 
+  // Sprint 5: no fake timer — progress is driven by real job stage updates
   useEffect(() => {
-    if (!loading) return undefined;
-
+    if (!loading) return;
     setLoadingStep(0);
     setLoadingProgress(10);
-
-    const interval = window.setInterval(() => {
-      setLoadingStep((current) =>
-        current < ANALYSIS_STAGES.length - 1 ? current + 1 : current
-      );
-      setLoadingProgress((current) => Math.min(92, current + 18));
-    }, 850);
-
-    return () => window.clearInterval(interval);
+    setJobStage("queued");
+    setJobStageLabel("Preparing analysis job");
+    setJobStageDetail("Your dataset has been received and is being scheduled.");
+    setExecutionProfile(null);
   }, [loading]);
 
   useEffect(() => {
@@ -209,10 +220,20 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       setLoading(true);
 
       try {
-        const apiResult = await analyzeConversations(conversations, {
+        const handleStageUpdate = (update: JobStageUpdate) => {
+        setJobStage(update.jobStage);
+        setJobStageLabel(update.jobStageLabel || update.jobStage);
+        setJobStageDetail(update.jobStageDetail || "");
+        if (update.executionProfile) setExecutionProfile(update.executionProfile);
+        const progress = STAGE_PROGRESS[update.jobStage] ?? 10;
+        setLoadingProgress(progress);
+      };
+
+      const apiResult = await analyzeConversations(conversations, {
           workspaceId: workspace.id,
           projectId: project.id,
           environmentId: environment.id,
+          onStageUpdate: handleStageUpdate,
         });
         const inputHash = await hashDataset(conversationsToJsonl(conversations));
 
@@ -416,9 +437,13 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       historyResolved,
       dataSource,
       loading,
-      loadingMessage: ANALYSIS_STAGES[loadingStep] ?? ANALYSIS_STAGES[0],
+      loadingMessage: jobStageLabel || "Analyzing dataset",
       loadingStep,
       loadingProgress,
+      jobStage,
+      jobStageLabel,
+      jobStageDetail,
+      executionProfile,
       runAnalysis,
       handleRerun,
       handleFileUpload,
@@ -436,6 +461,10 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       loading,
       loadingStep,
       loadingProgress,
+      jobStage,
+      jobStageLabel,
+      jobStageDetail,
+      executionProfile,
       runAnalysis,
       handleRerun,
       handleFileUpload,
