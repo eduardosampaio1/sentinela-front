@@ -25,6 +25,7 @@ import {
 import AnalysisLoadingOverlay from "@/components/dashboard/AnalysisLoadingOverlay";
 import { Button } from "@/components/ui/button";
 import ProblemsPanel from "@/components/dashboard-v2/ProblemsPanel";
+import PromptRecommendationsPanel from "@/components/dashboard-v2/PromptRecommendationsPanel";
 import RecommendationsPanel from "@/components/dashboard-v2/RecommendationsPanel";
 import InteractionAnalysisPanel from "@/components/dashboard-v2/InteractionAnalysisPanel";
 import VerdictStrip from "@/components/dashboard-decision/VerdictStrip";
@@ -229,6 +230,16 @@ async function handleInterpret() {
     <div className="mx-auto min-w-0 w-full max-w-6xl space-y-8 pb-12">
       <AnalysisLoadingOverlay open={loading} message={loadingMessage} progress={loadingProgress} />
 
+      {result?.incremental ? (
+        <div className="flex items-center gap-2 rounded-xl border border-sky-500/25 bg-sky-500/8 px-4 py-2 text-xs font-medium text-sky-300">
+          <span className="inline-block h-2 w-2 rounded-full bg-sky-400" />
+          Incremental run
+          {result.incremental_batches != null && result.incremental_batches > 1
+            ? ` — ${result.incremental_batches} batches merged`
+            : ""}
+        </div>
+      ) : null}
+
       <section className="space-y-4">
         <VerdictStrip model={decisionLayer.verdict} />
 
@@ -350,6 +361,7 @@ async function handleInterpret() {
           subtitle="Secondary actions ranked after the primary recommendation."
           emptyText="No additional actions ranked below the primary recommendation."
         />
+        <PromptRecommendationsPanel result={result} />
       </section>
 
       <section className="space-y-4">
