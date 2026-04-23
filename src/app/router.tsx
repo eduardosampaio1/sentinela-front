@@ -53,6 +53,9 @@ const NotFoundPage = lazy(() =>
 const ServerErrorPage = lazy(() =>
   import("@/features/errors/ServerErrorPage").then((m) => ({ default: m.ServerErrorPage }))
 );
+const AionPage = lazy(() =>
+  import("@/features/aion/AionPage").then((m) => ({ default: m.AionPage }))
+);
 
 // Dashboard sub-panels (route-accessible deep views)
 const DiagnosticsPanel = lazy(() =>
@@ -158,6 +161,10 @@ const routes: RouteObject[] = [
   {
     path: "/",
     element: <PageSuspense><LandingPage /></PageSuspense>,
+  },
+  {
+    path: "/aion",
+    element: <PageSuspense><AionPage /></PageSuspense>,
   },
 
   // ── Auth (public-only: redirect to /home if already logged in) ────────────

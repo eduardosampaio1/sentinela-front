@@ -88,6 +88,15 @@ function Navbar() {
               {label}
             </a>
           ))}
+          <span className="mx-1 h-4 w-px" style={{ background: C.border }} aria-hidden="true" />
+          <Link to="/aion" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors hover:text-[#F1F5F9]"
+            style={{ color: "#14B8A6" }}>
+            AION
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+              style={{ background: "rgba(234,179,8,0.15)", color: "#EAB308", border: "1px solid rgba(234,179,8,0.3)" }}>
+              New
+            </span>
+          </Link>
         </nav>
       </div>
 
@@ -412,31 +421,13 @@ function SecuritySection() {
 
 // ─── Pricing ──────────────────────────────────────────────────────────────────
 
-const PLANS = [
-  {
-    name: "Free",
-    price: "$0",
-    period: "",
-    features: ["Up to 100 conversations", "Core diagnostic metrics", "Critical alert highlights", "No retention required to test"],
-    cta: "Start free",
-    highlight: false,
-  },
-  {
-    name: "Growth",
-    price: "$149",
-    period: "/month",
-    features: ["Up to 10k conversations", "History and run comparison", "Full dashboard visibility", "Exportable reports for stakeholders"],
-    cta: "Start Growth",
-    highlight: true,
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    period: "",
-    features: ["Higher-volume monitoring", "Custom governance workflows", "Dedicated support path", "Integration planning with your team"],
-    cta: "Talk to us",
-    highlight: false,
-  },
+const EARLY_ACCESS_FEATURES = [
+  "Full conversation analysis",
+  "Behavioral diagnostics (3 axes)",
+  "Critical alerts & highlights",
+  "History and run comparison",
+  "Full dashboard with export",
+  "No credit card required",
 ];
 
 function PricingSection() {
@@ -446,52 +437,75 @@ function PricingSection() {
         <div className="text-center mb-14">
           <SectionBadge>Pricing</SectionBadge>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: C.text }}>
-            Pricing built for staged adoption
+            Free while we validate together
           </h2>
           <p className="text-lg" style={{ color: C.muted }}>
-            Start with analysis, then grow into repeatable governance when the operational need is clear.
+            Get full access during our early validation phase. No time limit. No credit card.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {PLANS.map((plan) => (
-            <div key={plan.name} className="relative rounded-2xl border p-7 flex flex-col transition-all"
-              style={{
-                background: plan.highlight ? "rgba(34,211,238,0.04)" : C.bgCard,
-                borderColor: plan.highlight ? C.cyanBord : C.border,
-              }}>
-              {plan.highlight && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-semibold"
-                  style={{ background: C.cyan, color: C.bg }}>
-                  Best for active teams
-                </div>
-              )}
-              <h3 className="text-base font-semibold mb-2" style={{ color: C.text }}>{plan.name}</h3>
-              <div className="flex items-end gap-1 mb-6">
-                <span className="text-4xl font-bold" style={{ color: C.text }}>{plan.price}</span>
-                <span className="pb-1 text-sm" style={{ color: C.dim }}>{plan.period}</span>
-              </div>
-              <ul className="space-y-3 mb-8 flex-1">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: C.muted }}>
-                    <svg className="w-4 h-4 flex-shrink-0" style={{ color: C.cyan }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/register">
-                <Button className="w-full rounded-xl font-semibold"
-                  style={plan.highlight
-                    ? { background: C.cyan, color: C.bg }
-                    : { background: "rgba(255,255,255,0.05)", color: C.muted, border: `1px solid ${C.border}` }
-                  }>
-                  {plan.cta}
-                </Button>
-              </Link>
+        <div className="max-w-lg mx-auto space-y-4">
+          {/* Single plan card */}
+          <div className="relative rounded-2xl border p-8 flex flex-col"
+            style={{
+              background: "rgba(34,211,238,0.04)",
+              borderColor: C.cyanBord,
+              boxShadow: "0 0 32px rgba(34,211,238,0.08)",
+            }}>
+            <div className="flex items-center gap-2 mb-6">
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                style={{ background: C.cyanBg, color: C.cyan, border: `1px solid ${C.cyanBord}` }}>
+                Early Access
+              </span>
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                style={{ background: "rgba(52,211,153,0.08)", color: C.green, border: "1px solid rgba(52,211,153,0.2)" }}>
+                Free
+              </span>
             </div>
-          ))}
+            <div className="flex items-end gap-1 mb-2">
+              <span className="text-5xl font-bold" style={{ color: C.text }}>$0</span>
+              <span className="pb-1.5 text-sm" style={{ color: C.dim }}>for now</span>
+            </div>
+            <p className="text-sm mb-8" style={{ color: C.muted }}>Full platform access. No strings attached.</p>
+            <ul className="space-y-3 mb-8 flex-1">
+              {EARLY_ACCESS_FEATURES.map((f) => (
+                <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: C.muted }}>
+                  <svg className="w-4 h-4 flex-shrink-0" style={{ color: C.cyan }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Link to="/register">
+              <Button className="w-full rounded-xl font-semibold h-11"
+                style={{ background: C.cyan, color: C.bg }}>
+                Start for free
+              </Button>
+            </Link>
+          </div>
+
+          {/* AION teaser */}
+          <div className="rounded-2xl border p-6 flex flex-col sm:flex-row sm:items-center gap-4"
+            style={{ background: C.bgCard, borderColor: C.border }}>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                  style={{ background: "rgba(20,184,166,0.1)", color: "#14B8A6", border: "1px solid rgba(20,184,166,0.2)" }}>
+                  Runtime Control
+                </span>
+              </div>
+              <p className="text-sm" style={{ color: C.muted }}>
+                Building at scale? <span style={{ color: C.text }}>AION</span> brings real-time AI governance — policy enforcement, smart routing, and cost control.
+              </p>
+            </div>
+            <Link to="/aion" className="shrink-0">
+              <Button variant="ghost" size="sm" className="rounded-xl whitespace-nowrap"
+                style={{ color: "#14B8A6", border: "1px solid rgba(20,184,166,0.2)" }}>
+                Explore AION →
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </section>
