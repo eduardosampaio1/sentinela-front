@@ -56,6 +56,15 @@ const ServerErrorPage = lazy(() =>
 const AionPage = lazy(() =>
   import("@/features/aion/AionPage").then((m) => ({ default: m.AionPage }))
 );
+const PrivacyPage = lazy(() =>
+  import("@/features/legal/PrivacyPage").then((m) => ({ default: m.PrivacyPage }))
+);
+const TermsPage = lazy(() =>
+  import("@/features/legal/TermsPage").then((m) => ({ default: m.TermsPage }))
+);
+const SecurityPage = lazy(() =>
+  import("@/features/legal/SecurityPage").then((m) => ({ default: m.SecurityPage }))
+);
 
 // Dashboard sub-panels (route-accessible deep views)
 const DiagnosticsPanel = lazy(() =>
@@ -165,6 +174,18 @@ const routes: RouteObject[] = [
   {
     path: "/aion",
     element: <PageSuspense><AionPage /></PageSuspense>,
+  },
+  {
+    path: "/privacy",
+    element: <PageSuspense><PrivacyPage /></PageSuspense>,
+  },
+  {
+    path: "/terms",
+    element: <PageSuspense><TermsPage /></PageSuspense>,
+  },
+  {
+    path: "/security",
+    element: <PageSuspense><SecurityPage /></PageSuspense>,
   },
 
   // ── Auth (public-only: redirect to /home if already logged in) ────────────

@@ -82,7 +82,109 @@
     "pricingHighlight": "Best for active teams",
     "footerTitle": "Stop treating production AI like a black box.",
     "footerBody": "Start with a free analysis, see where behavior is drifting, and give your team a more precise way to govern quality, consistency, and cost.",
-    "footerLegal": "© 2026 Sentinela. AI observability for production teams. Powered by Baluarte. All rights reserved."
+    "footerLegal": "© 2026 Sentinela. AI observability for production teams. Powered by Baluarte. All rights reserved.",
+    "v2": {
+      "nav": {
+        "problem": "Problem",
+        "platform": "Platform",
+        "how": "How it works",
+        "pricing": "Pricing",
+        "signin": "Sign in",
+        "start": "Get started"
+      },
+      "hero": {
+        "badge": "AI Observability Platform",
+        "h1a": "Your AI is running.",
+        "h1b": "Do you know if it's working?",
+        "body": "Sentinela reveals quality, drift, cost waste, and operational risks in production AI systems — and turns behavior into clear decisions.",
+        "check1": "Zero code integration — just export your conversations",
+        "check2": "Upload and full analysis in under 3 minutes",
+        "check3": "Free during Early Access",
+        "cta1": "Start free",
+        "cta2": "See the platform"
+      },
+      "context": {
+        "label": "Analyzes systems built with"
+      },
+      "problem": {
+        "badge": "The problem",
+        "h2": "What you can't see is what hurts",
+        "h2muted": "the product and the budget.",
+        "body": "AI teams without observability fly blind — and pay the price in undetected degradation, inflated cost, and lost trust.",
+        "p1": {
+          "title": "Quality degrades silently",
+          "desc": "Your model responds, but answers gradually worsen between runs. Without observability, you find out from user feedback — too late.",
+          "trend": "↓ 8 pts in 5 runs"
+        },
+        "p2": {
+          "title": "Token waste is invisible",
+          "desc": "40% of token spend goes to verbosity, repetition, and low-value responses. Costs rise before anyone notices the pattern.",
+          "trend": "vs $0.08 ideal — +50%"
+        },
+        "p3": {
+          "title": "Decisions lack evidence",
+          "desc": "You know something's wrong but don't know what, or where to act first. Intuition isn't operability.",
+          "trend": "no structured prioritization"
+        }
+      },
+      "platform": {
+        "badge": "Platform",
+        "h2": "Six signals that turn AI behavior",
+        "h2muted": "into real operability.",
+        "body": "Sentinela analyzes conversations and produces indicators your team can act on — not just monitor.",
+        "c1": { "tag": "Core",         "title": "Behavior Scoring",          "desc": "Composite score of response quality across multiple axes: consistency, completeness, format adherence, and behavioral drift." },
+        "c2": { "tag": "Signal",       "title": "Drift Detection",            "desc": "Detects structural deviation from expected baseline, run by run, before it becomes a visible problem." },
+        "c3": { "tag": "Economics",    "title": "Cost per Useful Outcome",    "desc": "Calculates the real cost per valuable response — separating useful tokens from verbosity and structural waste." },
+        "c4": { "tag": "Intelligence", "title": "Intent Clustering",          "desc": "Automatically maps intent patterns and detects when distinct clusters start producing overlapping outputs." },
+        "c5": { "tag": "Stability",    "title": "Behavioral Volatility",      "desc": "Measures oscillations between similar sessions in tone, length, and structure — and flags emerging instability." },
+        "c6": { "tag": "Decision",     "title": "Actionable Recommendations", "desc": "Prioritizes findings by impact and delivers structured recommendations. Not a dashboard to interpret — a decision ready to execute." }
+      },
+      "how": {
+        "badge": "How it works",
+        "h2": "From raw data to decision in minutes.",
+        "body": "Zero infrastructure setup. Zero code integration. Upload, analyze, act.",
+        "s1": { "title": "Export and upload",   "desc": "Export your AI conversation history as JSON or JSONL. Zero code integration. Zero SDK.",                              "detail": "Supports Claude, OpenAI, Gemini, LangChain, custom APIs" },
+        "s2": { "title": "The engine analyzes", "desc": "The engine scores consistency, detects drift, maps intents, estimates cost-per-outcome, and exposes patterns in seconds.", "detail": "Full analysis in under 3 minutes" },
+        "s3": { "title": "Act with evidence",   "desc": "Your dashboard shows what's degrading, what it costs, and which action will have the most operational impact.",          "detail": "Ranked priorities, structured recommendations" }
+      },
+      "outcomes": {
+        "badge": "Outcomes",
+        "h2": "What changes when you have visibility.",
+        "o1": { "value": "38%",    "label": "average cost reduction",  "desc": "In token waste identified and fixed after first analysis" },
+        "o2": { "value": "< 3min", "label": "time to first insight",   "desc": "From upload to full dashboard with ranked priorities" },
+        "o3": { "value": "0 code", "label": "required to get started", "desc": "No SDK, no webhook — just your conversation export" }
+      },
+      "pricing": {
+        "badge": "Pricing",
+        "h2": "Free while we validate together.",
+        "body": "Full platform access during the validation phase. No deadline. No card.",
+        "tagEarlyAccess": "Early Access",
+        "tagFree": "Free",
+        "perNow": "for now",
+        "tagline": "Full access. No strings attached.",
+        "cta": "Start now — it's free",
+        "featuresLabel": "Included in Early Access",
+        "f1": "Full conversation analysis",
+        "f2": "Behavior scoring (multiple axes)",
+        "f3": "Drift detection and alerts",
+        "f4": "Cost-per-outcome analysis",
+        "f5": "Automatic intent clustering",
+        "f6": "Behavioral volatility monitoring",
+        "f7": "Dashboard with export",
+        "f8": "History and run comparison",
+        "aionText": "Operating at scale? AION brings real-time AI governance — policy enforcement, intelligent routing, and cost control.",
+        "aionCta": "Explore AION →"
+      },
+      "cta": {
+        "badge": "Ready when you are",
+        "h2a": "Stop guessing what",
+        "h2b": "your AI is doing.",
+        "body": "Upload your dataset, analysis in seconds, decisions with evidence. No infrastructure, no code integration.",
+        "primary": "Start now — it's free",
+        "secondary": "Sign in to workspace"
+      },
+      "footer": "Sentinela · Enterprise AI observability platform"
+    }
   },
   "auth": {
     "loginTitle": "Open your workspace",

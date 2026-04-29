@@ -77,35 +77,39 @@ export default function MetricsSection() {
           <p className="text-lg leading-relaxed text-muted-foreground">{copy.body}</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {copy.metrics.map((metric) => (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {copy.metrics.map((metric, i) => (
             <div
               key={metric.title}
-              className="group rounded-2xl border border-border/50 bg-gradient-card p-6 transition-all hover:border-primary/20"
+              className={`group rounded-2xl border border-border/50 bg-gradient-card p-6 transition-all duration-200 hover:border-primary/25 hover:shadow-card cursor-default
+                ${i === 0 ? "xl:col-span-2" : ""}`}
             >
               <div className="mb-5 flex items-start justify-between gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/15 bg-primary/10">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 transition-colors duration-200 group-hover:bg-primary/20">
                   <metric.icon className="h-5 w-5 text-primary" />
                 </div>
-                <span className={`font-mono text-2xl font-bold ${metric.color}`}>{metric.value}</span>
+                <span className={`font-mono-label text-2xl font-bold ${metric.color}`}>{metric.value}</span>
               </div>
 
               <h3 className="mb-2 text-base font-semibold">{metric.title}</h3>
-              <p className="min-h-[72px] text-sm leading-relaxed text-muted-foreground">
+              <p className={`text-sm leading-relaxed text-muted-foreground ${i === 0 ? "" : "min-h-[72px]"}`}>
                 {metric.description}
               </p>
 
-              <div className="mt-5">
-                <div className="flex h-14 items-end gap-1.5">
-                  {metric.bars.map((bar, index) => (
+              <div className={`mt-5 ${i === 0 ? "xl:mt-7" : ""}`}>
+                <div className={`flex items-end gap-1.5 ${i === 0 ? "h-16 xl:h-20" : "h-14"}`}>
+                  {metric.bars.map((bar, idx) => (
                     <div
-                      key={index}
-                      className="flex-1 rounded-sm bg-primary/20 transition-colors group-hover:bg-primary/30"
+                      key={idx}
+                      className={`flex-1 rounded-sm transition-all duration-200
+                        ${idx === metric.bars.length - 1
+                          ? `${metric.color.replace("text-", "bg-")} opacity-80 group-hover:opacity-100`
+                          : "bg-primary/15 group-hover:bg-primary/25"}`}
                       style={{ height: `${bar}%` }}
                     />
                   ))}
                 </div>
-                <div className="mt-3 flex items-center justify-between text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                <div className="mt-3 flex items-center justify-between font-mono-label text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                   <span>{copy.baseline}</span>
                   <span>{copy.latest}</span>
                 </div>

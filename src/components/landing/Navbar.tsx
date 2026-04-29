@@ -1,19 +1,19 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Navbar = () => {
   const { t } = useLanguage();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/40">
-      <div className="container mx-auto flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2 text-xl font-bold tracking-tight text-foreground">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
-            <ShieldCheck className="h-4 w-4 text-primary" />
+    <nav className="fixed top-3 left-4 right-4 sm:left-6 sm:right-6 z-50 glass border border-border/50 rounded-2xl shadow-card">
+      <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-5">
+        <Link to="/" className="flex items-center gap-2.5 font-bold tracking-tight text-foreground">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-glow-sm">
+            <Eye className="h-4 w-4 text-primary-foreground" />
           </span>
-          <span>Sentinela</span>
+          <span className="text-lg font-display">Sentinela</span>
         </Link>
 
         <div className="hidden lg:flex items-center gap-8">

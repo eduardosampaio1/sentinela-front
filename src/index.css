@@ -52,10 +52,17 @@
     --critical: 0 72% 51%;
     --critical-foreground: 0 0% 100%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(195 100% 50%), hsl(210 100% 60%));
+    --purple: 265 70% 60%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(195 100% 50%), hsl(265 70% 60%));
     --gradient-card: linear-gradient(145deg, hsl(222 20% 12%), hsl(222 20% 9%));
-    --gradient-hero: radial-gradient(circle at top, hsl(216 86% 11%) 0%, hsl(222 25% 7%) 38%, hsl(222 25% 4%) 100%);
-    --shadow-glow: 0 0 44px -12px hsl(195 100% 50% / 0.25);
+    --gradient-hero:
+      radial-gradient(ellipse at 15% 55%, hsl(195 100% 50% / 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 15%, hsl(265 70% 60% / 0.06) 0%, transparent 48%),
+      radial-gradient(circle at top, hsl(216 86% 11%) 0%, hsl(222 25% 7%) 38%, hsl(222 25% 4%) 100%);
+    --shadow-glow: 0 0 44px -12px hsl(195 100% 50% / 0.3);
+    --shadow-glow-sm: 0 0 24px -8px hsl(195 100% 50% / 0.4);
+    --shadow-glow-purple: 0 0 44px -12px hsl(265 70% 60% / 0.3);
     --shadow-card: 0 14px 44px -18px hsl(0 0% 0% / 0.45);
   }
 
@@ -113,8 +120,39 @@
     box-shadow: var(--shadow-glow);
   }
 
+  .shadow-glow-sm {
+    box-shadow: var(--shadow-glow-sm);
+  }
+
+  .shadow-glow-purple {
+    box-shadow: var(--shadow-glow-purple);
+  }
+
   .shadow-card {
     box-shadow: var(--shadow-card);
+  }
+
+  .text-gradient-cyber {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(195 100% 50%), hsl(265 70% 60%));
+  }
+
+  .animate-blink {
+    animation: blink 1.1s step-end infinite;
+  }
+
+  .font-mono-label {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .animate-draw-line {
+    stroke-dasharray: 380;
+    stroke-dashoffset: 380;
+    animation: drawLine 1.8s ease-out 1s forwards;
+  }
+
+  .animate-count-bar {
+    animation: fillBar 1.4s cubic-bezier(0.16,1,0.3,1) 0.6s both;
   }
 
   .glass {
@@ -258,12 +296,31 @@
   }
 }
 
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes drawLine {
+  from { stroke-dashoffset: 380; opacity: 0; }
+  8% { opacity: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fillBar {
+  from { width: 0%; }
+  to { width: var(--bar-width, 72%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up,
   .animate-fade-in,
   .animate-pulse-slow,
   .animate-float-drift,
-  .animate-signal-pulse {
+  .animate-signal-pulse,
+  .animate-blink,
+  .animate-draw-line,
+  .animate-count-bar {
     animation: none !important;
   }
 }

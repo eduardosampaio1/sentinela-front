@@ -20,20 +20,29 @@ export default function HowItWorks() {
           <p className="text-lg leading-relaxed text-muted-foreground">{t("landing.workflowBody")}</p>
         </div>
 
-        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3 md:gap-8">
+        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3 md:gap-8 relative">
+          {/* Connector line between cards (desktop) */}
+          <div className="absolute hidden md:block top-[2.75rem] left-[calc(33.3%+1.5rem)] right-[calc(33.3%+1.5rem)] h-px bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 pointer-events-none" />
+
           {steps.map((step, index) => (
             <div
               key={step.title}
-              className="group relative rounded-2xl border border-border/50 bg-gradient-card p-6 transition-all hover:border-primary/30 sm:p-8"
+              className="group relative rounded-2xl border border-border/50 bg-gradient-card p-6 transition-all duration-200 hover:border-primary/40 hover:shadow-glow-sm cursor-default sm:p-8 overflow-hidden"
             >
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 transition-colors group-hover:bg-primary/20">
-                <step.icon className="h-6 w-6 text-primary" />
-              </div>
-              <div className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              {/* Large watermark number */}
+              <div className="absolute top-3 right-4 font-mono-label text-[5rem] font-bold leading-none text-border/15 select-none pointer-events-none">
                 0{index + 1}
               </div>
-              <h3 className="mb-3 text-lg font-semibold">{step.title}</h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">{step.description}</p>
+
+              <div className="mb-5 relative z-10 flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 transition-all duration-200 group-hover:bg-primary/20 group-hover:border-primary/40 group-hover:shadow-glow-sm">
+                <step.icon className="h-6 w-6 text-primary" />
+              </div>
+
+              <div className="mb-3 relative z-10 font-mono-label text-[10px] uppercase tracking-[0.22em] text-primary/60">
+                Step 0{index + 1}
+              </div>
+              <h3 className="mb-3 relative z-10 text-lg font-semibold">{step.title}</h3>
+              <p className="relative z-10 text-sm leading-relaxed text-muted-foreground">{step.description}</p>
             </div>
           ))}
         </div>
