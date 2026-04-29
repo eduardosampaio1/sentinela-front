@@ -504,7 +504,12 @@ export function adaptAnalysisResult(result: AnalysisResult): DomainAnalysis {
     coveredIntents: asNumber(result.covered_intents),
     totalIntents: asNumber(result.total_intents),
     minSamplesPerIntent: asNumber(result.min_samples_per_intent),
-    underrepresentedIntents: result.underrepresented_intents ?? [],
+    underrepresentedIntents: (result.underrepresented_intents ?? []).map((v: unknown): string => {
+      if (typeof v === "string") return v;
+      if (v && typeof v === "object" && "intent" in (v as object))
+        return String((v as Record<string, unknown>).intent);
+      return String(v);
+    }),
 
     // Alerts and issues
     criticalAlertsCount: result.critical_alerts_count ?? 0,
