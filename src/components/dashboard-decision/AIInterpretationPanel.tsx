@@ -3,10 +3,9 @@ import { Bot, ChevronDown, Lock, ShieldAlert, Sparkles, Target } from "lucide-re
 import { Button } from "@/components/ui/button";
 import type { AnalysisInterpretation } from "@/lib/api";
 import type { InterpretationPanelModel } from "@/lib/decisionLayerModel";
+import type { InterpretationStatus } from "@/lib/types";
 import MissingDataBadge from "@/components/dashboard-decision/MissingDataBadge";
 import { cn } from "@/lib/utils";
-
-type InterpretationStatus = "not_requested" | "queued" | "running" | "completed" | "failed";
 
 interface AIInterpretationPanelProps {
   model: InterpretationPanelModel;

@@ -24,6 +24,17 @@ export interface IntentScore {
   severity?: string;
 }
 
+/**
+ * Backend API interpretation status.
+ * Matches the values returned by GET /interpret/{analysis_id}.
+ */
+export type InterpretationStatus =
+  | "not_requested"
+  | "queued"
+  | "running"
+  | "completed"
+  | "failed";
+
 export interface AnalysisResponse {
   analysis_id?: string;
   analysis_run_id?: string;
