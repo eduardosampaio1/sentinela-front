@@ -7,7 +7,7 @@ import { ErrorState } from "@/shared/states/ErrorState";
 import { Button } from "@/components/ui/button";
 import type { AnalysisInterpretation } from "@/lib/api";
 
-type InterpretationStatus = "idle" | "polling" | "completed" | "failed";
+type PollingState = "idle" | "polling" | "completed" | "failed";
 
 function InterpretationContent({ interpretation }: { interpretation: AnalysisInterpretation }) {
   return (
@@ -108,7 +108,7 @@ function InterpretationContent({ interpretation }: { interpretation: AnalysisInt
 
 export function AIInterpretationPanel() {
   const { result } = useAnalysis();
-  const [status, setStatus] = useState<InterpretationStatus>("idle");
+  const [status, setStatus] = useState<PollingState>("idle");
   const [interpretation, setInterpretation] = useState<AnalysisInterpretation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pollAttempts, setPollAttempts] = useState(0);
