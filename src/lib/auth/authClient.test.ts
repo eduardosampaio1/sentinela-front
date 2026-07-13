@@ -46,10 +46,9 @@ describe("keycloakAuthClient (mapeamento oidc User -> AuthSession)", () => {
     });
     const client = createKeycloakAuthClient({ userManager: um as never, issuer: ISSUER });
     const session = await client.getSession();
-    expect(session).toEqual({
-      accessToken: "tok-abc",
-      user: { id: "kc-sub-1", email: "user@x.com" },
-    });
+    expect(session?.accessToken).toBe("tok-abc");
+    expect(session?.user.id).toBe("kc-sub-1");
+    expect(session?.user.email).toBe("user@x.com");
   });
 
   it("getSession retorna null se usuário ausente ou token expirado", async () => {
@@ -80,6 +79,8 @@ describe("keycloakAuthClient (mapeamento oidc User -> AuthSession)", () => {
     const um = fakeUserManager({ access_token: "cb-tok", expired: false, profile: { sub: "cb-sub", email: "cb@x.com" } });
     const session = await createKeycloakAuthClient({ userManager: um as never, issuer: ISSUER }).completeLoginCallback();
     expect(um.signinRedirectCallback).toHaveBeenCalled();
-    expect(session).toEqual({ accessToken: "cb-tok", user: { id: "cb-sub", email: "cb@x.com" } });
+    expect(session?.accessToken).toBe("cb-tok");
+    expect(session?.user.id).toBe("cb-sub");
+    expect(session?.user.email).toBe("cb@x.com");
   });
 });

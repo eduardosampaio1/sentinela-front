@@ -4,7 +4,12 @@ import type { AuthClient, AuthSession } from "./types";
 interface OidcUserLike {
   access_token: string;
   expired?: boolean;
-  profile: { sub: string; email?: string | null };
+  profile: {
+    sub: string;
+    email?: string | null;
+    name?: string | null;
+    preferred_username?: string | null;
+  };
 }
 interface UserManagerLike {
   getUser(): Promise<OidcUserLike | null>;
@@ -21,9 +26,16 @@ interface UserManagerLike {
 
 function toSession(user: OidcUserLike | null): AuthSession | null {
   if (!user || user.expired || !user.access_token) return null;
+  const displayName = user.profile.name ?? user.profile.preferred_username ?? null;
   return {
     accessToken: user.access_token,
-    user: { id: user.profile.sub, email: user.profile.email ?? null },
+    user: {
+      id: user.profile.sub,
+      email: user.profile.email ?? null,
+      user_metadata: { full_name: displayName, name: displayName },
+      app_metadata: { provider: "keycloak" },
+      created_at: null,
+    },
   };
 }
 

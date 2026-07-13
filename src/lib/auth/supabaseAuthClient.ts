@@ -2,7 +2,13 @@ import type { AuthClient, AuthSession } from "./types";
 
 interface SupabaseSessionLike {
   access_token: string;
-  user: { id: string; email?: string | null };
+  user: {
+    id: string;
+    email?: string | null;
+    user_metadata?: Record<string, unknown> | null;
+    app_metadata?: Record<string, unknown> | null;
+    created_at?: string | null;
+  };
 }
 interface SupabaseAuthLike {
   getSession(): Promise<{ data: { session: SupabaseSessionLike | null } }>;
@@ -14,7 +20,16 @@ interface SupabaseAuthLike {
 
 function toSession(s: SupabaseSessionLike | null): AuthSession | null {
   if (!s?.access_token) return null;
-  return { accessToken: s.access_token, user: { id: s.user?.id ?? "", email: s.user?.email ?? null } };
+  return {
+    accessToken: s.access_token,
+    user: {
+      id: s.user?.id ?? "",
+      email: s.user?.email ?? null,
+      user_metadata: s.user?.user_metadata ?? null,
+      app_metadata: s.user?.app_metadata ?? null,
+      created_at: s.user?.created_at ?? null,
+    },
+  };
 }
 
 /** Embrulha `supabase.auth` na costura neutra. Login/registro/reset seguem via formulários (lib/auth.ts). */

@@ -21,10 +21,10 @@ describe("supabaseAuthClient", () => {
 
   it("getSession mapeia sessão do supabase -> AuthSession", async () => {
     const c = createSupabaseAuthClient(fakeAuth(SESSION) as never);
-    expect(await c.getSession()).toEqual({
-      accessToken: "sb-tok",
-      user: { id: "sb-uid", email: "sb@x.com" },
-    });
+    const session = await c.getSession();
+    expect(session?.accessToken).toBe("sb-tok");
+    expect(session?.user.id).toBe("sb-uid");
+    expect(session?.user.email).toBe("sb@x.com");
   });
 
   it("getSession null sem sessão; getAccessToken devolve token", async () => {

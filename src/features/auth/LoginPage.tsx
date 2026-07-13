@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { getAuthClient } from "@/lib/auth/index";
+import { KeycloakRedirect } from "./KeycloakRedirect";
 import { AuthShell } from "@/shell/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,6 +120,11 @@ export function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // Modo keycloak: sem formulário de senha na SPA — redireciona ao login hospedado no Keycloak.
+  if (!getAuthClient().supportsPasswordForms()) {
+    return <KeycloakRedirect mode="login" nextPath={from} />;
   }
 
   return (

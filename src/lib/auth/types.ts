@@ -3,6 +3,11 @@ export type AuthProviderName = "supabase" | "keycloak";
 export interface AuthUser {
   id: string;
   email: string | null;
+  // Compat de forma com o User do Supabase (consumido por Profile/Settings/Sidebar/TopBar).
+  // Preenchido pelos dois providers; ausente quando não aplicável.
+  user_metadata?: Record<string, unknown> | null;
+  app_metadata?: Record<string, unknown> | null;
+  created_at?: string | null;
 }
 
 export interface AuthSession {

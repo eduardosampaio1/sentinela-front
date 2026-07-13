@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
+import { getAuthClient } from "@/lib/auth/index";
 import { cn } from "@/lib/utils";
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
@@ -43,6 +44,13 @@ export function SettingsPage() {
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
+    // Modo keycloak: credenciais são geridas no Account Console do Keycloak.
+    const authClient = getAuthClient();
+    if (!authClient.supportsPasswordForms()) {
+      const url = authClient.accountManagementUrl();
+      if (url) window.location.href = url;
+      return;
+    }
     if (!newPassword) { setPasswordError("New password is required."); return; }
     if (newPassword.length < 8) { setPasswordError("Password must be at least 8 characters."); return; }
     if (newPassword !== confirmNewPassword) { setPasswordError("Passwords do not match."); return; }
