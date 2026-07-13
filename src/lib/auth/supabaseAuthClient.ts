@@ -14,12 +14,13 @@ interface SupabaseAuthLike {
 
 function toSession(s: SupabaseSessionLike | null): AuthSession | null {
   if (!s?.access_token) return null;
-  return { accessToken: s.access_token, user: { id: s.user.id, email: s.user.email ?? null } };
+  return { accessToken: s.access_token, user: { id: s.user?.id ?? "", email: s.user?.email ?? null } };
 }
 
 /** Embrulha `supabase.auth` na costura neutra. Login/registro/reset seguem via formulários (lib/auth.ts). */
 export function createSupabaseAuthClient(auth: SupabaseAuthLike): AuthClient {
-  const getSession = async () => toSession((await auth.getSession()).data.session);
+  const rawSession = async () => (await auth.getSession()).data.session;
+  const getSession = async () => toSession(await rawSession());
   const formsOnly = () =>
     Promise.reject(
       new Error("No modo supabase o login usa os formulários da SPA, não redirect."),
@@ -29,7 +30,7 @@ export function createSupabaseAuthClient(auth: SupabaseAuthLike): AuthClient {
     provider: "supabase",
     getSession,
     async getAccessToken() {
-      return (await getSession())?.accessToken ?? null;
+      return (await rawSession())?.access_token ?? null;
     },
     onAuthStateChange(cb) {
       const { data } = auth.onAuthStateChange((_event, session) => cb(toSession(session)));

@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { getAuthClient } from "@/lib/auth/index";
 
 const DEFAULT_GATEWAY_API_URL = "https://sentinela-gateway.onrender.com";
 
@@ -419,16 +419,7 @@ function normalizeInterpretation(payload: unknown): AnalysisInterpretation {
 }
 
 async function getAuthHeaders(extra?: HeadersInit): Promise<HeadersInit> {
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
-
-  if (error) {
-    throw new Error(`Failed to load session: ${error.message}`);
-  }
-
-  const token = session?.access_token;
+  const token = await getAuthClient().getAccessToken();
   if (!token) {
     throw new Error("User session expired. Please sign in again.");
   }
@@ -510,7 +501,7 @@ function isInvalidSessionResponse(status: number, bodyText: string): boolean {
 
 async function invalidateSessionIfNeeded(status: number, bodyText: string): Promise<void> {
   if (!isInvalidSessionResponse(status, bodyText)) return;
-  await supabase.auth.signOut().catch(() => undefined);
+  await getAuthClient().signOut().catch(() => undefined);
 }
 
 async function createAnalysisWithFallback(

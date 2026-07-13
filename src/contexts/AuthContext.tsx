@@ -7,8 +7,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { getAuthClient } from "@/lib/auth/index";
+import type { AuthSession, AuthUser } from "@/lib/auth/index";
 import {
   createWorkspace as createWorkspaceRecord,
   getStoredWorkspaceId,
@@ -42,8 +42,8 @@ type FullContextResult = {
 };
 
 interface AuthContextValue {
-  user: User | null;
-  session: Session | null;
+  user: AuthUser | null;
+  session: AuthSession | null;
   workspace: Workspace | null;
   workspaces: Workspace[];
   project: SystemProject | null;
@@ -83,8 +83,8 @@ function pickFirst<T>(items: T[]): T | null {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [project, setProject] = useState<SystemProject | null>(null);
@@ -190,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const syncWorkspaceState = useCallback(
-    async (currUser: User, preferredWorkspaceId?: string | null) => {
+    async (currUser: AuthUser, preferredWorkspaceId?: string | null) => {
       setWorkspaceLoading(true);
       try {
         const preferredId = preferredWorkspaceId ?? getStoredWorkspaceId();
@@ -463,7 +463,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    await getAuthClient().signOut();
     setWorkspace(null);
     setWorkspaces([]);
     clearContext();
@@ -473,7 +473,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const handleAuthChange = async (currSession: Session | null) => {
+    const handleAuthChange = async (currSession: AuthSession | null) => {
       const currUser = currSession?.user ?? null;
 
       if (mounted) {
@@ -507,21 +507,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+    const authClient = getAuthClient();
+
+    authClient.getSession().then((initialSession) => {
       if (mounted) {
         void handleAuthChange(initialSession);
       }
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+    const unsubscribe = authClient.onAuthStateChange((nextSession) => {
       void handleAuthChange(nextSession);
     });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, [clearContext, syncWorkspaceState]);
 
