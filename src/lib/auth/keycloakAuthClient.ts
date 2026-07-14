@@ -13,7 +13,10 @@ interface OidcUserLike {
 }
 interface UserManagerLike {
   getUser(): Promise<OidcUserLike | null>;
-  signinRedirect(args?: { state?: unknown }): Promise<void>;
+  signinRedirect(args?: {
+    state?: unknown;
+    extraQueryParams?: Record<string, string>;
+  }): Promise<void>;
   signinRedirectCallback(): Promise<OidcUserLike | null>;
   signoutRedirect(): Promise<void>;
   events: {
@@ -65,8 +68,12 @@ export function createKeycloakAuthClient(opts: {
     async signOut() {
       await userManager.signoutRedirect();
     },
-    async startLogin(nextPath?: string) {
-      await userManager.signinRedirect({ state: { next: nextPath } });
+    async startLogin(nextPath?: string, opts?: { idpHint?: "google" | "github" }) {
+      await userManager.signinRedirect({
+        state: { next: nextPath },
+        // kc_idp_hint: Keycloak pula a própria tela e vai direto ao IdP (Google/GitHub)
+        ...(opts?.idpHint ? { extraQueryParams: { kc_idp_hint: opts.idpHint } } : {}),
+      });
     },
     // Keycloak-hosted login carrega os links de Registro/Esqueci-senha (realm com
     // registrationAllowed/resetPasswordAllowed). Redirecionamos ao mesmo fluxo.
