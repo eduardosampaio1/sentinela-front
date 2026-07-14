@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import AuthExperienceShell from "@/components/auth/AuthExperienceShell";
 import { clearTransientAuthLocation, normalizeNextPath } from "@/lib/authFlow";
 import { supabase } from "@/lib/supabase";
+import { getAuthClient } from "@/lib/auth/index";
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
@@ -17,28 +18,37 @@ export default function AuthCallbackPage() {
     async function completeAuth() {
       const nextPath = normalizeNextPath(searchParams.get("next"));
       try {
-        const authCode = searchParams.get("code");
-        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-        const accessToken = hashParams.get("access_token");
-        const refreshToken = hashParams.get("refresh_token");
-
-        if (authCode) {
-          const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-          if (error) throw error;
-          clearTransientAuthLocation({ removeCode: true });
-        } else if (accessToken && refreshToken) {
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          if (error) throw error;
-          clearTransientAuthLocation();
-        } else {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
+        const authClient = getAuthClient();
+        if (authClient.provider === "keycloak") {
+          const session = await authClient.completeLoginCallback();
           if (!session) {
-            throw new Error("Authentication callback is missing a valid session.");
+            throw new Error("Authentication callback did not return a session.");
+          }
+          clearTransientAuthLocation({ removeCode: true });
+        } else {
+          const authCode = searchParams.get("code");
+          const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+          const accessToken = hashParams.get("access_token");
+          const refreshToken = hashParams.get("refresh_token");
+
+          if (authCode) {
+            const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+            if (error) throw error;
+            clearTransientAuthLocation({ removeCode: true });
+          } else if (accessToken && refreshToken) {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (error) throw error;
+            clearTransientAuthLocation();
+          } else {
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
+            if (!session) {
+              throw new Error("Authentication callback is missing a valid session.");
+            }
           }
         }
 

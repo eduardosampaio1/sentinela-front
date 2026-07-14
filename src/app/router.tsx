@@ -26,6 +26,7 @@ const ForgotPasswordPage = lazy(() =>
 const SessionExpiredPage = lazy(() =>
   import("@/features/auth/SessionExpiredPage").then((m) => ({ default: m.SessionExpiredPage }))
 );
+const AuthCallbackPage = lazy(() => import("@/pages/AuthCallbackPage"));
 const LaunchpadPage = lazy(() =>
   import("@/features/launchpad/LaunchpadPage").then((m) => ({ default: m.LaunchpadPage }))
 );
@@ -211,6 +212,12 @@ const routes: RouteObject[] = [
   {
     path: "/session-expired",
     element: <PageSuspense><SessionExpiredPage /></PageSuspense>,
+  },
+
+  // ── Auth callback (público; conclui OIDC/OAuth antes da sessão existir) ────
+  {
+    path: "/auth/callback",
+    element: <PageSuspense><AuthCallbackPage /></PageSuspense>,
   },
 
   // ── Protected routes ──────────────────────────────────────────────────────

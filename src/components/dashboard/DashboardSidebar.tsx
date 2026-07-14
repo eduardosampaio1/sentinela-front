@@ -11,7 +11,6 @@ import {
   Settings,
   ShieldAlert,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { useAnalysis } from "@/contexts/AnalysisContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -36,7 +35,7 @@ const DashboardSidebar = ({ mobileOpen, onClose }: DashboardSidebarProps) => {
   const navigate = useNavigate();
   const { hasHistory, result } = useAnalysis();
   const { t } = useLanguage();
-  const { user, workspace } = useAuth();
+  const { user, workspace, signOut } = useAuth();
 
   const homeUrl = workspace
     ? buildWorkspaceHomePath({
@@ -66,7 +65,8 @@ const DashboardSidebar = ({ mobileOpen, onClose }: DashboardSidebarProps) => {
 
   async function handleLogout() {
     try {
-      await supabase.auth.signOut();
+      // No modo keycloak isto redireciona ao end-session do Keycloak; no supabase limpa a sessão.
+      await signOut();
       navigate("/login");
     } catch (error) {
       console.error("Sign out failed:", error);

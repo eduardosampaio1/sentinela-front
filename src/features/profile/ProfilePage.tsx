@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
+import { getAuthClient } from "@/lib/auth/index";
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
 
@@ -73,6 +74,13 @@ export function ProfilePage() {
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
+    // Modo keycloak: credenciais são geridas no Account Console do Keycloak.
+    const authClient = getAuthClient();
+    if (!authClient.supportsPasswordForms()) {
+      const url = authClient.accountManagementUrl();
+      if (url) window.location.href = url;
+      return;
+    }
     if (!newPassword) { setPasswordError("New password is required."); return; }
     if (newPassword.length < 8) { setPasswordError("Password must be at least 8 characters."); return; }
     if (newPassword !== confirmPassword) { setPasswordError("Passwords do not match."); return; }
@@ -138,7 +146,7 @@ export function ProfilePage() {
               <div className="space-y-1">
                 <p className="text-xs uppercase tracking-widest font-semibold text-[#475569]">Auth provider</p>
                 <p className="text-sm text-[#94A3B8]">
-                  {user?.app_metadata?.provider ?? "email"}
+                  {(user?.app_metadata?.provider as string | undefined) ?? "email"}
                 </p>
               </div>
             </div>

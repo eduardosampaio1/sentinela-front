@@ -1,4 +1,6 @@
 import { supabase } from "./supabase";
+import { getAuthClient } from "@/lib/auth/index";
+import { gwListAnalysisRuns, gwLatestAnalysisRun, gwAnalysisRunById } from "./gatewayContext";
 
 export interface AnalysisRunSummary {
   id: string;
@@ -97,6 +99,10 @@ export async function getLatestAnalysisRun(
   projectId: string,
   environmentId: string,
 ) {
+  if (getAuthClient().provider === "keycloak") {
+    const row = await gwLatestAnalysisRun(workspaceId, projectId, environmentId);
+    return row ? withEmbeddedAnalysisRunId(row as any) : null;
+  }
   const scoped = applyScopeFilters(
     supabase.from("analysis_runs").select("*"),
     { workspaceId, projectId, environmentId },
@@ -115,6 +121,11 @@ export async function getAnalysisRunById(
   runId: string,
   scope?: { workspaceId?: string | null; projectId?: string | null; environmentId?: string | null },
 ) {
+  if (getAuthClient().provider === "keycloak") {
+    if (!scope?.workspaceId) throw new Error("workspace scope required to fetch a run.");
+    const row = await gwAnalysisRunById(runId, scope.workspaceId);
+    return row ? withEmbeddedAnalysisRunId(row as any) : null;
+  }
   let query = supabase.from("analysis_runs").select("*").eq("id", runId);
   if (scope?.workspaceId) query = query.eq("workspace_id", scope.workspaceId);
   if (scope?.projectId) query = query.eq("project_id", scope.projectId);
@@ -131,6 +142,10 @@ export async function listAnalysisRuns(
   environmentId: string,
   limit = 6,
 ) {
+  if (getAuthClient().provider === "keycloak") {
+    const rows = await gwListAnalysisRuns(workspaceId, projectId, environmentId, limit);
+    return rows.map((run) => withEmbeddedAnalysisRunId(run as any)) as AnalysisRunSummary[];
+  }
   const scoped = applyScopeFilters(
     supabase
       .from("analysis_runs")

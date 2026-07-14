@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { getAuthClient } from "@/lib/auth/index";
+import { KeycloakRedirect } from "./KeycloakRedirect";
 import { AuthShell } from "@/shell/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +27,11 @@ export function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  // Modo keycloak: registro é hospedado pelo Keycloak (realm com registrationAllowed).
+  if (!getAuthClient().supportsPasswordForms()) {
+    return <KeycloakRedirect mode="register" />;
+  }
 
   function validate(): boolean {
     const errors: FieldErrors = {};

@@ -1,4 +1,11 @@
 import { supabase } from "./supabase";
+import { getAuthClient } from "@/lib/auth/index";
+import {
+  gwListWorkspaces,
+  gwCreateWorkspace,
+  gwRenameWorkspace,
+  gwDeleteWorkspace,
+} from "./gatewayContext";
 
 export interface Workspace {
   id: string;
@@ -163,6 +170,12 @@ async function listWorkspacesByOwner(userId: string): Promise<Workspace[]> {
 }
 
 export async function listUserWorkspaces(userId: string) {
+  if (getAuthClient().provider === "keycloak") {
+    const rows = await gwListWorkspaces();
+    return sortWorkspaces(
+      uniqueById(rows.map((r) => normalizeWorkspace(r as WorkspaceRow)).filter((w) => !w.deleted_at)),
+    );
+  }
   const fromMembership = await listWorkspacesByMembership(userId);
   if (fromMembership.length > 0) return fromMembership;
   return listWorkspacesByOwner(userId);
@@ -200,6 +213,10 @@ export async function createWorkspace(params: {
   const normalizedName = params.name.trim();
   if (!normalizedName) {
     throw new Error("Workspace name cannot be empty.");
+  }
+
+  if (getAuthClient().provider === "keycloak") {
+    return normalizeWorkspace((await gwCreateWorkspace(normalizedName)) as WorkspaceRow);
   }
 
   const slugSuffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
@@ -268,6 +285,11 @@ export async function renameWorkspace(workspaceId: string, name: string) {
     throw new Error("Workspace name cannot be empty.");
   }
 
+  if (getAuthClient().provider === "keycloak") {
+    await gwRenameWorkspace(workspaceId, normalizedName);
+    return;
+  }
+
   const payload = {
     name: normalizedName,
     updated_at: new Date().toISOString(),
@@ -304,6 +326,11 @@ export async function renameWorkspace(workspaceId: string, name: string) {
 }
 
 export async function softDeleteWorkspace(workspaceId: string) {
+  if (getAuthClient().provider === "keycloak") {
+    await gwDeleteWorkspace(workspaceId);
+    return;
+  }
+
   const { error } = await supabase
     .from("workspaces")
     .update({

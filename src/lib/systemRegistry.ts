@@ -1,4 +1,15 @@
 import { supabase } from "./supabase";
+import { getAuthClient } from "@/lib/auth/index";
+import {
+  gwListProjects,
+  gwListEnvironments,
+  gwCreateProject,
+  gwRenameProject,
+  gwDeleteProject,
+  gwCreateEnvironment,
+  gwRenameEnvironment,
+  gwDeleteEnvironment,
+} from "./gatewayContext";
 
 export type SystemType =
   | "chatbot"
@@ -137,6 +148,10 @@ export function setStoredEnvironmentId(projectId: string, environmentId: string 
 }
 
 export async function listWorkspaceProjects(workspaceId: string): Promise<SystemProject[]> {
+  if (getAuthClient().provider === "keycloak") {
+    const rows = await gwListProjects(workspaceId);
+    return rows.map((r) => toProject(r as RegistryRow));
+  }
   const { data, error } = await supabase
     .from("system_projects")
     .select(
@@ -165,6 +180,18 @@ export async function createSystemProject(params: {
 }) {
   const name = params.name.trim();
   if (!name) throw new Error("System name cannot be empty.");
+  if (getAuthClient().provider === "keycloak") {
+    const row = await gwCreateProject(params.workspaceId, {
+      name,
+      description: params.description ?? null,
+      system_type: params.systemType ?? "other",
+      primary_model: params.primaryModel ?? null,
+      ontology_version: params.ontologyVersion ?? null,
+      notes: params.notes ?? null,
+      tags: params.tags ?? [],
+    });
+    return toProject(row as RegistryRow);
+  }
   const payload = {
     workspace_id: params.workspaceId,
     name,
@@ -193,6 +220,10 @@ export async function createSystemProject(params: {
 export async function renameSystemProject(projectId: string, name: string) {
   const nextName = name.trim();
   if (!nextName) throw new Error("System name cannot be empty.");
+  if (getAuthClient().provider === "keycloak") {
+    await gwRenameProject(projectId, nextName);
+    return;
+  }
   const payload = {
     name: nextName,
     slug: slugify(nextName),
@@ -207,6 +238,10 @@ export async function renameSystemProject(projectId: string, name: string) {
 }
 
 export async function softDeleteSystemProject(projectId: string) {
+  if (getAuthClient().provider === "keycloak") {
+    await gwDeleteProject(projectId);
+    return;
+  }
   const { error } = await supabase
     .from("system_projects")
     .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
@@ -216,6 +251,10 @@ export async function softDeleteSystemProject(projectId: string) {
 }
 
 export async function listProjectEnvironments(projectId: string): Promise<SystemEnvironment[]> {
+  if (getAuthClient().provider === "keycloak") {
+    const rows = await gwListEnvironments(projectId);
+    return rows.map((r) => toEnvironment(r as RegistryRow));
+  }
   const { data, error } = await supabase
     .from("system_environments")
     .select("id,project_id,name,slug,environment_type,description,created_at,updated_at,deleted_at")
@@ -238,6 +277,14 @@ export async function createSystemEnvironment(params: {
 }) {
   const name = params.name.trim();
   if (!name) throw new Error("Environment name cannot be empty.");
+  if (getAuthClient().provider === "keycloak") {
+    const row = await gwCreateEnvironment(params.projectId, {
+      name,
+      environment_type: params.environmentType ?? "production",
+      description: params.description ?? null,
+    });
+    return toEnvironment(row as RegistryRow);
+  }
   const payload = {
     project_id: params.projectId,
     name,
@@ -262,6 +309,10 @@ export async function createSystemEnvironment(params: {
 export async function renameSystemEnvironment(environmentId: string, name: string) {
   const nextName = name.trim();
   if (!nextName) throw new Error("Environment name cannot be empty.");
+  if (getAuthClient().provider === "keycloak") {
+    await gwRenameEnvironment(environmentId, nextName);
+    return;
+  }
   const payload = {
     name: nextName,
     slug: slugify(nextName),
@@ -276,6 +327,10 @@ export async function renameSystemEnvironment(environmentId: string, name: strin
 }
 
 export async function softDeleteSystemEnvironment(environmentId: string) {
+  if (getAuthClient().provider === "keycloak") {
+    await gwDeleteEnvironment(environmentId);
+    return;
+  }
   const { error } = await supabase
     .from("system_environments")
     .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
