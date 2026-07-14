@@ -24,7 +24,8 @@ export interface AuthClient {
   onAuthStateChange(cb: (session: AuthSession | null) => void): () => void;
   signOut(): Promise<void>;
   // modelo redirect (keycloak) — no supabase, as telas de formulário chamam lib/auth.ts
-  startLogin(nextPath?: string): Promise<void>;
+  // opts.idpHint (keycloak): pula a tela do Keycloak e vai direto ao IdP (kc_idp_hint).
+  startLogin(nextPath?: string, opts?: { idpHint?: "google" | "github" }): Promise<void>;
   startRegister(nextPath?: string): Promise<void>;
   startPasswordReset(): Promise<void>;
   completeLoginCallback(): Promise<AuthSession | null>;

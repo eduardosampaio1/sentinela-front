@@ -75,6 +75,18 @@ describe("keycloakAuthClient (mapeamento oidc User -> AuthSession)", () => {
     expect(um.signinRedirect).toHaveBeenCalledWith({ state: { next: "/home" } });
   });
 
+  it("startLogin com idpHint passa kc_idp_hint (login social direto no IdP)", async () => {
+    const um = fakeUserManager(null);
+    await createKeycloakAuthClient({ userManager: um as never, issuer: ISSUER }).startLogin(
+      "/home",
+      { idpHint: "google" },
+    );
+    expect(um.signinRedirect).toHaveBeenCalledWith({
+      state: { next: "/home" },
+      extraQueryParams: { kc_idp_hint: "google" },
+    });
+  });
+
   it("completeLoginCallback mapeia o usuário retornado", async () => {
     const um = fakeUserManager({ access_token: "cb-tok", expired: false, profile: { sub: "cb-sub", email: "cb@x.com" } });
     const session = await createKeycloakAuthClient({ userManager: um as never, issuer: ISSUER }).completeLoginCallback();

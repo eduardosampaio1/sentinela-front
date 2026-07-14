@@ -2,7 +2,6 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { getAuthClient } from "@/lib/auth/index";
-import { KeycloakRedirect } from "./KeycloakRedirect";
 import { AuthShell } from "@/shell/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,14 +75,33 @@ export function LoginPage() {
   const [error, setError] = useState<AuthError | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
+  const isKeycloak = getAuthClient().provider === "keycloak";
+
   async function handleOAuth(provider: "google" | "github") {
     setError(null);
     setOauthLoading(provider);
     try {
+      if (isKeycloak) {
+        // kc_idp_hint: vai direto ao IdP (Google/GitHub) sem passar pela tela do Keycloak
+        await getAuthClient().startLogin(from, { idpHint: provider });
+        return;
+      }
       await signInWithOAuth(provider);
     } catch (err) {
       setError({ message: err instanceof Error ? err.message : `${provider === "google" ? "Google" : "GitHub"} sign-in failed. Try again.`, type: "generic" });
       setOauthLoading(null);
+    }
+  }
+
+  async function handleKeycloakEmail() {
+    setError(null);
+    setLoading(true);
+    try {
+      // senha nunca é digitada na SPA: o form de e-mail/senha fica na página do Keycloak
+      await getAuthClient().startLogin(from);
+    } catch (err) {
+      setError(parseAuthError(err));
+      setLoading(false);
     }
   }
 
@@ -122,9 +140,74 @@ export function LoginPage() {
     }
   }
 
-  // Modo keycloak: sem formulário de senha na SPA — redireciona ao login hospedado no Keycloak.
+  // Modo keycloak (híbrido): a tela de login vive na SPA (botões sociais via kc_idp_hint +
+  // "Continue with email"); a senha continua sendo digitada só na página do Keycloak.
   if (!getAuthClient().supportsPasswordForms()) {
-    return <KeycloakRedirect mode="login" nextPath={from} />;
+    return (
+      <AuthShell>
+        <div className="space-y-2 mb-8">
+          <h1 className="text-2xl font-semibold tracking-tight text-[#F1F5F9]">
+            Enter your analysis workspace
+          </h1>
+          <p className="text-sm text-[#94A3B8]">
+            Don't have an account?{" "}
+            <Link to="/register" className="text-[#22D3EE] hover:text-[#06B6D4] transition-colors">
+              Create one for free
+            </Link>
+          </p>
+        </div>
+
+        {error && (
+          <InlineError message={error.message} onDismiss={() => setError(null)} className="mb-5" />
+        )}
+
+        <div className="space-y-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOAuth("google")}
+            disabled={loading || oauthLoading !== null}
+            className="w-full h-11 rounded-xl flex items-center justify-center gap-2.5 bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#94A3B8] hover:bg-[rgba(255,255,255,0.05)] hover:text-[#F1F5F9] transition-colors"
+          >
+            <GoogleIcon />
+            {oauthLoading === "google" ? "Redirecting…" : "Continue with Google"}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOAuth("github")}
+            disabled={loading || oauthLoading !== null}
+            className="w-full h-11 rounded-xl flex items-center justify-center gap-2.5 bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#94A3B8] hover:bg-[rgba(255,255,255,0.05)] hover:text-[#F1F5F9] transition-colors"
+          >
+            <GitHubIcon />
+            {oauthLoading === "github" ? "Redirecting…" : "Continue with GitHub"}
+          </Button>
+        </div>
+
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
+          <span className="text-xs text-[#475569]">or</span>
+          <div className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
+        </div>
+
+        <Button
+          type="button"
+          onClick={handleKeycloakEmail}
+          disabled={loading || oauthLoading !== null}
+          className="w-full h-11 rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#06B6D4] transition-colors"
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 spinner" />
+              Redirecting…
+            </span>
+          ) : (
+            "Continue with email"
+          )}
+        </Button>
+      </AuthShell>
+    );
   }
 
   return (
