@@ -1,4 +1,6 @@
 import { supabase } from "./supabase";
+import { getAuthClient } from "@/lib/auth/index";
+import { gwListProjects, gwListEnvironments } from "./gatewayContext";
 
 export type SystemType =
   | "chatbot"
@@ -137,6 +139,10 @@ export function setStoredEnvironmentId(projectId: string, environmentId: string 
 }
 
 export async function listWorkspaceProjects(workspaceId: string): Promise<SystemProject[]> {
+  if (getAuthClient().provider === "keycloak") {
+    const rows = await gwListProjects(workspaceId);
+    return rows.map((r) => toProject(r as RegistryRow));
+  }
   const { data, error } = await supabase
     .from("system_projects")
     .select(
@@ -216,6 +222,10 @@ export async function softDeleteSystemProject(projectId: string) {
 }
 
 export async function listProjectEnvironments(projectId: string): Promise<SystemEnvironment[]> {
+  if (getAuthClient().provider === "keycloak") {
+    const rows = await gwListEnvironments(projectId);
+    return rows.map((r) => toEnvironment(r as RegistryRow));
+  }
   const { data, error } = await supabase
     .from("system_environments")
     .select("id,project_id,name,slug,environment_type,description,created_at,updated_at,deleted_at")

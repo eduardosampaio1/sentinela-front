@@ -1,4 +1,6 @@
 import { supabase } from "./supabase";
+import { getAuthClient } from "@/lib/auth/index";
+import { gwListWorkspaces } from "./gatewayContext";
 
 export interface Workspace {
   id: string;
@@ -163,6 +165,12 @@ async function listWorkspacesByOwner(userId: string): Promise<Workspace[]> {
 }
 
 export async function listUserWorkspaces(userId: string) {
+  if (getAuthClient().provider === "keycloak") {
+    const rows = await gwListWorkspaces();
+    return sortWorkspaces(
+      uniqueById(rows.map((r) => normalizeWorkspace(r as WorkspaceRow)).filter((w) => !w.deleted_at)),
+    );
+  }
   const fromMembership = await listWorkspacesByMembership(userId);
   if (fromMembership.length > 0) return fromMembership;
   return listWorkspacesByOwner(userId);
