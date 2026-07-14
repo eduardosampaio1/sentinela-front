@@ -6,6 +6,49 @@ import { clearTransientAuthLocation, normalizeNextPath } from "@/lib/authFlow";
 import { supabase } from "@/lib/supabase";
 import { getAuthClient } from "@/lib/auth/index";
 
+// O StrictMode (React 18 dev) dispara o effect 2×; o authorization code OIDC é single-use,
+// então a 2ª troca falharia com "Code not valid". Compartilhamos UMA troca por carregamento
+// de página (reseta a cada novo callback, pois cada callback é uma navegação/reload completo).
+let authExchangePromise: Promise<void> | null = null;
+
+async function exchangeAuthArtifact(): Promise<void> {
+  const authClient = getAuthClient();
+  if (authClient.provider === "keycloak") {
+    const session = await authClient.completeLoginCallback();
+    if (!session) {
+      throw new Error("Authentication callback did not return a session.");
+    }
+    clearTransientAuthLocation({ removeCode: true });
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const authCode = params.get("code");
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const accessToken = hashParams.get("access_token");
+  const refreshToken = hashParams.get("refresh_token");
+
+  if (authCode) {
+    const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+    if (error) throw error;
+    clearTransientAuthLocation({ removeCode: true });
+  } else if (accessToken && refreshToken) {
+    const { error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    if (error) throw error;
+    clearTransientAuthLocation();
+  } else {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error("Authentication callback is missing a valid session.");
+    }
+  }
+}
+
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -18,39 +61,11 @@ export default function AuthCallbackPage() {
     async function completeAuth() {
       const nextPath = normalizeNextPath(searchParams.get("next"));
       try {
-        const authClient = getAuthClient();
-        if (authClient.provider === "keycloak") {
-          const session = await authClient.completeLoginCallback();
-          if (!session) {
-            throw new Error("Authentication callback did not return a session.");
-          }
-          clearTransientAuthLocation({ removeCode: true });
-        } else {
-          const authCode = searchParams.get("code");
-          const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-          const accessToken = hashParams.get("access_token");
-          const refreshToken = hashParams.get("refresh_token");
-
-          if (authCode) {
-            const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-            if (error) throw error;
-            clearTransientAuthLocation({ removeCode: true });
-          } else if (accessToken && refreshToken) {
-            const { error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            if (error) throw error;
-            clearTransientAuthLocation();
-          } else {
-            const {
-              data: { session },
-            } = await supabase.auth.getSession();
-            if (!session) {
-              throw new Error("Authentication callback is missing a valid session.");
-            }
-          }
+        // Uma única troca por carregamento de página (guarda contra o double-invoke do StrictMode).
+        if (!authExchangePromise) {
+          authExchangePromise = exchangeAuthArtifact();
         }
+        await authExchangePromise;
 
         if (cancelled) return;
         setStatus("Authentication completed. Redirecting...");
