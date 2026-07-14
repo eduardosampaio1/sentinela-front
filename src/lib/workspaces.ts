@@ -1,6 +1,11 @@
 import { supabase } from "./supabase";
 import { getAuthClient } from "@/lib/auth/index";
-import { gwListWorkspaces } from "./gatewayContext";
+import {
+  gwListWorkspaces,
+  gwCreateWorkspace,
+  gwRenameWorkspace,
+  gwDeleteWorkspace,
+} from "./gatewayContext";
 
 export interface Workspace {
   id: string;
@@ -210,6 +215,10 @@ export async function createWorkspace(params: {
     throw new Error("Workspace name cannot be empty.");
   }
 
+  if (getAuthClient().provider === "keycloak") {
+    return normalizeWorkspace((await gwCreateWorkspace(normalizedName)) as WorkspaceRow);
+  }
+
   const slugSuffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
   const payloadCandidates: Array<Record<string, string>> = [
@@ -276,6 +285,11 @@ export async function renameWorkspace(workspaceId: string, name: string) {
     throw new Error("Workspace name cannot be empty.");
   }
 
+  if (getAuthClient().provider === "keycloak") {
+    await gwRenameWorkspace(workspaceId, normalizedName);
+    return;
+  }
+
   const payload = {
     name: normalizedName,
     updated_at: new Date().toISOString(),
@@ -312,6 +326,11 @@ export async function renameWorkspace(workspaceId: string, name: string) {
 }
 
 export async function softDeleteWorkspace(workspaceId: string) {
+  if (getAuthClient().provider === "keycloak") {
+    await gwDeleteWorkspace(workspaceId);
+    return;
+  }
+
   const { error } = await supabase
     .from("workspaces")
     .update({
