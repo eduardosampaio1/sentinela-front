@@ -42,8 +42,8 @@ function Avatar({ name, email }: { name?: string; email?: string }) {
       : text.slice(0, 2).toUpperCase();
 
   return (
-    <div className="w-16 h-16 rounded-2xl bg-[rgba(34,211,238,0.10)] border border-[rgba(34,211,238,0.18)] flex items-center justify-center flex-shrink-0">
-      <span className="text-xl font-bold text-[#22D3EE]">{initials}</span>
+    <div className="w-16 h-16 rounded-2xl bg-[rgba(79,90,232,0.10)] border border-[rgba(79,90,232,0.18)] flex items-center justify-center flex-shrink-0">
+      <span className="text-xl font-bold text-[#4F5AE8]">{initials}</span>
     </div>
   );
 }
@@ -204,7 +204,7 @@ export function ProfilePage() {
                 type="submit"
                 disabled={passwordLoading}
                 size="sm"
-                className="rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#06B6D4]"
+                className="rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4]"
               >
                 {passwordLoading ? "Updating password…" : "Update password"}
               </Button>

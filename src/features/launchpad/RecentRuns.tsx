@@ -117,7 +117,7 @@ export function RecentRuns({ maxRuns = 5 }: RecentRunsProps) {
         <p className="section-label">Recent analyses</p>
         <button
           onClick={() => navigate("/dashboard/history")}
-          className="text-xs text-[#22D3EE] hover:text-[#06B6D4] transition-colors"
+          className="text-xs text-[#4F5AE8] hover:text-[#3E48C4] transition-colors"
         >
           View all
         </button>
@@ -171,7 +171,7 @@ export function RecentRuns({ maxRuns = 5 }: RecentRunsProps) {
             {/* Arrow */}
             {run.rawResult && (
               <svg
-                className="w-4 h-4 text-[#475569] group-hover:text-[#22D3EE] transition-colors flex-shrink-0"
+                className="w-4 h-4 text-[#475569] group-hover:text-[#4F5AE8] transition-colors flex-shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

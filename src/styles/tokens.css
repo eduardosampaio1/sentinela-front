@@ -13,10 +13,10 @@
   --color-border-strong: rgba(255, 255, 255, 0.14);
 
   /* Primary */
-  --color-primary: #22D3EE;
-  --color-primary-muted: rgba(34, 211, 238, 0.12);
-  --color-primary-hover: #06B6D4;
-  --color-primary-glow: rgba(34, 211, 238, 0.15);
+  --color-primary: #4F5AE8;
+  --color-primary-muted: rgba(79,90,232, 0.12);
+  --color-primary-hover: #3E48C4;
+  --color-primary-glow: rgba(79,90,232, 0.15);
 
   /* Semantic */
   --color-success: #34D399;
@@ -85,7 +85,7 @@
   /* ---- Shadows ---- */
   --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4);
   --shadow-elevated: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 48px rgba(0, 0, 0, 0.5);
-  --shadow-glow-primary: 0 0 24px rgba(34, 211, 238, 0.15);
+  --shadow-glow-primary: 0 0 24px rgba(79,90,232, 0.15);
   --shadow-glow-success: 0 0 24px rgba(52, 211, 153, 0.15);
   --shadow-glow-danger: 0 0 24px rgba(248, 113, 113, 0.15);
 

@@ -2,6 +2,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalysis } from "@/hooks/useAnalysis";
+import { SentinelaMark } from "@/components/brand/SentinelaMark";
 
 // ─── Icon primitives ───────────────────────────────────────────────────────────
 
@@ -101,18 +102,18 @@ function SidebarNavItem({
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150",
         isActive
-          ? "bg-[rgba(34,211,238,0.10)] text-[#22D3EE] shadow-[inset_0_0_0_1px_rgba(34,211,238,0.12)]"
+          ? "bg-[rgba(79,90,232,0.10)] text-[#4F5AE8] shadow-[inset_0_0_0_1px_rgba(79,90,232,0.12)]"
           : "text-[#94A3B8] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]"
       )}
     >
       <Icon
         path={item.icon}
-        className={isActive ? "text-[#22D3EE]" : "text-current"}
+        className={isActive ? "text-[#4F5AE8]" : "text-current"}
       />
       <span className="text-sm font-medium truncate">{item.label}</span>
       {isActive && (
         <span
-          className="ml-auto w-1.5 h-1.5 rounded-full bg-[#22D3EE]"
+          className="ml-auto w-1.5 h-1.5 rounded-full bg-[#4F5AE8]"
           aria-hidden="true"
         />
       )}
@@ -148,9 +149,9 @@ function ContextBlock() {
         </p>
       )}
       {environment && (
-        <span className="inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 rounded-full bg-[rgba(34,211,238,0.08)] border border-[rgba(34,211,238,0.10)]">
-          <span className="w-1 h-1 rounded-full bg-[#22D3EE]" aria-hidden="true" />
-          <span className="text-[10px] text-[#22D3EE] font-medium">{environment.name}</span>
+        <span className="inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 rounded-full bg-[rgba(79,90,232,0.08)] border border-[rgba(79,90,232,0.10)]">
+          <span className="w-1 h-1 rounded-full bg-[#4F5AE8]" aria-hidden="true" />
+          <span className="text-[10px] text-[#4F5AE8] font-medium">{environment.name}</span>
         </span>
       )}
     </button>
@@ -210,8 +211,8 @@ function UserBlock() {
     <div className="px-3 py-3 border-t border-[rgba(255,255,255,0.06)]">
       <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-[rgba(255,255,255,0.04)] transition-colors group">
         {/* Avatar */}
-        <div className="w-7 h-7 rounded-full bg-[rgba(34,211,238,0.12)] border border-[rgba(34,211,238,0.2)] flex items-center justify-center flex-shrink-0">
-          <span className="text-[10px] font-bold text-[#22D3EE]">{initials}</span>
+        <div className="w-7 h-7 rounded-full bg-[rgba(79,90,232,0.12)] border border-[rgba(79,90,232,0.2)] flex items-center justify-center flex-shrink-0">
+          <span className="text-[10px] font-bold text-[#4F5AE8]">{initials}</span>
         </div>
 
         {/* Name / email */}
@@ -254,21 +255,7 @@ export function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
       {/* Logo */}
       <div className="h-14 flex items-center px-5 border-b border-[rgba(255,255,255,0.06)] flex-shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-[rgba(34,211,238,0.10)] border border-[rgba(34,211,238,0.18)] flex items-center justify-center flex-shrink-0">
-            <svg
-              className="w-3.5 h-3.5 text-[#22D3EE]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
-              />
-            </svg>
-          </div>
+          <SentinelaMark size={26} className="text-[#4F5AE8] flex-shrink-0" />
           <span className="text-sm font-semibold tracking-tight text-[#F1F5F9]">Sentinela</span>
         </div>
       </div>

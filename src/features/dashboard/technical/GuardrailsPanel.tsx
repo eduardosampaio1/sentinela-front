@@ -75,7 +75,7 @@ export function GuardrailsPanel() {
                       </p>
                       <div className="flex-1 h-1.5 bg-[rgba(255,255,255,0.04)] rounded-full overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-[#22D3EE] opacity-60"
+                          className="h-full rounded-full bg-[#4F5AE8] opacity-60"
                           style={{ width: pct !== null ? `${Math.max(2, pct)}%` : "2%" }}
                         />
                       </div>
@@ -100,7 +100,7 @@ export function GuardrailsPanel() {
                     {issue.summary && <p className="text-xs text-[#94A3B8] mt-1">{issue.summary}</p>}
                     {issue.recommendation && (
                       <p className="text-xs text-[#94A3B8] mt-1">
-                        <span className="text-[#22D3EE]">Action: </span>
+                        <span className="text-[#4F5AE8]">Action: </span>
                         {issue.recommendation}
                       </p>
                     )}

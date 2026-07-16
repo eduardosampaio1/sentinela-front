@@ -90,7 +90,7 @@ export function RegisterPage() {
   };
 
   const inputClass = (field: keyof FieldErrors) =>
-    `bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#22D3EE] focus:ring-[#22D3EE]/20 rounded-xl h-11 ${
+    `bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#4F5AE8] focus:ring-[#4F5AE8]/20 rounded-xl h-11 ${
       fieldErrors[field] ? "border-[#F87171] focus:border-[#F87171]" : ""
     }`;
 
@@ -102,7 +102,7 @@ export function RegisterPage() {
         </h1>
         <p className="text-sm text-[#94A3B8]">
           Start monitoring your AI system quality in minutes.{" "}
-          <Link to="/login" className="text-[#22D3EE] hover:text-[#06B6D4] transition-colors">
+          <Link to="/login" className="text-[#4F5AE8] hover:text-[#3E48C4] transition-colors">
             Already have an account?
           </Link>
         </p>
@@ -181,7 +181,7 @@ export function RegisterPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-11 rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#06B6D4] transition-colors mt-2"
+          className="w-full h-11 rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4] transition-colors mt-2"
         >
           {loading ? (
             <span className="flex items-center gap-2">

@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import type { EconomicsViewModel } from "@/domain/verdict.types";
 
 const TONE_COLORS = {
-  observed: "text-[#22D3EE]",
+  observed: "text-[#4F5AE8]",
   derived: "text-[#FCD34D]",
   projected: "text-[#94A3B8]",
   neutral: "text-[#94A3B8]",
@@ -79,7 +79,7 @@ export function EconomicsCard({ economics, collapsed = false }: EconomicsCardPro
                     )}
                     style={{
                       background: "rgba(255,255,255,0.04)",
-                      color: metric.tone === "observed" ? "#22D3EE" : metric.tone === "derived" ? "#FCD34D" : "#94A3B8",
+                      color: metric.tone === "observed" ? "#4F5AE8" : metric.tone === "derived" ? "#FCD34D" : "#94A3B8",
                     }}
                   >
                     {TONE_LABELS[metric.tone]}

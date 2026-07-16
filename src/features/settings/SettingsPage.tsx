@@ -131,7 +131,7 @@ export function SettingsPage() {
               {passwordError && <p className="text-xs text-[#F87171]">{passwordError}</p>}
               {passwordSuccess && <p className="text-xs text-[#34D399]">Password updated successfully.</p>}
 
-              <Button type="submit" disabled={passwordLoading} size="sm" className="rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#06B6D4]">
+              <Button type="submit" disabled={passwordLoading} size="sm" className="rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4]">
                 {passwordLoading ? "Updating..." : "Update password"}
               </Button>
             </form>

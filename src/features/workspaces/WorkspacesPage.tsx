@@ -60,7 +60,7 @@ function CreateDialog({ open, onOpenChange, title, placeholder, onConfirm }: Cre
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl text-[#94A3B8]">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="rounded-xl bg-[#22D3EE] text-[#070C18]">
+            <Button type="submit" disabled={loading} className="rounded-xl bg-[#4F5AE8] text-white">
               {loading ? "Creating…" : "Create"}
             </Button>
           </DialogFooter>
@@ -127,7 +127,7 @@ function RenameDialog({ open, onOpenChange, entityLabel, currentName, onConfirm 
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl text-[#94A3B8]">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !name.trim()} className="rounded-xl bg-[#22D3EE] text-[#070C18]">
+            <Button type="submit" disabled={loading || !name.trim()} className="rounded-xl bg-[#4F5AE8] text-white">
               {loading ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
@@ -151,14 +151,14 @@ function WorkspaceCard({ workspace, isActive, onSelect, onRename, onDelete }: {
       className={cn(
         "rounded-xl border px-4 py-3.5 flex items-center justify-between gap-3 transition-all",
         isActive
-          ? "bg-[rgba(34,211,238,0.06)] border-[rgba(34,211,238,0.15)]"
+          ? "bg-[rgba(79,90,232,0.06)] border-[rgba(79,90,232,0.15)]"
           : "bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.1)]"
       )}
     >
       <div className="flex items-center gap-3 min-w-0">
-        {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#22D3EE] flex-shrink-0" />}
+        {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#4F5AE8] flex-shrink-0" />}
         <div className="min-w-0">
-          <p className={cn("text-sm font-semibold truncate", isActive ? "text-[#22D3EE]" : "text-[#F1F5F9]")}>
+          <p className={cn("text-sm font-semibold truncate", isActive ? "text-[#4F5AE8]" : "text-[#F1F5F9]")}>
             {workspace.name}
           </p>
           <p className="text-xs text-[#475569] font-mono truncate">{workspace.id.slice(0, 12)}…</p>
@@ -245,7 +245,7 @@ export function WorkspacesPage() {
           <div className="card-base p-5">
             <div className="flex items-center justify-between mb-4">
               <p className="section-label">Workspaces</p>
-              <Button size="sm" onClick={() => setShowCreateWorkspace(true)} className="rounded-lg bg-[rgba(34,211,238,0.1)] text-[#22D3EE] border border-[rgba(34,211,238,0.15)] hover:bg-[rgba(34,211,238,0.18)] text-xs h-7">
+              <Button size="sm" onClick={() => setShowCreateWorkspace(true)} className="rounded-lg bg-[rgba(79,90,232,0.1)] text-[#4F5AE8] border border-[rgba(79,90,232,0.15)] hover:bg-[rgba(79,90,232,0.18)] text-xs h-7">
                 + New
               </Button>
             </div>
@@ -276,7 +276,7 @@ export function WorkspacesPage() {
                 size="sm"
                 onClick={() => setShowCreateProject(true)}
                 disabled={!workspace}
-                className="rounded-lg bg-[rgba(34,211,238,0.1)] text-[#22D3EE] border border-[rgba(34,211,238,0.15)] hover:bg-[rgba(34,211,238,0.18)] text-xs h-7 disabled:opacity-40"
+                className="rounded-lg bg-[rgba(79,90,232,0.1)] text-[#4F5AE8] border border-[rgba(79,90,232,0.15)] hover:bg-[rgba(79,90,232,0.18)] text-xs h-7 disabled:opacity-40"
               >
                 + New
               </Button>
@@ -288,14 +288,14 @@ export function WorkspacesPage() {
                   className={cn(
                     "rounded-xl border px-3 py-2.5 flex items-center justify-between gap-2 cursor-pointer transition-all",
                     proj.id === project?.id
-                      ? "bg-[rgba(34,211,238,0.06)] border-[rgba(34,211,238,0.15)]"
+                      ? "bg-[rgba(79,90,232,0.06)] border-[rgba(79,90,232,0.15)]"
                       : "bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.1)]"
                   )}
                   onClick={() => switchProject(proj.id)}
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    {proj.id === project?.id && <span className="w-1.5 h-1.5 rounded-full bg-[#22D3EE]" />}
-                    <p className={cn("text-sm truncate", proj.id === project?.id ? "text-[#22D3EE] font-semibold" : "text-[#94A3B8]")}>
+                    {proj.id === project?.id && <span className="w-1.5 h-1.5 rounded-full bg-[#4F5AE8]" />}
+                    <p className={cn("text-sm truncate", proj.id === project?.id ? "text-[#4F5AE8] font-semibold" : "text-[#94A3B8]")}>
                       {proj.name}
                     </p>
                   </div>
@@ -334,7 +334,7 @@ export function WorkspacesPage() {
                 size="sm"
                 onClick={() => setShowCreateEnvironment(true)}
                 disabled={!project}
-                className="rounded-lg bg-[rgba(34,211,238,0.1)] text-[#22D3EE] border border-[rgba(34,211,238,0.15)] hover:bg-[rgba(34,211,238,0.18)] text-xs h-7 disabled:opacity-40"
+                className="rounded-lg bg-[rgba(79,90,232,0.1)] text-[#4F5AE8] border border-[rgba(79,90,232,0.15)] hover:bg-[rgba(79,90,232,0.18)] text-xs h-7 disabled:opacity-40"
               >
                 + New
               </Button>
@@ -346,14 +346,14 @@ export function WorkspacesPage() {
                   className={cn(
                     "rounded-xl border px-3 py-2.5 flex items-center justify-between gap-2 cursor-pointer transition-all",
                     env.id === environment?.id
-                      ? "bg-[rgba(34,211,238,0.06)] border-[rgba(34,211,238,0.15)]"
+                      ? "bg-[rgba(79,90,232,0.06)] border-[rgba(79,90,232,0.15)]"
                       : "bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.1)]"
                   )}
                   onClick={() => switchEnvironment(env.id)}
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    {env.id === environment?.id && <span className="w-1.5 h-1.5 rounded-full bg-[#22D3EE]" />}
-                    <p className={cn("text-sm truncate", env.id === environment?.id ? "text-[#22D3EE] font-semibold" : "text-[#94A3B8]")}>
+                    {env.id === environment?.id && <span className="w-1.5 h-1.5 rounded-full bg-[#4F5AE8]" />}
+                    <p className={cn("text-sm truncate", env.id === environment?.id ? "text-[#4F5AE8] font-semibold" : "text-[#94A3B8]")}>
                       {env.name}
                     </p>
                     {env.environmentType && (

@@ -47,7 +47,7 @@ export default function DashboardModuleHero({
       <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
         <div className="max-w-3xl space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex h-14 w-14 items-center justify-center rounded-[20px] border border-primary/25 bg-background/35 text-primary shadow-[0_20px_40px_-24px_rgba(34,211,238,0.8)]">
+            <span className="inline-flex h-14 w-14 items-center justify-center rounded-[20px] border border-primary/25 bg-background/35 text-primary shadow-[0_20px_40px_-24px_rgba(79,90,232,0.8)]">
               {icon}
             </span>
             <div>

@@ -17,9 +17,9 @@ const CATEGORY_CONFIG: Record<string, { label: string; color: string; bg: string
   },
   REDUCE_HANDOFF: {
     label: "Reduce Handoff",
-    color: "text-[#22D3EE]",
-    bg: "bg-[rgba(34,211,238,0.08)]",
-    border: "border-[rgba(34,211,238,0.15)]",
+    color: "text-[#4F5AE8]",
+    bg: "bg-[rgba(79,90,232,0.08)]",
+    border: "border-[rgba(79,90,232,0.15)]",
   },
   PROMPT_FIX: {
     label: "Prompt Fix",
@@ -118,7 +118,7 @@ function TopCard({ rec }: { rec: StructuredRecommendation }) {
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="w-5 h-5 rounded-full bg-[rgba(34,211,238,0.12)] border border-[rgba(34,211,238,0.2)] flex items-center justify-center text-[10px] font-bold text-[#22D3EE] flex-shrink-0">
+          <span className="w-5 h-5 rounded-full bg-[rgba(79,90,232,0.12)] border border-[rgba(79,90,232,0.2)] flex items-center justify-center text-[10px] font-bold text-[#4F5AE8] flex-shrink-0">
             1
           </span>
           <CategoryBadge category={rec.actionCategory} />
@@ -161,8 +161,8 @@ function TopCard({ rec }: { rec: StructuredRecommendation }) {
       <EvidenceChips rec={rec} />
 
       {/* Action */}
-      <div className="rounded-xl bg-[rgba(34,211,238,0.04)] border border-[rgba(34,211,238,0.08)] px-4 py-3 space-y-2">
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#22D3EE]">
+      <div className="rounded-xl bg-[rgba(79,90,232,0.04)] border border-[rgba(79,90,232,0.08)] px-4 py-3 space-y-2">
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#4F5AE8]">
           Recommended action
         </p>
         <p className="text-xs font-medium text-[#F1F5F9] leading-snug">{rec.action.summary}</p>
@@ -170,7 +170,7 @@ function TopCard({ rec }: { rec: StructuredRecommendation }) {
           <ol className="space-y-1.5 mt-2">
             {rec.action.steps.map((step, i) => (
               <li key={i} className="flex items-start gap-2">
-                <span className="mt-0.5 w-4 h-4 rounded-full bg-[rgba(34,211,238,0.1)] flex items-center justify-center text-[9px] font-bold text-[#22D3EE] flex-shrink-0">
+                <span className="mt-0.5 w-4 h-4 rounded-full bg-[rgba(79,90,232,0.1)] flex items-center justify-center text-[9px] font-bold text-[#4F5AE8] flex-shrink-0">
                   {i + 1}
                 </span>
                 <span className="text-[11px] text-[#94A3B8] leading-snug">{step}</span>
@@ -227,10 +227,10 @@ export function TopRecommendationHero({ sprint4, className }: TopRecommendationH
     <div className={cn("space-y-3", className)}>
       {/* Section label */}
       <div className="flex items-center gap-3">
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#22D3EE]">
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#4F5AE8]">
           Priority action
         </p>
-        <div className="h-px flex-1 bg-[rgba(34,211,238,0.08)]" aria-hidden="true" />
+        <div className="h-px flex-1 bg-[rgba(79,90,232,0.08)]" aria-hidden="true" />
         <p className="text-[10px] text-[#2D3748]">{sprint4.modelVersion}</p>
       </div>
 

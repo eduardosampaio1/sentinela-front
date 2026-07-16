@@ -45,7 +45,7 @@ function CostRow({
       ? "text-[#4ADE80]"
       : accent === "current"
       ? "text-[#F1F5F9]"
-      : "text-[#22D3EE]";
+      : "text-[#4F5AE8]";
 
   return (
     <div
@@ -85,7 +85,7 @@ function DriverRow({ driver }: { driver: SavingsDriver }) {
         </div>
         <p className="text-[11px] text-[#475569] leading-snug">{driver.description}</p>
         {driver.recommendationHint && (
-          <p className="text-[10px] text-[#22D3EE] mt-0.5 leading-snug">
+          <p className="text-[10px] text-[#4F5AE8] mt-0.5 leading-snug">
             → {driver.recommendationHint}
           </p>
         )}

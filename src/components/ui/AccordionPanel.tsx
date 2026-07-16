@@ -40,7 +40,7 @@ export default function AccordionPanel({
       >
         <div className="flex min-w-0 items-center gap-3">
           {icon ? (
-            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border/60 bg-background/45 text-primary shadow-[0_12px_30px_-20px_rgba(34,211,238,0.9)]">
+            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border/60 bg-background/45 text-primary shadow-[0_12px_30px_-20px_rgba(79,90,232,0.9)]">
               {icon}
             </span>
           ) : null}

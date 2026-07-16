@@ -40,9 +40,9 @@ function scoreBg(score: number): string {
 const STATUS_CONFIG: Record<string, { label: string; styles: string }> = {
   completed:  { label: "Completed",  styles: "bg-[rgba(52,211,153,0.08)] text-[#34D399] border-[rgba(52,211,153,0.15)]" },
   analyzing:  { label: "Analyzing",  styles: "bg-[rgba(167,139,250,0.08)] text-[#A78BFA] border-[rgba(167,139,250,0.15)]" },
-  embedding:  { label: "Embedding",  styles: "bg-[rgba(34,211,238,0.08)] text-[#22D3EE] border-[rgba(34,211,238,0.15)]" },
+  embedding:  { label: "Embedding",  styles: "bg-[rgba(79,90,232,0.08)] text-[#4F5AE8] border-[rgba(79,90,232,0.15)]" },
   finalizing: { label: "Finalizing", styles: "bg-[rgba(74,222,128,0.06)] text-[#4ADE80] border-[rgba(74,222,128,0.12)]" },
-  processing: { label: "Processing", styles: "bg-[rgba(34,211,238,0.08)] text-[#22D3EE] border-[rgba(34,211,238,0.15)]" },
+  processing: { label: "Processing", styles: "bg-[rgba(79,90,232,0.08)] text-[#4F5AE8] border-[rgba(79,90,232,0.15)]" },
   queued:     { label: "Queued",     styles: "bg-[rgba(148,163,184,0.08)] text-[#94A3B8] border-[rgba(148,163,184,0.15)]" },
   failed:     { label: "Failed",     styles: "bg-[rgba(248,113,113,0.08)] text-[#F87171] border-[rgba(248,113,113,0.15)]" },
 };
@@ -69,7 +69,7 @@ function RiskBadge({ level }: { level?: string | null }) {
     MEDIUM:   "bg-[rgba(251,146,60,0.10)] text-[#FB923C] border-[rgba(251,146,60,0.18)]",
     LOW:      "bg-[rgba(52,211,153,0.10)] text-[#34D399] border-[rgba(52,211,153,0.18)]",
   };
-  const style = styles[upper] ?? "bg-[rgba(34,211,238,0.10)] text-[#22D3EE] border-[rgba(34,211,238,0.18)]";
+  const style = styles[upper] ?? "bg-[rgba(79,90,232,0.10)] text-[#4F5AE8] border-[rgba(79,90,232,0.18)]";
 
   return (
     <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border", style)}>
@@ -114,14 +114,14 @@ function CompareCheckbox({ checked, disabled }: { checked: boolean; disabled: bo
       className={cn(
         "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all",
         checked
-          ? "bg-[rgba(34,211,238,0.15)] border-[#22D3EE]"
+          ? "bg-[rgba(79,90,232,0.15)] border-[#4F5AE8]"
           : "bg-transparent border-[rgba(255,255,255,0.14)]",
         disabled && "opacity-40"
       )}
       aria-hidden="true"
     >
       {checked && (
-        <svg className="w-2.5 h-2.5 text-[#22D3EE]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+        <svg className="w-2.5 h-2.5 text-[#4F5AE8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       )}
@@ -169,7 +169,7 @@ export function RunRow({ run, compareMode = false, selected = false, compareDimm
         "flex items-center gap-4 px-5 py-4 border-b border-[rgba(255,255,255,0.04)] last:border-b-0 transition-all cursor-pointer hover:bg-[rgba(255,255,255,0.02)] group",
         !hasResult && !compareMode && "opacity-60",
         // Compare mode selection styles
-        compareMode && selected && "bg-[rgba(34,211,238,0.04)] border-l-2 border-l-[#22D3EE]",
+        compareMode && selected && "bg-[rgba(79,90,232,0.04)] border-l-2 border-l-[#4F5AE8]",
         compareMode && dimmed && "opacity-40 pointer-events-none",
       )}
       onClick={handleClick}
@@ -245,7 +245,7 @@ export function RunRow({ run, compareMode = false, selected = false, compareDimm
       {/* CTA — hidden in compare mode */}
       {!compareMode && (
         <div className="w-16 flex-shrink-0 flex justify-end">
-          <div className="flex items-center gap-1.5 text-[#94A3B8] group-hover:text-[#22D3EE] transition-colors">
+          <div className="flex items-center gap-1.5 text-[#94A3B8] group-hover:text-[#4F5AE8] transition-colors">
             <span className="text-xs font-medium">{hasResult ? "View" : "Details"}</span>
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -258,7 +258,7 @@ export function RunRow({ run, compareMode = false, selected = false, compareDimm
       {compareMode && (
         <div className="w-16 flex-shrink-0 flex justify-end">
           {selected && (
-            <span className="text-[11px] font-semibold text-[#22D3EE]">Selected</span>
+            <span className="text-[11px] font-semibold text-[#4F5AE8]">Selected</span>
           )}
         </div>
       )}

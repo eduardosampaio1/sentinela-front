@@ -42,7 +42,7 @@ function NoDashboardState() {
           <Button
             onClick={() => navigate("/home")}
             size="sm"
-            className="rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#06B6D4]"
+            className="rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4]"
           >
             Open Launchpad
           </Button>
@@ -116,7 +116,7 @@ export function DashboardPage() {
       topBarActions={
         <div className="flex items-center gap-2">
           {dataSource === "cached" && (
-            <span className="text-[10px] uppercase tracking-wide font-semibold text-[#22D3EE] bg-[rgba(34,211,238,0.08)] border border-[rgba(34,211,238,0.12)] px-2 py-1 rounded-full">
+            <span className="text-[10px] uppercase tracking-wide font-semibold text-[#4F5AE8] bg-[rgba(79,90,232,0.08)] border border-[rgba(79,90,232,0.12)] px-2 py-1 rounded-full">
               Cached
             </span>
           )}

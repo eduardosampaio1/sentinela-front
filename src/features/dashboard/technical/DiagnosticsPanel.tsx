@@ -141,7 +141,7 @@ function IssueCard({ issue, index }: { issue: DomainIssue; index: number }) {
             {evidenceEntries.map(([key, val]) => (
               <div key={key} className="flex items-center gap-1.5">
                 <span className="text-[10px] text-[#475569]">{labelFromKey(key)}</span>
-                <span className="text-[10px] font-semibold text-[#22D3EE] font-mono">
+                <span className="text-[10px] font-semibold text-[#4F5AE8] font-mono">
                   {fmtEvidence(val)}
                 </span>
               </div>
@@ -177,13 +177,13 @@ function IssueCard({ issue, index }: { issue: DomainIssue; index: number }) {
       {/* ── Recommended actions ── */}
       {(issue.recommendedActions && issue.recommendedActions.length > 0) ? (
         <div className="pl-5 pt-1 border-t border-[rgba(255,255,255,0.04)]">
-          <p className="text-[10px] uppercase tracking-wide font-semibold text-[#22D3EE] mb-1.5">
+          <p className="text-[10px] uppercase tracking-wide font-semibold text-[#4F5AE8] mb-1.5">
             Recommended actions
           </p>
           <ul className="space-y-1">
             {issue.recommendedActions.slice(0, 3).map((action, i) => (
               <li key={i} className="flex items-start gap-2">
-                <span className="text-[#22D3EE] text-[10px] font-bold mt-0.5 flex-shrink-0">
+                <span className="text-[#4F5AE8] text-[10px] font-bold mt-0.5 flex-shrink-0">
                   {i + 1}.
                 </span>
                 <p className="text-xs text-[#94A3B8]">{action}</p>
@@ -193,7 +193,7 @@ function IssueCard({ issue, index }: { issue: DomainIssue; index: number }) {
         </div>
       ) : issue.recommendation ? (
         <div className="pl-5 pt-1 border-t border-[rgba(255,255,255,0.04)]">
-          <p className="text-[10px] uppercase tracking-wide font-semibold text-[#22D3EE] mb-1">
+          <p className="text-[10px] uppercase tracking-wide font-semibold text-[#4F5AE8] mb-1">
             Action
           </p>
           <p className="text-xs text-[#94A3B8]">{issue.recommendation}</p>

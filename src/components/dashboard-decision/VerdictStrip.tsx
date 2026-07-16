@@ -40,7 +40,7 @@ export default function VerdictStrip({ model }: VerdictStripProps) {
     <section className="rounded-[24px] border border-border/45 bg-card/45 p-4 backdrop-blur-md sm:p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-start gap-3">
-          <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-primary/20 bg-primary/10 text-primary shadow-[0_20px_48px_-32px_rgba(34,211,238,0.95)]">
+          <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-primary/20 bg-primary/10 text-primary shadow-[0_20px_48px_-32px_rgba(79,90,232,0.95)]">
             {verdictIcon(model.verdict)}
           </span>
 

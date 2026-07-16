@@ -152,17 +152,17 @@ export function AnalysisLauncher() {
             "mb-4 flex items-start gap-2.5 rounded-xl px-4 py-3 border",
             datasetEta.isHeavy
               ? "bg-[rgba(252,211,77,0.06)] border-[rgba(252,211,77,0.12)]"
-              : "bg-[rgba(34,211,238,0.06)] border-[rgba(34,211,238,0.12)]"
+              : "bg-[rgba(79,90,232,0.06)] border-[rgba(79,90,232,0.12)]"
           )}
         >
           <svg
-            className={cn("w-4 h-4 flex-shrink-0 mt-0.5", datasetEta.isHeavy ? "text-[#FCD34D]" : "text-[#22D3EE]")}
+            className={cn("w-4 h-4 flex-shrink-0 mt-0.5", datasetEta.isHeavy ? "text-[#FCD34D]" : "text-[#4F5AE8]")}
             fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
           </svg>
           <div>
-            <p className={cn("text-xs font-semibold", datasetEta.isHeavy ? "text-[#FCD34D]" : "text-[#22D3EE]")}>
+            <p className={cn("text-xs font-semibold", datasetEta.isHeavy ? "text-[#FCD34D]" : "text-[#4F5AE8]")}>
               Large dataset detected — {datasetEta.approxLabel}
             </p>
             <p className="text-[11px] text-[#475569] mt-0.5">
@@ -181,8 +181,8 @@ export function AnalysisLauncher() {
           className={cn(
             "relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed min-h-[180px] cursor-pointer transition-all group",
             dragging
-              ? "border-[#22D3EE] bg-[rgba(34,211,238,0.06)]"
-              : "border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.02)] hover:border-[rgba(34,211,238,0.4)] hover:bg-[rgba(34,211,238,0.03)]",
+              ? "border-[#4F5AE8] bg-[rgba(79,90,232,0.06)]"
+              : "border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.02)] hover:border-[rgba(79,90,232,0.4)] hover:bg-[rgba(79,90,232,0.03)]",
             loading && "opacity-50 cursor-not-allowed"
           )}
         >
@@ -200,8 +200,8 @@ export function AnalysisLauncher() {
             className={cn(
               "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
               dragging
-                ? "bg-[rgba(34,211,238,0.15)] text-[#22D3EE]"
-                : "bg-[rgba(255,255,255,0.04)] text-[#94A3B8] group-hover:text-[#22D3EE] group-hover:bg-[rgba(34,211,238,0.08)]"
+                ? "bg-[rgba(79,90,232,0.15)] text-[#4F5AE8]"
+                : "bg-[rgba(255,255,255,0.04)] text-[#94A3B8] group-hover:text-[#4F5AE8] group-hover:bg-[rgba(79,90,232,0.08)]"
             )}
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -224,7 +224,7 @@ export function AnalysisLauncher() {
             placeholder='[{"role":"user","content":"..."},{"role":"assistant","content":"..."}]'
             rows={8}
             disabled={loading}
-            className="bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#22D3EE] resize-none font-mono text-xs rounded-xl leading-relaxed"
+            className="bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#4F5AE8] resize-none font-mono text-xs rounded-xl leading-relaxed"
           />
           <div className="flex items-center justify-between">
             <p className="text-xs text-[#94A3B8]">
@@ -234,7 +234,7 @@ export function AnalysisLauncher() {
               onClick={handlePasteSubmit}
               disabled={loading || !pastedText.trim()}
               size="sm"
-              className="rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#06B6D4] min-w-[120px]"
+              className="rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4] min-w-[120px]"
             >
               {loading ? (
                 <span className="flex items-center gap-1.5">

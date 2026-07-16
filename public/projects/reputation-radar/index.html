@@ -1,0 +1,1387 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reputation Radar — Prototype</title>
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --bg:#F5F7FA; --surface:#FFFFFF; --surface-2:#EDF1F6;
+    --ink:#16243A; --ink-muted:#54657E; --ink-faint:#66788F;
+    --brand:#1E40AF; --brand-soft:#E3EAFB; --on-brand:#FFFFFF;
+    --accent:#B45309; --accent-soft:#FBEEDC;
+    --ok:#15803D; --ok-soft:#E3F3E8;
+    --warn:#B45309; --warn-soft:#FBEEDC;
+    --act:#B91C1C; --act-soft:#FBE5E5;
+    --border:#D7DFEA; --border-strong:#B9C6D8;
+    --chip-roadmap:#5B21B6; --chip-roadmap-soft:#EDE7F9;
+    --shadow:0 1px 2px rgba(22,36,58,.06),0 4px 14px rgba(22,36,58,.05);
+    --radius:10px; --radius-sm:6px;
+    --font-body:"Segoe UI",system-ui,-apple-system,sans-serif;
+    --font-data:ui-monospace,"Cascadia Mono","Consolas",monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0D1420; --surface:#161F2E; --surface-2:#1D2939;
+      --ink:#E7EDF6; --ink-muted:#9DACC0; --ink-faint:#8494AB;
+      --brand:#8FAEF7; --brand-soft:#22304D; --on-brand:#0D1420;
+      --accent:#E5A158; --accent-soft:#3A2C18;
+      --ok:#5BBF82; --ok-soft:#17301F;
+      --warn:#E5A158; --warn-soft:#3A2C18;
+      --act:#F08A8A; --act-soft:#3D1A1A;
+      --border:#2A3850; --border-strong:#3B4C66;
+      --chip-roadmap:#C4B0F3; --chip-roadmap-soft:#2C2344;
+      --shadow:0 1px 2px rgba(0,0,0,.35),0 4px 14px rgba(0,0,0,.25);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D1420; --surface:#161F2E; --surface-2:#1D2939;
+    --ink:#E7EDF6; --ink-muted:#9DACC0; --ink-faint:#8494AB;
+    --brand:#8FAEF7; --brand-soft:#22304D; --on-brand:#0D1420;
+    --accent:#E5A158; --accent-soft:#3A2C18;
+    --ok:#5BBF82; --ok-soft:#17301F;
+    --warn:#E5A158; --warn-soft:#3A2C18;
+    --act:#F08A8A; --act-soft:#3D1A1A;
+    --border:#2A3850; --border-strong:#3B4C66;
+    --chip-roadmap:#C4B0F3; --chip-roadmap-soft:#2C2344;
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 4px 14px rgba(0,0,0,.25);
+  }
+  :root[data-theme="light"]{
+    --bg:#F5F7FA; --surface:#FFFFFF; --surface-2:#EDF1F6;
+    --ink:#16243A; --ink-muted:#54657E; --ink-faint:#66788F;
+    --brand:#1E40AF; --brand-soft:#E3EAFB; --on-brand:#FFFFFF;
+    --accent:#B45309; --accent-soft:#FBEEDC;
+    --ok:#15803D; --ok-soft:#E3F3E8;
+    --warn:#B45309; --warn-soft:#FBEEDC;
+    --act:#B91C1C; --act-soft:#FBE5E5;
+    --border:#D7DFEA; --border-strong:#B9C6D8;
+    --chip-roadmap:#5B21B6; --chip-roadmap-soft:#EDE7F9;
+    --shadow:0 1px 2px rgba(22,36,58,.06),0 4px 14px rgba(22,36,58,.05);
+  }
+
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5}
+  button{font-family:inherit;cursor:pointer}
+  a{color:var(--brand)}
+  :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+  /* ============ APP BAR ============ */
+  .appbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between}
+  .identity{display:flex;align-items:center;gap:12px}
+  .logo{width:34px;height:34px;border-radius:8px;background:var(--brand);color:var(--on-brand);display:grid;place-items:center;flex:none}
+  .identity h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.01em}
+  .crumb{font-size:12.5px;color:var(--ink-muted);margin-top:1px}
+  .crumb a{color:var(--ink-muted);text-decoration:none;border-bottom:1px dotted var(--border-strong)}
+  .crumb a:hover{color:var(--brand);border-bottom-color:var(--brand)}
+  .crumb b{color:var(--ink);font-weight:600}
+  .crumb .sep{margin:0 6px;color:var(--ink-faint)}
+  .bar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .cycle-chip{font-size:12.5px;color:var(--ink-muted);background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:6px 14px;white-space:nowrap}
+  .cycle-chip b{color:var(--ink);font-weight:600}
+
+  .switch{display:flex;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:3px;gap:2px}
+  .switch button{border:0;background:transparent;color:var(--ink-muted);font-size:13px;font-weight:600;padding:7px 16px;border-radius:99px;min-height:38px;transition:background .18s ease,color .18s ease}
+  .switch button[aria-selected="true"]{background:var(--brand);color:var(--on-brand)}
+  .switch button:not([aria-selected="true"]):hover{color:var(--ink)}
+
+  /* ============ DISCLOSURE BANNER ============ */
+  .proto-banner{display:flex;gap:10px;align-items:center;background:var(--accent-soft);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);margin:16px 24px 0;padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600}
+  .proto-banner svg{flex:none}
+  .proto-banner span b{font-weight:700}
+
+  /* ============ LAYOUT ============ */
+  .wrap{max-width:1240px;margin:0 auto;padding:20px 24px 56px;display:flex;flex-direction:column;gap:20px}
+  section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .sec-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:16px 20px 0}
+  .sec-head h2{font-size:15px;margin:0;font-weight:650}
+  .sec-head .sub{font-size:12.5px;color:var(--ink-muted)}
+  .sec-body{padding:14px 20px 18px}
+  .screen{display:none}
+  .screen.active{display:flex;flex-direction:column;gap:20px}
+
+  .tier{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:99px;padding:3px 10px;white-space:nowrap}
+  .tier.f1{background:var(--brand-soft);color:var(--brand)}
+  .tier.road{background:var(--chip-roadmap-soft);color:var(--chip-roadmap)}
+
+  /* ============ INFO TOOLTIP ============ */
+  .info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--border-strong);color:var(--ink-muted);background:transparent;font-size:10.5px;font-weight:700;padding:0;margin-left:6px;vertical-align:-2px;line-height:1}
+  .info:hover,.info:focus-visible{color:var(--brand);border-color:var(--brand)}
+  #tooltip{position:fixed;z-index:1000;max-width:280px;background:var(--ink);color:var(--surface);font-size:12px;font-weight:500;line-height:1.45;padding:9px 11px;border-radius:8px;box-shadow:var(--shadow);pointer-events:none;opacity:0;transition:opacity .12s ease;white-space:normal}
+  #tooltip.show{opacity:1}
+
+  /* ============ KPI ============ */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;background:transparent;border:0;box-shadow:none}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+  .kpi .label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);display:flex;align-items:center}
+  .kpi .value{font-family:var(--font-data);font-variant-numeric:tabular-nums;font-size:30px;font-weight:600;line-height:1.15}
+  .kpi .meta{font-size:12.5px;color:var(--ink-muted)}
+  .delta{font-family:var(--font-data);font-size:12.5px;font-weight:600;border-radius:99px;padding:2px 9px;display:inline-flex;align-items:center;gap:4px;width:max-content}
+  .delta.up{background:var(--ok-soft);color:var(--ok)}
+  .delta.down{background:var(--act-soft);color:var(--act)}
+  .delta.flat{background:var(--surface-2);color:var(--ink-muted);border:1px solid var(--border)}
+
+  .band{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+  .band.critical{background:var(--act-soft);color:var(--act)}
+  .band.weak{background:var(--warn-soft);color:var(--warn)}
+  .band.fair{background:var(--surface-2);color:var(--ink-muted);border:1px solid var(--border-strong)}
+  .band.good{background:var(--brand-soft);color:var(--brand)}
+  .band.strong{background:var(--ok-soft);color:var(--ok)}
+  .vrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .scale{position:relative;display:flex;height:6px;border-radius:99px;margin:10px 0 4px}
+  .scale i{height:100%}
+  .scale i:first-child{border-radius:99px 0 0 99px}
+  .scale i:last-child{border-radius:0 99px 99px 0}
+  .scale .sC{width:40%;background:var(--act-soft)}
+  .scale .sW{width:15%;background:var(--warn-soft)}
+  .scale .sF{width:15%;background:var(--border)}
+  .scale .sG{width:15%;background:var(--brand-soft)}
+  .scale .sS{width:15%;background:var(--ok-soft)}
+  .scale .dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:var(--ink);border:2px solid var(--surface);box-shadow:var(--shadow)}
+  .gap-note{margin:0 20px 18px;padding:11px 14px;border:1px dashed var(--border-strong);border-radius:var(--radius-sm);font-size:12.5px;color:var(--ink-muted);background:var(--surface-2)}
+  .gap-note b{color:var(--ink)}
+
+  /* ============ TABLES ============ */
+  .tbl-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);text-align:left;font-weight:700;padding:10px 12px;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+  td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr.data-row:hover{background:var(--surface-2)}
+  td.num,th.num{text-align:right;font-family:var(--font-data);font-variant-numeric:tabular-nums}
+  .motor-name{font-weight:600}
+  a.motor-name{text-decoration:none;border-bottom:1px dotted var(--border-strong)}
+  a.motor-name:hover{color:var(--brand);border-bottom-color:var(--brand)}
+  .motor-sub{font-size:11.5px;color:var(--ink-faint);display:block;margin-top:1px}
+
+  .score-btn{background:none;border:0;padding:0;font:inherit;font-family:var(--font-data);font-variant-numeric:tabular-nums;color:var(--ink);border-bottom:1px dashed var(--border-strong);display:inline-flex;align-items:center;gap:5px}
+  .score-btn:hover{color:var(--brand);border-bottom-color:var(--brand)}
+  .score-btn .car{transition:transform .15s ease;color:var(--ink-faint)}
+  .score-btn[aria-expanded="true"] .car{transform:rotate(180deg)}
+
+  tr.ev-row>td{background:var(--surface-2);white-space:normal;padding:14px 16px;border-bottom:1px solid var(--border)}
+  .ev-grid{display:grid;grid-template-columns:minmax(260px,5fr) minmax(260px,7fr);gap:18px;align-items:start}
+  .ev-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin:0 0 8px}
+  .axis{display:grid;grid-template-columns:110px 1fr 52px;gap:8px;align-items:center;font-size:12.5px;padding:2.5px 0}
+  .axis .nm{color:var(--ink-muted)}
+  .axis .bar{height:7px;border-radius:99px;background:var(--surface);border:1px solid var(--border);overflow:hidden}
+  .axis .bar>i{display:block;height:100%;background:var(--brand);border-radius:99px}
+  .axis.low .bar>i{background:var(--warn)}
+  .axis .pts{font-family:var(--font-data);font-variant-numeric:tabular-nums;text-align:right;color:var(--ink)}
+  .ev-note{font-size:12.5px;color:var(--ink-muted);margin-top:8px}
+  .ev-note b{color:var(--ink)}
+  .quote{font-size:12.5px;border-left:3px solid var(--border-strong);padding:6px 10px;margin:6px 0;color:var(--ink-muted);font-style:italic;background:var(--surface);border-radius:0 6px 6px 0}
+  .pair-label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);margin-top:8px}
+  .verdict{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;margin-top:6px}
+  .verdict.yes{color:var(--ok)} .verdict.no{color:var(--act)} .verdict.mid{color:var(--warn)}
+
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:99px;padding:3px 10px;white-space:nowrap}
+  .chip svg{flex:none}
+  .chip.ok{background:var(--ok-soft);color:var(--ok)}
+  .chip.warn{background:var(--warn-soft);color:var(--warn)}
+  .chip.act{background:var(--act-soft);color:var(--act)}
+  .chip.neutral{background:var(--surface-2);color:var(--ink-muted);border:1px solid var(--border)}
+  .seal{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;border-radius:99px;padding:2px 9px;border:1px solid;white-space:nowrap}
+  .seal.verified{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent);background:transparent}
+  .seal.unverified{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+  .seal.dead{color:var(--act);border-color:color-mix(in srgb,var(--act) 45%,transparent)}
+  .seal.mode{color:var(--ink-muted);border-color:var(--border-strong)}
+
+  .grade{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-data);font-variant-numeric:tabular-nums}
+  .grade .g{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-weight:700;font-size:12px;font-family:var(--font-body)}
+  .g.gA{background:var(--ok-soft);color:var(--ok)}
+  .g.gB{background:var(--brand-soft);color:var(--brand)}
+  .g.gC{background:var(--warn-soft);color:var(--warn)}
+  .g.gD{background:var(--accent-soft);color:var(--accent)}
+  .g.gE{background:var(--act-soft);color:var(--act)}
+
+  .fresh-old{color:var(--warn);font-weight:600}
+  .fresh-new{color:var(--ok);font-weight:600}
+
+  .callout{display:flex;gap:12px;border:1px solid color-mix(in srgb,var(--act) 35%,transparent);background:var(--act-soft);border-radius:var(--radius-sm);padding:12px 16px;margin:0 20px 14px;font-size:13.5px}
+  .callout svg{flex:none;margin-top:2px}
+  .callout b{color:var(--act)}
+
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:20px;background:transparent;border:0;box-shadow:none}
+  .duo>div{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 20px 18px}
+  .mode-card{border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;background:var(--surface-2)}
+  .mode-card .label{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-muted);display:flex;align-items:center}
+  .mode-card .value{font-family:var(--font-data);font-variant-numeric:tabular-nums;font-size:26px;font-weight:600}
+  .mode-card .meta{font-size:12px;color:var(--ink-muted);white-space:normal}
+
+  .cost-bar{height:8px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden;margin:10px 0 6px}
+  .cost-bar>i{display:block;height:100%;background:var(--ok);border-radius:99px}
+  .cost-bar>i.hot{background:var(--warn)}
+
+  .action-row td:first-child{white-space:normal;min-width:340px}
+  .prio{font-family:var(--font-data);font-weight:700;font-size:12px}
+  .prio.p1{color:var(--act)} .prio.p2{color:var(--warn)}
+  .pipe{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--ink-muted);border:1px solid var(--border-strong);border-radius:99px;padding:2px 9px;background:var(--surface-2)}
+  .pipe.hot{color:var(--brand);border-color:color-mix(in srgb,var(--brand) 40%,transparent);background:var(--brand-soft)}
+
+  .narr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 20px 18px}
+  .narr{border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+  .narr h3{font-size:14px;margin:0;font-weight:650}
+  .narr .facts{font-size:12.5px;color:var(--ink-muted);display:flex;flex-direction:column;gap:3px;white-space:normal}
+  .narr .facts b{color:var(--ink);font-weight:600}
+
+  .heat td{text-align:center;font-family:var(--font-data);font-variant-numeric:tabular-nums;font-size:12.5px;font-weight:600;min-width:64px}
+  .heat td.rowlabel{text-align:left;font-family:var(--font-body);font-weight:600;white-space:normal;min-width:200px}
+  .cell{display:inline-block;min-width:44px;border-radius:6px;padding:4px 8px}
+  .c-pos{background:var(--ok-soft);color:var(--ok)}
+  .c-neu{background:var(--surface-2);color:var(--ink-muted)}
+  .c-neg{background:var(--act-soft);color:var(--act)}
+  .c-mix{background:var(--warn-soft);color:var(--warn)}
+
+  .rankbar{display:flex;align-items:center;gap:12px;padding:7px 0}
+  .rankbar .name{width:110px;font-weight:600;font-size:13.5px}
+  .rankbar .bar{flex:1;height:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;overflow:hidden}
+  .rankbar .bar>i{display:block;height:100%;background:var(--brand);border-radius:99px}
+  .rankbar.hero .bar>i{background:var(--accent)}
+  .rankbar .val{font-family:var(--font-data);font-variant-numeric:tabular-nums;font-weight:600;width:36px;text-align:right}
+
+  .trend-wrap{padding:6px 20px 18px}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--ink-muted);padding:0 20px 8px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+  .method{font-size:12.5px;color:var(--ink-muted);border-top:1px dashed var(--border-strong);margin:0 20px;padding:14px 0 16px;white-space:normal}
+  .method code{font-family:var(--font-data);font-size:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:1px 6px}
+
+  footer.page{max-width:1240px;margin:0 auto;padding:0 24px 40px;font-size:12px;color:var(--ink-faint)}
+
+  [data-view="mvp"] .only-full{display:none}
+  [data-view="mvp"] .full-col{display:none}
+  [data-view="full"] .mvp-note{display:none}
+
+  /* pack picker */
+  .seg{display:flex;gap:8px;flex-wrap:wrap;padding:2px 0 10px}
+  .seg button{border:1px solid var(--border-strong);background:var(--surface);color:var(--ink-muted);font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;min-height:38px}
+  .seg button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+  .seg button:not([aria-pressed="true"]):hover{border-color:var(--brand);color:var(--brand)}
+  .seg button small{display:block;font-weight:400;font-size:11px;opacity:.85}
+  .nest-note{font-size:12px;color:var(--ink-muted);border-left:3px solid var(--border-strong);padding:6px 10px;margin-top:10px;background:var(--surface-2);border-radius:0 6px 6px 0}
+  .nest-note b{color:var(--ink)}
+
+  /* citation quality strip */
+  .cite-strip{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 20px 12px;font-size:12.5px}
+  .cs-item{border:1px solid var(--border-strong);background:var(--surface-2);border-radius:99px;padding:4px 12px;color:var(--ink-muted);white-space:nowrap}
+  .cs-item b{color:var(--ink);font-family:var(--font-data)}
+  .cs-item.ok b{color:var(--ok)} .cs-item.warn b{color:var(--warn)} .cs-item.act b{color:var(--act)}
+
+  /* prompt-detail cards */
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;background:transparent;border:0;box-shadow:none}
+  .pcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+  .pcard .top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .pcard .top .sc{font-family:var(--font-data);font-variant-numeric:tabular-nums;font-size:22px;font-weight:600}
+  .pcard .facts{font-size:12px;color:var(--ink-muted);display:flex;flex-direction:column;gap:2px}
+  .pcard .facts b{color:var(--ink)}
+
+  /* ============ WORKSPACES ============ */
+  .ws-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;background:transparent;border:0;box-shadow:none}
+  .ws-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:10px;text-align:left;color:var(--ink);text-decoration:none;transition:border-color .15s ease}
+  .ws-card:hover{border-color:var(--brand)}
+  .ws-card h3{margin:0;font-size:16px;font-weight:650;display:flex;align-items:center;gap:10px}
+  .ws-card .facts{font-size:13px;color:var(--ink-muted);display:flex;flex-direction:column;gap:4px}
+  .ws-card .facts b{color:var(--ink);font-weight:600}
+  .ws-ava{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font-weight:700;font-size:14px;flex:none}
+  .ws-ava.a1{background:var(--brand-soft);color:var(--brand)}
+  .ws-ava.a2{background:var(--chip-roadmap-soft);color:var(--chip-roadmap)}
+  .go{margin-top:auto;font-size:13px;font-weight:600;color:var(--brand);display:flex;align-items:center;gap:6px}
+
+  /* ============ CYCLES ============ */
+  .camp-head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;padding:16px 20px}
+  .camp-head .facts{font-size:13px;color:var(--ink-muted)}
+  .camp-head .facts b{color:var(--ink);font-weight:600}
+  .btn{display:inline-flex;align-items:center;gap:7px;border-radius:8px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink);font-size:13px;font-weight:600;padding:9px 16px;min-height:38px;text-decoration:none;transition:border-color .15s ease}
+  .btn:hover{border-color:var(--brand);color:var(--brand)}
+  .btn.primary{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+  .btn.primary:hover{opacity:.92;color:var(--on-brand)}
+  .cycle-list{display:flex;flex-direction:column;background:transparent;border:0;box-shadow:none;gap:12px}
+  .cycle-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 20px;display:grid;grid-template-columns:110px 1.4fr 1fr 1fr auto;gap:10px 18px;align-items:center}
+  .cycle-card .cnum{font-family:var(--font-data);font-weight:700;font-size:15px}
+  .cycle-card .cnum small{display:block;font-weight:400;color:var(--ink-faint);font-size:11.5px}
+  .cycle-card .cfact{font-size:12.5px;color:var(--ink-muted);white-space:normal}
+  .cycle-card .cfact b{color:var(--ink);font-weight:600}
+  .cycle-card.future{border-style:dashed;box-shadow:none}
+  @media (max-width:860px){.cycle-card{grid-template-columns:1fr 1fr;}}
+
+  /* ============ SETUP ============ */
+  .setup-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;background:transparent;border:0;box-shadow:none;align-items:start}
+  .setup-grid>div{display:flex;flex-direction:column;gap:20px}
+  .check-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+  .check-row:last-child{border-bottom:0}
+  .check-row input[type=checkbox]{width:17px;height:17px;accent-color:var(--brand);flex:none}
+  .check-row .cr-name{font-weight:600;font-size:13.5px;min-width:130px}
+  .check-row .cr-name small{display:block;font-weight:400;color:var(--ink-faint);font-size:11.5px}
+  .check-row .cr-cost{margin-left:auto;font-family:var(--font-data);font-size:12px;color:var(--ink-muted);white-space:nowrap}
+  .check-row.disabled{opacity:.55}
+  .fld{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+  .fld label{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-muted)}
+  .fld select,.fld input[type=number]{background:var(--surface-2);border:1px solid var(--border-strong);color:var(--ink);border-radius:8px;padding:9px 12px;font-size:14px;font-family:inherit;max-width:240px}
+  .fld-row{display:flex;gap:24px;flex-wrap:wrap}
+  .est-line{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:5px 0}
+  .est-line .k{color:var(--ink-muted)}
+  .est-line .v{font-family:var(--font-data);font-variant-numeric:tabular-nums;font-weight:600}
+  .est-total{border-top:1px solid var(--border-strong);margin-top:8px;padding-top:10px}
+  .est-total .v{font-size:18px}
+  .warn-inline{display:none;margin-top:10px;padding:9px 12px;border-radius:var(--radius-sm);background:var(--warn-soft);color:var(--warn);font-size:12.5px;font-weight:600}
+  .warn-inline.show{display:block}
+  .save-note{display:none;margin:0 20px 16px;padding:10px 14px;border-radius:var(--radius-sm);background:var(--brand-soft);color:var(--brand);font-size:13px;font-weight:600}
+  .save-note.show{display:block}
+  .pk-row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:6px 0;border-bottom:1px dashed var(--border)}
+  .pk-row:last-child{border-bottom:0}
+  .pk-row .n{font-family:var(--font-data);color:var(--ink-muted)}
+
+  /* ============ ANSWERS ============ */
+  .ans-head{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:baseline;padding:16px 20px 0;font-size:13px;color:var(--ink-muted)}
+  .ans-head b{color:var(--ink);font-weight:600}
+  .prompt-cell{white-space:normal;min-width:300px;font-size:13px}
+  .cat-tag{font-size:11px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em;display:block;margin-top:2px}
+  .sample-note{font-size:12.5px;color:var(--ink-muted);padding:12px 20px 16px}
+
+  @media (max-width:960px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .duo{grid-template-columns:1fr}
+    .narr-grid{grid-template-columns:1fr}
+    .mode-grid{grid-template-columns:1fr}
+    .ev-grid{grid-template-columns:1fr}
+    .setup-grid{grid-template-columns:1fr}
+  }
+  @media (max-width:560px){
+    .kpis{grid-template-columns:1fr}
+    .appbar{padding:12px 16px}
+    .wrap{padding:16px 16px 48px}
+    .proto-banner{margin:12px 16px 0}
+  }
+</style>
+
+<body data-view="mvp">
+<div id="tooltip" role="tooltip"></div>
+
+<header class="appbar">
+  <div class="identity">
+    <a class="logo" href="#/" aria-label="Home — workspaces" style="color:var(--on-brand)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.2"/><path d="M12 12 20 7"/><path d="M4.9 6.5a9 9 0 0 1 14.2 0"/><path d="M7.6 9.4a5.2 5.2 0 0 1 8.8 0"/></svg>
+    </a>
+    <div>
+      <h1>Sentinela · Reputation Radar</h1>
+      <div class="crumb" id="crumb"><b>Workspaces</b></div>
+    </div>
+  </div>
+  <div class="bar-right">
+    <span class="cycle-chip" id="cycle-chip" hidden>Cycle <b>1</b> · Jun 30 – Jul 30, 2026</span>
+    <div class="switch" id="view-switch" role="tablist" aria-label="Panel view" hidden>
+      <button role="tab" id="tab-mvp" aria-selected="true" onclick="setView('mvp')">MVP view · Phase 1</button>
+      <button role="tab" id="tab-full" aria-selected="false" onclick="setView('full')">Full view · Roadmap</button>
+    </div>
+  </div>
+</header>
+
+<div class="proto-banner" role="note">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.8 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0Z"/></svg>
+  <span><b>Interface prototype.</b> All numbers are illustrative — no real measurements were executed. Monitored prompts and sources stay in the market language (pt-BR).</span>
+</div>
+
+<!-- ================================================================ -->
+<!-- SCREEN: WORKSPACES                                               -->
+<!-- ================================================================ -->
+<main class="wrap screen" id="s-workspaces">
+  <section style="background:transparent;border:0;box-shadow:none">
+    <h2 style="font-size:20px;margin:6px 0 2px">Workspaces</h2>
+    <p style="margin:0;font-size:13.5px;color:var(--ink-muted)">Each client organization is a workspace. Brands, campaigns and cycles live inside it.</p>
+  </section>
+  <div class="ws-grid">
+    <a class="ws-card" href="#/w/cnn">
+      <h3><span class="ws-ava a1">CN</span>CNN GEO for Brands</h3>
+      <div class="facts">
+        <span><b>1 brand</b> · Ypê (Química Amparo)</span>
+        <span><b>1 active campaign</b> · Post-crisis Anvisa — monthly</span>
+        <span>Last cycle: <b>58/100</b> <span class="band fair" style="font-size:10px">Fair</span> · next round <b>Aug 30</b></span>
+      </div>
+      <span class="go">Open workspace <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </a>
+    <a class="ws-card" href="#/w/demo">
+      <h3><span class="ws-ava a2">AC</span>Acme Corp <span class="tier road" style="font-size:10px">example</span></h3>
+      <div class="facts">
+        <span><b>0 brands</b> · empty workspace</span>
+        <span>No campaigns configured yet</span>
+        <span>Shows the empty state + campaign setup flow</span>
+      </div>
+      <span class="go">Open workspace <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </a>
+  </div>
+</main>
+
+<!-- ================================================================ -->
+<!-- SCREEN: CYCLES (workspace home)                                  -->
+<!-- ================================================================ -->
+<main class="wrap screen" id="s-cycles">
+  <section>
+    <div class="camp-head">
+      <div>
+        <h2 style="font-size:17px;margin:0 0 4px">Ypê — Post-crisis Anvisa</h2>
+        <div class="facts">Monthly campaign · <b>7 engines</b> · <b>300 prompts</b> × <b>5 repetitions</b> · parametric + grounded · cap <b>US$ 150</b>/cycle</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="#/w/cnn/setup">Edit campaign</a>
+        <button class="btn primary" data-tip="Prototype — runs are not executed. In the product this enqueues an extraordinary round (war-room trigger).">Run now</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cycle-list">
+    <div class="cycle-card">
+      <div class="cnum">Cycle 1<small>Jul 28 – 30</small></div>
+      <div class="cfact"><span class="chip ok"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>Completed</span></div>
+      <div class="cfact">Brand Score <b>58/100</b> <span class="band fair" style="font-size:10px">Fair</span> <span style="color:var(--ok);font-family:var(--font-data)">▲ +6</span></div>
+      <div class="cfact">10,500 executions · <b>US$ 82.10</b> of 150 · 1 engine on <b style="color:var(--act)">Act</b></div>
+      <a class="btn" href="#/w/cnn/c/1">Open dashboard</a>
+    </div>
+    <div class="cycle-card">
+      <div class="cnum">Cycle 0<small>Jun 30 – Jul 2</small></div>
+      <div class="cfact"><span class="chip ok"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>Completed</span> <span class="tier f1" style="margin-left:6px">Baseline</span></div>
+      <div class="cfact">Brand Score <b>52/100</b> <span class="band weak" style="font-size:10px">Weak</span> · calibration run</div>
+      <div class="cfact">10,500 executions · <b>US$ 79.60</b> of 150 · paraphrase variance test included</div>
+      <button class="btn" data-tip="Prototype — only Cycle 1 has a full dashboard in this mock.">Open dashboard</button>
+    </div>
+    <div class="cycle-card future">
+      <div class="cnum">Cycle 2<small>Aug 30</small></div>
+      <div class="cfact"><span class="chip neutral">Scheduled</span></div>
+      <div class="cfact">Runs automatically · <b>monthly cadence</b></div>
+      <div class="cfact">Estimated <b>~US$ 82</b> · same grid (300 × 7 × 5)</div>
+      <button class="btn" data-tip="Prototype — scheduling is illustrative.">Reschedule</button>
+    </div>
+    <div class="cycle-card future">
+      <div class="cnum">Cycle 3<small>Sep 30</small></div>
+      <div class="cfact"><span class="chip neutral">Scheduled</span></div>
+      <div class="cfact">Runs automatically · <b>monthly cadence</b></div>
+      <div class="cfact">Estimated <b>~US$ 82</b> · same grid (300 × 7 × 5)</div>
+      <button class="btn" data-tip="Prototype — scheduling is illustrative.">Reschedule</button>
+    </div>
+  </div>
+</main>
+
+<!-- ================================================================ -->
+<!-- SCREEN: EMPTY WORKSPACE (Acme)                                   -->
+<!-- ================================================================ -->
+<main class="wrap screen" id="s-empty">
+  <section>
+    <div class="sec-body" style="text-align:center;padding:56px 20px">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="1.6" stroke-linecap="round" style="margin-bottom:10px"><circle cx="12" cy="12" r="2.2"/><path d="M12 12 20 7"/><path d="M4.9 6.5a9 9 0 0 1 14.2 0"/><path d="M7.6 9.4a5.2 5.2 0 0 1 8.8 0"/></svg>
+      <h2 style="font-size:17px;margin:0 0 6px">No campaigns yet</h2>
+      <p style="font-size:13.5px;color:var(--ink-muted);max-width:440px;margin:0 auto 18px">Set up your first monitoring campaign: pick a brand, choose which AI engines to watch, and define the prompt pack and cost cap.</p>
+      <a class="btn primary" href="#/w/demo/setup">Set up campaign</a>
+    </div>
+  </section>
+</main>
+
+<!-- ================================================================ -->
+<!-- SCREEN: CAMPAIGN SETUP                                           -->
+<!-- ================================================================ -->
+<main class="wrap screen" id="s-setup">
+  <div class="save-note" id="save-note">Prototype: campaign configuration is illustrative — nothing was saved. In the product this creates/updates the campaign and schedules the next cycle.</div>
+  <div class="setup-grid">
+    <div>
+      <section>
+        <div class="sec-head">
+          <h2>AI engines to monitor</h2>
+          <span class="sub">select which engines answer the prompt pack · cost updates live</span>
+        </div>
+        <div class="sec-body" id="engine-picks"><!-- rendered --></div>
+      </section>
+
+      <section>
+        <div class="sec-head">
+          <h2>Prompt pack</h2>
+          <span class="sub">the main budget lever · managed in the Prompt Bank · versioned · consumer questions stay in pt-BR</span>
+          <button class="info" data-tip="Packs are NESTED: Essential ⊂ Standard ⊂ Full. The Essential core runs in every tier, so cycle-over-cycle drift stays comparable on the core even if the client changes tier. Editing pack contents creates a new version — every cycle records which pack version ran.">i</button>
+        </div>
+        <div class="sec-body">
+          <div class="seg" role="group" aria-label="Prompt pack tier">
+            <button aria-pressed="false" onclick="setPack('essential')">Essential<small>50 prompts · crisis core</small></button>
+            <button aria-pressed="false" onclick="setPack('standard')">Standard<small>150 prompts · core + breadth</small></button>
+            <button aria-pressed="true" onclick="setPack('full')">Full<small>300 prompts · full panel</small></button>
+          </div>
+          <div id="pack-rows"><!-- rendered --></div>
+          <div class="nest-note"><b>Nested packs keep history honest:</b> Essential ⊂ Standard ⊂ Full. The 50-prompt core runs in every tier — drift and cycle comparisons stay valid on the core even when the tier changes. Upgrading adds breadth; it never breaks the series.</div>
+        </div>
+      </section>
+
+      <section>
+        <div class="sec-head"><h2>Execution</h2></div>
+        <div class="sec-body">
+          <div class="fld-row">
+            <div class="fld">
+              <label for="f-reps">Repetitions per prompt<button class="info" data-tip="AI engines vary between identical runs. Repetitions let us report cycle averages and answer stability instead of single-shot noise.">i</button></label>
+              <select id="f-reps" onchange="recalc()"><option>3</option><option selected>5</option></select>
+            </div>
+            <div class="fld">
+              <label for="f-cad">Cadence</label>
+              <select id="f-cad"><option selected>Monthly</option><option>Biweekly</option><option>Weekly</option><option>Intraday (war room) — Enterprise</option></select>
+            </div>
+            <div class="fld">
+              <label for="f-cap">Cost cap per cycle (US$)<button class="info" data-tip="Mandatory. The run stops automatically at the cap and is marked as partial — never a surprise bill.">i</button></label>
+              <input id="f-cap" type="number" value="150" min="10" onchange="recalc()" oninput="recalc()">
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div>
+      <section>
+        <div class="sec-head"><h2>Cycle estimate</h2><span class="sub">recalculated live</span></div>
+        <div class="sec-body">
+          <div class="est-line"><span class="k">Engines selected</span><span class="v" id="est-engines">7</span></div>
+          <div class="est-line"><span class="k">Prompts × repetitions</span><span class="v" id="est-pr">300 × 5</span></div>
+          <div class="est-line"><span class="k">Executions per cycle</span><span class="v" id="est-exec">10,500</span></div>
+          <div class="est-line"><span class="k">— parametric calls</span><span class="v" id="est-par">6,000</span></div>
+          <div class="est-line"><span class="k">— grounded calls (search fees)</span><span class="v" id="est-gro">4,500</span></div>
+          <div class="est-line est-total"><span class="k">Estimated cost / cycle</span><span class="v" id="est-cost">US$ 79.50</span></div>
+          <div class="cost-bar" style="margin-top:12px"><i id="est-bar" style="width:53%"></i></div>
+          <div style="font-size:12px;color:var(--ink-muted)" id="est-capline">53% of the US$ 150 cap</div>
+          <div class="warn-inline" id="est-warn">Estimate exceeds the cap — the cycle will stop at the cap and be marked as a partial run.</div>
+        </div>
+      </section>
+      <section>
+        <div class="sec-head"><h2>Summary</h2></div>
+        <div class="sec-body" style="font-size:13px;color:var(--ink-muted);display:flex;flex-direction:column;gap:6px">
+          <span>Every selected engine answers the <b style="color:var(--ink)"><span id="sum-pack">Full 300-prompt</span> pack</b>, <span id="sum-reps">5</span>× each, in both channels where supported.</span>
+          <span>Every answer is scored (sentiment · visibility · recommendation) and every cited source gets <b style="color:var(--ink)">Our Score</b>.</span>
+          <span>Deterministic scoring — no generative LLM grades anything.</span>
+        </div>
+        <div class="sec-body" style="padding-top:0">
+          <button class="btn primary" onclick="document.getElementById('save-note').classList.add('show');window.scrollTo({top:0})">Save campaign</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- ================================================================ -->
+<!-- SCREEN: CYCLE DASHBOARD                                          -->
+<!-- ================================================================ -->
+<main class="wrap screen" id="s-cycle">
+
+  <div class="kpis" aria-label="Cycle indicators">
+    <div class="kpi">
+      <span class="label">AI Brand Score<button class="info" data-tip="Composite 0–100 per cycle: brand visibility, answer sentiment, recommendation rank and answer stability, aggregated across all monitored engines. Always cycle averages — never single executions. Click any engine score below to see its breakdown.">i</button></span>
+      <div class="vrow"><span class="value">58<span style="font-size:16px;color:var(--ink-faint)">/100</span></span><span class="band fair" tabindex="0" data-tip="Illustrative bands — to be calibrated with the client in Phase 0: Strong ≥ 85 · Good 70–84 · Fair 55–69 · Weak 40–54 · Critical < 40.">Fair</span></div>
+      <span class="delta up"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5l7 8H5z"/></svg>+6 vs previous cycle</span>
+      <span class="meta">cycle average · 300 prompts × 5 repetitions</span>
+    </div>
+    <div class="kpi">
+      <span class="label">Net sentiment<button class="info" data-tip="% of positive answers minus % of negative answers in the cycle. A negative value means negative answers still outnumber positive ones — the green delta only says it is improving.">i</button></span>
+      <span class="value" style="color:var(--warn)">−12<span style="font-size:16px;color:var(--ink-faint)"> pts</span></span>
+      <span class="delta up"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5l7 8H5z"/></svg>+9 vs previous cycle</span>
+      <span class="meta">% positive − % negative answers</span>
+    </div>
+    <div class="kpi">
+      <span class="label">Share of Answer<button class="info" data-tip="Share of all collected answers in which the brand is mentioned at all. Measures visibility, not favorability.">i</button></span>
+      <span class="value">64<span style="font-size:16px;color:var(--ink-faint)">%</span></span>
+      <span class="delta up"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5l7 8H5z"/></svg>+5 pts</span>
+      <span class="meta">answers that mention the brand</span>
+    </div>
+    <div class="kpi">
+      <span class="label">Engines monitored<button class="info" data-tip="Engines measured through official APIs in Phase 1. Product surfaces without an API (Meta AI, Google AI Overview, Google AI Mode) enter in Phase B via SERP data providers.">i</button></span>
+      <span class="value">7<span style="font-size:16px;color:var(--ink-faint)"> of 10</span></span>
+      <span class="meta" style="margin-top:6px">Meta AI, Google AI Overview and AI Mode enter in Phase B (no product API)</span>
+    </div>
+  </div>
+
+  <section aria-labelledby="h-engines">
+    <div class="sec-head">
+      <h2 id="h-engines">Engine ranking</h2>
+      <span class="tier f1">Phase 1</span>
+      <span class="sub">click a score for evidence · click an engine name for its 300 answered prompts</span>
+    </div>
+    <div class="sec-body tbl-scroll">
+      <table id="engines-table">
+        <thead>
+          <tr>
+            <th scope="col">Engine</th>
+            <th scope="col">Channel<button class="info" data-tip="Parametric = model memory only, browsing disabled (approximates the training channel). Grounded = live web retrieval (RAG); the answer reflects current coverage and citations are captured.">i</button></th>
+            <th scope="col">Fidelity<button class="info" data-tip="How close the measurement is to the real consumer product. API = direct measurement. Product approximation = measured via API with a search tool enabled — not the consumer product itself; disclosed on every report.">i</button></th>
+            <th scope="col" class="num">Brand Score<button class="info" data-tip="0–100 per engine: Visibility (25) + Sentiment (30) + Recommendation (25) + Stability (20). Weights from methodology radar-v0.1 (illustrative). Click a score for the breakdown.">i</button></th>
+            <th scope="col" class="num">Δ cycle</th>
+            <th scope="col">Sentiment</th>
+            <th scope="col">Status<button class="info" data-tip="OK: stable. Watch: 5–15 pt drop, or a new high-risk narrative. Act: drop above 15 pts between cycles (contractual trigger) or a critical narrative.">i</button></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-danger">
+    <div class="sec-head">
+      <h2 id="h-danger">Most damaging prompts</h2>
+      <span class="tier f1">Phase 1</span>
+      <span class="sub">ranked by cycle-average score across the 7 engines · click a prompt to compare answers side by side</span>
+      <button class="info" data-tip="The prompts where the brand is answered worst this cycle. Damage rank = lowest cycle-average score. These are the questions a real consumer asks — and where PR action matters most.">i</button>
+    </div>
+    <div class="sec-body tbl-scroll">
+      <table id="danger-table">
+        <thead>
+          <tr>
+            <th scope="col">Prompt (pt-BR)</th>
+            <th scope="col">Category</th>
+            <th scope="col" class="num">Avg score</th>
+            <th scope="col">Worst engine</th>
+            <th scope="col" class="num">Engines negative</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="duo">
+    <div>
+      <div class="sec-head">
+        <h2>Training base vs live web</h2>
+        <span class="tier f1">Phase 1</span>
+      </div>
+      <div class="mode-grid">
+        <div class="mode-card">
+          <span class="label">Parametric (training)<button class="info" data-tip="Same AI Brand Score (0–100), measured with browsing/tools disabled: the answer comes only from what the model memorized in training. Changes only when a new model version ships — which is why the delta is flat.">i</button></span>
+          <div class="vrow" style="margin:4px 0 0"><span class="value">54<span style="font-size:14px;color:var(--ink-faint)">/100</span></span><span class="band weak">Weak</span><span class="delta flat">0 · no model updates</span></div>
+          <div class="scale" role="img" aria-label="54 of 100, Weak band"><i class="sC"></i><i class="sW"></i><i class="sF"></i><i class="sG"></i><i class="sS"></i><span class="dot" style="left:54%"></span></div>
+          <span class="meta">What the models “know” without searching — the brand image already baked into training. Only moves on new model versions.</span>
+        </div>
+        <div class="mode-card">
+          <span class="label">Grounded (web/RAG)<button class="info" data-tip="Same AI Brand Score (0–100), measured with web search enabled: the engine retrieves current pages and cites them. Moves within days when coverage changes — PR actions show up here first.">i</button></span>
+          <div class="vrow" style="margin:4px 0 0"><span class="value">49<span style="font-size:14px;color:var(--ink-faint)">/100</span></span><span class="band weak">Weak</span><span class="delta up"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5l7 8H5z"/></svg>+9 vs previous cycle</span></div>
+          <div class="scale" role="img" aria-label="49 of 100, Weak band"><i class="sC"></i><i class="sW"></i><i class="sF"></i><i class="sG"></i><i class="sS"></i><span class="dot" style="left:49%"></span></div>
+          <span class="meta">What the models answer searching the web right now — reflects current coverage of the case. Fastest-moving channel.</span>
+        </div>
+      </div>
+      <div class="gap-note"><b>Reading: coverage gap −5 pts.</b> Live-web answers run below the models’ memory — crisis coverage still drags current answers down. The grounded channel is recovering fastest (+9): editorial actions land here first. <b>Risk if it persists:</b> today’s web is tomorrow’s training data — a low grounded score left unaddressed eventually becomes the parametric score of future model versions.</div>
+    </div>
+    <div>
+      <div class="sec-head">
+        <h2>Cycle cost</h2>
+        <span class="tier f1">Phase 1</span>
+        <button class="info" data-tip="Every campaign has a mandatory cost cap. The projected cost is checked before and during the fan-out; when the cap is reached the run stops and is honestly marked as partial.">i</button>
+      </div>
+      <div class="sec-body">
+        <div style="font-family:var(--font-data);font-variant-numeric:tabular-nums;font-size:24px;font-weight:600">US$ 82.10 <span style="font-size:14px;color:var(--ink-muted);font-weight:400">of US$ 150.00 (campaign cap)</span></div>
+        <div class="cost-bar" role="img" aria-label="55% of the cost cap consumed"><i style="width:55%"></i></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">10,500 executions · 300 prompts × 7 engines × 5 reps · the cycle stops automatically at the cap</div>
+      </div>
+    </div>
+  </div>
+
+  <section aria-labelledby="h-sources">
+    <div class="sec-head">
+      <h2 id="h-sources">Sources cited by the AIs · Our Source Score</h2>
+      <span class="tier f1">Phase 1</span>
+      <span class="sub">deterministic score — no generative LLM grades a source · click any score for the rubric breakdown</span>
+    </div>
+    <div class="callout" role="note">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--act)" stroke-width="2.2" stroke-linecap="round"><path d="M12 9v4"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+      <span><b>Priority #1 —</b> high-authority <b>stale</b> source: g1.globo.com (May 12, crisis peak) is still cited by <b>5 of 7 engines</b>. The Anvisa resolution (Jun 22) does not yet anchor the answers.</span>
+    </div>
+    <div class="cite-strip" role="note">
+      <span class="cs-item"><b>87</b> unique sources cited</span>
+      <span class="cs-item ok"><b>61%</b> of citations from grade A/B</span>
+      <span class="cs-item warn"><b>27%</b> grade C/D</span>
+      <span class="cs-item act"><b>12%</b> grade E or unverified</span>
+      <span class="cs-item act"><b>1</b> unreachable URL (possible hallucination)</span>
+      <button class="info" data-tip="Citation quality profile of the cycle — the aggregate answer to “are the sources reliable?”. Covers the grounded channel only (4,500 of 10,500 answers): parametric answers do not browse and cite nothing. The table shows the top sources by presence; the full list is paged in the product.">i</button>
+    </div>
+    <div class="sec-body tbl-scroll" style="padding-top:0">
+      <table id="sources-table">
+        <thead>
+          <tr>
+            <th scope="col">Source</th>
+            <th scope="col">Class<button class="info" data-tip="Domain class from a curated, versioned registry: brand official / government / national press / complaints platform / social / forum / blog / unknown. Publisher-neutral: no outlet gets special weight for being a customer.">i</button></th>
+            <th scope="col">Our Score<button class="info" data-tip="Deterministic 0–100 rubric (source-score-v0.1): Authority 30 · Freshness 20 · Verifiability 15 · Corroboration 15 · Support 10 · Independence 10. Grades: A ≥ 85 · B 70–84 · C 55–69 · D 40–54 · E < 40. Click the score to see where every point comes from.">i</button></th>
+            <th scope="col">Freshness<button class="info" data-tip="Publication/update date anchored to the event timeline: before the crisis peak (May 12), between peak and resolution, or after the Anvisa resolution (Jun 22). A high-authority but stale source is the #1 driver of outdated answers.">i</button></th>
+            <th scope="col" class="num">Presence<button class="info" data-tip="How many of the monitored engines cited this source in this cycle. High presence × stale date = top checklist priority.">i</button></th>
+            <th scope="col" class="full-col">Support <span class="tier road" style="margin-left:4px">Tier 2</span><button class="info" data-tip="Whether the cited page actually supports the specific statement the AI attributed to it. Computed with local NLI/embedding models — never a generative LLM. Tier 2 capability; shown here as roadmap.">i</button></th>
+            <th scope="col">Verification<button class="info" data-tip="T1 verified = URL resolves, domain class and date checked by deterministic code. Unverified = the AI claimed this source; we have not checked it. Unreachable = the URL does not resolve (possible hallucinated source).">i</button></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p class="mvp-note" style="font-size:12.5px;color:var(--ink-muted);margin:12px 2px 0">
+        In Phase 1, “T1 verified” = URL, domain class and date checked by code. <b>Support</b> analysis (does the page confirm what the AI said?) is Tier 2 — visible in the Full view.
+      </p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-checklist">
+    <div class="sec-head">
+      <h2 id="h-checklist">Cycle action checklist</h2>
+      <span class="tier f1">Phase 1</span>
+      <span class="sub">feeds the Governance Panel · pipeline: Identified → In agenda → In production → Published → Measured</span>
+      <button class="info" data-tip="Actions are ranked by: how many engines cite the causing source × source authority × staleness. Each action carries a deadline and is re-measured in the next cycle.">i</button>
+    </div>
+    <div class="sec-body tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Recommended action</th>
+            <th scope="col">Engine</th>
+            <th scope="col">Priority</th>
+            <th scope="col">Due</th>
+            <th scope="col">Stage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="action-row">
+            <td>Publish content anchored on the Anvisa resolution (Jun 22) to displace the May coverage that still anchors answers</td>
+            <td>Perplexity</td>
+            <td><span class="prio p1">P1</span></td>
+            <td>Aug 12</td>
+            <td><span class="pipe hot">In agenda</span></td>
+          </tr>
+          <tr class="action-row">
+            <td>Create an answer-first page “A Ypê é segura?” with FAQPage schema on the official site</td>
+            <td>All</td>
+            <td><span class="prio p1">P1</span></td>
+            <td>Aug 08</td>
+            <td><span class="pipe">Identified</span></td>
+          </tr>
+          <tr class="action-row">
+            <td>Robots.txt: allow PerplexityBot and GPTBot on the institutional domain (currently blocked)</td>
+            <td>Perplexity · ChatGPT Search</td>
+            <td><span class="prio p2">P2</span></td>
+            <td>Aug 05</td>
+            <td><span class="pipe hot">In production</span></td>
+          </tr>
+          <tr class="action-row">
+            <td>Reply to the top Reclame Aqui complaints cited in answers (executed by the client)</td>
+            <td>ChatGPT Search</td>
+            <td><span class="prio p2">P2</span></td>
+            <td>Aug 20</td>
+            <td><span class="pipe">Identified</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="only-full" aria-labelledby="h-trend">
+    <div class="sec-head">
+      <h2 id="h-trend">Time evolution</h2>
+      <span class="tier road">Tier 2 · Roadmap</span>
+      <span class="sub">AI Brand Score per cycle · regulatory event marker</span>
+    </div>
+    <div class="legend"><span><i style="background:var(--brand)"></i>Brand Score (cycle average)</span><span><i style="background:var(--accent)"></i>Anvisa resolution (Jun 22)</span></div>
+    <div class="trend-wrap">
+      <svg viewBox="0 0 720 180" width="100%" height="180" role="img" aria-label="AI Brand Score line rising from 41 to 58 across six cycles, with the Anvisa resolution marker between the first two cycles">
+        <line x1="40" y1="20" x2="40" y2="150" stroke="var(--border-strong)" stroke-width="1"/>
+        <line x1="40" y1="150" x2="700" y2="150" stroke="var(--border-strong)" stroke-width="1"/>
+        <line x1="40" y1="63" x2="700" y2="63" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 5"/>
+        <line x1="40" y1="106" x2="700" y2="106" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 5"/>
+        <text x="30" y="67" font-size="11" fill="var(--ink-faint)" text-anchor="end" font-family="monospace">60</text>
+        <text x="30" y="110" font-size="11" fill="var(--ink-faint)" text-anchor="end" font-family="monospace">40</text>
+        <line x1="205" y1="20" x2="205" y2="150" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <polyline fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+          points="90,128 205,115 320,104 435,95 550,80 665,67"/>
+        <circle cx="665" cy="67" r="4.5" fill="var(--brand)"/>
+        <text x="90" y="168" font-size="11" fill="var(--ink-muted)" text-anchor="middle">May</text>
+        <text x="205" y="168" font-size="11" fill="var(--ink-muted)" text-anchor="middle">Jun</text>
+        <text x="320" y="168" font-size="11" fill="var(--ink-muted)" text-anchor="middle">Jul</text>
+        <text x="435" y="168" font-size="11" fill="var(--ink-muted)" text-anchor="middle">Aug</text>
+        <text x="550" y="168" font-size="11" fill="var(--ink-muted)" text-anchor="middle">Sep</text>
+        <text x="665" y="168" font-size="11" fill="var(--ink-muted)" text-anchor="middle">Oct</text>
+      </svg>
+    </div>
+  </section>
+
+  <section class="only-full" aria-labelledby="h-matrix">
+    <div class="sec-head">
+      <h2 id="h-matrix">Prompt category × engine matrix</h2>
+      <span class="tier road">Tier 2 · Roadmap</span>
+      <span class="sub">average sentiment per category · bands: green ≥ +11 · gray −5 to +10 · amber −6 to −11 · red ≤ −12</span>
+    </div>
+    <div class="sec-body tbl-scroll">
+      <table class="heat">
+        <thead>
+          <tr>
+            <th scope="col">Category</th>
+            <th scope="col">Claude</th><th scope="col">ChatGPT</th><th scope="col">Gemini</th><th scope="col">DeepSeek</th><th scope="col">Perplexity</th><th scope="col">G. Search</th><th scope="col">C. Search</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="rowlabel">Product safety and quality</td><td><span class="cell c-neu">+8</span></td><td><span class="cell c-neu">+4</span></td><td><span class="cell c-neu">0</span></td><td><span class="cell c-neg">−12</span></td><td><span class="cell c-neg">−34</span></td><td><span class="cell c-neu">−2</span></td><td><span class="cell c-mix">−9</span></td></tr>
+          <tr><td class="rowlabel">Anvisa case status</td><td><span class="cell c-neu">+2</span></td><td><span class="cell c-neu">−4</span></td><td><span class="cell c-mix">−8</span></td><td><span class="cell c-neg">−18</span></td><td><span class="cell c-neg">−41</span></td><td><span class="cell c-pos">+12</span></td><td><span class="cell c-mix">−7</span></td></tr>
+          <tr><td class="rowlabel">Brand identity and history</td><td><span class="cell c-pos">+31</span></td><td><span class="cell c-pos">+26</span></td><td><span class="cell c-pos">+22</span></td><td><span class="cell c-pos">+15</span></td><td><span class="cell c-neu">+6</span></td><td><span class="cell c-pos">+19</span></td><td><span class="cell c-pos">+17</span></td></tr>
+          <tr><td class="rowlabel">Competitor comparison</td><td><span class="cell c-neu">+3</span></td><td><span class="cell c-neu">−1</span></td><td><span class="cell c-neu">−5</span></td><td><span class="cell c-mix">−10</span></td><td><span class="cell c-neg">−22</span></td><td><span class="cell c-neu">−3</span></td><td><span class="cell c-neu">−4</span></td></tr>
+          <tr><td class="rowlabel">Purchase intent</td><td><span class="cell c-pos">+14</span></td><td><span class="cell c-pos">+11</span></td><td><span class="cell c-neu">+5</span></td><td><span class="cell c-neu">−2</span></td><td><span class="cell c-neg">−19</span></td><td><span class="cell c-neu">+7</span></td><td><span class="cell c-neu">+2</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="only-full" aria-labelledby="h-narr">
+    <div class="sec-head">
+      <h2 id="h-narr">Dominant narratives</h2>
+      <span class="tier road">Tier 2 · Roadmap</span>
+      <span class="sub">narrative classification · which sources feed it · which engines repeat it</span>
+    </div>
+    <div class="narr-grid">
+      <div class="narr">
+        <h3>Contamination / recall</h3>
+        <span class="chip act" style="width:max-content"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>Negative · weakening</span>
+        <div class="facts">
+          <span>Fed by: <b>g1 (May 12)</b>, Reclame Aqui</span>
+          <span>Repeated by: <b>5 of 7 engines</b></span>
+          <span>Triggered by: “Ypê é segura?”, “posso usar produtos Ypê?”</span>
+        </div>
+      </div>
+      <div class="narr">
+        <h3>Anvisa clears resumption</h3>
+        <span class="chip ok" style="width:max-content"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>Positive · gaining strength</span>
+        <div class="facts">
+          <span>Fed by: <b>anvisa.gov.br (Jun 22)</b>, official site</span>
+          <span>Repeated by: <b>3 of 7 engines</b></span>
+          <span>Triggered by: “Ypê foi liberada pela Anvisa?”</span>
+        </div>
+      </div>
+      <div class="narr">
+        <h3>Value for money / tradition</h3>
+        <span class="chip warn" style="width:max-content"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5l7 12H5z"/></svg>Neutral · stable</span>
+        <div class="facts">
+          <span>Fed by: retail comparisons, reviews</span>
+          <span>Repeated by: <b>6 of 7 engines</b></span>
+          <span>Triggered by: “Ypê ou {concorrente}: qual escolher?”</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="only-full" aria-labelledby="h-comp">
+    <div class="sec-head">
+      <h2 id="h-comp">Competitor benchmark</h2>
+      <span class="tier road">Tier 2 · Roadmap</span>
+      <span class="sub">AI Brand Score compared · cleaning products sector · competitor list defined with the client in Phase 0</span>
+    </div>
+    <div class="sec-body">
+      <div class="rankbar"><span class="name">Competitor A</span><div class="bar"><i style="width:71%"></i></div><span class="val">71</span></div>
+      <div class="rankbar"><span class="name">Competitor B</span><div class="bar"><i style="width:66%"></i></div><span class="val">66</span></div>
+      <div class="rankbar hero"><span class="name">Ypê</span><div class="bar"><i style="width:58%"></i></div><span class="val">58</span></div>
+      <div class="rankbar"><span class="name">Competitor C</span><div class="bar"><i style="width:44%"></i></div><span class="val">44</span></div>
+    </div>
+  </section>
+
+  <section class="only-full" aria-labelledby="h-crisis">
+    <div class="sec-head">
+      <h2 id="h-crisis">Alerts and war room</h2>
+      <span class="tier road">Enterprise · Roadmap</span>
+      <span class="sub">intra-day cadence during crises · automatic triggers for extraordinary review</span>
+    </div>
+    <div class="sec-body" style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;gap:10px;align-items:center;font-size:13.5px">
+        <span class="chip act"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>Act</span>
+        <span>Perplexity dropped <b>17 pts</b> this cycle — above the 15 pt contractual trigger.</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;font-size:13.5px">
+        <span class="chip warn"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5l7 12H5z"/></svg>Watch</span>
+        <span>A new low-authority source (limpezafacil.blog) entered the answers of 1 engine.</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;font-size:13.5px">
+        <span class="chip ok"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>OK</span>
+        <span>No public-complaints spike comparable to May 2026 detected this cycle.</span>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-met">
+    <div class="sec-head">
+      <h2 id="h-met">Methodology and provenance</h2>
+      <span class="tier f1">Phase 1</span>
+    </div>
+    <div class="sec-body" style="padding-bottom:0">
+      <p style="margin:0 0 8px;font-size:13.5px;color:var(--ink-muted)">
+        Readings use <b style="color:var(--ink)">cycle averages</b> (repetitions per prompt), never single executions — AI engines vary between identical runs.
+        Scores and source grades are <b style="color:var(--ink)">computed by deterministic, auditable code</b>; no generative LLM assigns any grade. The LLM appears only in the labeled interpretive summary.
+      </p>
+    </div>
+    <div class="method">
+      Methodology <code>radar-v0.1</code> · sentiment <code>scorer-ptbr-v0.1</code> · source grade <code>source-score-v0.1</code> · 5 repetitions/prompt · ChatGPT Search measured as a product approximation via API (labeled) · Meta AI, Google AI Overview and AI Mode: Phase B
+    </div>
+  </section>
+
+</main>
+
+<!-- ================================================================ -->
+<!-- SCREEN: ENGINE ANSWERS                                           -->
+<!-- ================================================================ -->
+<main class="wrap screen" id="s-answers">
+  <section>
+    <div class="sec-head">
+      <h2 id="ans-title">Perplexity — answered prompts</h2>
+      <span class="tier f1">Phase 1</span>
+      <span class="sub">every prompt × 5 repetitions, scored · expand a prompt to see repetition variance</span>
+    </div>
+    <div class="ans-head" id="ans-stats"></div>
+    <div class="sec-body tbl-scroll">
+      <table id="answers-table">
+        <thead>
+          <tr>
+            <th scope="col">Prompt (pt-BR)</th>
+            <th scope="col">Category</th>
+            <th scope="col" class="num">Prompt score<button class="info" data-tip="Average score of this prompt's repetitions on this engine: sentiment + visibility + recommendation, per methodology radar-v0.1. Click to see the repetitions.">i</button></th>
+            <th scope="col">Sentiment</th>
+            <th scope="col" class="num">Mentions brand<button class="info" data-tip="In how many of the 5 repetitions the brand was mentioned at all.">i</button></th>
+            <th scope="col">Top source cited</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="sample-note" id="ans-note">Showing 10 of 300 prompts — illustrative sample. The product pages through the full pack with filters by category, sentiment and source.</div>
+  </section>
+</main>
+
+<!-- ================================================================ -->
+<!-- SCREEN: PROMPT DETAIL (one prompt across all engines)           -->
+<!-- ================================================================ -->
+<main class="wrap screen" id="s-prompt">
+  <section>
+    <div class="sec-head">
+      <h2 id="pr-title" style="font-size:16px">Prompt</h2>
+      <span class="tier f1">Phase 1</span>
+    </div>
+    <div class="ans-head" id="pr-stats"></div>
+    <div class="sec-body" style="padding-top:8px;font-size:12.5px;color:var(--ink-muted)">
+      Same prompt, every engine, side by side — excerpts are one of the 5 repetitions (illustrative). Click an engine name for its full 300-prompt view.
+    </div>
+  </section>
+  <div class="pgrid" id="pr-cards"></div>
+</main>
+
+<footer class="page">
+  Sentinela · Reputation Radar — static navigable prototype (single HTML file) for scope alignment. Illustrative data; competitor names anonymized on purpose. UI in English; monitored prompts/sources remain in the market language.
+</footer>
+
+<script>
+  /* ================= view toggle (dashboard only) ================= */
+  function setView(v){
+    document.body.dataset.view = v;
+    document.getElementById('tab-mvp').setAttribute('aria-selected', v==='mvp' ? 'true':'false');
+    document.getElementById('tab-full').setAttribute('aria-selected', v==='full' ? 'true':'false');
+  }
+
+  /* ================= global fixed tooltip ================= */
+  (function(){
+    const tip = document.getElementById('tooltip');
+    let current = null;
+    function show(el){
+      current = el;
+      tip.textContent = el.dataset.tip;
+      tip.classList.add('show');
+      const r = el.getBoundingClientRect();
+      tip.style.left = '0px'; tip.style.top = '0px';
+      const tw = tip.offsetWidth, th = tip.offsetHeight;
+      let x = r.left + r.width/2 - tw/2;
+      x = Math.max(8, Math.min(x, window.innerWidth - tw - 8));
+      let y = r.top - th - 8;
+      if (y < 8) y = r.bottom + 8;
+      tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    }
+    function hide(){ current = null; tip.classList.remove('show'); }
+    document.addEventListener('mouseover', e => { const el = e.target.closest('[data-tip]'); if (el) show(el); else if (current) hide(); });
+    document.addEventListener('focusin',  e => { const el = e.target.closest('[data-tip]'); if (el) show(el); });
+    document.addEventListener('focusout', hide);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+    window.addEventListener('scroll', hide, true);
+  })();
+
+  /* ================= data ================= */
+  const ENGINE_AXES = [['Visibility',25],['Sentiment',30],['Recommendation',25],['Stability',20]];
+  const ENGINES = [
+    {slug:'claude', name:'Claude', sub:'Anthropic', channel:'Parametric', kind:'par', seal:['mode','API · no browsing'], score:63, br:[18,22,13,10], d:'+2', dc:'ok', sent:'Positive', st:['ok','OK'],
+     note:'1,500 answers · 300 prompts × 5 reps · mentions the brand in 71% of answers.',
+     quote:'“Sim, a Ypê é uma marca tradicional e amplamente usada no Brasil. Vale observar o recall recente de alguns lotes, já resolvido junto à Anvisa…”'},
+    {slug:'chatgpt', name:'ChatGPT', sub:'OpenAI', channel:'Parametric', kind:'par', seal:['mode','API · no browsing'], score:61, br:[17,21,14,9], d:'+4', dc:'ok', sent:'Neutral', st:['ok','OK'],
+     note:'1,500 answers · brand mentioned in 68% · recommendation appears in 112 of 300 prompts.',
+     quote:'“A Ypê é uma das marcas mais conhecidas de produtos de limpeza no Brasil, com boa relação custo-benefício…”'},
+    {slug:'gemini', name:'Gemini', sub:'Google', channel:'Parametric', kind:'par', seal:['mode','API · no browsing'], score:55, br:[16,18,12,9], d:'+7', dc:'ok', sent:'Neutral', st:['ok','OK'],
+     note:'1,500 answers · brand mentioned in 62% · higher variance between repetitions than peers.',
+     quote:'“Ypê é uma marca brasileira popular. Houve um recall em 2026; verifique os lotes afetados…”'},
+    {slug:'gemini-search', name:'Gemini Search', sub:'Google · grounding', channel:'Grounded', kind:'gro', seal:['mode','API · cites sources'], score:52, br:[15,16,11,10], d:'+9', dc:'ok', sent:'Neutral', st:['ok','OK'],
+     note:'1,500 answers · cites anvisa.gov.br in 40% of answers — the resolution is starting to anchor.',
+     quote:'“Segundo a Anvisa, a comercialização foi retomada em 22/06 para os itens fabricados a partir de janeiro…”'},
+    {slug:'deepseek', name:'DeepSeek', sub:'DeepSeek', channel:'Parametric', kind:'par', seal:['mode','API · no browsing'], score:49, br:[14,17,10,8], d:'−3', dc:'act', sent:'Neutral', st:['warn','Watch'],
+     note:'1,500 answers · brand mentioned in 55% · 41 answers contained outdated factual claims.',
+     quote:'“Ypê é uma marca de produtos de limpeza… informações recentes sobre recalls podem não estar atualizadas.”'},
+    {slug:'chatgpt-search', name:'ChatGPT Search', sub:'OpenAI · web_search', channel:'Grounded', kind:'gro', seal:['unverified','Product approximation','Measured via API with the web_search tool — not the consumer ChatGPT Search product itself. Disclosed on every report.'], score:47, br:[15,14,11,7], d:'+3', dc:'ok', sent:'Mixed', st:['warn','Watch'],
+     note:'1,500 answers · mixed sentiment: 38% of answers cite Reclame Aqui threads from May.',
+     quote:'“Houve um recall de produtos Ypê em maio de 2026; consumidores relataram problemas no Reclame Aqui…”'},
+    {slug:'perplexity', name:'Perplexity', sub:'Sonar', channel:'Grounded', kind:'gro', seal:['mode','API · cites sources'], score:38, br:[13,8,9,8], d:'−17', dc:'act', sent:'Negative', st:['act','Act'],
+     note:'1,500 answers · 182 answers cite the May coverage (g1, May 12) as if current · drop above the 15 pt contractual trigger.',
+     quote:'“A Anvisa determinou o recolhimento de produtos Ypê por risco de contaminação microbiológica [g1.globo.com]…”'}
+  ];
+
+  const SOURCE_AXES = [['Authority',30],['Freshness',20],['Verifiability',15],['Corroboration',15],['Support',10],['Independence',10]];
+  const SOURCES = [
+    {dom:'g1.globo.com', sub:'/economia/recall-ype…', cls:'National press', grade:'A', score:88, br:[30,8,15,15,10,10],
+     fresh:['old','May 12 · pre-resolution'], pres:'5 of 7', sup:['yes','Supports'], ver:['verified','T1 verified'],
+     why:'Loses points only on Freshness: published May 12, before the Jun 22 resolution — accurate then, stale now. This is the #1 checklist driver.',
+     claim:'AI claim: “products were recalled by Anvisa due to microbiological contamination risk.”',
+     excerpt:'“A Anvisa determinou o recolhimento de lotes de lava-louças, lava-roupas e desinfetantes da Ypê…”'},
+    {dom:'anvisa.gov.br', sub:'RE nº 1.834/2026 + resumption', cls:'Government', grade:'A', score:95, br:[30,18,15,12,10,10],
+     fresh:['new','Jun 22 · resolution'], pres:'3 of 7', sup:['yes','Supports'], ver:['verified','T1 verified'],
+     why:'Highest-authority source with the current resolution. Problem: only 3 of 7 engines cite it — the goal is to raise this presence.',
+     claim:'AI claim: “Anvisa cleared the resumption of sales on Jun 22.”',
+     excerpt:'“…autorizada a retomada da comercialização dos itens fabricados a partir de janeiro de 2026…”'},
+    {dom:'reclameaqui.com.br', sub:'brand page', cls:'Complaints platform', grade:'C', score:58, br:[14,16,15,6,4,3],
+     fresh:['','continuous'], pres:'4 of 7', sup:['mid','Partial'], ver:['verified','T1 verified'],
+     why:'Real platform with continuous updates, but user-generated content: medium authority, low corroboration, and it partially supports claims (individual complaints ≠ verified facts).',
+     claim:'AI claim: “consumers reported problems with Ypê products.”',
+     excerpt:'“Complaint volume spiked from ~4 to 1,287/day in May 2026; brand reputation dropped from Ótimo to Bom.”'},
+    {dom:'ype.ind.br', sub:'/seguranca-do-produto', cls:'Brand official', grade:'B', score:74, br:[22,18,15,6,9,4],
+     fresh:['new','Jun 30 · post-resolution'], pres:'2 of 7', sup:['yes','Supports'], ver:['verified','T1 verified'],
+     why:'Official and current, but low Independence by definition (the brand about itself) and low presence — engines barely cite it yet. Robots.txt action targets this.',
+     claim:'AI claim: “the company states affected batches were removed and production was cleared.”',
+     excerpt:'“Todos os lotes afetados foram recolhidos; a produção atual está liberada pela Anvisa…”'},
+    {dom:'limpezafacil.blog', sub:'/ype-perigo…', cls:'Blog / unknown', grade:'E', score:22, br:[4,0,15,0,0,3],
+     fresh:['','no date'], pres:'1 of 7', sup:['no','Does not support'], ver:['unverified','Unverified · claimed by AI'],
+     why:'URL resolves but: unknown domain, no publication date, claims not corroborated by any verified source, and the page content does not support what the AI attributed to it.',
+     claim:'AI claim: “tests found contamination in current retail batches.”',
+     excerpt:'Page speaks generically about “cleaning product risks” — no test, no batch, no date. Does not support the claim.'},
+    {dom:'exemplo-noticias.net', sub:'/ype-boicote…', cls:'Unknown', grade:'E', score:10, br:[4,0,0,0,0,6],
+     fresh:['','—'], pres:'1 of 7', sup:['','—'], ver:['dead','Unreachable · URL does not resolve'],
+     why:'The URL cited by the AI does not resolve (HTTP error). Possible hallucinated source — flagged as evidence of citation fabrication for this engine.',
+     claim:'AI claim: “a boycott movement against the brand is growing.”',
+     excerpt:'No page content available — the URL could not be reached at verification time.'}
+  ];
+
+  /* sample of the 300-prompt pack (same pack for every engine; per-engine scores vary) */
+  const PROMPTS = [
+    {t:'A Ypê é segura para uso doméstico?', cat:'Safety & quality', base:52},
+    {t:'Os produtos Ypê tiveram contaminação?', cat:'Safety & quality', base:44},
+    {t:'A Ypê foi liberada pela Anvisa?', cat:'Anvisa status', base:57},
+    {t:'Posso usar produtos Ypê hoje?', cat:'Anvisa status', base:54},
+    {t:'A Ypê é uma marca confiável?', cat:'Identity & history', base:66},
+    {t:'Há quanto tempo a Ypê existe?', cat:'Identity & history', base:74},
+    {t:'Ypê ou {concorrente}: qual escolher?', cat:'Competitor comparison', base:55},
+    {t:'Qual o melhor detergente do Brasil?', cat:'Competitor comparison', base:58},
+    {t:'Vale a pena comprar Ypê hoje?', cat:'Purchase intent', base:60},
+    {t:'Você recomendaria produtos Ypê?', cat:'Purchase intent', base:62}
+  ];
+
+  /* ================= shared render helpers ================= */
+  const CHIP_ICON = {ok:'<circle cx="12" cy="12" r="8"/>', warn:'<path d="M12 5l7 12H5z"/>', act:'<rect x="5" y="5" width="14" height="14" rx="2"/>'};
+  function chip(kind, label){ return `<span class="chip ${kind}"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">${CHIP_ICON[kind]}</svg>${label}</span>`; }
+  function axes(list, br){
+    return list.map(([nm,max],i)=>{
+      const v = br[i], pct = Math.round(v/max*100), low = pct < 50 ? ' low' : '';
+      return `<div class="axis${low}"><span class="nm">${nm}</span><span class="bar"><i style="width:${pct}%"></i></span><span class="pts">${v}/${max}</span></div>`;
+    }).join('');
+  }
+  function scoreBtn(score, suffix){
+    return `<button class="score-btn" aria-expanded="false" onclick="toggleEv(this)">${score}${suffix||''}<svg class="car" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 9l7 7 7-7z"/></svg></button>`;
+  }
+  window.toggleEv = function(btn){
+    const tr = btn.closest('tr'), ev = tr.nextElementSibling;
+    const open = ev.hasAttribute('hidden');
+    if (open) ev.removeAttribute('hidden'); else ev.setAttribute('hidden','');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+
+  /* ================= dashboard tables ================= */
+  document.querySelector('#engines-table tbody').innerHTML = ENGINES.map(e => {
+    const dColor = e.dc === 'ok' ? 'var(--ok)' : 'var(--act)';
+    const sealTip = e.seal[2] ? ` data-tip="${e.seal[2]}" tabindex="0"` : '';
+    return `
+    <tr class="data-row">
+      <td><a class="motor-name" href="#/w/cnn/c/1/e/${e.slug}">${e.name}</a><span class="motor-sub">${e.sub}</span></td>
+      <td>${e.channel}</td>
+      <td><span class="seal ${e.seal[0]}"${sealTip}>${e.seal[1]}</span></td>
+      <td class="num">${scoreBtn(e.score)}</td>
+      <td class="num" style="color:${dColor}">${e.d}</td>
+      <td>${e.sent}</td>
+      <td>${chip(e.st[0], e.st[1])}</td>
+    </tr>
+    <tr class="ev-row" hidden><td colspan="7">
+      <div class="ev-grid">
+        <div><p class="ev-title">Why ${e.score}? · score breakdown (radar-v0.1)</p>${axes(ENGINE_AXES, e.br)}</div>
+        <div>
+          <p class="ev-title">Evidence sample</p>
+          <div class="ev-note">${e.note} <a href="#/w/cnn/c/1/e/${e.slug}">See all 300 prompts →</a></div>
+          <div class="quote">${e.quote}</div>
+        </div>
+      </div>
+    </td></tr>`;
+  }).join('');
+
+  const SUP_CLASS = {yes:'yes', no:'no', mid:'mid', '':''};
+  document.querySelector('#sources-table tbody').innerHTML = SOURCES.map(s => {
+    const freshCls = s.fresh[0] ? ` class="fresh-${s.fresh[0]}"` : '';
+    const supCell = s.sup[1] === '—' ? '—' : `<span class="verdict ${SUP_CLASS[s.sup[0]]}" style="margin:0">${s.sup[1]}</span>`;
+    return `
+    <tr class="data-row">
+      <td><span class="motor-name">${s.dom}</span><span class="motor-sub">${s.sub}</span></td>
+      <td>${s.cls}</td>
+      <td><span class="grade"><span class="g g${s.grade}">${s.grade}</span>${scoreBtn(s.score, '/100')}</span></td>
+      <td><span${freshCls}>${s.fresh[1]}</span></td>
+      <td class="num">${s.pres}</td>
+      <td class="full-col">${supCell}</td>
+      <td><span class="seal ${s.ver[0]}">${s.ver[1]}</span></td>
+    </tr>
+    <tr class="ev-row" hidden><td colspan="7">
+      <div class="ev-grid">
+        <div><p class="ev-title">Why ${s.score}/100? · rubric breakdown (source-score-v0.1)</p>${axes(SOURCE_AXES, s.br)}</div>
+        <div>
+          <p class="ev-title">Reading</p>
+          <div class="ev-note">${s.why}</div>
+          <p class="pair-label">Support check — claim vs page</p>
+          <div class="ev-note" style="margin-top:2px">${s.claim}</div>
+          <div class="quote">${s.excerpt}</div>
+        </div>
+      </div>
+    </td></tr>`;
+  }).join('');
+
+  /* ================= setup screen ================= */
+  const UNIT = {par:0.002, gro:0.015}; // illustrative US$ per call (incl. tokens/search fees)
+  const PACK_CATS = ['Product safety and quality','Anvisa case status','Brand identity and history','Competitor comparison','Purchase intent'];
+  const PACKS = {
+    essential:{label:'Essential 50-prompt', size:50,  cats:[18,12,8,6,6]},
+    standard: {label:'Standard 150-prompt', size:150, cats:[45,35,25,25,20]},
+    full:     {label:'Full 300-prompt',     size:300, cats:[80,60,60,50,50]}
+  };
+  let packKey = 'full';
+  window.setPack = function(k){
+    packKey = k;
+    document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', b.getAttribute('onclick').includes("'"+k+"'") ? 'true' : 'false'));
+    renderPackRows();
+    recalc();
+  };
+  function renderPackRows(){
+    const pk = PACKS[packKey];
+    document.getElementById('pack-rows').innerHTML = PACK_CATS.map((c, i) => `
+      <div class="pk-row"><span>${c}${i===0?' <span class="cat-tag" style="display:inline;margin-left:6px">e.g. “A Ypê é segura?”</span>':''}</span><span class="n">${pk.cats[i]} prompts</span></div>`
+    ).join('') + `<div class="pk-row" style="font-weight:600"><span>Total (${pk.label} · pack v1)</span><span class="n">${pk.size} prompts</span></div>`;
+  }
+  renderPackRows();
+  const PICKS = [
+    {slug:'chatgpt', name:'ChatGPT', sub:'OpenAI API · no browsing', kind:'par', on:true},
+    {slug:'gemini', name:'Gemini', sub:'Google API · no grounding', kind:'par', on:true},
+    {slug:'claude', name:'Claude', sub:'Anthropic API', kind:'par', on:true},
+    {slug:'deepseek', name:'DeepSeek', sub:'DeepSeek API', kind:'par', on:true},
+    {slug:'perplexity', name:'Perplexity', sub:'Sonar API · native citations', kind:'gro', on:true},
+    {slug:'gemini-search', name:'Gemini Search', sub:'Google API + Search grounding', kind:'gro', on:true},
+    {slug:'chatgpt-search', name:'ChatGPT Search', sub:'OpenAI API + web_search · product approximation', kind:'gro', on:true},
+    {slug:'meta-ai', name:'Meta AI', sub:'no product API', kind:'off'},
+    {slug:'g-aio', name:'Google AI Overview', sub:'SERP surface · via data provider', kind:'off'},
+    {slug:'g-aim', name:'Google AI Mode', sub:'SERP surface · provider coverage TBD', kind:'off'}
+  ];
+  document.getElementById('engine-picks').innerHTML = PICKS.map((p,i) => {
+    if (p.kind === 'off') return `
+      <div class="check-row disabled">
+        <input type="checkbox" disabled aria-label="${p.name} — Phase B">
+        <span class="cr-name">${p.name}<small>${p.sub}</small></span>
+        <span class="tier road" tabindex="0" data-tip="No product API today. Enters in Phase B via SERP data providers (Google surfaces) or stays out of scope (Meta AI) — always disclosed.">Phase B</span>
+      </div>`;
+    const tag = p.kind === 'par' ? 'Parametric' : 'Grounded';
+    return `
+      <div class="check-row">
+        <input type="checkbox" id="pk-${p.slug}" data-kind="${p.kind}" ${p.on?'checked':''} onchange="recalc()" aria-label="${p.name}">
+        <span class="cr-name"><label for="pk-${p.slug}" style="cursor:pointer">${p.name}</label><small>${p.sub}</small></span>
+        <span class="seal mode">${tag}</span>
+        <span class="cr-cost">~US$ ${UNIT[p.kind].toFixed(3)}/call</span>
+      </div>`;
+  }).join('');
+
+  window.recalc = function(){
+    const scr = document.getElementById('s-setup');
+    if (!scr) return;
+    const checks = [...document.querySelectorAll('#engine-picks input[type=checkbox]:not(:disabled)')];
+    const par = checks.filter(c => c.checked && c.dataset.kind==='par').length;
+    const gro = checks.filter(c => c.checked && c.dataset.kind==='gro').length;
+    const reps = parseInt(document.getElementById('f-reps').value, 10);
+    const cap = Math.max(1, parseFloat(document.getElementById('f-cap').value) || 150);
+    const prompts = PACKS[packKey].size;
+    const parCalls = prompts * reps * par, groCalls = prompts * reps * gro;
+    const execs = parCalls + groCalls;
+    const cost = parCalls * UNIT.par + groCalls * UNIT.gro;
+    const fmt = n => n.toLocaleString('en-US');
+    document.getElementById('est-engines').textContent = par + gro;
+    document.getElementById('est-pr').textContent = `${prompts} × ${reps}`;
+    document.getElementById('est-exec').textContent = fmt(execs);
+    document.getElementById('est-par').textContent = fmt(parCalls);
+    document.getElementById('est-gro').textContent = fmt(groCalls);
+    document.getElementById('est-cost').textContent = 'US$ ' + cost.toFixed(2);
+    const pct = Math.min(100, Math.round(cost / cap * 100));
+    const bar = document.getElementById('est-bar');
+    bar.style.width = pct + '%';
+    bar.className = pct >= 100 ? 'hot' : '';
+    document.getElementById('est-capline').textContent = `${Math.round(cost/cap*100)}% of the US$ ${cap} cap`;
+    document.getElementById('est-warn').classList.toggle('show', cost > cap);
+    document.getElementById('sum-reps').textContent = reps;
+    document.getElementById('sum-pack').textContent = PACKS[packKey].label;
+  };
+
+  /* ================= answers screen ================= */
+  function sentChip(v){
+    if (v >= 11) return chip('ok','Positive');
+    if (v <= -12) return chip('act','Negative');
+    if (v <= -6) return chip('warn','Mixed');
+    return '<span class="chip neutral">Neutral</span>';
+  }
+  function renderAnswers(slug){
+    const e = ENGINES.find(x => x.slug === slug) || ENGINES[6];
+    const adj = e.score - 52; // engine modifier vs neutral base
+    document.getElementById('ans-title').textContent = `${e.name} — answered prompts`;
+    document.getElementById('ans-stats').innerHTML =
+      `<span><b>1,500</b> answers (300 prompts × 5 reps)</span>` +
+      `<span>Engine Brand Score <b>${e.score}/100</b></span>` +
+      `<span>Channel <b>${e.channel}</b></span>` +
+      `<span>Overall sentiment <b>${e.sent}</b></span>`;
+    document.querySelector('#answers-table tbody').innerHTML = PROMPTS.map((p, i) => {
+      const score = Math.max(5, Math.min(95, p.base + adj));
+      const sent = Math.round((score - 55) * 1.1);
+      const mentions = score > 55 ? '5 of 5' : score > 40 ? '4 of 5' : '3 of 5';
+      const topSrc = e.kind === 'gro' ? (score < 50 ? 'g1.globo.com (May 12)' : 'anvisa.gov.br (Jun 22)') : '— (parametric)';
+      const varianceRow = i === 0 ? `
+        <tr class="ev-row" hidden><td colspan="6">
+          <div class="ev-grid">
+            <div>
+              <p class="ev-title">5 repetitions · same prompt, same engine</p>
+              <div class="axis"><span class="nm">Rep 1</span><span class="bar"><i style="width:${Math.min(100,score+8)}%"></i></span><span class="pts">${Math.min(95,score+8)}</span></div>
+              <div class="axis"><span class="nm">Rep 2</span><span class="bar"><i style="width:${score}%"></i></span><span class="pts">${score}</span></div>
+              <div class="axis low"><span class="nm">Rep 3</span><span class="bar"><i style="width:${Math.max(5,score-12)}%"></i></span><span class="pts">${Math.max(5,score-12)}</span></div>
+              <div class="axis"><span class="nm">Rep 4</span><span class="bar"><i style="width:${Math.min(100,score+4)}%"></i></span><span class="pts">${Math.min(95,score+4)}</span></div>
+              <div class="axis"><span class="nm">Rep 5</span><span class="bar"><i style="width:${Math.max(5,score-4)}%"></i></span><span class="pts">${Math.max(5,score-4)}</span></div>
+              <div class="ev-note">This spread is why we report <b>cycle averages</b>, never single runs.</div>
+            </div>
+            <div>
+              <p class="ev-title">Two of the five answers</p>
+              <div class="quote">“Sim, com a retomada autorizada pela Anvisa em 22/06, os produtos atuais são considerados seguros…”</div>
+              <div class="quote">“Houve um recall por risco de contaminação em maio de 2026; recomendo verificar os lotes…”</div>
+            </div>
+          </div>
+        </td></tr>` : '<tr class="ev-row" hidden><td colspan="6"><div class="ev-note">Repetition detail — illustrated on the first prompt of this sample.</div></td></tr>';
+      return `
+        <tr class="data-row">
+          <td class="prompt-cell"><a href="#/w/cnn/c/1/p/${i}" style="color:inherit">${p.t}</a><span class="cat-tag">${p.cat}</span></td>
+          <td>${p.cat}</td>
+          <td class="num">${scoreBtn(score)}</td>
+          <td>${sentChip(sent)}</td>
+          <td class="num">${mentions}</td>
+          <td style="font-size:12.5px">${topSrc}</td>
+        </tr>${varianceRow}`;
+    }).join('');
+  }
+
+  /* ================= prompt-level computations ================= */
+  const engAdj = e => e.score - 52;
+  function promptScore(p, e){ return Math.max(5, Math.min(95, p.base + engAdj(e))); }
+  function promptSent(score){ return Math.round((score - 55) * 1.1); }
+  function excerptFor(score){
+    if (score >= 60) return '“Sim — a Ypê é uma marca tradicional; com a retomada autorizada pela Anvisa (22/06), os produtos atuais são considerados seguros.”';
+    if (score >= 45) return '“A Ypê é amplamente usada no Brasil; houve um recall em maio/2026 — verifique os lotes afetados antes de comprar.”';
+    return '“Houve recolhimento de produtos Ypê por risco de contaminação; consumidores relataram problemas [g1.globo.com, 12/05].”';
+  }
+
+  /* most damaging prompts (dashboard) */
+  (function(){
+    const rows = PROMPTS.map((p, i) => {
+      const scores = ENGINES.map(e => ({e, sc: promptScore(p, e)}));
+      const avg = Math.round(scores.reduce((a, x) => a + x.sc, 0) / scores.length);
+      const worst = scores.reduce((a, x) => x.sc < a.sc ? x : a);
+      const neg = scores.filter(x => promptSent(x.sc) <= -12).length;
+      return {p, i, avg, worst, neg};
+    }).sort((a, b) => a.avg - b.avg).slice(0, 5);
+    document.querySelector('#danger-table tbody').innerHTML = rows.map(r => `
+      <tr class="data-row">
+        <td class="prompt-cell"><a href="#/w/cnn/c/1/p/${r.i}" style="color:inherit">${r.p.t}</a></td>
+        <td>${r.p.cat}</td>
+        <td class="num" style="color:${r.avg < 45 ? 'var(--act)' : r.avg < 55 ? 'var(--warn)' : 'var(--ink)'}">${r.avg}</td>
+        <td>${r.worst.e.name} <span style="font-family:var(--font-data);color:var(--act)">(${r.worst.sc})</span></td>
+        <td class="num">${r.neg} of 7</td>
+        <td><a href="#/w/cnn/c/1/p/${r.i}">Compare answers →</a></td>
+      </tr>`).join('');
+  })();
+
+  /* prompt detail screen */
+  function renderPrompt(idx){
+    const p = PROMPTS[Math.max(0, Math.min(PROMPTS.length - 1, idx))];
+    document.getElementById('pr-title').textContent = '“' + p.t + '”';
+    const scores = ENGINES.map(e => promptScore(p, e));
+    const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    document.getElementById('pr-stats').innerHTML =
+      `<span>Category <b>${p.cat}</b></span>` +
+      `<span><b>35</b> answers this cycle (7 engines × 5 reps)</span>` +
+      `<span>Cycle average <b>${avg}/100</b></span>` +
+      `<span>Range <b>${Math.min(...scores)}–${Math.max(...scores)}</b> across engines</span>`;
+    document.getElementById('pr-cards').innerHTML = ENGINES.map(e => {
+      const sc = promptScore(p, e);
+      const sent = promptSent(sc);
+      const mentions = sc > 55 ? '5 of 5' : sc > 40 ? '4 of 5' : '3 of 5';
+      const topSrc = e.kind === 'gro' ? (sc < 50 ? 'g1.globo.com (May 12)' : 'anvisa.gov.br (Jun 22)') : '— parametric (no citations)';
+      return `
+      <div class="pcard">
+        <div class="top"><a class="motor-name" href="#/w/cnn/c/1/e/${e.slug}">${e.name}</a><span class="sc" style="color:${sc < 45 ? 'var(--act)' : sc < 55 ? 'var(--warn)' : 'var(--ink)'}">${sc}</span></div>
+        <div class="vrow">${sentChip(sent)}<span class="seal mode">${e.channel}</span></div>
+        <div class="quote" style="margin:2px 0">${excerptFor(sc)}</div>
+        <div class="facts"><span>Mentions brand: <b>${mentions}</b></span><span>Top source: <b>${topSrc}</b></span></div>
+      </div>`;
+    }).join('');
+  }
+
+  /* ================= router ================= */
+  const SCREENS = ['s-workspaces','s-cycles','s-empty','s-setup','s-cycle','s-answers','s-prompt'];
+  function crumb(html){ document.getElementById('crumb').innerHTML = html; }
+  function router(){
+    const h = location.hash || '#/';
+    SCREENS.forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById('view-switch').hidden = true;
+    document.getElementById('cycle-chip').hidden = true;
+    const sep = '<span class="sep">/</span>';
+    const wsLink = '<a href="#/">Workspaces</a>';
+    const cnnLink = '<a href="#/w/cnn">CNN GEO for Brands</a>';
+
+    if (h === '#/' || h === '#'){
+      document.getElementById('s-workspaces').classList.add('active');
+      crumb('<b>Workspaces</b>');
+    } else if (h === '#/w/cnn'){
+      document.getElementById('s-cycles').classList.add('active');
+      crumb(wsLink + sep + '<b>CNN GEO for Brands</b>' + sep + 'Ypê — cycles');
+    } else if (h === '#/w/demo'){
+      document.getElementById('s-empty').classList.add('active');
+      crumb(wsLink + sep + '<b>Acme Corp</b> (example)');
+    } else if (h === '#/w/cnn/setup' || h === '#/w/demo/setup'){
+      document.getElementById('s-setup').classList.add('active');
+      document.getElementById('save-note').classList.remove('show');
+      const back = h.includes('demo') ? '<a href="#/w/demo">Acme Corp</a>' : cnnLink;
+      crumb(wsLink + sep + back + sep + '<b>Campaign setup</b>');
+      recalc();
+    } else if (h === '#/w/cnn/c/1'){
+      document.getElementById('s-cycle').classList.add('active');
+      document.getElementById('view-switch').hidden = false;
+      document.getElementById('cycle-chip').hidden = false;
+      crumb(wsLink + sep + cnnLink + sep + '<b>Cycle 1 dashboard</b>');
+    } else if (h.startsWith('#/w/cnn/c/1/p/')){
+      const idx = parseInt(h.split('/').pop(), 10) || 0;
+      renderPrompt(idx);
+      document.getElementById('s-prompt').classList.add('active');
+      crumb(wsLink + sep + cnnLink + sep + '<a href="#/w/cnn/c/1">Cycle 1</a>' + sep + '<b>Prompt · across engines</b>');
+    } else if (h.startsWith('#/w/cnn/c/1/e/')){
+      const slug = h.split('/').pop();
+      renderAnswers(slug);
+      document.getElementById('s-answers').classList.add('active');
+      const eng = (ENGINES.find(x=>x.slug===slug)||{}).name || 'Engine';
+      crumb(wsLink + sep + cnnLink + sep + '<a href="#/w/cnn/c/1">Cycle 1</a>' + sep + '<b>' + eng + ' answers</b>');
+    } else {
+      document.getElementById('s-workspaces').classList.add('active');
+      crumb('<b>Workspaces</b>');
+    }
+    window.scrollTo({top:0});
+  }
+  window.addEventListener('hashchange', router);
+  router();
+</script>
+</body>
+
+</html>

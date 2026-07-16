@@ -68,7 +68,7 @@ function FilterChip<T extends string>({
       className={cn(
         "px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all",
         active
-          ? "bg-[rgba(34,211,238,0.10)] text-[#22D3EE] border-[rgba(34,211,238,0.20)]"
+          ? "bg-[rgba(79,90,232,0.10)] text-[#4F5AE8] border-[rgba(79,90,232,0.20)]"
           : "bg-transparent text-[#94A3B8] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] hover:text-[#94A3B8]"
       )}
       style={active && color ? { color, background: `${color}18`, borderColor: `${color}35` } : undefined}
@@ -200,7 +200,7 @@ function CompareToggleButton({
       className={cn(
         "flex items-center gap-1.5 text-xs font-medium transition-all px-3 py-1.5 rounded-lg border",
         active
-          ? "bg-[rgba(34,211,238,0.10)] text-[#22D3EE] border-[rgba(34,211,238,0.20)] hover:bg-[rgba(34,211,238,0.15)]"
+          ? "bg-[rgba(79,90,232,0.10)] text-[#4F5AE8] border-[rgba(79,90,232,0.20)] hover:bg-[rgba(79,90,232,0.15)]"
           : "text-[#94A3B8] border-[rgba(255,255,255,0.08)] hover:text-[#94A3B8] hover:border-[rgba(255,255,255,0.14)] bg-transparent"
       )}
       aria-label={active ? "Cancel compare mode" : "Enter compare mode"}
@@ -239,8 +239,8 @@ function FloatingSelectionBar({
       className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl"
       style={{
         background: "#0D1424",
-        border: "1px solid rgba(34,211,238,0.15)",
-        boxShadow: "0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(34,211,238,0.06)",
+        border: "1px solid rgba(79,90,232,0.15)",
+        boxShadow: "0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,90,232,0.06)",
       }}
       role="status"
       aria-live="polite"
@@ -268,7 +268,7 @@ function FloatingSelectionBar({
         className={cn(
           "flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all",
           ready
-            ? "bg-[rgba(34,211,238,0.12)] text-[#22D3EE] border border-[rgba(34,211,238,0.25)] hover:bg-[rgba(34,211,238,0.18)] cursor-pointer"
+            ? "bg-[rgba(79,90,232,0.12)] text-[#4F5AE8] border border-[rgba(79,90,232,0.25)] hover:bg-[rgba(79,90,232,0.18)] cursor-pointer"
             : "bg-[rgba(255,255,255,0.03)] text-[#475569] border border-[rgba(255,255,255,0.06)] opacity-50 cursor-not-allowed"
         )}
         aria-disabled={!ready}
@@ -476,11 +476,11 @@ export function HistoryPage() {
           <>
             {/* Compare mode hint banner */}
             {compareMode && (
-              <div className="flex items-center gap-2 mb-4 px-4 py-2.5 rounded-xl bg-[rgba(34,211,238,0.05)] border border-[rgba(34,211,238,0.12)]">
-                <svg className="w-3.5 h-3.5 text-[#22D3EE] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <div className="flex items-center gap-2 mb-4 px-4 py-2.5 rounded-xl bg-[rgba(79,90,232,0.05)] border border-[rgba(79,90,232,0.12)]">
+                <svg className="w-3.5 h-3.5 text-[#4F5AE8] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="text-xs text-[#22D3EE]">
+                <span className="text-xs text-[#4F5AE8]">
                   Select 2 runs to compare them side by side. Click a row to toggle selection.
                 </span>
               </div>
@@ -523,7 +523,7 @@ export function HistoryPage() {
                   <p className="text-sm text-[#94A3B8]">No runs match the selected filters.</p>
                   <button
                     onClick={() => { setRiskFilter("all"); setScoreFilter("all"); }}
-                    className="text-xs text-[#22D3EE] mt-2 hover:underline"
+                    className="text-xs text-[#4F5AE8] mt-2 hover:underline"
                   >
                     Clear filters
                   </button>
