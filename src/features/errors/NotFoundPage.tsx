@@ -25,7 +25,7 @@ export function NotFoundPage() {
           </svg>
         </div>
 
-        <p className="text-xs font-mono text-[#22D3EE] mb-3 tracking-widest uppercase">
+        <p className="text-xs font-mono text-[#4F5AE8] mb-3 tracking-widest uppercase">
           404 — Not found
         </p>
 
@@ -48,7 +48,7 @@ export function NotFoundPage() {
           <Link to="/home">
             <Button
               size="sm"
-              className="rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#06B6D4]"
+              className="rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#3E48C4]"
             >
               Go to Launchpad
             </Button>

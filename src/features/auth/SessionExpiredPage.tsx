@@ -25,7 +25,7 @@ export function SessionExpiredPage() {
         {/* Actions */}
         <div className="flex flex-col gap-3">
           <Link to="/login">
-            <Button className="w-full h-11 rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#06B6D4]">
+            <Button className="w-full h-11 rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#3E48C4]">
               Sign in again
             </Button>
           </Link>

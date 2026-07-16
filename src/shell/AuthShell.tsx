@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { SentinelaMark } from "@/components/brand/SentinelaMark";
 
 interface AuthShellProps {
   children: ReactNode;
@@ -18,7 +19,7 @@ export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
           {/* Background decoration */}
           <div
             className="absolute top-0 right-0 w-96 h-96 opacity-5 rounded-full blur-3xl"
-            style={{ background: "radial-gradient(circle, #22D3EE 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, #4F5AE8 0%, transparent 70%)" }}
             aria-hidden="true"
           />
           <div
@@ -30,11 +31,7 @@ export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
           {/* Logo */}
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-12">
-              <div className="w-9 h-9 rounded-xl bg-[rgba(34,211,238,0.12)] border border-[rgba(34,211,238,0.2)] flex items-center justify-center">
-                <svg className="w-5 h-5 text-[#22D3EE]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                </svg>
-              </div>
+              <SentinelaMark size={34} className="text-[#4F5AE8]" />
               <span className="text-lg font-semibold tracking-tight text-[#F1F5F9]">Sentinela</span>
             </div>
 
@@ -68,8 +65,8 @@ export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
                 },
               ].map((feature) => (
                 <div key={feature.title} className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[rgba(34,211,238,0.08)] border border-[rgba(34,211,238,0.12)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-4 h-4 text-[#22D3EE]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="w-8 h-8 rounded-lg bg-[rgba(79,90,232,0.08)] border border-[rgba(79,90,232,0.12)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-[#4F5AE8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d={feature.icon} />
                     </svg>
                   </div>
@@ -99,11 +96,7 @@ export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-8 h-8 rounded-lg bg-[rgba(34,211,238,0.12)] border border-[rgba(34,211,238,0.2)] flex items-center justify-center">
-              <svg className="w-4 h-4 text-[#22D3EE]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-              </svg>
-            </div>
+            <SentinelaMark size={30} className="text-[#4F5AE8]" />
             <span className="text-base font-semibold text-[#F1F5F9]">Sentinela</span>
           </div>
 

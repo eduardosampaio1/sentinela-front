@@ -151,7 +151,7 @@ export function LoginPage() {
           </h1>
           <p className="text-sm text-[#94A3B8]">
             Don't have an account?{" "}
-            <Link to="/register" className="text-[#22D3EE] hover:text-[#06B6D4] transition-colors">
+            <Link to="/register" className="text-[#4F5AE8] hover:text-[#3E48C4] transition-colors">
               Create one for free
             </Link>
           </p>
@@ -195,7 +195,7 @@ export function LoginPage() {
           type="button"
           onClick={handleKeycloakEmail}
           disabled={loading || oauthLoading !== null}
-          className="w-full h-11 rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#06B6D4] transition-colors"
+          className="w-full h-11 rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#3E48C4] transition-colors"
         >
           {loading ? (
             <span className="flex items-center gap-2">
@@ -218,7 +218,7 @@ export function LoginPage() {
         </h1>
         <p className="text-sm text-[#94A3B8]">
           Don't have an account?{" "}
-          <Link to="/register" className="text-[#22D3EE] hover:text-[#06B6D4] transition-colors">
+          <Link to="/register" className="text-[#4F5AE8] hover:text-[#3E48C4] transition-colors">
             Create one for free
           </Link>
         </p>
@@ -249,7 +249,7 @@ export function LoginPage() {
             autoComplete="email"
             autoFocus
             disabled={loading}
-            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#22D3EE] focus:ring-[#22D3EE]/20 rounded-xl h-11 ${
+            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#4F5AE8] focus:ring-[#4F5AE8]/20 rounded-xl h-11 ${
               fieldErrors.email ? "border-[#F87171] focus:border-[#F87171]" : ""
             }`}
           />
@@ -281,7 +281,7 @@ export function LoginPage() {
             placeholder="••••••••"
             autoComplete="current-password"
             disabled={loading}
-            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#22D3EE] focus:ring-[#22D3EE]/20 rounded-xl h-11 ${
+            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#4F5AE8] focus:ring-[#4F5AE8]/20 rounded-xl h-11 ${
               fieldErrors.password ? "border-[#F87171] focus:border-[#F87171]" : ""
             }`}
           />
@@ -293,7 +293,7 @@ export function LoginPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-11 rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#06B6D4] transition-colors mt-2"
+          className="w-full h-11 rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#3E48C4] transition-colors mt-2"
         >
           {loading ? (
             <span className="flex items-center gap-2">

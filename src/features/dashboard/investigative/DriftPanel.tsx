@@ -107,7 +107,7 @@ export function DriftPanel() {
                     <p className="text-xs text-[#94A3B8] w-36 flex-shrink-0 truncate">{signal.label}</p>
                     <div className="flex-1 h-1.5 rounded-full bg-[rgba(255,255,255,0.04)] overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-[#22D3EE] opacity-60"
+                        className="h-full rounded-full bg-[#4F5AE8] opacity-60"
                         style={{ width: pct !== null ? `${Math.max(2, pct)}%` : "2%" }}
                       />
                     </div>

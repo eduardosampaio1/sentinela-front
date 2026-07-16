@@ -146,7 +146,7 @@ const DashboardSidebar = ({ mobileOpen, onClose }: DashboardSidebarProps) => {
                       isDisabled
                         ? "cursor-not-allowed border-transparent opacity-45"
                         : isActive
-                          ? "border-primary/25 bg-primary/12 text-sidebar-accent-foreground shadow-[0_18px_38px_-28px_rgba(34,211,238,0.7)]"
+                          ? "border-primary/25 bg-primary/12 text-sidebar-accent-foreground shadow-[0_18px_38px_-28px_rgba(79,90,232,0.7)]"
                           : "border-transparent text-sidebar-foreground/80 hover:border-sidebar-border/70 hover:bg-white/[0.03] hover:text-sidebar-accent-foreground"
                     }`;
 

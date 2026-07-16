@@ -92,13 +92,13 @@
 
   /* Selection */
   ::selection {
-    background: rgba(34, 211, 238, 0.2);
+    background: rgba(79,90,232, 0.2);
     color: #F1F5F9;
   }
 
   /* Focus visible — WCAG 2.4.11 compliant */
   :focus-visible {
-    outline: 2px solid rgba(34, 211, 238, 0.7);
+    outline: 2px solid rgba(79,90,232, 0.7);
     outline-offset: 3px;
     border-radius: 4px;
   }
@@ -156,7 +156,7 @@
 
   /* Primary glow */
   .glow-primary {
-    box-shadow: 0 0 24px rgba(34, 211, 238, 0.15);
+    box-shadow: 0 0 24px rgba(79,90,232, 0.15);
   }
 
   /* Status badges */
@@ -185,9 +185,9 @@
   }
 
   .badge-info {
-    background: rgba(34, 211, 238, 0.12);
-    color: #22D3EE;
-    border: 1px solid rgba(34, 211, 238, 0.2);
+    background: rgba(79,90,232, 0.12);
+    color: #4F5AE8;
+    border: 1px solid rgba(79,90,232, 0.2);
   }
 
   /* Verdict states */
@@ -254,13 +254,13 @@
   .spinner {
     animation: spin 1s linear infinite;
     border: 2px solid rgba(255, 255, 255, 0.1);
-    border-top-color: #22D3EE;
+    border-top-color: #4F5AE8;
     border-radius: 50%;
   }
 
   /* Progress bar */
   .progress-bar {
-    background: linear-gradient(90deg, #22D3EE, #0EA5E9);
+    background: linear-gradient(90deg, #4F5AE8, #0EA5E9);
     border-radius: 999px;
     transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -281,7 +281,7 @@
   .stagger-5 { animation-delay: 160ms; }
 
   .text-gradient-primary {
-    background: linear-gradient(135deg, #22D3EE, #0EA5E9);
+    background: linear-gradient(135deg, #4F5AE8, #0EA5E9);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -320,8 +320,8 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 16px rgba(34, 211, 238, 0.1); }
-  50% { box-shadow: 0 0 32px rgba(34, 211, 238, 0.25); }
+  0%, 100% { box-shadow: 0 0 16px rgba(79,90,232, 0.1); }
+  50% { box-shadow: 0 0 32px rgba(79,90,232, 0.25); }
 }
 
 .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }

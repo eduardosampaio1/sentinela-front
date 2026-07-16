@@ -14,20 +14,20 @@ import type { EconomicsViewModel } from "@/domain/verdict.types";
 
 const COVER = {
   bg:       [7, 12, 24]       as RGB,  // #070C18
-  accent:   [34, 211, 238]    as RGB,  // #22D3EE
+  accent:   [79, 90, 232]    as RGB,  // #4F5AE8
   heading:  [241, 245, 249]   as RGB,  // #F1F5F9
   sub:      [148, 163, 184]   as RGB,  // #94A3B8
   cardBg:   [15, 23, 42]      as RGB,  // #0F172A
-  cardVal:  [34, 211, 238]    as RGB,  // #22D3EE
+  cardVal:  [79, 90, 232]    as RGB,  // #4F5AE8
 };
 
 const BODY = {
   text:     [15, 23, 42]      as RGB,  // #0F172A  — primary text
   secondary:[71, 85, 105]     as RGB,  // #475569  — labels / muted
   faint:    [148, 163, 184]   as RGB,  // #94A3B8  — very muted
-  accent:   [6, 182, 212]     as RGB,  // #06B6D4  — cyan (readable on white)
+  accent:   [62, 72, 196]     as RGB,  // #3E48C4  — cyan (readable on white)
   cardBg:   [241, 245, 249]   as RGB,  // #F1F5F9
-  cardVal:  [6, 182, 212]     as RGB,  // #06B6D4
+  cardVal:  [62, 72, 196]     as RGB,  // #3E48C4
   border:   [203, 213, 225]   as RGB,  // #CBD5E1
   line:     [226, 232, 240]   as RGB,  // #E2E8F0
 };

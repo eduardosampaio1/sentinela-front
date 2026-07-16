@@ -36,7 +36,7 @@ function riskStyle(level?: string | null) {
     case "HIGH":     return { color: "#FCD34D", bg: "rgba(252,211,77,0.10)",  border: "rgba(252,211,77,0.18)" };
     case "MEDIUM":   return { color: "#FB923C", bg: "rgba(251,146,60,0.10)",  border: "rgba(251,146,60,0.18)" };
     case "LOW":      return { color: "#34D399", bg: "rgba(52,211,153,0.10)",  border: "rgba(52,211,153,0.18)" };
-    default:         return { color: "#22D3EE", bg: "rgba(34,211,238,0.10)",  border: "rgba(34,211,238,0.18)" };
+    default:         return { color: "#4F5AE8", bg: "rgba(79,90,232,0.10)",  border: "rgba(79,90,232,0.18)" };
   }
 }
 
@@ -94,9 +94,9 @@ function AlertRow({ alert }: { alert: DomainAnalysis["alerts"][number] }) {
     high: "#FCD34D",
     medium: "#FB923C",
     low: "#34D399",
-    info: "#22D3EE",
+    info: "#4F5AE8",
   };
-  const color = severityColor[alert.severity?.toLowerCase() ?? "info"] ?? "#22D3EE";
+  const color = severityColor[alert.severity?.toLowerCase() ?? "info"] ?? "#4F5AE8";
 
   return (
     <div className="flex items-start gap-3 px-4 py-3 border-b border-[rgba(255,255,255,0.04)] last:border-b-0">
@@ -112,7 +112,7 @@ function AlertRow({ alert }: { alert: DomainAnalysis["alerts"][number] }) {
         )}
         {alert.recommendation && (
           <p className="text-xs text-[#475569] mt-1 leading-relaxed">
-            <span className="text-[#22D3EE] font-medium">Action: </span>{alert.recommendation}
+            <span className="text-[#4F5AE8] font-medium">Action: </span>{alert.recommendation}
           </p>
         )}
       </div>
@@ -131,7 +131,7 @@ function AlertRow({ alert }: { alert: DomainAnalysis["alerts"][number] }) {
 function RecommendationRow({ rec, index }: { rec: DomainAnalysis["recommendations"][number]; index: number }) {
   return (
     <div className="flex items-start gap-3 px-4 py-3 border-b border-[rgba(255,255,255,0.04)] last:border-b-0">
-      <span className="w-5 h-5 rounded-full bg-[rgba(34,211,238,0.08)] border border-[rgba(34,211,238,0.12)] flex items-center justify-center text-[10px] font-bold text-[#22D3EE] flex-shrink-0 mt-0.5">
+      <span className="w-5 h-5 rounded-full bg-[rgba(79,90,232,0.08)] border border-[rgba(79,90,232,0.12)] flex items-center justify-center text-[10px] font-bold text-[#4F5AE8] flex-shrink-0 mt-0.5">
         {index + 1}
       </span>
       <div className="flex-1 min-w-0">
@@ -281,7 +281,7 @@ export function RunDetailPage() {
               {run.raw_result && (
                 <Button
                   onClick={handleRestore}
-                  className="rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#67E8F9] flex-shrink-0"
+                  className="rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#67E8F9] flex-shrink-0"
                 >
                   Restore to dashboard
                 </Button>
@@ -433,7 +433,7 @@ export function RunDetailPage() {
                 <Button
                   onClick={handleRestore}
                   variant="outline"
-                  className="rounded-xl border-[rgba(34,211,238,0.25)] text-[#22D3EE] hover:bg-[rgba(34,211,238,0.08)] hover:text-[#22D3EE]"
+                  className="rounded-xl border-[rgba(79,90,232,0.25)] text-[#4F5AE8] hover:bg-[rgba(79,90,232,0.08)] hover:text-[#4F5AE8]"
                 >
                   Restore this analysis to the dashboard
                 </Button>

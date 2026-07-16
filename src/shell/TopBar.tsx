@@ -51,7 +51,7 @@ function AnalysisFreshnessBadge() {
       className={cn(
         "hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium transition-colors",
         dataSource === "cached"
-          ? "bg-[rgba(34,211,238,0.06)] border-[rgba(34,211,238,0.12)] text-[#22D3EE] hover:bg-[rgba(34,211,238,0.10)]"
+          ? "bg-[rgba(79,90,232,0.06)] border-[rgba(79,90,232,0.12)] text-[#4F5AE8] hover:bg-[rgba(79,90,232,0.10)]"
           : "bg-[rgba(52,211,153,0.06)] border-[rgba(52,211,153,0.12)] text-[#34D399] hover:bg-[rgba(52,211,153,0.10)]"
       )}
       title="View active analysis results"
@@ -59,7 +59,7 @@ function AnalysisFreshnessBadge() {
       <span
         className={cn(
           "w-1.5 h-1.5 rounded-full flex-shrink-0",
-          dataSource === "cached" ? "bg-[#22D3EE]" : "bg-[#34D399] animate-pulse"
+          dataSource === "cached" ? "bg-[#4F5AE8]" : "bg-[#34D399] animate-pulse"
         )}
         aria-hidden="true"
       />
@@ -126,7 +126,7 @@ export function TopBar({ title, actions, className }: TopBarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="w-8 h-8 rounded-full bg-[rgba(34,211,238,0.10)] border border-[rgba(34,211,238,0.18)] flex items-center justify-center text-[#22D3EE] text-[10px] font-bold hover:bg-[rgba(34,211,238,0.18)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE]/40"
+              className="w-8 h-8 rounded-full bg-[rgba(79,90,232,0.10)] border border-[rgba(79,90,232,0.18)] flex items-center justify-center text-[#4F5AE8] text-[10px] font-bold hover:bg-[rgba(79,90,232,0.18)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4F5AE8]/40"
               aria-label="Open user menu"
             >
               {userInitials(

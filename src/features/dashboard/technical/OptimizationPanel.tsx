@@ -87,7 +87,7 @@ export function OptimizationPanel() {
               <div className="flex items-center gap-4">
                 <div className="flex-1 h-2 bg-[rgba(255,255,255,0.04)] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#22D3EE] opacity-70 rounded-full"
+                    className="h-full bg-[#4F5AE8] opacity-70 rounded-full"
                     style={{
                       width: `${Math.max(2, (data.intentCoverageScore * 100))}%`,
                     }}
@@ -135,7 +135,7 @@ export function OptimizationPanel() {
               <div className="space-y-2">
                 {data.optimizationRecs.map((rec, idx) => (
                   <div key={idx} className="flex items-start gap-3 py-2 border-b border-[rgba(255,255,255,0.04)] last:border-b-0">
-                    <span className="w-5 h-5 rounded-full bg-[rgba(34,211,238,0.08)] border border-[rgba(34,211,238,0.12)] flex items-center justify-center text-[10px] font-bold text-[#22D3EE] flex-shrink-0 mt-0.5">
+                    <span className="w-5 h-5 rounded-full bg-[rgba(79,90,232,0.08)] border border-[rgba(79,90,232,0.12)] flex items-center justify-center text-[10px] font-bold text-[#4F5AE8] flex-shrink-0 mt-0.5">
                       {idx + 1}
                     </span>
                     <div>

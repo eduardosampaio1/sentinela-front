@@ -22,9 +22,9 @@ const SEVERITY_STYLES: Record<string, { badge: string; dot: string; rowBg: strin
     rowBg: "bg-[rgba(251,146,60,0.02)] border-[rgba(251,146,60,0.06)]",
   },
   info: {
-    badge: "bg-[rgba(34,211,238,0.12)] text-[#22D3EE] border-[rgba(34,211,238,0.2)]",
-    dot: "bg-[#22D3EE]",
-    rowBg: "bg-[rgba(34,211,238,0.02)] border-[rgba(34,211,238,0.06)]",
+    badge: "bg-[rgba(79,90,232,0.12)] text-[#4F5AE8] border-[rgba(79,90,232,0.2)]",
+    dot: "bg-[#4F5AE8]",
+    rowBg: "bg-[rgba(79,90,232,0.02)] border-[rgba(79,90,232,0.06)]",
   },
 };
 

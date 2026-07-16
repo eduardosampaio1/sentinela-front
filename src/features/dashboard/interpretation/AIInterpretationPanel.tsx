@@ -44,7 +44,7 @@ function InterpretationContent({ interpretation }: { interpretation: AnalysisInt
                     "text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full border",
                     risk.severity === "critical" ? "bg-[rgba(248,113,113,0.12)] text-[#F87171] border-[rgba(248,113,113,0.2)]" :
                     risk.severity === "high" ? "bg-[rgba(252,211,77,0.12)] text-[#FCD34D] border-[rgba(252,211,77,0.2)]" :
-                    "bg-[rgba(34,211,238,0.08)] text-[#22D3EE] border-[rgba(34,211,238,0.15)]"
+                    "bg-[rgba(79,90,232,0.08)] text-[#4F5AE8] border-[rgba(79,90,232,0.15)]"
                   )}>
                     {risk.severity}
                   </span>
@@ -74,7 +74,7 @@ function InterpretationContent({ interpretation }: { interpretation: AnalysisInt
           <div className="space-y-2">
             {interpretation.priority_actions.map((action, idx) => (
               <div key={idx} className="flex items-start gap-3">
-                <span className="w-5 h-5 rounded-full bg-[rgba(34,211,238,0.08)] border border-[rgba(34,211,238,0.12)] flex items-center justify-center text-[10px] font-bold text-[#22D3EE] flex-shrink-0 mt-0.5">
+                <span className="w-5 h-5 rounded-full bg-[rgba(79,90,232,0.08)] border border-[rgba(79,90,232,0.12)] flex items-center justify-center text-[10px] font-bold text-[#4F5AE8] flex-shrink-0 mt-0.5">
                   {action.priority ?? idx + 1}
                 </span>
                 <div>
@@ -92,8 +92,8 @@ function InterpretationContent({ interpretation }: { interpretation: AnalysisInt
 
       {/* Strategic recommendation */}
       {interpretation.strategic_recommendation && (
-        <div className="rounded-xl border border-[rgba(34,211,238,0.1)] bg-[rgba(34,211,238,0.04)] px-4 py-3.5">
-          <p className="text-[10px] uppercase tracking-wide font-semibold text-[#22D3EE] mb-2">Strategic recommendation</p>
+        <div className="rounded-xl border border-[rgba(79,90,232,0.1)] bg-[rgba(79,90,232,0.04)] px-4 py-3.5">
+          <p className="text-[10px] uppercase tracking-wide font-semibold text-[#4F5AE8] mb-2">Strategic recommendation</p>
           <p className="text-sm text-[#94A3B8] leading-relaxed">{interpretation.strategic_recommendation}</p>
         </div>
       )}
@@ -189,7 +189,7 @@ export function AIInterpretationPanel() {
           <Button
             size="sm"
             onClick={startInterpretation}
-            className="rounded-xl bg-[rgba(34,211,238,0.12)] text-[#22D3EE] border border-[rgba(34,211,238,0.2)] hover:bg-[rgba(34,211,238,0.18)] text-xs"
+            className="rounded-xl bg-[rgba(79,90,232,0.12)] text-[#4F5AE8] border border-[rgba(79,90,232,0.2)] hover:bg-[rgba(79,90,232,0.18)] text-xs"
           >
             <svg className="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
@@ -213,8 +213,8 @@ export function AIInterpretationPanel() {
       {/* Content states */}
       {status === "idle" && !interpretation && (
         <div className="py-6 text-center">
-          <div className="w-10 h-10 rounded-xl bg-[rgba(34,211,238,0.06)] border border-[rgba(34,211,238,0.1)] flex items-center justify-center mx-auto mb-3">
-            <svg className="w-5 h-5 text-[#22D3EE]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="w-10 h-10 rounded-xl bg-[rgba(79,90,232,0.06)] border border-[rgba(79,90,232,0.1)] flex items-center justify-center mx-auto mb-3">
+            <svg className="w-5 h-5 text-[#4F5AE8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
             </svg>
           </div>

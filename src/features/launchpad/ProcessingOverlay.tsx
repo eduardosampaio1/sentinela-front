@@ -38,7 +38,7 @@ const STAGE_CONFIG: Record<string, {
       </svg>
     ),
     brandSubtext: "Mapping behavioral patterns and semantic relationships across your conversations.",
-    color: "#22D3EE",
+    color: "#4F5AE8",
   },
   analyzing: {
     icon: (
@@ -92,7 +92,7 @@ function StagePipeline({ current }: { current: string }) {
               className={cn(
                 "w-1.5 h-1.5 rounded-full transition-all duration-500",
                 done    ? "bg-[#4ADE80]" :
-                active  ? "bg-[#22D3EE] scale-125 shadow-[0_0_6px_rgba(34,211,238,0.5)]" :
+                active  ? "bg-[#4F5AE8] scale-125 shadow-[0_0_6px_rgba(79,90,232,0.5)]" :
                           "bg-[rgba(255,255,255,0.1)]"
               )}
             />

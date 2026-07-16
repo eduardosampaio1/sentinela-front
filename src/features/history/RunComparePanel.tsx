@@ -95,7 +95,7 @@ function RiskBadge({ level }: { level: string | null }) {
     MEDIUM:   "bg-[rgba(251,146,60,0.10)] text-[#FB923C] border-[rgba(251,146,60,0.18)]",
     LOW:      "bg-[rgba(52,211,153,0.10)] text-[#34D399] border-[rgba(52,211,153,0.18)]",
   };
-  const style = styles[upper] ?? "bg-[rgba(34,211,238,0.10)] text-[#22D3EE] border-[rgba(34,211,238,0.18)]";
+  const style = styles[upper] ?? "bg-[rgba(79,90,232,0.10)] text-[#4F5AE8] border-[rgba(79,90,232,0.18)]";
 
   return (
     <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border", style)}>
@@ -411,7 +411,7 @@ export function RunComparePanel({ runA, runB, onClose }: RunComparePanelProps) {
         style={{
           height: "70vh",
           background: "#070C18",
-          borderTop: "1px solid rgba(34,211,238,0.12)",
+          borderTop: "1px solid rgba(79,90,232,0.12)",
           boxShadow: "0 -24px 80px rgba(0,0,0,0.6)",
           animation: "slideUpPanel 0.28s cubic-bezier(0.32,0.72,0,1) both",
         }}

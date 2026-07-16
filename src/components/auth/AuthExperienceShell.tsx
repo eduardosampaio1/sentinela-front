@@ -31,13 +31,13 @@ export default function AuthExperienceShell({
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-hero">
       <div className="pointer-events-none absolute inset-0 dashboard-subtle-grid opacity-50" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.22),transparent_58%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_top,rgba(79,90,232,0.22),transparent_58%)]" />
       <div className="pointer-events-none absolute inset-y-0 right-[-12rem] w-[28rem] bg-[radial-gradient(circle,rgba(59,130,246,0.16),transparent_62%)] blur-3xl" />
 
       <div className="page-shell flex min-h-screen items-center py-10 sm:py-12">
         <div className="grid w-full items-stretch gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] xl:gap-8">
           <section className="dashboard-panel-muted relative overflow-hidden p-7 sm:p-8 lg:p-10">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_34%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,90,232,0.12),transparent_34%)]" />
             <div className="relative">
               <div className="dashboard-kicker">{eyebrow}</div>
               <div className="mt-4 flex items-center gap-3">
@@ -81,7 +81,7 @@ export default function AuthExperienceShell({
               cardClassName,
             )}
           >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.14),transparent_28%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(79,90,232,0.14),transparent_28%)]" />
             <div className="relative">
               {status ? (
                 <div className="mb-4 rounded-2xl border border-primary/20 bg-primary/8 px-4 py-3 text-sm text-foreground">

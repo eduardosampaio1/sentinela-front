@@ -99,7 +99,7 @@ function ErrorFallback({
           <Button
             onClick={onReset}
             size="sm"
-            className="rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#06B6D4]"
+            className="rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#3E48C4]"
           >
             Back to Launchpad
           </Button>

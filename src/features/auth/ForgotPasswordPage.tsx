@@ -129,7 +129,7 @@ export function ForgotPasswordPage() {
             autoComplete="email"
             autoFocus
             disabled={loading}
-            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#22D3EE] rounded-xl h-11 ${
+            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#4F5AE8] rounded-xl h-11 ${
               emailError ? "border-[#F87171]" : ""
             }`}
           />
@@ -139,7 +139,7 @@ export function ForgotPasswordPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-11 rounded-xl bg-[#22D3EE] text-[#070C18] font-semibold hover:bg-[#06B6D4] transition-colors"
+          className="w-full h-11 rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#3E48C4] transition-colors"
         >
           {loading ? (
             <span className="flex items-center gap-2">

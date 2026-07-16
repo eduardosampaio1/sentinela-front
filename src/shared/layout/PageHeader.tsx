@@ -36,7 +36,7 @@ export function PageHeader({
             {title}
           </h1>
           {badge && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[rgba(34,211,238,0.12)] text-[#22D3EE] border border-[rgba(34,211,238,0.2)] whitespace-nowrap">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[rgba(79,90,232,0.12)] text-[#4F5AE8] border border-[rgba(79,90,232,0.2)] whitespace-nowrap">
               {badge}
             </span>
           )}

@@ -45,7 +45,7 @@ export function LoadingState({
         <div className={cn("spinner", spinnerSize)} aria-hidden="true" />
         <div
           className={cn(
-            "absolute inset-0 rounded-full opacity-20 bg-[#22D3EE] blur-xl",
+            "absolute inset-0 rounded-full opacity-20 bg-[#4F5AE8] blur-xl",
           )}
           aria-hidden="true"
         />
@@ -127,7 +127,7 @@ export function LoadingOverlay({
         <div className="relative">
           <div className="w-14 h-14 spinner" />
           <div
-            className="absolute inset-0 rounded-full bg-[#22D3EE] opacity-10 blur-2xl"
+            className="absolute inset-0 rounded-full bg-[#4F5AE8] opacity-10 blur-2xl"
             aria-hidden="true"
           />
         </div>
@@ -198,7 +198,7 @@ export function LoadingOverlay({
                     index < currentStep
                       ? "border-[#34D399] text-[#34D399]"
                       : index === currentStep
-                        ? "border-[#22D3EE] text-[#22D3EE]"
+                        ? "border-[#4F5AE8] text-[#4F5AE8]"
                         : "border-[#1A2540] text-[#1A2540]"
                   )}
                   aria-hidden="true"
