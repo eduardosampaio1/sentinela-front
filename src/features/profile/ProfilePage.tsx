@@ -204,7 +204,7 @@ export function ProfilePage() {
                 type="submit"
                 disabled={passwordLoading}
                 size="sm"
-                className="rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#3E48C4]"
+                className="rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4]"
               >
                 {passwordLoading ? "Updating password…" : "Update password"}
               </Button>

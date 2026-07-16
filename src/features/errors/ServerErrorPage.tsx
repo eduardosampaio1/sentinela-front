@@ -60,7 +60,7 @@ export function ServerErrorPage() {
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <Button
             size="sm"
-            className="rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#3E48C4]"
+            className="rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4]"
             onClick={() => window.location.reload()}
           >
             Reload page

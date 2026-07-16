@@ -281,7 +281,7 @@ export function RunDetailPage() {
               {run.raw_result && (
                 <Button
                   onClick={handleRestore}
-                  className="rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#67E8F9] flex-shrink-0"
+                  className="rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4] flex-shrink-0"
                 >
                   Restore to dashboard
                 </Button>

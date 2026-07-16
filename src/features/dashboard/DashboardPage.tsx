@@ -42,7 +42,7 @@ function NoDashboardState() {
           <Button
             onClick={() => navigate("/home")}
             size="sm"
-            className="rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#3E48C4]"
+            className="rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4]"
           >
             Open Launchpad
           </Button>

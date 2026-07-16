@@ -181,7 +181,7 @@ export function RegisterPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full h-11 rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#3E48C4] transition-colors mt-2"
+          className="w-full h-11 rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4] transition-colors mt-2"
         >
           {loading ? (
             <span className="flex items-center gap-2">

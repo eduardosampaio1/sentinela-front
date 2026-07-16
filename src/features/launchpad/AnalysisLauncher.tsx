@@ -234,7 +234,7 @@ export function AnalysisLauncher() {
               onClick={handlePasteSubmit}
               disabled={loading || !pastedText.trim()}
               size="sm"
-              className="rounded-xl bg-[#4F5AE8] text-[#070C18] font-semibold hover:bg-[#3E48C4] min-w-[120px]"
+              className="rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4] min-w-[120px]"
             >
               {loading ? (
                 <span className="flex items-center gap-1.5">

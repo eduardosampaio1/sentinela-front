@@ -70,7 +70,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
             "rounded-xl font-semibold text-xs flex-1 sm:flex-none",
             isEscalated
               ? "bg-[rgba(248,113,113,0.15)] text-[#F87171] border border-[rgba(248,113,113,0.25)] hover:bg-[rgba(248,113,113,0.25)]"
-              : "bg-[#4F5AE8] text-[#070C18] hover:bg-[#3E48C4]"
+              : "bg-[#4F5AE8] text-white hover:bg-[#3E48C4]"
           )}
           onClick={() => navigate("/dashboard")}
         >

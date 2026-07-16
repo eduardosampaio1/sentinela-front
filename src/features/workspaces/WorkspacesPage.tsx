@@ -60,7 +60,7 @@ function CreateDialog({ open, onOpenChange, title, placeholder, onConfirm }: Cre
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl text-[#94A3B8]">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="rounded-xl bg-[#4F5AE8] text-[#070C18]">
+            <Button type="submit" disabled={loading} className="rounded-xl bg-[#4F5AE8] text-white">
               {loading ? "Creating…" : "Create"}
             </Button>
           </DialogFooter>
@@ -127,7 +127,7 @@ function RenameDialog({ open, onOpenChange, entityLabel, currentName, onConfirm 
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl text-[#94A3B8]">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !name.trim()} className="rounded-xl bg-[#4F5AE8] text-[#070C18]">
+            <Button type="submit" disabled={loading || !name.trim()} className="rounded-xl bg-[#4F5AE8] text-white">
               {loading ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
