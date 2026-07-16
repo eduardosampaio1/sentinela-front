@@ -32,8 +32,11 @@ RUN npm run build
 # ---------- serve ----------
 FROM node:20-alpine
 WORKDIR /app
-RUN npm install -g serve
 COPY --from=build /app/dist ./dist
+COPY server.cjs ./server.cjs
 EXPOSE 8080
-# -s: fallback de SPA (todas as rotas -> index.html), essencial p/ o React Router (/auth/callback etc.)
-CMD ["sh", "-c", "serve -s dist -l ${PORT:-8080}"]
+# Servidor estático próprio (Node puro): serve arquivos com precedência correta
+# (arquivo -> .html -> index de diretório) e faz fallback de SPA -> index.html
+# p/ o React Router (/auth/callback etc.). Substitui `serve -s`, que reescrevia
+# TODO .html aninhado p/ o index e quebrava os protótipos estáticos em /projects.
+CMD ["node", "server.cjs"]
