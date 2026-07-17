@@ -639,42 +639,6 @@
     </div>
   </section>
 
-  <div class="duo">
-    <div>
-      <div class="sec-head">
-        <h2>Training base vs live web</h2>
-        <span class="tier f1">Phase 1</span>
-      </div>
-      <div class="mode-grid">
-        <div class="mode-card">
-          <span class="label">Parametric (training)<button class="info" data-tip="Same AI Brand Score (0–100), measured with browsing/tools disabled: the answer comes only from what the model memorized in training. Changes only when a new model version ships — which is why the delta is flat.">i</button></span>
-          <div class="vrow" style="margin:4px 0 0"><span class="value">54<span style="font-size:14px;color:var(--ink-faint)">/100</span></span><span class="band weak">Weak</span><span class="delta flat">0 · no model updates</span></div>
-          <div class="scale" role="img" aria-label="54 of 100, Weak band"><i class="sC"></i><i class="sW"></i><i class="sF"></i><i class="sG"></i><i class="sS"></i><span class="dot" style="left:54%"></span></div>
-          <span class="meta">What the models “know” without searching — the brand image already baked into training. Only moves on new model versions.</span>
-        </div>
-        <div class="mode-card">
-          <span class="label">Grounded (web/RAG)<button class="info" data-tip="Same AI Brand Score (0–100), measured with web search enabled: the engine retrieves current pages and cites them. Moves within days when coverage changes — PR actions show up here first.">i</button></span>
-          <div class="vrow" style="margin:4px 0 0"><span class="value">49<span style="font-size:14px;color:var(--ink-faint)">/100</span></span><span class="band weak">Weak</span><span class="delta up"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5l7 8H5z"/></svg>+9 vs previous cycle</span></div>
-          <div class="scale" role="img" aria-label="49 of 100, Weak band"><i class="sC"></i><i class="sW"></i><i class="sF"></i><i class="sG"></i><i class="sS"></i><span class="dot" style="left:49%"></span></div>
-          <span class="meta">What the models answer searching the web right now — reflects current coverage of the case. Fastest-moving channel.</span>
-        </div>
-      </div>
-      <div class="gap-note"><b>Reading: coverage gap −5 pts.</b> Live-web answers run below the models’ memory — crisis coverage still drags current answers down. The grounded channel is recovering fastest (+9): editorial actions land here first. <b>Risk if it persists:</b> today’s web is tomorrow’s training data — a low grounded score left unaddressed eventually becomes the parametric score of future model versions.</div>
-    </div>
-    <div>
-      <div class="sec-head">
-        <h2>Cycle cost</h2>
-        <span class="tier f1">Phase 1</span>
-        <button class="info" data-tip="Every campaign has a mandatory cost cap. The projected cost is checked before and during the fan-out; when the cap is reached the run stops and is honestly marked as partial.">i</button>
-      </div>
-      <div class="sec-body">
-        <div style="font-family:var(--font-data);font-variant-numeric:tabular-nums;font-size:24px;font-weight:600">US$ 82.10 <span style="font-size:14px;color:var(--ink-muted);font-weight:400">of US$ 150.00 (campaign cap)</span></div>
-        <div class="cost-bar" role="img" aria-label="55% of the cost cap consumed"><i style="width:55%"></i></div>
-        <div style="font-size:12.5px;color:var(--ink-muted)">10,500 executions · 300 prompts × 7 engines × 5 reps · the cycle stops automatically at the cap</div>
-      </div>
-    </div>
-  </div>
-
   <section aria-labelledby="h-sources">
     <div class="sec-head">
       <h2 id="h-sources">Sources cited by the AIs · Our Source Score</h2>
