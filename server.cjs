@@ -54,7 +54,17 @@ function send(res, filePath, status = 200) {
 
 // Resolve a request path to a real file inside DIST, or null.
 function resolve(urlPath) {
-  let rel = decodeURIComponent(urlPath.split("?")[0].split("#")[0]);
+  const raw = urlPath.split("?")[0].split("#")[0];
+  // decodeURIComponent throws URIError on malformed percent-encoding ("/%",
+  // "/%zz"), and req.url is attacker-controlled -- internet scanners send these
+  // constantly. An uncaught throw here kills the process, so a single bad
+  // request used to crash-loop the whole site. Malformed => no file match.
+  let rel;
+  try {
+    rel = decodeURIComponent(raw);
+  } catch {
+    return null;
+  }
   // normalize + block path traversal
   const abs = path.normalize(path.join(DIST, rel));
   if (abs !== DIST && !abs.startsWith(DIST + path.sep)) return null;
@@ -66,15 +76,30 @@ function resolve(urlPath) {
   return null;
 }
 
-http
-  .createServer((req, res) => {
+const server = http.createServer((req, res) => {
+  // Second layer: no single request may ever take the process down. Anything
+  // unexpected becomes a 500 for that one client, not a container restart.
+  try {
     const hit = resolve(req.url || "/");
     if (hit) return send(res, hit);
     // SPA fallback: let the React router handle client-side routes
     if (isFile(INDEX)) return send(res, INDEX);
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("Not found");
-  })
-  .listen(PORT, () => {
-    console.log(`sentinela-front static server on :${PORT} (dist=${DIST})`);
-  });
+  } catch (err) {
+    console.error(`request failed: ${req.method} ${req.url}`, err);
+    if (res.headersSent) return res.destroy();
+    res.writeHead(500, { "Content-Type": "text/plain" });
+    res.end("Internal server error");
+  }
+});
+
+// Malformed HTTP framing shouldn't surface as an uncaught 'clientError' either.
+server.on("clientError", (err, socket) => {
+  if (socket.writable) socket.end("HTTP/1.1 400 Bad Request\r\n\r\n");
+  socket.destroy();
+});
+
+server.listen(PORT, () => {
+  console.log(`sentinela-front static server on :${PORT} (dist=${DIST})`);
+});
