@@ -51,6 +51,14 @@ export async function saveAnalysisRun(params: {
   inputHash?: string;
   result: Record<string, unknown>;
 }) {
+  if (getAuthClient().provider === "keycloak") {
+    // O backend ja persistiu o analysis_run no Postgres (materializador de
+    // resultados). Escrever daqui iria para o client placeholder do Supabase e
+    // renderia um toast "History sync failed" para algo que foi persistido com
+    // sucesso. O caller trata null pulando o analysis_run_id embutido.
+    return null;
+  }
+
   const { data, error } = await supabase
     .from("analysis_runs")
     .insert({
