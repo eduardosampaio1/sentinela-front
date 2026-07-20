@@ -50,8 +50,20 @@ export async function saveAnalysisRun(params: {
   sourceFilename?: string;
   inputHash?: string;
   result: Record<string, unknown>;
+  /**
+   * true quando ESTA chamada e a unica persistencia do fluxo (import por JSON
+   * colado, que nao passa pelo backend). Nesse caso, nao persistir precisa
+   * falhar em voz alta em vez de virar "importado com sucesso".
+   */
+  requirePersistence?: boolean;
 }) {
   if (getAuthClient().provider === "keycloak") {
+    if (params.requirePersistence) {
+      throw new Error(
+        "Importing a pasted analysis result is not supported on this deployment: " +
+          "there is no gateway endpoint to persist it. Run the analysis from a dataset instead.",
+      );
+    }
     // O backend ja persistiu o analysis_run no Postgres (materializador de
     // resultados). Escrever daqui iria para o client placeholder do Supabase e
     // renderia um toast "History sync failed" para algo que foi persistido com

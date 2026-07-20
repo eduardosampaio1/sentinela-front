@@ -74,6 +74,19 @@ describe("saveAnalysisRun — gating por provider", () => {
     await expect(saveAnalysisRun(PARAMS)).resolves.toBeNull();
   });
 
+  it("lanca sob keycloak quando a persistencia e obrigatoria (import por JSON colado)", async () => {
+    // importAnalysisResult nao chama o backend: saveAnalysisRun e a UNICA
+    // persistencia. Retornar null ali faria a UI dizer "Analysis result
+    // imported" sem ter gravado nada — sucesso falso.
+    provider.value = "keycloak";
+    const { saveAnalysisRun } = await import("@/lib/analysisRuns");
+
+    await expect(
+      saveAnalysisRun({ ...PARAMS, requirePersistence: true }),
+    ).rejects.toThrow(/not supported/i);
+    expect(insertSpy).not.toHaveBeenCalled();
+  });
+
   it("mantem a escrita no Supabase quando o provider e supabase", async () => {
     provider.value = "supabase";
     const { saveAnalysisRun } = await import("@/lib/analysisRuns");
