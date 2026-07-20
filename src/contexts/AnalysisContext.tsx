@@ -373,6 +373,8 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
                 createdBy: user.id,
                 inputHash,
                 result: toPersistableResult(mapped),
+                // unica persistencia deste fluxo: nao passa pelo backend
+                requirePersistence: true,
               });
               if (savedRun?.id) {
                 const persistedResult = {
