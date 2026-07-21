@@ -106,33 +106,51 @@ export function extractAIHealthScore(result: AnalysisResult): number | null {
   return null;
 }
 
+// UM campo por metrica. Sem cadeia de fallback.
+//
+// A cadeia antiga trocava de metrica em silencio sob o mesmo rotulo: como o motor
+// nunca emite BEHAVIOR_SCORE, o tile "Behavior Score" acabava exibindo o composto
+// AI_HEALTH_SCORE — e, se este faltasse, exibiria global_confidence, que nem sequer
+// mede comportamento. Ausencia agora e null, e a tela declara indisponivel.
 export function extractBehaviorScore(result: AnalysisResult): number | null {
-  const scores = getScores(result);
-  for (const c of [
-    scores.BEHAVIOR_SCORE,
-    scores.behavior_score,
-    scores.AI_HEALTH_SCORE,
-    scores.ai_health_score,
-    result.global_confidence,
-  ]) {
-    const v = clampPercent(normalizeToPercent(c));
-    if (v !== null) return v;
-  }
-  return null;
+  return clampPercent(normalizeToPercent(getScores(result).BEHAVIORAL_HEALTH_SCORE));
 }
 
+// Drift e deslocamento entre turnos da conversa (session_drift_score), medido pelo
+// motor com cobertura declarada em interaction_analysis_mode. `semantic_dispersion`
+// e espalhamento intra-corpus — outra metrica, e era a que aparecia aqui.
 export function extractSemanticDrift(result: AnalysisResult): number | null {
-  const semantic = asRecord(getSignals(result).semantic);
-  for (const c of [
-    semantic.semantic_drift,
-    semantic.semantic_dispersion,
-    semantic.semantic_entropy,
-    semantic.drift,
-  ]) {
-    const v = clampPercent(normalizeToPercent(c));
-    if (v !== null) return v;
-  }
-  return null;
+  const summary = asRecord(
+    asRecord(getArgosV2(result).evidence).interaction_session_metrics_summary,
+  );
+  return clampPercent(normalizeToPercent(summary.session_drift_score));
+}
+
+export interface ScoreConfidence {
+  status: string;
+  confidence: string;
+  confidenceScore: number | null;
+  limitations: string[];
+}
+
+// Explicabilidade que o motor JA publica em confidence_detail e a tela ignorava:
+// exibia "High certainty" sobre um AI_HEALTH_SCORE declarado status=partial /
+// confidence=low pelo proprio motor.
+export function extractScoreConfidence(
+  result: AnalysisResult,
+  scoreKey: string,
+): ScoreConfidence | null {
+  const detail = asRecord(asRecord((result as Record<string, unknown>).confidence_detail).scores);
+  const entry = asRecord(detail[scoreKey]);
+  const status = asString(entry.status);
+  const confidence = asString(entry.confidence);
+  if (!status || !confidence) return null;
+  return {
+    status,
+    confidence,
+    confidenceScore: asNumber(entry.confidence_score),
+    limitations: Array.isArray(entry.limitations) ? entry.limitations.map(String) : [],
+  };
 }
 
 export function extractConfidencePercent(result: AnalysisResult): number | null {
