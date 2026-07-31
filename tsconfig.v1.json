@@ -1,0 +1,27 @@
+// Gate de typecheck ESTRITO e ESCOPADO à área canônica /v1 (Onda 6 E1, item 9).
+//
+// Por quê escopado: o `src` legado tem 34 erros de tipo PRÉ-EXISTENTES (adapters/, features/,
+// lib/economicsModel|decisionLayerModel|analysisAdapter — exports removidos), registrados como
+// dívida em docs/onda6/E1-typecheck-gate.md. A E1 NÃO os mascara (não liga skipLibCheck para
+// escondê-los, não afrouxa) nem os conserta (fora de escopo). O código NOVO, porém, precisa passar
+// no bar estrito — este projeto typecheck cobre só a camada canônica + seus testes/fixtures.
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/vite-env.d.ts",
+    "src/lib/v1",
+    "src/test/v1",
+    "src/test/fixtures/public-v1",
+    "src/test/quarantine.ts"
+  ]
+}
