@@ -25,7 +25,10 @@ if (pure.length) {
   process.exit(1);
 }
 
-// 2) UI: reprova só erros DENTRO da jornada canônica; tolera legado do grafo importado.
+// 2) UI: reprova erros DENTRO da jornada canônica E impõe o allowlist legado (Codex E2 R4):
+//    o baseline legado do grafo importado é EXATAMENTE este — não pode crescer nem mudar em
+//    silêncio (novo import legado com erro, ou os 3 virando 4, reprova). Ver E1-typecheck-gate.md.
+const EXPECTED_LEGACY = 3;
 const uiAll = errLines(tsc("tsconfig.v1-ui.json"));
 const canonical = uiAll.filter((l) => l.includes("features/canonical-analysis"));
 const legacy = uiAll.filter((l) => !l.includes("features/canonical-analysis"));
@@ -33,8 +36,16 @@ if (canonical.length) {
   console.error(`[typecheck] ${canonical.length} erro(s) ESTRITO(s) na UI canônica:\n${canonical.join("\n")}`);
   process.exit(1);
 }
+if (legacy.length !== EXPECTED_LEGACY) {
+  console.error(
+    `[typecheck] baseline legado mudou: esperado ${EXPECTED_LEGACY}, encontrado ${legacy.length}.\n` +
+      `${legacy.join("\n")}\n` +
+      `Se a mudança é legítima, atualize EXPECTED_LEGACY em scripts/typecheck.mjs e docs/onda6/E1-typecheck-gate.md.`,
+  );
+  process.exit(1);
+}
 
 console.log(
-  `[typecheck] OK — canônico PURO e UI estritos e limpos; ${legacy.length} erro(s) legado(s) ` +
-    `pré-existente(s) tolerado(s) no grafo importado pela UI (documentado, não cresce).`,
+  `[typecheck] OK — canônico PURO e UI estritos e limpos; ${legacy.length}/${EXPECTED_LEGACY} erro(s) ` +
+    `legado(s) do grafo importado (allowlist congelado, não cresce).`,
 );
