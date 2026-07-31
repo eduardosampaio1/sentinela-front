@@ -1,0 +1,110 @@
+// Contrato PÚBLICO `public-v1` — fonte ÚNICA de tipos da jornada canônica (Onda 6 E1).
+//
+// ORIGEM (não redefinir manualmente em outro lugar):
+//   repo `sentinela` @ e7d0703 · docs/contracts/public-v1.json + public-v1.types.ts
+//   versão do contrato: "public-v1" (congelado na Onda 5.5).
+//
+// Esta camada conhece SOMENTE conceitos públicos. É PROIBIDO qualquer tipo aqui conter
+// job_stage / job_id interno / engine / worker / assignment / attempt / lease /
+// execution_profile / presigned / upload_id / object key / minio / redis.
+// (O cadeado `test/v1/canonical-boundary.test.ts` reprova se algum aparecer.)
+
+/** Versão do contrato público que esta camada implementa. */
+export const PUBLIC_CONTRACT_VERSION = "public-v1" as const;
+
+/** Estado PÚBLICO estável de uma análise. Sem progresso % (fica para a Onda 7). */
+export type AnalysisStatus =
+  | "preparing" // reservada / recebendo-preparo antes da fila
+  | "receiving" // recebendo a base (upload em andamento)
+  | "queued" // submetida, aguardando execução
+  | "running" // em execução
+  | "recovering" // re-enfileirada após uma tentativa (retomando)
+  | "completed" // resultado disponível
+  | "failed"; // falha terminal (ver retry_allowed para recuperabilidade)
+
+export const PUBLIC_STATES: readonly AnalysisStatus[] = [
+  "preparing",
+  "receiving",
+  "queued",
+  "running",
+  "recovering",
+  "completed",
+  "failed",
+] as const;
+
+/** Projeção pública de leitura de status (GET /v1/analyses/{id}). */
+export interface AnalysisStatusView {
+  analysis_id: string;
+  status: AnalysisStatus;
+  record_count: number | null;
+  result_available: boolean;
+  retry_allowed: boolean;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+/** Item de listagem (GET /v1/analyses). */
+export interface AnalysisListItem {
+  analysis_id: string;
+  status: AnalysisStatus;
+  record_count: number | null;
+  result_available: boolean;
+  created_at: string | null;
+}
+
+/** Página de listagem por cursor determinístico. */
+export interface AnalysisListPage {
+  items: AnalysisListItem[];
+  next_cursor: string | null;
+}
+
+/** Resultado canônico (GET /v1/analyses/{id}/result) — só do Result Store. `result` é o
+ *  deliverable de domínio (schema result-v1). NÃO expõe engine_version (invariante: nunca Engine). */
+export interface AnalysisResultView {
+  analysis_id: string;
+  result_schema_version: string;
+  result: unknown;
+}
+
+/** Resposta de prepare (POST /v1/analyses) e submit/retry. */
+export interface AnalysisHandle {
+  analysis_id: string;
+  status: AnalysisStatus;
+}
+
+/** Código estável de erro público. `type` = `urn:sentinela:error:<code>`. */
+export type ProblemCode =
+  | "invalid_input"
+  | "authentication_required"
+  | "forbidden_or_not_found"
+  | "idempotency_conflict"
+  | "analysis_not_ready"
+  | "result_not_available"
+  | "capacity_wait"
+  | "temporarily_unavailable"
+  | "non_retryable_failure";
+
+/** Envelope de erro `application/problem+json` (RFC 7807). `detail` é sempre um código/descrição
+ *  segura — nunca tabela/SQL/host/bucket/key/URL/credencial/trace interno. */
+export interface Problem {
+  type: string; // urn:sentinela:error:<code>
+  title: string;
+  status: number;
+  code: ProblemCode;
+  detail: string;
+  instance: string; // correlation id
+  retryable: boolean;
+}
+
+// ── entradas públicas das 7 operações (só conceitos públicos) ─────────────────
+/** Escopo canônico autenticado. `workspace_id` é a ÚNICA autoridade de tenant do público.
+ *  (project/environment são contexto de produto legado — NÃO entram no `/v1` nesta etapa.) */
+export interface CanonicalScope {
+  workspaceId: string;
+}
+
+/** Parâmetros de listagem (cursor determinístico; sem offset). */
+export interface ListParams extends CanonicalScope {
+  limit?: number;
+  cursor?: string | null;
+}
