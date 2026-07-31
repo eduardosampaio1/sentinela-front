@@ -61,6 +61,19 @@ describe("V1 client — as 7 operações canônicas", () => {
     expect(page.next_cursor).toBe("cursor-2");
   });
 
+  it("base relativa same-origin (/api) resolve contra a origem (não lança TypeError)", async () => {
+    const fetchImpl = vi.fn(async (_input: RequestInfo | URL) => jsonResponse(HANDLE, 201));
+    const client = createV1Client({
+      baseUrl: "/api",
+      getAccessToken: async () => "tok",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      newCorrelationId: () => "corr-1",
+      newIdempotencyKey: () => "idem-1",
+    });
+    await client.prepare(SCOPE);
+    expect(String(fetchImpl.mock.calls[0]![0])).toBe(`${window.location.origin}/api/v1/analyses?workspace_id=ws-1`);
+  });
+
   it("uploadData: POST /data com corpo e content-type", async () => {
     const { client, fetchImpl } = makeClient(() => jsonResponse(STATUS_VIEWS.preparing));
     await client.uploadData("an-abc", SCOPE, "{}\n", {});

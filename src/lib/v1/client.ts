@@ -58,6 +58,11 @@ export function createV1Client(config: V1ClientConfig): V1Client {
   const newCorr = config.newCorrelationId ?? uuid;
   const newIdem = config.newIdempotencyKey ?? uuid;
   const base = config.baseUrl.replace(/\/+$/, "");
+  // A base pode ser ABSOLUTA (https://gw…) ou RELATIVA same-origin (ex.: "/api", como o cliente
+  // legado suporta atrás de um proxy). `new URL("/api/v1/…")` sem origem lança TypeError; passar
+  // uma origem de fallback resolve a relativa E é IGNORADA quando a base já é absoluta.
+  const origemFallback =
+    typeof window !== "undefined" && window.location ? window.location.origin : "http://localhost";
 
   const MALFORMADO = Symbol("malformado");
   async function corpoJsonSeguro(resposta: Response): Promise<unknown> {
@@ -91,7 +96,7 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       throw new ProblemError(normalizeProblem({ code: "authentication_required" }, 401, correlationId));
     }
     // 2) URL + query (workspace_id é a autoridade de tenant; nunca `tenant_id`)
-    const url = new URL(`${base}${caminho}`);
+    const url = new URL(`${base}${caminho}`, origemFallback);
     for (const [k, v] of Object.entries(query)) {
       if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
     }
