@@ -82,13 +82,13 @@ function SidebarNavItem({
   if (isDisabled) {
     return (
       <div
-        className="flex items-center gap-3 px-3 py-2 rounded-xl text-[#475569] cursor-not-allowed select-none"
+        className="flex items-center gap-3 px-3 py-2 rounded-xl text-muted-foreground cursor-not-allowed select-none"
         aria-disabled="true"
         title="Run an analysis first to access this view"
       >
         <Icon path={item.icon} />
         <span className="text-sm font-medium truncate">{item.label}</span>
-        <span className="ml-auto text-[10px] uppercase tracking-wide font-semibold text-[#1A2540] bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.04)] px-1.5 py-0.5 rounded-full">
+        <span className="ml-auto text-[10px] uppercase tracking-wide font-semibold text-muted-foreground bg-muted/40 border border-border px-1.5 py-0.5 rounded-full">
           needs run
         </span>
       </div>
@@ -102,18 +102,18 @@ function SidebarNavItem({
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150",
         isActive
-          ? "bg-[rgba(79,90,232,0.10)] text-[#4F5AE8] shadow-[inset_0_0_0_1px_rgba(79,90,232,0.12)]"
-          : "text-[#94A3B8] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]"
+          ? "bg-primary/10 text-primary ring-1 ring-inset ring-primary/[0.12]"
+          : "text-muted-foreground hover:text-muted-foreground hover:bg-muted/60"
       )}
     >
       <Icon
         path={item.icon}
-        className={isActive ? "text-[#4F5AE8]" : "text-current"}
+        className={isActive ? "text-primary" : "text-current"}
       />
       <span className="text-sm font-medium truncate">{item.label}</span>
       {isActive && (
         <span
-          className="ml-auto w-1.5 h-1.5 rounded-full bg-[#4F5AE8]"
+          className="ml-auto w-1.5 h-1.5 rounded-full bg-primary"
           aria-hidden="true"
         />
       )}
@@ -132,26 +132,26 @@ function ContextBlock() {
   return (
     <button
       onClick={() => navigate("/workspaces")}
-      className="w-full text-left px-4 py-3 border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.02)] transition-colors group"
+      className="w-full text-left px-4 py-3 border-b border-border hover:bg-muted/40 transition-colors group"
       title="Change active context"
     >
-      <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mb-1.5">
+      <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground mb-1.5">
         Active context
       </p>
       {workspace && (
-        <p className="text-xs font-semibold text-[#94A3B8] truncate leading-tight">
+        <p className="text-xs font-semibold text-muted-foreground truncate leading-tight">
           {workspace.name}
         </p>
       )}
       {project && (
-        <p className="text-xs text-[#94A3B8] truncate mt-0.5 leading-tight">
+        <p className="text-xs text-muted-foreground truncate mt-0.5 leading-tight">
           {project.name}
         </p>
       )}
       {environment && (
-        <span className="inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 rounded-full bg-[rgba(79,90,232,0.08)] border border-[rgba(79,90,232,0.10)]">
-          <span className="w-1 h-1 rounded-full bg-[#4F5AE8]" aria-hidden="true" />
-          <span className="text-[10px] text-[#4F5AE8] font-medium">{environment.name}</span>
+        <span className="inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 rounded-full bg-primary/[0.08] border border-primary/10">
+          <span className="w-1 h-1 rounded-full bg-primary" aria-hidden="true" />
+          <span className="text-[10px] text-primary font-medium">{environment.name}</span>
         </span>
       )}
     </button>
@@ -169,16 +169,16 @@ function AnalysisStatusPill() {
   return (
     <button
       onClick={() => navigate("/dashboard")}
-      className="mx-3 mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-[rgba(52,211,153,0.06)] border border-[rgba(52,211,153,0.12)] hover:bg-[rgba(52,211,153,0.10)] transition-colors"
+      className="mx-3 mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-success/[0.06] border border-success/[0.12] hover:bg-success/10 transition-colors"
       title="View active analysis results"
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-[#34D399] animate-pulse flex-shrink-0" aria-hidden="true" />
-      <span className="text-[11px] font-medium text-[#34D399] truncate flex-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse flex-shrink-0" aria-hidden="true" />
+      <span className="text-[11px] font-medium text-success truncate flex-1">
         Analysis active
       </span>
       <Icon
         path="M8.25 4.5l7.5 7.5-7.5 7.5"
-        className="w-3 h-3 text-[#34D399] flex-shrink-0"
+        className="w-3 h-3 text-success flex-shrink-0"
       />
     </button>
   );
@@ -208,20 +208,20 @@ function UserBlock() {
   };
 
   return (
-    <div className="px-3 py-3 border-t border-[rgba(255,255,255,0.06)]">
-      <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-[rgba(255,255,255,0.04)] transition-colors group">
+    <div className="px-3 py-3 border-t border-border">
+      <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-muted/60 transition-colors group">
         {/* Avatar */}
-        <div className="w-7 h-7 rounded-full bg-[rgba(79,90,232,0.12)] border border-[rgba(79,90,232,0.2)] flex items-center justify-center flex-shrink-0">
-          <span className="text-[10px] font-bold text-[#4F5AE8]">{initials}</span>
+        <div className="w-7 h-7 rounded-full bg-primary/[0.12] border border-primary/20 flex items-center justify-center flex-shrink-0">
+          <span className="text-[10px] font-bold text-foreground">{initials}</span>
         </div>
 
         {/* Name / email */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-[#94A3B8] truncate leading-tight">
+          <p className="text-xs font-semibold text-muted-foreground truncate leading-tight">
             {displayName}
           </p>
           {user?.email && displayName !== user.email && (
-            <p className="text-[10px] text-[#475569] truncate leading-tight">
+            <p className="text-[10px] text-muted-foreground truncate leading-tight">
               {user.email}
             </p>
           )}
@@ -230,7 +230,7 @@ function UserBlock() {
         {/* Sign out */}
         <button
           onClick={handleSignOut}
-          className="w-6 h-6 flex items-center justify-center rounded-lg text-[#475569] hover:text-[#F87171] hover:bg-[rgba(248,113,113,0.08)] transition-colors opacity-0 group-hover:opacity-100"
+          className="w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
           aria-label="Sign out"
           title="Sign out"
         >
@@ -250,13 +250,13 @@ export function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const { analysisCompleted } = useAnalysis();
 
   return (
-    <div className="flex flex-col h-full bg-[#070C18]">
+    <div className="flex flex-col h-full bg-background">
 
       {/* Logo */}
-      <div className="h-14 flex items-center px-5 border-b border-[rgba(255,255,255,0.06)] flex-shrink-0">
+      <div className="h-14 flex items-center px-5 border-b border-border flex-shrink-0">
         <div className="flex items-center gap-2.5">
-          <SentinelaMark size={26} className="text-[#4F5AE8] flex-shrink-0" />
-          <span className="text-sm font-semibold tracking-tight text-[#F1F5F9]">Sentinela</span>
+          <SentinelaMark size={26} className="text-primary flex-shrink-0" />
+          <span className="text-sm font-semibold tracking-tight text-foreground">Sentinela</span>
         </div>
       </div>
 
@@ -306,7 +306,7 @@ export function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
 
 export function Sidebar() {
   return (
-    <aside className="w-[220px] flex-shrink-0 h-screen sticky top-0 hidden md:flex flex-col border-r border-[rgba(255,255,255,0.06)]">
+    <aside className="w-[220px] flex-shrink-0 h-screen sticky top-0 hidden md:flex flex-col border-r border-border">
       <SidebarContent />
     </aside>
   );

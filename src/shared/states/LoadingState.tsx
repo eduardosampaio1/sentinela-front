@@ -27,7 +27,7 @@ export function LoadingState({
           role="status"
           aria-label={message}
         />
-        <span className={cn(textSize, "text-[#94A3B8]")}>{message}</span>
+        <span className={cn(textSize, "text-muted-foreground")}>{message}</span>
       </span>
     );
   }
@@ -45,15 +45,15 @@ export function LoadingState({
         <div className={cn("spinner", spinnerSize)} aria-hidden="true" />
         <div
           className={cn(
-            "absolute inset-0 rounded-full opacity-20 bg-[#4F5AE8] blur-xl",
+            "absolute inset-0 rounded-full opacity-20 bg-primary blur-xl",
           )}
           aria-hidden="true"
         />
       </div>
       <div className="text-center space-y-1">
-        <p className={cn(textSize, "font-medium text-[#F1F5F9]")}>{message}</p>
+        <p className={cn(textSize, "font-medium text-foreground")}>{message}</p>
         {description && (
-          <p className="text-xs text-[#94A3B8]">{description}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
         )}
       </div>
     </div>
@@ -120,14 +120,14 @@ export function LoadingOverlay({
     : (message ?? steps?.[currentStep] ?? "Processing dataset");
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#070C18]/92 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-background/92 backdrop-blur-sm">
       <div className="flex flex-col items-center gap-6 max-w-sm w-full px-8">
 
         {/* Spinner */}
         <div className="relative">
           <div className="w-14 h-14 spinner" />
           <div
-            className="absolute inset-0 rounded-full bg-[#4F5AE8] opacity-10 blur-2xl"
+            className="absolute inset-0 rounded-full bg-primary opacity-10 blur-2xl"
             aria-hidden="true"
           />
         </div>
@@ -135,7 +135,7 @@ export function LoadingOverlay({
         {/* Dynamic message with fade transition */}
         <div className="text-center space-y-1.5 min-h-[3.5rem] flex flex-col items-center justify-center">
           <p
-            className="text-base font-semibold text-[#F1F5F9]"
+            className="text-base font-semibold text-foreground"
             style={{
               opacity: isWaitingForWorker ? (fadeIn ? 1 : 0) : 1,
               transition: "opacity 400ms ease-in-out",
@@ -147,7 +147,7 @@ export function LoadingOverlay({
           </p>
           {isWaitingForWorker ? (
             <p
-              className="text-xs text-[#475569]"
+              className="text-xs text-muted-foreground"
               style={{
                 opacity: fadeIn ? 1 : 0,
                 transition: "opacity 400ms ease-in-out",
@@ -157,14 +157,14 @@ export function LoadingOverlay({
             </p>
           ) : (
             steps && steps[currentStep] && (
-              <p className="text-sm text-[#94A3B8]">{steps[currentStep]}</p>
+              <p className="text-sm text-muted-foreground">{steps[currentStep]}</p>
             )
           )}
         </div>
 
         {/* Progress bar */}
         {progress !== undefined && (
-          <div className="w-full bg-[rgba(255,255,255,0.06)] rounded-full h-1 overflow-hidden">
+          <div className="w-full bg-muted rounded-full h-1 overflow-hidden">
             <div
               className="progress-bar h-full transition-all duration-300"
               style={{ width: `${Math.max(4, progress)}%` }}
@@ -186,20 +186,20 @@ export function LoadingOverlay({
                 className={cn(
                   "text-xs flex items-center gap-2.5 transition-colors",
                   index < currentStep
-                    ? "text-[#34D399]"
+                    ? "text-success"
                     : index === currentStep
-                      ? "text-[#F1F5F9]"
-                      : "text-[#475569]"
+                      ? "text-foreground"
+                      : "text-muted-foreground"
                 )}
               >
                 <span
                   className={cn(
                     "w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold border flex-shrink-0",
                     index < currentStep
-                      ? "border-[#34D399] text-[#34D399]"
+                      ? "border-success text-success"
                       : index === currentStep
-                        ? "border-[#4F5AE8] text-[#4F5AE8]"
-                        : "border-[#1A2540] text-[#1A2540]"
+                        ? "border-primary text-primary"
+                        : "border-border text-border"
                   )}
                   aria-hidden="true"
                 >
