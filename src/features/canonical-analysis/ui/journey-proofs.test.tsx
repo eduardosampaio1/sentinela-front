@@ -1,0 +1,95 @@
+import { type ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/contexts/LanguageContext";
+import { createV1Client, type V1Client } from "@/lib/v1";
+import { HANDLE, statusView, problem } from "@/test/fixtures/public-v1/analyses";
+import { MSW_BASE } from "@/test/msw/handlers";
+import { server, setupMsw } from "@/test/msw/server";
+import { CanonicalClientProvider } from "../data/client";
+import { AnalysisPage } from "./AnalysisPage";
+
+vi.mock("@/shell/AppShell", () => ({ AppShell: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
+vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ workspace: { id: "ws-1" } }) }));
+vi.mock("react-router-dom", async (orig) => {
+  const actual = await orig<typeof import("react-router-dom")>();
+  return { ...actual, useNavigate: () => vi.fn(), useParams: () => ({ analysisId: "an-abc" }) };
+});
+
+setupMsw();
+let client: V1Client;
+beforeAll(() => {
+  client = createV1Client({ baseUrl: MSW_BASE, getAccessToken: async () => "tok" });
+});
+
+function wrap(children: ReactNode) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  return (
+    <LanguageProvider>
+      <QueryClientProvider client={qc}>
+        <CanonicalClientProvider client={client}>{children}</CanonicalClientProvider>
+      </QueryClientProvider>
+    </LanguageProvider>
+  );
+}
+
+describe("E3 item 15 — submit NÃO refaz upload", () => {
+  it("dois submits recuperáveis não disparam nenhum POST /data", async () => {
+    let dataCalls = 0;
+    let submitCalls = 0;
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("receiving"))),
+      http.post(`${MSW_BASE}/v1/analyses/:id/data`, () => {
+        dataCalls += 1;
+        return HttpResponse.json(statusView("receiving"));
+      }),
+      http.post(`${MSW_BASE}/v1/analyses/:id/submit`, () => {
+        submitCalls += 1;
+        // 1º submit falha (transitório recuperável), 2º sucede.
+        if (submitCalls === 1) {
+          return HttpResponse.json(problem("temporarily_unavailable"), {
+            status: 503,
+            headers: { "content-type": "application/problem+json" },
+          });
+        }
+        return HttpResponse.json({ ...HANDLE, status: "queued" });
+      }),
+    );
+
+    render(wrap(<AnalysisPage />));
+    const botao = await screen.findByRole("button", { name: /submit for analysis|enviar para análise/i });
+    await userEvent.click(botao);
+    await waitFor(() => expect(submitCalls).toBe(1));
+    await userEvent.click(screen.getByRole("button", { name: /submit for analysis|enviar para análise/i }));
+    await waitFor(() => expect(submitCalls).toBe(2));
+
+    expect(dataCalls).toBe(0); // NUNCA re-upload no retry de submit
+  });
+});
+
+describe("E3 item 18 — sem fallback legado (teste discriminante)", () => {
+  it("erro do /v1 fica no /v1: toda requisição é do Gateway canônico, nunca legado", async () => {
+    const urls: string[] = [];
+    const onReq = ({ request }: { request: Request }) => urls.push(request.url);
+    server.events.on("request:start", onReq);
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses/:id`, () =>
+        HttpResponse.json(problem("temporarily_unavailable"), {
+          status: 503,
+          headers: { "content-type": "application/problem+json" },
+        }),
+      ),
+    );
+
+    render(wrap(<AnalysisPage />));
+    // A UI mostra o erro público (traduzido pelo código), sem cair no legado.
+    await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+    server.events.removeListener("request:start", onReq);
+
+    expect(urls.length).toBeGreaterThan(0);
+    for (const u of urls) expect(u.startsWith(`${MSW_BASE}/v1/`)).toBe(true);
+  });
+});
