@@ -1,4 +1,52 @@
 {
+  "canonicalAnalysis": {
+    "entry": {
+      "title": "Nova análise",
+      "subtitle": "Envie uma base e acompanhe a análise pelos seus estados.",
+      "start": "Iniciar análise",
+      "starting": "Iniciando…",
+      "workspaceMissing": "Selecione um workspace para iniciar uma análise."
+    },
+    "upload": {
+      "title": "Adicione sua base",
+      "help": "Selecione um arquivo JSONL para analisar. O arquivo é enviado como está; nada é lido no seu navegador.",
+      "choose": "Escolher arquivo",
+      "dropHint": "Arraste um arquivo aqui ou escolha um",
+      "noFile": "Nenhum arquivo selecionado",
+      "invalid": "Este tipo de arquivo não é aceito.",
+      "sending": "Enviando sua base…",
+      "cancel": "Cancelar",
+      "retry": "Tentar de novo",
+      "submit": "Enviar para análise",
+      "selectedFile": "Arquivo selecionado"
+    },
+    "state": {
+      "preparing": { "title": "Preparando", "message": "Preparando a análise." },
+      "receiving": { "title": "Recebendo", "message": "Enviando e validando sua base." },
+      "queued": { "title": "Na fila", "message": "Recebida e aguardando disponibilidade." },
+      "running": { "title": "Em execução", "message": "Sua análise está sendo processada." },
+      "recovering": { "title": "Retomando", "message": "Retomando o processamento." },
+      "completed": { "title": "Concluída", "message": "Análise concluída." },
+      "failed": { "title": "Não concluída", "message": "A análise não pôde ser concluída." }
+    },
+    "action": {
+      "viewResult": "Ver resultado",
+      "retry": "Tentar de novo",
+      "back": "Voltar",
+      "newAnalysis": "Nova análise"
+    },
+    "problem": {
+      "authentication_required": "Sua sessão não é mais válida. Entre novamente.",
+      "forbidden_or_not_found": "Esta análise não existe ou não está disponível no seu workspace.",
+      "invalid_input": "A requisição não pôde ser processada como enviada. Revise e tente de novo.",
+      "idempotency_conflict": "Esta requisição já foi enviada. Usando a análise existente.",
+      "analysis_not_ready": "A análise ainda não está pronta.",
+      "result_not_available": "Nenhum resultado disponível para esta análise.",
+      "capacity_wait": "O sistema está sem capacidade agora. Prosseguirá automaticamente.",
+      "temporarily_unavailable": "O serviço está temporariamente indisponível. Tente de novo em instantes.",
+      "non_retryable_failure": "A requisição não pôde ser concluída. Repetir não ajuda — contate o suporte se persistir."
+    }
+  },
   "common": {
     "loading": "Carregando...",
     "login": "Entrar",
