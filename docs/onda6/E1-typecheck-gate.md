@@ -5,7 +5,8 @@
 | Gate | Comando | Estado E1 |
 |------|---------|-----------|
 | Lint | `npm run lint` (ou escopado `eslint src/lib/v1 …`) | **verde** nos arquivos novos |
-| Typecheck (canônico, ESTRITO) | `npm run typecheck` → `tsc -p tsconfig.v1.json --noEmit` | **verde (0 erros)** |
+| Typecheck (canônico, ESTRITO) | `npm run typecheck` → `node scripts/typecheck.mjs` (2 camadas) | **verde** |
+| Typecheck (só a camada pura) | `npm run typecheck:pure` → `tsc -p tsconfig.v1.json --noEmit` | **verde (0 erros)** |
 | Typecheck (legado, rastreio) | `npm run typecheck:legacy` → `tsc -p tsconfig.app.json --noEmit` | **vermelho: 34 erros pré-existentes** |
 | Testes | `npm test` → `vitest run` | **verde: 19 arquivos / 86 testes** |
 | Build | `npm run build` → `vite build` | **verde** (SWC não checa tipos) |
@@ -20,6 +21,13 @@ Decisão honesta:
 - **`npm run typecheck`** = [`tsconfig.v1.json`](../../tsconfig.v1.json) — ESTRITO (`strict`,
   `noImplicitAny`, `strictNullChecks`, `noUnused*`), escopado à **camada canônica** (`src/lib/v1`),
   seus testes e fixtures. **Deve ficar verde** — é o gate da E1 e das etapas seguintes.
+- **Onda 6 E2/E3 — UI canônica no estrito (Codex E2 R2):** a UI da jornada importa o shell/auth
+  LEGADO, cujo grafo tem **3 erros de tipo pré-existentes** (`lib/workspaces.ts` ×2, `shell/TopBar.tsx`
+  ×1). Como não tocamos o legado, `npm run typecheck` roda **2 camadas** via `scripts/typecheck.mjs`:
+  (1) `tsconfig.v1.json` puro (lib/v1 + data + flag + testes) — **0 erros**; (2) `tsconfig.v1-ui.json`
+  (feature inteira, inclui a UI e seus testes) — **0 erros em `features/canonical-analysis/**`**,
+  tolerando SÓ os 3 legados do grafo importado. Assim a jornada canônica **inteira** (dados + UI) está
+  sob o bar estrito; um erro de tipo em `AnalysisPage`/`UploadStep`/layout reprova o gate.
 - **`npm run typecheck:legacy`** = `tsconfig.app.json` — projeto inteiro, nas configs FROUXAS já
   existentes (`strict:false`). Hoje **vermelho (34 erros)**; serve para **rastrear** a dívida, não
   como gate que passa.

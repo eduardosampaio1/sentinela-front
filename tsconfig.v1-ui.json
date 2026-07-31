@@ -1,0 +1,17 @@
+// Typecheck ESTRITO da UI canônica da jornada (Onda 6 E2/E3). Diferente do `tsconfig.v1.json`
+// (lógica pura), a UI importa o shell/auth LEGADO, cujo grafo tem erros de tipo PRÉ-EXISTENTES
+// (workspaces.ts, TopBar.tsx). Não tocamos o legado (restrição). O gate `scripts/typecheck.mjs`
+// roda este projeto e FALHA se houver qualquer erro em `features/canonical-analysis/**`,
+// tolerando apenas os erros legados já conhecidos do grafo importado.
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/vite-env.d.ts", "src/features/canonical-analysis"]
+}

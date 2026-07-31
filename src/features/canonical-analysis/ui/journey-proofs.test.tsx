@@ -75,6 +75,20 @@ describe("E3 item 15 — submit NÃO refaz upload", () => {
   });
 });
 
+describe("E3 item 14 — refresh/deep-link resume por analysis_id", () => {
+  it("montada do ZERO (só o id na rota) reconstrói o estado terminal via /v1", async () => {
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses/:id`, () =>
+        HttpResponse.json(statusView("completed", { result_available: true })),
+      ),
+    );
+    // Sem contexto anterior (nenhum File/estado em memória): só o analysis_id da rota (mock useParams).
+    render(wrap(<AnalysisPage />));
+    // Espera a query resolver: estado completed + ação futura "ver resultado" (desabilitada nesta etapa).
+    expect(await screen.findByRole("button", { name: /view result|ver resultado/i })).toBeTruthy();
+  });
+});
+
 describe("E3 item 18 — sem fallback legado (teste discriminante)", () => {
   it("erro do /v1 fica no /v1: toda requisição é do Gateway canônico, nunca legado", async () => {
     const urls: string[] = [];
