@@ -67,6 +67,24 @@ describe("Jornada canônica — upload SEM materialização (E2 item 5)", () => 
     expect(spies.length).toBeGreaterThan(0); // pelo menos o FileReader foi vigiado
     for (const s of spies) expect(s).not.toHaveBeenCalled();
   });
+
+  it("após enviar com sucesso, o botão fica bloqueado (sem 2º POST /data — Codex R5)", async () => {
+    let dataCalls = 0;
+    server.use(
+      http.post(`${MSW_BASE}/v1/analyses/:id/data`, () => {
+        dataCalls += 1;
+        return HttpResponse.json(statusView("receiving"));
+      }),
+    );
+    render(wrap(<UploadStep analysisId="an-abc" scope={{ workspaceId: "ws-1" }} onUploaded={vi.fn()} />));
+    const input = document.getElementById("canonical-file") as HTMLInputElement;
+    await userEvent.upload(input, new File(["{}\n"], "base.jsonl", { type: "application/x-ndjson" }));
+    const botao = screen.getByRole("button", { name: /send dataset|enviar base/i });
+    await userEvent.click(botao);
+    await waitFor(() => expect(dataCalls).toBe(1));
+    await waitFor(() => expect((botao as HTMLButtonElement).disabled).toBe(true));
+    expect(dataCalls).toBe(1); // janela de refetch: bloqueado, não reenvia
+  });
 });
 
 describe("Jornada canônica — prepare cria a identidade durável (E2 itens 3-4)", () => {

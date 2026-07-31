@@ -75,6 +75,26 @@ describe("E3 item 15 — submit NÃO refaz upload", () => {
   });
 });
 
+describe("Codex R5 — submit bem-sucedido não permite 2º disparo na janela de refetch", () => {
+  it("após sucesso o botão fica desabilitado; segundo submit não ocorre", async () => {
+    let submitCalls = 0;
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("receiving"))),
+      http.post(`${MSW_BASE}/v1/analyses/:id/submit`, () => {
+        submitCalls += 1;
+        return HttpResponse.json({ ...HANDLE, status: "queued" });
+      }),
+    );
+    render(wrap(<AnalysisPage />));
+    const botao = await screen.findByRole("button", { name: /submit for analysis|enviar para análise/i });
+    await userEvent.click(botao);
+    await waitFor(() => expect(submitCalls).toBe(1));
+    // O status ainda é `receiving` (refetch), mas o botão fica BLOQUEADO (isSuccess) — sem 2º submit.
+    await waitFor(() => expect((botao as HTMLButtonElement).disabled).toBe(true));
+    expect(submitCalls).toBe(1);
+  });
+});
+
 describe("E3 item 14 — refresh/deep-link resume por analysis_id", () => {
   it("montada do ZERO (só o id na rota) reconstrói o estado terminal via /v1", async () => {
     server.use(

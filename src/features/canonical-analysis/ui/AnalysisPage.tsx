@@ -60,10 +60,12 @@ export function AnalysisPage() {
               onClick={() =>
                 submit.mutate(
                   { analysisId, scope, idempotencyKey: submitIntent.ensure() },
-                  { onSuccess: () => { submitIntent.reset(); revalidar(); } },
+                  { onSuccess: revalidar },
                 )
               }
-              disabled={submit.isPending}
+              // bloqueia na janela até o estado avançar (evita 2º submit com nova chave — Codex R5).
+              // Não reseta o intent: um clique que escape reusa a MESMA Idempotency-Key.
+              disabled={submit.isPending || submit.isSuccess}
               aria-busy={submit.isPending}
             >
               {t("canonicalAnalysis.upload.submit")}
@@ -90,10 +92,11 @@ export function AnalysisPage() {
                 onClick={() =>
                   retry.mutate(
                     { analysisId, scope, idempotencyKey: retryIntent.ensure() },
-                    { onSuccess: () => { retryIntent.reset(); revalidar(); } },
+                    { onSuccess: revalidar },
                   )
                 }
-                disabled={retry.isPending}
+                // mesma proteção do submit: bloqueia na janela e não reseta o intent (Codex R5).
+                disabled={retry.isPending || retry.isSuccess}
                 aria-busy={retry.isPending}
               >
                 {t("canonicalAnalysis.action.retry")}

@@ -26,9 +26,12 @@ export function UploadStep({
   const abortRef = useRef<AbortController | null>(null);
   const upload = useUploadData();
   const enviando = upload.isPending;
+  // Após o sucesso, o status ainda está `preparing` até o refetch avançar p/ `receiving` (quando
+  // este passo desmonta). Nessa janela o botão fica BLOQUEADO p/ não reenviar o dataset (Codex R5).
+  const bloqueado = enviando || upload.isSuccess;
 
   function enviar() {
-    if (!file || enviando) return;
+    if (!file || bloqueado) return;
     const ac = new AbortController();
     abortRef.current = ac;
     // File direto — sem leitura/cópia no navegador. O backend valida a base canonicamente.
@@ -69,7 +72,7 @@ export function UploadStep({
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
       />
 
-      {enviando && (
+      {bloqueado && (
         <p role="status" aria-live="polite" aria-busy="true" className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           {t("canonicalAnalysis.upload.sending")}
@@ -80,7 +83,7 @@ export function UploadStep({
 
       <div className="flex flex-wrap gap-2">
         {!enviando && (
-          <Button onClick={enviar} disabled={!file}>
+          <Button onClick={enviar} disabled={!file || bloqueado}>
             {upload.isError ? t("canonicalAnalysis.upload.retry") : t("canonicalAnalysis.upload.send")}
           </Button>
         )}
