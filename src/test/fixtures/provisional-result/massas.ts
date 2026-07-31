@@ -24,8 +24,8 @@ export const MASSA_A = {
     { id: "avg_variance_per_intent", kind: "scalar", availability: "available", value: 0.2 },
   ],
   recommendations: [
-    { id: "rec-1", title: "Revisar intenções sem cobertura", detail: "3 de 20 intenções sem cobertura." },
-    { id: "rec-2", title: "Investigar respostas não úteis", detail: null },
+    { id: "rec-1", title: "Revisar intenções sem cobertura", description: "3 de 20 intenções sem cobertura." },
+    { id: "rec-2", title: "Investigar respostas não úteis", description: null },
   ],
 } as const;
 

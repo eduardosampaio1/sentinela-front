@@ -57,6 +57,55 @@
       "records": "{{count}} records",
       "recordsUnknown": "Records not available"
     },
+    "result": {
+      "title": "Analysis result",
+      "loading": "Loading result…",
+      "backToHistory": "Back to history",
+      "summaryTitle": "Summary",
+      "totalRecords": "Records analyzed",
+      "usefulOutcomes": "Useful outcomes",
+      "analyzedAt": "Analyzed at",
+      "indicatorsTitle": "Indicators",
+      "recommendationsTitle": "Recommendations",
+      "partialNotice": "Some sections aren't available in this result.",
+      "unsupported": "This result was produced in a format this page doesn't support yet.",
+      "unsupportedHint": "Nothing was interpreted. You can go back to your history.",
+      "notMeasured": "Not measured",
+      "notApplicable": "Not applicable",
+      "outOfRange": "Value outside the expected range for this unit.",
+      "noIndicators": "No supported indicator in this result.",
+      "provisional": "Provisional presentation profile (Wave 6) — not the final public contract.",
+      "indicator": {
+        "useful_rate": {
+          "label": "Useful outcome rate",
+          "description": "Share of analyzed records with a useful outcome, as reported by the analysis."
+        },
+        "intent_coverage_rate": {
+          "label": "Intent coverage",
+          "description": "Share of intents covered, as reported by the analysis."
+        },
+        "token_waste_absolute": {
+          "label": "Wasted records",
+          "description": "Absolute count of records reported as wasted. Not a percentage."
+        },
+        "total_cost": {
+          "label": "Total cost",
+          "description": "Total estimated cost reported by the analysis."
+        },
+        "cost_per_useful_outcome": {
+          "label": "Cost per useful outcome",
+          "description": "Total cost divided by useful outcomes, as reported by the analysis."
+        },
+        "cost_per_session": {
+          "label": "Cost per record",
+          "description": "Total cost divided by analyzed records, as reported by the analysis."
+        },
+        "avg_variance_per_intent": {
+          "label": "Average response variance",
+          "description": "Mean response variance across intents. Not a consistency or confidence score."
+        }
+      }
+    },
     "problem": {
       "authentication_required": "Your session is no longer valid. Please sign in again.",
       "forbidden_or_not_found": "This analysis doesn't exist or isn't available in your workspace.",

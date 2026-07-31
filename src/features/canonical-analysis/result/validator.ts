@@ -58,7 +58,7 @@ function lerRecomendacao(bruto: unknown): ProvisionalRecommendation | null {
   const id = textoOuNulo(bruto.id);
   const title = textoOuNulo(bruto.title);
   if (!id || !title) return null;
-  return { id, title, detail: textoOuNulo(bruto.detail) };
+  return { id, title, description: textoOuNulo(bruto.description) };
 }
 
 /**

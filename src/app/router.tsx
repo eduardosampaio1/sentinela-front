@@ -80,6 +80,10 @@ const CanonicalStartPage = lazy(() =>
 const CanonicalAnalysisPage = lazy(() =>
   import("@/features/canonical-analysis/ui/AnalysisPage").then((m) => ({ default: m.AnalysisPage }))
 );
+// E5: página de resultado em chunk próprio (lazy) — só carrega quando há resultado a ver.
+const CanonicalResultPage = lazy(() =>
+  import("@/features/canonical-analysis/ui/ResultPage").then((m) => ({ default: m.ResultPage }))
+);
 
 // Dashboard sub-panels (route-accessible deep views)
 const DiagnosticsPanel = lazy(() =>
@@ -262,6 +266,7 @@ const routes: RouteObject[] = [
           { path: "/canonical/analyses", element: <PageSuspense><CanonicalAnalysesList /></PageSuspense> },
           { path: "/canonical/analyses/new", element: <PageSuspense><CanonicalStartPage /></PageSuspense> },
           { path: "/canonical/analyses/:analysisId", element: <PageSuspense><CanonicalAnalysisPage /></PageSuspense> },
+          { path: "/canonical/analyses/:analysisId/result", element: <PageSuspense><CanonicalResultPage /></PageSuspense> },
         ],
       },
 

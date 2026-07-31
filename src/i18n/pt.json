@@ -57,6 +57,55 @@
       "records": "{{count}} registros",
       "recordsUnknown": "Registros indisponíveis"
     },
+    "result": {
+      "title": "Resultado da análise",
+      "loading": "Carregando resultado…",
+      "backToHistory": "Voltar ao histórico",
+      "summaryTitle": "Resumo",
+      "totalRecords": "Registros analisados",
+      "usefulOutcomes": "Resultados úteis",
+      "analyzedAt": "Analisado em",
+      "indicatorsTitle": "Indicadores",
+      "recommendationsTitle": "Recomendações",
+      "partialNotice": "Algumas seções não estão disponíveis neste resultado.",
+      "unsupported": "Este resultado veio num formato que esta página ainda não suporta.",
+      "unsupportedHint": "Nada foi interpretado. Você pode voltar ao seu histórico.",
+      "notMeasured": "Não medido",
+      "notApplicable": "Não se aplica",
+      "outOfRange": "Valor fora da faixa esperada para esta unidade.",
+      "noIndicators": "Nenhum indicador suportado neste resultado.",
+      "provisional": "Perfil de apresentação provisório (Onda 6) — não é o contrato público definitivo.",
+      "indicator": {
+        "useful_rate": {
+          "label": "Taxa de resultados úteis",
+          "description": "Proporção dos registros analisados com desfecho útil, conforme informado pela análise."
+        },
+        "intent_coverage_rate": {
+          "label": "Cobertura de intenções",
+          "description": "Proporção de intenções cobertas, conforme informado pela análise."
+        },
+        "token_waste_absolute": {
+          "label": "Registros desperdiçados",
+          "description": "Contagem absoluta de registros informados como desperdiçados. Não é percentual."
+        },
+        "total_cost": {
+          "label": "Custo total",
+          "description": "Custo total estimado informado pela análise."
+        },
+        "cost_per_useful_outcome": {
+          "label": "Custo por resultado útil",
+          "description": "Custo total dividido pelos resultados úteis, conforme informado pela análise."
+        },
+        "cost_per_session": {
+          "label": "Custo por registro",
+          "description": "Custo total dividido pelos registros analisados, conforme informado pela análise."
+        },
+        "avg_variance_per_intent": {
+          "label": "Variância média das respostas",
+          "description": "Variância média das respostas entre intenções. Não é score de consistência nem de confiança."
+        }
+      }
+    },
     "problem": {
       "authentication_required": "Sua sessão não é mais válida. Entre novamente.",
       "forbidden_or_not_found": "Esta análise não existe ou não está disponível no seu workspace.",

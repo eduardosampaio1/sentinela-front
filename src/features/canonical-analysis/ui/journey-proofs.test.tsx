@@ -2,6 +2,7 @@ import { type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { http, HttpResponse } from "msw";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -30,7 +31,10 @@ function wrap(children: ReactNode) {
   return (
     <LanguageProvider>
       <QueryClientProvider client={qc}>
-        <CanonicalClientProvider client={client}>{children}</CanonicalClientProvider>
+        <CanonicalClientProvider client={client}>
+          {/* E5: a ação terminal virou <Link> (deep link p/ o resultado) — exige contexto de Router. */}
+          <MemoryRouter>{children}</MemoryRouter>
+        </CanonicalClientProvider>
       </QueryClientProvider>
     </LanguageProvider>
   );
@@ -105,7 +109,8 @@ describe("E3 item 14 — refresh/deep-link resume por analysis_id", () => {
     // Sem contexto anterior (nenhum File/estado em memória): só o analysis_id da rota (mock useParams).
     render(wrap(<AnalysisPage />));
     // Espera a query resolver: estado completed + ação futura "ver resultado" (desabilitada nesta etapa).
-    expect(await screen.findByRole("button", { name: /view result|ver resultado/i })).toBeTruthy();
+    // E5: a ação terminal virou LINK para a página canônica de resultado (deep-linkável).
+    expect(await screen.findByRole("link", { name: /view result|ver resultado/i })).toBeTruthy();
   });
 });
 

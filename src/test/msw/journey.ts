@@ -58,10 +58,12 @@ export function resetJourney(): void {
   mem.clear();
   listMem.clear();
   errMem.clear();
+  resMem.clear();
   if (typeof sessionStorage !== "undefined") {
     sessionStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem(LIST_SESSION_KEY);
     sessionStorage.removeItem(ERR_SESSION_KEY);
+    sessionStorage.removeItem(RES_SESSION_KEY);
   }
 }
 
@@ -123,6 +125,35 @@ function getStatusError(analysisId: string): { http: number; code: string } | un
   return backend === "memory" ? errMem.get(analysisId) : readErrAll()[analysisId];
 }
 
+// ── PAYLOAD do resultado por analysis_id (E5). Semeado pelos testes; `result` fica opaco no
+//    contrato e é o validator/adapter do frontend que decide se é suportado. ──
+const resMem = new Map<string, unknown>();
+const RES_SESSION_KEY = "__sentinela_result__";
+
+function readResAll(): Record<string, unknown> {
+  if (backend === "memory" || typeof sessionStorage === "undefined") return Object.fromEntries(resMem);
+  try {
+    return JSON.parse(sessionStorage.getItem(RES_SESSION_KEY) ?? "{}") as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+export function seedResult(analysisId: string, payload: unknown): void {
+  if (backend === "memory") {
+    resMem.set(analysisId, payload);
+    return;
+  }
+  const all = readResAll();
+  all[analysisId] = payload;
+  if (typeof sessionStorage !== "undefined") sessionStorage.setItem(RES_SESSION_KEY, JSON.stringify(all));
+}
+
+function getResult(analysisId: string): unknown {
+  const achado = backend === "memory" ? resMem.get(analysisId) : readResAll()[analysisId];
+  return achado ?? RESULT_VIEW.result;
+}
+
 /** Semeia uma análise já num estado/roteiro (p/ testes de deep-link/retry direto). */
 export function seedJourney(analysisId: string, seq: AnalysisStatus[], retryAllowed = false): void {
   putEntry(analysisId, { seq, idx: 0, retryAllowed });
@@ -175,9 +206,10 @@ export function makeJourneyHandlers(base: string) {
       putEntry(id, { seq: ["recovering", "running", "completed"], idx: 0, retryAllowed: false });
       return HttpResponse.json({ analysis_id: id, status: "recovering" });
     }),
-    http.get(`${b}/v1/analyses/:id/result`, ({ params }) =>
-      HttpResponse.json({ ...RESULT_VIEW, analysis_id: String(params.id) }),
-    ),
+    http.get(`${b}/v1/analyses/:id/result`, ({ params }) => {
+      const id = String(params.id);
+      return HttpResponse.json({ ...RESULT_VIEW, analysis_id: id, result: getResult(id) });
+    }),
     http.get(`${b}/v1/analyses`, ({ request }) => {
       const u = new URL(request.url);
       const ws = u.searchParams.get("workspace_id") ?? "";

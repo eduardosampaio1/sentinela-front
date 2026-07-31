@@ -53,7 +53,7 @@ export interface ProvisionalSummary {
 export interface ProvisionalRecommendation {
   id: string;
   title: string;
-  detail?: string | null;
+  description?: string | null;
 }
 
 export interface ProvisionalResult {

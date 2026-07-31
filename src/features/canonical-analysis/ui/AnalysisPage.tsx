@@ -85,8 +85,12 @@ export function AnalysisPage() {
           <div className="space-y-4">
             <StateBanner view={view} />
             {view.result_available ? (
-              // E3/E4: apenas expõe a ação futura — a renderização do resultado é da E5.
-              <Button variant="outline" disabled>{t("canonicalAnalysis.action.viewResult")}</Button>
+              // E5: a ação agora leva à página canônica de resultado (deep-linkável).
+              <Button variant="outline" asChild>
+                <Link to={`/canonical/analyses/${encodeURIComponent(analysisId)}/result`}>
+                  {t("canonicalAnalysis.action.viewResult")}
+                </Link>
+              </Button>
             ) : (
               // result_not_available: concluída mas resultado em preparação — NÃO é falha analítica,
               // NÃO renderiza dashboard (E5). Apresentação neutra de espera.
