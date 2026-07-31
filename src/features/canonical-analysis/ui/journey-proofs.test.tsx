@@ -40,14 +40,16 @@ describe("E3 item 15 — submit NÃO refaz upload", () => {
   it("dois submits recuperáveis não disparam nenhum POST /data", async () => {
     let dataCalls = 0;
     let submitCalls = 0;
+    const submitKeys: (string | null)[] = [];
     server.use(
       http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("receiving"))),
       http.post(`${MSW_BASE}/v1/analyses/:id/data`, () => {
         dataCalls += 1;
         return HttpResponse.json(statusView("receiving"));
       }),
-      http.post(`${MSW_BASE}/v1/analyses/:id/submit`, () => {
+      http.post(`${MSW_BASE}/v1/analyses/:id/submit`, ({ request }) => {
         submitCalls += 1;
+        submitKeys.push(request.headers.get("Idempotency-Key"));
         // 1º submit falha (transitório recuperável), 2º sucede.
         if (submitCalls === 1) {
           return HttpResponse.json(problem("temporarily_unavailable"), {
@@ -67,6 +69,9 @@ describe("E3 item 15 — submit NÃO refaz upload", () => {
     await waitFor(() => expect(submitCalls).toBe(2));
 
     expect(dataCalls).toBe(0); // NUNCA re-upload no retry de submit
+    // A MESMA Idempotency-Key nos dois submits: o backend vê UMA intenção, não duas.
+    expect(submitKeys[0]).toBeTruthy();
+    expect(submitKeys[1]).toBe(submitKeys[0]);
   });
 });
 

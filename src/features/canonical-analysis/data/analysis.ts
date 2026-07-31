@@ -73,16 +73,17 @@ export function useSubmitAnalysis(): UseMutationResult<
   });
 }
 
-// ── retry público (POST /{id}/retry). Mesma análise; nunca prepare/data. ──
+// ── retry público (POST /{id}/retry). Mesma análise; nunca prepare/data. Idempotency-Key da intenção. ──
 export function useRetryAnalysis(): UseMutationResult<
   AnalysisHandle,
   unknown,
-  { analysisId: string; scope: CanonicalScope }
+  { analysisId: string; scope: CanonicalScope; idempotencyKey?: string }
 > {
   const client = useV1Client();
   return useMutation({
     retry: false,
-    mutationFn: ({ analysisId, scope }) => client.retry(analysisId, scope),
+    mutationFn: ({ analysisId, scope, idempotencyKey }) =>
+      client.retry(analysisId, scope, idempotencyKey ? { idempotencyKey } : undefined),
   });
 }
 

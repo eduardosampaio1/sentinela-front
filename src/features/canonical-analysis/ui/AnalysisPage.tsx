@@ -11,6 +11,7 @@ import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/shared/states/LoadingState";
 import { useAnalysisStatus, useRetryAnalysis, useSubmitAnalysis } from "../data/analysis";
+import { useIdempotencyIntent } from "../data/intent";
 import { useCanonicalScope } from "./scope";
 import { UploadStep } from "./UploadStep";
 import { ProblemNotice, StateBanner } from "./notices";
@@ -24,6 +25,10 @@ export function AnalysisPage() {
   const status = useAnalysisStatus(scope, analysisId);
   const submit = useSubmitAnalysis();
   const retry = useRetryAnalysis();
+  // Idempotency-Key por INTENÇÃO também no submit/retry: reusada em retry de falha transitória,
+  // reset no sucesso — o backend nunca vê a mesma intenção como submits distintos (Codex E2 R1).
+  const submitIntent = useIdempotencyIntent();
+  const retryIntent = useIdempotencyIntent();
 
   function revalidar() {
     if (scope && analysisId) {
@@ -52,7 +57,12 @@ export function AnalysisPage() {
           <div className="space-y-4">
             <StateBanner view={view} />
             <Button
-              onClick={() => submit.mutate({ analysisId, scope }, { onSuccess: revalidar })}
+              onClick={() =>
+                submit.mutate(
+                  { analysisId, scope, idempotencyKey: submitIntent.ensure() },
+                  { onSuccess: () => { submitIntent.reset(); revalidar(); } },
+                )
+              }
               disabled={submit.isPending}
               aria-busy={submit.isPending}
             >
@@ -77,7 +87,12 @@ export function AnalysisPage() {
             <StateBanner view={view} />
             {view.retry_allowed && (
               <Button
-                onClick={() => retry.mutate({ analysisId, scope }, { onSuccess: revalidar })}
+                onClick={() =>
+                  retry.mutate(
+                    { analysisId, scope, idempotencyKey: retryIntent.ensure() },
+                    { onSuccess: () => { retryIntent.reset(); revalidar(); } },
+                  )
+                }
                 disabled={retry.isPending}
                 aria-busy={retry.isPending}
               >
