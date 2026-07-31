@@ -20,7 +20,9 @@
   "include": [
     "src/vite-env.d.ts",
     "src/lib/v1",
+    "src/features/canonical-analysis",
     "src/test/v1",
+    "src/test/msw",
     "src/test/fixtures/public-v1",
     "src/test/quarantine.ts"
   ]
