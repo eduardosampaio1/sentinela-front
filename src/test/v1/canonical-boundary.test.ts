@@ -77,4 +77,11 @@ describe("Cadeado — fronteira canônica src/lib/v1/**", () => {
       expect(COR_HARDCODED.test(codigo), `${arq}: cor hardcoded`).toBe(false);
     }
   });
+
+  // Codex E1 R1, achado 2: o barrel não pode arrastar o seam de auth/Supabase para todo consumidor.
+  it("o barrel index.ts NÃO re-exporta defaultClient nem importa o seam de auth", () => {
+    const idx = semComentarios(readFileSync(join(V1_DIR, "index.ts"), "utf8"));
+    expect(idx, "barrel re-exporta ./defaultClient (arrasta auth/Supabase)").not.toMatch(/from\s+["']\.\/defaultClient["']/);
+    expect(idx.includes("@/lib/auth"), "barrel importa @/lib/auth").toBe(false);
+  });
 });

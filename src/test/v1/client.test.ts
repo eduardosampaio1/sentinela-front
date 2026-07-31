@@ -80,6 +80,15 @@ describe("V1 client — auth, erros, cancelamento, sem-fallback", () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
+  it("workspace_id vazio/em-branco → invalid_input SEM rede (fail-closed de tenant)", async () => {
+    const { client, fetchImpl } = makeClient(() => jsonResponse(HANDLE)); // token válido de propósito
+    await expect(client.getStatus("an-abc", { workspaceId: "" })).rejects.toMatchObject({
+      problem: { code: "invalid_input", status: 400 },
+    });
+    await expect(client.list({ workspaceId: "   " })).rejects.toMatchObject({ problem: { code: "invalid_input" } });
+    expect(fetchImpl).not.toHaveBeenCalled(); // nunca uma requisição canônica sem escopo de tenant
+  });
+
   it("problem+json do backend vira ProblemError tipado e seguro", async () => {
     const { client } = makeClient(() => problemResponse("idempotency_conflict"));
     await expect(client.prepare(SCOPE)).rejects.toMatchObject({

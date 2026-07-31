@@ -77,6 +77,14 @@ export function createV1Client(config: V1ClientConfig): V1Client {
     idempotente?: boolean,
   ): Promise<T> {
     const correlationId = newCorr();
+    // 0) precondição de TENANT: workspace_id é OBRIGATÓRIO e não-vazio. Como o loop de query
+    // abaixo descarta valores vazios (correto p/ opcionais como cursor/limit), um workspaceId ""
+    // (estado transitório "workspace não carregado") sairia SEM escopo de tenant. Fail-closed:
+    // invalid_input local, SEM tocar a rede — nunca uma requisição canônica sem workspace.
+    const ws = query.workspace_id;
+    if (typeof ws !== "string" || ws.trim() === "") {
+      throw new ProblemError(normalizeProblem({ code: "invalid_input" }, 400, correlationId));
+    }
     // 1) auth ANTES da rede: sem token → authentication_required (não vaza, não chama fetch)
     const token = await config.getAccessToken();
     if (!token) {
