@@ -4,7 +4,7 @@
 // troca de workspace e tratamento de sessão expirada. NÃO migra telas — nenhuma jornada usa isto
 // ainda; o provider é fornecido pronto para as etapas E2+.
 
-import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { ProblemError } from "./problem";
 import { workspaceKeys } from "./queryKeys";
 
@@ -29,14 +29,17 @@ export interface QueryClientOptions {
 }
 
 export function createCanonicalQueryClient(options: QueryClientOptions = {}): QueryClient {
+  // Sessão expirada em QUALQUER caminho — leitura (query) OU escrita (mutation: prepare/uploadData/
+  // submit/retry). O TanStack reporta erro de mutation pelo MutationCache, NÃO pelo QueryCache; por
+  // isso o MESMO handler é ligado nos DOIS caches (Codex E1 R2, senão writes não acionam signOut).
+  const aoErrar = (error: unknown): void => {
+    if (error instanceof ProblemError && error.problem.code === "authentication_required") {
+      options.onAuthRequired?.();
+    }
+  };
   return new QueryClient({
-    queryCache: new QueryCache({
-      onError: (error) => {
-        if (error instanceof ProblemError && error.problem.code === "authentication_required") {
-          options.onAuthRequired?.();
-        }
-      },
-    }),
+    queryCache: new QueryCache({ onError: aoErrar }),
+    mutationCache: new MutationCache({ onError: aoErrar }),
     defaultOptions: {
       queries: {
         retry: deveRetentar,

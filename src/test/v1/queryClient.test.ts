@@ -1,3 +1,4 @@
+import { MutationObserver } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import {
   clearCanonicalCache,
@@ -100,6 +101,28 @@ describe("sessão expirada — dispara onAuthRequired", () => {
         queryFn: () => Promise.reject(new ProblemError(normalizeProblem({ code: "non_retryable_failure" }, 422, "c"))),
       })
       .catch(() => undefined);
+    expect(onAuthRequired).not.toHaveBeenCalled();
+  });
+
+  it("MUTATION (write: prepare/submit/…) com authentication_required também aciona onAuthRequired", async () => {
+    const onAuthRequired = vi.fn();
+    const qc = createCanonicalQueryClient({ onAuthRequired });
+    const obs = new MutationObserver(qc, {
+      mutationFn: () => Promise.reject(new ProblemError(normalizeProblem({ code: "authentication_required" }, 401, "c"))),
+      retry: false,
+    });
+    await obs.mutate().catch(() => undefined);
+    expect(onAuthRequired).toHaveBeenCalledTimes(1);
+  });
+
+  it("MUTATION com outro problema NÃO aciona o callback", async () => {
+    const onAuthRequired = vi.fn();
+    const qc = createCanonicalQueryClient({ onAuthRequired });
+    const obs = new MutationObserver(qc, {
+      mutationFn: () => Promise.reject(new ProblemError(normalizeProblem({ code: "invalid_input" }, 400, "c"))),
+      retry: false,
+    });
+    await obs.mutate().catch(() => undefined);
     expect(onAuthRequired).not.toHaveBeenCalled();
   });
 });
