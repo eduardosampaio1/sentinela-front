@@ -10,7 +10,13 @@ function tsc(project) {
   const r = spawnSync("npx", ["tsc", "-p", project, "--noEmit"], { encoding: "utf8", shell: true });
   return `${r.stdout ?? ""}${r.stderr ?? ""}`;
 }
-const errLines = (out) => out.split(/\r?\n/).filter((l) => /error TS\d+/.test(l));
+// Normaliza `\` → `/` (o tsc no Windows pode emitir caminhos com barra invertida) para o filtro
+// de arquivo NÃO deixar um erro da UI canônica passar como "legado" (Codex E2 R3).
+const errLines = (out) =>
+  out
+    .split(/\r?\n/)
+    .filter((l) => /error TS\d+/.test(l))
+    .map((l) => l.replace(/\\/g, "/"));
 
 // 1) Pura: qualquer erro reprova.
 const pure = errLines(tsc("tsconfig.v1.json"));
