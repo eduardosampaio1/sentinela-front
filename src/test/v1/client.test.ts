@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createV1Client, ProblemError, redactForLog } from "@/lib/v1";
+import { novoId } from "@/lib/v1/client";
 import { HANDLE, LIST_PAGE_1, problem, RESULT_VIEW, STATUS_VIEWS } from "@/test/fixtures/public-v1/analyses";
 
 const SCOPE = { workspaceId: "ws-1" };
@@ -137,5 +138,19 @@ describe("V1 client — auth, erros, cancelamento, sem-fallback", () => {
     expect(red.dataset).toBe("[redacted]");
     expect(red.result).toBe("[redacted]");
     expect(red.ok).toBe("visible");
+  });
+});
+
+describe("novoId — idempotency/correlation nunca colide (mesmo sem crypto.randomUUID)", () => {
+  it("fallback SEM Web Crypto (último recurso): 1000 ids no mesmo ms são distintos", () => {
+    const ids = new Set<string>();
+    for (let i = 0; i < 1000; i++) ids.add(novoId(undefined));
+    expect(ids.size).toBe(1000); // determinístico-por-ms colidiria (size << 1000)
+  });
+
+  it("usa getRandomValues quando há Web Crypto sem randomUUID", () => {
+    const semRandomUUID = { getRandomValues: (a: Uint8Array) => crypto.getRandomValues(a) } as unknown as Crypto;
+    const ids = new Set(Array.from({ length: 500 }, () => novoId(semRandomUUID)));
+    expect(ids.size).toBe(500);
   });
 });

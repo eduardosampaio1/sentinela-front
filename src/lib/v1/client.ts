@@ -43,20 +43,34 @@ export interface V1Client {
   retry(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
 }
 
-const uuid = (): string =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `id-${Math.abs(Date.now())}-${Math.floor(Math.abs(Date.now() * 1.7) % 1e9)}`;
+/**
+ * Gera um id (correlation / Idempotency-Key). O fallback SEM `crypto.randomUUID` usa aleatoriedade
+ * REAL (getRandomValues, senão Math.random): dois ids no MESMO milissegundo NÃO podem colidir —
+ * chaves iguais colapsariam operações idempotentes distintas. `cripto` é injetável p/ teste do
+ * fallback. (Codex E1 R4.)
+ */
+export function novoId(cripto: Crypto | undefined = typeof crypto !== "undefined" ? crypto : undefined): string {
+  // O tipo `Crypto` da lib GARANTE randomUUID; na realidade de runtime (browsers antigos) ele pode
+  // faltar. Modelamos como opcional p/ não colapsar o ramo getRandomValues em `never`.
+  const c = cripto as { randomUUID?: () => string; getRandomValues?: (a: Uint8Array) => Uint8Array } | undefined;
+  if (c?.randomUUID) return c.randomUUID();
+  if (c?.getRandomValues) {
+    const bytes = c.getRandomValues(new Uint8Array(16));
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  // último recurso (sem Web Crypto): 2 sorteios independentes + tempo → sem colisão no mesmo ms
+  return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}-${Math.random().toString(36).slice(2, 12)}`;
+}
 
 function encodeAnalysisId(id: string): string {
-  if (!id || typeof id !== "string") throw new ProblemError(normalizeProblem({ code: "invalid_input" }, 400, uuid()));
+  if (!id || typeof id !== "string") throw new ProblemError(normalizeProblem({ code: "invalid_input" }, 400, novoId()));
   return encodeURIComponent(id);
 }
 
 export function createV1Client(config: V1ClientConfig): V1Client {
   const fetchImpl = config.fetchImpl ?? globalThis.fetch;
-  const newCorr = config.newCorrelationId ?? uuid;
-  const newIdem = config.newIdempotencyKey ?? uuid;
+  const newCorr = config.newCorrelationId ?? novoId;
+  const newIdem = config.newIdempotencyKey ?? novoId;
   const base = config.baseUrl.replace(/\/+$/, "");
   // A base pode ser ABSOLUTA (https://gw…) ou RELATIVA same-origin (ex.: "/api", como o cliente
   // legado suporta atrás de um proxy). `new URL("/api/v1/…")` sem origem lança TypeError; passar
