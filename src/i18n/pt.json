@@ -36,6 +36,26 @@
       "back": "Voltar",
       "newAnalysis": "Nova análise"
     },
+    "list": {
+      "title": "Suas análises",
+      "subtitle": "Análises deste workspace.",
+      "loading": "Carregando análises…",
+      "empty": "Nenhuma análise ainda. Inicie uma para vê-la aqui.",
+      "errorRecoverable": "Não foi possível carregar suas análises agora. Tente novamente.",
+      "errorGeneric": "Não conseguimos carregar suas análises.",
+      "sessionExpired": "Sua sessão não é mais válida. Entre novamente.",
+      "retry": "Tentar de novo",
+      "newAnalysis": "Nova análise",
+      "previous": "Anterior",
+      "next": "Próxima",
+      "colStatus": "Estado",
+      "colCreated": "Criada em",
+      "colRecords": "Registros",
+      "resultReady": "Resultado pronto",
+      "open": "Abrir análise {{id}}",
+      "records": "{{count}} registros",
+      "recordsUnknown": "Registros indisponíveis"
+    },
     "problem": {
       "authentication_required": "Sua sessão não é mais válida. Entre novamente.",
       "forbidden_or_not_found": "Esta análise não existe ou não está disponível no seu workspace.",

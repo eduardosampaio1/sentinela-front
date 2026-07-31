@@ -36,6 +36,26 @@
       "back": "Back",
       "newAnalysis": "New analysis"
     },
+    "list": {
+      "title": "Your analyses",
+      "subtitle": "Analyses in this workspace.",
+      "loading": "Loading analyses…",
+      "empty": "No analyses yet. Start one to see it here.",
+      "errorRecoverable": "Couldn't load your analyses right now. Please try again.",
+      "errorGeneric": "We couldn't load your analyses.",
+      "sessionExpired": "Your session is no longer valid. Please sign in again.",
+      "retry": "Try again",
+      "newAnalysis": "New analysis",
+      "previous": "Previous",
+      "next": "Next",
+      "colStatus": "Status",
+      "colCreated": "Created",
+      "colRecords": "Records",
+      "resultReady": "Result ready",
+      "open": "Open analysis {{id}}",
+      "records": "{{count}} records",
+      "recordsUnknown": "Records not available"
+    },
     "problem": {
       "authentication_required": "Your session is no longer valid. Please sign in again.",
       "forbidden_or_not_found": "This analysis doesn't exist or isn't available in your workspace.",

@@ -71,6 +71,9 @@ const SecurityPage = lazy(() =>
 const CanonicalAnalysisLayout = lazy(() =>
   import("@/features/canonical-analysis/ui/CanonicalAnalysisLayout").then((m) => ({ default: m.CanonicalAnalysisLayout }))
 );
+const CanonicalAnalysesList = lazy(() =>
+  import("@/features/canonical-analysis/ui/AnalysesListPage").then((m) => ({ default: m.AnalysesListPage }))
+);
 const CanonicalStartPage = lazy(() =>
   import("@/features/canonical-analysis/ui/StartAnalysisPage").then((m) => ({ default: m.StartAnalysisPage }))
 );
@@ -256,6 +259,7 @@ const routes: RouteObject[] = [
       {
         element: <PageSuspense><CanonicalAnalysisLayout /></PageSuspense>,
         children: [
+          { path: "/canonical/analyses", element: <PageSuspense><CanonicalAnalysesList /></PageSuspense> },
           { path: "/canonical/analyses/new", element: <PageSuspense><CanonicalStartPage /></PageSuspense> },
           { path: "/canonical/analyses/:analysisId", element: <PageSuspense><CanonicalAnalysisPage /></PageSuspense> },
         ],

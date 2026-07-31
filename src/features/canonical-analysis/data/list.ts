@@ -1,0 +1,23 @@
+// Hook de LISTAGEM da jornada canônica (Onda 6 E4). Consome SÓ `@/lib/v1` — nada de legado.
+// Cursor OPACO: o frontend nunca decodifica/deriva offset; só repassa o `next_cursor` recebido.
+// Query key SEMPRE workspace-scoped (isola cache por construção na troca de workspace).
+
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
+import { workspaceKeys, type AnalysisListPage, type CanonicalScope } from "@/lib/v1";
+import { useV1Client } from "./client";
+
+const IDLE_KEY = ["canonical-analysis", "idle"] as const;
+
+/** Página de análises do workspace, ancorada num cursor opaco (ou 1ª página quando ausente). */
+export function useAnalysesList(
+  scope: CanonicalScope | null,
+  cursor?: string | null,
+): UseQueryResult<AnalysisListPage> {
+  const client = useV1Client();
+  return useQuery({
+    queryKey: scope ? workspaceKeys.list(scope.workspaceId, { cursor: cursor ?? null }) : IDLE_KEY,
+    enabled: Boolean(scope),
+    queryFn: ({ signal }) =>
+      client.list({ workspaceId: (scope as CanonicalScope).workspaceId, cursor: cursor ?? undefined }, { signal }),
+  });
+}

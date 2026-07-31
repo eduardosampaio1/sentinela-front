@@ -7,7 +7,7 @@
 //     reload (cenário "refresh": reconstruir por analysis_id) e o Playwright limpa entre specs.
 
 import { http, HttpResponse } from "msw";
-import type { AnalysisStatus } from "@/lib/v1";
+import type { AnalysisListPage, AnalysisStatus } from "@/lib/v1";
 import { RESULT_VIEW, statusView } from "@/test/fixtures/public-v1/analyses";
 import { MSW_BASE } from "./handlers";
 
@@ -19,7 +19,9 @@ interface JourneyEntry {
 
 let backend: "memory" | "session" = "memory";
 const mem = new Map<string, JourneyEntry>();
+const listMem = new Map<string, AnalysisListPage>();
 const SESSION_KEY = "__sentinela_journey__";
+const LIST_SESSION_KEY = "__sentinela_list__";
 
 /** Troca o backend para sessionStorage (browser E2E: persiste através do reload). */
 export function enableSessionJourneyStore(): void {
@@ -54,7 +56,42 @@ function putEntry(id: string, entry: JourneyEntry): void {
 
 export function resetJourney(): void {
   mem.clear();
-  if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(SESSION_KEY);
+  listMem.clear();
+  if (typeof sessionStorage !== "undefined") {
+    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(LIST_SESSION_KEY);
+  }
+}
+
+// ── LISTAGEM (E4): páginas por (workspace, cursor). Chave = `${workspaceId}|${cursor ?? ""}`. ──
+function readListAll(): Record<string, AnalysisListPage> {
+  if (backend === "memory" || typeof sessionStorage === "undefined") return Object.fromEntries(listMem);
+  try {
+    return JSON.parse(sessionStorage.getItem(LIST_SESSION_KEY) ?? "{}") as Record<string, AnalysisListPage>;
+  } catch {
+    return {};
+  }
+}
+
+function listKey(workspaceId: string, cursor: string | null): string {
+  return `${workspaceId}|${cursor ?? ""}`;
+}
+
+/** Semeia uma PÁGINA de listagem para (workspace, cursor). */
+export function seedList(workspaceId: string, cursor: string | null, pageData: AnalysisListPage): void {
+  const key = listKey(workspaceId, cursor);
+  if (backend === "memory") {
+    listMem.set(key, pageData);
+    return;
+  }
+  const all = readListAll();
+  all[key] = pageData;
+  if (typeof sessionStorage !== "undefined") sessionStorage.setItem(LIST_SESSION_KEY, JSON.stringify(all));
+}
+
+function getList(workspaceId: string, cursor: string | null): AnalysisListPage {
+  const found = backend === "memory" ? listMem.get(listKey(workspaceId, cursor)) : readListAll()[listKey(workspaceId, cursor)];
+  return found ?? { items: [], next_cursor: null };
 }
 
 /** Semeia uma análise já num estado/roteiro (p/ testes de deep-link/retry direto). */
@@ -112,6 +149,12 @@ export function makeJourneyHandlers(base: string) {
     http.get(`${b}/v1/analyses/:id/result`, ({ params }) =>
       HttpResponse.json({ ...RESULT_VIEW, analysis_id: String(params.id) }),
     ),
+    http.get(`${b}/v1/analyses`, ({ request }) => {
+      const u = new URL(request.url);
+      const ws = u.searchParams.get("workspace_id") ?? "";
+      const cursor = u.searchParams.get("cursor");
+      return HttpResponse.json(getList(ws, cursor));
+    }),
     http.get(`${b}/v1/analyses/:id`, ({ params }) => {
       const id = String(params.id);
       const { status, retryAllowed } = corrente(id);
