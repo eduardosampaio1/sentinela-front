@@ -67,6 +67,17 @@ const SecurityPage = lazy(() =>
   import("@/features/legal/SecurityPage").then((m) => ({ default: m.SecurityPage }))
 );
 
+// ── Jornada canônica /v1 (Onda 6; gated por VITE_SENTINELA_CANONICAL_ANALYSIS_ENABLED) ──────────
+const CanonicalAnalysisLayout = lazy(() =>
+  import("@/features/canonical-analysis/ui/CanonicalAnalysisLayout").then((m) => ({ default: m.CanonicalAnalysisLayout }))
+);
+const CanonicalStartPage = lazy(() =>
+  import("@/features/canonical-analysis/ui/StartAnalysisPage").then((m) => ({ default: m.StartAnalysisPage }))
+);
+const CanonicalAnalysisPage = lazy(() =>
+  import("@/features/canonical-analysis/ui/AnalysisPage").then((m) => ({ default: m.AnalysisPage }))
+);
+
 // Dashboard sub-panels (route-accessible deep views)
 const DiagnosticsPanel = lazy(() =>
   import("@/features/dashboard/technical/DiagnosticsPanel").then((m) => ({
@@ -240,6 +251,15 @@ const routes: RouteObject[] = [
 
       // Settings
       { path: "/dashboard/settings", element: <PageSuspense><SettingsPage /></PageSuspense> },
+
+      // Canonical analysis journey (Onda 6) — flag-gated layout; legacy routes untouched when OFF
+      {
+        element: <PageSuspense><CanonicalAnalysisLayout /></PageSuspense>,
+        children: [
+          { path: "/canonical/analyses/new", element: <PageSuspense><CanonicalStartPage /></PageSuspense> },
+          { path: "/canonical/analyses/:analysisId", element: <PageSuspense><CanonicalAnalysisPage /></PageSuspense> },
+        ],
+      },
 
       // Dashboard — requires an active analysis to be loaded
       {

@@ -11,6 +11,7 @@
       "title": "Add your dataset",
       "help": "Select a JSONL file to analyze. The file is sent as-is; nothing is read in your browser.",
       "choose": "Choose file",
+      "send": "Send dataset",
       "dropHint": "Drag a file here or choose one",
       "noFile": "No file selected",
       "invalid": "This file type isn't accepted.",

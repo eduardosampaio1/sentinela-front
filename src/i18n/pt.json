@@ -11,6 +11,7 @@
       "title": "Adicione sua base",
       "help": "Selecione um arquivo JSONL para analisar. O arquivo é enviado como está; nada é lido no seu navegador.",
       "choose": "Escolher arquivo",
+      "send": "Enviar base",
       "dropHint": "Arraste um arquivo aqui ou escolha um",
       "noFile": "Nenhum arquivo selecionado",
       "invalid": "Este tipo de arquivo não é aceito.",
