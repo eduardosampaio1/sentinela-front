@@ -10,6 +10,7 @@ import { server, setupMsw } from "@/test/msw/server";
 import { CanonicalClientProvider } from "./client";
 import {
   intervaloDePolling,
+  proximoPolling,
   useAnalysisStatus,
   useCreateAnalysis,
   useSubmitAnalysis,
@@ -45,6 +46,16 @@ describe("intervaloDePolling — por estado, terminal encerra", () => {
     expect(intervaloDePolling("receiving")).toBe(4000);
     expect(intervaloDePolling("completed")).toBe(false);
     expect(intervaloDePolling("failed")).toBe(false);
+  });
+});
+
+describe("proximoPolling — concluída SEM resultado ainda não é terminal (E6 item 23)", () => {
+  it("completed + result_available=false → segue checando; =true → para", () => {
+    expect(proximoPolling("completed", false)).toBe(4000); // resultado em preparação: continua
+    expect(proximoPolling("completed", true)).toBe(false); // resultado pronto: terminal
+    expect(proximoPolling("completed", undefined)).toBe(false); // sem sinal: terminal (default)
+    expect(proximoPolling("running", false)).toBe(2500); // em execução independe do resultado
+    expect(proximoPolling("failed", false)).toBe(false); // falha é terminal
   });
 });
 

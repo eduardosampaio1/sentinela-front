@@ -40,6 +40,8 @@ const COR = /#[0-9a-fA-F]{3,8}\b/;
 const CURSOR_DECODE = /\batob\s*\(|parseInt\s*\(\s*[a-zA-Z]*[Cc]ursor|Number\s*\(\s*[a-zA-Z]*[Cc]ursor|[Cc]ursor\.(split|slice|substring|substr|charAt|replace|indexOf|match|padStart)\b/;
 // E4-8: indicador analítico inventado no histórico (fora do escopo até E5).
 const INDICADOR_ANALITICO = /\bverdict\b|\bdrift\b|\bconfidence\b|\brecommendation\b|\bguardrail\b|behavior_score|tokens_used|risk_score/i;
+// E6-6: mutation NUNCA re-tenta automaticamente (retry de mutation só por ação explícita do usuário).
+const MUTATION_AUTO_RETRY = /retry:\s*true/;
 
 const arquivos = listar(FEATURE);
 
@@ -57,6 +59,8 @@ describe("Cadeado — jornada canônica (backend-first)", () => {
     expect(CURSOR_DECODE.test("setCursor(next)")).toBe(false); // repassar o cursor opaco é OK
     expect(INDICADOR_ANALITICO.test("const verdict = 1")).toBe(true);
     expect(INDICADOR_ANALITICO.test("result_available")).toBe(false); // campo contratado != indicador
+    expect(MUTATION_AUTO_RETRY.test("useMutation({ retry: true })")).toBe(true);
+    expect(MUTATION_AUTO_RETRY.test("retry: false")).toBe(false);
     expect(semComentarios("x // FileReader\n").includes("FileReader")).toBe(false);
   });
 
@@ -84,6 +88,7 @@ describe("Cadeado — jornada canônica (backend-first)", () => {
     ["cor hardcoded", COR],
     ["cursor opaco decodificado/derivado localmente", CURSOR_DECODE],
     ["indicador analítico inventado no histórico", INDICADOR_ANALITICO],
+    ["mutation com auto-retry (retry: true)", MUTATION_AUTO_RETRY],
   ] as const) {
     it(`nenhum arquivo viola: ${nome}`, () => {
       for (const arq of arquivos) {

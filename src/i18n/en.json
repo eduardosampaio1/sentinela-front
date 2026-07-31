@@ -34,7 +34,8 @@
       "viewResult": "View result",
       "retry": "Try again",
       "back": "Back",
-      "newAnalysis": "New analysis"
+      "newAnalysis": "New analysis",
+      "resultPreparing": "The analysis is complete. The result is still being prepared."
     },
     "list": {
       "title": "Your analyses",

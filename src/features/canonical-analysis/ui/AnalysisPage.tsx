@@ -3,7 +3,7 @@
 // recuperação) → terminal (completed/failed). Sem indicador analítico, sem % inventado.
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { workspaceKeys } from "@/lib/v1";
@@ -14,7 +14,7 @@ import { useAnalysisStatus, useRetryAnalysis, useSubmitAnalysis } from "../data/
 import { useIdempotencyIntent } from "../data/intent";
 import { useCanonicalScope } from "./scope";
 import { UploadStep } from "./UploadStep";
-import { ProblemNotice, StateBanner } from "./notices";
+import { ProblemFeedback, StateBanner } from "./notices";
 
 export function AnalysisPage() {
   const { t } = useLanguage();
@@ -36,6 +36,20 @@ export function AnalysisPage() {
     }
   }
 
+  // Submit/retry SEMPRE reusam o MESMO analysis_id e a Idempotency-Key da INTENÇÃO — nunca prepare,
+  // nunca upload, nunca nova chave p/ mascarar conflito. O bloqueio (isPending||isSuccess) impede
+  // duplo-clique e retries concorrentes; NENHUMA mutation re-tenta sozinha.
+  const submitBloqueado = submit.isPending || submit.isSuccess;
+  const retryBloqueado = retry.isPending || retry.isSuccess;
+  function dispararSubmit() {
+    if (!scope || !analysisId || submitBloqueado) return;
+    submit.mutate({ analysisId, scope, idempotencyKey: submitIntent.ensure() }, { onSuccess: revalidar });
+  }
+  function dispararRetry() {
+    if (!scope || !analysisId || retryBloqueado) return;
+    retry.mutate({ analysisId, scope, idempotencyKey: retryIntent.ensure() }, { onSuccess: revalidar });
+  }
+
   function corpo() {
     if (!scope) {
       return <p role="alert" className="text-sm text-muted-foreground">{t("canonicalAnalysis.entry.workspaceMissing")}</p>;
@@ -44,7 +58,9 @@ export function AnalysisPage() {
       return <LoadingState message={t("canonicalAnalysis.state.preparing.title")} size="md" />;
     }
     if (status.isError) {
-      return <ProblemNotice error={status.error} />;
+      // Erro da LEITURA de status (deep link inválido, 401, indisponível): apresentação pelo código.
+      // Leitura PODE re-tentar (limitado) por ação do usuário — item 22 (nunca auto p/ mutation).
+      return <ProblemFeedback error={status.error} onRetry={() => void status.refetch()} retryDisabled={status.isFetching} />;
     }
     const view = status.data;
     if (!view || !analysisId) return null;
@@ -56,30 +72,27 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
-            <Button
-              onClick={() =>
-                submit.mutate(
-                  { analysisId, scope, idempotencyKey: submitIntent.ensure() },
-                  { onSuccess: revalidar },
-                )
-              }
-              // bloqueia na janela até o estado avançar (evita 2º submit com nova chave — Codex R5).
-              // Não reseta o intent: um clique que escape reusa a MESMA Idempotency-Key.
-              disabled={submit.isPending || submit.isSuccess}
-              aria-busy={submit.isPending}
-            >
+            <Button onClick={dispararSubmit} disabled={submitBloqueado} aria-busy={submit.isPending}>
               {t("canonicalAnalysis.upload.submit")}
             </Button>
-            <ProblemNotice error={submit.error} />
+            {/* Erro de submit pelo CÓDIGO: capacity_wait/analysis_not_ready = espera neutra;
+                temporarily_unavailable/rede = re-submeter; idempotency_conflict = só mensagem. */}
+            <ProblemFeedback error={submit.error} onRetry={dispararSubmit} retryDisabled={submitBloqueado} />
           </div>
         );
       case "completed":
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
-            {view.result_available && (
-              // E3: apenas expõe a ação futura — a renderização do resultado é da E5.
+            {view.result_available ? (
+              // E3/E4: apenas expõe a ação futura — a renderização do resultado é da E5.
               <Button variant="outline" disabled>{t("canonicalAnalysis.action.viewResult")}</Button>
+            ) : (
+              // result_not_available: concluída mas resultado em preparação — NÃO é falha analítica,
+              // NÃO renderiza dashboard (E5). Apresentação neutra de espera.
+              <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
+                {t("canonicalAnalysis.action.resultPreparing")}
+              </p>
             )}
           </div>
         );
@@ -87,22 +100,25 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
-            {view.retry_allowed && (
-              <Button
-                onClick={() =>
-                  retry.mutate(
-                    { analysisId, scope, idempotencyKey: retryIntent.ensure() },
-                    { onSuccess: revalidar },
-                  )
-                }
-                // mesma proteção do submit: bloqueia na janela e não reseta o intent (Codex R5).
-                disabled={retry.isPending || retry.isSuccess}
-                aria-busy={retry.isPending}
-              >
+            {view.retry_allowed ? (
+              // Recuperável: retry canônico (mesmo analysis_id, sem prepare/upload).
+              <Button onClick={dispararRetry} disabled={retryBloqueado} aria-busy={retry.isPending}>
                 {t("canonicalAnalysis.action.retry")}
               </Button>
+            ) : (
+              // Não recuperável: NÃO oferecer "tentar novamente". Nova análise = nova INTENÇÃO
+              // explícita (novo prepare + nova Idempotency-Key), não um retry falso da mesma.
+              <div className="flex flex-wrap gap-2">
+                <Button asChild>
+                  <Link to="/canonical/analyses/new">{t("canonicalAnalysis.action.newAnalysis")}</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/canonical/analyses">{t("canonicalAnalysis.action.back")}</Link>
+                </Button>
+              </div>
             )}
-            <ProblemNotice error={retry.error} />
+            {/* Erro do retry pelo CÓDIGO (mensagem; o botão acima já permite re-tentar quando cabível). */}
+            <ProblemFeedback error={retry.error} />
           </div>
         );
       default:

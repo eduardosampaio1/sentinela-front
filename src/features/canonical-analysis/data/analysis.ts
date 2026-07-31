@@ -33,6 +33,16 @@ export function intervaloDePolling(status: AnalysisStatus | undefined): number |
   }
 }
 
+/** Polling considerando o resultado (E6 item 23): concluída SEM resultado disponível ainda NÃO é
+ *  terminal — segue checando (moderado) até `result_available` virar true. */
+export function proximoPolling(
+  status: AnalysisStatus | undefined,
+  resultAvailable?: boolean,
+): number | false {
+  if (status === "completed" && resultAvailable === false) return POLL_MODERADO;
+  return intervaloDePolling(status);
+}
+
 // ── prepare (POST /v1/analyses). Idempotency-Key vem da INTENÇÃO (chamador). ──
 export function useCreateAnalysis(): UseMutationResult<
   AnalysisHandle,
@@ -100,7 +110,7 @@ export function useAnalysisStatus(
     queryKey: scope && analysisId ? workspaceKeys.status(scope.workspaceId, analysisId) : IDLE_KEY,
     enabled: habilitado,
     queryFn: ({ signal }) => client.getStatus(analysisId as string, scope as CanonicalScope, { signal }),
-    refetchInterval: (query) => intervaloDePolling(query.state.data?.status),
+    refetchInterval: (query) => proximoPolling(query.state.data?.status, query.state.data?.result_available),
     // não consulta em background (aba invisível) — pausa por padrão do React Query
     refetchIntervalInBackground: false,
   });

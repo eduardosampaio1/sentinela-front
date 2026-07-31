@@ -57,9 +57,11 @@ function putEntry(id: string, entry: JourneyEntry): void {
 export function resetJourney(): void {
   mem.clear();
   listMem.clear();
+  errMem.clear();
   if (typeof sessionStorage !== "undefined") {
     sessionStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem(LIST_SESSION_KEY);
+    sessionStorage.removeItem(ERR_SESSION_KEY);
   }
 }
 
@@ -94,6 +96,33 @@ function getList(workspaceId: string, cursor: string | null): AnalysisListPage {
   return found ?? { items: [], next_cursor: null };
 }
 
+// ── ERRO de status por analysis_id (E6): GET /{id} devolve um problem+json semeado (ex.: 401). ──
+const errMem = new Map<string, { http: number; code: string }>();
+const ERR_SESSION_KEY = "__sentinela_status_error__";
+
+export function seedStatusError(analysisId: string, httpStatus: number, code: string): void {
+  if (backend === "memory") {
+    errMem.set(analysisId, { http: httpStatus, code });
+    return;
+  }
+  const all = readErrAll();
+  all[analysisId] = { http: httpStatus, code };
+  if (typeof sessionStorage !== "undefined") sessionStorage.setItem(ERR_SESSION_KEY, JSON.stringify(all));
+}
+
+function readErrAll(): Record<string, { http: number; code: string }> {
+  if (backend === "memory" || typeof sessionStorage === "undefined") return Object.fromEntries(errMem);
+  try {
+    return JSON.parse(sessionStorage.getItem(ERR_SESSION_KEY) ?? "{}") as Record<string, { http: number; code: string }>;
+  } catch {
+    return {};
+  }
+}
+
+function getStatusError(analysisId: string): { http: number; code: string } | undefined {
+  return backend === "memory" ? errMem.get(analysisId) : readErrAll()[analysisId];
+}
+
 /** Semeia uma análise já num estado/roteiro (p/ testes de deep-link/retry direto). */
 export function seedJourney(analysisId: string, seq: AnalysisStatus[], retryAllowed = false): void {
   putEntry(analysisId, { seq, idx: 0, retryAllowed });
@@ -116,7 +145,7 @@ const view = (id: string, status: AnalysisStatus, retryAllowed = false) =>
   statusView(status, {
     analysis_id: id,
     result_available: status === "completed",
-    retry_allowed: retryAllowed || status === "failed",
+    retry_allowed: retryAllowed, // controlado pela semente (permite failed NÃO recuperável)
   });
 
 /**
@@ -157,6 +186,13 @@ export function makeJourneyHandlers(base: string) {
     }),
     http.get(`${b}/v1/analyses/:id`, ({ params }) => {
       const id = String(params.id);
+      const err = getStatusError(id);
+      if (err) {
+        return HttpResponse.json(
+          { type: `urn:sentinela:error:${err.code}`, title: err.code, status: err.http, code: err.code, detail: err.code },
+          { status: err.http, headers: { "content-type": "application/problem+json" } },
+        );
+      }
       const { status, retryAllowed } = corrente(id);
       return HttpResponse.json(view(id, status, retryAllowed));
     }),
