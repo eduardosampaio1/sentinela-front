@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { getAuthClient } from "@/lib/auth/index";
+import { readE2EInjection } from "@/lib/auth/e2eBridge";
 import type { AuthSession, AuthUser } from "@/lib/auth/index";
 import {
   createWorkspace as createWorkspaceRecord,
@@ -191,6 +192,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const syncWorkspaceState = useCallback(
     async (currUser: AuthUser, preferredWorkspaceId?: string | null) => {
+      // CADEADO fail-closed: bypass E2E só em DEV. Em produção, `import.meta.env.DEV` é literal
+      // `false` → este ramo é eliminado do bundle e o caminho real (Supabase) é o único.
+      if (import.meta.env.DEV) {
+        const injected = readE2EInjection();
+        if (injected) {
+          setWorkspaces([injected.workspace]);
+          setWorkspace(injected.workspace);
+          setWorkspaceLoading(false);
+          return;
+        }
+      }
       setWorkspaceLoading(true);
       try {
         const preferredId = preferredWorkspaceId ?? getStoredWorkspaceId();

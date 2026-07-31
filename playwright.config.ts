@@ -26,7 +26,10 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       VITE_SENTINELA_CANONICAL_ANALYSIS_ENABLED: "true",
-      VITE_SENTINELA_API_URL: "http://localhost:9",
+      // Base do Gateway = origem do próprio dev server. O MSW browser worker registra os handlers
+      // na MESMA origem (sem CORS). VITE_E2E liga o bypass de auth E2E (opt-in por teste).
+      VITE_SENTINELA_API_URL: `http://localhost:${PORT}`,
+      VITE_E2E: "true",
     },
   },
 });

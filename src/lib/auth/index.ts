@@ -4,6 +4,7 @@ import type { AuthClient } from "./types";
 import { resolveProvider } from "./resolveProvider";
 import { createSupabaseAuthClient } from "./supabaseAuthClient";
 import { createKeycloakAuthClient } from "./keycloakAuthClient";
+import { createE2EAuthClient, readE2EInjection } from "./e2eBridge";
 
 export type { AuthClient, AuthSession, AuthUser, AuthProviderName } from "./types";
 
@@ -16,6 +17,12 @@ export function getAuthClient(): AuthClient {
 }
 
 function build(): AuthClient {
+  // CADEADO fail-closed: só em DEV. `import.meta.env.DEV` é literal `false` em build de produção,
+  // então este ramo é eliminado do bundle (dead-code) e nunca substitui o provider real.
+  if (import.meta.env.DEV) {
+    const injected = readE2EInjection();
+    if (injected) return createE2EAuthClient(injected.session);
+  }
   const provider = resolveProvider(import.meta.env.VITE_AUTH_PROVIDER);
   if (provider === "keycloak") {
     const issuer = String(import.meta.env.VITE_KEYCLOAK_ISSUER ?? "");

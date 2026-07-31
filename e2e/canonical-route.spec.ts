@@ -14,10 +14,7 @@ test.describe("Jornada canônica — rota fiada e protegida (browser real)", () 
     expect(page.url()).toContain("/login");
   });
 
-  // A jornada AUTENTICADA completa (prepare → upload sem materialização → submit → 7 estados →
-  // refresh/deep-link → troca de workspace → upload grande) está especificada em
-  // docs/onda6/E2-playwright.md e provada nos 30+ testes vitest+MSW. Falta apenas o fixture de
-  // login controlado (seed de sessão Supabase / mock de auth em browser) para exercê-la aqui —
-  // marcada como pendente para NÃO produzir falso verde.
-  test.fixme("jornada autenticada completa (requer fixture de login controlado)", async () => {});
+  // A jornada AUTENTICADA completa (happy/refresh/recovering) agora É exercida em browser real —
+  // ver `e2e/canonical-authenticated.spec.ts` — via o fixture de auth E2E fail-closed
+  // (`src/lib/auth/e2eBridge.ts` + `src/e2e/bypass.ts`) e o MSW browser worker stateful.
 });

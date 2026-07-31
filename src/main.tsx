@@ -18,10 +18,35 @@ window.addEventListener("vite:preloadError", () => {
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("Root element not found");
 
-createRoot(rootEl).render(
-  <StrictMode>
-    <Providers>
-      <App />
-    </Providers>
-  </StrictMode>
-);
+function renderApp() {
+  createRoot(rootEl!).render(
+    <StrictMode>
+      <Providers>
+        <App />
+      </Providers>
+    </StrictMode>
+  );
+}
+
+// CADEADO fail-closed: o bypass de auth E2E só é carregado sob TRÊS condições simultâneas:
+//   1. `import.meta.env.DEV` — literal `false` em produção → o `import()` é eliminado e
+//      `src/e2e/bypass.ts` (que contém o token fixo) nunca entra no bundle de produção;
+//   2. `VITE_E2E === "true"` — marca explícita do dev server sob Playwright;
+//   3. opt-in por teste (`window.__SENTINELA_E2E_AUTH__`, setado via addInitScript) — cada spec
+//      decide se quer o estado autenticado; sem ele, o caminho real de auth é usado (ex.: o
+//      cenário não-autenticado → /login continua válido no MESMO dev server).
+function e2eAuthRequested(): boolean {
+  try {
+    return typeof window !== "undefined" && (window as unknown as Record<string, unknown>).__SENTINELA_E2E_AUTH__ === true;
+  } catch {
+    return false;
+  }
+}
+
+if (import.meta.env.DEV && import.meta.env.VITE_E2E === "true" && e2eAuthRequested()) {
+  import("./e2e/bypass")
+    .then(({ installE2EBypass }) => installE2EBypass())
+    .finally(renderApp);
+} else {
+  renderApp();
+}
