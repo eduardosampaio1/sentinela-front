@@ -9,23 +9,49 @@ import { expect, test, type Page } from "@playwright/test";
 
 const AA_TEXTO_NORMAL = 4.5;
 
+// A massa é a MASSA A da E5 (proveniência em docs/onda6/E5-massa-sintetica-proveniencia.md):
+// aqui ela existe só para a página de resultado ter TEXTO REAL a medir — indicador disponível,
+// ausente ("Not measured") e recomendação — cobrindo os tons que o E7 consolidou.
+const MASSA_CONTRASTE = {
+  schema: "provisional-analysis-result-v1",
+  summary: { total_records: 100, useful_outcomes: 80, analyzed_at: "2026-07-31T10:00:00Z" },
+  indicators: [
+    { id: "useful_rate", kind: "ratio", availability: "available", value: 0.8 },
+    { id: "token_waste_absolute", kind: "count", availability: "available", value: 20 },
+    { id: "cost_per_useful_outcome", kind: "currency", availability: "not_measured", value: null, currency: null },
+  ],
+  recommendations: [{ id: "r1", title: "Revisar intenções sem cobertura", description: null }],
+};
+
 async function habilitar(page: Page) {
-  await page.addInitScript(() => {
-    (window as unknown as Record<string, unknown>).__SENTINELA_E2E_AUTH__ = true;
-    if (!sessionStorage.getItem("__sentinela_list__")) {
-      sessionStorage.setItem(
-        "__sentinela_list__",
-        JSON.stringify({
-          "e2e-workspace-0000|": {
-            items: [
-              { analysis_id: "an-c1", status: "completed", record_count: 10, result_available: true, created_at: "2026-07-31T10:00:00Z" },
-            ],
-            next_cursor: null,
-          },
-        }),
-      );
-    }
-  });
+  await page.addInitScript(
+    ([massa]) => {
+      (window as unknown as Record<string, unknown>).__SENTINELA_E2E_AUTH__ = true;
+      if (!sessionStorage.getItem("__sentinela_list__")) {
+        sessionStorage.setItem(
+          "__sentinela_list__",
+          JSON.stringify({
+            "e2e-workspace-0000|": {
+              items: [
+                { analysis_id: "an-c1", status: "completed", record_count: 10, result_available: true, created_at: "2026-07-31T10:00:00Z" },
+              ],
+              next_cursor: null,
+            },
+          }),
+        );
+      }
+      if (!sessionStorage.getItem("__sentinela_journey__")) {
+        sessionStorage.setItem(
+          "__sentinela_journey__",
+          JSON.stringify({ "an-c1": { seq: ["completed"], idx: 0, retryAllowed: false } }),
+        );
+      }
+      if (!sessionStorage.getItem("__sentinela_result__")) {
+        sessionStorage.setItem("__sentinela_result__", JSON.stringify({ "an-c1": massa }));
+      }
+    },
+    [MASSA_CONTRASTE] as const,
+  );
 }
 
 /** Razão de contraste real dos textos visíveis, medida no navegador (função real, não string). */
@@ -72,6 +98,8 @@ function medir() {
 const ROTAS = [
   { nome: "lista", url: "/canonical/analyses", ancora: "Your analyses" },
   { nome: "entrada", url: "/canonical/analyses/new", ancora: "New analysis" },
+  // A página de RESULTADO é a superfície nova da E5 — precisa do mesmo gate (Codex E7 R2 [P2]).
+  { nome: "resultado", url: "/canonical/analyses/an-c1/result", ancora: "Useful outcome rate" },
 ];
 
 for (const rota of ROTAS) {
