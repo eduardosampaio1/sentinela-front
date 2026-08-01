@@ -70,4 +70,21 @@ describe("Onda 8 — o legado do frontend não volta", () => {
     // Recuperável por `git show <commit-anterior>:src_legacy/<arquivo>`.
     expect(existsSync(`${raiz}/src_legacy`)).toBe(false);
   });
+
+  it("nenhuma dependência órfã do legado volta ao package.json", () => {
+    // `vaul` é a primitiva do componente `drawer`. O único arquivo que a importava vivia
+    // em `src_legacy/components/ui/drawer.tsx` e saiu no lote 1; a dependência ficou
+    // declarada, sem consumidor, e o lote 3 não a pegou porque a heurística de então
+    // ainda contava referência em config.
+    //
+    // Este cadeado é sobre o NOME, não sobre a contagem: uma dependência sem consumidor
+    // volta silenciosamente quando alguém copia um componente de fora e o `package.json`
+    // "já tinha" o pacote. Aqui ela volta VERMELHA.
+    const manifesto = JSON.parse(readFileSync(`${raiz}/package.json`, "utf8"));
+    const declaradas = {
+      ...(manifesto.dependencies ?? {}),
+      ...(manifesto.devDependencies ?? {}),
+    };
+    expect(Object.keys(declaradas)).not.toContain("vaul");
+  });
 });
