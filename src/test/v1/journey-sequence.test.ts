@@ -40,7 +40,16 @@ describe("MSW stateful — sequência do contrato por analysis_id", () => {
     const final = await client.getStatus(id, SCOPE);
     expect(final.status).toBe("completed");
     expect(final.result_available).toBe(true);
-    expect((await client.getResult(id, SCOPE)).result_schema_version).toBe("analysis-result-v1");
+    // Esta asserção de contrato só vale porque o payload DEFAULT da jornada não é o perfil
+    // provisório: o fake backend declara a versão do que entrega. Fixado explicitamente para
+    // que trocar o default não mude o SIGNIFICADO deste contrato em silêncio (Codex R4 [P1] —
+    // a quebra alegada não ocorre, mas o acoplamento era implícito).
+    const envelope = await client.getResult(id, SCOPE);
+    expect(
+      (envelope.result as { schema?: unknown } | null)?.schema,
+      "payload default da jornada NÃO carrega marcador provisório",
+    ).toBeUndefined();
+    expect(envelope.result_schema_version).toBe("analysis-result-v1");
   });
 
   it("isolamento entre testes: o store foi resetado (nova análise recomeça)", async () => {
