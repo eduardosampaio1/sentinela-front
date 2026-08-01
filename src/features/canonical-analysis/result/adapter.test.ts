@@ -146,6 +146,48 @@ describe("adapter — parcialidade, fronteira e incompatibilidade", () => {
     expect(adaptAnalysisResult(resultViewCom(null), "en").status).toBe("unsupported");
   });
 
+  // Codex E5/E7 R3 [P2]: a AUTORIDADE é o `result_schema_version` do contrato público, não um
+  // marcador dentro do blob opaco. Estes três casos fixam a ordem.
+  describe("autoridade do discriminador público", () => {
+    const MIOLO = {
+      summary: { total_records: 10, useful_outcomes: 8, analyzed_at: null },
+      indicators: [{ id: "useful_rate", kind: "ratio", availability: "available", value: 0.8 }],
+    };
+
+    it("envelope declara a versão suportada e o blob NÃO repete o marcador → renderiza", () => {
+      const r = adaptAnalysisResult(
+        resultViewCom(MIOLO, "an-abc", "provisional-analysis-result-v1"),
+        "en",
+      );
+      if (r.status !== "supported") throw new Error(`deveria ser suportada, veio ${r.status}`);
+      expect(r.view.indicators).toHaveLength(1);
+    });
+
+    it("envelope declara versão DESCONHECIDA e o blob traz o marcador mágico → NÃO renderiza", () => {
+      const comMarcador = { schema: "provisional-analysis-result-v1", ...MIOLO };
+      const r = adaptAnalysisResult(resultViewCom(comMarcador, "an-abc", "outra-versao-v9"), "en");
+      expect(r.status).toBe("unsupported");
+      if (r.status === "unsupported") expect(r.reason).toBe("unknown_schema");
+    });
+
+    it("envelope e blob se CONTRADIZEM → estado seguro, sem escolher um lado", () => {
+      const contraditorio = { schema: "outra-coisa-v2", ...MIOLO };
+      const r = adaptAnalysisResult(
+        resultViewCom(contraditorio, "an-abc", "provisional-analysis-result-v1"),
+        "en",
+      );
+      expect(r.status).toBe("unsupported");
+      if (r.status === "unsupported") expect(r.reason).toBe("schema_mismatch");
+    });
+
+    it("envelope sem versão declarada → missing_schema (não cai no blob)", () => {
+      const comMarcador = { schema: "provisional-analysis-result-v1", ...MIOLO };
+      const r = adaptAnalysisResult(resultViewCom(comMarcador, "an-abc", ""), "en");
+      expect(r.status).toBe("unsupported");
+      if (r.status === "unsupported") expect(r.reason).toBe("missing_schema");
+    });
+  });
+
   it("indicador incoerente (available sem valor / ausente com valor) é descartado", () => {
     const payload = {
       schema: "provisional-analysis-result-v1",

@@ -13,6 +13,7 @@ import {
   MASSA_B,
   MASSA_D_PARCIAL,
   PAYLOAD_SCHEMA_DESCONHECIDO,
+  resultViewCom,
 } from "@/test/fixtures/provisional-result/massas";
 import { MSW_BASE } from "@/test/msw/handlers";
 import { server, setupMsw } from "@/test/msw/server";
@@ -51,8 +52,10 @@ function servir(payload: unknown, opts?: { resultAvailable?: boolean }) {
     http.get(`${MSW_BASE}/v1/analyses/:id`, () =>
       HttpResponse.json(statusView("completed", { analysis_id: "an-abc", result_available: opts?.resultAvailable ?? true })),
     ),
+    // O envelope DECLARA a versão do que entrega (discriminador contratado). `resultViewCom`
+    // deriva da própria massa, como um backend faria — o front nunca infere a partir do blob.
     http.get(`${MSW_BASE}/v1/analyses/:id/result`, () =>
-      HttpResponse.json({ analysis_id: "an-abc", result_schema_version: "analysis-result-v1", result: payload }),
+      HttpResponse.json(resultViewCom(payload, "an-abc")),
     ),
   );
 }

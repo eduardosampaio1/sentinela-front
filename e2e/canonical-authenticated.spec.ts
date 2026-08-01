@@ -51,7 +51,12 @@ test.describe("Jornada canônica autenticada (browser real + MSW stateful)", () 
 
     // acompanha até completed (passa por recovering; NUNCA % nem progressbar)
     await expect(page.getByRole("heading", { name: "Completed" })).toBeVisible({ timeout: 40_000 });
-    await expect(page.getByRole("button", { name: "View result" })).toBeDisabled();
+    // E5 mudou este contrato de propósito: na E3 a ação era um botão DESABILITADO (não existia
+    // página de resultado); agora é um link real para a rota canônica, deep-linkável. A asserção
+    // não foi afrouxada — ficou mais forte: exige o href EXATO do analysis_id desta jornada.
+    const verResultado = page.getByRole("link", { name: "View result" });
+    await expect(verResultado).toBeVisible();
+    await expect(verResultado).toHaveAttribute("href", "/canonical/analyses/an-e2e/result");
 
     expect(legacy, "nenhuma chamada legada (/api|/rest|/graphql|/auth)").toEqual([]);
     expect(v1Calls, "a jornada fala com o Gateway /v1").toBeGreaterThan(0);

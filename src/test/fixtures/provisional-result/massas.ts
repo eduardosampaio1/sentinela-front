@@ -76,6 +76,28 @@ export const MASSA_E_FORA_DE_FAIXA = {
 /** Payload com schema desconhecido — deve cair em "resultado não suportado". */
 export const PAYLOAD_SCHEMA_DESCONHECIDO = { schema: "outro-schema-v9", indicators: [] } as const;
 
-export function resultViewCom(payload: unknown, analysisId = "an-abc"): AnalysisResultView {
-  return { analysis_id: analysisId, result_schema_version: "analysis-result-v1", result: payload };
+/**
+ * Monta o envelope público. O `result_schema_version` é o discriminador CONTRATADO: por padrão a
+ * fixture declara o que a massa realmente é — exatamente o que um backend faria ao publicar o
+ * resultado. `versaoDeclarada` existe só para montar envelopes INCONSISTENTES de propósito
+ * (declarar uma versão e entregar outra forma), que a fronteira precisa recusar.
+ */
+export function resultViewCom(
+  payload: unknown,
+  analysisId = "an-abc",
+  versaoDeclarada?: string,
+): AnalysisResultView {
+  const marcadorInterno =
+    typeof payload === "object" &&
+    payload !== null &&
+    typeof (payload as { schema?: unknown }).schema === "string"
+      ? (payload as { schema: string }).schema
+      : // Sem marcador: um blob não perfilado. A declaração honesta é a versão genérica —
+        // que a fronteira não sabe renderizar.
+        "analysis-result-v1";
+  return {
+    analysis_id: analysisId,
+    result_schema_version: versaoDeclarada ?? marcadorInterno,
+    result: payload,
+  };
 }

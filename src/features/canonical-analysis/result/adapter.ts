@@ -40,7 +40,11 @@ export interface ResultViewModel {
 
 export type ResultAdaptation =
   | { status: "supported"; view: ResultViewModel }
-  | { status: "unsupported"; schemaVersion: string; reason: "missing_schema" | "unknown_schema" | "malformed" };
+  | {
+      status: "unsupported";
+      schemaVersion: string;
+      reason: "missing_schema" | "unknown_schema" | "schema_mismatch" | "malformed";
+    };
 
 /** Formata um número preservando precisão significativa (sub-centavo não vira 0). */
 function formatarNumero(valor: number, locale: string, precisaoMinima?: number): string {
@@ -111,7 +115,8 @@ function apresentar(ind: ProvisionalIndicator, descriptor: IndicatorDescriptor, 
  * `locale` só afeta formatação. Nenhum componente chama o validador diretamente.
  */
 export function adaptAnalysisResult(publico: AnalysisResultView, locale = "en"): ResultAdaptation {
-  const outcome = validateProvisionalResult(publico.result);
+  // O discriminador do contrato público entra como AUTORIDADE (não o miolo do blob opaco).
+  const outcome = validateProvisionalResult(publico.result_schema_version, publico.result);
   if (outcome.status === "unsupported") {
     return { status: "unsupported", schemaVersion: publico.result_schema_version, reason: outcome.reason };
   }

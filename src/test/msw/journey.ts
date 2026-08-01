@@ -208,7 +208,22 @@ export function makeJourneyHandlers(base: string) {
     }),
     http.get(`${b}/v1/analyses/:id/result`, ({ params }) => {
       const id = String(params.id);
-      return HttpResponse.json({ ...RESULT_VIEW, analysis_id: id, result: getResult(id) });
+      const payload = getResult(id);
+      // O fake backend DECLARA no envelope a versão do que produziu — é o discriminador contratado.
+      // Antes o envelope dizia sempre "analysis-result-v1" enquanto servia outra forma; a fronteira
+      // só não reprovava porque olhava dentro do blob (Codex E5/E7 R3 [P2]).
+      const versao =
+        typeof payload === "object" &&
+        payload !== null &&
+        typeof (payload as { schema?: unknown }).schema === "string"
+          ? (payload as { schema: string }).schema
+          : RESULT_VIEW.result_schema_version;
+      return HttpResponse.json({
+        ...RESULT_VIEW,
+        analysis_id: id,
+        result_schema_version: versao,
+        result: payload,
+      });
     }),
     http.get(`${b}/v1/analyses`, ({ request }) => {
       const u = new URL(request.url);

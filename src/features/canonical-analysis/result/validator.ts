@@ -17,7 +17,10 @@ import {
 
 export type ValidationOutcome =
   | { status: "supported"; value: ProvisionalResult }
-  | { status: "unsupported"; reason: "missing_schema" | "unknown_schema" | "malformed" };
+  | {
+      status: "unsupported";
+      reason: "missing_schema" | "unknown_schema" | "schema_mismatch" | "malformed";
+    };
 
 const KINDS: IndicatorKind[] = ["ratio", "count", "currency", "scalar"];
 const AVAILABILITIES: IndicatorAvailability[] = ["available", "not_measured", "not_applicable"];
@@ -65,15 +68,29 @@ function lerRecomendacao(bruto: unknown): ProvisionalRecommendation | null {
  * Inspeciona o `result` opaco do contrato público.
  * `unsupported` NUNCA vira renderização adivinhada — a UI mostra "resultado não suportado".
  */
-export function validateProvisionalResult(bruto: unknown): ValidationOutcome {
-  if (!ehObjeto(bruto)) return { status: "unsupported", reason: "malformed" };
-
-  const schema = bruto.schema;
-  if (schema === undefined || schema === null || schema === "") {
+export function validateProvisionalResult(
+  versaoDeclarada: unknown,
+  bruto: unknown,
+): ValidationOutcome {
+  // AUTORIDADE = `result_schema_version` do contrato público. É o campo CONTRATADO que identifica
+  // a forma do `result` opaco; um marcador dentro do próprio blob não pode se autopromover a
+  // discriminador (Codex E5/E7 R3 [P2]). Consequências desta ordem:
+  //   - envelope válido SEM marcador interno é aceito (o backend já declarou a versão);
+  //   - envelope com versão desconhecida NÃO é resgatado por um marcador interno "mágico".
+  if (typeof versaoDeclarada !== "string" || versaoDeclarada.trim() === "") {
     return { status: "unsupported", reason: "missing_schema" };
   }
-  if (schema !== PROVISIONAL_RESULT_SCHEMA) {
+  if (versaoDeclarada !== PROVISIONAL_RESULT_SCHEMA) {
     return { status: "unsupported", reason: "unknown_schema" };
+  }
+
+  if (!ehObjeto(bruto)) return { status: "unsupported", reason: "malformed" };
+
+  // O marcador interno é OPCIONAL; quando existe e CONTRADIZ o contrato, a resposta é
+  // internamente inconsistente — estado seguro, sem escolher um dos dois lados.
+  const marcador = bruto.schema;
+  if (marcador !== undefined && marcador !== null && marcador !== PROVISIONAL_RESULT_SCHEMA) {
+    return { status: "unsupported", reason: "schema_mismatch" };
   }
 
   const summaryBruto = ehObjeto(bruto.summary) ? bruto.summary : {};
