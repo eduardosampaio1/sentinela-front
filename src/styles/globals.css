@@ -33,6 +33,18 @@
     --accent-foreground: 210 40% 85%;
     --destructive: 0 70% 70%;
     --destructive-foreground: 0 0% 100%;
+    /* E7: `success`/`warning` já eram referenciados pelo tailwind.config (hsl(var(--success)))
+       mas NÃO existiam aqui — as utilidades text-success/bg-success resolviam para nada
+       (Codex E5 R1 [P2]). Valores = as cores que o shell já usava: #34D399 e #FBBF24. */
+    --success: 158 64% 52%;
+    --success-foreground: 220 50% 5%;
+    --warning: 43 96% 56%;
+    --warning-foreground: 220 50% 5%;
+    /* `critical` também era referenciado pelo config sem existir aqui (usado na landing, fora do
+       escopo da E7): as utilidades resolviam para NADA. Definir restaura a intenção do config —
+       correção aditiva, não reforma da landing. */
+    --critical: 0 84% 60%;
+    --critical-foreground: 0 0% 100%;
     --border: 220 30% 14%;
     --input: 220 30% 14%;
     --ring: 236 77% 61%;
