@@ -24,6 +24,10 @@ describe("Onda 8 — o legado do frontend não volta", () => {
   it("nenhum arquivo fora de src_legacy importa de src_legacy", () => {
     const ofensores = versionados()
       .filter((f) => /\.(ts|tsx|js|jsx|mjs|cjs)$/.test(f) && !f.startsWith("src_legacy/"))
+      // Este arquivo carrega o padrão que procura, então casa consigo mesmo. Só apareceu
+      // depois do commit: enquanto estava fora do índice, `git ls-files` não o listava e
+      // o cadeado nunca se via. Um gate que se acusa é um gate que alguém desliga.
+      .filter((f) => !f.endsWith("onda8.legado.gate.test.ts"))
       .filter((f) => {
         const txt = readFileSync(`${raiz}/${f}`, "utf8");
         // `import ... from ".../src_legacy/..."`, `import("...src_legacy...")`,
