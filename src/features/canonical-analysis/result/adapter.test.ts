@@ -1,205 +1,256 @@
+// Adapter do resultado canônico — o que ele PODE e o que ele NÃO PODE fazer.
+//
+// As massas não são inventadas: são a saída real do código analítico do `sentinela` montada
+// pelo `sentinela-result-assembler`. Testar contra massa escrita à mão provaria só que o
+// adapter concorda com a minha suposição do formato.
+
 import { describe, expect, it } from "vitest";
-import { adaptAnalysisResult, type IndicatorView } from "./adapter";
+import { adaptAnalysisResult } from "./adapter";
+import { INDICATOR_DESCRIPTORS } from "./descriptors";
 import {
+  envelope,
   MASSA_A,
   MASSA_B,
   MASSA_C,
   MASSA_D_PARCIAL,
   MASSA_E_FORA_DE_FAIXA,
   PAYLOAD_SCHEMA_DESCONHECIDO,
-  resultViewCom,
-} from "@/test/fixtures/provisional-result/massas";
+} from "@/test/fixtures/canonical-result/massas";
 
-function ind(views: IndicatorView[], id: string): IndicatorView {
-  const v = views.find((x) => x.id === id);
-  if (!v) throw new Error(`indicador ausente: ${id}`);
-  return v;
+function suportado(doc: unknown, versao?: string) {
+  const r = adaptAnalysisResult(envelope(doc, versao));
+  if (r.status !== "supported") throw new Error(`esperava supported, veio ${r.reason}`);
+  return r.view;
 }
 
-describe("adapter — massa A (valores conferidos contra o código analítico real)", () => {
-  const r = adaptAnalysisResult(resultViewCom(MASSA_A), "en");
-  if (r.status !== "supported") throw new Error("massa A deveria ser suportada");
-  const v = r.view;
+function indicador(doc: unknown, id: string) {
+  const item = suportado(doc).indicators.find((i) => i.id === id);
+  if (!item) throw new Error(`indicador ausente na view: ${id}`);
+  return item;
+}
 
-  it("resumo vem do payload; analyzed_at NÃO é gerado no cliente", () => {
-    expect(v.summary.totalRecords).toBe(100);
-    expect(v.summary.usefulOutcomes).toBe(80);
-    expect(v.summary.analyzedAt).toBe("2026-07-31T10:00:00Z"); // exatamente o do backend
+describe("resumo e procedência", () => {
+  it("lê `record_count` e `analyzed_at` da origem, sem inventar nada", () => {
+    const v = suportado(MASSA_A);
+    expect(v.summary.recordCount).toBe(100);
+    expect(v.summary.analyzedAt).toBe("2026-07-31T10:00:00Z");
   });
 
-  it("useful_rate 0.8 → 80% (razão declarada; nunca 8.000%)", () => {
-    const i = ind(v.indicators, "useful_rate");
+  it("carrega a versão do registro de indicadores junto do resultado", () => {
+    // É ela, e não o schema, que explica um indicador que apareceu ou sumiu.
+    expect(suportado(MASSA_A).indicatorRegistryVersion).toBe("indicator-registry-1.0");
+  });
+});
+
+describe("apresentação por natureza do valor", () => {
+  it("razão vira percentual — e SÓ porque a origem declarou `ratio`", () => {
+    const i = indicador(MASSA_A, "useful_outcome_rate");
+    expect(i.rawValue).toBe(0.8);
     expect(i.display).toBe("80");
     expect(i.unitSuffix).toBe("%");
-    expect(i.rawValue).toBe(0.8);
   });
 
-  it("REGRESSÃO intent_coverage: 0.85 → 85%, jamais 8.500%", () => {
-    const i = ind(v.indicators, "intent_coverage_rate");
-    expect(i.display).toBe("85");
-    expect(i.unitSuffix).toBe("%");
-    expect(i.display).not.toBe("8,500");
-    expect(i.display).not.toBe("8500");
+  it("contagem NUNCA vira percentual", () => {
+    const i = indicador(MASSA_A, "analyzed_conversation_count");
+    expect(i.rawValue).toBe(100);
+    expect(i.display).toBe("100");
+    expect(i.unitSuffix).toBeNull();
   });
 
-  it("REGRESSÃO token_waste: 20 é CONTAGEM — '20' sem '%'", () => {
-    const i = ind(v.indicators, "token_waste_absolute");
-    expect(i.display).toBe("20");
-    expect(i.unitSuffix).toBeNull(); // nunca "%"
+  it("moeda usa o código declarado pela origem", () => {
+    const i = indicador(MASSA_A, "total_estimated_cost");
+    expect(i.rawValue).toBe(10);
+    expect(i.display).toContain("10");
   });
 
-  it("CPUO 0.125 (10.00/80) formatado sem símbolo inventado (currency null)", () => {
-    const i = ind(v.indicators, "cost_per_useful_outcome");
-    expect(i.rawValue).toBe(0.125);
-    expect(i.display).toBe("0.13"); // 2 casas p/ valor ≥ 0.01
-    expect(i.display).not.toMatch(/R\$|\$/); // sem moeda assumida
+  it("valor sub-centavo não colapsa em zero na exibição", () => {
+    // Massa C: custo 0,000004 por registro. Exibir "0" aqui seria dizer que não custou nada.
+    const i = indicador(MASSA_C, "cost_per_useful_outcome");
+    expect(i.rawValue).toBeGreaterThan(0);
+    expect(i.display).not.toMatch(/^[^1-9]*0$/);
   });
 
-  it("recomendações preservam a ORDEM recebida (sem priorização local)", () => {
-    expect(v.recommendations?.map((x) => x.id)).toEqual(["rec-1", "rec-2"]);
-  });
-
-  it("só indicadores COM descriptor entram; nada de handoff_rate na UI", () => {
-    expect(v.indicators.some((i) => i.id === "handoff_rate")).toBe(false);
-    expect(v.partial).toBe(false);
+  it("a precisão vem da ORIGEM, não de uma tabela local", () => {
+    // O descriptor não tem mais `precision`: se tivesse, haveria duas fontes para a mesma
+    // decisão, e elas divergiriam.
+    for (const d of Object.values(INDICATOR_DESCRIPTORS)) {
+      expect(d).not.toHaveProperty("precision");
+    }
   });
 });
 
-describe("adapter — massa B (ausência × zero real)", () => {
-  const r = adaptAnalysisResult(resultViewCom(MASSA_B), "en");
-  if (r.status !== "supported") throw new Error("massa B deveria ser suportada");
-  const v = r.view;
-
-  it("cost_per_useful_outcome sem úteis → NÃO APLICÁVEL, nunca 0", () => {
-    const i = ind(v.indicators, "cost_per_useful_outcome");
-    expect(i.availability).toBe("not_applicable");
-    expect(i.display).toBeNull();
+describe("ausência é ausência — nunca zero", () => {
+  it("sem desfecho útil, o custo por desfecho útil é AUSENTE (não zero)", () => {
+    const i = indicador(MASSA_B, "cost_per_useful_outcome");
+    expect(i.state).toBe("not_measured");
     expect(i.rawValue).toBeNull();
-    expect(i.display).not.toBe("0");
+    expect(i.display).toBeNull();
   });
 
-  it("cobertura 0 é ZERO REAL (disponível, exibido como 0%)", () => {
-    const i = ind(v.indicators, "intent_coverage_rate");
-    expect(i.availability).toBe("available");
+  it("zero REAL continua sendo zero, e é distinguível da ausência", () => {
+    const i = indicador(MASSA_B, "useful_outcome_rate");
+    expect(i.state).toBe("measured");
+    expect(i.rawValue).toBe(0);
     expect(i.display).toBe("0");
-    expect(i.unitSuffix).toBe("%");
-  });
-
-  it("variância não medida → not_measured (distinto de zero e de não aplicável)", () => {
-    expect(ind(v.indicators, "avg_variance_per_intent").availability).toBe("not_measured");
-  });
-
-  it("sem chave recommendations → seção inexistente (null), não vazia", () => {
-    expect(v.recommendations).toBeNull();
   });
 });
 
-describe("adapter — massa C (sub-centavo e moeda declarada)", () => {
-  const r = adaptAnalysisResult(resultViewCom(MASSA_C), "en");
-  if (r.status !== "supported") throw new Error("massa C deveria ser suportada");
-  const v = r.view;
-
-  it("REGRESSÃO sub-centavo: 0.0042 não vira 0.00 nem $0", () => {
-    const i = ind(v.indicators, "total_cost");
-    expect(i.rawValue).toBe(0.0042);
-    expect(i.display).toMatch(/0\.0042/);
-    expect(i.display).not.toMatch(/^\$?0\.00$/);
+describe("parcialidade vem DECLARADA, não inferida", () => {
+  it("documento completo não é marcado como parcial", () => {
+    expect(suportado(MASSA_A).partial).toBe(false);
   });
 
-  it("moeda declarada (USD) é usada; sem duplicar símbolo", () => {
-    const i = ind(v.indicators, "cost_per_useful_outcome");
-    expect(i.display).toMatch(/\$/);
-    expect((i.display?.match(/\$/g) ?? []).length).toBe(1);
-    expect(i.display).toMatch(/0\.0014/);
+  it("a origem declara incompleto e o adapter respeita, com os motivos", () => {
+    const v = suportado(MASSA_D_PARCIAL);
+    expect(v.partial).toBe(true);
+    expect(v.partialityReasons).toContain("indicator_unavailable");
   });
 
-  it("razão 1 → 100%", () => {
-    expect(ind(v.indicators, "useful_rate").display).toBe("100");
+  it("a massa B é parcial porque o BACKEND disse, não porque o frontend contou", () => {
+    // Prova que o sinal atravessa de ponta a ponta: a massa B saiu do Assembler já
+    // incompleta (sem desfecho útil, o custo por desfecho não tem denominador) — e o
+    // frontend recebeu TODOS os 14 indicadores, então contá-los não revelaria isso.
+    const v = suportado(MASSA_B);
+    expect(v.partial).toBe(true);
+    expect(v.indicators).toHaveLength(14);
   });
 });
 
-describe("adapter — parcialidade, fronteira e incompatibilidade", () => {
-  it("indicador sem descriptor é descartado e a view fica PARCIAL", () => {
-    const r = adaptAnalysisResult(resultViewCom(MASSA_D_PARCIAL), "en");
-    if (r.status !== "supported") throw new Error("deveria ser suportada");
-    expect(r.view.indicators.map((i) => i.id)).toEqual(["useful_rate"]);
-    expect(r.view.partial).toBe(true);
+describe("cadeado de vocabulário", () => {
+  it("indicador sem descriptor não vira UI adivinhada — mas também não some calado", () => {
+    const comEstranho = {
+      ...MASSA_A,
+      indicators: [
+        ...MASSA_A.indicators,
+        {
+          id: "metrica_que_a_ui_nao_conhece",
+          state: "measured",
+          value: 1,
+          kind: "count",
+          unit: null,
+          currency: null,
+          denominator: null,
+          coverage: null,
+          display_precision: 0,
+        },
+      ],
+    };
+    const v = suportado(comEstranho);
+    expect(v.indicators.map((i) => i.id)).not.toContain("metrica_que_a_ui_nao_conhece");
+    expect(v.unsupportedIndicatorIds).toContain("metrica_que_a_ui_nao_conhece");
   });
 
-  it("razão fora da faixa (1.4) é SINALIZADA, não limitada silenciosamente", () => {
-    const r = adaptAnalysisResult(resultViewCom(MASSA_E_FORA_DE_FAIXA), "en");
-    if (r.status !== "supported") throw new Error("deveria ser suportada");
-    const i = ind(r.view.indicators, "useful_rate");
+  it("todo indicador da massa real tem descriptor (registro e UI casados)", () => {
+    // Se o backend produz 14 e a UI só sabe nomear 7, metade da análise vira invisível.
+    expect(suportado(MASSA_A).unsupportedIndicatorIds).toEqual([]);
+    expect(suportado(MASSA_A).indicators).toHaveLength(14);
+  });
+});
+
+describe("valor fora da faixa declarada", () => {
+  it("é SINALIZADO, nunca limitado em silêncio", () => {
+    const i = indicador(MASSA_E_FORA_DE_FAIXA, "useful_outcome_rate");
     expect(i.outOfRange).toBe(true);
-    expect(i.rawValue).toBe(1.4); // não foi "consertado" para 1
+    expect(i.rawValue).toBe(1.4); // preservado: limitar esconderia o defeito da origem
   });
+});
 
-  it("schema desconhecido → unsupported (sem adivinhar)", () => {
-    const r = adaptAnalysisResult(resultViewCom(PAYLOAD_SCHEMA_DESCONHECIDO), "en");
+describe("versão do contrato é a AUTORIDADE", () => {
+  it("versão desconhecida → unsupported, sem tentar renderizar", () => {
+    const r = adaptAnalysisResult(envelope(MASSA_A, "analysis-result-v99"));
     expect(r.status).toBe("unsupported");
     if (r.status === "unsupported") expect(r.reason).toBe("unknown_schema");
   });
 
-  it("payload sem schema / malformado → unsupported", () => {
-    expect(adaptAnalysisResult(resultViewCom({ indicators: [] }), "en").status).toBe("unsupported");
-    expect(adaptAnalysisResult(resultViewCom("texto"), "en").status).toBe("unsupported");
-    expect(adaptAnalysisResult(resultViewCom(null), "en").status).toBe("unsupported");
+  it("versão ausente → unsupported", () => {
+    const r = adaptAnalysisResult(envelope(MASSA_A, ""));
+    expect(r.status).toBe("unsupported");
+    if (r.status === "unsupported") expect(r.reason).toBe("missing_schema");
   });
 
-  // Codex E5/E7 R3 [P2]: a AUTORIDADE é o `result_schema_version` do contrato público, não um
-  // marcador dentro do blob opaco. Estes três casos fixam a ordem.
-  describe("autoridade do discriminador público", () => {
-    const MIOLO = {
-      summary: { total_records: 10, useful_outcomes: 8, analyzed_at: null },
-      indicators: [{ id: "useful_rate", kind: "ratio", availability: "available", value: 0.8 }],
-    };
-
-    it("envelope declara a versão suportada e o blob NÃO repete o marcador → renderiza", () => {
-      const r = adaptAnalysisResult(
-        resultViewCom(MIOLO, "an-abc", "provisional-analysis-result-v1"),
-        "en",
-      );
-      if (r.status !== "supported") throw new Error(`deveria ser suportada, veio ${r.status}`);
-      expect(r.view.indicators).toHaveLength(1);
-    });
-
-    it("envelope declara versão DESCONHECIDA e o blob traz o marcador mágico → NÃO renderiza", () => {
-      const comMarcador = { schema: "provisional-analysis-result-v1", ...MIOLO };
-      const r = adaptAnalysisResult(resultViewCom(comMarcador, "an-abc", "outra-versao-v9"), "en");
-      expect(r.status).toBe("unsupported");
-      if (r.status === "unsupported") expect(r.reason).toBe("unknown_schema");
-    });
-
-    it("envelope e blob se CONTRADIZEM → estado seguro, sem escolher um lado", () => {
-      const contraditorio = { schema: "outra-coisa-v2", ...MIOLO };
-      const r = adaptAnalysisResult(
-        resultViewCom(contraditorio, "an-abc", "provisional-analysis-result-v1"),
-        "en",
-      );
-      expect(r.status).toBe("unsupported");
-      if (r.status === "unsupported") expect(r.reason).toBe("schema_mismatch");
-    });
-
-    it("envelope sem versão declarada → missing_schema (não cai no blob)", () => {
-      const comMarcador = { schema: "provisional-analysis-result-v1", ...MIOLO };
-      const r = adaptAnalysisResult(resultViewCom(comMarcador, "an-abc", ""), "en");
-      expect(r.status).toBe("unsupported");
-      if (r.status === "unsupported") expect(r.reason).toBe("missing_schema");
-    });
+  it("documento de outra versão NÃO é resgatado por marcador interno", () => {
+    const r = adaptAnalysisResult(envelope(PAYLOAD_SCHEMA_DESCONHECIDO));
+    expect(r.status).toBe("unsupported");
+    if (r.status === "unsupported") expect(r.reason).toBe("schema_mismatch");
   });
 
-  it("indicador incoerente (available sem valor / ausente com valor) é descartado", () => {
-    const payload = {
-      schema: "provisional-analysis-result-v1",
-      summary: { total_records: 1, useful_outcomes: 1, analyzed_at: null },
-      indicators: [
-        { id: "useful_rate", kind: "ratio", availability: "available", value: null },
-        { id: "total_cost", kind: "currency", availability: "not_measured", value: 5 },
-      ],
+  it("documento sem `summary` não é `analysis-result-v1`", () => {
+    const { summary: _s, ...semSumario } = MASSA_A;
+    const r = adaptAnalysisResult(envelope(semSumario));
+    expect(r.status).toBe("unsupported");
+    if (r.status === "unsupported") expect(r.reason).toBe("malformed");
+  });
+
+  it("documento sem `partiality` não é `analysis-result-v1`", () => {
+    // Fabricar `complete: true` aqui afirmaria completude que ninguém declarou.
+    const { partiality: _p, ...semParcialidade } = MASSA_A;
+    const r = adaptAnalysisResult(envelope(semParcialidade));
+    expect(r.status).toBe("unsupported");
+    if (r.status === "unsupported") expect(r.reason).toBe("malformed");
+  });
+});
+
+describe("coerência interna do indicador", () => {
+  it("estado sem valor carregando número é descartado", () => {
+    // Escolher em qual dos dois acreditar seria pior que descartar.
+    const incoerente = {
+      ...MASSA_A,
+      indicators: [{ ...MASSA_A.indicators[0], state: "not_measured", value: 0.8 }],
     };
-    const r = adaptAnalysisResult(resultViewCom(payload), "en");
-    if (r.status !== "supported") throw new Error("deveria ser suportada");
-    expect(r.view.indicators).toHaveLength(0);
-    expect(r.view.partial).toBe(true);
+    expect(suportado(incoerente).indicators).toHaveLength(0);
+  });
+
+  it("estado COM valor sem número é descartado", () => {
+    const incoerente = {
+      ...MASSA_A,
+      indicators: [{ ...MASSA_A.indicators[0], state: "measured", value: null }],
+    };
+    expect(suportado(incoerente).indicators).toHaveLength(0);
+  });
+});
+
+describe("recomendação atravessa sem ser reordenada nem reclassificada", () => {
+  // Esta é a camada que o cadeado por grep NÃO consegue dar: ele não distingue transportar
+  // de fabricar quando o valor vem de uma variável. Aqui a prova é por COMPORTAMENTO —
+  // o que sai tem de ser byte a byte o que entrou, na mesma ordem.
+  it("a ordem recebida é preservada", () => {
+    const v = suportado(MASSA_A);
+    expect(v.recommendations.map((r) => r.id)).toEqual(
+      MASSA_A.recommendations.map((r: { id: string }) => r.id),
+    );
+  });
+
+  it("a prioridade que SAI é exatamente a que ENTROU", () => {
+    const v = suportado(MASSA_A);
+    const daOrigem = new Map(
+      MASSA_A.recommendations.map((r: { id: string; priority: string }) => [r.id, r.priority]),
+    );
+    expect(v.recommendations.length).toBeGreaterThan(0);
+    for (const r of v.recommendations) {
+      expect(r.priority, `prioridade de ${r.id} divergiu da origem`).toBe(daOrigem.get(r.id));
+    }
+  });
+
+  it("inverter a prioridade na ORIGEM inverte na saída (o adapter não decide nada)", () => {
+    // Se o adapter reclassificasse, a saída seria a mesma nos dois casos.
+    const invertida = {
+      ...MASSA_A,
+      recommendations: MASSA_A.recommendations.map(
+        (r: { priority: string }, i: number) => ({ ...r, priority: i === 0 ? "P9" : "P0" }),
+      ),
+    };
+    const v = suportado(invertida);
+    expect(v.recommendations[0].priority).toBe("P9");
+    expect(v.recommendations[1].priority).toBe("P0");
+  });
+});
+
+describe("o adapter é puro", () => {
+  it("a mesma entrada produz a mesma saída", () => {
+    expect(suportado(MASSA_A)).toEqual(suportado(MASSA_A));
+  });
+
+  it("não gera timestamp local — a data vem do backend", () => {
+    expect(suportado(MASSA_A).summary.analyzedAt).toBe(MASSA_A.summary.analyzed_at);
   });
 });

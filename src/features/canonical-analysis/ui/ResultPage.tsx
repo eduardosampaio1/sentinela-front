@@ -19,12 +19,19 @@ import { ProblemFeedback } from "./notices";
 function ValorIndicador({ item }: { item: IndicatorView }) {
   const { t } = useLanguage();
   if (item.display === null) {
-    const chave =
-      item.availability === "not_applicable"
-        ? "canonicalAnalysis.result.notApplicable"
-        : "canonicalAnalysis.result.notMeasured";
-    // Ausência NUNCA vira zero: texto explícito e distinto de "0".
-    return <span className="text-base font-medium text-muted-foreground">{t(chave)}</span>;
+    // Ausência NUNCA vira zero: texto explícito, distinto de "0" e distinto ENTRE SI. Um cálculo
+    // que FALHOU não é a mesma coisa que um que não se aplica — o primeiro é problema a
+    // investigar, o segundo é resposta legítima. Colapsar os dois esconde incidente.
+    const chave: Record<typeof item.state, string> = {
+      measured: "canonicalAnalysis.result.notMeasured",
+      partially_measured: "canonicalAnalysis.result.notMeasured",
+      not_measured: "canonicalAnalysis.result.notMeasured",
+      not_applicable: "canonicalAnalysis.result.notApplicable",
+      calculation_failed: "canonicalAnalysis.result.calculationFailed",
+    };
+    return (
+      <span className="text-base font-medium text-muted-foreground">{t(chave[item.state])}</span>
+    );
   }
   return (
     <span className="text-2xl font-semibold text-foreground">
@@ -44,6 +51,20 @@ function CartaoIndicador({ item }: { item: IndicatorView }) {
       </p>
       {/* o "porquê" do número, sempre legível — nunca só a cor/valor */}
       <p className="mt-2 text-xs text-muted-foreground">{t(item.descriptor.descriptionKey)}</p>
+      {/* Medido em PARTE da amostra: o numero e real, a cobertura nao e total. Dizer isso e a
+          diferenca entre informar e enganar. */}
+      {item.state === "partially_measured" && (
+        <p role="note" className="mt-2 text-xs text-muted-foreground">
+          {t("canonicalAnalysis.result.partiallyMeasured")}
+          {item.coverageDisplay && ` (${item.coverageDisplay})`}
+        </p>
+      )}
+      {/* Sobre o que a razao foi calculada — auditabilidade do numero, vinda da origem. */}
+      {item.denominator && (
+        <p className="mt-1 text-xs text-muted-foreground">
+          {t("canonicalAnalysis.result.denominator")}: {item.denominator.value}
+        </p>
+      )}
       {item.outOfRange && (
         <p role="note" className="mt-2 text-xs text-destructive">
           {t("canonicalAnalysis.result.outOfRange")}
@@ -111,18 +132,14 @@ export function ResultPage() {
           <h2 id="res-resumo" className="text-lg font-semibold text-foreground">
             {t("canonicalAnalysis.result.summaryTitle")}
           </h2>
-          <dl className="grid gap-4 sm:grid-cols-3">
+          {/* Duas colunas, nao tres: `useful_outcomes` saiu do resumo porque no contrato canonico
+              ele e um INDICADOR (`useful_outcome_count`), com estado e denominador proprios.
+              Duplica-lo aqui criaria dois lugares para o mesmo numero — e eles divergiriam
+              justamente quando um estivesse ausente e o outro nao. */}
+          <dl className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-lg border border-border bg-card p-4">
               <dt className="text-sm text-muted-foreground">{t("canonicalAnalysis.result.totalRecords")}</dt>
-              <dd className="mt-1 text-xl font-semibold text-foreground">
-                {v.summary.totalRecords === null ? t("canonicalAnalysis.result.notMeasured") : v.summary.totalRecords}
-              </dd>
-            </div>
-            <div className="rounded-lg border border-border bg-card p-4">
-              <dt className="text-sm text-muted-foreground">{t("canonicalAnalysis.result.usefulOutcomes")}</dt>
-              <dd className="mt-1 text-xl font-semibold text-foreground">
-                {v.summary.usefulOutcomes === null ? t("canonicalAnalysis.result.notMeasured") : v.summary.usefulOutcomes}
-              </dd>
+              <dd className="mt-1 text-xl font-semibold text-foreground">{v.summary.recordCount}</dd>
             </div>
             <div className="rounded-lg border border-border bg-card p-4">
               <dt className="text-sm text-muted-foreground">{t("canonicalAnalysis.result.analyzedAt")}</dt>
@@ -149,15 +166,27 @@ export function ResultPage() {
               ))}
             </ul>
           )}
+          {/* Parcialidade DECLARADA pela origem, com os motivos dela. A E5 inferia isto contando
+              indicadores que sobreviveram a filtragem do frontend — o que media a cobertura do
+              PROPRIO frontend, nao a da analise. */}
           {v.partial && (
             <p role="status" className="text-sm text-muted-foreground">
               {t("canonicalAnalysis.result.partialNotice")}
+              {v.partialityReasons.length > 0 && ` (${v.partialityReasons.join(", ")})`}
+            </p>
+          )}
+          {/* Indicador que o backend mandou e a UI nao sabe nomear: visivel, nunca silencioso.
+              Sumir com ele daria a impressao de que a analise nao o produziu. */}
+          {v.unsupportedIndicatorIds.length > 0 && (
+            <p role="status" className="text-sm text-muted-foreground">
+              {t("canonicalAnalysis.result.unsupportedIndicators")}:{" "}
+              {v.unsupportedIndicatorIds.join(", ")}
             </p>
           )}
         </section>
 
         {/* Seção só existe se a origem trouxe recomendações — ordem preservada, sem priorizar. */}
-        {v.recommendations && v.recommendations.length > 0 && (
+        {v.recommendations.length > 0 && (
           <section aria-labelledby="res-recs" className="space-y-3">
             <h2 id="res-recs" className="text-lg font-semibold text-foreground">
               {t("canonicalAnalysis.result.recommendationsTitle")}
@@ -166,14 +195,20 @@ export function ResultPage() {
               {v.recommendations.map((rec) => (
                 <li key={rec.id} className="rounded-lg border border-border bg-card p-4">
                   <p className="font-medium text-foreground">{rec.title}</p>
-                  {rec.description && <p className="mt-1 text-sm text-muted-foreground">{rec.description}</p>}
+                  {/* Prioridade vem da ORIGEM. A UI preserva a ordem recebida e nao reordena. */}
+                  <p className="mt-1 text-sm text-muted-foreground">{rec.priority}</p>
                 </li>
               ))}
             </ol>
           </section>
         )}
 
-        <p className="text-xs text-muted-foreground">{t("canonicalAnalysis.result.provisional")}</p>
+        {/* Procedencia legivel: QUAL contrato e QUAL registro de indicadores produziram isto.
+            E o registro, nao o schema, que explica um indicador que apareceu ou sumiu. */}
+        <p className="text-xs text-muted-foreground">
+          {v.schemaVersion}
+          {v.indicatorRegistryVersion && ` \u00b7 ${v.indicatorRegistryVersion}`}
+        </p>
       </div>
     );
   }

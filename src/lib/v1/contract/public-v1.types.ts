@@ -1,7 +1,8 @@
 // Contrato PÚBLICO `public-v1` — fonte ÚNICA de tipos da jornada canônica (Onda 6 E1).
 //
 // ORIGEM (não redefinir manualmente em outro lugar):
-//   repo `sentinela` @ e7d0703 · docs/contracts/public-v1.json + public-v1.types.ts
+//   repo `sentinela` · docs/contracts/public-v1.json + public-v1.types.ts
+//   (o gate `test/v1/contract-sync.test.ts` prova que esta copia nao derivou da origem)
 //   versão do contrato: "public-v1" (congelado na Onda 5.5).
 //
 // Esta camada conhece SOMENTE conceitos públicos. É PROIBIDO qualquer tipo aqui conter
@@ -58,11 +59,23 @@ export interface AnalysisListPage {
   next_cursor: string | null;
 }
 
-/** Resultado canônico (GET /v1/analyses/{id}/result) — só do Result Store. `result` é o
- *  deliverable de domínio (schema result-v1). NÃO expõe engine_version (invariante: nunca Engine). */
+/** Resultado canônico (GET /v1/analyses/{id}/result) — só do Result Store.
+ *
+ *  `result` é um documento `analysis-result-v1`, montado pelo Orchestrator com o
+ *  `sentinela-result-assembler`. Deixou de ser `unknown`; o tipo do documento vive em
+ *  `features/canonical-analysis/result/canonicalSchema.ts`, e aqui ele fica opaco DE PROPOSITO:
+ *  esta camada transporta o contrato publico e nao conhece o vocabulario analitico. Quem abre o
+ *  documento e o validador da fronteira do resultado — um lugar so.
+ *
+ *  `indicator_registry_version` e o que explica um indicador que aparece ou some entre duas
+ *  execucoes: o schema sozinho nao responde isso.
+ *
+ *  NAO expoe engine_version (invariante: o cliente nunca ve Engine) nem o manifesto interno da
+ *  montagem (auditoria; nao atravessa a fronteira publica). */
 export interface AnalysisResultView {
   analysis_id: string;
   result_schema_version: string;
+  indicator_registry_version: string;
   result: unknown;
 }
 

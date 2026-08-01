@@ -29,13 +29,23 @@ function semComentarios(src: string): string {
 const arquivos = listar(FEATURE);
 /** Componentes = tudo que renderiza (ui/), onde NENHUMA aritmética analítica pode existir. */
 const componentes = arquivos.filter((f) => f.includes(`${join("canonical-analysis", "ui")}`));
-/** Só estes podem conhecer o shape provisório do payload. */
-const PODEM_CONHECER_SHAPE = ["validator.ts", "adapter.ts", "provisionalSchema.ts"];
+/** Só estes podem conhecer o shape do documento canônico. */
+const PODEM_CONHECER_SHAPE = ["validator.ts", "adapter.ts", "canonicalSchema.ts"];
 
 // 1-2: aritmética analítica / Math usado para criar score ou percentual não contratado.
 const ARITMETICA_ANALITICA = /\*\s*100\b|\/\s*100\b|Math\.(round|max|min|abs|pow|sqrt|log)\s*\(|\breduce\s*\(/;
-// 7-8: veredito/priorização no navegador.
-const VEREDITO_OU_PRIORIZACAO = /\bverdict\b|\bseverity\b|\bpriorit(y|ize|ized)\b|\.sort\s*\(/i;
+// 7-8: veredito/priorização DECIDIDOS no navegador.
+//
+// A regra mudou de forma com o contrato canônico: `analysis-result-v1` TRAZ `priority` da
+// origem. Exibi-la, transportá-la e tipá-la é consumir o contrato; FABRICÁ-LA é violá-lo — e
+// grep não distingue as duas coisas quando o valor vem de uma variável.
+//
+// Por isso a defesa tem duas camadas, e esta é a BARATA: pega prioridade atribuída a um
+// LITERAL (o jeito como uma prioridade inventada de fato aparece no código) e reordenação.
+// O invariante de verdade — a prioridade que SAI é igual à que ENTROU — é provado por
+// COMPORTAMENTO no teste do adapter, e esse não se engana com nome de variável.
+const VEREDITO_OU_PRIORIZACAO =
+  /\bverdict\b|\bseverity\b|\bpriorit(y|ize|ized)\s*[:=]\s*["'`\d]|\bprioritize\s*\(|\.sort\s*\(/i;
 // 10: data de análise criada no cliente.
 const DATA_LOCAL = /new Date\(\s*\)|Date\.now\s*\(/;
 // 11: zero como substituto de ausência.
@@ -53,6 +63,14 @@ describe("Cadeado BACKEND FIRST — resultado (E5)", () => {
     expect(ARITMETICA_ANALITICA.test("const total = view.totalRecords")).toBe(false);
     expect(VEREDITO_OU_PRIORIZACAO.test("const verdict = 'bad'")).toBe(true);
     expect(VEREDITO_OU_PRIORIZACAO.test("recs.sort((a,b)=>b.p-a.p)")).toBe(true);
+    // FABRICAR prioridade (literal) e reordenar continuam proibidos...
+    expect(VEREDITO_OU_PRIORIZACAO.test("return { priority: 'P1' }")).toBe(true);
+    expect(VEREDITO_OU_PRIORIZACAO.test("const priority = 3")).toBe(true);
+    expect(VEREDITO_OU_PRIORIZACAO.test("prioritize(recs)")).toBe(true);
+    // ...mas LER, TRANSPORTAR e TIPAR a que a origem declarou é consumir o contrato.
+    expect(VEREDITO_OU_PRIORIZACAO.test("<p>{rec.priority}</p>")).toBe(false);
+    expect(VEREDITO_OU_PRIORIZACAO.test("priority: prioridadeDaOrigem,")).toBe(false);
+    expect(VEREDITO_OU_PRIORIZACAO.test("  priority: string;")).toBe(false);
     expect(DATA_LOCAL.test("analyzed_at: new Date()")).toBe(true);
     expect(DATA_LOCAL.test("new Date(view.analyzedAt)")).toBe(false); // formatar data RECEBIDA é OK
     expect(ZERO_PARA_AUSENCIA.test("valor ?? 0")).toBe(true);
@@ -76,14 +94,14 @@ describe("Cadeado BACKEND FIRST — resultado (E5)", () => {
   });
 
   it("3: só validator/adapter/schema conhecem o SHAPE do payload (view model é livre)", () => {
-    // O que se proíbe é conhecer o PAYLOAD BRUTO: o literal do schema, o import do shape
-    // provisional e o acesso a `.result` cru. Ler o VIEW MODEL (v.indicators, item.availability)
-    // é o contrato de saída do adapter — legítimo e esperado no componente.
+    // O que se proíbe é conhecer o DOCUMENTO BRUTO: o literal do schema, o import do shape
+    // canônico e o acesso a `.result` cru. Ler o VIEW MODEL (v.indicators, item.state) é o
+    // contrato de SAÍDA do adapter — legítimo e esperado no componente.
     const SHAPE_BRUTO = [
-      "provisional-analysis-result-v1",
-      "provisionalSchema",
-      "ProvisionalResult",
-      "ProvisionalIndicator",
+      "analysis-result-v1",
+      "canonicalSchema",
+      "CanonicalResult",
+      "CanonicalIndicator",
     ];
     const ACESSO_RESULT_CRU = /\.data\.result\b|\bpublico\.result\b|\.result\.indicators\b|\bresult\.summary\b/;
     for (const arq of arquivos) {
@@ -99,10 +117,10 @@ describe("Cadeado BACKEND FIRST — resultado (E5)", () => {
   });
 
   it("3b: o cadeado do shape tem dentes", () => {
-    const SHAPE = /provisional-analysis-result-v1|provisionalSchema|ProvisionalResult|ProvisionalIndicator/;
+    const SHAPE = /analysis-result-v1|canonicalSchema|CanonicalResult|CanonicalIndicator/;
     const CRU = /\.data\.result\b|\bpublico\.result\b|\.result\.indicators\b|\bresult\.summary\b/;
-    expect(SHAPE.test('import type { ProvisionalResult } from "./provisionalSchema"')).toBe(true);
-    expect(SHAPE.test('if (payload.schema === "provisional-analysis-result-v1")')).toBe(true);
+    expect(SHAPE.test('import type { CanonicalResult } from "./canonicalSchema"')).toBe(true);
+    expect(SHAPE.test('if (doc.result_schema_version === "analysis-result-v1")')).toBe(true);
     expect(SHAPE.test("const x = view.indicators")).toBe(false); // view model é livre
     expect(CRU.test("resultado.data.result.indicators")).toBe(true);
     expect(CRU.test("adaptado.view.indicators")).toBe(false);
@@ -120,12 +138,23 @@ describe("Cadeado BACKEND FIRST — resultado (E5)", () => {
     }
   });
 
-  it("7-8: nenhum veredito/severidade/priorização no navegador", () => {
+  it("7-8: nenhum veredito/severidade/priorização DECIDIDOS no navegador", () => {
     for (const arq of arquivos) {
       const codigo = semComentarios(readFileSync(arq, "utf8"));
       const m = codigo.match(VEREDITO_OU_PRIORIZACAO);
       expect(m, `${arq}: veredito/priorização local "${m?.[0]}"`).toBeNull();
     }
+  });
+
+  it("7-8b: o módulo de schema é só declaração — não tem onde esconder cálculo", () => {
+    // Ele nomeia os campos do contrato (`priority: string`), e é por isso que a regra acima
+    // precisa distinguir declarar de fabricar. Aqui se prova que ele não tem NENHUM corpo
+    // executável: sem função, sem retorno, sem aritmética. Se um dia tiver, isto quebra.
+    const schema = arquivos.find((f) => f.endsWith("canonicalSchema.ts"));
+    expect(schema, "canonicalSchema.ts sumiu do inventário").toBeTruthy();
+    const codigo = semComentarios(readFileSync(schema as string, "utf8"));
+    expect(codigo).not.toMatch(/\bfunction\b|=>|\breturn\b/);
+    expect(codigo).not.toMatch(ARITMETICA_ANALITICA);
   });
 
   it("10: data de análise nunca criada no cliente", () => {

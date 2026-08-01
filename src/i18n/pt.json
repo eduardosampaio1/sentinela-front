@@ -22,13 +22,34 @@
       "selectedFile": "Arquivo selecionado"
     },
     "state": {
-      "preparing": { "title": "Preparando", "message": "Preparando a análise." },
-      "receiving": { "title": "Recebendo", "message": "Enviando e validando sua base." },
-      "queued": { "title": "Na fila", "message": "Recebida e aguardando disponibilidade." },
-      "running": { "title": "Em execução", "message": "Sua análise está sendo processada." },
-      "recovering": { "title": "Retomando", "message": "Retomando o processamento." },
-      "completed": { "title": "Concluída", "message": "Análise concluída." },
-      "failed": { "title": "Não concluída", "message": "A análise não pôde ser concluída." }
+      "preparing": {
+        "title": "Preparando",
+        "message": "Preparando a análise."
+      },
+      "receiving": {
+        "title": "Recebendo",
+        "message": "Enviando e validando sua base."
+      },
+      "queued": {
+        "title": "Na fila",
+        "message": "Recebida e aguardando disponibilidade."
+      },
+      "running": {
+        "title": "Em execução",
+        "message": "Sua análise está sendo processada."
+      },
+      "recovering": {
+        "title": "Retomando",
+        "message": "Retomando o processamento."
+      },
+      "completed": {
+        "title": "Concluída",
+        "message": "Análise concluída."
+      },
+      "failed": {
+        "title": "Não concluída",
+        "message": "A análise não pôde ser concluída."
+      }
     },
     "action": {
       "viewResult": "Ver resultado",
@@ -63,7 +84,6 @@
       "backToHistory": "Voltar ao histórico",
       "summaryTitle": "Resumo",
       "totalRecords": "Registros analisados",
-      "usefulOutcomes": "Resultados úteis",
       "analyzedAt": "Analisado em",
       "indicatorsTitle": "Indicadores",
       "recommendationsTitle": "Recomendações",
@@ -74,37 +94,68 @@
       "notApplicable": "Não se aplica",
       "outOfRange": "Valor fora da faixa esperada para esta unidade.",
       "noIndicators": "Nenhum indicador suportado neste resultado.",
-      "provisional": "Perfil de apresentação provisório (Onda 6) — não é o contrato público definitivo.",
       "indicator": {
-        "useful_rate": {
-          "label": "Taxa de resultados úteis",
-          "description": "Proporção dos registros analisados com desfecho útil, conforme informado pela análise."
+        "useful_outcome_rate": {
+          "label": "Taxa de desfecho útil",
+          "description": "Fração das conversas analisadas com desfecho útil, conforme o domínio."
+        },
+        "outcome_field_coverage_rate": {
+          "label": "Cobertura do campo de desfecho",
+          "description": "Fração dos registros que trouxeram campo de desfecho. Cobertura baixa limita todos os números baseados em desfecho."
+        },
+        "conversion_rate": {
+          "label": "Taxa de conversão",
+          "description": "Fração das conversas analisadas que atingiram o status de conversão declarado pelo domínio."
         },
         "intent_coverage_rate": {
           "label": "Cobertura de intenções",
-          "description": "Proporção de intenções cobertas, conforme informado pela análise."
+          "description": "Fração do catálogo de intenções observada neste conjunto de dados."
         },
-        "token_waste_absolute": {
-          "label": "Registros desperdiçados",
-          "description": "Contagem absoluta de registros informados como desperdiçados. Não é percentual."
+        "analyzed_conversation_count": {
+          "label": "Conversas analisadas",
+          "description": "Quantas conversas entraram na análise. É o denominador das taxas acima."
         },
-        "total_cost": {
-          "label": "Custo total",
-          "description": "Custo total estimado informado pela análise."
+        "useful_outcome_count": {
+          "label": "Desfechos úteis",
+          "description": "Quantas conversas tiveram desfecho útil. Contagem absoluta, nunca percentual."
+        },
+        "handoff_count": {
+          "label": "Transferências",
+          "description": "Quantas conversas foram transferidas, conforme observado nos registros."
+        },
+        "conversion_count": {
+          "label": "Conversões",
+          "description": "Quantas conversas atingiram o status de conversão. Contagem absoluta."
+        },
+        "total_estimated_cost": {
+          "label": "Custo total estimado",
+          "description": "Soma das estimativas de custo por registro fornecidas pela origem. É estimativa, não fatura."
+        },
+        "token_cost_total": {
+          "label": "Custo de tokens",
+          "description": "Parcela do custo estimado atribuída a tokens."
+        },
+        "handoff_cost_total": {
+          "label": "Custo de transferências",
+          "description": "Parcela do custo estimado atribuída a transferências."
         },
         "cost_per_useful_outcome": {
-          "label": "Custo por resultado útil",
-          "description": "Custo total dividido pelos resultados úteis, conforme informado pela análise."
+          "label": "Custo por desfecho útil",
+          "description": "Custo estimado dividido pelos desfechos úteis. Sem desfecho útil não há denominador — o valor é ausente, não zero."
         },
         "cost_per_session": {
-          "label": "Custo por registro",
-          "description": "Custo total dividido pelos registros analisados, conforme informado pela análise."
+          "label": "Custo por sessão",
+          "description": "Custo estimado dividido pelas conversas analisadas."
         },
-        "avg_variance_per_intent": {
-          "label": "Variância média das respostas",
-          "description": "Variância média das respostas entre intenções. Não é score de consistência nem de confiança."
+        "mean_response_variance_per_intent": {
+          "label": "Variância média de resposta por intenção",
+          "description": "Variância média das respostas dentro de cada intenção. Mede dispersão — não é consistência, drift nem confiança."
         }
-      }
+      },
+      "calculationFailed": "Calculation failed",
+      "partiallyMeasured": "Measured on part of the sample",
+      "denominator": "Denominator",
+      "unsupportedIndicators": "Indicators received but not recognized by this interface"
     },
     "problem": {
       "authentication_required": "Sua sessão não é mais válida. Entre novamente.",
@@ -251,27 +302,75 @@
         "h2": "Seis sinais que transformam comportamento de IA",
         "h2muted": "em operabilidade real.",
         "body": "O Sentinela analisa conversas e produz indicadores que seu time pode agir — não apenas monitorar.",
-        "c1": { "tag": "Core",          "title": "Behavior Scoring",           "desc": "Pontuação composta da qualidade das respostas em múltiplos eixos: consistência, completude, aderência ao formato e drift comportamental." },
-        "c2": { "tag": "Signal",        "title": "Drift Detection",             "desc": "Detecta desvio estrutural do comportamento em relação ao baseline, run a run, antes de virar problema visível." },
-        "c3": { "tag": "Economics",     "title": "Cost per Useful Outcome",     "desc": "Calcula o custo real por resposta com valor — separando tokens úteis de verbosidade e desperdício estrutural." },
-        "c4": { "tag": "Intelligence",  "title": "Intent Clustering",           "desc": "Mapeia automaticamente os padrões de intent e detecta quando clusters distintos começam a produzir outputs sobrepostos." },
-        "c5": { "tag": "Stability",     "title": "Behavioral Volatility",       "desc": "Mede oscilações entre sessões similares em tom, tamanho e estrutura — e sinaliza instabilidade emergente." },
-        "c6": { "tag": "Decision",      "title": "Actionable Recommendations",  "desc": "Prioriza achados por impacto e entrega recomendações estruturadas. Não um dashboard para interpretar — uma decisão pronta para executar." }
+        "c1": {
+          "tag": "Core",
+          "title": "Behavior Scoring",
+          "desc": "Pontuação composta da qualidade das respostas em múltiplos eixos: consistência, completude, aderência ao formato e drift comportamental."
+        },
+        "c2": {
+          "tag": "Signal",
+          "title": "Drift Detection",
+          "desc": "Detecta desvio estrutural do comportamento em relação ao baseline, run a run, antes de virar problema visível."
+        },
+        "c3": {
+          "tag": "Economics",
+          "title": "Cost per Useful Outcome",
+          "desc": "Calcula o custo real por resposta com valor — separando tokens úteis de verbosidade e desperdício estrutural."
+        },
+        "c4": {
+          "tag": "Intelligence",
+          "title": "Intent Clustering",
+          "desc": "Mapeia automaticamente os padrões de intent e detecta quando clusters distintos começam a produzir outputs sobrepostos."
+        },
+        "c5": {
+          "tag": "Stability",
+          "title": "Behavioral Volatility",
+          "desc": "Mede oscilações entre sessões similares em tom, tamanho e estrutura — e sinaliza instabilidade emergente."
+        },
+        "c6": {
+          "tag": "Decision",
+          "title": "Actionable Recommendations",
+          "desc": "Prioriza achados por impacto e entrega recomendações estruturadas. Não um dashboard para interpretar — uma decisão pronta para executar."
+        }
       },
       "how": {
         "badge": "Como funciona",
         "h2": "De dado bruto a decisão em minutos.",
         "body": "Zero setup de infraestrutura. Zero integração de código. Upload, analise, aja.",
-        "s1": { "title": "Exporte e faça upload",  "desc": "Exporte o histórico de conversas da sua plataforma de IA em JSON ou JSONL. Zero integração de código. Zero SDK.",                     "detail": "Suporte a Claude, OpenAI, Gemini, LangChain, APIs customizadas" },
-        "s2": { "title": "O engine analisa",       "desc": "O engine pontua consistência, detecta drift, mapeia intents, estima custo-por-outcome e expõe padrões em segundos.",                  "detail": "Análise completa em menos de 3 minutos" },
-        "s3": { "title": "Aja com evidência",      "desc": "Seu dashboard mostra o que está degradando, o que custa e qual ação terá maior impacto operacional — sem especulação.",              "detail": "Prioridades ranqueadas, recomendações estruturadas" }
+        "s1": {
+          "title": "Exporte e faça upload",
+          "desc": "Exporte o histórico de conversas da sua plataforma de IA em JSON ou JSONL. Zero integração de código. Zero SDK.",
+          "detail": "Suporte a Claude, OpenAI, Gemini, LangChain, APIs customizadas"
+        },
+        "s2": {
+          "title": "O engine analisa",
+          "desc": "O engine pontua consistência, detecta drift, mapeia intents, estima custo-por-outcome e expõe padrões em segundos.",
+          "detail": "Análise completa em menos de 3 minutos"
+        },
+        "s3": {
+          "title": "Aja com evidência",
+          "desc": "Seu dashboard mostra o que está degradando, o que custa e qual ação terá maior impacto operacional — sem especulação.",
+          "detail": "Prioridades ranqueadas, recomendações estruturadas"
+        }
       },
       "outcomes": {
         "badge": "Resultados",
         "h2": "O que muda quando você tem visibilidade.",
-        "o1": { "value": "38%",     "label": "redução média de custo",    "desc": "Em token waste identificado e corrigido após primeira análise" },
-        "o2": { "value": "< 3min",  "label": "tempo para primeiro insight", "desc": "Do upload ao dashboard completo com prioridades ranqueadas" },
-        "o3": { "value": "0 código","label": "necessário para começar",   "desc": "Sem SDK, sem webhook — só o export das conversas da sua plataforma" }
+        "o1": {
+          "value": "38%",
+          "label": "redução média de custo",
+          "desc": "Em token waste identificado e corrigido após primeira análise"
+        },
+        "o2": {
+          "value": "< 3min",
+          "label": "tempo para primeiro insight",
+          "desc": "Do upload ao dashboard completo com prioridades ranqueadas"
+        },
+        "o3": {
+          "value": "0 código",
+          "label": "necessário para começar",
+          "desc": "Sem SDK, sem webhook — só o export das conversas da sua plataforma"
+        }
       },
       "pricing": {
         "badge": "Pricing",

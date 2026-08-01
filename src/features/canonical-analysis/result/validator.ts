@@ -1,29 +1,33 @@
-// Validador da fronteira do resultado (Onda 6 E5). O contrato público devolve `result: unknown`;
-// aqui ele é INSPECIONADO campo a campo antes de virar view model. Sem `as` amplo, sem adivinhação.
+// Validador da fronteira do resultado. O contrato público declara `analysis-result-v1`;
+// aqui o documento é INSPECIONADO campo a campo antes de virar view model. Sem `as` amplo,
+// sem adivinhação.
 //
 // Três desfechos honestos:
-//   supported    → o payload corresponde ao perfil provisório (pode ter seções ausentes)
+//   supported    → o payload corresponde a `analysis-result-v1`
 //   unsupported  → não corresponde (schema desconhecido/ausente/forma incompatível) → estado seguro
-//   (parcialidade é sinalizada DENTRO de `supported`, por seção)
+//   (parcialidade NÃO é desfecho daqui: ela vem DECLARADA dentro do documento)
 
 import {
-  PROVISIONAL_RESULT_SCHEMA,
-  type IndicatorAvailability,
+  CANONICAL_RESULT_SCHEMA,
+  INDICATOR_KINDS,
+  INDICATOR_STATES,
+  STATES_COM_VALOR,
+  type CanonicalDenominator,
+  type CanonicalDimension,
+  type CanonicalEvidenceSummary,
+  type CanonicalIndicator,
+  type CanonicalRecommendation,
+  type CanonicalResult,
   type IndicatorKind,
-  type ProvisionalIndicator,
-  type ProvisionalRecommendation,
-  type ProvisionalResult,
-} from "./provisionalSchema";
+  type IndicatorState,
+} from "./canonicalSchema";
 
 export type ValidationOutcome =
-  | { status: "supported"; value: ProvisionalResult }
+  | { status: "supported"; value: CanonicalResult }
   | {
       status: "unsupported";
       reason: "missing_schema" | "unknown_schema" | "schema_mismatch" | "malformed";
     };
-
-const KINDS: IndicatorKind[] = ["ratio", "count", "currency", "scalar"];
-const AVAILABILITIES: IndicatorAvailability[] = ["available", "not_measured", "not_applicable"];
 
 function ehObjeto(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -37,82 +41,155 @@ function textoOuNulo(v: unknown): string | null {
   return typeof v === "string" && v.trim() !== "" ? v : null;
 }
 
-/** Indicador válido ou `null` (descartado — nunca "consertado" com zero). */
-function lerIndicador(bruto: unknown): ProvisionalIndicator | null {
+function lerDenominador(bruto: unknown): CanonicalDenominator | null {
   if (!ehObjeto(bruto)) return null;
-  const id = textoOuNulo(bruto.id);
-  const kind = bruto.kind;
-  const availability = bruto.availability;
-  if (!id) return null;
-  if (typeof kind !== "string" || !KINDS.includes(kind as IndicatorKind)) return null;
-  if (typeof availability !== "string" || !AVAILABILITIES.includes(availability as IndicatorAvailability)) return null;
-
+  const kind = textoOuNulo(bruto.kind);
   const value = numeroOuNulo(bruto.value);
-  // Coerência declarada: "available" exige valor numérico; ausência exige value nulo.
-  if (availability === "available" && value === null) return null;
-  if (availability !== "available" && value !== null) return null;
-
-  const currency = kind === "currency" ? textoOuNulo(bruto.currency) : null;
-  return { id, kind: kind as IndicatorKind, availability: availability as IndicatorAvailability, value, currency };
+  if (!kind || value === null) return null;
+  return { kind, value };
 }
 
-function lerRecomendacao(bruto: unknown): ProvisionalRecommendation | null {
+/** Indicador válido ou `null` (descartado — nunca "consertado" com zero). */
+function lerIndicador(bruto: unknown): CanonicalIndicator | null {
+  if (!ehObjeto(bruto)) return null;
+  const id = textoOuNulo(bruto.id);
+  if (!id) return null;
+
+  const kind = bruto.kind;
+  if (typeof kind !== "string" || !INDICATOR_KINDS.includes(kind as IndicatorKind)) return null;
+  const state = bruto.state;
+  if (typeof state !== "string" || !INDICATOR_STATES.includes(state as IndicatorState)) return null;
+
+  const value = numeroOuNulo(bruto.value);
+  // Coerência declarada: estado COM valor exige número; estado sem valor exige `null`.
+  // Um indicador que se diz `not_measured` carregando um número é internamente
+  // inconsistente — e o pior desfecho seria escolher em qual dos dois acreditar.
+  const temValor = STATES_COM_VALOR.includes(state as IndicatorState);
+  if (temValor && value === null) return null;
+  if (!temValor && value !== null) return null;
+
+  const precisao = numeroOuNulo(bruto.display_precision);
+  if (precisao === null || precisao < 0 || !Number.isInteger(precisao)) return null;
+
+  return {
+    id,
+    kind: kind as IndicatorKind,
+    state: state as IndicatorState,
+    value,
+    unit: textoOuNulo(bruto.unit),
+    currency: textoOuNulo(bruto.currency),
+    denominator: lerDenominador(bruto.denominator),
+    coverage: numeroOuNulo(bruto.coverage),
+    display_precision: precisao,
+  };
+}
+
+function lerRecomendacao(bruto: unknown): CanonicalRecommendation | null {
   if (!ehObjeto(bruto)) return null;
   const id = textoOuNulo(bruto.id);
   const title = textoOuNulo(bruto.title);
-  if (!id || !title) return null;
-  return { id, title, description: textoOuNulo(bruto.description) };
+  // Local em português de propósito: `const priority = ...` é indistinguível, para um leitor
+  // (e para o cadeado backend-first), de FABRICAR uma prioridade. Aqui ela é LIDA do documento.
+  const prioridadeDaOrigem = textoOuNulo(bruto.priority);
+  if (!id || !title || !prioridadeDaOrigem) return null;
+  const refs = Array.isArray(bruto.evidence_refs)
+    ? bruto.evidence_refs.filter((r): r is string => typeof r === "string")
+    : [];
+  return {
+    id,
+    title,
+    priority: prioridadeDaOrigem,
+    category: textoOuNulo(bruto.category),
+    evidence_refs: refs,
+  };
+}
+
+function lerDimensao(bruto: unknown): CanonicalDimension | null {
+  if (!ehObjeto(bruto)) return null;
+  const id = textoOuNulo(bruto.id);
+  const state = bruto.state;
+  if (!id) return null;
+  if (typeof state !== "string" || !INDICATOR_STATES.includes(state as IndicatorState)) return null;
+  return {
+    id,
+    state: state as IndicatorState,
+    value: numeroOuNulo(bruto.value),
+    coverage: numeroOuNulo(bruto.coverage),
+  };
+}
+
+function lerEvidencia(bruto: unknown): CanonicalEvidenceSummary | null {
+  if (!ehObjeto(bruto)) return null;
+  const id = textoOuNulo(bruto.id);
+  const kind = textoOuNulo(bruto.kind);
+  const observed = numeroOuNulo(bruto.observed_count);
+  if (!id || !kind || observed === null) return null;
+  return { id, kind, label: textoOuNulo(bruto.label), observed_count: observed };
+}
+
+function lista<T>(v: unknown, ler: (b: unknown) => T | null): T[] {
+  return Array.isArray(v) ? v.map(ler).filter((x): x is T => x !== null) : [];
 }
 
 /**
- * Inspeciona o `result` opaco do contrato público.
+ * Inspeciona o `result` do contrato público.
  * `unsupported` NUNCA vira renderização adivinhada — a UI mostra "resultado não suportado".
  */
-export function validateProvisionalResult(
+export function validateCanonicalResult(
   versaoDeclarada: unknown,
   bruto: unknown,
 ): ValidationOutcome {
-  // AUTORIDADE = `result_schema_version` do contrato público. É o campo CONTRATADO que identifica
-  // a forma do `result` opaco; um marcador dentro do próprio blob não pode se autopromover a
-  // discriminador (Codex E5/E7 R3 [P2]). Consequências desta ordem:
-  //   - envelope válido SEM marcador interno é aceito (o backend já declarou a versão);
-  //   - envelope com versão desconhecida NÃO é resgatado por um marcador interno "mágico".
+  // AUTORIDADE = `result_schema_version` do contrato público. É o campo CONTRATADO que
+  // identifica a forma do `result`; um marcador dentro do próprio documento não pode se
+  // autopromover a discriminador (Codex E5/E7 R3 [P2]). Consequências desta ordem:
+  //   - documento sem o campo interno é aceito (o backend já declarou a versão);
+  //   - versão desconhecida NÃO é resgatada por um marcador interno "mágico".
   if (typeof versaoDeclarada !== "string" || versaoDeclarada.trim() === "") {
     return { status: "unsupported", reason: "missing_schema" };
   }
-  if (versaoDeclarada !== PROVISIONAL_RESULT_SCHEMA) {
+  if (versaoDeclarada !== CANONICAL_RESULT_SCHEMA) {
     return { status: "unsupported", reason: "unknown_schema" };
   }
-
   if (!ehObjeto(bruto)) return { status: "unsupported", reason: "malformed" };
 
-  // O marcador interno é OPCIONAL; quando existe e CONTRADIZ o contrato, a resposta é
-  // internamente inconsistente — estado seguro, sem escolher um dos dois lados.
-  const marcador = bruto.schema;
-  if (marcador !== undefined && marcador !== null && marcador !== PROVISIONAL_RESULT_SCHEMA) {
+  // `analysis-result-v1` carrega a própria versão dentro do documento. Quando ela existe e
+  // CONTRADIZ o contrato, a resposta é internamente inconsistente — estado seguro, sem
+  // escolher um dos dois lados.
+  const interna = bruto.result_schema_version;
+  if (interna !== undefined && interna !== null && interna !== CANONICAL_RESULT_SCHEMA) {
     return { status: "unsupported", reason: "schema_mismatch" };
   }
 
-  const summaryBruto = ehObjeto(bruto.summary) ? bruto.summary : {};
-  const summary = {
-    total_records: numeroOuNulo(summaryBruto.total_records),
-    useful_outcomes: numeroOuNulo(summaryBruto.useful_outcomes),
-    // `analyzed_at` só é aceito se vier da ORIGEM. O frontend jamais preenche.
-    analyzed_at: textoOuNulo(summaryBruto.analyzed_at),
-  };
+  // `summary` e `partiality` são OBRIGATÓRIOS no contrato. Ausentes, o documento não é
+  // `analysis-result-v1` — e fabricar defaults aqui inventaria uma análise que não houve.
+  const summaryBruto = bruto.summary;
+  if (!ehObjeto(summaryBruto)) return { status: "unsupported", reason: "malformed" };
+  const recordCount = numeroOuNulo(summaryBruto.record_count);
+  const analyzedAt = textoOuNulo(summaryBruto.analyzed_at);
+  if (recordCount === null || analyzedAt === null) {
+    return { status: "unsupported", reason: "malformed" };
+  }
 
-  const indicators = Array.isArray(bruto.indicators)
-    ? bruto.indicators.map(lerIndicador).filter((i): i is ProvisionalIndicator => i !== null)
+  const partialityBruto = bruto.partiality;
+  if (!ehObjeto(partialityBruto) || typeof partialityBruto.complete !== "boolean") {
+    return { status: "unsupported", reason: "malformed" };
+  }
+  const reasons = Array.isArray(partialityBruto.reasons)
+    ? partialityBruto.reasons.filter((r): r is string => typeof r === "string")
     : [];
-
-  // Ausência da chave ⇒ seção não existe (não se inventa recomendação).
-  const recomendacoesBrutas = bruto.recommendations;
-  const recommendations = Array.isArray(recomendacoesBrutas)
-    ? recomendacoesBrutas.map(lerRecomendacao).filter((r): r is ProvisionalRecommendation => r !== null)
-    : undefined;
 
   return {
     status: "supported",
-    value: { schema: PROVISIONAL_RESULT_SCHEMA, summary, indicators, recommendations },
+    value: {
+      analysis_id: textoOuNulo(bruto.analysis_id) ?? "",
+      result_schema_version: CANONICAL_RESULT_SCHEMA,
+      measurement_contract_version: textoOuNulo(bruto.measurement_contract_version) ?? "",
+      summary: { record_count: recordCount, analyzed_at: analyzedAt },
+      partiality: { complete: partialityBruto.complete, reasons },
+      indicators: lista(bruto.indicators, lerIndicador),
+      dimensions: lista(bruto.dimensions, lerDimensao),
+      recommendations: lista(bruto.recommendations, lerRecomendacao),
+      evidence: lista(bruto.evidence, lerEvidencia),
+    },
   };
 }

@@ -22,13 +22,34 @@
       "selectedFile": "Selected file"
     },
     "state": {
-      "preparing": { "title": "Preparing", "message": "Preparing the analysis." },
-      "receiving": { "title": "Receiving", "message": "Sending and validating your dataset." },
-      "queued": { "title": "Queued", "message": "Received and waiting for availability." },
-      "running": { "title": "Running", "message": "Your analysis is being processed." },
-      "recovering": { "title": "Recovering", "message": "Resuming the processing." },
-      "completed": { "title": "Completed", "message": "Analysis completed." },
-      "failed": { "title": "Couldn't complete", "message": "The analysis couldn't be completed." }
+      "preparing": {
+        "title": "Preparing",
+        "message": "Preparing the analysis."
+      },
+      "receiving": {
+        "title": "Receiving",
+        "message": "Sending and validating your dataset."
+      },
+      "queued": {
+        "title": "Queued",
+        "message": "Received and waiting for availability."
+      },
+      "running": {
+        "title": "Running",
+        "message": "Your analysis is being processed."
+      },
+      "recovering": {
+        "title": "Recovering",
+        "message": "Resuming the processing."
+      },
+      "completed": {
+        "title": "Completed",
+        "message": "Analysis completed."
+      },
+      "failed": {
+        "title": "Couldn't complete",
+        "message": "The analysis couldn't be completed."
+      }
     },
     "action": {
       "viewResult": "View result",
@@ -63,7 +84,6 @@
       "backToHistory": "Back to history",
       "summaryTitle": "Summary",
       "totalRecords": "Records analyzed",
-      "usefulOutcomes": "Useful outcomes",
       "analyzedAt": "Analyzed at",
       "indicatorsTitle": "Indicators",
       "recommendationsTitle": "Recommendations",
@@ -74,37 +94,68 @@
       "notApplicable": "Not applicable",
       "outOfRange": "Value outside the expected range for this unit.",
       "noIndicators": "No supported indicator in this result.",
-      "provisional": "Provisional presentation profile (Wave 6) — not the final public contract.",
       "indicator": {
-        "useful_rate": {
+        "useful_outcome_rate": {
           "label": "Useful outcome rate",
-          "description": "Share of analyzed records with a useful outcome, as reported by the analysis."
+          "description": "Share of analyzed conversations with a useful outcome, as declared by the domain."
+        },
+        "outcome_field_coverage_rate": {
+          "label": "Outcome field coverage",
+          "description": "Share of records that carried an outcome field at all. Low coverage limits every outcome-based number below."
+        },
+        "conversion_rate": {
+          "label": "Conversion rate",
+          "description": "Share of analyzed conversations that reached the conversion status declared by the domain."
         },
         "intent_coverage_rate": {
           "label": "Intent coverage",
-          "description": "Share of intents covered, as reported by the analysis."
+          "description": "Share of the intent catalog observed in this dataset."
         },
-        "token_waste_absolute": {
-          "label": "Wasted records",
-          "description": "Absolute count of records reported as wasted. Not a percentage."
+        "analyzed_conversation_count": {
+          "label": "Analyzed conversations",
+          "description": "How many conversations entered the analysis. It is the denominator of the rates above."
         },
-        "total_cost": {
-          "label": "Total cost",
-          "description": "Total estimated cost reported by the analysis."
+        "useful_outcome_count": {
+          "label": "Useful outcomes",
+          "description": "How many conversations had a useful outcome. Absolute count, never a percentage."
+        },
+        "handoff_count": {
+          "label": "Handoffs",
+          "description": "How many conversations were handed off, as observed in the records."
+        },
+        "conversion_count": {
+          "label": "Conversions",
+          "description": "How many conversations reached the conversion status. Absolute count."
+        },
+        "total_estimated_cost": {
+          "label": "Total estimated cost",
+          "description": "Sum of the per-record cost estimates provided by the source. It is an estimate, not billing."
+        },
+        "token_cost_total": {
+          "label": "Token cost",
+          "description": "Portion of the estimated cost attributed to tokens."
+        },
+        "handoff_cost_total": {
+          "label": "Handoff cost",
+          "description": "Portion of the estimated cost attributed to handoffs."
         },
         "cost_per_useful_outcome": {
           "label": "Cost per useful outcome",
-          "description": "Total cost divided by useful outcomes, as reported by the analysis."
+          "description": "Estimated cost divided by useful outcomes. With no useful outcome there is no denominator — the value is absent, not zero."
         },
         "cost_per_session": {
-          "label": "Cost per record",
-          "description": "Total cost divided by analyzed records, as reported by the analysis."
+          "label": "Cost per session",
+          "description": "Estimated cost divided by analyzed conversations."
         },
-        "avg_variance_per_intent": {
-          "label": "Average response variance",
-          "description": "Mean response variance across intents. Not a consistency or confidence score."
+        "mean_response_variance_per_intent": {
+          "label": "Mean response variance per intent",
+          "description": "Average variance of responses within each intent. It measures dispersion — it is not consistency, drift or confidence."
         }
-      }
+      },
+      "calculationFailed": "Calculation failed",
+      "partiallyMeasured": "Measured on part of the sample",
+      "denominator": "Denominator",
+      "unsupportedIndicators": "Indicators received but not recognized by this interface"
     },
     "problem": {
       "authentication_required": "Your session is no longer valid. Please sign in again.",
@@ -251,27 +302,75 @@
         "h2": "Six signals that turn AI behavior",
         "h2muted": "into real operability.",
         "body": "Sentinela analyzes conversations and produces indicators your team can act on — not just monitor.",
-        "c1": { "tag": "Core",         "title": "Behavior Scoring",          "desc": "Composite score of response quality across multiple axes: consistency, completeness, format adherence, and behavioral drift." },
-        "c2": { "tag": "Signal",       "title": "Drift Detection",            "desc": "Detects structural deviation from expected baseline, run by run, before it becomes a visible problem." },
-        "c3": { "tag": "Economics",    "title": "Cost per Useful Outcome",    "desc": "Calculates the real cost per valuable response — separating useful tokens from verbosity and structural waste." },
-        "c4": { "tag": "Intelligence", "title": "Intent Clustering",          "desc": "Automatically maps intent patterns and detects when distinct clusters start producing overlapping outputs." },
-        "c5": { "tag": "Stability",    "title": "Behavioral Volatility",      "desc": "Measures oscillations between similar sessions in tone, length, and structure — and flags emerging instability." },
-        "c6": { "tag": "Decision",     "title": "Actionable Recommendations", "desc": "Prioritizes findings by impact and delivers structured recommendations. Not a dashboard to interpret — a decision ready to execute." }
+        "c1": {
+          "tag": "Core",
+          "title": "Behavior Scoring",
+          "desc": "Composite score of response quality across multiple axes: consistency, completeness, format adherence, and behavioral drift."
+        },
+        "c2": {
+          "tag": "Signal",
+          "title": "Drift Detection",
+          "desc": "Detects structural deviation from expected baseline, run by run, before it becomes a visible problem."
+        },
+        "c3": {
+          "tag": "Economics",
+          "title": "Cost per Useful Outcome",
+          "desc": "Calculates the real cost per valuable response — separating useful tokens from verbosity and structural waste."
+        },
+        "c4": {
+          "tag": "Intelligence",
+          "title": "Intent Clustering",
+          "desc": "Automatically maps intent patterns and detects when distinct clusters start producing overlapping outputs."
+        },
+        "c5": {
+          "tag": "Stability",
+          "title": "Behavioral Volatility",
+          "desc": "Measures oscillations between similar sessions in tone, length, and structure — and flags emerging instability."
+        },
+        "c6": {
+          "tag": "Decision",
+          "title": "Actionable Recommendations",
+          "desc": "Prioritizes findings by impact and delivers structured recommendations. Not a dashboard to interpret — a decision ready to execute."
+        }
       },
       "how": {
         "badge": "How it works",
         "h2": "From raw data to decision in minutes.",
         "body": "Zero infrastructure setup. Zero code integration. Upload, analyze, act.",
-        "s1": { "title": "Export and upload",   "desc": "Export your AI conversation history as JSON or JSONL. Zero code integration. Zero SDK.",                              "detail": "Supports Claude, OpenAI, Gemini, LangChain, custom APIs" },
-        "s2": { "title": "The engine analyzes", "desc": "The engine scores consistency, detects drift, maps intents, estimates cost-per-outcome, and exposes patterns in seconds.", "detail": "Full analysis in under 3 minutes" },
-        "s3": { "title": "Act with evidence",   "desc": "Your dashboard shows what's degrading, what it costs, and which action will have the most operational impact.",          "detail": "Ranked priorities, structured recommendations" }
+        "s1": {
+          "title": "Export and upload",
+          "desc": "Export your AI conversation history as JSON or JSONL. Zero code integration. Zero SDK.",
+          "detail": "Supports Claude, OpenAI, Gemini, LangChain, custom APIs"
+        },
+        "s2": {
+          "title": "The engine analyzes",
+          "desc": "The engine scores consistency, detects drift, maps intents, estimates cost-per-outcome, and exposes patterns in seconds.",
+          "detail": "Full analysis in under 3 minutes"
+        },
+        "s3": {
+          "title": "Act with evidence",
+          "desc": "Your dashboard shows what's degrading, what it costs, and which action will have the most operational impact.",
+          "detail": "Ranked priorities, structured recommendations"
+        }
       },
       "outcomes": {
         "badge": "Outcomes",
         "h2": "What changes when you have visibility.",
-        "o1": { "value": "38%",    "label": "average cost reduction",  "desc": "In token waste identified and fixed after first analysis" },
-        "o2": { "value": "< 3min", "label": "time to first insight",   "desc": "From upload to full dashboard with ranked priorities" },
-        "o3": { "value": "0 code", "label": "required to get started", "desc": "No SDK, no webhook — just your conversation export" }
+        "o1": {
+          "value": "38%",
+          "label": "average cost reduction",
+          "desc": "In token waste identified and fixed after first analysis"
+        },
+        "o2": {
+          "value": "< 3min",
+          "label": "time to first insight",
+          "desc": "From upload to full dashboard with ranked priorities"
+        },
+        "o3": {
+          "value": "0 code",
+          "label": "required to get started",
+          "desc": "No SDK, no webhook — just your conversation export"
+        }
       },
       "pricing": {
         "badge": "Pricing",

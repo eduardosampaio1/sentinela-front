@@ -38,9 +38,14 @@ export const STATUS_VIEWS: Record<AnalysisStatus, AnalysisStatusView> = {
   failed: statusView("failed"),
 };
 
+/** Envelope do contrato público. O DOCUMENTO dentro dele é deliberadamente mínimo aqui: esta
+ *  fixture serve aos testes do CLIENTE (transporte, cabeçalhos, erros), que não abrem o
+ *  documento. Quem exercita o conteúdo canônico usa `fixtures/canonical-result/massas.ts`,
+ *  cujos documentos são a saída real do backend. */
 export const RESULT_VIEW: AnalysisResultView = {
   analysis_id: "an-abc",
   result_schema_version: "analysis-result-v1",
+  indicator_registry_version: "indicator-registry-1.0",
   result: { summary: { records: 1240 } },
 };
 

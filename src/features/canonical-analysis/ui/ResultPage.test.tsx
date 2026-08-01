@@ -13,8 +13,8 @@ import {
   MASSA_B,
   MASSA_D_PARCIAL,
   PAYLOAD_SCHEMA_DESCONHECIDO,
-  resultViewCom,
-} from "@/test/fixtures/provisional-result/massas";
+  envelope,
+} from "@/test/fixtures/canonical-result/massas";
 import { MSW_BASE } from "@/test/msw/handlers";
 import { server, setupMsw } from "@/test/msw/server";
 import { CanonicalClientProvider } from "../data/client";
@@ -52,10 +52,10 @@ function servir(payload: unknown, opts?: { resultAvailable?: boolean }) {
     http.get(`${MSW_BASE}/v1/analyses/:id`, () =>
       HttpResponse.json(statusView("completed", { analysis_id: "an-abc", result_available: opts?.resultAvailable ?? true })),
     ),
-    // O envelope DECLARA a versão do que entrega (discriminador contratado). `resultViewCom`
+    // O envelope DECLARA a versão do que entrega (discriminador contratado). O `envelope`
     // deriva da própria massa, como um backend faria — o front nunca infere a partir do blob.
     http.get(`${MSW_BASE}/v1/analyses/:id/result`, () =>
-      HttpResponse.json(resultViewCom(payload, "an-abc")),
+      HttpResponse.json({ ...envelope(payload), analysis_id: "an-abc" }),
     ),
   );
 }
@@ -65,30 +65,36 @@ describe("ResultPage — renderização canônica dos indicadores (massa A)", ()
     servir(MASSA_A);
     montar();
 
-    // resumo do backend (escopado ao <dt>/<dd> — "80" também aparece como 80% da taxa útil)
+    // resumo do backend
     const rotuloRegistros = await screen.findByText("Records analyzed");
     expect(rotuloRegistros.parentElement?.textContent).toContain("100");
-    const rotuloUteis = screen.getByText("Useful outcomes");
-    expect(rotuloUteis.parentElement?.textContent).toContain("80");
+
+    // `Useful outcomes` NAO esta mais no resumo: no contrato canonico ele e um INDICADOR, com
+    // estado e denominador proprios. Duplica-lo criaria dois lugares para o mesmo numero.
+    const uteis = screen.getByText("Useful outcomes").closest("li");
+    expect(uteis, "useful outcomes deve ser um indicador (li), nao um item do resumo").toBeTruthy();
+    expect(uteis?.textContent).toContain("80");
 
     // indicadores: rótulo do descriptor + valor formatado + unidade
     expect(screen.getByText("Useful outcome rate")).toBeTruthy();
     expect(screen.getByText("Intent coverage")).toBeTruthy();
-    const cobertura = screen.getByText("85");
-    expect(cobertura).toBeTruthy();
-    expect(cobertura.parentElement?.textContent).toContain("%");
+    // Escopado ao cartao: com 14 indicadores, "85" tambem e a cobertura do campo de desfecho.
+    const cobertura = screen.getByText("Intent coverage").closest("li");
+    expect(cobertura?.textContent).toContain("85");
+    expect(cobertura?.textContent).toContain("%");
 
-    // waste é contagem: "20" SEM %
-    const waste = screen.getByText("Wasted records").closest("li");
-    expect(waste?.textContent).toContain("20");
-    expect(waste?.textContent).not.toContain("20%");
+    // contagem NUNCA vira percentual
+    const conversas = screen.getByText("Analyzed conversations").closest("li");
+    expect(conversas?.textContent).toContain("100");
+    expect(conversas?.textContent).not.toContain("100%");
 
     // recomendações na ordem recebida
-    const recs = screen.getAllByText(/Revisar intenções|Investigar respostas/);
-    expect(recs[0].textContent).toMatch(/Revisar intenções/);
+    const recs = screen.getAllByText(/Revisar intencoes|Investigar respostas/);
+    expect(recs[0].textContent).toMatch(/Revisar intencoes/);
 
-    // marca de PROVISÓRIO visível
-    expect(screen.getByText(/Provisional presentation profile/i)).toBeTruthy();
+    // procedencia visivel: contrato + registro de indicadores
+    expect(screen.getByText(/analysis-result-v1/)).toBeTruthy();
+    expect(screen.getByText(/indicator-registry-1\.0/)).toBeTruthy();
   });
 });
 
@@ -96,16 +102,18 @@ describe("ResultPage — ausência, parcialidade e incompatibilidade", () => {
   it("massa B: 'Não aplicável' para CPUO e 0% para cobertura (zero real)", async () => {
     servir(MASSA_B);
     montar();
+    // Sem desfecho util nao ha denominador: AUSENTE, e o texto e distinto de "0".
     const cpuo = (await screen.findByText("Cost per useful outcome")).closest("li");
-    expect(cpuo?.textContent).toContain("Not applicable");
+    expect(cpuo?.textContent).toContain("Not measured");
     expect(cpuo?.textContent).not.toMatch(/\b0\b/);
 
-    const cobertura = screen.getByText("Intent coverage").closest("li");
-    expect(cobertura?.textContent).toContain("0");
-    expect(cobertura?.textContent).toContain("%");
+    // Zero REAL continua sendo zero — e essa e a diferenca que importa.
+    const taxa = screen.getByText("Useful outcome rate").closest("li");
+    expect(taxa?.textContent).toContain("0");
+    expect(taxa?.textContent).toContain("%");
 
-    // variância não medida
-    expect(screen.getByText("Average response variance").closest("li")?.textContent).toContain("Not measured");
+    // Parcialidade DECLARADA pela origem (a massa B saiu incompleta do Assembler).
+    expect(screen.getByText(/Some sections aren't available/i)).toBeTruthy();
   });
 
   it("massa B: sem recomendações → a seção NÃO é renderizada", async () => {
@@ -144,7 +152,7 @@ describe("ResultPage — integridade indicador ↔ descriptor ↔ campo canônic
     servir(MASSA_A);
     montar();
     await screen.findByText("Useful outcome rate");
-    for (const id of MASSA_A.indicators.map((i) => i.id)) {
+    for (const id of MASSA_A.indicators.map((i: { id: string }) => i.id)) {
       const d = INDICATOR_DESCRIPTORS[id];
       expect(d, `sem descriptor: ${id}`).toBeTruthy();
       expect(d.labelKey).toContain(id);
