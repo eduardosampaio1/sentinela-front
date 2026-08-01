@@ -80,10 +80,18 @@ describe("Onda 8 — o legado do frontend não volta", () => {
   });
 
   it("nenhum teste canônico depende de src_legacy", () => {
+    // `includes("src_legacy")` era forte demais: acusava qualquer teste que EXPLICASSE a
+    // história — e acusou, de fato, o cadeado de rotas de auth escrito no mesmo dia, cujo
+    // pecado era dizer de onde a rota de recuperação de senha tinha sumido.
+    //
+    // Foi a TERCEIRA vez nesta onda que um cadeado meu proibiu falar do problema em vez de
+    // proibir o problema (as outras: o `[^"']*` atravessando linhas neste mesmo arquivo, e
+    // o gate do RUNBOOK acusando o parágrafo que explicava a recomendação antiga). A regra
+    // é a mesma dos outros casos: o CAMINHO dentro de uma string, numa linha só.
     const ofensores = versionados()
       .filter((f) => f.startsWith("src/test/"))
-      .filter((f) => readFileSync(`${raiz}/${f}`, "utf8").includes("src_legacy"))
-      // este próprio arquivo cita o nome, e é o único que pode
+      .filter((f) => /["'][^"'\n]*src_legacy/.test(readFileSync(`${raiz}/${f}`, "utf8")))
+      // este próprio arquivo carrega o padrão que procura
       .filter((f) => !f.endsWith("onda8.legado.gate.test.ts"));
     expect(ofensores).toEqual([]);
   });
