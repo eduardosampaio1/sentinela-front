@@ -39,7 +39,14 @@ describe("Onda 8 — o legado do frontend não volta", () => {
         // Aqui a regra passou a ser mais simples e mais forte: o caminho não aparece
         // dentro de string nenhuma. Um cadeado que enumera sintaxes perde para a
         // próxima sintaxe; um que proíbe o caminho, não.
-        return /["'][^"']*src_legacy/.test(txt);
+        //
+        // `[^"'\n]` e não `[^"']`: em JavaScript uma classe negada CASA com quebra de
+        // linha, então `[^"']*` atravessava o arquivo inteiro e qualquer aspa numa linha
+        // anterior alcançava a palavra `src_legacy` escrita num comentário dez linhas
+        // abaixo. Foi assim que este gate acusou `src/app/router.tsx`, cujo único pecado
+        // era EXPLICAR por que a rota de reset tinha sumido. Um cadeado que proíbe falar
+        // do legado, em vez de depender dele, é um cadeado que ninguém consegue manter.
+        return /["'][^"'\n]*src_legacy/.test(txt);
       });
     expect(ofensores).toEqual([]);
   });

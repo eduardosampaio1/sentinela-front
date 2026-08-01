@@ -27,6 +27,7 @@ const SessionExpiredPage = lazy(() =>
   import("@/features/auth/SessionExpiredPage").then((m) => ({ default: m.SessionExpiredPage }))
 );
 const AuthCallbackPage = lazy(() => import("@/pages/AuthCallbackPage"));
+const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const LaunchpadPage = lazy(() =>
   import("@/features/launchpad/LaunchpadPage").then((m) => ({ default: m.LaunchpadPage }))
 );
@@ -236,6 +237,21 @@ const routes: RouteObject[] = [
   {
     path: "/auth/callback",
     element: <PageSuspense><AuthCallbackPage /></PageSuspense>,
+  },
+
+  // ── Redefinição de senha (público pelo mesmo motivo do callback) ───────────
+  // O usuário chega aqui pelo link do e-mail do Supabase, com um token de recuperação e
+  // SEM sessão. `PublicOnlyRoute` não serve: ele redireciona quem já está logado, e a
+  // recuperação também precisa funcionar para quem tem sessão velha no navegador.
+  //
+  // Esta rota não existia. `ForgotPasswordPage` mandava o link, `authFlow` sabia montar a
+  // URL, a página estava escrita — e o router não a registrava, então o usuário caía num
+  // 404 vindo do e-mail. Ela vivia em `src_legacy/App.tsx`, o router ANTIGO, e a migração
+  // da Onda 6 não a portou; a remoção do legado na Onda 8 não causou a falha, apenas
+  // tirou da árvore o arquivo que dava a impressão de que o caso estava coberto.
+  {
+    path: "/auth/reset-password",
+    element: <PageSuspense><ResetPasswordPage /></PageSuspense>,
   },
 
   // ── Protected routes ──────────────────────────────────────────────────────

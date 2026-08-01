@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { getAuthClient } from "@/lib/auth/index";
+import { buildPasswordResetUrl } from "@/lib/authFlow";
 import { KeycloakRedirect } from "./KeycloakRedirect";
 import { AuthShell } from "@/shell/AuthShell";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,10 @@ export function ForgotPasswordPage() {
 
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/reset-password`,
+        // `buildPasswordResetUrl()` e nao string montada aqui: esta pagina construia
+        // `/reset-password` e o `authFlow` construia `/auth/reset-password`. Dois
+        // caminhos para o mesmo destino, e o e-mail levava ao que nao existia.
+        redirectTo: buildPasswordResetUrl(),
       });
 
       if (resetError) {
