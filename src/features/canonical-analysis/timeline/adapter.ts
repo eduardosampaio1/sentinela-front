@@ -69,12 +69,29 @@ function conferirSemCampoInterno(evento: Record<string, unknown>): void {
   }
 }
 
+/**
+ * De qual tipo cada campo de detalhe é público, segundo o contrato.
+ *
+ * A versão anterior lia `reason` e depois `failure_stage` de QUALQUER evento conhecido.
+ * O contrato declara `reason` só para `analysis.recovering` e `failure_stage` só para
+ * `analysis.failed` — então, se o backend regredisse e mandasse
+ * `{event_type: "analysis.completed", data: {reason: "..."}}`, a tela renderizaria um
+ * campo que aquele tipo não tem.
+ *
+ * Isso importa mais aqui do que pareceria: o adapter já recusa campo INTERNO, mas
+ * `reason` não é interno — é público no tipo errado. A defesa contra vazamento não
+ * pegaria, e o cliente veria um texto explicativo pendurado num evento de sucesso.
+ */
+const CAMPO_DE_DETALHE: Readonly<Record<string, 'reason' | 'failure_stage'>> = {
+  'analysis.recovering': 'reason',
+  'analysis.failed': 'failure_stage',
+};
+
 function detalheDe(evento: TimelineEvent): string | null {
-  const reason = evento.data?.reason;
-  if (typeof reason === 'string') return reason;
-  const stage = evento.data?.failure_stage;
-  if (typeof stage === 'string') return stage;
-  return null;
+  const campo = CAMPO_DE_DETALHE[evento.event_type];
+  if (!campo) return null;
+  const valor = evento.data?.[campo];
+  return typeof valor === 'string' ? valor : null;
 }
 
 export function adaptTimeline(bruto: unknown): TimelineView {

@@ -126,7 +126,19 @@ function isento(arquivo: string, nome: string): boolean {
     const alvo = arquivos.find((a) => a.split("\\").join("/").endsWith(SO_DECLARA_A_DENYLIST));
     expect(alvo, "o arquivo isento sumiu — remova a isenção").toBeTruthy();
     const codigo = semComentarios(readFileSync(alvo as string, "utf8"));
-    expect(codigo).not.toMatch(/function|=>|class|if\s*\(|for\s*\(/);
+    // A regex ABAIXO já foi escrita com bytes 0x08 (backspace) no lugar de `\b`.
+    // Ela não casava `function`, `class`, `if (` nem `for (` — só o `=>` da
+    // alternância funcionava. Um cadeado que não detecta o que diz detectar é pior
+    // que nenhum: ele responde a pergunta errada em verde.
+    //
+    // Os dois `expect` seguintes são a prova de que ela funciona AGORA: um alvo
+    // sintético com corpo executável precisa casar, senão a asserção de cima passa
+    // por vacuidade.
+    const CORPO_EXECUTAVEL = /\bfunction\b|=>|\bclass\b|\bif\s*\(|\bfor\s*\(/;
+    expect('export function x() {}').toMatch(CORPO_EXECUTAVEL);
+    expect('if (a) { b(); }').toMatch(CORPO_EXECUTAVEL);
+    expect('export const A = [1, 2];').not.toMatch(CORPO_EXECUTAVEL);
+    expect(codigo).not.toMatch(CORPO_EXECUTAVEL);
   });
 
   it("a isenção é de UM arquivo e de UMA regra", () => {
