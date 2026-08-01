@@ -79,6 +79,26 @@ describe("Cadeado — jornada canônica (backend-first)", () => {
     }
   });
 
+/**
+ * Exceção ESCOPADA, com o mesmo formato da `PODEM_CONHECER_SHAPE` da E5: um arquivo,
+ * nomeado, com o motivo.
+ *
+ * `timeline/timelineSchema.ts` contém a DENYLIST de campos internos — ela existe para
+ * RECUSÁ-LOS, não para consumi-los. Um cadeado que proíbe nomear o proibido torna
+ * impossível escrever a defesa, que é o oposto do que ele protege.
+ *
+ * O invariante real ("a feature canônica não CONSOME vocabulário interno") continua
+ * valendo para este arquivo e é provado logo abaixo, por outra via: ele só declara.
+ */
+const SO_DECLARA_A_DENYLIST = "timeline/timelineSchema.ts";
+
+function isento(arquivo: string, nome: string): boolean {
+  return (
+    nome.includes("vocabulário interno") &&
+    arquivo.split("\\").join("/").endsWith(SO_DECLARA_A_DENYLIST)
+  );
+}
+
   for (const [nome, re] of [
     ["materialização do dataset (FileReader/.text/.arrayBuffer/JSON.parse/hash)", MATERIALIZACAO],
     ["fallback legado / SSE / vocabulário interno", LEGADO_OU_INTERNO],
@@ -92,10 +112,28 @@ describe("Cadeado — jornada canônica (backend-first)", () => {
   ] as const) {
     it(`nenhum arquivo viola: ${nome}`, () => {
       for (const arq of arquivos) {
+        if (isento(arq, nome)) continue;
         const codigo = semComentarios(readFileSync(arq, "utf8"));
         const m = codigo.match(re);
         expect(m, `${arq}: violação "${m?.[0]}"`).toBeNull();
       }
     });
   }
+
+  it("o arquivo isento SÓ declara — nenhum corpo executável", () => {
+    // É o que substitui a regra geral para ele. Uma denylist é dado; se este arquivo
+    // ganhar lógica, ele deixa de ser dado e a isenção deixa de valer.
+    const alvo = arquivos.find((a) => a.split("\\").join("/").endsWith(SO_DECLARA_A_DENYLIST));
+    expect(alvo, "o arquivo isento sumiu — remova a isenção").toBeTruthy();
+    const codigo = semComentarios(readFileSync(alvo as string, "utf8"));
+    expect(codigo).not.toMatch(/function|=>|class|if\s*\(|for\s*\(/);
+  });
+
+  it("a isenção é de UM arquivo e de UMA regra", () => {
+    // Contraprova: se a isenção crescesse para outro arquivo ou outra regra, ela
+    // deixaria de ser exceção e viraria buraco.
+    expect(isento("x/timeline/timelineSchema.ts", "fallback legado / SSE / vocabulário interno")).toBe(true);
+    expect(isento("x/timeline/adapter.ts", "fallback legado / SSE / vocabulário interno")).toBe(false);
+    expect(isento("x/timeline/timelineSchema.ts", "cor hardcoded")).toBe(false);
+  });
 });
