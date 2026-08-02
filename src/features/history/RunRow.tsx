@@ -188,14 +188,9 @@ export function RunRow({
           rotulo="Records"
           valor={linha.recordCount}
         />
-        <div className="hidden md:block">
-          <Metrica
-            testId={`run-engine-${linha.analysisId}`}
-            rotulo="Engine"
-            valor={linha.engineVersion}
-            mono
-          />
-        </div>
+        {/* O `<div className="hidden md:block">` que embrulhava a métrica "Engine" saiu junto
+            com ela. Um wrapper vazio continuaria ocupando o gap do flex e deslocando a linha
+            em telas médias — resíduo invisível no código e visível na tela. */}
       </div>
 
       {!compareMode && (

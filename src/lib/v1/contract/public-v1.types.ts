@@ -61,8 +61,14 @@ export interface AnalysisListItem {
    * Os campos legados `risk_level` e `n_intents` NÃO estão aqui porque não existem no modelo
    * canônico — não há indicador de risco nem contagem de intents. Publicá-los exigiria
    * inventá-los.
+   *
+   * `engine_version` SAIU (achado de review cruzado, Alta). Este mesmo arquivo declara,
+   * 20 linhas abaixo, que o cliente NUNCA vê Engine — e declarava o campo assim mesmo. O
+   * contrato congelado o lista em `nunca_publicos` desde a Onda 5.5; o backend o devolvia
+   * na listagem e a tela de histórico o renderizava com o rótulo "Engine".
+   *
+   * O invariante estava certo e o código errado. Quem some é o campo.
    */
-  engine_version?: string | null;
   observed_conversations?: number | null;
 }
 

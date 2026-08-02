@@ -40,7 +40,7 @@ import { getAuthClient } from "@/lib/auth/index";
 import { readE2EInjection } from "@/lib/auth/e2eBridge";
 import type { AuthSession, AuthUser } from "@/lib/auth/index";
 import { getV1Client } from "@/lib/v1/defaultClient";
-import type { WorkspaceMembershipView } from "@/lib/v1";
+import type { MeView, WorkspaceMembershipView } from "@/lib/v1";
 
 const CHAVE_PREFERENCIA = "sentinela:workspace";
 
@@ -54,6 +54,14 @@ export interface AuthContextValue {
   /** Falha ao projetar memberships. Estado explícito — nunca "sem workspaces" silencioso. */
   membershipsError: Error | null;
   memberships: WorkspaceMembershipView[];
+  /**
+   * O que o Gateway declara que ESTE ambiente oferece. `null` = ainda não projetado.
+   *
+   * `null` não é 'desligado'. Quem consome precisa distinguir as duas coisas, senão a
+   * janela de carregamento vira uma negativa — e a jornada fecharia sozinha a cada
+   * navegação, por um motivo que nunca aconteceu.
+   */
+  capabilities: MeView["capabilities"] | null;
   workspace: WorkspaceMembershipView | null;
   /** Troca para um workspace PERMITIDO. Id fora da projeção é rejeitado (retorna `false`). */
   switchWorkspace: (workspaceId: string) => boolean;
@@ -105,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [membershipsLoading, setMembershipsLoading] = useState(false);
   const [membershipsError, setMembershipsError] = useState<Error | null>(null);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [capabilities, setCapabilities] = useState<MeView["capabilities"] | null>(null);
 
   // ── Sessão: fronteira autenticadora temporária ───────────────────────────────────────────────
   useEffect(() => {
@@ -133,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Sem usuário não há projeção — e não há workspace. Zerar é o estado correto, não um erro.
       setMemberships([]);
       setWorkspaceId(null);
+      setCapabilities(null);
       setMembershipsError(null);
       setMembershipsLoading(false);
       return;
@@ -150,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         setMemberships([membership]);
         setWorkspaceId(membership.id);
+        setCapabilities({ canonical_analysis_enabled: true });
         setMembershipsError(null);
         setMembershipsLoading(false);
         return;
@@ -167,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // correto de quem ainda não foi projetado.
     setMemberships([]);
     setWorkspaceId(null);
+    setCapabilities(null);
     setMembershipsLoading(true);
     setMembershipsError(null);
     let vivo = true;
@@ -177,6 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!vivo) return;
         const lista = Array.isArray(me.workspaces) ? me.workspaces : [];
         setMemberships(lista);
+        setCapabilities(me.capabilities ?? null);
         const ativo = escolherWorkspace(lista, preferenciaLocal());
         setWorkspaceId(ativo?.id ?? null);
         gravarPreferencia(ativo?.id ?? null);
@@ -188,6 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setMembershipsError(erro instanceof Error ? erro : new Error(String(erro)));
         setMemberships([]);
         setWorkspaceId(null);
+        setCapabilities(null);
       })
       .finally(() => {
         if (vivo) setMembershipsLoading(false);
@@ -221,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setMemberships([]);
     setWorkspaceId(null);
+    setCapabilities(null);
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -231,6 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       membershipsLoading,
       membershipsError,
       memberships,
+      capabilities,
       workspace,
       switchWorkspace,
       signOut,
@@ -242,6 +258,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       membershipsLoading,
       membershipsError,
       memberships,
+      capabilities,
       workspace,
       switchWorkspace,
       signOut,

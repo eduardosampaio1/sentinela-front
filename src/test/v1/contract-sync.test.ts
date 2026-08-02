@@ -62,6 +62,34 @@ describe("cópia local de public-v1 × origem", () => {
     expect(daCopia).toEqual([...(snapshot.status_read_model_fields as string[])].sort());
   });
 
+  it.runIf(ORIGEM)("o read-model da LISTAGEM casa com o contrato da origem", () => {
+    // Faltava. `AnalysisResultView` e `AnalysisStatusView` eram comparados; a listagem não —
+    // e foi por ela que `engine_version` entrou na cópia e na tela sem gate nenhum reagir.
+    const snapshot = JSON.parse(readFileSync(resolve(ORIGEM!, "public-v1.json"), "utf-8"));
+    const daCopia = camposDaInterface(readFileSync(COPIA, "utf-8"), "AnalysisListItem");
+    expect(daCopia).toEqual([...(snapshot.list_item_fields as string[])].sort());
+  });
+
+  it.runIf(ORIGEM)("nenhum campo NUNCA público aparece na cópia dos tipos", () => {
+    // O contrato declara `nunca_publicos` desde a Onda 5.5, e o lado do frontend nunca o leu.
+    // A checagem é no ARQUIVO inteiro, não numa interface: o campo proibido não pode aparecer
+    // em projeção nenhuma, nem numa nova que alguém acrescente amanhã.
+    const snapshot = JSON.parse(readFileSync(resolve(ORIGEM!, "public-v1.json"), "utf-8"));
+    const proibidos = snapshot.nunca_publicos as string[];
+    expect(proibidos.length).toBeGreaterThan(0);
+
+    const texto = readFileSync(COPIA, "utf-8");
+    // Comentário PODE citar o proibido — é onde se explica por que ele não está aqui. O que
+    // não pode é declaração de campo. Sem esta distinção, documentar a regra a violaria.
+    const semComentarios = texto.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    for (const campo of proibidos) {
+      expect(
+        new RegExp(`^\\s*${campo}\\??\\s*:`, "m").test(semComentarios),
+        `a cópia declara o campo NUNCA público \`${campo}\``,
+      ).toBe(false);
+    }
+  });
+
   it.runIf(ORIGEM)("o documento do resultado é `analysis-result-v1` na origem", () => {
     const snapshot = JSON.parse(readFileSync(resolve(ORIGEM!, "public-v1.json"), "utf-8"));
     expect(snapshot.result_document_schema).toBe("analysis-result-v1");

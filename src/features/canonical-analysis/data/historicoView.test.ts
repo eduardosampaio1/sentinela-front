@@ -21,14 +21,13 @@ const BASE: AnalysisListItem = {
 describe("linha de histórico canônica", () => {
   it("projeta os campos que o backend afirma", () => {
     expect(
-      linhaHistoricoDe({ ...BASE, engine_version: "engine-9.9", observed_conversations: 42 }),
+      linhaHistoricoDe({ ...BASE, observed_conversations: 42 }),
     ).toEqual({
       analysisId: "an-1",
       status: "completed",
       createdAt: "2026-08-01T10:00:00Z",
       recordCount: 120,
       nConversations: 42,
-      engineVersion: "engine-9.9",
       resultAvailable: true,
     });
   });
@@ -38,17 +37,14 @@ describe("linha de histórico canônica", () => {
     // precisa chegar à tela como ausência para ser renderizada como tal.
     const linha = linhaHistoricoDe(BASE);
     expect(linha.nConversations).toBeNull();
-    expect(linha.engineVersion).toBeNull();
   });
 
   it("null explícito do backend é preservado como null", () => {
     const linha = linhaHistoricoDe({
       ...BASE,
-      engine_version: null,
       observed_conversations: null,
     });
     expect(linha.nConversations).toBeNull();
-    expect(linha.engineVersion).toBeNull();
   });
 
   it("zero medido é preservado como zero, e não confundido com ausência", () => {

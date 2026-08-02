@@ -26,7 +26,6 @@ export interface LinhaHistorico {
   recordCount: number | null;
   /** Conversas observadas — indicador `observed_conversations`, só quando `measured`. */
   nConversations: number | null;
-  engineVersion: string | null;
   /** `true` quando existe resultado canônico para abrir. */
   resultAvailable: boolean;
 }
@@ -41,7 +40,6 @@ export function linhaHistoricoDe(item: AnalysisListItem): LinhaHistorico {
     // `?? null` e não `?? 0`: o campo é opcional no contrato (cliente pode falar com um
     // Gateway anterior ao rc16), e ausência de campo é ausência de informação.
     nConversations: item.observed_conversations ?? null,
-    engineVersion: item.engine_version ?? null,
     resultAvailable: item.result_available,
   };
 }
