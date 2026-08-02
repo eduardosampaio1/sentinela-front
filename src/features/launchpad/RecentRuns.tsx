@@ -138,14 +138,10 @@ export function RecentRuns({ maxRuns = 5 }: RecentRunsProps) {
                 rotulo="Records"
                 valor={linha.recordCount}
               />
-              <div className="hidden sm:block">
-                <Celula
-                  testId={`recent-engine-${linha.analysisId}`}
-                  rotulo="Engine"
-                  valor={linha.engineVersion}
-                  mono
-                />
-              </div>
+              {/* A célula "Engine" saiu daqui junto com o campo: `engine_version` está em
+                  `nunca_publicos` do contrato congelado, e o cliente nunca vê Engine. O
+                  wrapper `hidden sm:block` foi embora com ela — sozinho ele continuaria
+                  ocupando o gap do flex. */}
             </div>
 
             {linha.resultAvailable && (

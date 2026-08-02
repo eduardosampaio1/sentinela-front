@@ -120,15 +120,25 @@ describe("HistoryPage — jornada canônica", () => {
     expect(zero.textContent).toContain("0");
   });
 
-  it("engine ausente não vira texto inventado", async () => {
-    listar([base("an-1")]);
+  it("a linha NÃO tem célula de Engine — o cliente nunca vê Engine", async () => {
+    // Antes este caso afirmava que a célula existia e mostrava "indisponível" quando o campo
+    // vinha nulo. A célula deixou de existir: `engine_version` está em `nunca_publicos` do
+    // contrato congelado desde a Onda 5.5, e a listagem o devolvia mesmo assim.
+    //
+    // O invariante "ausência não vira texto inventado" não se perdeu — ele continua provado no
+    // caso das conversas, logo acima, que é onde ainda há um valor opcional para exibir. Aqui a
+    // afirmação é outra e mais forte: não há o que exibir, porque o dado não atravessa a
+    // fronteira pública.
+    //
+    // A prova é por AUSÊNCIA, e o `findByTestId` da linha vem antes de propósito: sem ele o
+    // `queryByTestId` responderia `null` por a lista ainda não ter renderizado, e o teste
+    // passaria por vacuidade.
+    listar([base("an-1", { engine_version: "engine-9.9" })]);
     renderHistory();
 
-    const cel = await screen.findByTestId("run-engine-an-1");
-    expect(cel).toHaveAttribute("data-estado", "indisponivel");
-    const txt = (cel.textContent ?? "").toLowerCase();
-    expect(txt).not.toContain("unknown");
-    expect(txt).not.toContain("n/a");
+    await screen.findByTestId("run-row-an-1");
+    expect(screen.queryByTestId("run-engine-an-1")).toBeNull();
+    expect(screen.getByTestId("run-row-an-1").textContent).not.toContain("engine-9.9");
   });
 
   it("risco, intents e os filtros que dependiam deles não existem mais", async () => {

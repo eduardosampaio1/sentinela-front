@@ -25,23 +25,16 @@ export interface QuarantineEntry {
 }
 
 export const QUARANTINE: readonly QuarantineEntry[] = [
-  {
-    file: "src/test/authFlows.test.tsx",
-    category: "dead-stack",
-    reason: "Importa @/pages/Login (módulo de página removido; auth vivo em features/auth/*). Erro de coleção.",
-    debtId: "SENT-FE-E1-Q1",
-    ancora: "@/pages/Login",
-  },
-  // SENT-FE-E1-Q2 (`src/test/homePageFlow.test.tsx`) SAIU DA QUARENTENA na Onda 8: o arquivo foi
-  // REMOVIDO junto com a `HomeWelcomePage`, provada morta (fora do router, do bundle e do
-  // sourcemap). Dívida quitada por remoção, não por conserto — e a quarentena só encolhe.
-  {
-    file: "src/test/economicsRendering.test.tsx",
-    category: "dead-stack",
-    reason: "buildEconomicsPanelModel (@/lib/economicsModel) quebra em runtime (getUsefulRate is not a function) e CoreMetricsRow exige TooltipProvider ausente; indicador de economics legado fora de rota viva.",
-    debtId: "SENT-FE-E1-Q3",
-    ancora: "buildEconomicsPanelModel",
-  },
+  // TRÊS dívidas quitadas por REMOÇÃO na Onda 8 — não por conserto. A quarentena só encolhe.
+  //
+  //   Q2 `homePageFlow.test.tsx`      — saiu com a `HomeWelcomePage`, provada morta.
+  //   Q1 `authFlows.test.tsx`         — saiu com `pages/Login` e `pages/VerifyEmailPage`.
+  //   Q3 `economicsRendering.test.tsx` — saiu com `CoreMetricsRow`, `decisionLayerModel` e
+  //                                      `economicsModel`, todos fora do bundle.
+  //
+  // Os três já não coletavam: importavam módulos que deixaram de existir. Mantê-los na lista
+  // seria declarar dívida sobre código que não existe — a quarentena viraria arquivo morto
+  // com nome de dívida.
   {
     file: "src/test/apiErrorFormatting.test.ts",
     category: "legacy-contract",

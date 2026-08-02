@@ -117,9 +117,9 @@ function Cabecalho({ linha, lado }: { linha: LinhaHistorico; lado: "A" | "B" }) 
       <p className="text-sm font-medium text-[#F1F5F9] truncate">
         {linha.createdAt ? formatRelativeTime(linha.createdAt) : INDISPONIVEL}
       </p>
-      <p className="text-[11px] font-mono text-[#475569] truncate">
-        {linha.engineVersion ?? INDISPONIVEL}
-      </p>
+      {/* A linha de Engine saiu: `engine_version` esta em `nunca_publicos` do contrato
+          congelado, e o cliente nunca ve Engine. Terceira superficie que o exibia, e a
+          unica que nem o typecheck nem o vitest cobriam. */}
     </div>
   );
 }

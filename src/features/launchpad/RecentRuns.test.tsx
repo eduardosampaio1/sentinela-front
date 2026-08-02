@@ -102,14 +102,22 @@ describe("RecentRuns — jornada canônica", () => {
     expect(celula.textContent).toContain("0");
   });
 
-  it("versão da engine ausente não vira texto arbitrário", async () => {
-    responder([base("an-1")]);
+  it("a linha NÃO tem célula de Engine — o cliente nunca vê Engine", async () => {
+    // O caso afirmava que a célula existia e mostrava "indisponível" quando o campo vinha nulo.
+    // A célula saiu: `engine_version` está em `nunca_publicos` do contrato congelado desde a
+    // Onda 5.5, e a listagem o devolvia mesmo assim.
+    //
+    // A massa manda um valor NÃO nulo de propósito: com `null`, "não aparece na tela" seria
+    // ambíguo entre "o campo sumiu" e "o campo estava vazio".
+    //
+    // O `findByTestId` da linha vem antes do `queryByTestId`: sem ele a consulta responderia
+    // `null` por a lista ainda não ter renderizado, e o teste passaria por vacuidade.
+    responder([base("an-1", { engine_version: "engine-9.9" })]);
     renderRecent();
 
-    const celula = await screen.findByTestId("recent-engine-an-1");
-    expect(celula).toHaveAttribute("data-estado", "indisponivel");
-    expect(celula.textContent?.toLowerCase()).not.toContain("unknown");
-    expect(celula.textContent?.toLowerCase()).not.toContain("n/a");
+    await screen.findByTestId("recent-conversations-an-1");
+    expect(screen.queryByTestId("recent-engine-an-1")).toBeNull();
+    expect(document.body.textContent).not.toContain("engine-9.9");
   });
 
   it("uma requisição para a página inteira — sem N+1 por linha", async () => {

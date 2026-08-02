@@ -51,7 +51,7 @@ export function WorkspacesPage() {
         {!membershipsLoading && membershipsError && (
           <ErrorState
             title="Workspaces could not be loaded"
-            description="We could not reach the service that lists your workspaces. This is not a statement about your access."
+            message="We could not reach the service that lists your workspaces. This is not a statement about your access."
           />
         )}
 

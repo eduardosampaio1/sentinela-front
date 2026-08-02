@@ -1,7 +1,8 @@
 import { defineConfig, configDefaults } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-// Baseline quarantine (Onda 6 E1): 4 suítes legadas/dead-stack pré-existentes, fora da E1.
+// Baseline quarantine: 4 suítes legadas na Onda 6 E1; 1 depois da Onda 8, que quitou três
+// delas por REMOÇÃO do código que elas exercitavam. O teto só encolhe.
 // Fonte única + gate: src/test/quarantine.ts + src/test/v1/quarantine-gate.test.ts.
 import { QUARANTINE_FILES } from "./src/test/quarantine";
 
