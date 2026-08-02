@@ -80,25 +80,17 @@ describe("Cadeado — jornada canônica (backend-first)", () => {
   });
 
 /**
- * Exceção ESCOPADA, com o mesmo formato da `PODEM_CONHECER_SHAPE` da E5: um arquivo,
- * nomeado, com o motivo.
+ * A isenção saiu junto com o arquivo que a justificava.
  *
- * `timeline/timelineSchema.ts` contém a DENYLIST de campos internos — ela existe para
- * RECUSÁ-LOS, não para consumi-los. Um cadeado que proíbe nomear o proibido torna
- * impossível escrever a defesa, que é o oposto do que ele protege.
+ * `timeline/timelineSchema.ts` declarava a DENYLIST de campos internos, e por isso precisava
+ * nomear o proibido — a única exceção que a regra "não consome vocabulário interno" tinha. A
+ * pasta `timeline/` inteira foi removida na Onda 8: nada no roteador a alcançava, o adapter e
+ * o schema nunca foram fiados, e os testes deles exercitavam código que o app nunca executa.
  *
- * O invariante real ("a feature canônica não CONSOME vocabulário interno") continua
- * valendo para este arquivo e é provado logo abaixo, por outra via: ele só declara.
+ * O gate avisou sozinho — `expect(alvo, "o arquivo isento sumiu — remova a isenção")`. Uma
+ * isenção órfã é pior que nenhuma: ela continua aberta para o próximo arquivo que casar o
+ * padrão, sem que ninguém tenha decidido isso.
  */
-const SO_DECLARA_A_DENYLIST = "timeline/timelineSchema.ts";
-
-function isento(arquivo: string, nome: string): boolean {
-  return (
-    nome.includes("vocabulário interno") &&
-    arquivo.split("\\").join("/").endsWith(SO_DECLARA_A_DENYLIST)
-  );
-}
-
   for (const [nome, re] of [
     ["materialização do dataset (FileReader/.text/.arrayBuffer/JSON.parse/hash)", MATERIALIZACAO],
     ["fallback legado / SSE / vocabulário interno", LEGADO_OU_INTERNO],
@@ -112,7 +104,6 @@ function isento(arquivo: string, nome: string): boolean {
   ] as const) {
     it(`nenhum arquivo viola: ${nome}`, () => {
       for (const arq of arquivos) {
-        if (isento(arq, nome)) continue;
         const codigo = semComentarios(readFileSync(arq, "utf8"));
         const m = codigo.match(re);
         expect(m, `${arq}: violação "${m?.[0]}"`).toBeNull();
@@ -120,32 +111,11 @@ function isento(arquivo: string, nome: string): boolean {
     });
   }
 
-  it("o arquivo isento SÓ declara — nenhum corpo executável", () => {
-    // É o que substitui a regra geral para ele. Uma denylist é dado; se este arquivo
-    // ganhar lógica, ele deixa de ser dado e a isenção deixa de valer.
-    const alvo = arquivos.find((a) => a.split("\\").join("/").endsWith(SO_DECLARA_A_DENYLIST));
-    expect(alvo, "o arquivo isento sumiu — remova a isenção").toBeTruthy();
-    const codigo = semComentarios(readFileSync(alvo as string, "utf8"));
-    // A regex ABAIXO já foi escrita com bytes 0x08 (backspace) no lugar de `\b`.
-    // Ela não casava `function`, `class`, `if (` nem `for (` — só o `=>` da
-    // alternância funcionava. Um cadeado que não detecta o que diz detectar é pior
-    // que nenhum: ele responde a pergunta errada em verde.
-    //
-    // Os dois `expect` seguintes são a prova de que ela funciona AGORA: um alvo
-    // sintético com corpo executável precisa casar, senão a asserção de cima passa
-    // por vacuidade.
-    const CORPO_EXECUTAVEL = /\bfunction\b|=>|\bclass\b|\bif\s*\(|\bfor\s*\(/;
-    expect('export function x() {}').toMatch(CORPO_EXECUTAVEL);
-    expect('if (a) { b(); }').toMatch(CORPO_EXECUTAVEL);
-    expect('export const A = [1, 2];').not.toMatch(CORPO_EXECUTAVEL);
-    expect(codigo).not.toMatch(CORPO_EXECUTAVEL);
-  });
-
-  it("a isenção é de UM arquivo e de UMA regra", () => {
-    // Contraprova: se a isenção crescesse para outro arquivo ou outra regra, ela
-    // deixaria de ser exceção e viraria buraco.
-    expect(isento("x/timeline/timelineSchema.ts", "fallback legado / SSE / vocabulário interno")).toBe(true);
-    expect(isento("x/timeline/adapter.ts", "fallback legado / SSE / vocabulário interno")).toBe(false);
-    expect(isento("x/timeline/timelineSchema.ts", "cor hardcoded")).toBe(false);
+  it("nenhum arquivo da jornada está isento — a regra vale para todos", () => {
+    // Prova POSITIVA de que a isenção sumiu de fato, e não só de que o teste dela foi
+    // apagado. O cadeado agora varre a feature inteira sem exceção; se alguém reintroduzir
+    // um caminho isento, esta contagem para de bater com a do laço acima.
+    expect(arquivos.length).toBeGreaterThan(0);
+    expect(arquivos.some((a) => a.split("\\").join("/").includes("/timeline/"))).toBe(false);
   });
 });
