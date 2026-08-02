@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
@@ -7,177 +7,54 @@ import { EmptyState } from "@/shared/states/EmptyState";
 import { ErrorState } from "@/shared/states/ErrorState";
 import { SkeletonHistoryTable } from "@/shared/states/SkeletonState";
 import { useAuth } from "@/hooks/useAuth";
-import { listAnalysisRuns } from "@/lib/analysisRuns";
-import type { AnalysisRunSummary } from "@/lib/analysisRuns";
+import { useAnalysesList } from "@/features/canonical-analysis/data/list";
+import {
+  linhaHistoricoDe,
+  type LinhaHistorico,
+} from "@/features/canonical-analysis/data/historicoView";
 import { cn } from "@/lib/utils";
 import { RunRow } from "./RunRow";
 import { RunComparePanel } from "./RunComparePanel";
 
-// ─── Filter types ─────────────────────────────────────────────────────────────
-
-type RiskFilter = "all" | "critical" | "high" | "medium" | "low";
-type ScoreFilter = "all" | "high" | "good" | "moderate" | "poor";
-
-function extractScore(raw: Record<string, unknown> | null | undefined): number | null {
-  if (!raw) return null;
-  const candidates = [
-    raw.behavior_score,
-    raw.consistency_score,
-    (raw.argos_v2 as Record<string, unknown> | null)?.behavior_score,
-    (raw.argos_v2 as Record<string, unknown> | null)?.consistency_score,
-  ];
-  for (const v of candidates) {
-    if (typeof v === "number" && v >= 0 && v <= 100) return Math.round(v);
-  }
-  return null;
-}
-
-function matchesRisk(run: AnalysisRunSummary, filter: RiskFilter): boolean {
-  if (filter === "all") return true;
-  return run.risk_level?.toLowerCase() === filter;
-}
-
-function matchesScore(run: AnalysisRunSummary, filter: ScoreFilter): boolean {
-  if (filter === "all") return true;
-  const score = extractScore(run.raw_result);
-  if (score === null) return false;
-  switch (filter) {
-    case "high":     return score >= 80;
-    case "good":     return score >= 60 && score < 80;
-    case "moderate": return score >= 40 && score < 60;
-    case "poor":     return score < 40;
-  }
-}
-
-// ─── Filter bar ───────────────────────────────────────────────────────────────
-
-function FilterChip<T extends string>({
-  label,
-  active,
-  onClick,
-  color,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-  color?: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all",
-        active
-          ? "bg-[rgba(79,90,232,0.10)] text-[#4F5AE8] border-[rgba(79,90,232,0.20)]"
-          : "bg-transparent text-[#94A3B8] border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] hover:text-[#94A3B8]"
-      )}
-      style={active && color ? { color, background: `${color}18`, borderColor: `${color}35` } : undefined}
-    >
-      {label}
-    </button>
-  );
-}
-
-interface FilterBarProps {
-  riskFilter: RiskFilter;
-  scoreFilter: ScoreFilter;
-  onRiskChange: (v: RiskFilter) => void;
-  onScoreChange: (v: ScoreFilter) => void;
-  totalCount: number;
-  filteredCount: number;
-}
-
-function FilterBar({ riskFilter, scoreFilter, onRiskChange, onScoreChange, totalCount, filteredCount }: FilterBarProps) {
-  const isFiltered = riskFilter !== "all" || scoreFilter !== "all";
-
-  return (
-    <div className="flex items-center gap-4 flex-wrap mb-4">
-      {/* Risk filters */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mr-1">Risk</span>
-        {(["all", "critical", "high", "medium", "low"] as RiskFilter[]).map((v) => {
-          const riskColors: Record<string, string> = {
-            critical: "#F87171",
-            high: "#FCD34D",
-            medium: "#FB923C",
-            low: "#34D399",
-          };
-          return (
-            <FilterChip
-              key={v}
-              label={v === "all" ? "All" : v.charAt(0).toUpperCase() + v.slice(1)}
-              active={riskFilter === v}
-              onClick={() => onRiskChange(v)}
-              color={riskColors[v]}
-            />
-          );
-        })}
-      </div>
-
-      {/* Divider */}
-      <div className="w-px h-4 bg-[rgba(255,255,255,0.06)] hidden sm:block" />
-
-      {/* Score filters */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mr-1">Score</span>
-        {([
-          { v: "all" as ScoreFilter, label: "All" },
-          { v: "high" as ScoreFilter,     label: "≥80", color: "#34D399" },
-          { v: "good" as ScoreFilter,     label: "60–79", color: "#FCD34D" },
-          { v: "moderate" as ScoreFilter, label: "40–59", color: "#FB923C" },
-          { v: "poor" as ScoreFilter,     label: "<40",   color: "#F87171" },
-        ]).map(({ v, label, color }) => (
-          <FilterChip
-            key={v}
-            label={label}
-            active={scoreFilter === v}
-            onClick={() => onScoreChange(v)}
-            color={color}
-          />
-        ))}
-      </div>
-
-      {/* Result count + clear */}
-      {isFiltered && (
-        <>
-          <div className="w-px h-4 bg-[rgba(255,255,255,0.06)] hidden sm:block" />
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-[#94A3B8]">
-              {filteredCount} of {totalCount}
-            </span>
-            <button
-              onClick={() => { onRiskChange("all"); onScoreChange("all"); }}
-              className="text-[11px] text-[#475569] hover:text-[#94A3B8] transition-colors"
-            >
-              Clear
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+/**
+ * Histórico de análises — jornada CANÔNICA.
+ *
+ * Escopo é o **workspace autenticado**. O eixo `(workspace, project, environment)` do modelo
+ * legado saiu inteiro: era a precondição que fazia o `/v1` devolver `400`, e o contrato canônico
+ * escopa por workspace.
+ *
+ * ## Uma requisição por página
+ *
+ * O carregamento usa só `GET /v1/analyses`. O resumo de cada linha (conversas, engine) vem
+ * materializado pelo backend na mesma query (rc16). Nada aqui abre `/result` para montar a
+ * lista — comparar é o único caminho que lê resultado, e só por ação explícita do usuário.
+ *
+ * ## Os dois filtros que saíram
+ *
+ * A barra filtrava por **risco** e por **faixa de score**:
+ *
+ * * `risk_level` não existe no registro canônico de indicadores;
+ * * o score vinha de `raw_result` — RESULT_FIELD — e obtê-lo por linha seria N+1.
+ *
+ * Nenhum foi substituído por aproximação: escolher arbitrariamente um indicador como "o score",
+ * ou derivar um risco, seria inventar justamente o número que o usuário usa para decidir. Os
+ * controles saíram em vez de ficarem visíveis sem funcionar. O gap está registrado em
+ * `docs/supabase-zero/CLUSTER-HISTORICO.md`; reintroduzi-los depende de decisão de produto mais
+ * contrato materializado no backend, sem N+1.
+ */
 
 // ─── Table header ─────────────────────────────────────────────────────────────
 
 function TableHeader({ compareMode }: { compareMode: boolean }) {
   return (
     <div className="flex items-center gap-4 px-5 py-3 border-b border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)]">
-      {/* Checkbox spacer in compare mode */}
       {compareMode && <div className="w-4 flex-shrink-0" />}
-
       <div className="w-32 flex-shrink-0">
         <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">Date</p>
       </div>
-      <div className="w-24 flex-shrink-0">
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">Risk</p>
-      </div>
-      <div className="w-20 flex-shrink-0">
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">Score</p>
-      </div>
       <div className="flex items-center gap-5 flex-1">
         <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">Conversations</p>
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">Intents</p>
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569]">Records</p>
         <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] hidden md:block">Engine</p>
       </div>
       <div className="w-16 flex-shrink-0" />
@@ -185,15 +62,9 @@ function TableHeader({ compareMode }: { compareMode: boolean }) {
   );
 }
 
-// ─── Compare toggle button ────────────────────────────────────────────────────
+// ─── Compare toggle ───────────────────────────────────────────────────────────
 
-function CompareToggleButton({
-  active,
-  onClick,
-}: {
-  active: boolean;
-  onClick: () => void;
-}) {
+function CompareToggleButton({ active, onClick }: { active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -201,12 +72,11 @@ function CompareToggleButton({
         "flex items-center gap-1.5 text-xs font-medium transition-all px-3 py-1.5 rounded-lg border",
         active
           ? "bg-[rgba(79,90,232,0.10)] text-[#4F5AE8] border-[rgba(79,90,232,0.20)] hover:bg-[rgba(79,90,232,0.15)]"
-          : "text-[#94A3B8] border-[rgba(255,255,255,0.08)] hover:text-[#94A3B8] hover:border-[rgba(255,255,255,0.14)] bg-transparent"
+          : "text-[#94A3B8] border-[rgba(255,255,255,0.08)] hover:text-[#94A3B8] hover:border-[rgba(255,255,255,0.14)] bg-transparent",
       )}
       aria-label={active ? "Cancel compare mode" : "Enter compare mode"}
       aria-pressed={active}
     >
-      {/* Split-view icon */}
       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 4H5a1 1 0 00-1 1v14a1 1 0 001 1h4M15 4h4a1 1 0 011 1v14a1 1 0 01-1 1h-4M12 4v16" />
       </svg>
@@ -229,10 +99,10 @@ function FloatingSelectionBar({
   const ready = selectedCount === 2;
   const label =
     selectedCount === 0
-      ? "Select 2 runs to compare"
+      ? "Select 2 analyses to compare"
       : selectedCount === 1
-      ? "1 run selected — select one more"
-      : "2 runs selected — ready to compare";
+        ? "1 analysis selected — select one more"
+        : "2 analyses selected — ready to compare";
 
   return (
     <div
@@ -245,31 +115,22 @@ function FloatingSelectionBar({
       role="status"
       aria-live="polite"
     >
-      {/* Status indicator */}
       <div className="flex items-center gap-2">
-        <div
-          className={cn(
-            "w-1.5 h-1.5 rounded-full transition-colors",
-            ready ? "bg-[#34D399]" : "bg-[#475569]"
-          )}
-        />
-        <span className={cn("text-xs font-medium", ready ? "text-[#F1F5F9]" : "text-[#94A3B8]")}>
-          {label}
-        </span>
+        <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", ready ? "bg-[#34D399]" : "bg-[#475569]")} />
+        <span className={cn("text-xs font-medium", ready ? "text-[#F1F5F9]" : "text-[#94A3B8]")}>{label}</span>
       </div>
 
-      {/* Divider */}
       <div className="w-px h-4 bg-[rgba(255,255,255,0.08)]" />
 
-      {/* Compare now */}
       <button
         onClick={onCompare}
         disabled={!ready}
+        data-testid="compare-now"
         className={cn(
           "flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all",
           ready
             ? "bg-[rgba(79,90,232,0.12)] text-[#4F5AE8] border border-[rgba(79,90,232,0.25)] hover:bg-[rgba(79,90,232,0.18)] cursor-pointer"
-            : "bg-[rgba(255,255,255,0.03)] text-[#475569] border border-[rgba(255,255,255,0.06)] opacity-50 cursor-not-allowed"
+            : "bg-[rgba(255,255,255,0.03)] text-[#475569] border border-[rgba(255,255,255,0.06)] opacity-50 cursor-not-allowed",
         )}
         aria-disabled={!ready}
       >
@@ -279,11 +140,7 @@ function FloatingSelectionBar({
         Compare now
       </button>
 
-      {/* Clear */}
-      <button
-        onClick={onClear}
-        className="text-[11px] text-[#475569] hover:text-[#94A3B8] transition-colors"
-      >
+      <button onClick={onClear} className="text-[11px] text-[#475569] hover:text-[#94A3B8] transition-colors">
         Clear
       </button>
     </div>
@@ -293,111 +150,48 @@ function FloatingSelectionBar({
 // ─── HistoryPage ──────────────────────────────────────────────────────────────
 
 export function HistoryPage() {
-  const { workspace, project, environment } = useAuth();
+  const { workspace } = useAuth();
   const navigate = useNavigate();
 
-  const [runs, setRuns] = useState<AnalysisRunSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [riskFilter, setRiskFilter] = useState<RiskFilter>("all");
-  const [scoreFilter, setScoreFilter] = useState<ScoreFilter>("all");
-
-  // Compare mode state
   const [compareMode, setCompareMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [compareRuns, setCompareRuns] = useState<[AnalysisRunSummary, AnalysisRunSummary] | null>(null);
+  const [comparar, setComparar] = useState<[LinhaHistorico, LinhaHistorico] | null>(null);
 
-  const noContext = !workspace?.id || !project?.id || !environment?.id;
+  const escopo = workspace?.id ? { workspaceId: workspace.id } : null;
+  const { data, isPending, error, refetch } = useAnalysesList(escopo);
 
-  const fetchRuns = useCallback(() => {
-    if (noContext) { setLoading(false); return; }
-
-    setLoading(true);
-    setError(null);
-
-    listAnalysisRuns(workspace!.id, project!.id, environment!.id, 50)
-      .then(setRuns)
-      .catch((err) => {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Analysis history could not be retrieved. Check your connection and try again."
-        );
-      })
-      .finally(() => setLoading(false));
-  }, [workspace?.id, project?.id, environment?.id, noContext]);
-
-  useEffect(() => {
-    fetchRuns();
-  }, [fetchRuns]);
-
-  // Reset filters when runs change
-  useEffect(() => {
-    setRiskFilter("all");
-    setScoreFilter("all");
-  }, [workspace?.id, project?.id, environment?.id]);
-
-  const filteredRuns = useMemo(() => {
-    return runs.filter(
-      (r) => matchesRisk(r, riskFilter) && matchesScore(r, scoreFilter)
-    );
-  }, [runs, riskFilter, scoreFilter]);
-
-  // ── Compare mode handlers ──────────────────────────────────────────────────
+  const linhas: LinhaHistorico[] = useMemo(
+    () => (data?.items ?? []).map(linhaHistoricoDe),
+    [data],
+  );
 
   function handleToggleCompareMode() {
-    if (compareMode) {
-      // Turning off — clear selection
-      setCompareMode(false);
-      setSelectedIds([]);
-    } else {
-      setCompareMode(true);
-    }
+    setCompareMode((antes) => !antes);
+    setSelectedIds([]);
   }
 
-  function handleToggleSelect(id: string) {
+  function handleToggleSelect(analysisId: string) {
     setSelectedIds((prev) => {
-      if (prev.includes(id)) {
-        // Deselect
-        return prev.filter((x) => x !== id);
-      }
-      if (prev.length < 2) {
-        // Add
-        return [...prev, id];
-      }
-      // Already 2 selected — do nothing
+      if (prev.includes(analysisId)) return prev.filter((x) => x !== analysisId);
+      if (prev.length < 2) return [...prev, analysisId];
       return prev;
     });
   }
 
-  function handleClearSelection() {
-    setSelectedIds([]);
-  }
-
   function handleCompareNow() {
     if (selectedIds.length !== 2) return;
-    const [idA, idB] = selectedIds;
-    const runA = runs.find((r) => r.id === idA);
-    const runB = runs.find((r) => r.id === idB);
-    if (!runA || !runB) return;
-
-    // Ensure A is older (earlier created_at) and B is newer
-    const [older, newer] =
-      new Date(runA.created_at) <= new Date(runB.created_at)
-        ? [runA, runB]
-        : [runB, runA];
-
-    setCompareRuns([older, newer]);
+    const a = linhas.find((l) => l.analysisId === selectedIds[0]);
+    const b = linhas.find((l) => l.analysisId === selectedIds[1]);
+    if (!a || !b) return;
+    // A é a mais ANTIGA: um delta lido como "de A para B" só faz sentido em ordem cronológica.
+    // Data ausente vai para o fim — ordenar por um valor que não existe seria inventá-lo.
+    const ta = a.createdAt ? Date.parse(a.createdAt) : Number.POSITIVE_INFINITY;
+    const tb = b.createdAt ? Date.parse(b.createdAt) : Number.POSITIVE_INFINITY;
+    setComparar(ta <= tb ? [a, b] : [b, a]);
   }
-
-  function handleCloseCompare() {
-    setCompareRuns(null);
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
 
   const showFloatingBar = compareMode && selectedIds.length > 0;
+  const semWorkspace = !escopo;
 
   return (
     <AppShell topBarTitle="History">
@@ -405,19 +199,14 @@ export function HistoryPage() {
         <PageHeader
           title="Analysis history"
           description={
-            noContext
-              ? "Select an active workspace, project, and environment to view runs."
-              : `Showing up to 50 runs · ${workspace?.name ?? ""} · ${project?.name ?? ""} · ${environment?.name ?? ""}`
+            semWorkspace ? "Select an active workspace to view analyses." : (workspace?.name ?? "")
           }
           actions={
-            !noContext && (
+            !semWorkspace && (
               <div className="flex items-center gap-2">
-                {/* Compare toggle */}
                 <CompareToggleButton active={compareMode} onClick={handleToggleCompareMode} />
-
-                {/* Refresh */}
                 <button
-                  onClick={fetchRuns}
+                  onClick={() => void refetch()}
                   className="flex items-center gap-1.5 text-xs text-[#94A3B8] hover:text-[#94A3B8] transition-colors"
                   aria-label="Refresh history"
                 >
@@ -431,124 +220,82 @@ export function HistoryPage() {
           }
         />
 
-        {/* No workspace context */}
-        {noContext && (
+        {semWorkspace && (
           <EmptyState
-            title="Workspace context required"
-            description="History is scoped to a workspace, project, and environment. Configure your active context in Workspaces to see past analysis runs."
-            action={{
-              label: "Configure workspaces",
-              onClick: () => navigate("/workspaces"),
-            }}
+            title="Workspace required"
+            description="History is scoped to the workspace you are signed in to. Choose a workspace to see past analyses."
+            action={{ label: "Choose workspace", onClick: () => navigate("/workspaces") }}
           />
         )}
 
-        {/* Loading — skeleton table */}
-        {!noContext && loading && <SkeletonHistoryTable rows={6} />}
+        {!semWorkspace && isPending && <SkeletonHistoryTable rows={6} />}
 
-        {/* Error */}
-        {!noContext && !loading && error && (
+        {!semWorkspace && !isPending && error && (
           <ErrorState
             title="History could not be loaded"
-            message={error}
-            onRetry={fetchRuns}
+            message="Analysis history could not be retrieved. Check your connection and try again."
+            onRetry={() => void refetch()}
           />
         )}
 
-        {/* No runs yet */}
-        {!noContext && !loading && !error && runs.length === 0 && (
+        {!semWorkspace && !isPending && !error && linhas.length === 0 && (
           <EmptyState
-            title="No analysis runs yet"
-            description={`No analyses have been recorded for ${project?.name ?? "this project"} in the ${environment?.name ?? "current"} environment. Run your first analysis from the Launchpad to start building a history.`}
-            action={{
-              label: "Run first analysis",
-              onClick: () => navigate("/home"),
-            }}
-            secondaryAction={{
-              label: "Switch context",
-              onClick: () => navigate("/workspaces"),
-            }}
+            title="No analyses yet"
+            description="No analyses have been recorded for this workspace. Run your first analysis to start building a history."
+            action={{ label: "Run first analysis", onClick: () => navigate("/canonical/analyses/new") }}
           />
         )}
 
-        {/* Table + filters */}
-        {!noContext && !loading && !error && runs.length > 0 && (
+        {!semWorkspace && !isPending && !error && linhas.length > 0 && (
           <>
-            {/* Compare mode hint banner */}
             {compareMode && (
               <div className="flex items-center gap-2 mb-4 px-4 py-2.5 rounded-xl bg-[rgba(79,90,232,0.05)] border border-[rgba(79,90,232,0.12)]">
                 <svg className="w-3.5 h-3.5 text-[#4F5AE8] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className="text-xs text-[#4F5AE8]">
-                  Select 2 runs to compare them side by side. Click a row to toggle selection.
+                  Select 2 analyses to compare them side by side. Click a row to toggle selection.
                 </span>
               </div>
             )}
 
-            <FilterBar
-              riskFilter={riskFilter}
-              scoreFilter={scoreFilter}
-              onRiskChange={setRiskFilter}
-              onScoreChange={setScoreFilter}
-              totalCount={runs.length}
-              filteredCount={filteredRuns.length}
-            />
-
             <div
               className="card-base overflow-hidden"
-              // Add bottom padding when floating bar is visible so content isn't obscured
               style={showFloatingBar ? { paddingBottom: "5rem" } : undefined}
             >
               <TableHeader compareMode={compareMode} />
-
-              {filteredRuns.length > 0 ? (
-                filteredRuns.map((run) => {
-                  const isSelected = selectedIds.includes(run.id);
-                  const compareDimmed = compareMode && selectedIds.length === 2 && !isSelected;
-
-                  return (
-                    <RunRow
-                      key={run.id}
-                      run={run}
-                      compareMode={compareMode}
-                      selected={isSelected}
-                      compareDimmed={compareDimmed}
-                      onToggleSelect={handleToggleSelect}
-                    />
-                  );
-                })
-              ) : (
-                <div className="py-10 text-center">
-                  <p className="text-sm text-[#94A3B8]">No runs match the selected filters.</p>
-                  <button
-                    onClick={() => { setRiskFilter("all"); setScoreFilter("all"); }}
-                    className="text-xs text-[#4F5AE8] mt-2 hover:underline"
-                  >
-                    Clear filters
-                  </button>
-                </div>
-              )}
+              {linhas.map((linha) => {
+                const isSelected = selectedIds.includes(linha.analysisId);
+                return (
+                  <RunRow
+                    key={linha.analysisId}
+                    linha={linha}
+                    compareMode={compareMode}
+                    selected={isSelected}
+                    compareDimmed={compareMode && selectedIds.length === 2 && !isSelected}
+                    onToggleSelect={handleToggleSelect}
+                  />
+                );
+              })}
             </div>
           </>
         )}
       </PageFrame>
 
-      {/* Floating selection bar */}
       {showFloatingBar && (
         <FloatingSelectionBar
           selectedCount={selectedIds.length}
           onCompare={handleCompareNow}
-          onClear={handleClearSelection}
+          onClear={() => setSelectedIds([])}
         />
       )}
 
-      {/* Compare panel */}
-      {compareRuns && (
+      {comparar && escopo && (
         <RunComparePanel
-          runA={compareRuns[0]}
-          runB={compareRuns[1]}
-          onClose={handleCloseCompare}
+          escopo={escopo}
+          linhaA={comparar[0]}
+          linhaB={comparar[1]}
+          onClose={() => setComparar(null)}
         />
       )}
     </AppShell>
