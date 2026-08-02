@@ -13,17 +13,33 @@ import {
   hashDataset,
   isSessionCached,
   loadResult,
-  parseAnalysisImport,
   parseConversationsInput,
   saveResult,
   type AnalysisResult,
   type JobStageUpdate,
   type JobExecutionProfile,
 } from "@/lib/api";
-import { saveAnalysisRun, getLatestAnalysisRun } from "@/lib/analysisRuns";
-import { type AnalysisJobRecord } from "@/lib/analysisJobs";
+import { getV1Client } from "@/lib/v1/defaultClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+
+/**
+ * `hasHistory` pergunta ao backend, não ao Supabase.
+ *
+ * Este contexto é montado em `app/providers.tsx`, ACIMA do router — a `FundacaoV1` é elemento de
+ * rota e portanto fica abaixo dele. Usar `useV1Client()` aqui reintroduziria, invertido, o
+ * defeito corrigido na Macrofrente 1: hook exigindo um provider que não existe acima.
+ *
+ * `getV1Client()` devolve o MESMO singleton que a `CanonicalClientProvider` entrega — sem
+ * segundo cliente e sem depender do contexto React.
+ *
+ * Escopo: só `workspace_id`. O eixo (workspace, project, environment) saiu; a autoridade de
+ * tenant é o workspace autenticado.
+ */
+async function workspaceTemAnalise(workspaceId: string): Promise<boolean> {
+  const pagina = await getV1Client().analyses.list({ workspaceId, limit: 1 });
+  return (pagina.items?.length ?? 0) > 0;
+}
 
 // Sprint 5: stage → progress mapping (never fake percentages)
 const STAGE_PROGRESS: Record<string, number> = {
@@ -55,10 +71,8 @@ interface AnalysisContextValue {
   handleRerun: () => void;
   handleFileUpload: (file: File) => void;
   handlePasteAnalysis: (text: string) => void;
-  importAnalysisResult: (text: string) => void;
   clearAnalysis: () => void;
   loadStoredAnalysis: (analysis: AnalysisResult) => void;
-  activeJob: AnalysisJobRecord | null;
 }
 
 const AnalysisContext = createContext<AnalysisContextValue | null>(null);
@@ -73,10 +87,6 @@ function conversationsToJsonl(conversations: unknown[]) {
   return conversations.map((item) => JSON.stringify(item)).join("\n");
 }
 
-function toPersistableResult(result: AnalysisResult): Record<string, unknown> {
-  return JSON.parse(JSON.stringify(result)) as Record<string, unknown>;
-}
-
 export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [hasHistory, setHasHistory] = useState(false);
@@ -85,7 +95,8 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [activeJob, setActiveJob] = useState<AnalysisJobRecord | null>(null);
+  // `activeJob` saiu junto: o tipo vinha de `lib/analysisJobs` (camada Supabase) e nenhuma
+  // tela consumia o campo -- era estado publicado sem leitor.
   // Sprint 5: real job stage from API
   const [jobStage, setJobStage] = useState("queued");
   const [jobStageLabel, setJobStageLabel] = useState("Preparing analysis job");
@@ -96,17 +107,17 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
 
   const { toast } = useToast();
   const { user, workspace, project, environment } = useAuth();
-  const historyStorageKey =
-    workspace?.id && project?.id && environment?.id
-      ? `sentinela:history:${workspace.id}:${project.id}:${environment.id}`
-      : null;
+  // Eixo unico: o workspace autenticado. `project`/`environment` sairam do escopo de
+  // historico e de cache -- eles nunca foram autoridade de tenant, e enquanto compunham a
+  // chave o mesmo workspace via historicos diferentes conforme a selecao do usuario.
+  const historyStorageKey = workspace?.id ? `sentinela:history:${workspace.id}` : null;
   const contextScope = useMemo(
     () => ({
       workspaceId: workspace?.id ?? null,
-      projectId: project?.id ?? null,
-      environmentId: environment?.id ?? null,
+      projectId: null,
+      environmentId: null,
     }),
-    [environment?.id, project?.id, workspace?.id],
+    [workspace?.id],
   );
 
   const markHasHistory = useCallback(() => {
@@ -128,7 +139,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   }, [loading]);
 
   useEffect(() => {
-    if (!workspace?.id || !project?.id || !environment?.id) {
+    if (!workspace?.id) {
       setHasHistory(false);
       setResult(null);
       setDataSource("fresh");
@@ -141,7 +152,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     setResult(null);
     setDataSource("fresh");
 
-    const storageKey = `sentinela:history:${workspace.id}:${project.id}:${environment.id}`;
+    const storageKey = `sentinela:history:${workspace.id}`;
     const localFlag = window.localStorage.getItem(storageKey) === "1";
     const cachedWorkspaceResult = loadResult(contextScope);
     const hasScopedSessionCache = isSessionCached(contextScope);
@@ -156,18 +167,22 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
 
     let mounted = true;
 
-    void getLatestAnalysisRun(workspace.id, project.id, environment.id)
-      .then((latestRun) => {
+    // A verdade navegacional — "este workspace já tem análise?" — vem do backend canônico.
+    //
+    // O que NÃO é restaurado daqui é o `result` legado (forma `AnalysisResult`, produzida pelo
+    // `/api/analyze`). Ele não tem produtor canônico: `analysis-result-v1` é outro contrato, com
+    // renderizador próprio (`CanonicalResultPage`). Mapear um no outro construiria um segundo
+    // renderizador do mesmo documento — recusado antes no `RunDetailPage`, e recusado aqui.
+    //
+    // Sem cache de sessão, `result` fica nulo e a tela diz isso, em vez de o navegador
+    // reconstruir um registro que ele não deveria ter criado. Para reabrir um resultado, o
+    // caminho é o histórico → `/canonical/analyses/{id}/result`.
+    void workspaceTemAnalise(workspace.id)
+      .then((existe) => {
         if (!mounted) return;
-        if (latestRun) {
+        if (existe) {
           setHasHistory(true);
           window.localStorage.setItem(storageKey, "1");
-          if (latestRun.raw_result && typeof latestRun.raw_result === "object") {
-            const latestResult = latestRun.raw_result as AnalysisResult;
-            saveResult(latestResult, undefined, contextScope);
-            setResult(latestResult);
-            setDataSource("cached");
-          }
         } else if (!localFlag && !hasScopedSessionCache) {
           setHasHistory(false);
           setResult(null);
@@ -185,7 +200,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, [contextScope, environment?.id, project?.id, workspace?.id]);
+  }, [contextScope, workspace?.id]);
 
   const finishLoading = useCallback(() => {
     setLoadingProgress(100);
@@ -241,41 +256,21 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         saveResult(apiResult, inputHash, contextScope);
         setDataSource("fresh");
         markHasHistory();
-        setActiveJob(null);
 
-        let persistenceError: unknown = null;
-        try {
-          const savedRun = await saveAnalysisRun({
-            workspaceId: workspace.id,
-            projectId: project.id,
-            environmentId: environment.id,
-            createdBy: user.id,
-            sourceFilename: "dataset.jsonl",
-            inputHash,
-            result: toPersistableResult(apiResult),
-          });
-          if (savedRun?.id) {
-            const persistedResult = {
-              ...apiResult,
-              analysis_run_id: savedRun.id,
-            };
-            setResult(persistedResult);
-            saveResult(persistedResult, inputHash, contextScope);
-          }
-        } catch (persistError) {
-          persistenceError = persistError;
-        }
-
+        // Aqui havia `saveAnalysisRun`: o navegador gravava a análise em `analysis_runs`.
+        //
+        // Pela matriz congelada, análises pertencem ao Orchestrator. E a gravação não era
+        // duplicata de nada — era o frontend fabricando o registro, que é justamente o que a
+        // matriz proíbe. Não ganha substituto em `/v1`: uma escrita que não deveria pertencer ao
+        // cliente não vira endpoint novo.
+        //
+        // Nada do que ela protegia se perde: `setResult`, `saveResult` e `markHasHistory` já
+        // aconteceram acima. O que some é o `analysis_run_id` — id de linha do Supabase, sem
+        // contraparte canônica (lá a identidade é `analysis_id`, e o `ExecutiveAxis` já lê
+        // `analysis_run_id ?? analysis_id`).
         toast({
           title: "Analysis completed successfully.",
         });
-        if (persistenceError) {
-          toast({
-            title: "History sync failed",
-            description: getErrorMessage(persistenceError),
-            variant: "destructive",
-          });
-        }
         finishLoading();
       } catch (error: unknown) {
         finishLoading();
@@ -350,73 +345,15 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     [runAnalysis, toast]
   );
 
-  const importAnalysisResult = useCallback(
-    (text: string) => {
-      try {
-        setLoading(true);
-        const mapped = parseAnalysisImport(text);
-
-        window.setTimeout(async () => {
-          try {
-            saveResult(mapped, undefined, contextScope);
-            setResult(mapped);
-            setDataSource("fresh");
-            markHasHistory();
-
-            if (user?.id && workspace?.id && project?.id && environment?.id) {
-              const inputHash = await hashDataset(JSON.stringify(mapped));
-
-              const savedRun = await saveAnalysisRun({
-                workspaceId: workspace.id,
-                projectId: project.id,
-                environmentId: environment.id,
-                createdBy: user.id,
-                inputHash,
-                result: toPersistableResult(mapped),
-                // unica persistencia deste fluxo: nao passa pelo backend
-                requirePersistence: true,
-              });
-              if (savedRun?.id) {
-                const persistedResult = {
-                  ...mapped,
-                  analysis_run_id: savedRun.id,
-                };
-                saveResult(persistedResult, undefined, contextScope);
-                setResult(persistedResult);
-              }
-            }
-
-            toast({ title: "Analysis result imported" });
-          } catch (error: unknown) {
-            toast({
-              title: "Failed to persist imported analysis",
-              description: getErrorMessage(error),
-              variant: "destructive",
-            });
-          } finally {
-            finishLoading();
-          }
-        }, 900);
-      } catch (error: unknown) {
-        setLoading(false);
-        toast({
-          title: "Invalid analysis result",
-          description: getErrorMessage(error),
-          variant: "destructive",
-        });
-      }
-    },
-    [
-      contextScope,
-      environment?.id,
-      finishLoading,
-      markHasHistory,
-      project?.id,
-      toast,
-      user?.id,
-      workspace?.id,
-    ]
-  );
+  // AQUI FICAVA `importAnalysisResult`.
+  //
+  // Fluxo INALCANCAVEL: nenhuma tela consumia a acao -- so o proprio contexto a exportava.
+  // E era o caso mais direto do que a matriz proibe: o proprio codigo dizia "unica
+  // persistencia deste fluxo: nao passa pelo backend", com `requirePersistence: true`.
+  // O navegador criava um registro de analise que nenhum backend conhecia.
+  //
+  // Removida inteira em vez de migrada: migrar uma acao morta seria trabalho sobre codigo
+  // que ninguem alcanca, e daria a um fluxo sem dono um endpoint novo.
 
   const clearAnalysis = useCallback(() => {
     setResult(null);
@@ -450,10 +387,8 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       handleRerun,
       handleFileUpload,
       handlePasteAnalysis,
-      importAnalysisResult,
       clearAnalysis,
       loadStoredAnalysis,
-      activeJob,
     }),
     [
       result,
@@ -471,10 +406,8 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       handleRerun,
       handleFileUpload,
       handlePasteAnalysis,
-      importAnalysisResult,
       clearAnalysis,
       loadStoredAnalysis,
-      activeJob,
     ]
   );
 
