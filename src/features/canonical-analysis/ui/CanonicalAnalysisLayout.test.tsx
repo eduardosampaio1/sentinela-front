@@ -47,13 +47,13 @@ beforeEach(() => {
 describe("portão da jornada canônica", () => {
   it("flag ON + capability ON abre a jornada", () => {
     montar();
-    expect(screen.getByText("jornada")).toBeInTheDocument();
+    expect(screen.getByText("jornada")).not.toBeNull();
   });
 
   it("flag OFF fecha, mesmo com a capability ligada", () => {
     flagMock.mockReturnValue(false);
     montar();
-    expect(screen.getByText("home")).toBeInTheDocument();
+    expect(screen.getByText("home")).not.toBeNull();
   });
 
   it("capability OFF fecha a jornada em vez de deixar a chamada tomar 404", () => {
@@ -64,7 +64,7 @@ describe("portão da jornada canônica", () => {
       membershipsLoading: false,
     });
     montar();
-    expect(screen.getByText("home")).toBeInTheDocument();
+    expect(screen.getByText("home")).not.toBeNull();
   });
 
   it("capability AINDA NÃO projetada não é lida como desligada", () => {
