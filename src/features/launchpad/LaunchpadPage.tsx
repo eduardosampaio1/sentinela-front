@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 // ─── Active context strip ────────────────────────────────────────────────────
 
 function ContextStrip() {
-  const { workspace, project, environment } = useAuth();
+  const { workspace } = useAuth();
   const navigate = useNavigate();
 
 

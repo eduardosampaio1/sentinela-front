@@ -124,10 +124,10 @@ function SidebarNavItem({
 // ─── Context block ─────────────────────────────────────────────────────────────
 
 function ContextBlock() {
-  const { workspace, project, environment } = useAuth();
+  const { workspace } = useAuth();
   const navigate = useNavigate();
 
-  if (!workspace && !project) return null;
+  if (!workspace) return null;
 
   return (
     <button

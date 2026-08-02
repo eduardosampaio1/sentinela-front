@@ -68,7 +68,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   // tela consumia o campo -- era estado publicado sem leitor.
 
   const { toast } = useToast();
-  const { user, workspace, project, environment } = useAuth();
+  const { workspace } = useAuth();
   // Eixo unico: o workspace autenticado. `project`/`environment` sairam do escopo de
   // historico e de cache -- eles nunca foram autoridade de tenant, e enquanto compunham a
   // chave o mesmo workspace via historicos diferentes conforme a selecao do usuario.
