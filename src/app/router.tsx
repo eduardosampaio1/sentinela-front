@@ -3,6 +3,7 @@ import {
   createBrowserRouter,
   Navigate,
   Outlet,
+  useParams,
   type RouteObject,
 } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,9 +38,6 @@ const DashboardPage = lazy(() =>
 const HistoryPage = lazy(() =>
   import("@/features/history/HistoryPage").then((m) => ({ default: m.HistoryPage }))
 );
-const RunDetailPage = lazy(() =>
-  import("@/features/history/RunDetailPage").then((m) => ({ default: m.RunDetailPage }))
-);
 const WorkspacesPage = lazy(() =>
   import("@/features/workspaces/WorkspacesPage").then((m) => ({ default: m.WorkspacesPage }))
 );
@@ -69,6 +67,18 @@ const SecurityPage = lazy(() =>
 );
 
 // ── Jornada canônica /v1 (Onda 6; gated por VITE_SENTINELA_CANONICAL_ANALYSIS_ENABLED) ──────────
+/**
+ * `/dashboard/history/:id` -> `/canonical/analyses/:id/result`.
+ *
+ * Preserva deep links antigos (favorito, link compartilhado) sem manter uma segunda tela de
+ * resultado. `replace` para que o botao voltar nao caia no redirect de novo.
+ */
+function RedirecionaDetalheLegado() {
+  const { id } = useParams();
+  if (!id) return <Navigate to="/dashboard/history" replace />;
+  return <Navigate to={`/canonical/analyses/${encodeURIComponent(id)}/result`} replace />;
+}
+
 const CanonicalAnalysisLayout = lazy(() =>
   import("@/features/canonical-analysis/ui/CanonicalAnalysisLayout").then((m) => ({ default: m.CanonicalAnalysisLayout }))
 );
@@ -270,7 +280,12 @@ const routes: RouteObject[] = [
 
       // History (accessible without an active analysis)
       { path: "/dashboard/history", element: <PageSuspense><HistoryPage /></PageSuspense> },
-      { path: "/dashboard/history/:id", element: <PageSuspense><RunDetailPage /></PageSuspense> },
+      // Deep link legado do detalhe. Nada navega mais para ca desde a migracao do historico
+      // (4A/3): a linha leva direto a rota canonica. O redirect existe para que URLs salvas e
+      // compartilhadas continuem funcionando -- e leva ao renderizador CANONICO, que le o
+      // documento `analysis-result-v1`. Reconstruir um segundo renderizador do mesmo documento
+      // seria duplicar a `CanonicalResultPage` com semantica legada.
+      { path: "/dashboard/history/:id", element: <RedirecionaDetalheLegado /> },
 
       // Settings
       { path: "/dashboard/settings", element: <PageSuspense><SettingsPage /></PageSuspense> },
