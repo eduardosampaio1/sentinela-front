@@ -134,10 +134,20 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         if (existe) {
           setHasHistory(true);
           window.localStorage.setItem(storageKey, "1");
-        } else if (!localFlag && !hasScopedSessionCache) {
+        } else {
+          // Achado de review (Media): o `else if (!localFlag ...)` deixava a flag de
+          // `localStorage` sobreviver a uma resposta do backend que diz "nenhuma analise". O
+          // resultado era `analysisCompleted` verdadeiro e `/dashboard` liberado sem historico
+          // real -- estado local mandando mais que o backend.
+          //
+          // A resposta do backend MANDA. A flag local e conveniencia de arranque; quando o
+          // backend contradiz, ela e apagada em vez de mantida.
+          window.localStorage.removeItem(storageKey);
           setHasHistory(false);
-          setResult(null);
-          setDataSource("fresh");
+          if (!hasScopedSessionCache) {
+            setResult(null);
+            setDataSource("fresh");
+          }
         }
         setHistoryResolved(true);
       })

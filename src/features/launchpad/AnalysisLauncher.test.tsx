@@ -82,16 +82,16 @@ describe("AnalysisLauncher — entrada leva à jornada canônica", () => {
     expect(screen.getByTestId("modo")).toHaveTextContent("file");
   });
 
-  it("colar texto navega para a entrada canônica", async () => {
+  it("nao existe mais caixa de colar JSON", () => {
+    // Achado de review (Alta): o modo `paste` levava so o modo no state do router, e a jornada
+    // canonica NAO le esse state -- `StartAnalysisPage` faz `prepare` e `UploadStep` aceita
+    // apenas `File`. O texto colado era descartado em silencio.
+    //
+    // O controle saiu em vez de ganhar um mecanismo de rascunho entre paginas. Este caso guarda
+    // a remocao: se a caixa voltar sem um caminho real de colar na jornada, ele reclama.
     montar();
-    await userEvent.click(screen.getByRole("button", { name: "Paste JSON" }));
-    // `type` interpreta `{` como descritor de tecla do userEvent; `paste` entrega o texto cru.
-    await userEvent.click(screen.getByRole("textbox"));
-    await userEvent.paste('{"a":1}');
-    await userEvent.click(screen.getByRole("button", { name: "Analyze dataset" }));
-
-    expect(await screen.findByText("entrada canônica")).toBeInTheDocument();
-    expect(screen.getByTestId("modo")).toHaveTextContent("paste");
+    expect(screen.queryByRole("button", { name: "Paste JSON" })).toBeNull();
+    expect(screen.queryByRole("textbox")).toBeNull();
   });
 
   it("nenhuma requisição sai da ação — nem /api/analyze, nem upload antecipado", async () => {

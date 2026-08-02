@@ -91,3 +91,17 @@ describe("AnalysisContext — sonda de histórico", () => {
     expect(params).not.toHaveProperty("environmentId");
   });
 });
+
+describe("AnalysisContext — a resposta do backend manda", () => {
+  it("lista vazia APAGA a flag local de histórico", async () => {
+    // Achado de review (Média): o `else if (!localFlag ...)` deixava a flag de `localStorage`
+    // sobreviver a um backend que diz "nenhuma análise". `analysisCompleted` ficava verdadeiro e
+    // `/dashboard` liberado sem histórico real — estado local mandando mais que o backend.
+    window.localStorage.setItem("sentinela:history:ws-1", "1");
+    listMock.mockResolvedValue({ items: [], next_cursor: null });
+    montar();
+
+    await waitFor(() => expect(screen.getByTestId("sonda")).toHaveTextContent("resolvido:nao-tem"));
+    expect(window.localStorage.getItem("sentinela:history:ws-1")).toBeNull();
+  });
+});
