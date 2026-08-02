@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import type { RecommendationModel } from "@/domain/verdict.types";
 import { Button } from "@/components/ui/button";
-import { useAnalysis } from "@/hooks/useAnalysis";
 
 interface RecommendationCardProps {
   recommendation: RecommendationModel;
@@ -10,7 +9,15 @@ interface RecommendationCardProps {
 
 export function RecommendationCard({ recommendation }: RecommendationCardProps) {
   const navigate = useNavigate();
-  const { handleRerun } = useAnalysis();
+
+  // Re-run leva a jornada CANONICA em vez de reexecutar inline.
+  //
+  // O caminho inline (`/api/analyze`) exige project_id + environment_id -- o Gateway recusa
+  // sem os tres (api/routes/analysis.py). Esse eixo deixa de existir quando a identidade
+  // vira workspace-only, e dar a ele uma fonte propria seria persistencia paralela sem dono,
+  // que a matriz proibe. A jornada canonica ja faz prepare -> upload -> submit com o
+  // Orchestrator persistindo.
+  const irParaNovaAnalise = () => navigate("/canonical/analyses/new");
 
   const isEscalated = recommendation.escalated;
 
@@ -81,7 +88,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
           <Button
             size="sm"
             variant="ghost"
-            onClick={handleRerun}
+            onClick={irParaNovaAnalise}
             className="rounded-xl text-xs text-[#94A3B8] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]"
           >
             {recommendation.secondaryCtaLabel}
