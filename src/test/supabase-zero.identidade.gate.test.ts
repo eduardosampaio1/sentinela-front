@@ -44,12 +44,11 @@ describe("Supabase = 0 — identidade: o frontend não é autoridade", () => {
     // Uma segunda fonte de membership é uma segunda verdade: no dia em que divergirem, o
     // usuário vê um workspace que o backend nega — ou pior, o contrário.
     //
-    // Este cadeado nasce VERMELHO de propósito, e a lista abaixo é a prova disso: hoje o
-    // `AuthContext` busca membership no Supabase. A lista é FECHADA — some quando a Parte 5
-    // reescrever o arquivo, e ninguém pode entrar nela sem editar este teste.
-    const PENDENTE_ATE_PARTE5 = [
-      "src/contexts/AuthContext.tsx", // usa listUserWorkspaces (Supabase) — Parte 5 troca por /v1/me
-    ] as const;
+    // Este cadeado nasceu VERMELHO de propósito: o `AuthContext` buscava membership no Supabase.
+    // A lista FECHOU EM VAZIO na Onda 8 — o contexto passou a ler a projeção de `/v1/me`, e a
+    // única autoridade de membership virou o Gateway. A lista permanece aqui, vazia, porque é
+    // ela que faz o gate reprovar se alguém reabrir uma segunda fonte de verdade.
+    const PENDENTE_ATE_PARTE5: readonly string[] = [];
 
     const fontes = fontesVivas().filter(({ texto }) => /\bworkspaces\s*[:=]/.test(texto));
     expect(fontes.length, "nenhum arquivo manipula workspaces — o gate não olharia nada").toBeGreaterThan(0);

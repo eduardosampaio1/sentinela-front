@@ -28,7 +28,10 @@ if (pure.length) {
 // 2) UI: reprova erros DENTRO da jornada canônica E impõe o allowlist legado (Codex E2 R4):
 //    o baseline legado do grafo importado é EXATAMENTE este — não pode crescer nem mudar em
 //    silêncio (novo import legado com erro, ou os 3 virando 4, reprova). Ver E1-typecheck-gate.md.
-const EXPECTED_LEGACY = 3;
+// 3 -> 1 (Onda 8, macrofrente de identidade). Os dois que sairam eram de `lib/workspaces`,
+// que deixou o grafo quando o AuthContext parou de ler membership do Supabase e a
+// WorkspacesPage passou a listar a projecao de /v1/me. Baseline SO DESCE.
+const EXPECTED_LEGACY = 1;
 const uiAll = errLines(tsc("tsconfig.v1-ui.json"));
 const canonical = uiAll.filter((l) => l.includes("features/canonical-analysis"));
 const legacy = uiAll.filter((l) => !l.includes("features/canonical-analysis"));

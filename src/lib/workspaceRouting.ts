@@ -1,4 +1,7 @@
-import type { Workspace } from "@/lib/workspaces";
+// Forma ESTRUTURAL minima. `@/lib/workspaces` foi removido: era a camada Supabase de
+// membership, e membership agora vem projetada por /v1/me. So o `slug` interessa ao
+// roteamento, entao declarar aqui evita ressuscitar o modulo por causa de um tipo.
+type Workspace = { slug: string | null };
 
 function slugify(raw: string): string {
   const normalized = String(raw || "")

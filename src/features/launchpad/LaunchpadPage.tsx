@@ -13,58 +13,18 @@ function ContextStrip() {
   const { workspace } = useAuth();
   const navigate = useNavigate();
 
-
-  const hasContext = workspace || project || environment;
-  const isComplete = workspace && project && environment;
-
-  if (!hasContext) return null;
+  // Contexto ativo = workspace autenticado. `project`/`environment` sairam da identidade junto
+  // com o caminho de analise inline que os exigia; nao havia "contexto incompleto" a sinalizar
+  // aqui, porque so existe um eixo agora.
+  if (!workspace) return null;
 
   return (
-    <div
-      className={`flex items-center justify-between px-5 py-3 rounded-xl border mb-6 ${
-        isComplete
-          ? "bg-[#0D1525] border-[rgba(255,255,255,0.06)]"
-          : "bg-[rgba(252,211,77,0.04)] border-[rgba(252,211,77,0.12)]"
-      }`}
-    >
-      <div className="flex items-center gap-6 min-w-0 flex-1">
-        {workspace && (
-          <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mb-0.5">Workspace</p>
-            <p className="text-sm font-semibold text-[#F1F5F9] truncate">{workspace.name}</p>
-          </div>
-        )}
-
-        {workspace && project && (
-          <div className="w-px h-7 bg-[rgba(255,255,255,0.06)] flex-shrink-0" aria-hidden="true" />
-        )}
-
-        {project && (
-          <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mb-0.5">System</p>
-            <p className="text-sm font-medium text-[#94A3B8] truncate">{project.name}</p>
-          </div>
-        )}
-
-        {project && environment && (
-          <div className="w-px h-7 bg-[rgba(255,255,255,0.06)] hidden sm:block flex-shrink-0" aria-hidden="true" />
-        )}
-
-        {environment && (
-          <div className="hidden sm:block">
-            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mb-0.5">Environment</p>
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[rgba(79,90,232,0.08)] border border-[rgba(79,90,232,0.12)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#4F5AE8]" aria-hidden="true" />
-              <span className="text-xs font-medium text-[#4F5AE8]">{environment.name}</span>
-            </span>
-          </div>
-        )}
-
-        {!isComplete && (
-          <p className="text-xs text-[#FCD34D] ml-2">
-            Context incomplete — results will not be saved to history
-          </p>
-        )}
+    <div className="flex items-center justify-between px-5 py-3 rounded-xl border mb-6 bg-[#0D1525] border-[rgba(255,255,255,0.06)]">
+      <div className="min-w-0">
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-[#475569] mb-0.5">
+          Workspace
+        </p>
+        <p className="text-sm font-semibold text-[#F1F5F9] truncate">{workspace.name}</p>
       </div>
 
       <Button

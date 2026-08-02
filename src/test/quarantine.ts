@@ -32,13 +32,9 @@ export const QUARANTINE: readonly QuarantineEntry[] = [
     debtId: "SENT-FE-E1-Q1",
     ancora: "@/pages/Login",
   },
-  {
-    file: "src/test/homePageFlow.test.tsx",
-    category: "dead-stack",
-    reason: "Importa @/pages/HomePage (substituído por HomeWelcomePage/launchpad). Erro de coleção.",
-    debtId: "SENT-FE-E1-Q2",
-    ancora: "@/pages/HomePage",
-  },
+  // SENT-FE-E1-Q2 (`src/test/homePageFlow.test.tsx`) SAIU DA QUARENTENA na Onda 8: o arquivo foi
+  // REMOVIDO junto com a `HomeWelcomePage`, provada morta (fora do router, do bundle e do
+  // sourcemap). Dívida quitada por remoção, não por conserto — e a quarentena só encolhe.
   {
     file: "src/test/economicsRendering.test.tsx",
     category: "dead-stack",

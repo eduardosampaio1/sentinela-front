@@ -12,10 +12,13 @@ import { QUARANTINE, QUARANTINE_FILES } from "@/test/quarantine";
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..", "..", ".."); // raiz do repo
 
 describe("Gate — quarentena de baseline E1", () => {
-  it("a lista está CONGELADA em exatamente 4 suítes conhecidas", () => {
-    expect(QUARANTINE).toHaveLength(4);
-    expect(new Set(QUARANTINE.map((q) => q.file)).size).toBe(4); // sem duplicatas
-    expect(new Set(QUARANTINE.map((q) => q.debtId)).size).toBe(4); // ticket único por entrada
+  // 4 -> 3 na Onda 8: SENT-FE-E1-Q2 (`homePageFlow.test.tsx`) saiu porque o arquivo foi
+  // REMOVIDO com a `HomeWelcomePage` morta. A lista SÓ ENCOLHE — entrada nova exige editar aqui,
+  // e é isso que impede a quarentena virar depósito.
+  it("a lista está CONGELADA em exatamente 3 suítes conhecidas", () => {
+    expect(QUARANTINE).toHaveLength(3);
+    expect(new Set(QUARANTINE.map((q) => q.file)).size).toBe(3); // sem duplicatas
+    expect(new Set(QUARANTINE.map((q) => q.debtId)).size).toBe(3); // ticket único por entrada
     expect(QUARANTINE_FILES).toEqual(QUARANTINE.map((q) => q.file));
   });
 

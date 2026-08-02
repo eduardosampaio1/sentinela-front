@@ -7,7 +7,7 @@
 // em `src/test/v1/e2e-bypass-lockdown.test.ts`.
 
 import type { AuthSession } from "@/lib/auth/types";
-import type { Workspace } from "@/lib/workspaces";
+import type { E2EWorkspace as Workspace } from "@/lib/auth/e2eBridge";
 import { setE2EInjection } from "@/lib/auth/e2eBridge";
 import { enableSessionJourneyStore, makeJourneyHandlers, resetJourney, seedJourney } from "@/test/msw/journey";
 

@@ -138,22 +138,15 @@ function ContextBlock() {
       <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground mb-1.5">
         Active context
       </p>
-      {workspace && (
-        <p className="text-xs font-semibold text-muted-foreground truncate leading-tight">
-          {workspace.name}
-        </p>
-      )}
-      {project && (
-        <p className="text-xs text-muted-foreground truncate mt-0.5 leading-tight">
-          {project.name}
-        </p>
-      )}
-      {environment && (
-        <span className="inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 rounded-full bg-primary/[0.08] border border-primary/10">
-          <span className="w-1 h-1 rounded-full bg-primary" aria-hidden="true" />
-          <span className="text-[10px] text-primary font-medium">{environment.name}</span>
-        </span>
-      )}
+      {/* Contexto ativo = workspace, e so. `project`/`environment` sairam da identidade: nunca
+          foram autoridade de tenant, e o eixo que os usava (analise inline) foi removido. */}
+      <p className="text-xs font-semibold text-muted-foreground truncate leading-tight">
+        {workspace.name}
+      </p>
+      <span className="inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 rounded-full bg-primary/[0.08] border border-primary/10">
+        <span className="w-1 h-1 rounded-full bg-primary" aria-hidden="true" />
+        <span className="text-[10px] text-primary font-medium">{workspace.role}</span>
+      </span>
     </button>
   );
 }

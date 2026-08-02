@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { AnalysisLauncher } from "./AnalysisLauncher";
 
 /**
@@ -122,21 +124,12 @@ describe("AnalysisLauncher — entrada leva à jornada canônica", () => {
     expect(await screen.findByText("entrada canônica")).toBeInTheDocument();
   });
 
-  it("não toca a camada de dados Supabase", async () => {
-    // Prova por substituição: os módulos de dados explodem se alguém os chamar. Cobre o caso em
-    // que a navegação foi migrada mas uma gravação "de histórico" sobreviveu ao lado.
-    const modulos = ["@/lib/analysisRuns", "@/lib/analysisJobs"];
-    for (const m of modulos) {
-      vi.doMock(m, () => new Proxy({}, { get: () => () => { throw new Error(`${m} nao pode ser chamado`); } }));
-    }
-    try {
-      const { container } = montar();
-      const input = container.querySelector('input[type="file"]') as HTMLInputElement;
-      await userEvent.upload(input, new File([CONTEUDO], "dataset.jsonl"));
-      expect(await screen.findByText("entrada canônica")).toBeInTheDocument();
-    } finally {
-      vi.doUnmock("@/lib/analysisRuns");
-      vi.doUnmock("@/lib/analysisJobs");
-    }
+  it("a camada de dados Supabase nem existe mais para ser tocada", () => {
+    // Antes este caso substituia `@/lib/analysisRuns` e `@/lib/analysisJobs` por proxies que
+    // lancavam. Os modulos foram REMOVIDOS do disco ao chegarem a zero consumidores, entao a
+    // prova ficou mais forte: nao ha o que mockar, e um import ressuscitado quebra o build.
+    const fonte = readFileSync(resolve(__dirname, "AnalysisLauncher.tsx"), "utf8");
+    expect(fonte).not.toMatch(/@\/lib\/(analysisRuns|analysisJobs|systemRegistry|workspaces)/);
+    expect(fonte).not.toMatch(/supabase/i);
   });
 });

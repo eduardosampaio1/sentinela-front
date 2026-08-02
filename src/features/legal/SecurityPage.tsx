@@ -41,9 +41,10 @@ function ContentPT() {
 
     <h3>Isolamento de dados</h3>
     <p>
-      Cada workspace opera com isolamento lógico completo. Row-Level Security (RLS) é aplicada
-      em nível de banco de dados para garantir que um tenant jamais acesse dados de outro,
-      mesmo em caso de falha de lógica de aplicação.
+      Cada workspace opera com isolamento lógico completo. A associação do usuário aos
+      workspaces vem do provedor de identidade e é verificada pelo Gateway em CADA requisição:
+      pedir um workspace nunca é prova de pertencer a ele. Um identificador que não esteja na
+      projeção autorizada é recusado, e não corrigido.
     </p>
 
     <h3>Infraestrutura</h3>
@@ -137,9 +138,10 @@ function ContentEN() {
 
     <h3>Data isolation</h3>
     <p>
-      Each workspace operates with full logical isolation. Row-Level Security (RLS) is enforced
-      at the database level to ensure one tenant can never access another's data, even in the
-      event of application-layer logic failure.
+      Each workspace operates with full logical isolation. Workspace membership comes from the
+      identity provider and is verified by the Gateway on EVERY request: asking for a workspace
+      is never proof of belonging to it. An identifier absent from the authorized projection is
+      rejected, not repaired.
     </p>
 
     <h3>Infrastructure</h3>
