@@ -2,7 +2,6 @@ import { useState, useRef, type DragEvent, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { InlineError } from "@/shared/states/ErrorState";
 
 // O Launchpad NAO executa mais analise inline, e NAO oferece mais colar JSON.
