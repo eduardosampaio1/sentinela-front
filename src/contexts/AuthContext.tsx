@@ -156,6 +156,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // A projeção ANTERIOR cai aqui, antes de a nova chegar.
+    //
+    // Achado de review (Alta): `session`/`user` mudavam na hora, mas `memberships`/`workspaceId`
+    // só eram substituídos quando `/v1/me` do novo usuário respondia. Na janela entre as duas
+    // coisas o contexto afirmava `user = B` com `workspace = ws-a` — e um consumidor podia emitir
+    // uma chamada com o token de B carregando o workspace de A.
+    //
+    // Zerar antes é fail-closed: durante a troca não há workspace, e não haver acesso é o estado
+    // correto de quem ainda não foi projetado.
+    setMemberships([]);
+    setWorkspaceId(null);
     setMembershipsLoading(true);
     setMembershipsError(null);
     let vivo = true;

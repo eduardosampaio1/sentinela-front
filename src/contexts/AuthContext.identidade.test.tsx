@@ -19,10 +19,25 @@ vi.mock("@/lib/v1/defaultClient", () => ({ getV1Client: () => ({ me: meMock }) }
 
 const signOutMock = vi.fn(async () => {});
 let sessaoInicial: unknown = null;
+
+// Ouvintes REAIS do provider: sem eles, a troca de usuario nunca acontece no teste, e o race
+// entre a projecao antiga e a nova fica fora de alcance. Foi exatamente esse buraco que deixou
+// o vazamento de membership passar despercebido.
+let ouvintes: ((s: unknown) => void)[] = [];
+function emitirSessao(s: unknown) {
+  sessaoInicial = s;
+  for (const cb of ouvintes) cb(s);
+}
+
 vi.mock("@/lib/auth/index", () => ({
   getAuthClient: () => ({
     getSession: async () => sessaoInicial,
-    onAuthStateChange: () => () => {},
+    onAuthStateChange: (cb: (s: unknown) => void) => {
+      ouvintes.push(cb);
+      return () => {
+        ouvintes = ouvintes.filter((x) => x !== cb);
+      };
+    },
     signOut: signOutMock,
   }),
 }));
@@ -59,6 +74,7 @@ function montar() {
 }
 
 beforeEach(() => {
+  ouvintes = [];
   meMock.mockReset();
   signOutMock.mockClear();
   window.localStorage.clear();
@@ -134,6 +150,44 @@ describe("AuthContext — memberships de /v1/me", () => {
     montar();
     await waitFor(() => expect(screen.getByTestId("estado")).toHaveTextContent("erro"));
     expect(screen.getByTestId("ativo")).toHaveTextContent("nenhum");
+  });
+});
+
+describe("AuthContext — troca de usuário não vaza membership", () => {
+  it("membership de A some ANTES de a projeção de B chegar", async () => {
+    // Achado de review (Alta): `session/user` mudavam na hora, mas `memberships`/`workspaceId`
+    // so eram substituidos quando `/v1/me` de B respondia. Na janela entre as duas coisas, o
+    // contexto afirmava `user = B` com `workspace = ws-a` — e um consumidor podia emitir uma
+    // chamada com o token de B carregando o workspace de A.
+    //
+    // A prova precisa de uma projecao de B que DEMORA: com resposta imediata, a janela some e o
+    // teste passaria mesmo com o defeito presente.
+    meMock.mockResolvedValueOnce({ user: { id: "u1" }, workspaces: [WS_A], capabilities: {} });
+    montar();
+    await waitFor(() => expect(screen.getByTestId("ativo")).toHaveTextContent("ws-a"));
+
+    let liberar!: (v: unknown) => void;
+    meMock.mockReturnValueOnce(new Promise((res) => { liberar = res; }));
+    emitirSessao({ user: { id: "u2", email: "b@b.c" }, accessToken: "tok-b" });
+
+    // Janela: usuario ja e B. O workspace de A NAO pode continuar ativo aqui.
+    await waitFor(() => expect(screen.getByTestId("estado")).toHaveTextContent("carregando"));
+    expect(screen.getByTestId("ativo"), "workspace de A vazou para a sessao de B").toHaveTextContent("nenhum");
+    expect(screen.getByTestId("lista"), "memberships de A vazaram para B").toHaveTextContent("vazia");
+
+    liberar({ user: { id: "u2" }, workspaces: [WS_B], capabilities: {} });
+    await waitFor(() => expect(screen.getByTestId("ativo")).toHaveTextContent("ws-b"));
+  });
+
+  it("logout limpa memberships e workspace ativo", async () => {
+    meMock.mockResolvedValue({ user: { id: "u1" }, workspaces: [WS_A], capabilities: {} });
+    montar();
+    await waitFor(() => expect(screen.getByTestId("ativo")).toHaveTextContent("ws-a"));
+
+    emitirSessao(null);
+    await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent("anonimo"));
+    expect(screen.getByTestId("ativo")).toHaveTextContent("nenhum");
+    expect(screen.getByTestId("lista")).toHaveTextContent("vazia");
   });
 });
 
