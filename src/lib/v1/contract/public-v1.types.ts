@@ -51,6 +51,19 @@ export interface AnalysisListItem {
   record_count: number | null;
   result_available: boolean;
   created_at: string | null;
+  /**
+   * Resumo analítico materializado pelo backend na MESMA query (sem N+1, sem cálculo aqui).
+   *
+   * `null` significa **ausente**, nunca zero: análise sem resultado, indicador com
+   * `state != "measured"`, ou documento malformado. Renderizar `0` ou `"—"` como se fosse
+   * medição transformaria não-medição em fato.
+   *
+   * Os campos legados `risk_level` e `n_intents` NÃO estão aqui porque não existem no modelo
+   * canônico — não há indicador de risco nem contagem de intents. Publicá-los exigiria
+   * inventá-los.
+   */
+  engine_version?: string | null;
+  observed_conversations?: number | null;
 }
 
 /** Página de listagem por cursor determinístico. */
@@ -120,4 +133,26 @@ export interface CanonicalScope {
 export interface ListParams extends CanonicalScope {
   limit?: number;
   cursor?: string | null;
+}
+
+// ── /v1/me — projeção da sessão (Supabase = 0) ────────────────────────────────
+
+/** Membership projetada pelo Gateway a partir das claims do Keycloak. */
+export interface WorkspaceMembershipView {
+  id: string;
+  name: string;
+  role: "viewer" | "member" | "admin" | "owner";
+}
+
+/**
+ * Resposta de `GET /v1/me`.
+ *
+ * `workspaces` é a LISTA AUTORITATIVA: o frontend não a mantém, não a deriva de dado local
+ * antigo e não a completa por outra fonte. O workspace ativo é preferência local e só vale se
+ * estiver aqui.
+ */
+export interface MeView {
+  user: { id: string; email: string; name: string };
+  workspaces: WorkspaceMembershipView[];
+  capabilities: { canonical_analysis_enabled: boolean };
 }

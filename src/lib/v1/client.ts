@@ -12,6 +12,7 @@ import type {
   AnalysisStatusView,
   CanonicalScope,
   ListParams,
+  MeView,
 } from "./contract/public-v1.types";
 import { normalizeProblem, PROBLEM_MEDIA_TYPE, ProblemError } from "./problem";
 
@@ -32,8 +33,10 @@ export interface RequestOptions {
   idempotencyKey?: string;
 }
 
-/** Fronteira pública tipada — as 7 operações canônicas. */
+/** Fronteira pública tipada — identidade + as 7 operações canônicas. */
 export interface V1Client {
+  /** Sessão e workspaces permitidos. Única operação SEM escopo de tenant, por definição. */
+  me(opts?: RequestOptions): Promise<MeView>;
   prepare(scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
   uploadData(analysisId: string, scope: CanonicalScope, body: BodyInit, opts?: RequestOptions): Promise<AnalysisStatusView>;
   submit(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
@@ -87,23 +90,23 @@ export function createV1Client(config: V1ClientConfig): V1Client {
     }
   }
 
-  async function pedir<T>(
+  /**
+   * Transporte comum: auth, correlação, URL, fetch e normalização de erro.
+   *
+   * NÃO exige tenant — e não pode exigir. `/v1/me` é justamente a chamada que descobre a QUAIS
+   * workspaces o usuário pertence; pedir `workspace_id` nela seria exigir a resposta como
+   * pergunta. A precondição de tenant vive em `pedir`, uma camada acima, sem flag de bypass.
+   */
+  async function enviar<T>(
     metodo: string,
     caminho: string,
     query: Record<string, string | number | undefined | null>,
     opts: RequestOptions | undefined,
     corpo?: { body: BodyInit; contentType?: string },
     idempotente?: boolean,
+    correlacao?: string,
   ): Promise<T> {
-    const correlationId = newCorr();
-    // 0) precondição de TENANT: workspace_id é OBRIGATÓRIO e não-vazio. Como o loop de query
-    // abaixo descarta valores vazios (correto p/ opcionais como cursor/limit), um workspaceId ""
-    // (estado transitório "workspace não carregado") sairia SEM escopo de tenant. Fail-closed:
-    // invalid_input local, SEM tocar a rede — nunca uma requisição canônica sem workspace.
-    const ws = query.workspace_id;
-    if (typeof ws !== "string" || ws.trim() === "") {
-      throw new ProblemError(normalizeProblem({ code: "invalid_input" }, 400, correlationId));
-    }
+    const correlationId = correlacao ?? newCorr();
     // 1) auth ANTES da rede: sem token → authentication_required (não vaza, não chama fetch)
     const token = await config.getAccessToken();
     if (!token) {
@@ -158,7 +161,36 @@ export function createV1Client(config: V1ClientConfig): V1Client {
     return dados as T;
   }
 
+  /**
+   * Operações de ANÁLISE: exigem tenant. A precondição é incondicional — sem parâmetro de
+   * bypass, porque um booleano `exigeWorkspace` acabaria passado por engano algum dia.
+   */
+  async function pedir<T>(
+    metodo: string,
+    caminho: string,
+    query: Record<string, string | number | undefined | null>,
+    opts: RequestOptions | undefined,
+    corpo?: { body: BodyInit; contentType?: string },
+    idempotente?: boolean,
+  ): Promise<T> {
+    const correlationId = newCorr();
+    // precondição de TENANT: workspace_id é OBRIGATÓRIO e não-vazio. Como o loop de query
+    // descarta valores vazios (correto p/ opcionais como cursor/limit), um workspaceId ""
+    // (estado transitório "workspace não carregado") sairia SEM escopo de tenant. Fail-closed:
+    // invalid_input local, SEM tocar a rede — nunca uma requisição canônica sem workspace.
+    const ws = query.workspace_id;
+    if (typeof ws !== "string" || ws.trim() === "") {
+      throw new ProblemError(normalizeProblem({ code: "invalid_input" }, 400, correlationId));
+    }
+    return enviar<T>(metodo, caminho, query, opts, corpo, idempotente, correlationId);
+  }
+
   return {
+    /**
+     * Projeção da sessão: quem sou eu e a que workspaces pertenço. Fonte ÚNICA dessa verdade —
+     * o frontend não mantém lista autoritativa de membership nem a deriva de dado local antigo.
+     */
+    me: (opts) => enviar<MeView>("GET", "/v1/me", {}, opts),
     prepare: (scope, opts) =>
       pedir<AnalysisHandle>("POST", "/v1/analyses", { workspace_id: scope.workspaceId }, opts, undefined, true),
     uploadData: (analysisId, scope, body, opts) =>
