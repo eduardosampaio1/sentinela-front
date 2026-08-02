@@ -1,39 +1,54 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useAnalysis } from "@/hooks/useAnalysis";
-import { listAnalysisRuns } from "@/lib/analysisRuns";
-import { cn, formatRelativeTime, severityOrder } from "@/lib/utils";
+import { useAnalysesList } from "@/features/canonical-analysis/data/list";
+import { linhaHistoricoDe, type LinhaHistorico } from "@/features/canonical-analysis/data/historicoView";
+import { cn, formatRelativeTime } from "@/lib/utils";
 import { LoadingState } from "@/shared/states/LoadingState";
 import { EmptyState } from "@/shared/states/EmptyState";
-import type { AnalysisResult } from "@/lib/api";
 
-interface RunSummary {
-  id: string;
-  createdAt: string;
-  nConversations?: number;
-  nIntents?: number;
-  riskLevel?: string;
-  engineVersion?: string;
-  rawResult?: AnalysisResult | null;
-}
+/**
+ * Análises recentes — jornada CANÔNICA.
+ *
+ * Escopo é o **workspace autenticado**, e só ele. O eixo `(workspace, project, environment)` do
+ * histórico legado não participa: era a precondição que fazia o `/v1` devolver `400`, e o
+ * modelo canônico escopa por workspace.
+ *
+ * ## Colunas que sumiram, e por quê
+ *
+ * O card legado exibia `risk_level` e `n_intents`, lidos do `raw_result` do motor LEGADO. Nenhum
+ * dos dois existe no modelo canônico — não há indicador de risco nem contagem de intents no
+ * registro. Não estão aqui como "indisponível" porque isso sugeriria que um dia chegam por este
+ * caminho; eles só chegam se o registro de indicadores passar a medi-los.
+ *
+ * O que o backend afirma é renderizado; o que ele não afirma aparece como **indisponível**,
+ * nunca como `0` nem como texto inventado. `0` medido continua sendo `0`.
+ */
 
-function RiskBadge({ level }: { level?: string }) {
-  if (!level) return <span className="text-xs text-[#94A3B8]">—</span>;
+const INDISPONIVEL = "—";
 
-  const styles: Record<string, string> = {
-    CRITICAL: "badge-critical",
-    HIGH: "badge-high",
-    MEDIUM: "badge-high",
-    LOW: "badge-low",
-  };
-
-  const style = styles[level.toUpperCase()] ?? "badge-info";
-
+/** Célula que distingue medição de ausência — a distinção que o usuário lê. */
+function Celula({
+  testId,
+  rotulo,
+  valor,
+  mono,
+}: {
+  testId: string;
+  rotulo: string;
+  valor: string | number | null;
+  mono?: boolean;
+}) {
+  const ausente = valor === null;
   return (
-    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold", style)}>
-      {level}
-    </span>
+    <div className="text-left" data-testid={testId} data-estado={ausente ? "indisponivel" : "medido"}>
+      <p className="text-xs text-[#94A3B8]">{rotulo}</p>
+      <p
+        className={cn("text-sm font-medium text-[#94A3B8]", mono && "text-xs font-mono")}
+        aria-label={ausente ? `${rotulo}: unavailable` : undefined}
+      >
+        {ausente ? INDISPONIVEL : valor}
+      </p>
+    </div>
   );
 }
 
@@ -42,63 +57,31 @@ interface RecentRunsProps {
 }
 
 export function RecentRuns({ maxRuns = 5 }: RecentRunsProps) {
-  const { workspace, project, environment } = useAuth();
-  const { loadStoredAnalysis } = useAnalysis();
+  const { workspace } = useAuth();
   const navigate = useNavigate();
-  const [runs, setRuns] = useState<RunSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const escopo = workspace?.id ? { workspaceId: workspace.id } : null;
+  // UMA requisição para a página inteira. O resumo (conversas, engine) vem materializado pelo
+  // backend na mesma query; abrir o resultado de cada linha seria N+1 numa tela de entrada.
+  const { data, isPending, error } = useAnalysesList(escopo);
 
-  useEffect(() => {
-    if (!workspace?.id || !project?.id || !environment?.id) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    listAnalysisRuns(workspace.id, project.id, environment.id, maxRuns)
-      .then((data) => {
-        setRuns(
-          data.map((run) => ({
-            id: run.id,
-            createdAt: run.created_at ?? "",
-            nConversations: run.n_conversations ?? undefined,
-            nIntents: run.n_intents ?? undefined,
-            riskLevel: run.risk_level ?? undefined,
-            engineVersion: run.engine_version ?? undefined,
-            rawResult: run.raw_result as AnalysisResult | null,
-          }))
-        );
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Failed to load recent runs.");
-      })
-      .finally(() => setLoading(false));
-  }, [workspace?.id, project?.id, environment?.id, maxRuns]);
-
-  function handleLoadRun(run: RunSummary) {
-    if (run.rawResult) {
-      loadStoredAnalysis(run.rawResult);
-      navigate("/dashboard");
-    }
+  if (!escopo) {
+    return null;
   }
-
-  if (loading) {
-    return <LoadingState message="Loading recent analyses" size="sm" className="py-8" />;
+  if (isPending) {
+    return <LoadingState message="Loading recent analyses" size="sm" className="py-8" data-testid="recent-loading" />;
   }
-
   if (error) {
     return (
       <div className="card-base p-5">
         <p className="section-label mb-3">Recent analyses</p>
-        <p className="text-sm text-[#F87171]">{error}</p>
+        <p className="text-sm text-[#F87171]">Failed to load recent analyses.</p>
       </div>
     );
   }
 
-  if (runs.length === 0) {
+  const linhas: LinhaHistorico[] = (data?.items ?? []).slice(0, maxRuns).map(linhaHistoricoDe);
+
+  if (linhas.length === 0) {
     return (
       <div className="card-base p-6">
         <p className="section-label mb-4">Recent analyses</p>
@@ -116,7 +99,7 @@ export function RecentRuns({ maxRuns = 5 }: RecentRunsProps) {
       <div className="flex items-center justify-between mb-4">
         <p className="section-label">Recent analyses</p>
         <button
-          onClick={() => navigate("/dashboard/history")}
+          onClick={() => navigate("/canonical/analyses")}
           className="text-xs text-[#4F5AE8] hover:text-[#3E48C4] transition-colors"
         >
           View all
@@ -124,52 +107,48 @@ export function RecentRuns({ maxRuns = 5 }: RecentRunsProps) {
       </div>
 
       <div className="space-y-2">
-        {runs.map((run) => (
+        {linhas.map((linha) => (
           <button
-            key={run.id}
-            onClick={() => handleLoadRun(run)}
-            disabled={!run.rawResult}
+            key={linha.analysisId}
+            // O resultado vive na rota canônica. `result_available` continua significando
+            // EXISTÊNCIA do resultado — não a forma interna do documento.
+            onClick={() => navigate(`/canonical/analyses/${encodeURIComponent(linha.analysisId)}/result`)}
+            disabled={!linha.resultAvailable}
             className={cn(
               "w-full flex items-center gap-4 px-4 py-3 rounded-xl border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] transition-all group text-left",
-              run.rawResult
+              linha.resultAvailable
                 ? "hover:bg-[rgba(255,255,255,0.05)] hover:border-[rgba(255,255,255,0.08)] cursor-pointer"
-                : "opacity-50 cursor-not-allowed"
+                : "opacity-50 cursor-not-allowed",
             )}
           >
-            {/* Time */}
             <div className="flex-shrink-0 text-left min-w-[80px]">
-              <p className="text-xs text-[#94A3B8]">{formatRelativeTime(run.createdAt)}</p>
+              <p className="text-xs text-[#94A3B8]">
+                {linha.createdAt ? formatRelativeTime(linha.createdAt) : INDISPONIVEL}
+              </p>
             </div>
 
-            {/* Metrics */}
             <div className="flex-1 flex items-center gap-6 min-w-0">
-              {run.nConversations !== undefined && (
-                <div className="text-left">
-                  <p className="text-xs text-[#94A3B8]">Conversations</p>
-                  <p className="text-sm font-medium text-[#94A3B8]">{run.nConversations}</p>
-                </div>
-              )}
-              {run.nIntents !== undefined && (
-                <div className="text-left">
-                  <p className="text-xs text-[#94A3B8]">Intents</p>
-                  <p className="text-sm font-medium text-[#94A3B8]">{run.nIntents}</p>
-                </div>
-              )}
-              {run.engineVersion && (
-                <div className="text-left hidden sm:block">
-                  <p className="text-xs text-[#94A3B8]">Engine</p>
-                  <p className="text-xs font-mono text-[#94A3B8]">{run.engineVersion}</p>
-                </div>
-              )}
+              <Celula
+                testId={`recent-conversations-${linha.analysisId}`}
+                rotulo="Conversations"
+                valor={linha.nConversations}
+              />
+              <Celula
+                testId={`recent-records-${linha.analysisId}`}
+                rotulo="Records"
+                valor={linha.recordCount}
+              />
+              <div className="hidden sm:block">
+                <Celula
+                  testId={`recent-engine-${linha.analysisId}`}
+                  rotulo="Engine"
+                  valor={linha.engineVersion}
+                  mono
+                />
+              </div>
             </div>
 
-            {/* Risk badge */}
-            <div className="flex-shrink-0">
-              <RiskBadge level={run.riskLevel} />
-            </div>
-
-            {/* Arrow */}
-            {run.rawResult && (
+            {linha.resultAvailable && (
               <svg
                 className="w-4 h-4 text-[#475569] group-hover:text-[#4F5AE8] transition-colors flex-shrink-0"
                 fill="none"
