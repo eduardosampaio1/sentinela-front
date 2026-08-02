@@ -62,12 +62,16 @@ function responder(items: Item[], capturar?: (url: URL) => void) {
   );
 }
 
-const base = (id: string): Item => ({
+// Aceita sobrescrita, como o helper equivalente da HistoryPage. O caso que prova a ausencia
+// da celula de Engine PRECISA mandar um valor nao-nulo: com `null`, "nao aparece na tela"
+// seria ambiguo entre "o campo sumiu" e "o campo estava vazio".
+const base = (id: string, extra: Record<string, unknown> = {}): Item => ({
   analysis_id: id,
   status: "completed",
   record_count: 100,
   result_available: true,
   created_at: "2026-08-01T10:00:00Z",
+  ...extra,
 });
 
 describe("RecentRuns — jornada canônica", () => {

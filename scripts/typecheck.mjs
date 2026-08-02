@@ -33,10 +33,26 @@ if (pure.length) {
 // WorkspacesPage passou a listar a projecao de /v1/me. Baseline SO DESCE.
 const EXPECTED_LEGACY = 1;
 const uiAll = errLines(tsc("tsconfig.v1-ui.json"));
-const canonical = uiAll.filter((l) => l.includes("features/canonical-analysis"));
-const legacy = uiAll.filter((l) => !l.includes("features/canonical-analysis"));
+// SUPERFICIES VIVAS — qualquer erro AQUI reprova, sem allowlist.
+//
+// `canonical-analysis` era a unica ate a Onda 8. `launchpad` e `history` entraram porque
+// estavam VIVAS e fora do alcance do gate: o primeiro `tsc` sobre elas achou dois defeitos
+// reais de runtime (`navigate` fora de escopo, `descriptor.label` inexistente). Um gate que
+// nao alcanca a tela nao protege a tela.
+//
+// A lista e de PREFIXO DE DIRETORIO, casada com o `include` do `tsconfig.v1-ui.json`: os
+// dois precisam crescer juntos, e o teste do instrumento afirma isso.
+export const SUPERFICIES_ESTRITAS = [
+  "features/canonical-analysis",
+  "features/launchpad",
+  "features/history",
+];
+
+const estrito = (l) => SUPERFICIES_ESTRITAS.some((s) => l.includes(s));
+const canonical = uiAll.filter(estrito);
+const legacy = uiAll.filter((l) => !estrito(l));
 if (canonical.length) {
-  console.error(`[typecheck] ${canonical.length} erro(s) ESTRITO(s) na UI canônica:\n${canonical.join("\n")}`);
+  console.error(`[typecheck] ${canonical.length} erro(s) ESTRITO(s) nas superfícies vivas:\n${canonical.join("\n")}`);
   process.exit(1);
 }
 if (legacy.length !== EXPECTED_LEGACY) {

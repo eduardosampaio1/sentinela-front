@@ -13,5 +13,22 @@
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true
   },
-  "include": ["src/vite-env.d.ts", "src/features/canonical-analysis"]
+  // `src/test/setup.ts` entra para o `tsc` enxergar a augmentation de matchers do jest-dom
+  // (`toBeInTheDocument`, `toHaveAttribute`). Sem ele, todo teste de UI vira erro de tipo --
+  // e isso e defeito de CONFIGURACAO, nao do teste.
+  //
+  // `launchpad` e `history` entraram na Onda 8: eram superficies VIVAS fora do alcance do
+  // gate oficial. O primeiro `tsc` sobre elas achou DOIS defeitos reais de runtime
+  // (`navigate` fora de escopo no LaunchpadPage; `descriptor.label` inexistente no
+  // RunComparePanel).
+  //
+  // Os caminhos sao de DIRETORIO de proposito: arquivo novo nessas pastas ja nasce coberto,
+  // sem ninguem precisar lembrar de registrar.
+  "include": [
+    "src/vite-env.d.ts",
+    "src/test/setup.ts",
+    "src/features/canonical-analysis",
+    "src/features/launchpad",
+    "src/features/history"
+  ]
 }

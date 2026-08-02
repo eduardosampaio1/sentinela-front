@@ -42,6 +42,11 @@ function ContextStrip() {
 // ─── LaunchpadPage ─────────────────────────────────────────────────────────────
 
 export function LaunchpadPage() {
+  // `navigate` estava declarado APENAS dentro de `ContextStrip`, e usado aqui embaixo no
+  // botao "View last results" -- fora do escopo. Em runtime isso e `ReferenceError` no
+  // clique, numa pagina viva. Invisivel porque `features/launchpad` estava fora do alcance
+  // do `npm run typecheck`.
+  const navigate = useNavigate();
   const { analysisCompleted } = useAnalysis();
 
   // O vigia do ciclo `loading` (true -> false -> navega para /dashboard) sumiu junto com o

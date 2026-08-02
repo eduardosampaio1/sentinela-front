@@ -3,6 +3,7 @@ import { useAnalysisResult } from "@/features/canonical-analysis/data/analysis";
 import { adaptAnalysisResult, type IndicatorView } from "@/features/canonical-analysis/result/adapter";
 import type { LinhaHistorico } from "@/features/canonical-analysis/data/historicoView";
 import type { CanonicalScope } from "@/lib/v1";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
 /**
@@ -42,14 +43,25 @@ type Par =
   | { id: string; rotulo: string; kind: "comparavel"; a: IndicatorView; b: IndicatorView; delta: number }
   | { id: string; rotulo: string; kind: "incomparavel"; a: IndicatorView | null; b: IndicatorView | null };
 
-function parear(a: IndicatorView[], b: IndicatorView[]): Par[] {
+/**
+ * `t` entra por parâmetro porque `parear` é função pura — não pode chamar hook.
+ *
+ * O descriptor canônico carrega `labelKey` (chave i18n), não `label`. O código lia
+ * `descriptor.label`, que não existe: `rotulo` caía sempre no fallback e o painel exibia o **id
+ * cru** do indicador, além de ordenar por ele. Saída plausível e errada — ninguém vê "está em
+ * inglês técnico" como defeito.
+ *
+ * O erro era invisível porque `features/history` estava fora do alcance do `npm run typecheck`.
+ */
+function parear(a: IndicatorView[], b: IndicatorView[], t: (chave: string) => string): Par[] {
   const porId = new Map<string, { a?: IndicatorView; b?: IndicatorView }>();
   for (const ind of a) porId.set(ind.id, { ...(porId.get(ind.id) ?? {}), a: ind });
   for (const ind of b) porId.set(ind.id, { ...(porId.get(ind.id) ?? {}), b: ind });
 
   const pares: Par[] = [];
   for (const [id, { a: ia, b: ib }] of porId) {
-    const rotulo = ia?.descriptor.label ?? ib?.descriptor.label ?? id;
+    const chave = ia?.descriptor.labelKey ?? ib?.descriptor.labelKey;
+    const rotulo = chave ? t(chave) : id;
     // `measured` dos DOIS lados é a condição. Um indicador `unavailable` tem `rawValue` que não
     // é medição; subtraí-lo produziria um delta que parece fato e não é.
     const medidoA = ia?.state === "measured" && ia.rawValue !== null;
@@ -127,6 +139,7 @@ function Cabecalho({ linha, lado }: { linha: LinhaHistorico; lado: "A" | "B" }) 
 // ─── Painel ───────────────────────────────────────────────────────────────────
 
 export function RunComparePanel({ escopo, linhaA, linhaB, onClose }: RunComparePanelProps) {
+  const { t } = useLanguage();
   // Duas chamadas EXPLÍCITAS, ambas disparadas por esta montagem — que só acontece pela ação
   // de comparar. `habilitado` é `true` porque o painel não existe sem a intenção do usuário.
   const a = useAnalysisResult(escopo, linhaA.analysisId, true);
@@ -141,7 +154,7 @@ export function RunComparePanel({ escopo, linhaA, linhaB, onClose }: RunCompareP
     }
     return {
       tipo: "ok" as const,
-      pares: parear(adA.view.indicators, adB.view.indicators),
+      pares: parear(adA.view.indicators, adB.view.indicators, t),
       // Divergência de procedência é MOSTRADA, não normalizada.
       schemaDivergente: adA.view.schemaVersion !== adB.view.schemaVersion,
       registryDivergente:
@@ -149,7 +162,7 @@ export function RunComparePanel({ escopo, linhaA, linhaB, onClose }: RunCompareP
       registryA: adA.view.indicatorRegistryVersion,
       registryB: adB.view.indicatorRegistryVersion,
     };
-  }, [a.data, b.data]);
+  }, [a.data, b.data, t]);
 
   const carregando = a.isPending || b.isPending;
   const falhou = Boolean(a.error || b.error);
