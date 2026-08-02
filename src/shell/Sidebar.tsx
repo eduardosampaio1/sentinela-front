@@ -143,10 +143,11 @@ function ContextBlock() {
       <p className="text-xs font-semibold text-muted-foreground truncate leading-tight">
         {workspace.name}
       </p>
-      <span className="inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 rounded-full bg-primary/[0.08] border border-primary/10">
-        <span className="w-1 h-1 rounded-full bg-primary" aria-hidden="true" />
-        <span className="text-[10px] text-primary font-medium">{workspace.role}</span>
-      </span>
+      {/* `text-primary` sobre `bg-primary/[0.08]` da 3,69:1 — abaixo de AA (4,5:1). O gate de
+          contraste no DOM vivo pegou. A mesma cor do rotulo acima passa, entao o papel usa ela. */}
+      <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground mt-1.5">
+        {workspace.role}
+      </p>
     </button>
   );
 }
