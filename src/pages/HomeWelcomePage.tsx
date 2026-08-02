@@ -1,18 +1,25 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { hasUserAnalysisRuns } from "@/lib/analysisRuns";
-
+/**
+ * Tela de primeira decisão: Quick Scan ou Deep Analysis.
+ *
+ * ## Por que aqui não há consulta nenhuma
+ *
+ * Havia uma: `hasUserAnalysisRuns(user.id)`, contra `analysis_runs` no Supabase. O resultado ia
+ * para um estado que o próprio componente descartava — `const [, setHasRuns]` — e portanto nunca
+ * era lido, nunca decidia nada, nunca chegava à tela. Custava uma requisição e não produzia
+ * informação.
+ *
+ * Não foi substituída por uma chamada `/v1` equivalente porque não havia pergunta a responder:
+ * a tela renderiza duas ações fixas, iguais para quem já analisou e para quem nunca analisou.
+ * Trocar um acesso inútil por outro seria migrar a forma e preservar o desperdício.
+ *
+ * ## Estado desta tela
+ *
+ * `/home/welcome` é servida pela `LaunchpadPage` no `router.tsx`, e o único import deste arquivo
+ * fora dele mesmo é o teste, que declara a rota por conta própria — ela **não é alcançável pelo
+ * app**. Continua aqui de propósito: remoção tem lote próprio, e a regra do programa é não
+ * apagar antes de a prova de desuso estar registrada.
+ */
 export default function HomeWelcomePage() {
-  const { user } = useAuth() as { user?: { id: string; email?: string } | null };
-  const [, setHasRuns] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    void hasUserAnalysisRuns(user.id)
-      .then(setHasRuns)
-      .catch(() => setHasRuns(false));
-  }, [user?.id]);
-
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
       <h1 className="text-2xl font-semibold text-foreground">
