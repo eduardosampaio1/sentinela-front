@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalysis } from "@/hooks/useAnalysis";
 import { LoadingState } from "@/shared/states/LoadingState";
+import { FundacaoV1 } from "./FundacaoV1";
 
 // ─── Lazy page imports ─────────────────────────────────────────────────────────
 
@@ -265,8 +266,13 @@ const routes: RouteObject[] = [
   },
 
   // ── Protected routes ──────────────────────────────────────────────────────
+  //
+  // `FundacaoV1` fica ENTRE o portao de autenticacao e as telas: toda tela autenticada pode ler
+  // `/v1`, inclusive as legadas ja migradas. Ver src/app/FundacaoV1.tsx.
   {
     element: <ProtectedRoute />,
+    children: [{
+    element: <FundacaoV1 />,
     children: [
       // Launchpad — primary entry for authenticated users
       { path: "/home", element: <PageSuspense><LaunchpadPage /></PageSuspense> },
@@ -313,6 +319,7 @@ const routes: RouteObject[] = [
         ],
       },
     ],
+    }],
   },
 
   // ── Legacy redirect aliases ────────────────────────────────────────────────
