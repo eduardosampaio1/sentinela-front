@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
@@ -6,7 +5,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAnalysis } from "@/hooks/useAnalysis";
 import { AnalysisLauncher } from "./AnalysisLauncher";
 import { RecentRuns } from "./RecentRuns";
-import { ProcessingOverlay } from "./ProcessingOverlay";
 import { Button } from "@/components/ui/button";
 
 // ─── Active context strip ────────────────────────────────────────────────────
@@ -84,40 +82,14 @@ function ContextStrip() {
 // ─── LaunchpadPage ─────────────────────────────────────────────────────────────
 
 export function LaunchpadPage() {
-  const { analysisCompleted, loading, loadingStep, loadingProgress, result } = useAnalysis();
-  const navigate = useNavigate();
+  const { analysisCompleted } = useAnalysis();
 
-  // Navigate to dashboard when a fresh analysis finishes successfully.
-  // We watch the loading cycle (true → false) instead of `analysisCompleted`
-  // because `analysisCompleted` may already be true (hasHistory) before the run
-  // starts, making the false→true edge never fire for repeat users.
-  // We also capture the result at load-start so we can detect whether a NEW
-  // result was produced (vs a failed run that leaves the old result in place).
-  const prevLoading = useRef(loading);
-  const resultAtLoadStart = useRef<typeof result | undefined>(undefined);
-  useEffect(() => {
-    if (loading && !prevLoading.current) {
-      // Loading just started — snapshot the current result to compare later.
-      resultAtLoadStart.current = result;
-    }
-    if (!loading && prevLoading.current) {
-      // Loading just ended — navigate only if a new result was produced.
-      if (result !== null && result !== resultAtLoadStart.current) {
-        navigate("/dashboard");
-      }
-      resultAtLoadStart.current = undefined;
-    }
-    prevLoading.current = loading;
-  }, [loading, navigate, result]);
+  // O vigia do ciclo `loading` (true -> false -> navega para /dashboard) sumiu junto com o
+  // caminho inline: sem execucao aqui, nao ha ciclo para observar. A jornada canonica leva
+  // o usuario a identidade duravel por conta propria.
 
   return (
     <>
-      <ProcessingOverlay
-        visible={loading}
-        stage={loadingStep}
-        progress={loadingProgress}
-      />
-
       <AppShell topBarTitle="Launchpad">
         <PageFrame maxWidth="xl">
 

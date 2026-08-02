@@ -9,15 +9,10 @@ import {
   type ReactNode,
 } from "react";
 import {
-  analyzeConversations,
-  hashDataset,
   isSessionCached,
   loadResult,
-  parseConversationsInput,
   saveResult,
   type AnalysisResult,
-  type JobStageUpdate,
-  type JobExecutionProfile,
 } from "@/lib/api";
 import { getV1Client } from "@/lib/v1/defaultClient";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,40 +32,17 @@ import { useToast } from "@/hooks/use-toast";
  * tenant é o workspace autenticado.
  */
 async function workspaceTemAnalise(workspaceId: string): Promise<boolean> {
-  const pagina = await getV1Client().analyses.list({ workspaceId, limit: 1 });
+  const pagina = await getV1Client().list({ workspaceId, limit: 1 });
   return (pagina.items?.length ?? 0) > 0;
 }
 
 // Sprint 5: stage → progress mapping (never fake percentages)
-const STAGE_PROGRESS: Record<string, number> = {
-  queued:     10,
-  preparing:  20,
-  embedding:  40,
-  analyzing:  75,
-  finalizing: 90,
-  completed:  100,
-  failed:     0,
-};
-
 interface AnalysisContextValue {
   result: AnalysisResult | null;
   hasHistory: boolean;
   analysisCompleted: boolean;
   historyResolved: boolean;
   dataSource: "cached" | "fresh";
-  loading: boolean;
-  loadingMessage: string;
-  loadingStep: number;
-  loadingProgress: number;
-  // Sprint 5: real job stage
-  jobStage: string;
-  jobStageLabel: string;
-  jobStageDetail: string;
-  executionProfile: JobExecutionProfile | null;
-  runAnalysis: (conversations: unknown[]) => Promise<void>;
-  handleRerun: () => void;
-  handleFileUpload: (file: File) => void;
-  handlePasteAnalysis: (text: string) => void;
   clearAnalysis: () => void;
   loadStoredAnalysis: (analysis: AnalysisResult) => void;
 }
@@ -92,18 +64,8 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [hasHistory, setHasHistory] = useState(false);
   const [historyResolved, setHistoryResolved] = useState(false);
   const [dataSource, setDataSource] = useState<"cached" | "fresh">("fresh");
-  const [loading, setLoading] = useState(false);
-  const [loadingStep, setLoadingStep] = useState(0);
-  const [loadingProgress, setLoadingProgress] = useState(0);
   // `activeJob` saiu junto: o tipo vinha de `lib/analysisJobs` (camada Supabase) e nenhuma
   // tela consumia o campo -- era estado publicado sem leitor.
-  // Sprint 5: real job stage from API
-  const [jobStage, setJobStage] = useState("queued");
-  const [jobStageLabel, setJobStageLabel] = useState("Preparing analysis job");
-  const [jobStageDetail, setJobStageDetail] = useState("Your dataset has been received and is being scheduled.");
-  const [executionProfile, setExecutionProfile] = useState<JobExecutionProfile | null>(null);
-
-  const lastConversationsRef = useRef<unknown[] | null>(null);
 
   const { toast } = useToast();
   const { user, workspace, project, environment } = useAuth();
@@ -126,17 +88,6 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       window.localStorage.setItem(historyStorageKey, "1");
     }
   }, [historyStorageKey]);
-
-  // Sprint 5: no fake timer — progress is driven by real job stage updates
-  useEffect(() => {
-    if (!loading) return;
-    setLoadingStep(0);
-    setLoadingProgress(10);
-    setJobStage("queued");
-    setJobStageLabel("Preparing analysis job");
-    setJobStageDetail("Your dataset has been received and is being scheduled.");
-    setExecutionProfile(null);
-  }, [loading]);
 
   useEffect(() => {
     if (!workspace?.id) {
@@ -202,148 +153,18 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     };
   }, [contextScope, workspace?.id]);
 
-  const finishLoading = useCallback(() => {
-    setLoadingProgress(100);
-
-    window.setTimeout(() => {
-      setLoading(false);
-      setLoadingStep(0);
-      setLoadingProgress(0);
-    }, 350);
-  }, []);
-
-  const runAnalysis = useCallback(
-    async (conversations: unknown[]) => {
-      if (conversations.length < 2) {
-        toast({
-          title: "Minimum 2 conversations required",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!user?.id || !workspace?.id || !project?.id || !environment?.id) {
-        toast({
-          title: "Missing workspace context",
-          description: "You must be logged in and attached to workspace, system, and environment.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      lastConversationsRef.current = conversations;
-      setLoading(true);
-
-      try {
-        const handleStageUpdate = (update: JobStageUpdate) => {
-        setJobStage(update.jobStage);
-        setJobStageLabel(update.jobStageLabel || update.jobStage);
-        setJobStageDetail(update.jobStageDetail || "");
-        if (update.executionProfile) setExecutionProfile(update.executionProfile);
-        const progress = STAGE_PROGRESS[update.jobStage] ?? 10;
-        setLoadingProgress(progress);
-      };
-
-      const apiResult = await analyzeConversations(conversations, {
-          workspaceId: workspace.id,
-          projectId: project.id,
-          environmentId: environment.id,
-          onStageUpdate: handleStageUpdate,
-        });
-        const inputHash = await hashDataset(conversationsToJsonl(conversations));
-
-        setResult(apiResult);
-        saveResult(apiResult, inputHash, contextScope);
-        setDataSource("fresh");
-        markHasHistory();
-
-        // Aqui havia `saveAnalysisRun`: o navegador gravava a análise em `analysis_runs`.
-        //
-        // Pela matriz congelada, análises pertencem ao Orchestrator. E a gravação não era
-        // duplicata de nada — era o frontend fabricando o registro, que é justamente o que a
-        // matriz proíbe. Não ganha substituto em `/v1`: uma escrita que não deveria pertencer ao
-        // cliente não vira endpoint novo.
-        //
-        // Nada do que ela protegia se perde: `setResult`, `saveResult` e `markHasHistory` já
-        // aconteceram acima. O que some é o `analysis_run_id` — id de linha do Supabase, sem
-        // contraparte canônica (lá a identidade é `analysis_id`, e o `ExecutiveAxis` já lê
-        // `analysis_run_id ?? analysis_id`).
-        toast({
-          title: "Analysis completed successfully.",
-        });
-        finishLoading();
-      } catch (error: unknown) {
-        finishLoading();
-        toast({
-          title: "Analysis failed",
-          description: getErrorMessage(error),
-          variant: "destructive",
-        });
-      }
-    },
-    [
-      contextScope,
-      environment?.id,
-      finishLoading,
-      markHasHistory,
-      project?.id,
-      toast,
-      user?.id,
-      workspace?.id,
-    ]
-  );
-
-  const handleRerun = useCallback(() => {
-    if (lastConversationsRef.current) {
-      void runAnalysis(lastConversationsRef.current);
-      return;
-    }
-
-    toast({
-      title: "No dataset loaded",
-      description: "Upload or paste a dataset first.",
-      variant: "destructive",
-    });
-  }, [runAnalysis, toast]);
-
-  const handleFileUpload = useCallback(
-    (file: File) => {
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        try {
-          const text = reader.result as string;
-          const conversations = parseConversationsInput(text);
-          void runAnalysis(conversations);
-        } catch (error: unknown) {
-          toast({
-            title: "Invalid JSON file",
-            description: getErrorMessage(error),
-            variant: "destructive",
-          });
-        }
-      };
-
-      reader.readAsText(file);
-    },
-    [runAnalysis, toast]
-  );
-
-  const handlePasteAnalysis = useCallback(
-    (text: string) => {
-      try {
-        const conversations = parseConversationsInput(text);
-        void runAnalysis(conversations);
-      } catch (error: unknown) {
-        toast({
-          title: "Invalid dataset JSON",
-          description: getErrorMessage(error),
-          variant: "destructive",
-        });
-      }
-    },
-    [runAnalysis, toast]
-  );
+  // AQUI FICAVA O CAMINHO INLINE: `runAnalysis`, `handleRerun`, `handleFileUpload` e
+  // `handlePasteAnalysis`, mais o maquinario de progresso (`loading`, `loadingStep`,
+  // `loadingProgress`, `jobStage*`, `executionProfile`, `finishLoading`).
+  //
+  // Todos falavam com `/api/analyze`, que o Gateway recusa sem project_id +
+  // environment_id. Esse eixo perdeu dono quando a identidade virou workspace-only, e dar
+  // a ele uma fonte propria seria persistencia paralela sem dono arquitetural.
+  //
+  // A entrada de analise agora e a jornada canonica: o Launchpad e o Re-run navegam para
+  // /canonical/analyses/new, onde prepare -> upload -> submit acontece com o Orchestrator
+  // como dono do registro. Zero consumidores restantes provados por grep, por
+  // desestruturacao, por alias, em mocks, em testes, e pelo sourcemap do build.
 
   // AQUI FICAVA `importAnalysisResult`.
   //
@@ -358,7 +179,6 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const clearAnalysis = useCallback(() => {
     setResult(null);
     setDataSource("fresh");
-    setActiveJob(null);
   }, []);
 
   const loadStoredAnalysis = useCallback((analysis: AnalysisResult) => {
@@ -375,18 +195,6 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       analysisCompleted: hasHistory || Boolean(result),
       historyResolved,
       dataSource,
-      loading,
-      loadingMessage: jobStageLabel || "Analyzing dataset",
-      loadingStep,
-      loadingProgress,
-      jobStage,
-      jobStageLabel,
-      jobStageDetail,
-      executionProfile,
-      runAnalysis,
-      handleRerun,
-      handleFileUpload,
-      handlePasteAnalysis,
       clearAnalysis,
       loadStoredAnalysis,
     }),
@@ -395,17 +203,6 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       hasHistory,
       historyResolved,
       dataSource,
-      loading,
-      loadingStep,
-      loadingProgress,
-      jobStage,
-      jobStageLabel,
-      jobStageDetail,
-      executionProfile,
-      runAnalysis,
-      handleRerun,
-      handleFileUpload,
-      handlePasteAnalysis,
       clearAnalysis,
       loadStoredAnalysis,
     ]

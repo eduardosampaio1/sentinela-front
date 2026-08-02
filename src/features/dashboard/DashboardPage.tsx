@@ -77,7 +77,7 @@ function SectionDivider({ label }: { label: string }) {
 // ─── Dashboard page ───────────────────────────────────────────────────────────
 
 export function DashboardPage() {
-  const { result, loading, dataSource } = useAnalysis();
+  const { result, dataSource } = useAnalysis();
   const navigate = useNavigate();
 
   const domain = useMemo(() => (result ? adaptAnalysisResult(result) : null), [result]);

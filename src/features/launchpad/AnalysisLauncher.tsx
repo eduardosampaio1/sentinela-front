@@ -1,9 +1,23 @@
 import { useState, useRef, type DragEvent, type ChangeEvent } from "react";
-import { useAnalysis } from "@/hooks/useAnalysis";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { InlineError } from "@/shared/states/ErrorState";
+
+// O Launchpad NAO executa mais analise inline.
+//
+// O caminho antigo (`handleFileUpload`/`handlePasteAnalysis` -> `runAnalysis` -> /api/analyze)
+// exige project_id + environment_id: o Gateway recusa sem os tres. Esse eixo perde dono quando
+// a identidade vira workspace-only, e dar a ele uma fonte propria seria persistencia paralela
+// sem dono arquitetural.
+//
+// A jornada canonica NAO aceita prefill: `StartAnalysisPage` e um botao que faz `prepare` e
+// navega para a identidade duravel; o `UploadStep` recebe o `File` so depois. Entao o launcher
+// leva apenas o MODO pretendido, em `state` do router -- nunca na URL, que fica registrada em
+// historico, log de proxy e Referer. Conteudo de dataset nao entra em URL.
+//
+// Nao ha upload antecipado: enviar bytes antes de a analise existir criaria artefato sem dono.
 
 type Mode = "upload" | "paste";
 
@@ -38,7 +52,9 @@ function getDatasetEta(count: number): DatasetEta | null {
 }
 
 export function AnalysisLauncher() {
-  const { handleFileUpload, handlePasteAnalysis, loading } = useAnalysis();
+  const navigate = useNavigate();
+  // Nao existe mais operacao longa nesta tela: a acao navega. Sem estado de carregamento.
+  const loading = false;
   const [mode, setMode] = useState<Mode>("upload");
   const [pastedText, setPastedText] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -46,20 +62,9 @@ export function AnalysisLauncher() {
   const [datasetEta, setDatasetEta] = useState<DatasetEta | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function readAndDispatchFile(file: File) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const text = reader.result as string;
-      try {
-        const count = estimateRecordCount(text);
-        setDatasetEta(getDatasetEta(count));
-      } catch {
-        setDatasetEta(null);
-      }
-      handleFileUpload(file);
-    };
-    reader.onerror = () => handleFileUpload(file);
-    reader.readAsText(file);
+  /** Leva a jornada canonica com o modo pretendido. Nada de conteudo, nada de rede. */
+  function irParaJornadaCanonica(modo: "file" | "paste") {
+    navigate("/canonical/analyses/new", { state: { modo } });
   }
 
   function handleDragOver(e: DragEvent) {
@@ -82,7 +87,7 @@ export function AnalysisLauncher() {
     }
     setValidationError(null);
     setDatasetEta(null);
-    readAndDispatchFile(file);
+    irParaJornadaCanonica("file");
   }
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
@@ -90,9 +95,9 @@ export function AnalysisLauncher() {
     if (!file) return;
     setValidationError(null);
     setDatasetEta(null);
-    readAndDispatchFile(file);
     // Reset input so same file can be re-selected
     e.target.value = "";
+    irParaJornadaCanonica("file");
   }
 
   function handlePasteSubmit() {
@@ -107,7 +112,10 @@ export function AnalysisLauncher() {
     } catch {
       setDatasetEta(null);
     }
-    handlePasteAnalysis(pastedText);
+    // O texto colado NAO viaja: a jornada canonica recebe o dataset como arquivo no
+    // `UploadStep`. Levar o conteudo aqui exigiria um mecanismo de rascunho entre paginas que
+    // nao existe, e inventa-lo seria mais superficie do que a migracao pede.
+    irParaJornadaCanonica("paste");
   }
 
   return (

@@ -59,7 +59,13 @@ describe("linha de histórico canônica", () => {
   it("não inventa risk_level nem n_intents", () => {
     // Não existem no modelo canônico. O tipo não os declara, e o adapter não os produz —
     // nem como null, que sugeriria que um dia chegam por este caminho.
-    const linha = linhaHistoricoDe({ ...BASE, observed_conversations: 7 }) as Record<string, unknown>;
+    // `as unknown as` porque `LinhaHistorico` e `Record<string, unknown>` não se sobrepõem: é
+    // justamente essa não-sobreposição que o caso afirma. A conversão direta é erro sob o
+    // tsconfig da camada canônica pura.
+    const linha = linhaHistoricoDe({ ...BASE, observed_conversations: 7 }) as unknown as Record<
+      string,
+      unknown
+    >;
     expect("riskLevel" in linha).toBe(false);
     expect("nIntents" in linha).toBe(false);
   });
