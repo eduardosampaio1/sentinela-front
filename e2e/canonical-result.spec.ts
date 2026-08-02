@@ -1,31 +1,18 @@
-// E5 — resultado em browser real (Onda 6 E5, item 17). O payload provisório é semeado no MSW
-// worker (sessionStorage) e chega pelo GET público; o validator/adapter decidem a renderização.
+// E5 — resultado em browser real (Onda 6 E5, item 17). O documento é semeado no MSW worker
+// (sessionStorage) e chega pelo GET público; o validator/adapter decidem a renderização.
+//
+// As massas vêm de `src/test/fixtures/canonical-result/massas.ts` — as MESMAS que a suíte de
+// unidade usa. Até a Onda 8 este arquivo carregava cópias locais do perfil PROVISÓRIO, que o
+// frontend abandonou quando migrou para `analysis-result-v1` (integração do Assembler). O
+// validator recusava, corretamente, um schema que ele não conhece — e o spec ficou vermelho sem
+// ninguém rodar. Duplicar a massa foi o que permitiu as duas verdades divergirem; importar a
+// fonte única é o que impede a divergência de voltar.
 //
 // Isolamento por workspace é provado no nível de componente/adapter (a fixture E2E injeta um
 // workspace único); aqui a prova é: só /v1, deep link, refresh, indisponível, incompatível, parcial.
 
 import { expect, test, type Page } from "@playwright/test";
-
-const MASSA_A = {
-  schema: "provisional-analysis-result-v1",
-  summary: { total_records: 100, useful_outcomes: 80, analyzed_at: "2026-07-31T10:00:00Z" },
-  indicators: [
-    { id: "useful_rate", kind: "ratio", availability: "available", value: 0.8 },
-    { id: "intent_coverage_rate", kind: "ratio", availability: "available", value: 0.85 },
-    { id: "token_waste_absolute", kind: "count", availability: "available", value: 20 },
-    { id: "cost_per_useful_outcome", kind: "currency", availability: "available", value: 0.125, currency: null },
-  ],
-  recommendations: [{ id: "r1", title: "Revisar intenções sem cobertura", description: null }],
-};
-
-const MASSA_PARCIAL = {
-  schema: "provisional-analysis-result-v1",
-  summary: { total_records: 5, useful_outcomes: null, analyzed_at: null },
-  indicators: [
-    { id: "useful_rate", kind: "ratio", availability: "available", value: 0.5 },
-    { id: "id_desconhecido", kind: "ratio", availability: "available", value: 0.9 },
-  ],
-};
+import { MASSA_A, MASSA_D_PARCIAL } from "../src/test/fixtures/canonical-result/massas";
 
 async function semear(page: Page, id: string, payload: unknown, resultAvailable = true) {
   await page.addInitScript(
@@ -66,14 +53,25 @@ test.describe("E5 — resultado canônico (browser real)", () => {
     await expect(cobertura).toContainText("85");
     await expect(cobertura).toContainText("%");
     await expect(cobertura).not.toContainText("8,500");
-    // waste é contagem, sem "%"
-    const waste = page.locator("li", { hasText: "Wasted records" });
-    await expect(waste).toContainText("20");
-    await expect(waste).not.toContainText("20%");
-    // recomendação renderizada
-    await expect(page.getByText("Revisar intenções sem cobertura")).toBeVisible();
-    // marca de provisório
-    await expect(page.getByText(/Provisional presentation profile/i)).toBeVisible();
+    // contagem e contagem, sem "%" -- o par do caso acima. Se a unidade viesse do rotulo em
+    // vez do documento, os dois passariam (ou falhariam) juntos.
+    // Âncora no INÍCIO do texto do card: "Analyzed conversations" também aparece no meio da
+    // descrição de outros indicadores ("Share of ... analyzed conversations"), e um `hasText`
+    // solto casava quatro cards.
+    const contagem = page.locator("li", { hasText: /^Analyzed conversations/ });
+    await expect(contagem).toContainText("100");
+    await expect(contagem, "contagem não é formatada como taxa").not.toContainText("100%");
+    // `token_waste_absolute` ("Wasted records") NAO e mais asserido: ele saiu do registro
+    // canonico porque nao tinha produtor -- o numero vinha de um proxy int(round(avg_tokens)),
+    // anotado como tal no proprio codigo analitico. Manter a assercao exigiria manter o
+    // rotulo, e rotulo sem produtor e numero inventado com cara de medicao.
+    // Ver src/features/canonical-analysis/result/descriptors.ts.
+    // O "porquê" do número, visível ao lado dele. Aqui havia a asserção da marca "Provisional
+    // presentation profile", que o app parou de mostrar quando o perfil provisório saiu — hoje a
+    // string não existe em `src/`. Trocá-la por nada deixaria o caso sem a prova de honestidade
+    // que ele carregava; a descrição do indicador é o equivalente canônico, e é ela que impede um
+    // número aparecer sem dizer de onde veio.
+    await expect(contagem).toContainText("It is the denominator of the rates above.");
 
     expect(legado, "sem chamada legada").toBe(0);
     expect(v1, "consumiu o Gateway /v1").toBeGreaterThan(0);
@@ -103,7 +101,7 @@ test.describe("E5 — resultado canônico (browser real)", () => {
   });
 
   test("parcial: seção suportada renderiza e a parcialidade é sinalizada", async ({ page }) => {
-    await semear(page, "an-parc", MASSA_PARCIAL);
+    await semear(page, "an-parc", MASSA_D_PARCIAL);
     await page.goto("/canonical/analyses/an-parc/result");
     await expect(page.getByText("Useful outcome rate")).toBeVisible();
     await expect(page.getByText(/Some sections aren't available/i)).toBeVisible();

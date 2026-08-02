@@ -6,22 +6,14 @@
 // hardcode sem olhar).
 
 import { expect, test, type Page } from "@playwright/test";
+// Massa canonica: MESMA fonte da suite de unidade. A copia local aqui era do perfil
+// PROVISORIO, abandonado quando o frontend migrou para analysis-result-v1 na integracao do
+// Assembler. O validator recusava (corretamente) um schema que nao conhece, a pagina mostrava
+// o estado seguro -- e este gate media o contraste da TELA DE ERRO, achando que media o
+// resultado. Copia e o que permite duas verdades divergirem sem ninguem notar.
+import { MASSA_A as MASSA_CONTRASTE } from "../src/test/fixtures/canonical-result/massas";
 
 const AA_TEXTO_NORMAL = 4.5;
-
-// A massa é a MASSA A da E5 (proveniência em docs/onda6/E5-massa-sintetica-proveniencia.md):
-// aqui ela existe só para a página de resultado ter TEXTO REAL a medir — indicador disponível,
-// ausente ("Not measured") e recomendação — cobrindo os tons que o E7 consolidou.
-const MASSA_CONTRASTE = {
-  schema: "provisional-analysis-result-v1",
-  summary: { total_records: 100, useful_outcomes: 80, analyzed_at: "2026-07-31T10:00:00Z" },
-  indicators: [
-    { id: "useful_rate", kind: "ratio", availability: "available", value: 0.8 },
-    { id: "token_waste_absolute", kind: "count", availability: "available", value: 20 },
-    { id: "cost_per_useful_outcome", kind: "currency", availability: "not_measured", value: null, currency: null },
-  ],
-  recommendations: [{ id: "r1", title: "Revisar intenções sem cobertura", description: null }],
-};
 
 async function habilitar(page: Page) {
   await page.addInitScript(
