@@ -1,4 +1,8 @@
 import { getAuthClient } from "@/lib/auth/index";
+// Reusa o gerador da camada canônica em vez de um `crypto.randomUUID()` solto: ele já trata o
+// ambiente sem `crypto.randomUUID` (ver `lib/v1/client.ts`), e ter DOIS geradores de
+// identificador no mesmo app é como se acumulam formatos que ninguém consegue correlacionar.
+import { novoId } from "@/lib/v1/client";
 
 const DEFAULT_GATEWAY_API_URL = "https://sentinela-gateway.onrender.com";
 
@@ -507,7 +511,20 @@ async function invalidateSessionIfNeeded(status: number, bodyText: string): Prom
 async function createAnalysisWithFallback(
   formData: FormData,
 ): Promise<{ analysisId: string; baseUrl: string }> {
-  const headers = await getAuthHeaders({ Accept: "application/json" });
+  // `Idempotency-Key` passou a ser OBRIGATÓRIA em `POST /analyses/`: a rota agora abre uma
+  // ingestão no Ingestion Service, e é a chave que impede um duplo clique de virar duas.
+  //
+  // Gerada UMA vez, aqui, e reusada no laço de bases abaixo. Gerá-la dentro do laço faria
+  // cada tentativa contra outra base URL abrir uma ingestão nova — exatamente o que a
+  // idempotência existe para impedir, e num ponto em que o usuário não fez nada de novo.
+  //
+  // Uma chamada desta função = uma intenção do usuário de analisar este dataset. É a mesma
+  // regra do `useIdempotencyIntent` da jornada canônica, aplicada onde não há hook.
+  const idempotencyKey = novoId();
+  const headers = await getAuthHeaders({
+    Accept: "application/json",
+    "Idempotency-Key": idempotencyKey,
+  });
   const attemptErrors: string[] = [];
 
   for (const baseUrl of API_BASE_CANDIDATES) {
