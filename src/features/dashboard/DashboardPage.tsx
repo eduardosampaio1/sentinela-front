@@ -77,7 +77,7 @@ function SectionDivider({ label }: { label: string }) {
 // ─── Dashboard page ───────────────────────────────────────────────────────────
 
 export function DashboardPage() {
-  const { result, dataSource } = useAnalysis();
+  const { result } = useAnalysis();
   const navigate = useNavigate();
 
   const domain = useMemo(() => (result ? adaptAnalysisResult(result) : null), [result]);
@@ -115,11 +115,9 @@ export function DashboardPage() {
       topBarTitle="Dashboard"
       topBarActions={
         <div className="flex items-center gap-2">
-          {dataSource === "cached" && (
-            <span className="text-[10px] uppercase tracking-wide font-semibold text-[#4F5AE8] bg-[rgba(79,90,232,0.08)] border border-[rgba(79,90,232,0.12)] px-2 py-1 rounded-full">
-              Cached
-            </span>
-          )}
+          {/* O selo "Cached" saiu com o cache de sessao. Sem copia local, todo
+              resultado na tela veio do Gateway agora — um selo que nunca acende e
+              ruido, nao informacao. */}
           <Button
             size="sm"
             variant="ghost"

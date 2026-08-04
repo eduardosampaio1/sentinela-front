@@ -96,28 +96,14 @@ describe("a jornada canônica não deixa dado no navegador", () => {
   }
 });
 
-describe("dívida declarada do caminho legado", () => {
-  it("`saveResult` do legado guarda o resultado em sessionStorage — e some com o legado", () => {
-    // Este teste NÃO é uma proibição: é um registro executável de uma dívida conhecida.
-    //
-    // `src/lib/api.ts` persiste o `AnalysisResult` inteiro em `sessionStorage`. É o caminho
-    // legado, que o Big Bang apaga junto com `analyzeConversations`. Enquanto ele existir, a
-    // cópia no navegador existe — e nenhum purge do servidor a alcança.
-    //
-    // O teste falha no dia em que o legado sumir, e aí ele deve ser REMOVIDO junto: um
-    // lembrete que sobrevive ao seu motivo vira ruído.
-    // Mede `saveResult` NOMINALMENTE, não "qualquer sessionStorage no arquivo": se a função
-    // sumisse mas sobrasse outro `setItem`, o lembrete continuaria verde apontando para uma
-    // dívida que já não existe — e a dívida que existe passaria despercebida.
-    const legado = fs.readFileSync(path.resolve(RAIZ, "../../lib/api.ts"), "utf-8");
-    const corpo = legado.slice(legado.indexOf("export function saveResult"));
-    expect(
-      corpo.startsWith("export function saveResult"),
-      "`saveResult` sumiu do legado: remova este lembrete",
-    ).toBe(true);
-    expect(
-      /sessionStorage\.setItem/.test(corpo.slice(0, corpo.indexOf("\n}"))),
-      "`saveResult` parou de persistir no navegador: remova este lembrete",
-    ).toBe(true);
-  });
-});
+// AQUI FICAVA O LEMBRETE DA DÍVIDA DO LEGADO.
+//
+// Ele afirmava que `saveResult` (em `src/lib/api.ts`) ainda persistia o `AnalysisResult`
+// inteiro em `sessionStorage`, e foi escrito para FALHAR no dia em que o legado sumisse —
+// com a instrução de ser removido junto, porque lembrete que sobrevive ao seu motivo vira
+// ruído.
+//
+// Esse dia é hoje: o cache de resultado no navegador foi removido. As provas que o
+// substituem, mais fortes, estão em `test/v1/storage-legado.test.ts` (ausência no código +
+// limpeza das chaves legadas) e em `ui/semStorageDeResultado.test.tsx` (nada é escrito, e o
+// refresh reconsulta o Gateway).

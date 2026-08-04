@@ -13,11 +13,19 @@ import { describe, expect, it } from "vitest";
 
 const raiz = process.cwd();
 
-/** Arquivos versionados, via git — não caminha em `node_modules` nem em `dist`. */
+/** Arquivos versionados, via git — não caminha em `node_modules` nem em `dist`.
+ *
+ * Filtra pelo que EXISTE no disco. `git ls-files` lista o índice, e um arquivo removido na
+ * árvore mas ainda indexado (remoção pendente de commit) fazia o `readFileSync` abaixo estourar
+ * com ENOENT — o gate morria por erro de leitura em vez de avaliar o invariante.
+ *
+ * Isso não afrouxa nada: um arquivo que não existe não tem conteúdo que possa importar de
+ * `src_legacy`. O que se perde é só o crash. */
 function versionados(): string[] {
   return execSync("git ls-files", { cwd: raiz, encoding: "utf8" })
     .split(/\r?\n/)
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((f) => existsSync(`${raiz}/${f}`));
 }
 
 describe("Onda 8 — o legado do frontend não volta", () => {

@@ -8,12 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  isSessionCached,
-  loadResult,
-  saveResult,
-  type AnalysisResult,
-} from "@/lib/api";
+import { type AnalysisResult } from "@/lib/api";
 import { getV1Client } from "@/lib/v1/defaultClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -42,10 +37,14 @@ interface AnalysisContextValue {
   hasHistory: boolean;
   analysisCompleted: boolean;
   historyResolved: boolean;
-  dataSource: "cached" | "fresh";
   clearAnalysis: () => void;
-  loadStoredAnalysis: (analysis: AnalysisResult) => void;
 }
+
+// `dataSource: "cached" | "fresh"` SAIU do contrato do contexto.
+//
+// Ele existia para acender um selo de "resultado em cache" na `DashboardPage` e na `TopBar`.
+// Sem cache no navegador, "cached" virou um valor que nada pode produzir — e um ramo de UI
+// que nunca executa é pior que UI nenhuma: parece cobertura e não é.
 
 const AnalysisContext = createContext<AnalysisContextValue | null>(null);
 
@@ -63,7 +62,6 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [hasHistory, setHasHistory] = useState(false);
   const [historyResolved, setHistoryResolved] = useState(false);
-  const [dataSource, setDataSource] = useState<"cached" | "fresh">("fresh");
   // `activeJob` saiu junto: o tipo vinha de `lib/analysisJobs` (camada Supabase) e nenhuma
   // tela consumia o campo -- era estado publicado sem leitor.
 
@@ -73,14 +71,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   // historico e de cache -- eles nunca foram autoridade de tenant, e enquanto compunham a
   // chave o mesmo workspace via historicos diferentes conforme a selecao do usuario.
   const historyStorageKey = workspace?.id ? `sentinela:history:${workspace.id}` : null;
-  const contextScope = useMemo(
-    () => ({
-      workspaceId: workspace?.id ?? null,
-      projectId: null,
-      environmentId: null,
-    }),
-    [workspace?.id],
-  );
+  // `contextScope` saiu com o cache: ele só existia para compor a chave de `sessionStorage`.
 
   const markHasHistory = useCallback(() => {
     setHasHistory(true);
@@ -93,7 +84,6 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     if (!workspace?.id) {
       setHasHistory(false);
       setResult(null);
-      setDataSource("fresh");
       setHistoryResolved(true);
       return;
     }
@@ -101,17 +91,15 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     setHistoryResolved(false);
     setHasHistory(false);
     setResult(null);
-    setDataSource("fresh");
 
     const storageKey = `sentinela:history:${workspace.id}`;
     const localFlag = window.localStorage.getItem(storageKey) === "1";
-    const cachedWorkspaceResult = loadResult(contextScope);
-    const hasScopedSessionCache = isSessionCached(contextScope);
-    if (cachedWorkspaceResult && hasScopedSessionCache) {
-      setResult(cachedWorkspaceResult);
-      setDataSource("cached");
-      setHasHistory(true);
-    }
+    // NÃO há restauração de resultado a partir do navegador. O que sobrevive à troca de
+    // workspace é uma flag booleana de navegação ("este workspace já teve análise?"), e mesmo
+    // ela é conveniência de arranque: a resposta do backend logo abaixo manda.
+    //
+    // O `result` começa nulo SEMPRE. Para reabrir um resultado, o caminho é o histórico →
+    // `/canonical/analyses/{id}/result`, que consulta o Gateway.
     if (localFlag) {
       setHasHistory(true);
     }
@@ -144,10 +132,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
           // backend contradiz, ela e apagada em vez de mantida.
           window.localStorage.removeItem(storageKey);
           setHasHistory(false);
-          if (!hasScopedSessionCache) {
-            setResult(null);
-            setDataSource("fresh");
-          }
+          setResult(null);
         }
         setHistoryResolved(true);
       })
@@ -161,7 +146,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, [contextScope, workspace?.id]);
+  }, [workspace?.id]);
 
   // AQUI FICAVA O CAMINHO INLINE: `runAnalysis`, `handleRerun`, `handleFileUpload` e
   // `handlePasteAnalysis`, mais o maquinario de progresso (`loading`, `loadingStep`,
@@ -188,15 +173,17 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
 
   const clearAnalysis = useCallback(() => {
     setResult(null);
-    setDataSource("fresh");
   }, []);
 
-  const loadStoredAnalysis = useCallback((analysis: AnalysisResult) => {
-    saveResult(analysis, undefined, contextScope);
-    setResult(analysis);
-    setDataSource("cached");
-    markHasHistory();
-  }, [contextScope, markHasHistory]);
+  // AQUI FICAVA `loadStoredAnalysis`.
+  //
+  // Era o ÚNICO escritor do cache de sessão — e não tinha um só consumidor: nenhuma tela
+  // chamava a ação, só o próprio contexto a exportava. O caminho que gravava o resultado do
+  // cliente no navegador era, ele mesmo, inalcançável.
+  //
+  // Some inteiro em vez de virar "grava em memória": guardar um resultado que ninguém pede
+  // seria estado publicado sem leitor, e o `dataSource: "cached"` que ele acendia não teria
+  // como ser verdade.
 
   const value = useMemo(
     () => ({
@@ -204,17 +191,13 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
       hasHistory,
       analysisCompleted: hasHistory || Boolean(result),
       historyResolved,
-      dataSource,
       clearAnalysis,
-      loadStoredAnalysis,
     }),
     [
       result,
       hasHistory,
       historyResolved,
-      dataSource,
       clearAnalysis,
-      loadStoredAnalysis,
     ]
   );
 

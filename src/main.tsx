@@ -2,8 +2,17 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Providers } from "./app/providers";
 import { App } from "./app/App";
+import { limparResultadosLegadosDoNavegador } from "./lib/legacyBrowserStorage";
 import "./styles/tokens.css";
 import "./styles/globals.css";
+
+// ANTES de qualquer render: apaga as cópias de resultado que a versão anterior deixou no
+// navegador. Remover o código que gravava não apaga o que ele já gravou, e essa cópia é a
+// única que nenhum purge do servidor alcança.
+//
+// Não usa `clear()`: só saem as chaves com os prefixos que este app criou. Ver
+// `lib/legacyBrowserStorage.ts`.
+limparResultadosLegadosDoNavegador();
 
 // When a new deploy changes chunk hashes, cached HTML references stale filenames.
 // Reload once so the browser fetches the fresh index.html with correct chunk URLs.

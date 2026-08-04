@@ -37,7 +37,7 @@ function useBreadcrumbs() {
 // ─── Analysis freshness badge ─────────────────────────────────────────────────
 
 function AnalysisFreshnessBadge() {
-  const { result, dataSource } = useAnalysis();
+  const { result } = useAnalysis();
   const navigate = useNavigate();
 
   if (!result) return null;
@@ -50,16 +50,16 @@ function AnalysisFreshnessBadge() {
       onClick={() => navigate("/dashboard")}
       className={cn(
         "hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium transition-colors",
-        dataSource === "cached"
-          ? "bg-primary/[0.06] border-primary/[0.12] text-primary hover:bg-primary/10"
-          : "bg-success/[0.06] border-success/[0.12] text-success hover:bg-success/10"
+        // Estado UNICO: o resultado na tela veio do Gateway. O ramo "cached"
+        // existia para o cache de sessao, que nao existe mais.
+        "bg-success/[0.06] border-success/[0.12] text-success hover:bg-success/10"
       )}
       title="View active analysis results"
     >
       <span
         className={cn(
           "w-1.5 h-1.5 rounded-full flex-shrink-0",
-          dataSource === "cached" ? "bg-primary" : "bg-success animate-pulse"
+          "bg-success animate-pulse"
         )}
         aria-hidden="true"
       />

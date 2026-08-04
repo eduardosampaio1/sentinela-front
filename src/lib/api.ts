@@ -1298,178 +1298,30 @@ export async function interpretAnalysis(
   throw new Error("Interpretation timed out while waiting for completion.");
 }
 
-const CACHE_PREFIX = "sentinela:analysis:";
-const LAST_KEY_STORAGE_PREFIX = "sentinela:last_cache_key";
-
-type AnalysisCacheScope =
-  | string
-  | {
-      workspaceId?: string | null;
-      projectId?: string | null;
-      environmentId?: string | null;
-    }
-  | null
-  | undefined;
-
-function normalizeCacheScope(scope?: AnalysisCacheScope) {
-  if (typeof scope === "string") {
-    return {
-      workspaceId: scope.trim(),
-      projectId: "",
-      environmentId: "",
-    };
-  }
-  return {
-    workspaceId: String(scope?.workspaceId ?? "").trim(),
-    projectId: String(scope?.projectId ?? "").trim(),
-    environmentId: String(scope?.environmentId ?? "").trim(),
-  };
-}
-
-function workspaceScopedLastKey(scope?: AnalysisCacheScope): string {
-  const normalized = normalizeCacheScope(scope);
-  if (normalized.workspaceId) {
-    return `${LAST_KEY_STORAGE_PREFIX}:${normalized.workspaceId}:${normalized.projectId || "none"}:${normalized.environmentId || "none"}`;
-  }
-  return LAST_KEY_STORAGE_PREFIX;
-}
-
-function cacheKeyFor(result: AnalysisResult): string {
-  return CACHE_PREFIX + (result._cache_key || result.analysis_id || "latest");
-}
-
-export function hashDataset(jsonlContent: string): string {
-  let hash = 0;
-  for (let i = 0; i < jsonlContent.length; i += 1) {
-    hash = ((hash << 5) - hash + jsonlContent.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash).toString(36);
-}
-
-export function saveResult(
-  result: AnalysisResult,
-  inputHash?: string,
-  scope?: AnalysisCacheScope,
-) {
-  const next = { ...result };
-  if (inputHash) next._cache_key = inputHash;
-
-  const key = cacheKeyFor(next);
-  sessionStorage.setItem(key, JSON.stringify(next));
-  sessionStorage.setItem(workspaceScopedLastKey(scope), key);
-}
-
-export function loadResult(scope?: AnalysisCacheScope): AnalysisResult | null {
-  const scopedKey = workspaceScopedLastKey(scope);
-  const lastKey = sessionStorage.getItem(scopedKey);
-  if (!lastKey) return null;
-
-  const raw = sessionStorage.getItem(lastKey);
-  if (!raw) return null;
-
-  try {
-    return sanitizeResult(JSON.parse(raw));
-  } catch {
-    return null;
-  }
-}
-
-export const loadLastResult = loadResult;
-
-export function isSessionCached(scope?: AnalysisCacheScope): boolean {
-  const lastKey = sessionStorage.getItem(workspaceScopedLastKey(scope));
-  return !!lastKey && !!sessionStorage.getItem(lastKey);
-}
-
-function sanitizeResult(parsed: unknown): AnalysisResult {
-  const record = asRecord(parsed);
-  const argosV2 = asRecord(record.argos_v2) as ArgosV2Payload;
-  const argosMetadata = asRecord(argosV2.metadata);
-  const baselineFromMetadata = asRecord(argosMetadata.baseline_comparison);
-  const baselineTop = asRecord(record.baseline_comparison);
-  const baselineComparison =
-    Object.keys(baselineTop).length > 0
-      ? baselineTop
-      : Object.keys(baselineFromMetadata).length > 0
-        ? baselineFromMetadata
-        : undefined;
-  const topBusinessImpact = asRecord(record.business_impact);
-  const argosBusinessImpact = asRecord(argosV2.business_impact);
-  const mergedBusinessImpact = mergeBusinessImpactPayloads(topBusinessImpact, argosBusinessImpact);
-  const businessImpact =
-    Object.keys(mergedBusinessImpact).length > 0
-      ? mergedBusinessImpact
-        : undefined;
-  const executiveSummary =
-    String(record.executive_summary ?? "").trim() ||
-    String(argosV2.executive_summary ?? "").trim() ||
-    undefined;
-  const resolvedAnalysisRunId = firstNonEmptyString(
-    record.analysis_run_id,
-    record.job_id,
-    argosMetadata.analysis_run_id,
-    argosMetadata.job_id,
-    argosMetadata.run_id,
-  );
-
-  return {
-    workspace_id: typeof record.workspace_id === "string" ? record.workspace_id : undefined,
-    project_id: typeof record.project_id === "string" ? record.project_id : undefined,
-    environment_id: typeof record.environment_id === "string" ? record.environment_id : undefined,
-    engine_version: typeof record.engine_version === "string" ? record.engine_version : undefined,
-    consistency_score: normalizePercent(record.consistency_score) ?? 0,
-    global_confidence: normalizePercent(record.global_confidence),
-    risk_level: typeof record.risk_level === "string" ? record.risk_level : undefined,
-    n_conversations: typeof record.n_conversations === "number" ? record.n_conversations : undefined,
-    n_intents: typeof record.n_intents === "number" ? record.n_intents : undefined,
-    token_waste_estimate:
-      typeof record.token_waste_estimate === "number" ? record.token_waste_estimate : 0,
-    cross_intent_similarity: normalizePercent(record.cross_intent_similarity) ?? 0,
-    response_variance: normalizePercent(record.response_variance),
-    response_stability_score: normalizePercent(record.response_stability_score),
-    intent_coverage_score: normalizePercent(record.intent_coverage_score),
-    covered_intents: typeof record.covered_intents === "number" ? record.covered_intents : undefined,
-    total_intents: typeof record.total_intents === "number" ? record.total_intents : undefined,
-    min_samples_per_intent:
-      typeof record.min_samples_per_intent === "number" ? record.min_samples_per_intent : undefined,
-    underrepresented_intents: Array.isArray(record.underrepresented_intents)
-      ? record.underrepresented_intents.map((v: unknown): string => { if (typeof v === "string") return v; if (v && typeof v === "object" && "intent" in (v as object)) return String((v as Record<string,unknown>).intent); return String(v); })
-      : [],
-    critical_alerts_count:
-      typeof record.critical_alerts_count === "number" ? record.critical_alerts_count : 0,
-    alerts: Array.isArray(record.alerts) ? (record.alerts as AnalysisAlert[]) : [],
-    intents: Array.isArray(record.intents) ? (record.intents as IntentMetric[]) : [],
-    analyzed_at:
-      typeof record.analyzed_at === "string" ? record.analyzed_at : new Date().toISOString(),
-    analysis_id: typeof record.analysis_id === "string" ? record.analysis_id : undefined,
-    analysis_run_id: resolvedAnalysisRunId,
-    issues: Array.isArray(record.issues) ? (record.issues as Array<Record<string, unknown>>) : [],
-    insights: Object.keys(asRecord(record.insights)).length > 0 ? asRecord(record.insights) : undefined,
-    argos_v2: Object.keys(argosV2).length > 0 ? argosV2 : undefined,
-    business_impact: businessImpact,
-    executive_summary: executiveSummary,
-    baseline_comparison: baselineComparison,
-    prompt_recommendations: Array.isArray(record.prompt_recommendations)
-      ? (record.prompt_recommendations as Array<Record<string, unknown>>).map((rec) => ({
-          id: String(rec.id ?? ""),
-          priority: typeof rec.priority === "number" ? rec.priority : 9,
-          title: String(rec.title ?? ""),
-          problem: String(rec.problem ?? ""),
-          action: String(rec.action ?? ""),
-          prompt_snippet: String(rec.prompt_snippet ?? ""),
-          affected_intents: Array.isArray(rec.affected_intents)
-            ? (rec.affected_intents as unknown[]).map(String)
-            : [],
-        }))
-      : undefined,
-    incremental: typeof record.incremental === "boolean" ? record.incremental : undefined,
-    incremental_batches:
-      typeof record.incremental_batches === "number" ? record.incremental_batches : undefined,
-    _warnings: Array.isArray(record._warnings) ? record._warnings.map(String) : [],
-    _cache_key: typeof record._cache_key === "string" ? record._cache_key : undefined,
-    _meta: asRecord(record._meta) as AnalysisResult["_meta"],
-  };
-}
+// AQUI FICAVA O CACHE DE RESULTADO NO NAVEGADOR.
+//
+// `saveResult` gravava o `AnalysisResult` INTEIRO em `sessionStorage`, e `loadResult` o
+// reidratava por `sanitizeResult`. Junto saíram `loadLastResult`, `isSessionCached`,
+// `cacheKeyFor`, `workspaceScopedLastKey`, `normalizeCacheScope`, o tipo `AnalysisCacheScope`
+// e os prefixos `sentinela:analysis:` / `sentinela:last_cache_key`.
+//
+// O resultado é dado derivado do dado do cliente. Guardá-lo no navegador criava uma cópia que
+// o servidor não conhece e que NENHUM purge alcança: sanitizar, versionar e descartar do lado
+// do Ingestion perde o sentido se a resposta fica na máquina de quem consultou.
+//
+// `sanitizeResult` saiu junto e não por arrumação: ele existia para remontar o resultado a
+// partir do blob local. Mantê-lo deixaria a máquina de reconstrução de pé, esperando um
+// produtor — e um dia alguém a religaria.
+//
+// `hashDataset` também saiu. Ele derivava uma chave a partir do CONTEÚDO do arquivo do
+// cliente, dentro do navegador, e não tinha nenhum consumidor.
+//
+// O que substitui: nada persistente. O `analysis_id` vive na URL (não é sensível), o
+// resultado vive em memória enquanto a aba estiver aberta, e o refresh reconsulta o Gateway.
+// A limpeza das chaves legadas mora em `lib/legacyBrowserStorage.ts`.
+//
+// `_cache_key` PERMANECE no tipo: ele é preenchido a partir da resposta do servidor
+// (`dataset_hash` / `analysis_id`), não pelo cache — e alimenta `datasetHash` no adapter.
 
 export function parseConversationsInput(raw: string): unknown[] {
   const trimmed = raw.trim();
