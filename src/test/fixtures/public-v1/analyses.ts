@@ -34,6 +34,9 @@ export const STATUS_VIEWS: Record<AnalysisStatus, AnalysisStatusView> = {
   queued: statusView("queued"),
   running: statusView("running"),
   recovering: statusView("recovering"),
+  // Entrou com o estado novo. O `Record<AnalysisStatus, ...>` é EXAUSTIVO de propósito:
+  // é ele que obriga a fixture a acompanhar a união, e foi ele que cobrou esta linha.
+  needs_mapping: statusView("needs_mapping"),
   completed: statusView("completed"),
   failed: statusView("failed"),
 };

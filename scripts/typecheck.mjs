@@ -30,8 +30,14 @@ if (pure.length) {
 //    silêncio (novo import legado com erro, ou os 3 virando 4, reprova). Ver E1-typecheck-gate.md.
 // 3 -> 1 (Onda 8, macrofrente de identidade). Os dois que sairam eram de `lib/workspaces`,
 // que deixou o grafo quando o AuthContext parou de ler membership do Supabase e a
-// WorkspacesPage passou a listar a projecao de /v1/me. Baseline SO DESCE.
-const EXPECTED_LEGACY = 1;
+// WorkspacesPage passou a listar a projecao de /v1/me.
+//
+// 1 -> 0 (aposentadoria do dashboard legado). O ultimo saiu junto com a ilha legada inteira:
+// `lib/api.ts`, `adapters/*`, `domain/*` e `lib/reportPdf.ts` perderam o unico consumidor
+// (a `DashboardPage`) e foram removidos. Nao houve conserto — houve remocao do subject.
+//
+// Baseline SO DESCE. Zero e o piso: dai em diante, qualquer erro legado e um erro NOVO.
+const EXPECTED_LEGACY = 0;
 const uiAll = errLines(tsc("tsconfig.v1-ui.json"));
 // SUPERFICIES VIVAS — qualquer erro AQUI reprova, sem allowlist.
 //

@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { useAuth } from "@/hooks/useAuth";
-import { useAnalysis } from "@/hooks/useAnalysis";
 import { AnalysisLauncher } from "./AnalysisLauncher";
 import { RecentRuns } from "./RecentRuns";
 import { Button } from "@/components/ui/button";
@@ -47,7 +46,6 @@ export function LaunchpadPage() {
   // clique, numa pagina viva. Invisivel porque `features/launchpad` estava fora do alcance
   // do `npm run typecheck`.
   const navigate = useNavigate();
-  const { analysisCompleted } = useAnalysis();
 
   // O vigia do ciclo `loading` (true -> false -> navega para /dashboard) sumiu junto com o
   // caminho inline: sem execucao aqui, nao ha ciclo para observar. A jornada canonica leva
@@ -75,7 +73,14 @@ export function LaunchpadPage() {
                 </p>
               </div>
 
-              {analysisCompleted && (
+              {/* SEM condicional. `analysisCompleted` era `hasHistory || Boolean(result)`
+                  — autorização indireta que errava nos dois sentidos: escondia o botão
+                  de quem tinha resultado e o mostrava para quem não tinha.
+
+                  `/dashboard` é rota de compatibilidade: ela pergunta ao backend e
+                  decide entre abrir o resultado e mostrar o estado vazio. O botão pode
+                  aparecer sempre porque quem responde "tem ou não tem" é o backend. */}
+              {(
                 <Button
                   onClick={() => navigate("/dashboard")}
                   size="sm"

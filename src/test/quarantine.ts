@@ -35,13 +35,17 @@ export const QUARANTINE: readonly QuarantineEntry[] = [
   // Os três já não coletavam: importavam módulos que deixaram de existir. Mantê-los na lista
   // seria declarar dívida sobre código que não existe — a quarentena viraria arquivo morto
   // com nome de dívida.
-  {
-    file: "src/test/apiErrorFormatting.test.ts",
-    category: "legacy-contract",
-    reason: "Testa o formato de erro do cliente LEGADO lib/api (session-expired mascara a msg de auth do backend). E1 é proibida de tocar o cliente legado; a camada canônica usa problem+json.",
-    debtId: "SENT-FE-E1-Q4",
-    ancora: "surfaces a readable backend auth configuration message",
-  },
+  // SENT-FE-E1-Q4 (`src/test/apiErrorFormatting.test.ts`) SAIU da quarentena porque o
+  // subject sumiu: `lib/api.ts` foi removido com a aposentadoria do dashboard legado.
+  //
+  // O gate desta lista pegou isso sozinho — ele exige que cada arquivo em quarentena EXISTA e
+  // AINDA contenha a âncora, justamente para a lista não virar arquivo morto com nome de
+  // dívida. Foi ele quem cobrou a remoção.
+  //
+  // O invariante que aquele teste guardava ("erro de auth do backend vira mensagem legível")
+  // vive no caminho canônico: `test/v1/problem.test.ts` (9 categorias) e
+  // `features/canonical-analysis/data/errorView.test.ts` (`authentication_required` →
+  // `sign_in`, e só ele limpa a sessão).
 ] as const;
 
 /** Lista para `test.exclude` do vitest (derivada da fonte única). */

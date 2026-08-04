@@ -585,5 +585,15 @@
     "convs": "convs",
     "meanChars": "chars médio",
     "stdChars": "desvio"
+  },
+  "dashboardCompat": {
+    "title": "Resultado da análise",
+    "resolving": "Procurando a análise mais recente…",
+    "emptyTitle": "Nenhuma análise ainda",
+    "emptyBody": "Este workspace ainda não tem análises. Comece uma para ver o resultado aqui.",
+    "noCompletedTitle": "Nenhuma análise concluída",
+    "noCompletedBody": "Há análises neste workspace, mas nenhuma concluída com resultado disponível. Abra o histórico para acompanhar.",
+    "startAnalysis": "Iniciar análise",
+    "openHistory": "Abrir histórico"
   }
 }

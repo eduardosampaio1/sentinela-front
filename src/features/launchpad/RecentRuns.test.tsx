@@ -26,7 +26,6 @@ import { RecentRuns } from "./RecentRuns";
  *    montar a lista seria N+1 numa tela de entrada.
  */
 
-vi.mock("@/hooks/useAnalysis", () => ({ useAnalysis: () => ({}) }));
 const auth = vi.hoisted(() => ({ ws: { id: "ws-1" } as { id: string } | null }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ workspace: auth.ws }) }));
 

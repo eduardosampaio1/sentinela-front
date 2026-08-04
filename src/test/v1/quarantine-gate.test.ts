@@ -12,15 +12,19 @@ import { QUARANTINE, QUARANTINE_FILES } from "@/test/quarantine";
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..", "..", ".."); // raiz do repo
 
 describe("Gate — quarentena de baseline E1", () => {
-  // 4 -> 1 na Onda 8. Q2 (`homePageFlow`), Q1 (`authFlows`) e Q3 (`economicsRendering`) saíram
-  // porque os ARQUIVOS foram removidos junto com o código que exercitavam — dívida quitada por
-  // remoção, não por conserto. A lista SÓ ENCOLHE: entrada nova exige editar aqui, e é isso que
-  // impede a quarentena virar depósito.
-  it("a lista está CONGELADA em exatamente 1 suíte conhecida", () => {
-    expect(QUARANTINE).toHaveLength(1);
-    expect(new Set(QUARANTINE.map((q) => q.file)).size).toBe(1); // sem duplicatas
-    expect(new Set(QUARANTINE.map((q) => q.debtId)).size).toBe(1); // ticket único por entrada
-    expect(QUARANTINE_FILES).toEqual(QUARANTINE.map((q) => q.file));
+  // 4 -> 1 na Onda 8 -> 0 com a aposentadoria do dashboard legado.
+  //
+  // Todas saíram do mesmo jeito: o ARQUIVO foi removido junto com o código que exercitava.
+  // Dívida quitada por REMOÇÃO, não por conserto — e a distinção importa, porque "conserto"
+  // sugere que o comportamento continua e passou a funcionar, quando na verdade ele deixou de
+  // existir. A última foi Q4 (`apiErrorFormatting`), que morreu com `lib/api.ts`.
+  //
+  // A lista SÓ ENCOLHE: entrada nova exige editar aqui, e é isso que impede a quarentena virar
+  // depósito. Zero é o estado desejado, não um acidente — se voltar a crescer, este número
+  // muda e alguém precisa justificar.
+  it("a lista está VAZIA — nenhuma suíte em quarentena", () => {
+    expect(QUARANTINE).toHaveLength(0);
+    expect(QUARANTINE_FILES).toEqual([]);
   });
 
   it("toda entrada é dead-stack ou legacy-contract (nunca camada canônica /v1)", () => {

@@ -1,7 +1,6 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { useAnalysis } from "@/hooks/useAnalysis";
 import { SentinelaMark } from "@/components/brand/SentinelaMark";
 
 // ─── Icon primitives ───────────────────────────────────────────────────────────
@@ -26,7 +25,6 @@ interface NavItem {
   to: string;
   label: string;
   icon: string;
-  requiresAnalysis?: boolean;
   exact?: boolean;
 }
 
@@ -41,7 +39,6 @@ const PRIMARY_NAV: NavItem[] = [
     to: "/dashboard",
     label: "Dashboard",
     icon: "M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z",
-    requiresAnalysis: true,
   },
   {
     to: "/dashboard/history",
@@ -65,36 +62,24 @@ const BOTTOM_NAV: NavItem[] = [
 
 // ─── Single nav item ──────────────────────────────────────────────────────────
 
-function SidebarNavItem({
-  item,
-  analysisCompleted,
-}: {
-  item: NavItem;
-  analysisCompleted: boolean;
-}) {
+// `analysisCompleted` SAIU dos parâmetros, e com ele o item desabilitado.
+//
+// Ele vinha de `hasHistory || Boolean(result)` — autorização INDIRETA: "o workspace já teve
+// análise" não é "existe resultado para mostrar agora". Desabilitar o Dashboard por esse
+// critério errava nos dois sentidos: bloqueava quem tinha resultado e liberava quem não tinha.
+//
+// `/dashboard` agora é rota de compatibilidade: ela mesma pergunta ao backend e decide entre
+// redirecionar e mostrar estado vazio. Não há o que desabilitar.
+function SidebarNavItem({ item }: { item: NavItem }) {
   const location = useLocation();
-  const isDisabled = item.requiresAnalysis && !analysisCompleted;
 
   const isActive = item.exact
     ? location.pathname === item.to
     : location.pathname.startsWith(item.to);
 
-  if (isDisabled) {
-    return (
-      <div
-        className="flex items-center gap-3 px-3 py-2 rounded-xl text-muted-foreground cursor-not-allowed select-none"
-        aria-disabled="true"
-        title="Run an analysis first to access this view"
-      >
-        <Icon path={item.icon} />
-        <span className="text-sm font-medium truncate">{item.label}</span>
-        <span className="ml-auto text-[10px] uppercase tracking-wide font-semibold text-muted-foreground bg-muted/40 border border-border px-1.5 py-0.5 rounded-full">
-          needs run
-        </span>
-      </div>
-    );
-  }
-
+  // O ramo "desabilitado" (com o selo `needs run`) saiu junto com `analysisCompleted`. Todo
+  // item de navegação é um link agora; quem decide se há o que mostrar é o destino, com base
+  // no backend.
   return (
     <NavLink
       to={item.to}
@@ -152,31 +137,12 @@ function ContextBlock() {
   );
 }
 
-// ─── Analysis status pill ──────────────────────────────────────────────────────
-
-function AnalysisStatusPill() {
-  const { analysisCompleted, result } = useAnalysis();
-  const navigate = useNavigate();
-
-  if (!analysisCompleted || !result) return null;
-
-  return (
-    <button
-      onClick={() => navigate("/dashboard")}
-      className="mx-3 mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-success/[0.06] border border-success/[0.12] hover:bg-success/10 transition-colors"
-      title="View active analysis results"
-    >
-      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse flex-shrink-0" aria-hidden="true" />
-      <span className="text-[11px] font-medium text-success truncate flex-1">
-        Analysis active
-      </span>
-      <Icon
-        path="M8.25 4.5l7.5 7.5-7.5 7.5"
-        className="w-3 h-3 text-success flex-shrink-0"
-      />
-    </button>
-  );
-}
+// AQUI FICAVA `AnalysisStatusPill` — o selo "Analysis active" que levava ao dashboard.
+//
+// Ele só aparecia com `result` preenchido, e `result` só era preenchido pelo cache do
+// navegador. Sem o cache, o selo nunca acendia: UI inalcançável.
+//
+// O caminho para o resultado é o item Dashboard (que redireciona) ou o histórico.
 
 // ─── User profile block ────────────────────────────────────────────────────────
 
@@ -241,7 +207,6 @@ function UserBlock() {
 // ─── Sidebar inner content (shared between desktop + mobile drawer) ────────────
 
 export function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
-  const { analysisCompleted } = useAnalysis();
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -269,14 +234,12 @@ export function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
           <SidebarNavItem
             key={item.to}
             item={item}
-            analysisCompleted={analysisCompleted}
           />
         ))}
       </nav>
 
       {/* Analysis active pill */}
       <div onClick={onNavClick}>
-        <AnalysisStatusPill />
       </div>
 
       {/* Bottom nav */}
@@ -285,7 +248,6 @@ export function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
           <SidebarNavItem
             key={item.to}
             item={item}
-            analysisCompleted={true}
           />
         ))}
       </div>

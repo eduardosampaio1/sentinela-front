@@ -201,10 +201,15 @@ describe("prova 7 — o cache de resultado não existe mais no código", () => {
     expect(culpados).toEqual([]);
   });
 
-  it("`lib/api.ts` não toca em storage nenhum", () => {
-    const src = semComentarios(path.join(SRC, "lib/api.ts"));
-    expect(/\bsessionStorage\b/.test(src)).toBe(false);
-    expect(/\blocalStorage\b/.test(src)).toBe(false);
+  it("`lib/api.ts` NÃO EXISTE MAIS — o que é mais forte que 'não toca storage'", () => {
+    // A asserção anterior era "o arquivo existe e não toca storage". Ela ficou obsoleta por
+    // cima: com a aposentadoria do dashboard legado, `lib/api.ts` perdeu o último consumidor
+    // e foi removido inteiro — com ele, o segundo modelo de resultado (`AnalysisResult`) e o
+    // caminho `analyzeConversations`.
+    //
+    // Trocar por "não existe" não afrouxa nada: é a mesma garantia levada ao limite. E se o
+    // arquivo voltar, este teste falha e obriga alguém a explicar por quê.
+    expect(fs.existsSync(path.join(SRC, "lib/api.ts"))).toBe(false);
   });
 });
 

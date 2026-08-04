@@ -7,7 +7,6 @@ import {
   type RouteObject,
 } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useAnalysis } from "@/hooks/useAnalysis";
 import { LoadingState } from "@/shared/states/LoadingState";
 import { FundacaoV1 } from "./FundacaoV1";
 
@@ -33,8 +32,10 @@ const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const LaunchpadPage = lazy(() =>
   import("@/features/launchpad/LaunchpadPage").then((m) => ({ default: m.LaunchpadPage }))
 );
-const DashboardPage = lazy(() =>
-  import("@/features/dashboard/DashboardPage").then((m) => ({ default: m.DashboardPage }))
+// `/dashboard` NÃO é mais um dashboard: é rota de compatibilidade que resolve a análise
+// canônica no backend e redireciona para o renderizador único.
+const DashboardCompatRoute = lazy(() =>
+  import("@/features/dashboard/DashboardCompatRoute").then((m) => ({ default: m.DashboardCompatRoute }))
 );
 const HistoryPage = lazy(() =>
   import("@/features/history/HistoryPage").then((m) => ({ default: m.HistoryPage }))
@@ -97,40 +98,13 @@ const CanonicalResultPage = lazy(() =>
   import("@/features/canonical-analysis/ui/ResultPage").then((m) => ({ default: m.ResultPage }))
 );
 
-// Dashboard sub-panels (route-accessible deep views)
-const DiagnosticsPanel = lazy(() =>
-  import("@/features/dashboard/technical/DiagnosticsPanel").then((m) => ({
-    default: function DiagnosticsPanelPage() {
-      return (
-        <div className="min-h-screen bg-[#070C18] p-8">
-          <m.DiagnosticsPanel />
-        </div>
-      );
-    },
-  }))
-);
-const GuardrailsPanel = lazy(() =>
-  import("@/features/dashboard/technical/GuardrailsPanel").then((m) => ({
-    default: function GuardrailsPanelPage() {
-      return (
-        <div className="min-h-screen bg-[#070C18] p-8">
-          <m.GuardrailsPanel />
-        </div>
-      );
-    },
-  }))
-);
-const OptimizationPanel = lazy(() =>
-  import("@/features/dashboard/technical/OptimizationPanel").then((m) => ({
-    default: function OptimizationPanelPage() {
-      return (
-        <div className="min-h-screen bg-[#070C18] p-8">
-          <m.OptimizationPanel />
-        </div>
-      );
-    },
-  }))
-);
+// AQUI FICAVAM OS 3 PAINÉIS LEGADOS COM ROTA PRÓPRIA (diagnostics/guardrails/optimization).
+//
+// Liam `AnalysisContext.result`, cuja única fonte era o cache do navegador. Sem o cache,
+// renderizavam vazio — e uma rota que existe para mostrar nada é pior que rota nenhuma:
+// ela promete uma tela.
+//
+// O resultado tem UM renderizador: /canonical/analyses/{id}/result.
 
 // ─── Shared loading screen ─────────────────────────────────────────────────────
 
@@ -180,19 +154,16 @@ function PublicOnlyRoute() {
   return <Outlet />;
 }
 
-function AnalysisCompletedRoute() {
-  const { analysisCompleted, historyResolved } = useAnalysis();
-
-  if (!historyResolved) {
-    return <FullScreenLoader message="Restoring analysis context" />;
-  }
-
-  if (!analysisCompleted) {
-    return <Navigate to="/home" replace />;
-  }
-
-  return <Outlet />;
-}
+// AQUI FICAVA `AnalysisCompletedRoute`.
+//
+// Ele autorizava a navegação por `analysisCompleted = hasHistory || Boolean(result)` —
+// autorização INDIRETA: `hasHistory` diz que o workspace já teve análise, não que existe
+// um resultado para mostrar agora. Era por isso que um workspace com histórico chegava a
+// uma tela vazia.
+//
+// A rota de compatibilidade não precisa de portão: ela mesma pergunta ao backend e decide
+// entre redirecionar e mostrar o estado vazio. Quem autoriza o RESULTADO é o Gateway, na
+// leitura de `/canonical/analyses/{id}/result`, com o workspace do contexto autenticado.
 
 // ─── Route tree ───────────────────────────────────────────────────────────────
 
@@ -307,17 +278,15 @@ const routes: RouteObject[] = [
         ],
       },
 
-      // Dashboard — requires an active analysis to be loaded
-      {
-        element: <AnalysisCompletedRoute />,
-        children: [
-          { path: "/dashboard", element: <PageSuspense><DashboardPage /></PageSuspense> },
-          { path: "/dashboard/analysis", element: <PageSuspense><DashboardPage /></PageSuspense> },
-          { path: "/dashboard/diagnostics", element: <PageSuspense><DiagnosticsPanel /></PageSuspense> },
-          { path: "/dashboard/guardrails", element: <PageSuspense><GuardrailsPanel /></PageSuspense> },
-          { path: "/dashboard/optimization", element: <PageSuspense><OptimizationPanel /></PageSuspense> },
-        ],
-      },
+      // `/dashboard` — COMPATIBILIDADE. Resolve a análise canônica no backend e redireciona.
+      // Sem portão de "análise completa": a própria rota decide entre redirecionar e mostrar
+      // estado vazio, e nenhum indicador é renderizado aqui.
+      { path: "/dashboard", element: <PageSuspense><DashboardCompatRoute /></PageSuspense> },
+      { path: "/dashboard/analysis", element: <Navigate to="/dashboard" replace /> },
+      // Os 3 painéis com rota própria foram aposentados junto com o cluster legado.
+      { path: "/dashboard/diagnostics", element: <Navigate to="/dashboard" replace /> },
+      { path: "/dashboard/guardrails", element: <Navigate to="/dashboard" replace /> },
+      { path: "/dashboard/optimization", element: <Navigate to="/dashboard" replace /> },
     ],
     }],
   },

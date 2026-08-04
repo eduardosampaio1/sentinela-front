@@ -1,8 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { useAnalysis } from "@/hooks/useAnalysis";
-import { formatRelativeTime } from "@/lib/utils";
 import { MobileNav } from "./MobileNav";
 import {
   DropdownMenu,
@@ -36,37 +34,10 @@ function useBreadcrumbs() {
 
 // ─── Analysis freshness badge ─────────────────────────────────────────────────
 
-function AnalysisFreshnessBadge() {
-  const { result } = useAnalysis();
-  const navigate = useNavigate();
-
-  if (!result) return null;
-
-  const analyzedAt = result.analyzed_at;
-  const relativeTime = analyzedAt ? formatRelativeTime(analyzedAt) : null;
-
-  return (
-    <button
-      onClick={() => navigate("/dashboard")}
-      className={cn(
-        "hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium transition-colors",
-        // Estado UNICO: o resultado na tela veio do Gateway. O ramo "cached"
-        // existia para o cache de sessao, que nao existe mais.
-        "bg-success/[0.06] border-success/[0.12] text-success hover:bg-success/10"
-      )}
-      title="View active analysis results"
-    >
-      <span
-        className={cn(
-          "w-1.5 h-1.5 rounded-full flex-shrink-0",
-          "bg-success animate-pulse"
-        )}
-        aria-hidden="true"
-      />
-      {relativeTime ? `Analysis · ${relativeTime}` : "Analysis active"}
-    </button>
-  );
-}
+// AQUI FICAVA `AnalysisFreshnessBadge` — o selo "Analysis · há N min" na barra superior.
+//
+// `if (!result) return null;` era a primeira linha, e `result` só nascia do cache do
+// navegador. Sem o cache, o selo retornava `null` sempre. Componente inalcançável.
 
 // ─── User initials ────────────────────────────────────────────────────────────
 
@@ -120,7 +91,6 @@ export function TopBar({ title, actions, className }: TopBarProps) {
       <div className="flex items-center gap-3">
         {actions}
 
-        <AnalysisFreshnessBadge />
 
         {/* User dropdown */}
         <DropdownMenu>
@@ -131,7 +101,7 @@ export function TopBar({ title, actions, className }: TopBarProps) {
             >
               {userInitials(
                 user?.user_metadata?.full_name as string | undefined,
-                user?.email
+                user?.email ?? undefined
               )}
             </button>
           </DropdownMenuTrigger>
