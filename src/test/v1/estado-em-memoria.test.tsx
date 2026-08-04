@@ -126,10 +126,13 @@ describe("o cadeado que fecha a vacuidade", () => {
     // do navegador, e ele foi removido.
     const fs = await import("node:fs");
     const path = await import("node:path");
-    const fonte = fs.readFileSync(
-      path.resolve(__dirname, "../../contexts/AnalysisContext.tsx"),
-      "utf-8",
-    );
+    // SEM COMENTÁRIOS: este arquivo e o próprio contexto discutem `setResult(null)` em prosa.
+    // Lendo o texto cru, o dia em que as chamadas REAIS sumissem e só a prosa ficasse, o
+    // cadeado ainda acharia o padrão e passaria — medindo a explicação, não o programa.
+    const fonte = fs
+      .readFileSync(path.resolve(__dirname, "../../contexts/AnalysisContext.tsx"), "utf-8")
+      .replace(/\/\*[\s\S]*?\*\//g, " ")
+      .replace(/(^|[^:])\/\/.*$/gm, "$1");
     const chamadas = [...fonte.matchAll(/setResult\(([^)]*)\)/g)].map((m) => m[1].trim());
     expect(chamadas.length, "nenhum `setResult` encontrado — o arquivo mudou de forma").toBeGreaterThan(0);
     expect([...new Set(chamadas)]).toEqual(["null"]);

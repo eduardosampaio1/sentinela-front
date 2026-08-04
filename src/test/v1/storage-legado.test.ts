@@ -73,6 +73,28 @@ describe("prova 5 — limpeza defensiva das chaves legadas", () => {
     expect(window.localStorage.getItem("terceiro:qualquer-coisa")).toBe("preserve");
   });
 
+  it("NÃO apaga a chave VIZINHA de nome parecido", () => {
+    // `startsWith("sentinela:last_cache_key")` puro pegava `sentinela:last_cache_keyboard` e
+    // qualquer `..._v2` legítimo de amanhã. Apagar o vizinho pelo nome parecido é o erro do
+    // `clear()` em escala menor — e mais difícil de notar, porque a vítima é uma chave só.
+    window.localStorage.setItem("sentinela:last_cache_keyboard", "preserve");
+    window.localStorage.setItem("sentinela:last_cache_key_v2", "preserve");
+    window.localStorage.setItem("sentinela:analysis_backup", "preserve");
+    // E as formas REAIS continuam saindo — senão a correção viraria "não apaga nada".
+    window.localStorage.setItem("sentinela:last_cache_key", "some");
+    window.localStorage.setItem("sentinela:last_cache_key:ws-1:none:none", "some");
+    window.localStorage.setItem("sentinela:analysis:x", "some");
+
+    const removidas = limparResultadosLegadosDoNavegador();
+
+    expect(removidas.sort()).toEqual(
+      ["sentinela:analysis:x", "sentinela:last_cache_key", "sentinela:last_cache_key:ws-1:none:none"].sort(),
+    );
+    expect(window.localStorage.getItem("sentinela:last_cache_keyboard")).toBe("preserve");
+    expect(window.localStorage.getItem("sentinela:last_cache_key_v2")).toBe("preserve");
+    expect(window.localStorage.getItem("sentinela:analysis_backup")).toBe("preserve");
+  });
+
   it("apaga TODAS as chaves quando há várias — sem pular por reindexação", () => {
     // `storage.key(i)` reindexa a cada remoção. Apagar dentro do laço pula chaves, e o defeito
     // é silencioso: com 4 chaves, sobram 2 e o teste de 1 chave passaria mesmo assim.

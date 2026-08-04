@@ -132,3 +132,52 @@ test.describe("storage do navegador — o resultado não fica na máquina", () =
     expect(local["terceiro:preserve"]).toBe("ok");
   });
 });
+
+test.describe("as outras portas de persistência do navegador", () => {
+  test("nem IndexedDB, nem Cache API, nem cookie, nem service worker, nem a URL", async ({ page }) => {
+    // O despejo dos dois storages é só uma das portas. O objetivo proíbe as outras pelo nome,
+    // e uma prova que só olha `sessionStorage` deixaria a proibição sem verificação em browser
+    // real — que é onde IndexedDB e Cache API de fato existem.
+    await semear(page, "an-store", MASSA_MARCADA);
+    await page.goto("/canonical/analyses/an-store/result");
+    await expect(page.getByRole("heading", { name: "Analysis result", level: 1 })).toBeVisible();
+
+    const portas = await page.evaluate(async () => {
+      const bancos = typeof indexedDB.databases === "function" ? await indexedDB.databases() : [];
+      const caches_ = typeof caches !== "undefined" ? await caches.keys() : [];
+      const sws = navigator.serviceWorker
+        ? (await navigator.serviceWorker.getRegistrations()).map((r) => r.scope)
+        : [];
+      return {
+        indexedDB: bancos.map((b) => b.name ?? "").filter(Boolean),
+        cacheApi: caches_,
+        cookie: document.cookie,
+        url: location.href,
+        serviceWorkers: sws,
+        scriptsDeSw: navigator.serviceWorker
+          ? (await navigator.serviceWorker.getRegistrations())
+              .map((r) => r.active?.scriptURL ?? r.installing?.scriptURL ?? "")
+              .filter(Boolean)
+          : [],
+      };
+    });
+
+    expect(portas.indexedDB, "a aplicação criou banco IndexedDB").toEqual([]);
+    expect(portas.cacheApi, "a aplicação criou Cache API").toEqual([]);
+    expect(portas.cookie, "a aplicação gravou cookie").toBe("");
+
+    // Service worker: o ÚNICO permitido é o do MSW, que é o servidor falso deste harness.
+    // Não dá para exigir zero — o próprio E2E depende dele. Dá para exigir que não haja
+    // NENHUM outro, que é a pergunta real: a aplicação registrou um worker seu para guardar
+    // resposta?
+    const forasteiros = portas.scriptsDeSw.filter((u) => !u.includes("mockServiceWorker"));
+    expect(forasteiros, `service worker não-MSW registrado: ${forasteiros.join(", ")}`).toEqual([]);
+
+    // A URL carrega o `analysis_id` (persistível e NÃO sensível) e nada mais: sem query, sem
+    // hash, e sem nenhum marcador do cliente.
+    expect(portas.url).toContain("/canonical/analyses/an-store/result");
+    expect(portas.url).not.toContain("?");
+    expect(portas.url).not.toContain("#");
+    expect(portas.url).not.toContain(MARCADOR);
+  });
+});
