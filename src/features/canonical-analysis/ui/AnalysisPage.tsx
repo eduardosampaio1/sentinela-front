@@ -80,6 +80,23 @@ export function AnalysisPage() {
             <ProblemFeedback error={submit.error} onRetry={dispararSubmit} retryDisabled={submitBloqueado} />
           </div>
         );
+      case "needs_mapping":
+        // Caso PRÓPRIO, não `default`. Caindo no default, esta parada renderizaria o mesmo
+        // banner de "na fila / executando" e o polling seguiria rodando: a tela travada com
+        // cara de trabalho em curso — exatamente o que a máquina de apresentação existe para
+        // evitar, e que ela sozinha não consegue evitar se ninguém a consome.
+        //
+        // O editor humano de mapping ainda não existe. A saída honesta NÃO é um botão que
+        // finge abrir algo: é dizer o que falta (o banner traz o texto) e oferecer a única
+        // ação que de fato faz sentido hoje — reconsultar, já que o polling automático parou.
+        return (
+          <div className="space-y-4">
+            <StateBanner view={view} />
+            <Button variant="outline" onClick={() => void status.refetch()} disabled={status.isFetching}>
+              {t("canonicalAnalysis.action.checkAgain")}
+            </Button>
+          </div>
+        );
       case "completed":
         return (
           <div className="space-y-4">

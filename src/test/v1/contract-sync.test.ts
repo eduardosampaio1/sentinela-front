@@ -123,8 +123,16 @@ describe("cópia local de public-v1 × origem", () => {
     // não pode é declaração de campo. Sem esta distinção, documentar a regra a violaria.
     const semComentarios = texto.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
     for (const campo of proibidos) {
+      // A âncora era `^\s*campo` — só pegava a declaração no INÍCIO da linha. Passavam verdes
+      // `readonly engine_version?: string`, um campo depois de qualquer modificador, e a forma
+      // inline `{ engine_version?: string }`. A promessa ("em projeção nenhuma") era mais
+      // ampla que o alcance.
+      //
+      // Agora a fronteira à esquerda é qualquer coisa que NÃO seja parte de um identificador:
+      // `engine_version:` é pego onde quer que esteja, e `my_engine_version:` continua livre —
+      // ele não é o campo proibido.
       expect(
-        new RegExp(`^\\s*${campo}\\??\\s*:`, "m").test(semComentarios),
+        new RegExp(`(^|[^A-Za-z0-9_$])${campo}\\??\\s*:`, "m").test(semComentarios),
         `a cópia declara o campo NUNCA público \`${campo}\``,
       ).toBe(false);
     }

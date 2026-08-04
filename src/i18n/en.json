@@ -57,6 +57,7 @@
     },
     "action": {
       "viewResult": "View result",
+      "checkAgain": "Check again",
       "retry": "Try again",
       "back": "Back",
       "newAnalysis": "New analysis",

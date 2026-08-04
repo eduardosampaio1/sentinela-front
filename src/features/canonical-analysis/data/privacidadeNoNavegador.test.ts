@@ -72,16 +72,28 @@ describe("a jornada canônica não deixa dado no navegador", () => {
     expect(culpados.map((c) => path.relative(RAIZ, c))).toEqual([]);
   });
 
-  it("a jornada não lê o CONTEÚDO do arquivo do usuário", () => {
-    // `FileReader`/`.text()`/`arrayBuffer()` trariam os bytes do cliente para a memória da
-    // aba — e daí para um preview, um log ou um estado de React. O upload é repassado como
-    // corpo da requisição, sem o frontend olhar dentro.
-    const culpados = arquivos.filter((a) => {
-      const src = codigo(a);
-      return /\bFileReader\b|\.arrayBuffer\(\)|readAsText/.test(src);
+  // As formas de trazer os bytes do cliente para a memória da aba — e daí para um preview, um
+  // log ou um estado de React. O upload é repassado como corpo da requisição, sem o frontend
+  // olhar dentro. A lista precisa cobrir a família INTEIRA: fechar `readAsText` e deixar
+  // `readAsArrayBuffer` aberto é um cadeado com a promessa maior que o alcance.
+  const LEITURAS = [
+    /\bFileReader\b/,
+    /\breadAsText\b/,
+    /\breadAsArrayBuffer\b/,
+    /\breadAsBinaryString\b/,
+    /\breadAsDataURL\b/,
+    /\.arrayBuffer\(\)/,
+    /\.text\(\)/,
+    /\.stream\(\)/,
+    /\bcreateObjectURL\b/, // não lê, mas expõe o conteúdo a um preview/nova aba
+  ];
+
+  for (const padrao of LEITURAS) {
+    it(`a jornada não lê o CONTEÚDO do arquivo do usuário via ${padrao.source}`, () => {
+      const culpados = arquivos.filter((a) => padrao.test(codigo(a)));
+      expect(culpados.map((c) => path.relative(RAIZ, c))).toEqual([]);
     });
-    expect(culpados.map((c) => path.relative(RAIZ, c))).toEqual([]);
-  });
+  }
 });
 
 describe("dívida declarada do caminho legado", () => {
@@ -94,10 +106,18 @@ describe("dívida declarada do caminho legado", () => {
     //
     // O teste falha no dia em que o legado sumir, e aí ele deve ser REMOVIDO junto: um
     // lembrete que sobrevive ao seu motivo vira ruído.
+    // Mede `saveResult` NOMINALMENTE, não "qualquer sessionStorage no arquivo": se a função
+    // sumisse mas sobrasse outro `setItem`, o lembrete continuaria verde apontando para uma
+    // dívida que já não existe — e a dívida que existe passaria despercebida.
     const legado = fs.readFileSync(path.resolve(RAIZ, "../../lib/api.ts"), "utf-8");
+    const corpo = legado.slice(legado.indexOf("export function saveResult"));
     expect(
-      /sessionStorage\.setItem/.test(legado),
-      "o legado parou de usar sessionStorage: remova este lembrete",
+      corpo.startsWith("export function saveResult"),
+      "`saveResult` sumiu do legado: remova este lembrete",
+    ).toBe(true);
+    expect(
+      /sessionStorage\.setItem/.test(corpo.slice(0, corpo.indexOf("\n}"))),
+      "`saveResult` parou de persistir no navegador: remova este lembrete",
     ).toBe(true);
   });
 });

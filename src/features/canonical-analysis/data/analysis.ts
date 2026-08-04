@@ -28,6 +28,12 @@ export function intervaloDePolling(status: AnalysisStatus | undefined): number |
     case "completed":
     case "failed":
       return false; // terminal: para de consultar
+    case "needs_mapping":
+      // NÃO é terminal, mas também não muda sozinho: depende de uma pessoa confirmar como os
+      // campos devem ser interpretados. Continuar consultando seria bater no backend para
+      // sempre por uma resposta que não muda — e, pior, contar ao usuário (pelo indicador de
+      // atividade) que algo está em curso. A tela é revalidada pela AÇÃO, não pelo relógio.
+      return false;
     default:
       return POLL_MODERADO;
   }

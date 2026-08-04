@@ -10,6 +10,9 @@
 // O Gateway traduz tudo isso para o vocabulário público. O frontend não sabe o que é bucket,
 // object key, worker, lease, purge ou fencing — e há teste provando que não sabe.
 
+import fs from "node:fs";
+import path from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { describeAnalysisState } from "./stateView";
@@ -67,6 +70,25 @@ describe("nenhum estado público fica sem texto", () => {
     });
   }
 
+  it("a UNIÃO e o array declaram exatamente os mesmos estados", () => {
+    // A direção que faltava. O laço acima percorre `PUBLIC_STATES`: um estado acrescentado só
+    // na união `AnalysisStatus` nunca seria testado, e o gate de sincronia com a origem que
+    // pegaria isso não roda quando a origem não está na máquina.
+    //
+    // Este teste NÃO depende da origem: é uma coerência interna do arquivo, e vale sempre.
+    const fonte = fs.readFileSync(
+      path.resolve(__dirname, "../../../lib/v1/contract/public-v1.types.ts"),
+      "utf-8",
+    );
+    const uniao = fonte.slice(
+      fonte.indexOf("export type AnalysisStatus"),
+      fonte.indexOf("export const PUBLIC_STATES"),
+    );
+    const daUniao = [...uniao.matchAll(/\|\s*"([a-z_]+)"/g)].map((m) => m[1]).sort();
+    expect(daUniao.length, "nenhum estado extraído da união").toBeGreaterThan(0);
+    expect(daUniao).toEqual([...PUBLIC_STATES].sort());
+  });
+
   it("a máquina de apresentação cobre TODOS os estados declarados", () => {
     // Sem isto, um estado novo no contrato cairia no `switch` sem `case` e a função
     // devolveria `undefined` — a tela quebraria em runtime, não em teste.
@@ -111,5 +133,40 @@ describe("o frontend não conhece o interior do sistema", () => {
         expect(texto, `texto de estado menciona "${proibido}"`).not.toContain(proibido);
       }
     }
+  });
+
+  it("o CÓDIGO da jornada não menciona infraestrutura", () => {
+    // Os dois testes acima cobrem o vocabulário e os textos. A afirmação, porém, é sobre o
+    // frontend: um hook lendo `object_key`, uma chamada com `bucket` na URL ou um campo
+    // `lease` num tipo passariam por eles inteiros. O que o Gateway esconde na fachada não
+    // pode reaparecer aqui pela porta dos fundos.
+    const raiz = path.resolve(__dirname, "..");
+    const arquivos: string[] = [];
+    const visitar = (dir: string) => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const alvo = path.join(dir, e.name);
+        if (e.isDirectory()) visitar(alvo);
+        else if (/\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name)) arquivos.push(alvo);
+      }
+    };
+    visitar(raiz);
+    expect(arquivos.length, "nenhum arquivo da jornada encontrado").toBeGreaterThan(5);
+
+    // `attempt` sai desta lista: `attempt_count` é conceito do Orchestrator, mas a palavra
+    // aparece legitimamente em ingles corrente. O cadeado de estados acima ja o cobre onde
+    // importa — no vocabulario publico.
+    const noCodigo = PROIBIDOS.filter((p) => p !== "attempt");
+    const culpados: string[] = [];
+    for (const a of arquivos) {
+      const src = fs
+        .readFileSync(a, "utf-8")
+        .replace(/\/\*[\s\S]*?\*\//g, " ")
+        .replace(/(^|[^:])\/\/.*$/gm, "$1")
+        .toLowerCase();
+      for (const proibido of noCodigo) {
+        if (src.includes(proibido)) culpados.push(`${path.relative(raiz, a)}: ${proibido}`);
+      }
+    }
+    expect(culpados).toEqual([]);
   });
 });
