@@ -1,5 +1,15 @@
 # Onda 6 — E1 · Gate de typecheck + status do `src_legacy`
 
+> ⚠ **DOCUMENTO HISTÓRICO.** Descreve o gate como ele era na E1 (dois projetos estritos,
+> escopados por enumeração, com baseline legado de 34 erros). O desenho mudou em **ANL-FE-08**:
+> hoje são **seis** projetos, quatro deles definidos por exclusão, com gate de cobertura contra
+> o índice do git. O baseline legado chegou a **zero** e deixou de existir como mecanismo.
+>
+> Ver **[TYPECHECK-GATE.md](../TYPECHECK-GATE.md)** para o estado atual. `npm run typecheck:legacy`
+> não existe mais — foi substituído por `typecheck:prod` e `typecheck:tests`.
+>
+> O que está abaixo continua valendo como registro de por que o gate nasceu escopado.
+
 ## Gates rodados SEPARADAMENTE (item 9)
 
 | Gate | Comando | Estado E1 |

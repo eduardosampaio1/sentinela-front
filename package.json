@@ -9,8 +9,12 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "typecheck": "node scripts/typecheck.mjs",
+    "typecheck:cobertura": "node scripts/typecheck-cobertura.mjs",
+    "typecheck:alcance": "node scripts/typecheck-alcance.mjs",
     "typecheck:pure": "tsc -p tsconfig.v1.json --noEmit",
-    "typecheck:legacy": "tsc -p tsconfig.app.json --noEmit",
+    "typecheck:prod": "tsc -p tsconfig.prod.json --noEmit",
+    "typecheck:tests": "tsc -p tsconfig.tests.json --noEmit",
+    "typecheck:e2e": "tsc -p tsconfig.e2e.json --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"

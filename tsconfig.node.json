@@ -18,5 +18,9 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts"]
+  // Configs de FERRAMENTA na raiz. Eram só `vite.config.ts`; `tailwind` e `vitest` estavam
+  // fora de qualquer projeto — não quebravam nada porque ninguém os checava, que é a mesma
+  // razão pela qual `features/dashboard` passou despercebida. `playwright.config.ts` mora no
+  // `tsconfig.e2e.json`, com os tipos do runner dele.
+  "include": ["vite.config.ts", "vitest.config.ts", "tailwind.config.ts"]
 }

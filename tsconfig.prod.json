@@ -1,0 +1,39 @@
+// Typecheck da ÁRVORE DE PRODUÇÃO INTEIRA — todo `.ts`/`.tsx` de `src/` que não seja teste.
+//
+// ## Por que este projeto existe
+//
+// Os projetos `tsconfig.v1.json` e `tsconfig.v1-ui.json` são ESTRITOS e ESCOPADOS: eles
+// enumeram diretórios. Enumeração é frágil pelo motivo óbvio e pelo não-óbvio — o óbvio é que
+// alguém esquece de registrar; o não-óbvio é que o gate continua VERDE enquanto esquece, e
+// verde é indistinguível de coberto.
+//
+// Foi exatamente o que aconteceu: `src/features/dashboard/`, criada na aposentadoria do
+// dashboard legado, ficou fora das três superfícies estritas. `npm run typecheck` passou
+// limpo sobre 97 arquivos e nunca abriu os 7 dela — que tinham 3 erros de tipo.
+//
+// ## O desenho: por EXCLUSÃO, não por enumeração
+//
+// `include` é `src` inteiro; `exclude` tira só o que é teste. A consequência é a que importa:
+// **arquivo novo nasce coberto**. Ninguém precisa lembrar de registrar diretório, e não existe
+// allowlist para crescer em silêncio.
+//
+// ## Rigor
+//
+// Herda o nível do `tsconfig.app.json` (não-estrito) DE PROPÓSITO. O objetivo aqui é
+// COBERTURA, e subir a régua no mesmo passo em que se amplia o alcance mistura duas medições:
+// não daria para saber se um erro novo é código descoberto ou régua nova.
+//
+// O rigor mora nos projetos estritos, que continuam existindo e continuam exigindo `strict`
+// na jornada canônica. Este é o piso; aqueles são o teto.
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src"],
+  "exclude": [
+    "src/test",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ]
+}

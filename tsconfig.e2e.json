@@ -1,0 +1,17 @@
+// Typecheck das specs de BROWSER (Playwright). Projeto próprio, e não uma pasta a mais no
+// `tsconfig.tests.json`, por um motivo de tipos: estas specs rodam no runner do Playwright,
+// não no do vitest. Os globais são outros (`test`, `expect`, `page` do `@playwright/test`), e
+// carregar `vitest/globals` aqui faria dois `expect` diferentes colidirem no mesmo escopo.
+//
+// A cobertura importa: 9 specs, ~40 casos, e são elas que pegam o que o typecheck e o vitest
+// não pegam. Foram elas que acusaram `ReferenceError: UserBlock is not defined` quando um
+// corte apagou código vizinho — 37 de 40 caindo de uma vez. Deixá-las sem typecheck é deixar
+// sem rede justamente a camada que serve de rede para as outras.
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["@playwright/test", "node"]
+  },
+  "include": ["e2e", "playwright.config.ts"]
+}

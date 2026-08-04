@@ -8,7 +8,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-import type { AnalysisListItem, AnalysisListPage } from "@/lib/v1";
+import type { AnalysisListItem, AnalysisListPage, V1Client } from "@/lib/v1";
 import { MAX_PAGINAS, resolverAnaliseCanonica } from "./resolverAnaliseCanonica";
 
 function item(
@@ -19,8 +19,20 @@ function item(
   return { analysis_id, status, result_available, record_count: 10, created_at: null };
 }
 
+/** O mock carrega a assinatura REAL de `V1Client["list"]`.
+ *
+ *  `vi.fn(async () => …)`, sem tipo, produz um mock de ZERO parâmetros — e aí `mock.calls` é a
+ *  tupla vazia, então `calls[0][0]` é `TS2493`. Os três erros estavam aqui desde que este
+ *  arquivo nasceu, invisíveis porque `features/dashboard` não pertencia a projeto de typecheck
+ *  nenhum.
+ *
+ *  Tipar não é calar o compilador: agora o mock precisa ACEITAR o que o cliente real aceita, e
+ *  a asserção sobre `calls[0][0]` passa a falar do parâmetro de verdade — se `ListParams`
+ *  mudar, este teste sente. */
 function clienteQueDevolve(...paginas: AnalysisListPage[]) {
-  const list = vi.fn(async () => paginas.shift() ?? { items: [], next_cursor: null });
+  const list = vi.fn<V1Client["list"]>(
+    async () => paginas.shift() ?? { items: [], next_cursor: null },
+  );
   return { client: { list }, list };
 }
 
@@ -41,10 +53,17 @@ describe("a fonte do id é a listagem canônica, escopada pelo workspace", () =>
 
     await resolverAnaliseCanonica(client, "ws-A");
 
-    const params = list.mock.calls[0][0] as Record<string, unknown>;
-    expect(Object.keys(params)).toEqual(expect.arrayContaining(["workspaceId"]));
-    expect(params.projectId).toBeUndefined();
-    expect(params.environmentId).toBeUndefined();
+    // A pergunta é sobre as chaves OBSERVADAS, não sobre o tipo. `ListParams` já não declara
+    // `projectId`/`environmentId`, mas tipo não impede que um `spread` acidental carregue a
+    // chave em runtime — e é essa a falha que este teste precisa pegar.
+    //
+    // O `as Record<string, unknown>` que estava aqui só compilava enquanto o mock era destipado.
+    // Assim que ele ganhou a assinatura real, o compilador recusou a conversão (`TS2352`) — e
+    // recusou com razão: ela afirmava que `ListParams` tem chaves arbitrárias.
+    const chaves = Object.keys(list.mock.calls[0][0]);
+    expect(chaves).toEqual(expect.arrayContaining(["workspaceId"]));
+    expect(chaves).not.toContain("projectId");
+    expect(chaves).not.toContain("environmentId");
   });
 
   it("uma falha da chamada PROPAGA — não vira 'não tem análise'", async () => {

@@ -1,0 +1,31 @@
+// Typecheck de TODO teste TypeScript de unidade/componente — o complemento de
+// `tsconfig.prod.json`.
+//
+// ## Por que teste precisa de typecheck
+//
+// Porque teste que não compila não protege nada, e o modo como ele quebra é silencioso: um
+// `expect` sobre uma propriedade que não existe mais passa a comparar `undefined` com
+// `undefined` e fica **verde**. Os 3 `TS2493` de `features/dashboard` eram indexação de tupla
+// vazia — o teste lia `[0]` de algo que o tipo garante não ter elemento nenhum.
+//
+// ## Projeto separado do de produção
+//
+// Testes precisam de `src/test/setup.ts` (augmentation dos matchers do jest-dom) e dos globais
+// do vitest; produção não. Misturar os dois obrigaria a produção a carregar tipos de teste, e
+// aí um `import` acidental de fixture em código de produção passaria despercebido.
+//
+// ## Por EXCLUSÃO também
+//
+// `include` pega o padrão de nome, não uma lista de arquivos. Teste novo nasce coberto.
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "src/vite-env.d.ts",
+    "src/test",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ]
+}
