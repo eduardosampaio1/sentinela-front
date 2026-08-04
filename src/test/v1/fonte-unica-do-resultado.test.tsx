@@ -230,4 +230,16 @@ describe("prova 10 — o renderizador único cobre loading, erro, resultado e au
       "features/canonical-analysis/result/adapter.ts",
     ]);
   });
+
+  it("o arquivo-fronteira exporta UM conversor, não dois", () => {
+    // O teste acima conta ARQUIVOS, e uma mutação passou por baixo dele: um segundo conversor
+    // DENTRO do próprio adapter. A fronteira não é só o arquivo — é a função.
+    //
+    // `adapt*` é a convenção de nome de conversor nesta base. Dois deles no mesmo arquivo já
+    // são duas regras de evolução morando juntas, que é o que a decisão proíbe; o fato de
+    // dividirem o mesmo `.ts` só torna a divergência mais fácil de não notar.
+    const adapter = semComentarios(path.resolve(SRC, "features/canonical-analysis/result/adapter.ts"));
+    const conversores = [...adapter.matchAll(/export function (adapt\w*)/g)].map((m) => m[1]);
+    expect(conversores).toEqual(["adaptAnalysisResult"]);
+  });
 });
