@@ -20,6 +20,12 @@ export type AnalysisStatus =
   | "queued" // submetida, aguardando execução
   | "running" // em execução
   | "recovering" // re-enfileirada após uma tentativa (retomando)
+  // Parada de NEGÓCIO, não de sistema: o dado chegou e passou pelo Privacy Gate, mas falta
+  // uma pessoa confirmar como alguns campos devem ser interpretados. Não é `failed` (nada
+  // quebrou, e "tentar de novo" repetiria exatamente o mesmo resultado) nem `preparing`
+  // (nada está progredindo, e um indicador em andamento seria a tela travada com cara de
+  // trabalho em curso).
+  | "needs_mapping"
   | "completed" // resultado disponível
   | "failed"; // falha terminal (ver retry_allowed para recuperabilidade)
 
@@ -29,6 +35,7 @@ export const PUBLIC_STATES: readonly AnalysisStatus[] = [
   "queued",
   "running",
   "recovering",
+  "needs_mapping",
   "completed",
   "failed",
 ] as const;

@@ -42,6 +42,10 @@
         "title": "Recovering",
         "message": "Resuming the processing."
       },
+      "needs_mapping": {
+        "title": "Confirmation needed",
+        "message": "We need to confirm how some fields should be interpreted."
+      },
       "completed": {
         "title": "Completed",
         "message": "Analysis completed."

@@ -6,7 +6,7 @@
 
 import type { AnalysisStatus, AnalysisStatusView } from "@/lib/v1";
 
-export type AnalysisAction = "wait" | "view_result" | "retry" | "none";
+export type AnalysisAction = "wait" | "view_result" | "retry" | "none" | "confirm_mapping";
 
 export interface AnalysisStateView {
   status: AnalysisStatus;
@@ -36,6 +36,24 @@ export function describeAnalysisState(
     case "running":
     case "recovering":
       return { ...base, action: "wait", terminal: false, indeterminate: true, isError: false };
+    case "needs_mapping":
+      // Os quatro sinais dizem a mesma coisa por ângulos diferentes, e cada um evita um
+      // desfecho ruim específico:
+      //   `indeterminate: false` — nada está progredindo. Um spinner aqui seria a tela
+      //     travada com cara de trabalho em curso: o usuário esperaria para sempre.
+      //   `terminal: false` — a jornada não acabou. Tratá-la como terminal encerraria o
+      //     acompanhamento de algo que ainda pode andar quando a pessoa confirmar.
+      //   `isError: false` — nada quebrou. Pintar de erro faria o usuário procurar defeito
+      //     onde há uma pergunta.
+      //   `action: "confirm_mapping"` — há uma ação HUMANA pendente, e ela não é "retry":
+      //     reenviar o mesmo arquivo daria exatamente o mesmo resultado.
+      return {
+        ...base,
+        action: "confirm_mapping",
+        terminal: false,
+        indeterminate: false,
+        isError: false,
+      };
     case "completed":
       return { ...base, action: "view_result", terminal: true, indeterminate: false, isError: false };
     case "failed":

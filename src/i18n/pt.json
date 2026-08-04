@@ -42,6 +42,10 @@
         "title": "Retomando",
         "message": "Retomando o processamento."
       },
+      "needs_mapping": {
+        "title": "Confirmação necessária",
+        "message": "Precisamos confirmar como alguns campos devem ser interpretados."
+      },
       "completed": {
         "title": "Concluída",
         "message": "Análise concluída."

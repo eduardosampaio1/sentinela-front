@@ -49,7 +49,47 @@ function camposDaInterface(fonte: string, nome: string): string[] {
     .sort();
 }
 
+/** Extrai os membros de um array `const` de estados (`PUBLIC_STATES`) da cópia. */
+function estadosDaCopia(fonte: string): string[] {
+  const inicio = fonte.indexOf("export const PUBLIC_STATES");
+  if (inicio < 0) return [];
+  // `= [` e não o primeiro `[`: a anotação de tipo é `readonly AnalysisStatus[]`, e casar com
+  // o colchete dela devolve uma lista VAZIA — que passa em qualquer laço e em qualquer
+  // comparação de subconjunto sem verificar nada.
+  const abre = fonte.indexOf("= [", inicio) + 2;
+  const fecha = fonte.indexOf("]", abre);
+  return [...fonte.slice(abre, fecha).matchAll(/"([a-z_]+)"/g)].map((m) => m[1]).sort();
+}
+
 describe("cópia local de public-v1 × origem", () => {
+  // Esta suíte comparava só os CAMPOS dos read-models. O vocabulário de ESTADOS — a coisa de
+  // que a jornada inteira depende, e que o próprio arquivo da cópia anuncia como sua razão de
+  // existir — passava sem ninguém olhar: dava para somar ou remover um estado na cópia e o
+  // gate de "não derivou da origem" continuava verde.
+  it.runIf(ORIGEM)("o vocabulário de ESTADOS casa com o contrato da origem", () => {
+    const snapshot = JSON.parse(readFileSync(resolve(ORIGEM!, "public-v1.json"), "utf-8"));
+    const daCopia = estadosDaCopia(readFileSync(COPIA, "utf-8"));
+    expect(daCopia.length, "PUBLIC_STATES não foi encontrado na cópia").toBeGreaterThan(0);
+    expect(daCopia).toEqual([...(snapshot.public_states as string[])].sort());
+  });
+
+  it.runIf(ORIGEM)("todo estado do array também existe no tipo `AnalysisStatus`", () => {
+    // O array e a união são duas declarações do mesmo fato. Se divergirem, o `switch` da
+    // máquina de apresentação compila (a união mandou) enquanto o laço de teste percorre
+    // outra lista (o array mandou) — e cada um prova uma coisa diferente.
+    const texto = readFileSync(COPIA, "utf-8");
+    const uniao = texto.slice(
+      texto.indexOf("export type AnalysisStatus"),
+      texto.indexOf("export const PUBLIC_STATES"),
+    );
+    const estados = estadosDaCopia(texto);
+    expect(estados.length, "PUBLIC_STATES não foi encontrado na cópia").toBeGreaterThan(0);
+    for (const estado of estados) {
+      expect(uniao, `"${estado}" está em PUBLIC_STATES mas não em AnalysisStatus`).toContain(
+        `"${estado}"`,
+      );
+    }
+  });
   it.runIf(ORIGEM)("o read-model do RESULTADO casa com o contrato da origem", () => {
     const snapshot = JSON.parse(readFileSync(resolve(ORIGEM!, "public-v1.json"), "utf-8"));
     const daCopia = camposDaInterface(readFileSync(COPIA, "utf-8"), "AnalysisResultView");
