@@ -51,7 +51,21 @@ beforeEach(() => {
 });
 
 describe("prova 4 — logout e troca de workspace limpam o estado em memória", () => {
-  it("sem workspace (logout) o resultado é nulo", async () => {
+  // ⚠️ LEIA ANTES DE CONFIAR NOS DOIS PRIMEIROS TESTES.
+  //
+  // Depois da remoção do cache, `result` NÃO TEM PRODUTOR: todo `setResult` no contexto é
+  // `setResult(null)`. Logo, "o logout limpa o resultado" é verdade por vacuidade — não há o
+  // que limpar. O mutation gate expôs isso: remover os `setResult(null)` do logout e da troca
+  // de workspace SOBREVIVEU, porque o valor observado é o mesmo nos dois mundos.
+  //
+  // Manter os dois testes assim mesmo, com esta nota, é honesto; apresentá-los como prova de
+  // limpeza não seria. A prova com dentes é a de `hasHistory`, abaixo — esse estado tem
+  // produtor de verdade.
+  //
+  // O cadeado que fecha a vacuidade é o último deste arquivo: no dia em que alguém criar um
+  // produtor para `result`, ele falha e cobra a prova de limpeza que hoje não existe.
+
+  it("sem workspace (logout) o resultado é nulo [vacuidade declarada]", async () => {
     workspaceAtual = null;
     const { unmount } = montar();
     expect(screen.getByTestId("resultado").textContent).toBe("SEM-RESULTADO");
@@ -98,5 +112,26 @@ describe("prova 4 — logout e troca de workspace limpam o estado em memória", 
     const { unmount } = montar();
     expect(screen.getByTestId("historico").textContent).toBe("COM-HISTORICO");
     unmount();
+  });
+});
+
+describe("o cadeado que fecha a vacuidade", () => {
+  it("`result` continua sem produtor — todo `setResult` do contexto e `setResult(null)`", async () => {
+    // Este e o fato que torna vacuosos os dois primeiros testes. Ele precisa ser VERIFICADO,
+    // nao assumido: no dia em que alguem escrever `setResult(algo)`, este teste falha e cobra
+    // uma prova de verdade de que logout e troca de workspace apagam esse algo.
+    //
+    // Tambem e o registro de uma consequencia de produto: sem produtor, o cluster legado de
+    // `/dashboard` (que le `result` do contexto) nao tem fonte de dados. A fonte era o cache
+    // do navegador, e ele foi removido.
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const fonte = fs.readFileSync(
+      path.resolve(__dirname, "../../contexts/AnalysisContext.tsx"),
+      "utf-8",
+    );
+    const chamadas = [...fonte.matchAll(/setResult\(([^)]*)\)/g)].map((m) => m[1].trim());
+    expect(chamadas.length, "nenhum `setResult` encontrado — o arquivo mudou de forma").toBeGreaterThan(0);
+    expect([...new Set(chamadas)]).toEqual(["null"]);
   });
 });

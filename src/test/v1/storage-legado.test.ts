@@ -16,6 +16,14 @@ import {
 const RAIZ = path.resolve(__dirname, "../../..");
 const SRC = path.join(RAIZ, "src");
 
+/** Código sem comentários — senão o cadeado mede a prosa que EXPLICA a remoção. */
+function semComentarios(caminho: string): string {
+  return fs
+    .readFileSync(caminho, "utf-8")
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1");
+}
+
 // ── prova 5 — as chaves legadas são apagadas na inicialização ─────────────────
 
 describe("prova 5 — limpeza defensiva das chaves legadas", () => {
@@ -87,7 +95,10 @@ describe("prova 5 — limpeza defensiva das chaves legadas", () => {
     // Sem isto, a função poderia estar perfeita e nunca executar — o modo de falha recorrente
     // deste programa. `main.tsx` não é montável em teste (cria a raiz do DOM real), então a
     // prova aqui é estrutural: o import existe e a chamada existe.
-    const main = fs.readFileSync(path.join(SRC, "main.tsx"), "utf-8");
+    // SEM COMENTÁRIOS. Uma mutação que apenas comenta a chamada
+    // (`// limparResultadosLegadosDoNavegador();`) mantém a string no arquivo, e um
+    // `toContain` sobre o texto cru passa verde medindo a prosa. Foi o que a mutação s9 provou.
+    const main = semComentarios(path.join(SRC, "main.tsx"));
     expect(main).toContain("limparResultadosLegadosDoNavegador");
     expect(main, "a função é importada mas nunca chamada").toContain(
       "limparResultadosLegadosDoNavegador();",
@@ -124,14 +135,6 @@ function arquivosDeCodigo(dir: string): string[] {
     }
   }
   return achados;
-}
-
-/** Código sem comentários — senão o cadeado mede a prosa que EXPLICA a remoção. */
-function semComentarios(caminho: string): string {
-  return fs
-    .readFileSync(caminho, "utf-8")
-    .replace(/\/\*[\s\S]*?\*\//g, " ")
-    .replace(/(^|[^:])\/\/.*$/gm, "$1");
 }
 
 describe("prova 7 — o cache de resultado não existe mais no código", () => {
