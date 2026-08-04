@@ -213,10 +213,21 @@ describe("prova 10 — o renderizador único cobre loading, erro, resultado e au
     //
     // O discriminador honesto é o adapter: quem lê o documento canônico e produz view model é
     // um arquivo só. Se aparecer um segundo, aí sim há duas regras de evolução.
-    const fronteiras = arquivos
-      .filter((a) => /export function adaptAnalysisResult\b/.test(semComentarios(a)))
-      .map((a) => path.relative(SRC, a));
-    expect(fronteiras).toHaveLength(1);
-    expect(fronteiras[0]).toContain("canonical-analysis");
+    // Discriminador por QUEM LÊ O CONTRATO, não por nome de função. Um segundo conversor
+    // chamado `adaptAnalysisResultLegado` escapava de uma regex ancorada no nome (`L` é
+    // caractere de palavra, então `\b` não separa) — e foi exatamente essa a mutação que
+    // sobreviveu. Quem quer converter o documento canônico PRECISA do tipo dele.
+    const leemOContrato = arquivos
+      .filter((a) => /\bAnalysisResultView\b/.test(semComentarios(a)))
+      .map((a) => path.relative(SRC, a).replace(/\\/g, "/"))
+      // A declaração do contrato (`lib/v1/`) e as FIXTURES (`test/`) não contam: nenhuma
+      // converte documento — uma declara o tipo, as outras declaram massa.
+      .filter((r) => !r.startsWith("lib/v1/") && !r.startsWith("test/"));
+    // Dois, e cada um com um papel distinto: o HOOK transporta (tipo de retorno da query) e o
+    // ADAPTER converte. Um terceiro leitor é um segundo modelo nascendo.
+    expect(leemOContrato.sort()).toEqual([
+      "features/canonical-analysis/data/analysis.ts",
+      "features/canonical-analysis/result/adapter.ts",
+    ]);
   });
 });

@@ -40,9 +40,19 @@ function servirListagem(porWorkspace: Record<string, unknown>) {
   );
 }
 
-function montar() {
+/** Fábrica de árvores por TESTE.
+ *
+ *  `QueryClient` e `MemoryRouter` nascem uma vez por teste (não compartilhar entre testes:
+ *  vaza estado de navegação — depois de um redirecionamento o router fica na rota de
+ *  resultado e o teste seguinte nasce lá).
+ *
+ *  A fábrica devolve um elemento NOVO a cada chamada, com as MESMAS instâncias dentro. É o
+ *  que a prova 4 precisa: elemento novo faz o React reconciliar (com a mesma referência ele
+ *  pula a subárvore e o efeito nunca é reavaliado), e as mesmas instâncias impedem o
+ *  componente de remontar (remontagem roda o efeito com ou sem a dependência). */
+function fabricaDeArvore() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+  const fazer = () => (
     <LanguageProvider>
       <QueryClientProvider client={qc}>
         <CanonicalClientProvider client={client}>
@@ -61,8 +71,14 @@ function montar() {
           </MemoryRouter>
         </CanonicalClientProvider>
       </QueryClientProvider>
-    </LanguageProvider>,
+    </LanguageProvider>
   );
+  return fazer;
+}
+
+function montar() {
+  const fazer = fabricaDeArvore();
+  return { ...render(fazer()), fazer };
 }
 
 const concluida = (id: string) => ({
@@ -181,19 +197,29 @@ describe("prova 3 — sem análise, estado vazio honesto", () => {
 // ── prova 4 — troca de workspace não reutiliza id anterior ───────────────────
 
 describe("prova 4 — a troca de workspace pergunta de novo", () => {
-  it("o segundo workspace é consultado, e o id do primeiro não é reusado", async () => {
-    servirListagem({ "ws-A": concluida("an-do-A"), "ws-B": { items: [], next_cursor: null } });
+  it("o workspace muda SOB o mesmo componente e a consulta é refeita", async () => {
+    // ⚠️ Desmontar e remontar entre as trocas NÃO prova isto: uma montagem nova roda o efeito
+    // de qualquer jeito, com ou sem `workspaceId` nas dependências. Foi assim que a mutação
+    // que remove a dependência sobreviveu à primeira versão deste teste.
+    //
+    // E a direção importa. No desfecho ENCONTRADA a rota REDIRECIONA e desmonta — não existe
+    // "trocar de workspace com ela na tela mostrando resultado", porque ela nunca mostra
+    // resultado.
+    //
+    // O caso alcançável é o oposto: a rota está no ESTADO VAZIO (montada, esperando), o
+    // usuário troca de workspace, e no novo existe análise. Sem a dependência, a tela fica
+    // vazia para sempre — dizendo a alguém que ele não tem análise quando tem.
+    servirListagem({ "ws-A": { items: [], next_cursor: null }, "ws-B": concluida("an-do-B") });
 
-    const primeira = montar();
-    await waitFor(() => expect(screen.getByTestId("destino-canonico")).toBeTruthy());
-    primeira.unmount();
+    const tela = montar();
+    await waitFor(() => expect(screen.getByTestId("dashboard-compat-vazio")).toBeTruthy());
 
     workspaceAtual = { id: "ws-B" };
-    const segunda = montar();
-    // B não tem análise: se o id de A fosse reusado, aqui haveria redirecionamento.
-    await waitFor(() => expect(screen.getByTestId("dashboard-compat-vazio")).toBeTruthy());
+    tela.rerender(tela.fazer());
+
+    await waitFor(() => expect(screen.getByTestId("destino-canonico")).toBeTruthy());
     expect(workspacesPedidos).toEqual(["ws-A", "ws-B"]);
-    segunda.unmount();
+    tela.unmount();
   });
 });
 
