@@ -28,40 +28,102 @@ async function autenticar(page: Page): Promise<void> {
 }
 
 /**
- * Abre o resultado e devolve quantas respostas vieram DA ORIGEM DO GATEWAY.
+ * Abre o resultado e ESPERA a resposta do documento vinda da origem do Gateway.
  *
- * A contagem é a prova de que o MSW não respondeu no lugar dele. Sem ela, uma spec verde seria
- * compatível com "o worker interceptou e devolveu a massa antiga" — que é o falso verde que esta
- * fatia inteira existe para não ter.
+ * Esperar, e não contar depois. A primeira versão somava respostas num contador e lia o número
+ * assim que a página aparecia — mas `canonical-result-page` fica visível no estado de
+ * carregamento, antes de a requisição terminar. A asserção passava quando a rede era rápida e
+ * falhava quando não era: uma prova de "o Gateway respondeu" que dependia de sorte é pior que
+ * nenhuma, porque um dia ela fica verde pelo motivo errado.
+ *
+ * O `waitForResponse` prova as duas coisas de uma vez: houve requisição PARA A ORIGEM DO
+ * GATEWAY, e ela foi respondida. Se o MSW tivesse interceptado, nada apareceria naquela origem.
  */
-async function abrir(page: Page, id: string): Promise<{ doGateway: number }> {
-  let doGateway = 0;
-  page.on("response", (r) => {
-    if (new URL(r.url()).origin === ORIGEM_DO_GATEWAY) doGateway += 1;
-  });
+async function abrir(page: Page, id: string): Promise<void> {
   await autenticar(page);
-  await page.goto(`/canonical/analyses/${id}/result`);
+  const [resposta] = await Promise.all([
+    page.waitForResponse(
+      (r) =>
+        new URL(r.url()).origin === ORIGEM_DO_GATEWAY &&
+        r.url().includes(`/v1/analyses/${id}/result`),
+    ),
+    page.goto(`/canonical/analyses/${id}/result`),
+  ]);
+  expect(resposta.status(), "o Gateway não respondeu 200 ao documento").toBe(200);
   await expect(page.getByTestId("canonical-result-page")).toBeVisible();
-  return { doGateway };
+}
+
+/**
+ * O RECORTE do documento que esta spec lê. Declarado, e não `any`.
+ *
+ * Não é o contrato inteiro — é o que a spec confere. Escrever `any` aqui pareceria inofensivo e
+ * custaria a única coisa que o tipo dá de graça neste arquivo: se o Gateway parar de entregar
+ * `analytics.data.concentrations`, o erro aparece na compilação em vez de virar `undefined` no
+ * meio de uma asserção.
+ */
+interface GrupoDoDocumento {
+  label: string;
+  count: number;
+}
+interface DistribuicaoDoDocumento {
+  measure_id: string;
+  value_count: number;
+  groups: GrupoDoDocumento[];
+}
+interface EstatisticaDoDocumento {
+  statistic_id: string;
+  state: string;
+  value: number | null;
+}
+interface ConcentracaoDoDocumento {
+  measure_id: string;
+  statistics: EstatisticaDoDocumento[];
+  bands: { entity_count: number }[];
+}
+interface SerieDoDocumento {
+  effective_granularity: string;
+  windows: { count: number | null }[];
+}
+interface SnapshotDoDocumento {
+  dimensions: DistribuicaoDoDocumento[];
+  concentrations: ConcentracaoDoDocumento[];
+  time_series: SerieDoDocumento[];
+}
+interface DocumentoPublico {
+  result_schema_version: string;
+  indicator_registry_version: string;
+  /** `analytics` só existe no v2 — o v1 não tem um, e inventá-lo aqui esconderia a diferença. */
+  result: { analytics?: { component_status: string; data: SnapshotDoDocumento | null } };
 }
 
 /** O documento como o GATEWAY o entrega — a referência contra a qual a tela é conferida. */
-async function documentoDoGateway(id: string): Promise<Record<string, unknown>> {
+async function documentoDoGateway(id: string): Promise<DocumentoPublico> {
   const r = await fetch(
     `${CORREDOR.gateway}/v1/analyses/${id}/result?workspace_id=${CORREDOR.workspace}`,
     { headers: { Authorization: "Bearer e2e-local-session-not-a-real-credential" } },
   );
   expect(r.status).toBe(200);
-  return (await r.json()) as Record<string, unknown>;
+  return (await r.json()) as DocumentoPublico;
+}
+
+/** O bloco analítico, ou uma falha explícita — nunca um `?.` que engole o estado errado. */
+function analiticoDe(publico: DocumentoPublico): { component_status: string; data: SnapshotDoDocumento | null } {
+  const bloco = publico.result.analytics;
+  if (!bloco) throw new Error("o documento do Gateway não trouxe o bloco `analytics`");
+  return bloco;
+}
+
+/** O snapshot, exigindo que ele exista (ready/partial). */
+function snapshotDe(publico: DocumentoPublico): SnapshotDoDocumento {
+  const dados = analiticoDe(publico).data;
+  if (!dados) throw new Error("o documento do Gateway veio sem conteúdo analítico");
+  return dados;
 }
 
 test.describe("MF6.4c — Gateway real → Frontend → tela", () => {
   test("ready: Engine e Analytics renderizados com os números que o Gateway entregou", async ({ page }) => {
     const id = CORREDOR.ids.ready;
-    const { doGateway } = await abrir(page, id);
-
-    // ── a composição aconteceu de verdade ────────────────────────────────────
-    expect(doGateway, "nenhuma resposta veio da origem do Gateway").toBeGreaterThan(0);
+    await abrir(page, id); // já prova que o documento veio da origem do Gateway
     const publico = await documentoDoGateway(id);
     expect(publico.result_schema_version).toBe("analysis-result-v2");
 
@@ -88,8 +150,8 @@ test.describe("MF6.4c — Gateway real → Frontend → tela", () => {
     const id = CORREDOR.ids.ready;
     await abrir(page, id);
     const publico = await documentoDoGateway(id);
-    const dados = (publico.result as Record<string, any>).analytics.data;
-    const concentracao = dados.concentrations.find((c: any) => c.measure_id === "declared_turns");
+    const dados = snapshotDe(publico);
+    const concentracao = dados.concentrations.find((c) => c.measure_id === "declared_turns");
     expect(concentracao, "o documento do Gateway não trouxe declared_turns").toBeTruthy();
 
     const area = page.getByRole("heading", { name: "Volume concentration" }).locator("xpath=..");
@@ -97,14 +159,14 @@ test.describe("MF6.4c — Gateway real → Frontend → tela", () => {
 
     // A participação exibida é a do documento, na escala percentual que a origem declara —
     // 0,6233766… → "62.3%". Nenhuma outra conta produz esse número a partir do que está na tela.
-    const top = concentracao.statistics.find(
-      (e: any) => e.statistic_id === "top_20_percent_volume_share",
+    const top = concentracao!.statistics.find(
+      (e) => e.statistic_id === "top_20_percent_volume_share",
     );
-    expect(top.state).toBe("published");
-    await expect(area).toContainText(`${(top.value * 100).toFixed(1)}%`);
+    expect(top?.state).toBe("published");
+    await expect(area).toContainText(`${((top!.value ?? 0) * 100).toFixed(1)}%`);
 
     // As faixas: a contagem de entidades aparece ESCRITA, não só como comprimento de barra.
-    for (const faixa of concentracao.bands) {
+    for (const faixa of concentracao!.bands) {
       await expect(area).toContainText(String(faixa.entity_count));
     }
   });
@@ -113,7 +175,7 @@ test.describe("MF6.4c — Gateway real → Frontend → tela", () => {
     const id = CORREDOR.ids.ready;
     await abrir(page, id);
     const publico = await documentoDoGateway(id);
-    const serie = (publico.result as Record<string, any>).analytics.data.time_series[0];
+    const serie = snapshotDe(publico).time_series[0];
     expect(serie.effective_granularity).toBe("month");
 
     const area = page.getByRole("heading", { name: "Over time" }).locator("xpath=..");
@@ -127,7 +189,7 @@ test.describe("MF6.4c — Gateway real → Frontend → tela", () => {
     const id = CORREDOR.ids.ready;
     await abrir(page, id);
     const publico = await documentoDoGateway(id);
-    const dimensao = (publico.result as Record<string, any>).analytics.data.dimensions[0];
+    const dimensao = snapshotDe(publico).dimensions[0];
 
     const area = page.getByRole("heading", { name: "Dimensions" }).locator("xpath=..");
     const texto = (await area.textContent()) ?? "";
@@ -149,7 +211,7 @@ test.describe("MF6.4c — Gateway real → Frontend → tela", () => {
     const id = CORREDOR.ids.parcial;
     await abrir(page, id);
     const publico = await documentoDoGateway(id);
-    expect((publico.result as Record<string, any>).analytics.component_status).toBe("partial");
+    expect(analiticoDe(publico).component_status).toBe("partial");
 
     const aviso = page.getByText(/omitted to avoid revealing small groups/);
     await expect(aviso).toBeVisible();
@@ -161,7 +223,7 @@ test.describe("MF6.4c — Gateway real → Frontend → tela", () => {
     const id = CORREDOR.ids.retido;
     await abrir(page, id);
     const publico = await documentoDoGateway(id);
-    const analytics = (publico.result as Record<string, any>).analytics;
+    const analytics = analiticoDe(publico);
     expect(analytics.component_status).toBe("withheld");
     expect(analytics.data).toBeNull();
 
