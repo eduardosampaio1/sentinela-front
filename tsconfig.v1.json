@@ -22,6 +22,7 @@
     "src/lib/v1",
     "src/features/canonical-analysis/flag.ts",
     "src/features/canonical-analysis/data",
+    "src/features/canonical-analysis/result",
     "src/test/v1",
     "src/test/msw",
     "src/test/fixtures/public-v1",
