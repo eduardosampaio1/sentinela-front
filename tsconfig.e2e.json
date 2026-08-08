@@ -13,5 +13,5 @@
     "noEmit": true,
     "types": ["@playwright/test", "node"]
   },
-  "include": ["e2e", "playwright.config.ts"]
+  "include": ["e2e", "e2e-mf64c", "playwright.config.ts", "playwright.mf64c.config.ts"]
 }
