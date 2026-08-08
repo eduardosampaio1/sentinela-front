@@ -223,11 +223,21 @@ describe("prova 10 — o renderizador único cobre loading, erro, resultado e au
       // A declaração do contrato (`lib/v1/`) e as FIXTURES (`test/`) não contam: nenhuma
       // converte documento — uma declara o tipo, as outras declaram massa.
       .filter((r) => !r.startsWith("lib/v1/") && !r.startsWith("test/"));
-    // Dois, e cada um com um papel distinto: o HOOK transporta (tipo de retorno da query) e o
-    // ADAPTER converte. Um terceiro leitor é um segundo modelo nascendo.
+    // Quatro, e cada um com um papel distinto — a lista cresceu na MF6.4b sem afrouxar a regra,
+    // porque a regra é "um modelo por CONTRATO", não "um modelo no total":
+    //
+    //   analysis.ts   o HOOK transporta (tipo de retorno da query)
+    //   adaptar.ts    a FRONTEIRA escolhe o contrato, e não converte nada
+    //   adapter.ts    converte o `analysis-result-v1`
+    //   adapterV2.ts  converte o `analysis-result-v2`
+    //
+    // Um QUINTO leitor é um segundo modelo do mesmo contrato nascendo — e aí voltam as duas
+    // regras de evolução que esta prova existe para impedir.
     expect(leemOContrato.sort()).toEqual([
       "features/canonical-analysis/data/analysis.ts",
+      "features/canonical-analysis/result/adaptar.ts",
       "features/canonical-analysis/result/adapter.ts",
+      "features/canonical-analysis/result/adapterV2.ts",
     ]);
   });
 
@@ -238,8 +248,14 @@ describe("prova 10 — o renderizador único cobre loading, erro, resultado e au
     // `adapt*` é a convenção de nome de conversor nesta base. Dois deles no mesmo arquivo já
     // são duas regras de evolução morando juntas, que é o que a decisão proíbe; o fato de
     // dividirem o mesmo `.ts` só torna a divergência mais fácil de não notar.
+    // Vale para os DOIS arquivos-fronteira: um conversor exportado em cada.
     const adapter = semComentarios(path.resolve(SRC, "features/canonical-analysis/result/adapter.ts"));
-    const conversores = [...adapter.matchAll(/export function (adapt\w*)/g)].map((m) => m[1]);
-    expect(conversores).toEqual(["adaptAnalysisResult"]);
+    expect([...adapter.matchAll(/export function (adapt\w*)/g)].map((m) => m[1])).toEqual([
+      "adaptAnalysisResult",
+    ]);
+    const v2 = semComentarios(path.resolve(SRC, "features/canonical-analysis/result/adapterV2.ts"));
+    expect([...v2.matchAll(/export function (adapt\w*)/g)].map((m) => m[1])).toEqual([
+      "adaptAnalysisResultV2",
+    ]);
   });
 });

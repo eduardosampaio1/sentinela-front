@@ -29,8 +29,37 @@ function semComentarios(src: string): string {
 const arquivos = listar(FEATURE);
 /** Componentes = tudo que renderiza (ui/), onde NENHUMA aritmética analítica pode existir. */
 const componentes = arquivos.filter((f) => f.includes(`${join("canonical-analysis", "ui")}`));
-/** Só estes podem conhecer o shape do documento canônico. */
-const PODEM_CONHECER_SHAPE = ["validator.ts", "adapter.ts", "canonicalSchema.ts"];
+/** Só estes podem conhecer o shape do documento canônico.
+ *
+ * A lista cresceu na MF6.4b, e cresceu pelo MESMO critério de sempre — quem CONVERTE o documento:
+ *
+ *   `*V2.ts`      o contrato integrado tem validador, schema e adapter próprios. O v2 não é uma
+ *                 variação do v1: o v1 tem `additionalProperties: false`, e por isso os dois são
+ *                 documentos distintos com camadas distintas.
+ *   `leitores.ts` os leitores de folha da parte da ENGINE, compartilhados pelos dois validadores.
+ *                 São a inspeção campo a campo — conhecer o shape é o trabalho deles.
+ *   `indicadores.ts`  a apresentação de UM indicador, compartilhada pelos dois adapters. Ela
+ *                 recebe `CanonicalIndicator` porque converte indicador; é adapter, e mora fora
+ *                 de `adapter.ts` justamente para não existir em duas cópias.
+ *   `analyticsProjection.ts`  o snapshot que vai dentro de `analytics.data`.
+ *   `adaptar.ts`  a FRONTEIRA que escolhe o adapter. Ela precisa das duas constantes de versão
+ *                 para decidir, e ler a constante do módulo é melhor que repetir o literal — que
+ *                 é o que ela faria se esta lista a proibisse.
+ *
+ * O que a lista continua NEGANDO é o essencial: nenhum componente de `ui/` conhece o documento.
+ */
+const PODEM_CONHECER_SHAPE = [
+  "validator.ts",
+  "adapter.ts",
+  "canonicalSchema.ts",
+  "validatorV2.ts",
+  "adapterV2.ts",
+  "canonicalSchemaV2.ts",
+  "leitores.ts",
+  "indicadores.ts",
+  "analyticsProjection.ts",
+  "adaptar.ts",
+];
 
 // 1-2: aritmética analítica / Math usado para criar score ou percentual não contratado.
 const ARITMETICA_ANALITICA = /\*\s*100\b|\/\s*100\b|Math\.(round|max|min|abs|pow|sqrt|log)\s*\(|\breduce\s*\(/;
@@ -189,9 +218,13 @@ describe("Cadeado BACKEND FIRST — resultado (E5)", () => {
   });
 
   it("15: adapter é a fronteira ÚNICA (nenhum outro módulo importa o validator)", () => {
+    // Um par (validador, adapter) por CONTRATO. O que a regra proíbe é um terceiro módulo
+    // chamando validação por conta própria — e continua proibido: `adaptar.ts` escolhe entre os
+    // dois adapters, e nenhum dos dois é validador.
+    const FRONTEIRAS = ["adapter.ts", "validator.ts", "adapterV2.ts", "validatorV2.ts"];
     for (const arq of arquivos) {
       const base = arq.split(/[\\/]/).pop() as string;
-      if (base === "adapter.ts" || base === "validator.ts") continue;
+      if (FRONTEIRAS.includes(base)) continue;
       const codigo = semComentarios(readFileSync(arq, "utf8"));
       expect(codigo.includes("./validator"), `${arq}: importa o validator direto`).toBe(false);
       expect(codigo.includes("result/validator"), `${arq}: importa o validator direto`).toBe(false);

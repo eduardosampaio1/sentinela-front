@@ -24,7 +24,12 @@
 // contrato cada lado foi produzido.
 
 import type { AnalysisResultView } from "@/lib/v1";
-import { apresentarIndicadores, type IndicatorView } from "./indicadores";
+import {
+  apresentarIndicadores,
+  apresentarRecomendacoes,
+  type IndicatorView,
+  type RecommendationView,
+} from "./indicadores";
 import { validateCanonicalResultV2, type ValidationOutcomeV2 } from "./validatorV2";
 import type {
   EstatisticaDeConcentracao,
@@ -34,7 +39,6 @@ import type {
   SerieTemporal,
   SnapshotAnalitico,
 } from "./analyticsProjection";
-import type { CanonicalRecommendation } from "./canonicalSchema";
 import {
   formatarInstante,
   formatarJanela,
@@ -87,14 +91,18 @@ export interface GroupView {
   count: number;
   countDisplay: string;
   /**
-   * Largura da barra, 0..1, **relativa ao maior grupo exibido nesta mesma lista**.
+   * Largura da barra, já como valor CSS (`"63%"`), **relativa ao maior item desta mesma lista**.
    *
    * É escala VISUAL, não estatística publicada: nenhum número é derivado dela, ela não aparece
    * como rótulo, e trocá-la por outra escala não mudaria fato nenhum da tela. A proporção real
    * de cada grupo sobre a população só existiria dividindo por um denominador — que é
    * exatamente o cálculo que este adapter não faz.
+   *
+   * Sai daqui já como TEXTO porque a alternativa era o componente multiplicar por 100 — e
+   * aritmética em componente é o primeiro passo do cálculo migrando para a UI, exatamente o que
+   * o cadeado `backend-first-result` pega.
    */
-  scale: number;
+  barWidth: string;
 }
 
 export interface DistributionView {
@@ -129,7 +137,7 @@ export interface BandView {
   label: string;
   entityCount: number;
   entityCountDisplay: string;
-  scale: number;
+  barWidth: string;
 }
 
 export interface ConcentrationView {
@@ -153,7 +161,7 @@ export interface WindowView {
   count: number | null;
   countDisplay: string | null;
   status: string;
-  scale: number;
+  barWidth: string;
 }
 
 export interface SeriesView {
@@ -215,7 +223,7 @@ export interface ResultV2ViewModel {
   /** A contagem **A**: a janela da Engine. Nome próprio, para não ser lida como denominador. */
   summary: { engineWindowRecordCount: number; engineWindowRecordCountDisplay: string; analyzedAt: string; analyzedAtDisplay: string };
   indicators: IndicatorView[];
-  recommendations: CanonicalRecommendation[];
+  recommendations: RecommendationView[];
   partial: boolean;
   partialityReasons: string[];
   unsupportedIndicatorIds: string[];
@@ -285,10 +293,20 @@ function contagens(
  *
  * Máximo zero ⇒ escala zero para todos: uma lista de zeros não tem barra maior, e dividir por
  * zero produziria `NaN` que o navegador desenharia como largura vazia sem ninguém saber por quê.
+ *
+ * O resultado já sai LIMITADO a 0..1. O limite mora aqui e não no componente porque limitar é
+ * aritmética, e a regra da plataforma é que aritmética não acontece em componente — nem a
+ * inofensiva, porque é assim que a primeira conta entra na árvore de UI.
  */
-function escalar(valores: number[]): (v: number) => number {
+function escalar(valores: number[]): (v: number) => string {
   const maximo = valores.reduce((a, b) => (b > a ? b : a), 0);
-  return (v: number) => (maximo > 0 ? v / maximo : 0);
+  return (v: number) => {
+    if (maximo <= 0) return "0%";
+    const fracao = v / maximo;
+    const limitada = fracao < 0 ? 0 : fracao > 1 ? 1 : fracao;
+    // Uma casa decimal basta para a barra, e evita um valor CSS de dezessete dígitos.
+    return `${(limitada * 100).toFixed(1)}%`;
+  };
 }
 
 function apresentarMedida(m: ResumoNumerico, locale: string): MeasureView {
@@ -338,7 +356,7 @@ function apresentarDistribuicao(d: ResumoDeDistribuicao, locale: string): Distri
       label: g.label,
       count: g.count,
       countDisplay: formatarNumero(g.count, locale, 0),
-      scale: escala(g.count),
+      barWidth: escala(g.count),
     })),
     otherCountDisplay:
       d.other_count === null ? null : formatarNumero(d.other_count, locale, 0),
@@ -425,7 +443,7 @@ function apresentarConcentracao(c: ResumoDeConcentracao, locale: string): Concen
           : `${formatarNumero(b.lower_value, locale, 0)} – ${formatarNumero(b.upper_value, locale, 0)}`,
       entityCount: b.entity_count,
       entityCountDisplay: formatarNumero(b.entity_count, locale, 0),
-      scale: escala(b.entity_count),
+      barWidth: escala(b.entity_count),
     })),
     coarsened: c.coarsening_applied,
     suppressed: c.suppression_applied,
@@ -434,7 +452,13 @@ function apresentarConcentracao(c: ResumoDeConcentracao, locale: string): Concen
 }
 
 function apresentarSerie(s: SerieTemporal, locale: string): SeriesView {
-  const escala = escalar(s.windows.map((j) => j.count ?? 0));
+  // Janela suprimida FICA DE FORA da escala, em vez de entrar como zero. As duas dariam o mesmo
+  // máximo hoje, e não é por isso que a diferença importa: `?? 0` afirma que a janela vale zero,
+  // e o que se sabe dela é que o número não foi liberado. A expressão precisa dizer a segunda
+  // coisa, senão a primeira acaba copiada para um lugar onde o resultado muda.
+  const escala = escalar(
+    s.windows.filter((j): j is typeof j & { count: number } => j.count !== null).map((j) => j.count),
+  );
   return {
     id: s.dimension_id,
     label: humanizar(s.dimension_id),
@@ -453,9 +477,9 @@ function apresentarSerie(s: SerieTemporal, locale: string): SeriesView {
       count: j.count,
       countDisplay: j.count === null ? null : formatarNumero(j.count, locale, 0),
       status: j.status,
-      // Janela suprimida não tem altura: desenhá-la como zero diria "nada aconteceu aqui"
-      // sobre exatamente a janela cujo número foi retido.
-      scale: j.count === null ? 0 : escala(j.count),
+      // Janela suprimida não tem barra: desenhá-la com largura zero diria "nada aconteceu
+      // aqui" sobre exatamente a janela cujo número foi retido.
+      barWidth: j.count === null ? "0%" : escala(j.count),
     })),
     coarsened: s.coarsening_applied,
     suppressed: s.suppression_applied,
@@ -536,7 +560,7 @@ export function adaptAnalysisResultV2(
         analyzedAtDisplay: formatarInstante(doc.summary.analyzed_at, locale),
       },
       indicators: views,
-      recommendations: doc.recommendations,
+      recommendations: apresentarRecomendacoes(doc.recommendations),
       partial: !doc.partiality.complete,
       partialityReasons: doc.partiality.reasons,
       unsupportedIndicatorIds: naoSuportados,

@@ -127,8 +127,9 @@ describe("concentração de volume (Pareto)", () => {
     const [c] = conteudo(V2_READY).concentrations;
     expect(c.bands.map((b) => b.label)).toEqual(["3", "12", "40"]);
     expect(c.bands.map((b) => b.entityCount)).toEqual([68, 20, 12]);
-    // Escala VISUAL relativa ao maior — nenhum número da tela sai dela.
-    expect(c.bands[0].scale).toBe(1);
+    // Escala VISUAL relativa ao maior — nenhum número da tela sai dela, e ela já sai como
+    // valor CSS para nenhum componente precisar multiplicar nada.
+    expect(c.bands[0].barWidth).toBe("100.0%");
   });
 
   it("estatística retida não ganha número, e o motivo vem de vocabulário FECHADO", () => {
@@ -208,7 +209,7 @@ describe("série temporal", () => {
     const [s] = conteudo(doc).series;
     expect(s.windows[0].count).toBeNull();
     expect(s.windows[0].countDisplay).toBeNull();
-    expect(s.windows[0].scale).toBe(0);
+    expect(s.windows[0].barWidth).toBe("0%");
   });
 
   it("janela sem contagem e sem supressão derruba a série — não vira zero", () => {

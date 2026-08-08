@@ -8,9 +8,13 @@
 // ausência por zero, misturar versões.
 
 import type { AnalysisResultView } from "@/lib/v1";
-import { apresentarIndicadores, type IndicatorView } from "./indicadores";
+import {
+  apresentarIndicadores,
+  apresentarRecomendacoes,
+  type IndicatorView,
+  type RecommendationView,
+} from "./indicadores";
 import { validateCanonicalResult } from "./validator";
-import type { CanonicalRecommendation } from "./canonicalSchema";
 
 // `IndicatorView` e a apresentação de indicador mudaram de casa na MF6.4b (`indicadores.ts`),
 // compartilhadas com o adapter v2 — ver o cabeçalho de lá. Reexportado porque os componentes do
@@ -25,7 +29,7 @@ export interface ResultViewModel {
   summary: { recordCount: number; analyzedAt: string };
   indicators: IndicatorView[];
   /** Vazio ⇒ a seção NÃO é renderizada (não se inventa recomendação). */
-  recommendations: CanonicalRecommendation[];
+  recommendations: RecommendationView[];
   /**
    * Completude DECLARADA pela origem, com os motivos dela.
    *
@@ -76,7 +80,7 @@ export function adaptAnalysisResult(publico: AnalysisResultView, locale = "en"):
         analyzedAt: doc.summary.analyzed_at, // vem do backend; nunca gerado aqui
       },
       indicators: views,
-      recommendations: doc.recommendations,
+      recommendations: apresentarRecomendacoes(doc.recommendations),
       // DECLARADA, não inferida.
       partial: !doc.partiality.complete,
       partialityReasons: doc.partiality.reasons,

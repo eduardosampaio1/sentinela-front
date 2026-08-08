@@ -17,6 +17,7 @@ import {
   STATES_COM_VALOR,
   type CanonicalDenominator,
   type CanonicalIndicator,
+  type CanonicalRecommendation,
   type IndicatorState,
 } from "./canonicalSchema";
 
@@ -111,4 +112,35 @@ export function apresentarIndicadores(
     else naoSuportados.push(ind.id);
   }
   return { views, naoSuportados };
+}
+
+/**
+ * Uma recomendação como a TELA a recebe.
+ *
+ * Estruturalmente igual à do documento, e mesmo assim um tipo próprio — porque o view model
+ * precisa prometer os campos por conta dele. Enquanto ele reexportava `CanonicalRecommendation`,
+ * qualquer componente que tipasse a prop passava a importar o contrato do documento, e o cadeado
+ * `backend-first-result` pegou exatamente isso. Não é duplicação decorativa: é a diferença entre
+ * "a tela mostra o que o documento tem" e "a tela promete estes campos, venham de onde vierem".
+ */
+export interface RecommendationView {
+  id: string;
+  title: string;
+  /** DA ORIGEM. O frontend nunca a fabrica nem reordena por ela. */
+  priority: string;
+  category: string | null;
+  evidence_refs: string[];
+}
+
+/** Transporte 1:1, preservando a ORDEM recebida. Nenhuma priorização acontece aqui. */
+export function apresentarRecomendacoes(
+  recomendacoes: readonly CanonicalRecommendation[],
+): RecommendationView[] {
+  return recomendacoes.map((r) => ({
+    id: r.id,
+    title: r.title,
+    priority: r.priority,
+    category: r.category,
+    evidence_refs: r.evidence_refs,
+  }));
 }

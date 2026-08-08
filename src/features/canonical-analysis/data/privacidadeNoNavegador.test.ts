@@ -88,12 +88,52 @@ describe("a jornada canônica não deixa dado no navegador", () => {
     /\bcreateObjectURL\b/, // não lê, mas expõe o conteúdo a um preview/nova aba
   ];
 
+  /**
+   * A ÚNICA exceção, e ela é de um arquivo para um padrão só.
+   *
+   * `BotaoDeExport` chama `createObjectURL` sobre um Blob de CSV montado a partir do VIEW MODEL —
+   * ou seja, sobre o documento público que o Gateway já liberou e que a tela já está mostrando.
+   * Ele nunca vê o arquivo enviado pelo usuário: a função que monta o texto (`result/exportar`)
+   * não recebe payload, não recebe `File`, e não tem como alcançar nenhum dos dois.
+   *
+   * A exceção é por CAMINHO e por PADRÃO, e não uma frouxidão do cadeado: `createObjectURL` em
+   * `UploadStep` continua reprovando, e este arquivo continua reprovando em `FileReader`,
+   * `.text()`, `.arrayBuffer()` e no resto da família.
+   *
+   * As duas provas abaixo mantêm a exceção honesta: ela precisa existir (senão vira permissão
+   * para um arquivo que nem usa o recurso) e precisa continuar sem tocar no arquivo do usuário.
+   */
+  const EXCECAO = {
+    caminho: path.join("ui", "analytics", "BotaoDeExport.tsx"),
+    padrao: /\bcreateObjectURL\b/,
+  };
+
   for (const padrao of LEITURAS) {
     it(`a jornada não lê o CONTEÚDO do arquivo do usuário via ${padrao.source}`, () => {
-      const culpados = arquivos.filter((a) => padrao.test(codigo(a)));
-      expect(culpados.map((c) => path.relative(RAIZ, c))).toEqual([]);
+      const dispensado = padrao.source === EXCECAO.padrao.source ? EXCECAO.caminho : null;
+      const culpados = arquivos
+        .filter((a) => padrao.test(codigo(a)))
+        .map((c) => path.relative(RAIZ, c))
+        .filter((rel) => rel !== dispensado);
+      expect(culpados).toEqual([]);
     });
   }
+
+  it("a exceção do export EXISTE — permissão para quem não usa o recurso é permissão solta", () => {
+    const alvo = path.join(RAIZ, EXCECAO.caminho);
+    expect(fs.existsSync(alvo), EXCECAO.caminho).toBe(true);
+    expect(EXCECAO.padrao.test(codigo(alvo))).toBe(true);
+  });
+
+  it("o arquivo dispensado não alcança o arquivo do usuário por nenhuma outra porta", () => {
+    const src = codigo(path.join(RAIZ, EXCECAO.caminho));
+    for (const padrao of LEITURAS) {
+      if (padrao.source === EXCECAO.padrao.source) continue;
+      expect(padrao.test(src), padrao.source).toBe(false);
+    }
+    // E não recebe `File`/`FormData` por nenhum caminho: o que ele exporta é o view model.
+    expect(/\bFile\b|\bFormData\b|\bfiles\[/.test(src)).toBe(false);
+  });
 });
 
 // AQUI FICAVA O LEMBRETE DA DÍVIDA DO LEGADO.
