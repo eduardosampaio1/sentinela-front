@@ -13,6 +13,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { CANONICAL_RESULT_SCHEMA } from "@/features/canonical-analysis/result/canonicalSchema";
+import { CANONICAL_RESULT_V2_SCHEMA } from "@/features/canonical-analysis/result/canonicalSchemaV2";
 
 const RAIZ = resolve(__dirname, "../../..");
 const COPIA = resolve(RAIZ, "src/lib/v1/contract/public-v1.types.ts");
@@ -138,10 +140,31 @@ describe("cópia local de public-v1 × origem", () => {
     }
   });
 
-  it.runIf(ORIGEM)("o documento do resultado é `analysis-result-v1` na origem", () => {
+  it.runIf(ORIGEM)("a origem declara os DOIS documentos do resultado", () => {
+    // Passou a ser plural na MF6.4b: a rota pública serve o `analysis-result-v2` quando ele
+    // existe. O campo singular saiu — dois campos declarando a mesma coisa divergiriam na
+    // próxima versão, e o errado seria o que alguém leu.
+    //
+    // Esta prova é o que impede o frontend de suportar uma versão que a origem não declara (e o
+    // contrário): os dois lados precisam concordar sobre o vocabulário do discriminador.
     const snapshot = JSON.parse(readFileSync(resolve(ORIGEM!, "public-v1.json"), "utf-8"));
-    expect(snapshot.result_document_schema).toBe("analysis-result-v1");
+    expect(snapshot.result_document_schemas).toEqual([
+      "analysis-result-v1",
+      "analysis-result-v2",
+    ]);
+    expect(snapshot.result_document_schema).toBeUndefined();
     expect(snapshot.result_document_owner).toBe("sentinela-result-assembler");
+  });
+
+  it.runIf(ORIGEM)("este frontend suporta EXATAMENTE os documentos que a origem declara", () => {
+    // A verificação cruzada que importa: duas suítes verdes não provam que os dois repos falam
+    // do mesmo vocabulário. Aqui as constantes DESTE frontend são comparadas com a declaração
+    // do repo dono — se a origem publicar uma v3, este teste vira o aviso de que a tela ainda
+    // não a lê (e o estado seguro é o que o usuário veria até lá).
+    const snapshot = JSON.parse(readFileSync(resolve(ORIGEM!, "public-v1.json"), "utf-8"));
+    expect([CANONICAL_RESULT_SCHEMA, CANONICAL_RESULT_V2_SCHEMA].sort()).toEqual(
+      [...snapshot.result_document_schemas].sort(),
+    );
   });
 
   it("a cópia declara de onde veio", () => {
