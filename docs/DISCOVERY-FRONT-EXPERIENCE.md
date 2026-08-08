@@ -8,6 +8,26 @@
 
 ---
 
+## 0. Decisões congeladas (V1) — não são perguntas abertas
+
+| # | decisão | onde |
+|---|---|---|
+| **D1** | **Administrador único na experiência.** A infraestrutura suporta múltiplos usuários; a V1 não expõe colaboração. Todo usuário nasce com autonomia sobre o que criou | §6.1 |
+| **D2** | **Nenhuma UI antecipando colaboração** — sem convite, equipe, Viewer/Analyst, papéis, permissões, aprovação, administração de membros | §6.1 |
+| **D3** | **Não mostrar "Admin"** em badge, chip, seletor ou texto. Papel só informa quando existe outro papel possível | §6.2 |
+| **D4** | **Workspace** = conta/espaço operacional (ex.: `Baluarte`) | §6.3 |
+| **D5** | **Instância** = sistema **+** ambiente, **entidade única na tela** (ex.: `Chatbot de Cobrança — Produção`). Sem árvores de projeto/sistema/ambiente | §6.3 |
+| **D6** | **Análise** = execução sobre uma base enviada **para uma Instância** | §6.3 |
+| **D7** | **Hierarquia oficial:** `Workspace → Instâncias → Análises`, orientando navegação, breadcrumb, Home, histórico, deep link, nova análise e contexto do resultado | §6.3 |
+| **D8** | **Momentos da jornada, não personas.** O produto reage ao estado, não a Viewer/Admin/Analista | §6.4 |
+| **D9** | **Home do Workspace** = 1 Ações necessárias · 2 Em andamento · 3 Instâncias · 4 Resultados recentes. **Não** é dashboard de KPIs | §9.1 |
+| **D10** | **Regra "não tocar no ARGOS" REVOGADA**, substituída por regra atemporal de escopo | §1 |
+
+> **Q1 encerrada como pergunta de produto.** Instância existe. A pergunta que restava era técnica,
+> e foi **provada**: ver §6.6 — veredito **E**.
+
+---
+
 ## 1. Fontes lidas no Obsidian
 
 Vault `C:\Users\DESKTOP\Documents\Obsidian\Sentinela OS`.
@@ -29,9 +49,17 @@ atual vence documento antigo comprovadamente divergente. O `INDEX - Arquitetura 
 recebeu, no congelamento, um aviso de topo dizendo que onde ele ou as notas de 2026-07 divergirem
 da nota `ARQ - Arquitetura Entregue`, **aquela nota vale**. Esta Discovery segue essa cadeia.
 
-> ⚠️ `REGRA DE OURO ZERO.md` §6 ("Escopo travado") diz **"Não tocar no ARGOS (`sentinela-front`,
-> `sentinela`)"**. Isso se refere ao front LEGADO `sentinela-front` — **não** a
-> `sentinela-front-e1`, que é o repo desta frente. Registro aqui para a distinção não se perder.
+> ✅ **Regra do ARGOS REVOGADA (2026-08-08).** `REGRA DE OURO ZERO.md` §6 dizia *"Não tocar no
+> ARGOS (`sentinela-front`, `sentinela`)"*. Ela foi **substituída** — não reinterpretada por nota
+> lateral — por uma regra atemporal:
+>
+> > **Escopo travado é o escopo explicitamente declarado pela frente ativa.** Repositórios ou
+> > superfícies fora dele só podem ser alterados por **delta explícito**.
+>
+> Motivo: a redação antiga nomeava repositórios e envelheceu com a topologia. `sentinela` é
+> **worktree do mesmo repositório** de `sentinela-facts` — o Gateway/Engine que as Ondas 1–8
+> entregaram — e `sentinela-front-e1` tem nome vizinho a `sentinela-front`. A regra antiga fica no
+> vault marcada como revogada, para rastreabilidade.
 
 ---
 
@@ -251,24 +279,141 @@ E o vocabulário de `/progress` já é exatamente o que a experiência-alvo pede
 
 ---
 
-## 6. Modelo mental do produto — Workspace › Instância › Análise
+## 6. Modelo mental do produto — DECISÕES CONGELADAS DA V1
 
-| conceito | no backend | no front | veredito |
-|---|---|---|---|
-| **Workspace** | `workspace_id` obrigatório em toda rota pública; autorização decide por ele | `useCanonicalScope()` → `{ workspaceId }`; `/workspaces` | **respeitado** |
-| **Instância** (sistema + ambiente observado) | o contrato aceita `project_id` e `environment_id` **opcionais** em todas as rotas | o cliente **nunca os envia**; nenhuma rota, tela, contexto ou breadcrumb menciona instância | **quebrado / inexistente** |
-| **Análise** | `analysis_id ≡ job_id`; rotas por id | rotas `/canonical/analyses/:id` e `/…/result` | **respeitado** |
+> Esta seção deixou de ser pergunta aberta. São **decisões de produto da V1**, congeladas.
 
-**Consequência prática.** Hoje a navegação é `Workspace → Análise`. O nível do meio não existe:
-não há "esta análise é do sistema X, ambiente Y". O histórico é uma lista plana por workspace, o
-breadcrumb não tem o degrau intermediário, e "nova análise" não pergunta a instância.
+### 6.1 Modelo de usuário
 
-**Isto é uma pergunta de produto, não um bug** (ver §15, Q1): *instância* é `project_id` +
-`environment_id` do contrato congelado, ou é uma entidade nova? Se for a primeira, o delta é
-tipo **D** (contrato pronto, front não usa). Se for a segunda, é **E** (backend congelado não
-suporta) e **paro aqui**, como instruído.
+O modelo **não** é "workspace individual porque nunca haverá equipe". É:
+
+> **A infraestrutura já suporta múltiplos usuários, mas a experiência inicial é de administrador
+> único.** Todo usuário cadastrado nasce com autonomia sobre o que criou.
+
+```
+Usuário autenticado → administra o que criou → cria seu Workspace
+  → cria e controla suas Instâncias → envia bases → acompanha análises
+  → vê resultados → exporta resultados
+```
+
+**Não existem na interface da V1:** convite de membros, gestão de equipe, Viewer, Analyst, papéis
+configuráveis, gestão de permissões, aprovação de acesso, administração de membros.
+
+A fundação de identidade/autorização **permite** essa evolução — as claims já carregam `role` por
+workspace —, mas a complexidade fica **dormente**. Não se antecipa UI de colaboração.
+
+### 6.2 Não mostrar "Admin"
+
+Nenhum badge, chip, seletor ou texto dizendo **Admin** enquanto todos os usuários da V1 tiverem o
+mesmo modelo de autonomia. *Um papel só tem valor informativo quando existe outro papel possível.*
+Internamente o modelo é "administrador/owner do que criou"; isso **não vira decoração de
+interface**.
+
+> ⚠️ **Achado que isto torna acionável:** `GET /v1/me` já devolve `role` por workspace
+> (`me_workspace_fields = ['id','name','role']`) e `/workspaces` também. O dado existe — a decisão
+> é **não exibi-lo**.
+
+### 6.3 Nomenclatura congelada
+
+| conceito | definição | exemplo |
+|---|---|---|
+| **Workspace** | a conta / espaço operacional do usuário dentro do Sentinela | `Baluarte` |
+| **Instância** | o sistema específico **+** o ambiente que o usuário acompanha | `Chatbot de Cobrança — Produção` |
+| **Análise** | uma execução sobre uma base enviada **para uma Instância** | — |
+
+A Instância pode ter internamente `nome` + `ambiente`, mas **na experiência aparece como entidade
+única**: `Chatbot de Cobrança — Produção`. **Não** se criam árvores separadas de *projeto* /
+*sistema* / *ambiente* só porque o modelo técnico tem campos distintos.
+
+**Hierarquia oficial de produto:**
+
+```
+Workspace
+└── Instâncias
+    └── Análises
+```
+
+Ela orienta: navegação, breadcrumbs, Home, histórico, deep links, nova análise, contexto do
+resultado e o retorno após processamento.
+
+### 6.4 Momentos da jornada — não personas por papel
+
+A V1 **não** classifica usuários em Viewer/Admin/Analista. O produto reage ao **estado da
+jornada**:
+
+| momento | o produto faz |
+|---|---|
+| novo, sem Workspace | leva a criar o Workspace |
+| Workspace vazio | leva a criar a primeira Instância |
+| recorrente | mostra Instâncias, pendências e últimas análises |
+| processamento em andamento | acompanha Engine e Analytics |
+| ação necessária | resolve mapping ou outra pendência autorizada |
+| com resultados | visualiza e exporta |
+
+### 6.5 Futuro (não implementar agora)
+
+Quando colaboração for liberada: o criador do Workspace continua Owner/Admin; convidados recebem
+papéis e escopos. Essa possibilidade **não** pode contaminar navegação, formulários, settings,
+Home, criação de Workspace ou criação de Instância da V1.
 
 ---
+
+### 6.6 Q1 — PROVA TÉCNICA contra o Gateway congelado
+
+A pergunta de produto está encerrada (Instância existe). Restava a técnica: *os contratos públicos
+congelados permitem implementar Workspace → Instância → Análise com `project_id` +
+`environment_id`?*
+
+**Não bastava os dois campos existirem.** As seis perguntas, respondidas por leitura do código
+congelado:
+
+| # | pergunta | resposta | evidência |
+|---|---|---|---|
+| 1 | como **listar** Instâncias? | ⚠️ possível, **fora do contrato congelado** | `GET /workspaces/{id}/projects` e `GET /projects/{id}/environments` existem em `api/routes/context.py`, servidas por `PgContextStore`. **Mas** o snapshot `public-v1` congela **11 operações, todas sob `/v1/analyses`** — estas não estão nele |
+| 2 | como obter o **nome exibível**? | ⚠️ idem | `list_workspace_projects` devolve `name`; mesma ressalva de contrato |
+| 3 | como obter o **ambiente**? | ⚠️ idem | `list_project_environments`; mesma ressalva |
+| 4 | como **criar/selecionar** uma? | ⚠️ idem | `POST /workspaces/{id}/projects`, `POST /projects/{id}/environments`; mesma ressalva |
+| 5 | como **associar** nova análise? | 🔴 **NÃO É POSSÍVEL** | o Gateway **descarta** os campos: `del project_id, environment_id` em `_tenant_autorizado` |
+| 6 | como **recuperar** no histórico / deep link? | 🔴 **NÃO É POSSÍVEL** | nenhum read-model congelado devolve os campos, e a listagem não filtra por eles |
+
+**A frase é do próprio Gateway** (`api/routes/analyses_v1.py`, docstring de `_tenant_autorizado`):
+
+> `project_id` e `environment_id` continuam **aceitos** pelo contrato público, mas **não
+> participam da decisão**: eram o eixo do histórico legado, que o modelo canônico não tem.
+
+E os read-models congelados, verbatim do snapshot:
+
+```
+status_read_model_fields = [analysis_id, status, record_count, result_available,
+                            retry_allowed, created_at, updated_at]
+list_item_fields         = [analysis_id, status, record_count, result_available,
+                            created_at, observed_conversations]
+result_read_model_fields = [analysis_id, result_schema_version,
+                            indicator_registry_version, result]
+timeline_event_fields    = [event_id, event_type, event_schema_version, analysis_id,
+                            workspace_id, sequence, occurred_at, data]
+```
+
+Nenhum deles carrega `project_id` nem `environment_id`. A API do Orchestrator **nem chega a
+receber** os campos — o Gateway os apaga antes.
+
+### 🔴 Veredito: **Q1 técnico = E — PRODUCT/BACKEND DELTA CANDIDATE**
+
+O contrato público congelado **aceita** os identificadores e **não os usa**: uma análise não pode
+ser associada a uma Instância, e a associação não pode ser recuperada depois. Sem isso, a
+hierarquia `Workspace → Instância → Análise` não é implementável só no Front.
+
+**Paro nesta decisão**, como instruído. E registro o que **não** foi feito, porque as três
+tentações estavam à mão:
+
+- ❌ **não** inventei catálogo de Instâncias no browser;
+- ❌ **não** guardei pseudo-Instância local (o cadeado de privacidade proíbe, e seria mentira);
+- ❌ **não** derivei nome de Instância a partir de ID.
+
+**Delta mínimo que o backend precisaria** (para a decisão de vocês, não para eu executar):
+a análise precisa **nascer com** e **devolver** a Instância — o campo entrando no `create/submit`
+e saindo em `status`, `list` e `timeline`; e a listagem precisando filtrar por ele. Se as rotas de
+contexto forem promovidas ao contrato público, elas resolvem 1–4; **5 e 6 são o bloqueio real**.
 
 ## 7. Riscos de monólito (medidos, não estimados)
 
@@ -388,72 +533,144 @@ flowchart TD
 ## 9. Fluxo TO-BE (experiência-alvo, para revisão)
 
 Linguagem de produto na superfície; vocabulário interno só na documentação técnica.
+**Mermaid mestre + subfluxos por domínio** — um diagrama único ficaria ilegível.
+
+### 9.1 Mestre — entrada, Workspace, Instância, Análise
 
 ```mermaid
 flowchart TD
-  A[Usuario autenticado] --> W{Quantos workspaces?}
-  W -- nenhum --> W0[Estado vazio: criar primeiro espaco de trabalho]
-  W -- um --> WS[Workspace ativo]
-  W -- varios --> WSEL[Seletor de workspace]
-  WSEL --> WS
-  W0 --> WS
+    AUTH[Usuario autenticado] --> HAS_WS{Possui Workspace?}
 
-  WS --> I{Instancias no workspace}
-  I -- nenhuma --> I0[Estado vazio: cadastrar primeira instancia]
-  I -- uma ou mais --> ISEL[Instancia = sistema + ambiente observado]
-  I0 --> ISEL
+    HAS_WS -->|Nao| CREATE_WS[Criar Workspace]
+    CREATE_WS --> HOME
 
-  ISEL --> HOME[Visao da instancia: ultima analise + historico + Nova analise]
-  HOME --> NEW[Nova analise]
+    HAS_WS -->|Sim| HOME[Home do Workspace]
 
-  NEW --> UP[Recebendo arquivo]
-  UP --> UND[Entendendo os dados]
-  UND --> MAP{Mapeamento inequivoco?}
-  MAP -- nao --> MAPUI[ACAO NECESSARIA: confirmar como ler as colunas]
-  MAPUI --> PROT
-  MAP -- sim --> PROT[Protegendo informacoes sensiveis]
-  PROT --> PREP[Preparando a analise]
+    HOME --> ACTIONS[1 - Acoes necessarias]
+    HOME --> RUNNING[2 - Em andamento]
+    HOME --> INSTANCES[3 - Instancias]
+    HOME --> RECENT[4 - Resultados recentes]
 
-  PREP --> PAR[Analisando]
-  PAR --> ENG[Motor de analise]
-  PAR --> ANA[Analise estatistica]
+    INSTANCES --> HAS_INSTANCE{Possui Instancia?}
 
-  ENG --> PROG[[GET /progress: engine, analytics, export, final_result]]
-  ANA --> PROG
+    HAS_INSTANCE -->|Nao| CREATE_INSTANCE[Criar primeira Instancia]
+    HAS_INSTANCE -->|Sim| INSTANCE_DETAIL[Detalhe da Instancia]
 
-  PROG --> PROGRESSIVO{O que ja esta pronto?}
-  PROGRESSIVO -- analytics ready/partial --> EARLY[Resultados analiticos ja visiveis]
-  PROGRESSIVO -- export ready --> DL[Download disponivel]
-  PROGRESSIVO -- final_result pending --> AGUARDA[Resultado completo em preparo]
+    CREATE_INSTANCE --> INSTANCE_DETAIL
 
-  EARLY --> FIN
-  AGUARDA --> FIN{final_result}
-  FIN -- ready --> RES[Resultado canonico completo]
-  FIN -- failed --> FAIL[FALHA: componente nao concluiu + o que ainda esta disponivel]
+    INSTANCE_DETAIL --> NEW_ANALYSIS[Nova analise]
+    INSTANCE_DETAIL --> HISTORY[Historico da Instancia]
+    INSTANCE_DETAIL --> LAST_RESULT[Ultimo resultado]
 
-  RES --> H1[Visao geral: o que merece atencao]
-  RES --> H2[Analytics: conversas, turnos, cobertura, Pareto, evolucao]
-  RES --> H3[Evidencias: distribuicoes e cruzamentos]
-  RES --> H4[Qualidade dos dados]
-  RES --> H5[Metodologia e procedencia]
-  RES --> H6[Exportacoes]
+    ACTIONS -.pendencia de mapping.-> SUB_PREP
+    RUNNING -.acompanhar.-> SUB_PROC
+    RECENT --> SUB_RES
+    NEW_ANALYSIS --> SUB_PREP[["9.2 - Envio e preparacao"]]
+    SUB_PREP --> SUB_PROC[["9.3 - Processamento"]]
+    SUB_PROC --> SUB_RES[["9.4 - Resultados"]]
+    HISTORY --> SUB_RES
+    LAST_RESULT --> SUB_RES
 
-  RES --> HIST[Historico da instancia]
-  RES --> NEW2[Nova analise]
+    SUB_RES --> INSTANCE_DETAIL
 
-  %% estados que nao podem se confundir
-  S1[PROCESSANDO: trabalho acontecendo]:::proc
-  S2[ACAO NECESSARIA: espera decisao do usuario]:::act
-  S3[CONCLUIDO COM RESTRICAO: terminou, parte nao pode ser exibida]:::restr
-  S4[FALHA: componente nao concluiu]:::fail
+    NOTA[Instancia = sistema + ambiente, entidade UNICA na tela]:::nota
+    INSTANCE_DETAIL --- NOTA
 
-  classDef proc fill:#12233d,stroke:#3b82f6,color:#dbeafe
-  classDef act fill:#3d2f12,stroke:#f59e0b,color:#fef3c7
-  classDef restr fill:#2b2340,stroke:#8b5cf6,color:#ede9fe
-  classDef fail fill:#3a1d1d,stroke:#ef4444,color:#fee2e2
+    BLOQ[BLOQUEADO: contrato congelado nao associa nem devolve Instancia - ver 6.6]:::bloq
+    HAS_INSTANCE --- BLOQ
+
+    classDef nota fill:#12233d,stroke:#3b82f6,color:#dbeafe
+    classDef bloq fill:#3a1d1d,stroke:#a33,color:#fdd,stroke-dasharray: 4 3
 ```
 
-### Linguagem de produto ↔ vocabulário interno
+**Racional da Home** — e ela não é dashboard decorativo de KPIs:
+
+```
+Precisa de mim?  →  O que esta acontecendo?  →  Quais sistemas acompanho?  →  O que aconteceu?
+   Acoes             Em andamento                 Instancias                  Resultados recentes
+```
+
+### 9.2 Subfluxo — envio e preparação
+
+```mermaid
+flowchart TD
+    NEW[Nova analise na Instancia] --> UP[Recebendo arquivo]
+    UP --> UND[Entendendo os dados]
+    UND --> MAP{Mapeamento inequivoco?}
+    MAP -->|Nao| MAPUI[ACAO NECESSARIA - confirmar como ler as colunas]:::act
+    MAPUI --> CONF{Usuario confirma?}
+    CONF -->|Sim| PROT
+    CONF -->|Abandona| PEND[Fica como pendencia na Home]:::act
+    MAP -->|Sim| PROT[Protegendo informacoes sensiveis]
+    PROT --> PREP[Preparando a analise]
+    PREP --> OUT[[Vai para 9.3 - Processamento]]
+
+    REJ[Base recusada ou sem conteudo analisavel]:::fail
+    UND --> REJ
+
+    classDef act fill:#3d2f12,stroke:#f59e0b,color:#fef3c7
+    classDef fail fill:#3a1d1d,stroke:#ef4444,color:#fee2e2
+```
+
+### 9.3 Subfluxo — processamento e disponibilidade progressiva
+
+Fonte: `GET /v1/analyses/{id}/progress`, com os quatro eixos independentes.
+
+```mermaid
+flowchart TD
+    IN[[Vem de 9.2]] --> PAR[Analisando]:::proc
+    PAR --> ENG[Motor de analise]
+    PAR --> ANA[Analise estatistica]
+
+    ENG --> PROG[[GET /progress - engine, analytics, export, final_result]]
+    ANA --> PROG
+
+    PROG --> EIXO{Eixo a eixo}
+    EIXO -->|analytics ready ou partial| EARLY[Resultados analiticos JA visiveis]:::proc
+    EIXO -->|analytics withheld| WH[CONCLUIDO COM RESTRICAO]:::restr
+    EIXO -->|analytics failed| AF[FALHA so do componente analitico]:::fail
+    EIXO -->|export ready| DL[Download disponivel]
+    EIXO -->|export preparing| XP[PROCESSANDO export - diferente de analytics]:::proc
+    EIXO -->|engine failed| EF[FALHA do motor - analytics segue visivel]:::fail
+    EIXO -->|final_result pending| WAIT[Resultado completo em preparo]:::proc
+
+    EARLY --> FIN
+    WAIT --> FIN{final_result}
+    FIN -->|ready| OUT[[Vai para 9.4 - Resultados]]
+    FIN -->|failed| FAIL[FALHA - com o que ainda esta disponivel]:::fail
+
+    classDef proc fill:#12233d,stroke:#3b82f6,color:#dbeafe
+    classDef restr fill:#2b2340,stroke:#8b5cf6,color:#ede9fe
+    classDef fail fill:#3a1d1d,stroke:#ef4444,color:#fee2e2
+```
+
+### 9.4 Subfluxo — resultados
+
+```mermaid
+flowchart TD
+    IN[[Vem de 9.3]] --> RES[Resultado canonico completo]
+    RES --> H1[Visao geral - o que merece atencao]
+    RES --> H2[Analytics - conversas, turnos, cobertura, Pareto, evolucao]
+    RES --> H3[Evidencias - distribuicoes e cruzamentos]
+    RES --> H4[Qualidade dos dados]
+    RES --> H5[Metodologia e procedencia]
+    RES --> H6[Exportacoes]
+
+    RES --> BACK[Voltar para a Instancia]
+    RES --> NEW2[Nova analise na mesma Instancia]
+    RES --> HIST[Historico da Instancia]
+```
+
+### 9.5 Os quatro estados que não podem se confundir
+
+| estado | significa | exemplo que NÃO é |
+|---|---|---|
+| **PROCESSANDO** | trabalho ainda acontecendo | ≠ `export preparing` confundido com analytics rodando |
+| **AÇÃO NECESSÁRIA** | o sistema espera decisão do usuário | mapping pendente |
+| **CONCLUÍDO COM RESTRIÇÃO** | terminou, e parte não pode ser exibida | `withheld` ≠ `failed`; `partial` ≠ `withheld` |
+| **FALHA** | componente não conseguiu concluir | "resultado parcial porque a Engine ainda roda" ≠ `analytics partial` |
+
+### 9.6 Linguagem de produto ↔ vocabulário interno
 
 | tela diz | internamente é |
 |---|---|
@@ -465,10 +682,8 @@ flowchart TD
 | Resultados disponíveis | `/progress` por componente |
 | Não foi possível liberar parte dos resultados | `analytics.component_status = withheld` |
 
-O usuário nunca vê: *Privacy Gate, Input Artifact, Orchestrator, measure_schema, Analytics
-Worker, fencing, lease*.
-
----
+O usuário nunca vê: *Privacy Gate, Input Artifact, Orchestrator, measure_schema, Analytics Worker,
+fencing, lease*.
 
 ## 10. Matriz de cenários e transições
 
@@ -484,11 +699,15 @@ Fonte backend: `S` = `GET /{id}` (status) · `P` = `GET /{id}/progress` · `R` =
 | E5 | deep link autorizado | qualquer | abrir URL | rota alvo | tela pedida | — | — | sim | mantém | sim | `S`/`R` | existe | — |
 | E6 | deep link sem acesso | qualquer | abrir URL | negado | erro público, sem revelar existência | voltar | — | não | mantém | sim | Gateway | existe | — |
 | E7 | análise inexistente | qualquer | abrir URL | 404 público | não encontrado | voltar ao histórico | — | não | mantém | sim | `S` | existe | — |
-| **W1** | workspace vazio | escopo ativo | listar | vazio | estado vazio | nova análise | — | não | mantém | sim | `L` | existe | sem menção a instância |
-| W2 | primeira instância | — | — | — | — | — | — | — | — | — | — | **inexistente** | **§6 / Q1** |
-| W3 | instância sem análises | — | — | — | — | — | — | — | — | — | — | **inexistente** | **§6 / Q1** |
-| W4 | instância com histórico | — | — | — | — | — | — | — | — | — | — | **inexistente** | **§6 / Q1** |
-| W5 | nova análise na instância | — | — | — | — | — | — | — | — | — | — | **inexistente** | **§6 / Q1** |
+| **W0** | sem Workspace (momento da jornada) | autenticado | criar | Workspace ativo | leva a criar o Workspace | criar Workspace | — | não | mantém | n/a | `/workspaces` | **parcial** | existe rota, não é o momento guiado |
+| W1 | Workspace vazio | escopo ativo | listar | vazio | leva a criar a **primeira Instância** | criar Instância | — | não | mantém | sim | `L` | **parcial** | hoje leva a "nova análise", sem Instância |
+| W1b | **Home do Workspace** | recorrente | abrir | Home | 1 Ações · 2 Em andamento · 3 Instâncias · 4 Recentes | resolver pendência | nova análise | sim | mantém | sim | `L` + `P` | **inexistente** | Home hoje é Launchpad sem essas 4 faixas |
+| W2 | primeira Instância | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E — §6.6** |
+| W3 | Instância sem análises | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E — §6.6** |
+| W4 | Instância com histórico | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E — §6.6** (histórico não filtra por Instância) |
+| W5 | nova análise **na Instância** | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E — §6.6** (associação é descartada) |
+| W6 | contexto do resultado / breadcrumb | resultado aberto | — | — | Workspace › Instância › Análise | — | — | — | — | sim | — | **inexistente** | 🔴 **E — §6.6** (read-model não devolve a Instância) |
+| W7 | papel do usuário na interface | qualquer | — | — | **nada** — sem badge "Admin" | — | — | — | — | — | `/v1/me` traz `role` | **decisão** | dado existe; **decidido não exibir** (§6.2) |
 | **U1** | arquivo válido | `prepared` | upload | `receiving`→`queued` | progresso do envio | — | cancelar | sim | retoma | sim | `S` | existe | — |
 | U2 | arquivo inválido | `prepared` | upload rejeitado | `prepared` | motivo público do erro | escolher outro | — | não | mantém | sim | problem+json | existe | — |
 | U3 | upload em andamento | `receiving` | — | — | indicador de envio | — | cancelar | sim | retoma | sim | `S` | **parcial** | cancelamento não existe |
@@ -535,13 +754,18 @@ Fonte backend: `S` = `GET /{id}` (status) · `P` = `GET /{id}/progress` · `R` =
 | S6 | deep link durante processamento | `running` | abrir | jornada | progresso | — | — | sim | retoma | sim | `S` | **existe** | — |
 | S7 | deep link depois da conclusão | `completed` | abrir | resultado | resultado | — | — | sim | mantém | sim | `R` | **existe** | — |
 
-**Resumo (contado da própria tabela, não estimado):** 57 cenários · **29 existem** ·
-**9 parciais** · **19 inexistentes**.
+**Resumo (contado da própria tabela, não estimado):** 61 cenários · **28 existem** ·
+**11 parciais** · **21 inexistentes** · **1 decisão de não fazer** (W7, o badge "Admin").
 
-Das 19 inexistentes, **5 estão bloqueadas por decisão** — W2–W5 (instância, Q1) e F6
-(cancelamento, Q4) — e as **14 restantes dependem apenas de consumir contrato já congelado**
-(tipo D): os quatro eixos de `/progress`, os cinco estados de export, `analytics failed/unknown`,
-falha parcial por componente, e a tela de confirmação do mapeamento.
+Das 21 inexistentes:
+
+- **6 bloqueadas por delta de backend** — W2, W3, W4, W5, W6 (Instância, **§6.6 = E**) e F6
+  (cancelamento, Q4). Elas não são implementáveis só no Front;
+- **1 bloqueada por decisão de produto pequena** — W1b depende de como a Home compõe as 4 faixas,
+  e as faixas 1/2/4 já são consumíveis do contrato congelado;
+- **14 dependem apenas de consumir contrato já congelado** (tipo **D**): os quatro eixos de
+  `/progress`, os cinco estados de export, `analytics failed/unknown`, falha parcial por
+  componente e a tela de confirmação do mapeamento.
 
 ---
 
@@ -609,7 +833,9 @@ Tipos: **A** recomposição · **B** componente/feature nova · **C** DS precisa
 | Export real | CSV local do view model | `GET /analytics/export/download` + estados | **D** | baixo | S | não | não | **P0** |
 | Distinção dos 4 estados | processando × falha | + AÇÃO NECESSÁRIA e CONCLUÍDO COM RESTRIÇÃO | **A+C** | baixo | S | não | sim | **P0** |
 | Tela de mapping | banner | tela de confirmação | **B** | médio | M | não | forms | **P1** |
-| Nível Instância | inexistente | Workspace › Instância › Análise | **D ou E** | **alto** | L | **decisão** | sim | **P1 — bloqueado por Q1** |
+| **Nível Instância** | inexistente | Workspace › Instância › Análise | 🔴 **E — confirmado (§6.6)** | **alto** | L | **SIM — delta de backend** | sim | **bloqueado** |
+| **Home do Workspace** (4 faixas) | Launchpad genérico | Ações · Em andamento · Instâncias · Recentes | **A+D** (faixa 3 depende de Instância) | baixo | M | não (faixas 1/2/4) | não | **P0** |
+| Badge de papel na UI | não existe | **continua não existindo** | **decisão** | — | — | não | não | **congelado (§6.2)** |
 | Hierarquia do resultado | seções planas | 6 níveis com "o que merece atenção" | **A** | baixo | M | não | tabs | **P1** |
 | Timeline da análise | inexistente | linha do tempo por eventos | **D** | baixo | S | não | pequena | **P2** |
 | Cruzamentos (evidências) | contados, não exibidos | área própria | **A** | baixo | S | não | não | **P2** |
@@ -634,13 +860,18 @@ eu **parei**, como instruído.
 
 Cada etapa é fechável e observável sozinha. Nada aqui foi iniciado.
 
-1. **Etapa 0 — decisões (§15).** Q1 (instância) bloqueia a navegação inteira. Sem resposta, as
-   etapas seguintes não mexem em rotas.
+1. **Etapa 0 — ENCERRADA.** O modelo de usuário, a nomenclatura e a hierarquia estão congelados
+   (§6.1–6.5). Q1 foi **provado tecnicamente**: é **E** (§6.6). Consequência prática: as etapas
+   1–7 **não dependem** de Instância e podem ser desenhadas sem ela; a navegação por Instância
+   fica fora até haver delta de backend.
 2. **Etapa 1 — `/progress` como fonte da jornada.** Cliente + view model dos 4 eixos + os quatro
    estados distintos. É o que desbloqueia P1/P2/P3/P5, A4/A5, X1–X5, F1/F2.
 3. **Etapa 2 — resultados progressivos.** Analytics visível antes do resultado final, com o
    aviso honesto de que a Engine ainda roda (≠ `partial`).
-4. **Etapa 3 — export real.** Substituir o CSV local pelo download do backend, com os 5 estados.
+4. **Etapa 2b — Home do Workspace.** Faixas 1 (Ações necessárias), 2 (Em andamento) e 4
+   (Resultados recentes) saem de `L` + `P`, já congelados. A faixa 3 (Instâncias) fica vazia
+   até a Etapa 8. Home não vira dashboard de KPIs.
+5. **Etapa 3 — export real.** Substituir o CSV local pelo download do backend, com os 5 estados.
    Manter o CSV como "exportar o que está na tela" **ou** remover — decisão pequena (Q6).
 5. **Etapa 4 — higiene do legado.** Unificar histórico; decompor `LandingPage`/`AionPage`;
    levar `shared/states` para os tokens.
@@ -648,7 +879,9 @@ Cada etapa é fechável e observável sozinha. Nada aqui foi iniciado.
 7. **Etapa 6 — mapping como tela.** Aqui entram RHF + Zod, se aprovados.
 8. **Etapa 7 — gráficos.** Recharts só na superfície analítica, lazy, recebendo view model
    agregado.
-9. **Etapa 8 — instância.** Depende de Q1.
+9. **Etapa 8 — Instância.** 🔴 **Bloqueada por delta de backend** (§6.6). Não desenhar rotas,
+   breadcrumbs nem seletor de Instância antes disso — desenhar contra um contrato que descarta a
+   associação produziria uma tela que não sobrevive ao primeiro reload.
 
 ---
 
@@ -656,7 +889,8 @@ Cada etapa é fechável e observável sozinha. Nada aqui foi iniciado.
 
 | # | pergunta | por que importa | consequência |
 |---|---|---|---|
-| **Q1** | **"Instância" é `project_id` + `environment_id` do contrato congelado, ou é entidade nova?** | O contrato público já aceita os dois campos em todas as rotas, e o front nunca os envia. Se for entidade nova (com CRUD, listagem, dono), o backend congelado **não** suporta | Se contrato existente → delta **D**. Se entidade nova → **E**, e é decisão de backend pós-freeze |
+| ~~**Q1**~~ | ~~"Instância" existe?~~ | **ENCERRADA.** Produto decidiu: Instância é conceito oficial da V1 (§6.3). A prova técnica está em §6.6 | 🔴 **E — PRODUCT/BACKEND DELTA CANDIDATE.** O contrato aceita os IDs e os **descarta**; nenhum read-model os devolve. Delta mínimo descrito em §6.6 |
+| **Q1'** | O delta de Instância entra como **novo delta de backend** depois do Experience Freeze, ou a V1 sai sem Instância? | É a única decisão que muda a navegação inteira | Define se as Etapas 1–7 assumem hierarquia de 2 ou 3 níveis |
 | **Q2** | Resultados progressivos mudam o modelo mental: o usuário passa a ver analytics **antes** do resultado final. Confirmam? | É a mudança de experiência mais profunda desta frente | Define se a Etapa 2 acontece |
 | **Q3** | "Cobertura" na hierarquia do resultado: hoje o backend publica **contagens**, não percentual. Calcular no front é **proibido** pela regra de ouro | Aparece explicitamente na hierarquia candidata | Ou exibimos as 4 contagens, ou é **delta de backend** (E) |
 | **Q4** | Cancelamento de análise (U3, F6) não tem rota pública | Aparece em dois cenários pedidos | **E** — decisão de backend pós-freeze |
