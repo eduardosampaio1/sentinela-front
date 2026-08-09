@@ -19,4 +19,5 @@ export { ConfirmDestructive } from "./ConfirmDestructive";
 export { DataTable, type ColunaDaTabela } from "./DataTable";
 export { EmptyState, ErrorState, LoadingState, type AcaoDeErro } from "./EstadosDeTela";
 export { ProgressiveState, type EixoExibido } from "./ProgressiveState";
+export { ProvenanceMargin, type ItemDeProcedencia } from "./ProvenanceMargin";
 export { Toolbar } from "./Toolbar";

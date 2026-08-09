@@ -329,7 +329,24 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   `montando`; (3) `success` × `warning` medem 1,14:1 — registrado como aberto.
 - **Blocker:** habilita critério **17**.
 
-### M12 · `ProvenanceMargin` — a assinatura
+### M12 · `ProvenanceMargin` — a assinatura — ✅ EXECUTADA
+> **Estado:** executada. `src/design/patterns/ProvenanceMargin.tsx` +
+> `provenanceMargin.test.tsx` (14 casos próprios) + as 4 combinações de D37 registradas no lugar
+> canônico (`patterns.test.tsx`). **10 mutações mortas**, incluindo as 5 exigidas.
+>
+> **API neutra:** `rotuloDoIndicador` · `procedencia: {rotulo, valor: string|null}[]` ·
+> `rotuloDaMargem` · `textoQuandoAusente` · `children`. Nenhum payload, nenhum campo de contrato,
+> nenhum vocabulário de domínio — o gate da M04 reprova se o DS aprender qualquer um deles.
+>
+> **A3 sem media query em JS:** as duas versões existem no DOM e quem escolhe é o CSS
+> (`hidden md:block` / `md:hidden`). `display:none` sai da árvore de acessibilidade sozinho, então
+> o leitor de tela lê uma vez só — e nada depende de decidir o breakpoint antes da primeira pintura.
+>
+> **Ausência é declarada, nunca convertida:** `valor: null` vira a palavra que o **produto**
+> passou; procedência vazia mantém a margem de pé dizendo o mesmo. Não saber de onde veio não é
+> uma procedência ruim, e a margem que sumisse devolveria o número à solidão que a V9 fecha.
+>
+> **Fora, como o plano manda:** decidir *quais* campos de trust aparecem (M22/M28).
 - **Objetivo:** o pattern `valor → procedência acessível` (V9 + A3).
 - **Pré:** M08, M10. **Paraleliza com:** M11, M13.
 - **Escopo:** desktop persistente; abaixo de tablet **disclosure presa ao dado**;

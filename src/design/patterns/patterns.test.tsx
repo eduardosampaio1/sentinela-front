@@ -21,6 +21,7 @@ import {
   ErrorState,
   LoadingState,
   ProgressiveState,
+  ProvenanceMargin,
   Toolbar,
 } from "./index";
 
@@ -75,6 +76,19 @@ const CASOS = [
   },
   { nome: "ComparisonRow", render: (t: string) => <ComparisonRow rotulo={t} antes="10" depois="12" base={t} delta="+2" /> },
   { nome: "ComparisonRowQuebrada", render: (t: string) => <ComparisonRowQuebrada rotulo={t} antes="10" depois="12" base={t} motivo={t} /> },
+  {
+    nome: "ProvenanceMargin",
+    render: (t: string) => (
+      <ProvenanceMargin
+        rotuloDoIndicador={t}
+        rotuloDaMargem={t}
+        textoQuandoAusente={t}
+        procedencia={[{ rotulo: t, valor: "1.234" }]}
+      >
+        <span>63,0%</span>
+      </ProvenanceMargin>
+    ),
+  },
   { nome: "Toolbar", render: (t: string) => <Toolbar primaria={<button>{t}</button>} /> },
 ] as const;
 
