@@ -21,7 +21,7 @@ similaridade é fabricar continuidade que ninguém mediu. Isso é a mesma regra 
 
 ---
 
-## 0. Decisões congeladas D24–D29
+## 0. Decisões congeladas D24–D30
 
 | # | decisão | detalhe |
 |---|---|---|
@@ -31,6 +31,16 @@ similaridade é fabricar continuidade que ninguém mediu. Isso é a mesma regra 
 | **D27** (Q18) | **Recomendações longitudinais entram na V1** | `recommendation_id` já existe no domínio e é exatamente a identidade necessária. **Nunca parear por título, texto, similaridade ou heurística no Front.** Se o id não chegou ao documento canônico, **não existe** afirmação de persistiu/apareceu/deixou de aparecer. **L6 vira delta explícito próprio** de contrato/fiação, com testes e freeze próprios — **não misturar** com o delta de Instância. Requisito da V1; **não é autorização de implementação** |
 | **D28** (Q19) | **A V1 permite EXCLUIR análises; "arquivar" não existe como conceito** | Exclusão é destrutiva e só existe **quando houver operação real de backend e lifecycle definido**. **Nenhum botão fake.** Regra de segurança congelada: **toda exclusão exige digitar exatamente o nome da Instância** a que a análise pertence — não basta *Confirmar*, checkbox ou digitar "EXCLUIR". Ver §7.1 |
 | **D29** (Q20) | **As duas superfícies de comparação existem, com UMA fonte de verdade** | No **Resultado**: resumo automático *"esta análise vs. imediatamente anterior"*, só fatos comparáveis e publicados. Na **Instância**: superfície de **Evolução/Comparação** com seleção de duas execuções. **Um único view model/regra canônica** — Resultado consome a versão resumida, Instância a exploração completa. Incompatibilidade de schema/registry aplica **D26**. **Ausência de um sinal nunca vira automaticamente "resolveu" ou "sumiu"**, especialmente diante de privacy withholding |
+| **D30** (R5) | **Auditar a exclusão não significa preservar o conteúdo excluído** | A evidência conserva **somente** `analysis_id · workspace_id/instance_id · actor · timestamp · motivo/ação · resultado da operação`. **Nunca** payload, resultado, evidência, recomendações, projeção, facts, ou qualquer conteúdo que a operação tinha obrigação de destruir. Referências conceituais — certidão de destruição e `expired`×`purged_at` — **não podem ser copiadas sem provar compatibilidade** de chave e ciclo de vida. Ver §15 |
+
+---
+
+## 0.1 Estado do mapeamento funcional
+
+> ✅ **FUNCTIONAL EXPERIENCE MAPPING — COMPLETE**
+> ✅ **EXPERIENCE FREEZE FUNCIONAL — ENCERRADO**
+>
+> Q21–Q23 encerradas em §14 sem revelar decisão de produto nova. Detalhe e ressalvas em §17.
 
 ---
 
@@ -369,6 +379,9 @@ primeiro quando um workspace acumula uso.
 > `expired` (*"não entrego mais"*) de `purged_at` (*"não existe mais"*), e o Ingestion emite
 > **certidão de destruição** sem guardar o destruído. A exclusão de análise deve seguir o mesmo
 > desenho: registra-se **quem, quando, o quê (por id) e por quê**, nunca o conteúdo.
+>
+> ✅ **R5 está congelada em D30** (§15), com os campos exatos permitidos e a advertência de não
+> copiar as implementações de referência sem provar compatibilidade de chave e ciclo de vida.
 
 ### 7.2 Discovery do cascade esperado (o que precisa ser decidido no backend)
 
@@ -376,18 +389,18 @@ primeiro quando um workspace acumula uso.
 
 | artefato | onde vive | cascade esperado | observação |
 |---|---|---|---|
-| **resultado v1** (`orchestrator_analysis_results`) | Orchestrator | destruir | tabela é **imutável por trigger** — a exclusão precisa de caminho próprio, não de `update` |
-| **resultado v2** (`orchestrator_integrated_results`) | Orchestrator | destruir | idem |
-| **facts** (`engine-facts-v1`) | object store + `orchestrator_engine_facts` | destruir bytes **e** referência | a referência sem os bytes vira ponteiro morto; os bytes sem a referência viram órfão |
-| **Input Artifact** | object store + metadados | ⚠️ **decisão** | pode ser compartilhado por um **retry** da mesma análise; e o descarte do dado do cliente já tem dono no Ingestion |
+| **resultado v1** (`orchestrator_analysis_results`) | Orchestrator | destruir | FK **NO ACTION** — hoje **bloqueia** o delete do job. O trigger de imutabilidade é **UPDATE-only**, não atrapalha (§14.1–14.2) |
+| **resultado v2** (`orchestrator_integrated_results`) | Orchestrator | destruir | FK **CASCADE** — some junto. **Assimetria com o v1**, §16 C-A |
+| **facts** (`engine-facts-v1`) | object store + `orchestrator_engine_facts` | destruir bytes **e** referência | a referência **cascateia**; os bytes não — sem sinalização viram órfão |
+| **Input Artifact** | object store + metadados | **não destruir aqui; sinalizar** | ✅ §14.4 — compartilhamento **não é proibido** (sem unique na operação) e o descarte **já tem dono**: o Ingestion, com certidão |
 | **snapshot/projeção analítica** | Analytics | destruir | é conteúdo derivado do dataset |
 | **export** | Analytics | destruir + marcar `purged_at` | o desenho já existe |
-| **timeline / eventos públicos** | outbox + Dispatcher | ⚠️ **decisão** | apagar o histórico de eventos **apaga a auditoria**; provavelmente **preservar o evento, destruir o conteúdo** |
-| **entregas do Dispatcher** | Dispatcher | ⚠️ **decisão** | envelope entregue já saiu do domínio; retenção própria (`0004`) |
-| **referências longitudinais** | Instância | **bloquear** se for baseline (R4); **desfazer** se for só ponto da série | precisa que a série tolere buraco — ou a exclusão fica proibida |
-| **comanda analítica** | Orchestrator | destruir | — |
+| **timeline / eventos públicos** | outbox + Dispatcher | **preservar evento, destruir conteúdo** | ✅ §14.5 — `data_keys` fechados + retenção declarada no contrato; a purga é **operação** |
+| **entregas do Dispatcher** | Dispatcher | **preservar; retenção própria** | envelope entregue já saiu do domínio; `analysis_id` é **opaco** ali |
+| **referências longitudinais** | Instância | **bloquear** se for baseline (R4); ponto simples pode sair | ✅ §14.6 — a série **tolera buraco**; R4 é o único bloqueio |
+| **comanda analítica** | Orchestrator | destruir | FK **CASCADE**, junto com os recibos |
 
-**Três perguntas de cascade que só o backend responde** (Q21–Q23, §13).
+**Três perguntas de cascade que só o backend responderia** (Q21–Q23) — **encerradas em §14**.
 
 ---
 
@@ -578,13 +591,224 @@ dizer que fazem é o tipo de afirmação que esta plataforma inteira existe para
 | ~~Q19~~ | arquivar/excluir ou só reter? | **D28** — **excluir sim, arquivar não existe**; confirmação por digitação do nome da Instância; 5 restrições (§7.1) |
 | ~~Q20~~ | superfície própria ou embutida? | **D29** — **as duas**, com **uma** regra canônica de comparação |
 
-### 13.2 Abertas — cascade da exclusão (§7.2)
+### 13.2 Q21–Q23 — ENCERRADAS (prova em §14)
 
-| # | pergunta | por que só o backend responde |
+Texto literal de cada pergunta, como estava registrada, e o desfecho:
+
+| # | pergunta | por que só o backend responderia | desfecho |
+|---|---|---|---|
+| **Q21** | Excluir a análise destrói o **Input Artifact**? | Ele pode ser compartilhado por um **retry** da mesma análise, e o descarte do dado do cliente já tem dono no Ingestion. Destruir junto pode apagar o insumo de outra execução; não destruir pode deixar o dado vivo depois de o usuário mandar apagar | **RESPONDIDA** (§14.4) — o compartilhamento **não vem do retry**, mas **não é proibido** (sem unique; id vem do chamador); e o descarte **já tem dono**. Decisão: **não destruir pelo caminho da análise; sinalizar** |
+| **Q22** | Excluir a análise apaga a **timeline / eventos públicos**? | Apagar apaga a **auditoria**; manter preserva metadados de algo que deveria sumir. O caminho provável é **preservar o evento e destruir o conteúdo**, mas é decisão | **RESPONDIDA** (§14.5) — o caminho provável **se confirma**, e o schema já o suporta (`data_keys` fechados + retenção declarada) |
+| **Q23** | A **série longitudinal** tolera buraco? | Se sim, excluir um ponto do meio é aceitável. Se não, a exclusão fica proibida para análises que participam de comparação — e R4 (baseline) vira caso particular de uma regra maior | **RESPONDIDA** (§14.6) — **tolera**. R4 permanece o **único** bloqueio longitudinal; não vira caso particular de nada |
+
+---
+
+## 14. Q21–Q23 — a prova
+
+Investigação sobre o schema real (FKs, `delete_rule`, triggers) dos bancos congelados, não sobre
+intenção documentada.
+
+### 14.1 O grafo de FK já decide metade do cascade
+
+Catálogo (`information_schema`) do banco do Orchestrator, a partir de `orchestrator_jobs.job_id`:
+
+```
+CASCADE (somem junto com o job)
+  orchestrator_attempts                       -> CASCADE
+  orchestrator_assignments                    -> CASCADE
+  orchestrator_analytics_commands             -> CASCADE
+     orchestrator_analytics_output_receipts   -> CASCADE
+  orchestrator_engine_facts                   -> CASCADE
+  orchestrator_integrated_results     (v2)    -> CASCADE
+
+NO ACTION (BLOQUEIAM a remocao do job)
+  orchestrator_analysis_operations.job_id     -> NO ACTION
+  orchestrator_analysis_results.job_id  (v1)  -> NO ACTION
+  orchestrator_ingestion_inbox.analysis_id    -> NO ACTION
+  orchestrator_analysis_operations.input_artifact_id    -> NO ACTION
+  orchestrator_input_upload_sessions.input_artifact_id  -> NO ACTION
+
+outros
+  orchestrator_input_descriptors.input_artifact_id      -> CASCADE
+  orchestrator_engines.current_assignment_id            -> SET NULL
+```
+
+> 🔴 **Assimetria encontrada, e ela não parece intencional:** o resultado **v2** cai por CASCADE e o
+> **v1** bloqueia. As duas tabelas guardam a mesma classe de coisa — o documento público de uma
+> análise — com semântica de exclusão **oposta**. Hoje não incomoda porque ninguém exclui. No dia
+> em que a exclusão existir, um `delete` no job apagaria o v2 **em silêncio** e **falharia** por
+> causa do v1. Decisão de backend, §16 **C-A**.
+
+### 14.2 Os triggers de imutabilidade **não** bloqueiam DELETE
+
+| trigger | tabela | eventos |
 |---|---|---|
-| **Q21** | Excluir a análise destrói o **Input Artifact**? | Ele pode ser compartilhado por um **retry** da mesma análise, e o descarte do dado do cliente já tem dono no Ingestion. Destruir junto pode apagar o insumo de outra execução; não destruir pode deixar o dado vivo depois de o usuário mandar apagar |
-| **Q22** | Excluir a análise apaga a **timeline / eventos públicos**? | Apagar apaga a **auditoria**; manter preserva metadados de algo que deveria sumir. O caminho provável é **preservar o evento e destruir o conteúdo**, mas é decisão |
-| **Q23** | A **série longitudinal** tolera buraco? | Se sim, excluir um ponto do meio é aceitável. Se não, a exclusão fica proibida para análises que participam de comparação — e R4 (baseline) vira caso particular de uma regra maior |
+| `orchestrator_resultado_sem_update` | `orchestrator_analysis_results` (v1) | **UPDATE** |
+| `orchestrator_integrado_sem_update` | `orchestrator_integrated_results` (v2) | **UPDATE** |
+| `trg_engine_facts_tenant_confere` | `orchestrator_engine_facts` | INSERT, UPDATE |
+
+**Nenhum cobre DELETE.** A imutabilidade que existe é *"resultado publicado não se reescreve"* —
+não *"resultado publicado não se apaga"*. Consequência prática: implementar exclusão **não exige**
+remover nem afrouxar trigger de imutabilidade.
+
+### 14.3 O alcance de `analysis_id`, por banco
+
+| banco | tabelas com `analysis_id` |
+|---|---|
+| **Orchestrator** | `analysis_operations`, `engine_facts`, `ingestion_inbox`, `integrated_results`, `public_events` |
+| **Analytics** | `analytics_snapshots`, `analytics_output_fragments`, `analytics_public_projections`, `analytics_exports` |
+| **Dispatcher** | entregas e tentativas — o próprio schema declara que o `analysis_id` aparece por **rastreabilidade** e é **opaco para este processo** |
+| **Ingestion** | por `ingestion_id`, com ciclo de vida próprio |
+
+**Nenhum cascade atravessa fronteira de serviço** — e está certo: cascade entre bancos seria
+acoplamento por schema, que a arquitetura proíbe. Logo, tudo que sai do Orchestrator sai por
+**sinalização**, não por FK.
+
+### 14.4 Q21 — Input Artifact
+
+**Fatos medidos:**
+
+- `orchestrator_analysis_operations.input_artifact_id` é **NO ACTION** — o artefato não some junto;
+- o **retry não cria análise nova**: reusa o *mesmo `analysis_id`*, zero `prepare`, zero `upload`
+  (Onda 6). Pelo fluxo normal, portanto, **não** há duas análises no mesmo artefato;
+- 🔴 **mas nada impede que haja.** A unicidade que existe está na *sessão de upload*
+  (`0017`: `input_artifact_id … not null unique`), **não** na operação. Em
+  `orchestrator_analysis_operations` os únicos índices são `(tenant_id, idempotency_digest)` e o
+  de listagem — **`input_artifact_id` não tem unique**. E o vínculo é feito com o id **vindo do
+  chamador** (`POST /analysis-operations/{analysis_id}/artifact`, campo `input_artifact_id` no
+  corpo). O guarda existente é **por operação**: rejeita revincular *outro* artefato à *mesma*
+  operação — não impede *outra* operação de vincular o *mesmo* artefato;
+- o **descarte do dado do cliente já tem dono**: o Ingestion, com purga de origem e de sanitizado
+  e **certidão durável** gravada **sempre**, inclusive quando o clearance recusou.
+
+**Decisão proposta:** a exclusão de análise **não destrói o Input Artifact pelo seu próprio
+caminho** — ela **sinaliza** ao dono, que já sabe destruir e já emite certidão. Duplicar a
+destruição criaria dois lugares apagando a mesma coisa, com duas certidões e nenhuma autoridade.
+
+> **A premissa da pergunta se sustenta — por um motivo diferente do que ela supunha.** Não é o
+> retry que compartilha (ele não cria análise nova); é que **o compartilhamento não é proibido**:
+> nem por unique, nem pelo guarda de vínculo. Um cascade a partir de uma análise poderia, em
+> princípio, destruir o insumo de outra. Como o dono do descarte já existe e já certifica,
+> **sinalizar é a saída que não depende dessa incerteza**.
+>
+> Dos dois riscos da pergunta original, o que sobra é o **inverso**: não destruir e deixar o dado
+> vivo depois de o usuário mandar apagar. Por isso a sinalização é **obrigatória**, não opcional.
+
+### 14.5 Q22 — timeline / eventos públicos
+
+**Fatos medidos:**
+
+- `orchestrator_public_events` tem `analysis_id`, e o envelope tem **`data_keys` fechados** por
+  tipo (contrato `public-events-v1`): o evento carrega **vocabulário**, não conteúdo analítico;
+- a migration `0020_eventos_publicos.sql` declara que a retenção vem de
+  `public-events-v1.json::retencao_dias` e que **a purga é operação, não migration** — ou seja,
+  retenção de evento **já é conceito existente**, com prazo contratual;
+- o Dispatcher tem **retenção auditada própria** e trata `analysis_id` como opaco.
+
+**Decisão proposta:** **preservar o evento, destruir o conteúdo** — exatamente o "caminho provável"
+da pergunta, agora com suporte de schema em vez de intuição. O evento de exclusão entra na
+timeline; os eventos anteriores permanecem como **fatos do processo** (ocorreu, quando, de que
+tipo), e o que for conteúdo sai. A retenção continua sendo operação, com o prazo do contrato.
+
+### 14.6 Q23 — a série tolera buraco?
+
+**Fatos medidos:**
+
+- a série é derivada de `GET /v1/analyses` (listagem por cursor) — **não** é cadeia encadeada:
+  nenhuma análise aponta para a anterior;
+- a comparação é **par a par**, por `indicator.id`, sob demanda (D29) — não há estrutura acumulada
+  que se quebre pela ausência de um ponto;
+- a única relação que cria dependência real é o **baseline** (D25/R4).
+
+**Resposta: tolera.** Excluir um ponto do meio remove um ponto da série; não invalida os demais.
+**R4 permanece o único bloqueio de exclusão por relação longitudinal** — não vira caso particular
+de uma regra maior, porque a regra maior não existe.
+
+> ⚠️ Consequência de honestidade: se a tela mostrar "vs. anterior" e o anterior tiver sido excluído,
+> ela compara com o **anterior que existe** e **diz** que houve exclusão entre os dois. Silenciar
+> produziria um delta atravessando um buraco sem avisar — e isso é a mesma classe de mentira que
+> D26 proíbe na quebra de versão.
+
+### 14.7 As respostas do enunciado, consolidadas
+
+| pergunta | resposta |
+|---|---|
+| **o que exatamente é destruído** | o job e tudo que CASCATEIA dele: tentativas, assignments, comanda analítica + recibos, facts, **resultado v2**. Mais, por decisão explícita: **resultado v1**, operação e inbox. Nos outros serviços: **por sinalização**, nunca por cascade cruzado |
+| **`result`** | v1 e v2 **destruídos**. O v2 já cascateia; o v1 **bloqueia** hoje (C-A) |
+| **`timeline`** | **preservada como fato do processo**, conteúdo destruído; retenção continua sendo operação com prazo do contrato |
+| **export / derivados** | Analytics destrói snapshot, fragmentos, projeção pública e export — o desenho `expired` (*não entrego mais*) × `purged_at` (*não existe mais*) **já existe** e se aplica |
+| **referências longitudinais** | a série **tolera buraco**; só o **baseline ativo** bloqueia (R4) |
+| **como fica no histórico** | 🔶 **aberta** (C-B): sumir da listagem, ou linha *"análise excluída em `<data>`"* sem conteúdo |
+| **o que impede exclusão** | (a) **baseline ativo** (R4); (b) **não terminal** — processando ou `needs_mapping` (R1), senão vira cancelamento disfarçado, que D-Q4 tirou da V1; (c) hoje, tecnicamente, as **FKs NO ACTION** de v1/operação/inbox |
+| **evidência auditável** | §15 — **D30** |
+
+---
+
+## 15. D30 — princípio de auditoria da exclusão (congela **R5**, §7.1)
+
+> **Auditar a exclusão não significa preservar o conteúdo excluído.**
+
+A evidência conserva **somente o necessário para provar a operação**:
+
+```
+analysis_id
+workspace_id / instance_id
+actor
+timestamp
+motivo / acao
+resultado da operacao
+```
+
+**Nunca** preservar payload, resultado, evidência, recomendações, projeção, facts, ou qualquer
+outro conteúdo que a operação tinha **obrigação de destruir**. Um log de exclusão que guarda o que
+foi excluído não é auditoria: é a exclusão não tendo acontecido.
+
+### Referência conceitual — e o que provar antes de copiar
+
+| padrão existente | o que ele ensina | compatibilidade a provar |
+|---|---|---|
+| **certidão de destruição** (Ingestion, `persistencia/privacidade.py`) | grava-se **sempre**, inclusive quando o clearance recusou — sem isso *"a ingestão reprovada ficaria sem registro do motivo"*. A certidão prova o **ato** e não guarda o destruído; a leitura devolve estado de purga da origem e do sanitizado, mais um sinal de existência durável | a certidão é chaveada por `ingestion_id`; a exclusão de análise é por `analysis_id`. **São chaves de domínios diferentes** — reusar a tabela acoplaria dois lifecycles que hoje são independentes |
+| **`expired` × `purged_at`** (Analytics, `0010`) | separa *"não entrego mais"* de *"não existe mais"*; sem os dois, "expirado" significaria duas coisas e a auditoria não distinguiria retenção de destruição | é padrão de **export**, com estado e prazo próprios. Aplicá-lo à análise exige decidir antes se existe estado intermediário (*"marcada para exclusão"*) ou se a exclusão é atômica — **C-D** |
+
+**Não copiar implementação sem provar compatibilidade.** As duas referências vêm de domínios com
+chave e ciclo próprios; o que se herda é o **princípio**, não a tabela.
+
+---
+
+## 16. Decisões de BACKEND que continuam abertas, com alternativas mínimas
+
+| # | decisão | alternativas mínimas |
+|---|---|---|
+| **C-A** | assimetria **v1 × v2** na FK (§14.1) | (1) v1 passa a cascatear, igualando os dois; (2) **ambos viram NO ACTION** e a rotina de exclusão remove em ordem explícita; (3) mantém como está e a rotina trata cada um. **(2) é a mais honesta** — exclusão explícita não deveria depender de efeito colateral de FK |
+| **C-B** | como a análise excluída aparece no histórico | (1) some da listagem; (2) **linha "análise excluída em `<data>`"**, sem conteúdo. **(2)** preserva a leitura da série (§14.6) e custa uma coluna |
+| **C-C** | sinalização ao Ingestion (§14.4) | (1) **evento na outbox pública**; (2) chamada interna síncrona; (3) reconciliação por varredura. **(1)** é o padrão da casa e já tem entrega confiável, retry e dead letter |
+| **C-D** | exclusão atômica ou com estado intermediário | (1) atômica; (2) *"marcada para exclusão"* → purga assíncrona, no espírito de `expired`/`purged_at`. **(2)** tolera falha parcial entre serviços; **(1)** é mais simples e mente menos |
+| **C-E** | o vínculo **artefato → operação** é exclusivo? (§14.4) | (1) **unique** em `input_artifact_id`, tornando a exclusividade um fato do banco; (2) guarda na aplicação; (3) aceitar compartilhamento como legítimo e nunca destruir pelo caminho da análise. **A decisão de produto não muda em nenhum dos três** — a sinalização ao Ingestion cobre os três casos. É higiene de invariante, e vale a pena porque hoje a exclusividade é **crença**, não garantia |
+
+**Nenhuma delas revela decisão de PRODUTO nova** — são escolhas de implementação do backend. O que
+o usuário vê já está congelado em **D28** (o que a exclusão faz, o que exige, o que proíbe) e
+**D30** (o que a auditoria preserva). Teste aplicado a cada uma: *"o comportamento visível muda
+conforme a alternativa escolhida?"* — em C-A…C-E a resposta é **não**.
+
+---
+
+## 17. Encerramento do mapeamento funcional
+
+Q21–Q23 fecharam **sem revelar nova decisão de produto fundamental**. As cinco questões
+remanescentes (C-A…C-E) são de implementação de backend, sob comportamento de produto já congelado.
+
+### ✅ FUNCTIONAL EXPERIENCE MAPPING — COMPLETE
+### ✅ EXPERIENCE FREEZE FUNCIONAL — ENCERRADO
+
+**O que isto significa:** sabemos **o que a V1 deve fazer** — telas, estados, regras, restrições,
+vocabulário e o que é proibido inventar no browser.
+
+**O que isto NÃO significa:** não significa que os deltas de backend estão implementados, nem que a
+Instância existe, nem que o Big Bang está autorizado. Backend permanece **congelado**; o delta de
+Instância permanece **não autorizado**; o Big Bang permanece **bloqueado**.
+
+**Próxima frente, separada e NÃO iniciada nesta missão:** *DESIGN DISCOVERY / SENTINELA DESIGN
+SYSTEM*.
 
 ---
 
