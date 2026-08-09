@@ -89,7 +89,7 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **DoD:** `nestedProjection.ts` não importa mais `.py`. **Evidência:** mutação 4 re-executada.
 - **Blocker:** **B9** (parte técnica). **Autorização:** ✅ decisão 4.
 
-### M01 · Cadeia Keycloak provada (pré-erradicação)
+### M01 · Cadeia Keycloak provada (pré-erradicação) — CONCLUIDA
 - **Objetivo:** provar que Keycloak cobre **login, recuperação e callback** antes de remover
   qualquer equivalente Supabase.
 - **Existe porque:** `/login` e `/forgot-password` são caminho de autenticação **real**. Remover
@@ -100,6 +100,20 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Superfícies:** AUTH-01, AUTH-02, AUTH-03. **Scenarios:** `session-expired`.
 - **Testes/Gates:** teste de fluxo por rota; `me.test.ts` estendido.
 - **DoD:** os três fluxos verdes **sem** Supabase no caminho. **Evidência:** log do teste.
+- **Entregue:** `src/lib/auth/keycloak-cadeia.test.tsx` — 8 casos, **3/3 mutações**. Espião que
+  registra **qualquer** acesso a `supabase.auth` (Proxy), não só os métodos hoje chamados.
+- 🔎 **Corrigido durante a execução:** a tela de login sob Keycloak é **híbrida** — vive na SPA
+  com os botões sociais e o "Continue with email", e só a **senha** é digitada no provedor. Meus
+  primeiros casos esperavam redirect ao montar e falharam; a leitura errada era minha. Não
+  contraria D19, que trata de credencial.
+- 🔴 **Duas pré-condições para a M02, descobertas aqui:**
+  1. **o módulo ainda está no caminho.** `lib/auth/index.ts` importa `@/lib/supabase`
+     **estaticamente**, e as três páginas também. Nenhuma **função** é chamada sob Keycloak —
+     isso está provado — mas o módulo é avaliado no carregamento. Remover o import é M02.
+  2. **a recuperação depende de configuração de realm.** `startPasswordReset()` redireciona para a
+     tela hospedada do Keycloak, que só oferece "esqueci a senha" com `resetPasswordAllowed`
+     ligado. O front não consegue provar isso. **A M02 não pode remover `/forgot-password` antes
+     de essa configuração ser verificada no realm**, sob pena de a recuperação sumir em silêncio.
 - **Blocker:** **B6** (metade). **Autorização:** ✅ decisão 5.
 
 ### M02 · Erradicação do Supabase Auth
