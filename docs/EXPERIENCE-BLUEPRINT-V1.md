@@ -1,9 +1,13 @@
 # EXPERIENCE BLUEPRINT V1
 
-> **Exclusivamente documental.** Zero implementação, zero componente, zero wireframe, zero alteração
-> de backend/contrato, zero dependência, zero deploy/push/Railway.
+> **Autoridade de MAPA:** superfícies, estados, scenarios, componentes e dependências.
+> **Não** é autoridade de regra arquitetural (→ `FRONT-ARCHITECTURE-AND-MOCK-CONTRACT.md`),
+> visual (→ `FRONT-DESIGN-SYSTEM-CONSTITUTION.md`) nem de produto
+> (→ `PRODUCT-EXPERIENCE-FREEZE-V1.md`).
 >
-> **Base:** `sentinela-front-e1` @ `77641c8`.
+> **Roteador:** `INDICE-DE-AUTORIDADE-V1.md`
+>
+> **Base:** `sentinela-front-e1` @ `77641c8`, atualizado após WS-A (`cf782e0`).
 > Backend **congelado** · delta de Instância **não autorizado** · Big Bang **bloqueado** ·
 > Supabase Auth = **delta obrigatório separado**, não autorização de remoção aqui.
 
@@ -11,7 +15,12 @@
 
 ## 1. Fontes de autoridade
 
-### 1.1 Documentos vigentes
+> ℹ️ **Após o DOC-FREEZE**, esta seção deixou de ser o índice canônico. A autoridade vigente está
+> em `INDICE-DE-AUTORIDADE-V1.md`; os documentos abaixo passaram a **EVIDENCE/HISTORICAL**. O que
+> segue vale como o **rastro** de onde cada regra veio, e a análise de conflitos de §1.2–1.4
+> continua sendo a evidência de C1/C2/C3.
+
+### 1.1 Documentos de origem (hoje EVIDENCE)
 
 | domínio | autoridade vigente | observação |
 |---|---|---|
@@ -24,7 +33,7 @@
 | **Freeze operacional / rollout** | Obsidian `14 - Operação/OPS - Freeze Global e Pacote pre-Big-Bang.md` | |
 | **Regras de ouro** | Obsidian `REGRA DE OURO ZERO.md` | §6: regra ARGOS **revogada**, história preservada |
 | **Anti-monólito** | Obsidian `04 - Decisões/DEC - Arquitetura modular anti-monólito e topologia multi-repo.md` | *"acima de 1.000 linhas bloqueia fechamento"* |
-| 🔴 **Contrato público V1** | **ver §1.2 — há três versões divergentes** | |
+| 🔴 **Contrato público V1** | `sentinela-facts/docs/contracts/public-v1.json` = **AUTHORITATIVE** (WS-A) | mirror STALE e cópia DERIVED — §1.2 |
 | **Instância** | `DISCOVERY-0C` §11.1 + `DISCOVERY-FRONT-EXPERIENCE` (Q1′) | **delta não autorizado** |
 | **Mock architecture** | `DESIGN-0` §6, preservada sem alteração | |
 | **Auth canônico** | Keycloak via `src/lib/auth/` (`oidc-client-ts`) + `me_nota` do contrato | Supabase = resíduo a erradicar |
@@ -322,7 +331,7 @@ compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browse
 | **Analytics** | `GET /analytics` — `component_status`, `snapshot`, `withheld` | **REAL** (sem cliente — delta FE) |
 | **Evidências** | `result` v2 (facts) | **REAL** |
 | **Qualidade** | contagens A/B/C reconciliadas | **REAL** |
-| **Trust / procedência** | §10 | **REAL** — 11/11 campos existem; parte só precisa ser lida |
+| **Trust / procedência** | §10 | **REAL — 11/11** disponíveis; `method_*` e `privacy_policy_version` são **delta de front** (ler o que já chega) |
 | **Export** | `GET /analytics/export/download` + eixo `export` | **REAL** (sem cliente — delta FE) |
 | **Comparação com anterior** | duas leituras de `/result` + `indicator.id` | **REAL** para o par; **APPROVED DELTA** para "anterior da Instância" |
 
