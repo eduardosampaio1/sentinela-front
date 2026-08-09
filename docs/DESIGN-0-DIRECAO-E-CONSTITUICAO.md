@@ -106,12 +106,19 @@ Três consequências, todas medidas e nenhuma cosmética:
 | `next-themes` | 0.3.0 | **0** | instalado e nunca usado |
 | `sonner` | 1.7.4 | **0** | idem |
 | `jspdf` | 4.2.0 | **0** | idem |
-| `tailwindcss-animate` | 1.0.7 | **0** | idem (nem no `tailwind.config`) |
+| `tailwindcss-animate` | 1.0.7 | **0 importações** | 🔴 **medição errada** — é **plugin** em `tailwind.config.ts:98`, com 5 consumidores vivos. **Fica** |
 | `msw` | 2.15.0 | só `src/test/msw` | test-only hoje — ver §6 |
 | `axe-core` | 4.12.1 | suíte a11y | ok |
 | `@playwright/test` | 1.62.1 | `e2e-mf64c/` | ok |
 
-**Quatro pacotes runtime com zero uso.** Peso e superfície de manutenção sem dono.
+**Três pacotes runtime com zero uso** — corrigido de quatro. Peso e superfície sem dono.
+
+> 🔴 **Correção da M03 (2026-08-09): eram TRÊS, não quatro.** Esta contagem mediu **importações do
+> nome do módulo em `.ts`/`.tsx`**, e `tailwindcss-animate` não é importado — ele é **registrado
+> como plugin** em `tailwind.config.ts:98` e entrega **classes utilitárias**. Cinco componentes
+> Radix vivos usam `animate-in`, `animate-out`, `fade-in-0`, `zoom-in-95` e `slide-in-from-*`.
+> Medir importação de módulo e concluir "zero uso" foi medir a coisa errada — e a remoção teria
+> passado em toda a suíte, porque classe utilitária ausente vira string inerte, não erro.
 
 ### 2.3 Estado do que a constituição vai exigir
 
@@ -688,12 +695,12 @@ frentes ([[feedback_teste_verde_por_motivo_errado]]).
 |---|---|---|---|
 | **R1** | **Três sistemas de token concorrentes**; `--background`/`--primary` definidos duas vezes com valores diferentes; a única `.dark` mora em arquivo morto | 🔴 alta | Delta nº 1 da Design 1 — **token único vale por si**, independente de tema. É a prova que D23 exige |
 | **R2** | **Auth Supabase está VIVA e roteada** (`/login`, `/forgot-password`), enquanto Keycloak é o auth canônico. A narrativa "Supabase está morto" era sobre **acesso a dados** | 🔴 alta | **Não é mais candidato.** A decisão arquitetural é que **Supabase está aposentado** → **DELTA OBRIGATÓRIO DE ERRADICAÇÃO**, em frente própria, **separada da Design**. Não implementado nesta missão. Ver §13.1 |
-| **R3** | `next-themes` instalado com **zero uso** — é a peça que P31 precisaria, se autorizado | 🟡 média | **Não** decidir na Design 1: sem autorização de tema, remover ou deixar quieto |
+| ~~R3~~ | `next-themes` instalado com zero uso | ✅ **RESOLVIDO na M03** | **Removido.** A decisão 1 do owner tirou Light/Dark da V1; a peça saiu junto |
 | **R4** | `LandingPage` (1.215) e `AionPage` (1.180) **violam a regra anti-monólito**, que diz *"bloqueia fechamento"* | 🟡 média | Já é missão própria (Q7). Agora com critério objetivo: **< 1.000 linhas** |
 | **R5** | Responsive existe em **25 %** dos arquivos. D32 diz "não é retrofit", mas para o legado **será** | 🟡 média | D32 vale para superfície **nova**; legado converge por missão, sem promessa global |
 | **R6** | Recharts pode virar **dona de transformação/semântica analítica** (binning, agregação, interpolação, domínio automático) e violar `fonte-unica-do-resultado` | 🟡 média | Adoção **condicional**: renderizar geometria/escala é permitido; transformar não. Provar a separação, senão primitivas próprias |
 | **R7** | `web-design-guidelines` **busca a régua de uma URL externa em runtime** | 🟡 média | Vale como consultoria, **não como gate**. Para gate, congelar snapshot versionado no repo |
-| **R8** | `jspdf`, `sonner`, `tailwindcss-animate` instalados com **zero uso** | 🟢 baixa | Remover na primeira missão que abrir o `package.json` |
+| ~~R8~~ | `jspdf`, `sonner`, `tailwindcss-animate` com "zero uso" | ⚠️ **PARCIALMENTE RESOLVIDO na M03** | `jspdf` e `sonner` **removidos**. 🔴 `tailwindcss-animate` **NÃO**: a auditoria estava errada — ele é **plugin em `tailwind.config.ts:98`** e 5 componentes Radix vivos consomem `animate-in`/`animate-out`/`fade-in-0`/`zoom-in-95`/`slide-in-from-*`. Removê-lo apagaria as animações de diálogo, dropdown, sheet, toast e tooltip **sem nenhum teste reagir** |
 | **R9** | Zod pode virar validador canônico "por conveniência" | 🟢 baixa | Barreira de lint por pasta desde o primeiro commit que instalar Zod |
 | **R10** | `package.json` declara `msw.workerDirectory`, mas o worker **nunca é montado** — a arquitetura de §6 depende dele | 🟢 baixa | Item explícito da Design 1 |
 

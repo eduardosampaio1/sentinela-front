@@ -121,8 +121,11 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   `src/index.css` e `src/App.css` **não são importados por ninguém** — e um deles guarda a única
   regra `.dark` do repo, que é fantasma.
 - **Pré:** nenhuma. **Paraleliza com:** M02, M04–M07.
-- **Escopo:** remover os quatro pacotes e os dois CSS mortos. **`next-themes` sai** — decisão 1
+- **Escopo:** remover os pacotes sem uso e os dois CSS mortos. **`next-themes` sai** — decisão 1
   tirou tema da V1. **Fora:** tocar `tokens.css`/`globals.css` (isso é M08).
+- 🔴 **Corrigido na execução:** eram **três** pacotes, não quatro. `tailwindcss-animate` **fica** —
+  é **plugin** em `tailwind.config.ts:98`, e 5 componentes Radix vivos consomem suas classes. A
+  auditoria da Design 0 mediu importação de módulo, que ele não tem, e concluiu "zero uso".
 - **Repos:** `sentinela-front-e1`. **Superfícies:** nenhuma.
 - **Testes/Gates:** build + suíte + gate de "arquivo CSS órfão".
 - **DoD:** `package.json` sem os quatro; nenhum CSS não importado. **Evidência:** diff + build.

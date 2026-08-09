@@ -278,7 +278,9 @@ decoração — e esta casa já pagou esse preço.
 | **fica** | React 18.3 · TS 5.8 · Vite 5.4 · React Router 6.30 · TanStack Query 5.83 · Radix (implementação interna) · CVA · clsx/tailwind-merge · Keycloak · Vitest · Testing Library · Playwright · axe-core |
 | **consolidar** | Tailwind 3.4 (config aponta para variáveis que o arquivo vivo define diferente) · tokens (três vocabulários → um) · MSW no browser |
 | **adicionar sob condição** | Motion for React (escopo de §5 do DS) · **Recharts** (renderer, nunca owner semântico) · React Hook Form · Zod (só forms) · Storybook |
-| **sai** | `sonner`, `jspdf`, `tailwindcss-animate` (zero uso) · `next-themes` enquanto P31 não for autorizada · `@supabase/supabase-js` (B6) |
+| **saiu (M03)** | ✅ `sonner`, `jspdf`, `next-themes` — removidos |
+| **fica, contra o previsto** | 🔴 `tailwindcss-animate` — **não** tem zero uso: é plugin do Tailwind e 5 componentes Radix consomem suas classes |
+| **sai (pendente)** | `@supabase/supabase-js` (B6, missão M02) |
 | **não recomendamos** | MUI / Ant / Chakra / Mantine — determinariam a identidade visual |
 
 **Nenhum upgrade por "há versão nova".** Não subir React 19 nem Tailwind 4 nesta frente.

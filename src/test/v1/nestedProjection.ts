@@ -9,7 +9,7 @@
 // direção da divergência. Um campo publicado e não lido é dívida; um campo lido e não publicado
 // é invenção.
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 const RAIZ = resolve(__dirname, "../../..");
