@@ -1,0 +1,121 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   SENTINELA — VOCABULÁRIO CANÔNICO DE TOKENS
+   Fonte ÚNICA de valor visual. M08.
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+
+   ## A regra, em uma linha
+
+   **Este é o único arquivo do repositório onde um token pode ter valor literal.**
+   Qualquer outra folha de estilo só pode declarar custom property como `var(--ds-…)`, e nenhum
+   componente pode carregar `#hex`. O gate `design-tokens-unico.test.ts` reprova o contrário, e
+   foi visto falhando nas três mutações previstas antes de entrar.
+
+   ## Por que o prefixo `--ds-` existe, e por que ele não é enfeite
+
+   O vocabulário legado (shadcn, consumido por `tailwind.config.ts` e por 31 arquivos) usa
+   `--accent` para uma **superfície de item selecionado**. A Constituição do Design System usa
+   `accent` para a **cor de ação da marca**. São dois papéis diferentes com o mesmo nome — e num
+   `:root` compartilhado a última declaração vence em silêncio, trocando a cor de marca por uma
+   superfície cinza-azulada sem nenhum teste reagir.
+
+   O prefixo torna a colisão **impossível por construção** em vez de improvável por disciplina.
+   É o mesmo desenho que a auditoria de Design 0.5 mediu na Vercel (`--ds-*` corrente convivendo
+   com `--geist-*` legado), com uma diferença que importa: lá o legado ainda carrega literais e
+   um `--geist-success-light` **azul**; aqui a camada legada é proibida de ter valor próprio.
+
+   ## Formato
+
+   Triplas HSL sem `hsl()`, porque é isso que `tailwind.config.ts` consome como
+   `hsl(var(--token))`. Um único formato evita a conversão silenciosa que fazia `#070C18` e
+   `220 50% 5%` renderizarem dois fundos diferentes na mesma tela.
+
+   ## Nomeação
+
+   Por **papel semântico**. Nunca por aparência (`--azul-escuro`) e nunca por índice de rampa
+   (`--surface-100`): índice não se lê sozinho, e a auditoria de Design 0.5 mostrou dois sistemas
+   de primeira linha usando a MESMA numeração em direções OPOSTAS.
+
+   ## Elevação (V2)
+
+   `base → raised → overlay` sobe em luminância. Superfície de conteúdo é sempre mais clara que o
+   vazio atrás dela. Elevação nunca escurece.
+
+   ## Tema
+
+   **Um tema só.** D23 vigente: Light/Dark está fora da V1 e P31 permanece proposta. A estrutura
+   comporta um segundo tema sem reescrita — os papéis já estão separados dos valores — mas o
+   segundo tema **não existe** e não é simulado aqui.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Superfícies ─────────────────────────────────────────────────────────────────────────
+     A escada de elevação. Cada degrau é um papel, não um número. */
+
+  /** O vazio: fundo da aplicação e do shell. */
+  --ds-surface-base: 220 50% 5%;
+  /** Conteúdo elevado sobre o vazio: cartão, painel, popover ancorado. */
+  --ds-surface-raised: 220 45% 9%;
+  /** Camada sobreposta ao conteúdo: diálogo, menu flutuante.
+      Hoje coincide em valor com `raised` — o papel é distinto, o valor ainda não. Separá-los
+      visualmente é decisão de superfície real (M10+), não de missão de token. */
+  --ds-surface-overlay: 220 45% 9%;
+  /** Item de lista em foco/hover dentro de navegação. */
+  --ds-surface-sunken: 220 30% 14%;
+  /** Área de menor ênfase: bloco desabilitado, fundo de campo inerte. */
+  --ds-surface-muted: 220 30% 16%;
+  /** Item selecionado, e fundo de ação secundária. */
+  --ds-surface-selected: 220 30% 18%;
+
+  /* ── Texto ───────────────────────────────────────────────────────────────────────────────
+     V4: contraste é folga, não mínimo. */
+
+  --ds-text-primary: 210 40% 95%;
+  --ds-text-secondary: 210 40% 85%;
+  --ds-text-muted: 215 20% 54%;
+  /** Texto sobre a cor de ação e sobre `danger` — os dois são escuros o bastante para branco. */
+  --ds-text-on-accent: 0 0% 100%;
+  /** Texto sobre `success` e `warning` — os dois são claros, e pedem tinta escura.
+      Coincide em valor com `surface-base`: papéis diferentes, mesmo valor. */
+  --ds-text-on-signal: 220 50% 5%;
+
+  /* ── Bordas ──────────────────────────────────────────────────────────────────────────────
+     V1: separação é borda e alinhamento, não sombra. E borda tem ESCALA. */
+
+  --ds-border-default: 220 30% 14%;
+  /** Divisor interno, menos presente que a borda padrão. No escuro, menos luz = menos presença. */
+  --ds-border-subtle: 220 30% 12%;
+
+  /* ── Ação ────────────────────────────────────────────────────────────────────────────────
+     V5: cor de ação é reservada. Um acento só. */
+
+  --ds-accent: 236 77% 61%;
+
+  /* ── Sinais semânticos ───────────────────────────────────────────────────────────────────
+     V6 continua valendo na composição: cor NUNCA é canal único. Estes tokens dão a cor; o
+     ícone, a forma e o rótulo são responsabilidade do componente. */
+
+  --ds-success: 158 64% 52%;
+  --ds-warning: 43 96% 56%;
+  --ds-danger: 0 70% 70%;
+
+  /* ── Forma ───────────────────────────────────────────────────────────────────────────────── */
+
+  --ds-radius-default: 0.75rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   PAPÉIS DECLARADOS PELA CONSTITUIÇÃO QUE AINDA NÃO TÊM VALOR
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+
+   `--ds-border-strong`, `--ds-info`, `--ds-state-running|partial|withheld` e `--ds-chart-*`
+   fazem parte do vocabulário declarado em FRONT-DESIGN-SYSTEM-CONSTITUTION §4 e **não estão
+   aqui de propósito**.
+
+   Nenhum deles tem valor no sistema atual, e inventar um agora seria escolher cor sem a prova
+   que a própria Constituição exige: contraste ≥ 3:1 entre séries adjacentes, distinção em escala
+   de cinza e sob deuteranopia. Essa prova só existe junto com o componente que os consome —
+   `StatusBadge` (M11) para os de estado, e a primeira superfície analítica para os de gráfico.
+
+   Declarar o nome vazio seria pior: daria a impressão de que o papel existe. Ele existe como
+   DECISÃO; não existe como valor.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */

@@ -168,7 +168,7 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > **4 combinações** de D37; tokens de motion existem com reduced motion.
 > **Sem Light/Dark** (decisão 1).
 
-### M08 · Vocabulário único de tokens, nomeado por papel
+### ✅ M08 · Vocabulário único de tokens, nomeado por papel — **CONCLUÍDA**
 - **Objetivo:** três vocabulários → **um**, com nomes por papel (V3/A2).
 - **Existe porque:** `tokens.css` fala `--color-*` em hex, `globals.css` fala shadcn/HSL, e
   `--background`/`--primary` estão definidos **duas vezes com valores diferentes** (colisão
@@ -181,7 +181,14 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Testes/Gates:** um só namespace no `:root`; **zero `#hex` em componente**; **nome × valor**
   (apontar `--success` para azul falha).
 - **DoD:** mutação que reintroduz `--background` num segundo arquivo → **vermelho**.
-- **Evidência:** log das três mutações. **Blocker:** R1.
+- **Evidência:** 3/3 mutações mataram o gate esperado; **zero regressão visual provada** — 32 dos
+  34 tokens legados resolvem valor idêntico e **todas as regras de pintura são byte-idênticas**
+  (42535 = 42535). Os 2 que mudaram são `--critical`/`--critical-foreground`, removidos por terem
+  **0 consumidores**. **Blocker: R1 fechado.**
+- ⚠️ **Corrigido na execução:** o escopo previa tratar a colisão `--background`/`--primary`, mas a
+  M03 já a eliminara ao apagar `index.css` — os dois arquivos vivos tinham **zero** nome em comum.
+  A colisão real era outra e mais perigosa: `--accent` significa **superfície** no shadcn e **cor
+  de ação** na Constituição. Resolvida por namespace `--ds-`.
 
 ### M09 · Tokens de motion + reduced motion
 - **Escopo:** 5 durações, 4 curvas, `spring-direct`; tabela de reduced motion que **preserva a

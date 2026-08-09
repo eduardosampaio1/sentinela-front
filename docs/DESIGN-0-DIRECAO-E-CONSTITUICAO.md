@@ -693,7 +693,7 @@ frentes ([[feedback_teste_verde_por_motivo_errado]]).
 
 | # | risco / contradição | gravidade | encaminhamento |
 |---|---|---|---|
-| **R1** | **Três sistemas de token concorrentes**; `--background`/`--primary` definidos duas vezes com valores diferentes; a única `.dark` mora em arquivo morto | 🔴 alta | Delta nº 1 da Design 1 — **token único vale por si**, independente de tema. É a prova que D23 exige |
+| ~~R1~~ | Três sistemas de token concorrentes | ✅ **RESOLVIDO — M03 + M08** | `index.css` e `App.css` removidos na M03; `styles/tokens.css` (82 props, 0 consumidores) removido na M08. Restou **um** vocabulário canônico em `src/design/tokens/`, e `globals.css` virou camada de **apelidos**. Gate `design-tokens-unico` com 3 mutações negativas |
 | **R2** | **Auth Supabase está VIVA e roteada** (`/login`, `/forgot-password`), enquanto Keycloak é o auth canônico. A narrativa "Supabase está morto" era sobre **acesso a dados** | 🔴 alta | **Não é mais candidato.** A decisão arquitetural é que **Supabase está aposentado** → **DELTA OBRIGATÓRIO DE ERRADICAÇÃO**, em frente própria, **separada da Design**. Não implementado nesta missão. Ver §13.1 |
 | ~~R3~~ | `next-themes` instalado com zero uso | ✅ **RESOLVIDO na M03** | **Removido.** A decisão 1 do owner tirou Light/Dark da V1; a peça saiu junto |
 | **R4** | `LandingPage` (1.215) e `AionPage` (1.180) **violam a regra anti-monólito**, que diz *"bloqueia fechamento"* | 🟡 média | Já é missão própria (Q7). Agora com critério objetivo: **< 1.000 linhas** |

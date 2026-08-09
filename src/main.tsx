@@ -3,7 +3,9 @@ import { createRoot } from "react-dom/client";
 import { Providers } from "./app/providers";
 import { App } from "./app/App";
 import { limparResultadosLegadosDoNavegador } from "./lib/legacyBrowserStorage";
-import "./styles/tokens.css";
+// Vocabulario canonico PRIMEIRO: `styles/globals.css` so contem apelidos que apontam para
+// estes papeis, e apelido declarado antes do valor nao resolveria.
+import "./design/tokens/tokens.css";
 import "./styles/globals.css";
 
 // ANTES de qualquer render: apaga as cópias de resultado que a versão anterior deixou no

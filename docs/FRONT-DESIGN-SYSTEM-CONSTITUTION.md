@@ -148,6 +148,25 @@ chart-1..n     chart-grid     chart-axis     chart-emphasis
 **O componente consome semântica, nunca `#hex` de tema.** Derivação por **rampa de luminância**,
 nunca por inversão — inverter troca a direção da elevação (V2).
 
+### Implementado na M08 — o namespace `--ds-` e o que ele resolve
+
+A fonte canônica é **`src/design/tokens/tokens.css`**, e é o **único** arquivo do repositório onde
+um token pode ter valor literal. Todo o resto é apelido `var(--ds-…)`, com gate.
+
+O prefixo não é enfeite: o `--accent` do shadcn é uma **superfície de item selecionado**, e o
+`accent` desta Constituição é a **cor de ação da marca**. Dois papéis, um nome — e num `:root`
+compartilhado a última declaração vence em silêncio. O namespace torna a colisão **impossível por
+construção** em vez de improvável por disciplina. É o desenho medido na Vercel em §2.3 do
+`DESIGN-05`, com uma diferença: lá o legado ainda tem valor próprio (e um `success` azul); aqui a
+camada legada é **proibida** de ter valor.
+
+**Papéis desta Constituição que ainda NÃO têm valor**, e por quê: `border-strong`, `info`,
+`state-running|partial|withheld` e `chart-*`. Nenhum existe no sistema atual, e escolher cor agora
+seria decidir sem a prova que a própria Constituição exige — contraste ≥ 3:1 entre séries
+adjacentes, distinção em escala de cinza e sob deuteranopia. Essa prova só existe junto com o
+componente que os consome: `StatusBadge` (M11) e a primeira superfície analítica. **Existem como
+decisão; não existem como valor.**
+
 **Alvos verificáveis:** texto **≥ 4.5:1** · UI e não-texto **≥ 3:1** · séries adjacentes de
 gráfico **≥ 3:1** entre si.
 

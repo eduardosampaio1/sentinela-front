@@ -16,47 +16,64 @@
 @tailwind utilities;
 
 @layer base {
+  /* ── CAMADA DE COMPATIBILIDADE (M08) ──────────────────────────────────────────────────
+     Estes nomes são o vocabulário LEGADO do shadcn. Eles continuam existindo porque
+     `tailwind.config.ts` os consome como `hsl(var(--nome))` e 31 arquivos dependem das classes
+     resultantes. Migrá-los em massa seria refatoração de componentes, que não é esta missão.
+
+     O que mudou: eles deixaram de ter VALOR PRÓPRIO. Cada um é agora um apelido para um papel
+     do vocabulário canônico (`src/design/tokens/tokens.css`), e o gate
+     `design-tokens-unico.test.ts` reprova qualquer literal que volte a aparecer aqui.
+
+     Um par merece nota, porque é a colisão que motivou o prefixo `--ds-`: o `--accent` do
+     shadcn é uma SUPERFÍCIE de item selecionado, e não a cor de ação. Ele aponta para
+     `--ds-surface-selected`. A cor de ação da marca é `--ds-accent`, e chega aqui como
+     `--primary`. */
   :root {
-    --background: 220 50% 5%;
-    --foreground: 210 40% 95%;
-    --card: 220 45% 9%;
-    --card-foreground: 210 40% 95%;
-    --popover: 220 45% 9%;
-    --popover-foreground: 210 40% 95%;
-    --primary: 236 77% 61%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 30% 18%;
-    --secondary-foreground: 210 40% 85%;
-    --muted: 220 30% 16%;
-    --muted-foreground: 215 20% 54%;
-    --accent: 220 30% 18%;
-    --accent-foreground: 210 40% 85%;
-    --destructive: 0 70% 70%;
-    --destructive-foreground: 0 0% 100%;
-    /* E7: `success`/`warning` já eram referenciados pelo tailwind.config (hsl(var(--success)))
-       mas NÃO existiam aqui — as utilidades text-success/bg-success resolviam para nada
-       (Codex E5 R1 [P2]). Valores = as cores que o shell já usava: #34D399 e #FBBF24. */
-    --success: 158 64% 52%;
-    --success-foreground: 220 50% 5%;
-    --warning: 43 96% 56%;
-    --warning-foreground: 220 50% 5%;
-    /* `critical` também era referenciado pelo config sem existir aqui (usado na landing, fora do
-       escopo da E7): as utilidades resolviam para NADA. Definir restaura a intenção do config —
-       correção aditiva, não reforma da landing. */
-    --critical: 0 84% 60%;
-    --critical-foreground: 0 0% 100%;
-    --border: 220 30% 14%;
-    --input: 220 30% 14%;
-    --ring: 236 77% 61%;
-    --radius: 0.75rem;
-    --sidebar-background: 220 50% 5%;
-    --sidebar-foreground: 210 40% 95%;
-    --sidebar-primary: 236 77% 61%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 30% 14%;
-    --sidebar-accent-foreground: 210 40% 85%;
-    --sidebar-border: 220 30% 12%;
-    --sidebar-ring: 236 77% 61%;
+    --background: var(--ds-surface-base);
+    --foreground: var(--ds-text-primary);
+
+    --card: var(--ds-surface-raised);
+    --card-foreground: var(--ds-text-primary);
+    --popover: var(--ds-surface-overlay);
+    --popover-foreground: var(--ds-text-primary);
+
+    /* ação da marca (shadcn chama de `primary`) */
+    --primary: var(--ds-accent);
+    --primary-foreground: var(--ds-text-on-accent);
+    --ring: var(--ds-accent);
+
+    /* superfícies de ênfase secundária — NÃO são cor de ação */
+    --secondary: var(--ds-surface-selected);
+    --secondary-foreground: var(--ds-text-secondary);
+    --accent: var(--ds-surface-selected);
+    --accent-foreground: var(--ds-text-secondary);
+
+    --muted: var(--ds-surface-muted);
+    --muted-foreground: var(--ds-text-muted);
+
+    --destructive: var(--ds-danger);
+    --destructive-foreground: var(--ds-text-on-accent);
+    --success: var(--ds-success);
+    --success-foreground: var(--ds-text-on-signal);
+    --warning: var(--ds-warning);
+    --warning-foreground: var(--ds-text-on-signal);
+
+    --border: var(--ds-border-default);
+    --input: var(--ds-border-default);
+
+    --radius: var(--ds-radius-default);
+
+    /* Sidebar: o shadcn dá nomes próprios ao shell. Todos apontam para os mesmos papéis —
+       o que a consolidação por valor já mostrava: 34 nomes para 16 valores. */
+    --sidebar-background: var(--ds-surface-base);
+    --sidebar-foreground: var(--ds-text-primary);
+    --sidebar-primary: var(--ds-accent);
+    --sidebar-primary-foreground: var(--ds-text-on-accent);
+    --sidebar-accent: var(--ds-surface-sunken);
+    --sidebar-accent-foreground: var(--ds-text-secondary);
+    --sidebar-border: var(--ds-border-subtle);
+    --sidebar-ring: var(--ds-accent);
   }
 
   * {
