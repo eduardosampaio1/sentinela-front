@@ -114,15 +114,19 @@ describe("WS-A3 · C2 — /v1/me", () => {
     }
   });
 
-  it.runIf(temOrigem)("`operations[]` está INCOMPLETO — e isso é defeito declarado, não semântica", () => {
-    // A conclusão do A3: se `operations[]` representasse só a família `analyses`, o manifesto não
-    // congelaria quatro grupos de campos de `/v1/me` nem diria que ela é a única autoridade de
-    // membership. Ele congela. Logo a lista é que está incompleta.
+  it.runIf(temOrigem)("`operations[]` está COMPLETO — a BD07 fechou o defeito do A3", () => {
+    // A conclusão do A3 era que `operations[]` estava incompleto: se ele representasse só a
+    // família `analyses`, o manifesto não congelaria quatro grupos de campos de `/v1/me` nem
+    // diria que ela é a única autoridade de membership. Ele congela. Logo faltava a entrada.
     //
-    // O patch é no repo do contrato, que está CONGELADO — por isso a dívida fica declarada aqui
-    // e o patch exato vai no documento, não no arquivo.
+    // A **BD07** acrescentou `get_me` ao manifesto. Este caso inverteu de propósito: ele deixou de
+    // documentar a dívida e passou a proteger a correção. Se alguém remover a entrada, o gate
+    // volta a vermelho em vez de "voltar ao normal" — que é o que aconteceria se o caso tivesse
+    // sido apagado junto com a dívida.
     const { contrato } = inventario();
-    expect(contrato.some((o) => o.caminho === "/v1/me")).toBe(false);
+    const me = contrato.find((o) => o.caminho === "/v1/me");
+    expect(me, "`GET /v1/me` saiu de `operations[]` — a BD07 foi desfeita").toBeTruthy();
+    expect(me?.metodo).toBe("GET");
   });
 });
 

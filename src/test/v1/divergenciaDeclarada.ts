@@ -24,15 +24,17 @@ export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
 /**
  * Operação que o cliente chama e o array `operations[]` do contrato não lista.
  *
- * É o conflito C2. O WS-A3 concluiu que é **defeito do manifesto**, não semântica intencional: o
- * contrato congela `me_read_model_fields`, `me_user_fields`, `me_workspace_fields` e
- * `me_capabilities`, declara em `me_nota` que *"GET /v1/me é a ÚNICA autoridade de membership do
- * cliente"*, diz *"Congelado a partir da Onda 8"* — e o Gateway implementa a rota
- * (`api/routes/me_v1.py`). Só a entrada em `operations[]` falta.
+ * **VAZIA desde a BD07.** Era o conflito C2: o contrato congelava `me_read_model_fields`,
+ * `me_user_fields`, `me_workspace_fields` e `me_capabilities`, declarava em `me_nota` que
+ * *"GET /v1/me é a ÚNICA autoridade de membership do cliente"* e o Gateway implementava a rota
+ * (`api/routes/me_v1.py`) — só a entrada em `operations[]` faltava. O WS-A3 classificou isso como
+ * defeito do manifesto, não semântica intencional, e a BD07 o corrigiu: `get_me` entrou no
+ * authoritative e o mirror foi alinhado byte a byte.
  *
- * Fica declarada porque o patch é no repo do contrato, que está CONGELADO.
+ * A lista fica aqui, vazia, em vez de sumir. É o mecanismo: uma divergência nova acusa vermelho
+ * contra `[]`, e ninguém precisa lembrar de recriar a declaração.
  */
-export const SEM_ENTRADA_NO_CONTRATO: readonly string[] = ["GET /v1/me"] as const;
+export const SEM_ENTRADA_NO_CONTRATO: readonly string[] = [] as const;
 
 /**
  * Campos que o PRODUTOR publica no snapshot e o frontend não lê, **por projeção**.
