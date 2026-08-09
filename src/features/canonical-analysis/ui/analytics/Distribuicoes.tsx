@@ -71,10 +71,10 @@ export function AreaDeDistribuicoes({
               </Note>
             )}
             <Note>
-              {t("canonicalAnalysis.result.analytics.minGroupSize").replace(
-                "{n}",
-                String(d.minGroupSize),
-              )}
+              {/* Interpolação pelo caminho canônico. Antes era `.replace("{n}", …)` na mão —
+                  uma segunda via que funcionava neste ponto e deixava o placeholder `{n}` sem
+                  ninguém que o substituísse em qualquer outro lugar que usasse `t(chave, params)`. */}
+              {t("canonicalAnalysis.result.analytics.minGroupSize", { n: d.minGroupSize })}
             </Note>
           </Panel>
         ))}

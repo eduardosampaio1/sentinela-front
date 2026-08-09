@@ -376,7 +376,27 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   operação, comparável e quebrada — porque a diferença não é de aparência: no caso quebrado o delta
   **não existe**, e uma prop booleana convidaria a passar `null` e mostrar zero.
 
-### M14 · i18n — infraestrutura e paridade
+### M14 · i18n — infraestrutura e paridade — ✅ EXECUTADA
+> **Estado:** executada. `src/test/v1/i18n-paridade.test.ts` (20 casos, 14 mutações mortas).
+> **Paridade: 506 × 506**, agora com gate — antes quebrava em silêncio, como o plano dizia.
+>
+> 🔴 **Defeito real corrigido — DUAS sintaxes de interpolação vivas.** `interpolate()` substitui
+> só `{{nome}}`; havia 5 chaves com `{n}` e **dois** consumidores fazendo `.replace("{n}", …)` na
+> mão. Funcionava naqueles dois pontos e em nenhum outro: qualquer `t(chave, params)` teria
+> deixado o literal `{n}` na tela. As 5 chaves foram convertidas nos dois idiomas e os dois
+> consumidores passaram ao caminho canônico. Um caso tranca a porta contra a interpolação manual.
+>
+> **Orfandade é INDECIDÍVEL hoje, e o gate diz isso** em vez de mentir. Há 9 chamadas
+> `t(variavel)` que não carregam chave nenhuma no texto do programa; uma detecção ingênua acusou
+> **319 de 506** chaves inocentes. O gate congela esse número numa catraca: quando chegar a zero,
+> orfandade passa a ser mensurável. **Fantasmas** (código pedindo chave inexistente) são
+> decidíveis e estão em **zero**, com gate duro.
+>
+> **Hardcoded: zero** em `features/**/ui/**`, incluindo atributos visíveis
+> (`placeholder`/`title`/`alt`/`aria-label`). O gate nasce antes da primeira superfície TO-BE.
+>
+> **Orçamento D37:** razão agregada PT/EN = **1.094** (teto 1.30). 45 frases estouram
+> individualmente — não são defeito, são a matéria que testa os patterns; congeladas em catraca.
 - **Escopo:** gate de **paridade `pt.json` × `en.json`** (hoje 506/506, quebra em silêncio); gate de
   texto hardcoded; orçamento de **+30 %** verificado nos patterns.
 - **Pré:** M13. **Paraleliza com:** M15.

@@ -37,7 +37,10 @@ function Notas({ notas }: { notas: AnalyticsNotes }) {
       <ul className="space-y-1 text-xs text-muted-foreground">
         {linhas.map(([chave, quantos]) => (
           <li key={chave}>
-            {t(`canonicalAnalysis.result.analytics.${chave}`).replace("{n}", String(quantos))}
+            {/* Interpolação pelo caminho canônico. Antes era `.replace("{n}", …)` — a segunda
+                via que a M14 eliminou: o placeholder `{n}` não é substituído por `interpolate()`,
+                então só funcionava em quem lembrasse de fazer a troca na mão. */}
+            {t(`canonicalAnalysis.result.analytics.${chave}`, { n: quantos })}
           </li>
         ))}
       </ul>
