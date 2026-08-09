@@ -16,7 +16,7 @@
 | **Como se parece e como se compõe?** Direção visual, tokens, camadas, motion, a11y, responsive, data viz | **`FRONT-DESIGN-SYSTEM-CONSTITUTION.md`** |
 | **Quais superfícies existem, com quais estados, scenarios, componentes e dependências?** | **`EXPERIENCE-BLUEPRINT-V1.md`** |
 | **Como o front é construído por dentro?** Fronteiras, contrato, mock, validadores, auth, privacidade, gates | **`FRONT-ARCHITECTURE-AND-MOCK-CONTRACT.md`** |
-| **Em que ordem se constrói?** | *futuro* `FRONT-V1-IMPLEMENTATION-PLAN.md` — **não criado** |
+| **Em que ordem se constrói?** | **`FRONT-V1-IMPLEMENTATION-PLAN.md`** — 48 missões de front + 9 deltas de backend |
 
 ### Autoridade SUPERIOR, acima dos quatro
 
@@ -66,17 +66,17 @@ Os documentos oficiais não fingem que tudo está resolvido.
 
 | # | gate | classe | bloqueia **dev**? | bloqueia **integração**? | bloqueia **release**? | missão futura |
 |---|---|---|---|---|---|---|
-| **B1** | 4 operações contratadas sem cliente (`progress`, `analytics`, `export/download`, `timeline`) | delta de **Front** | ⚠️ bloqueia RES-01 e AN-03 | não | não | **WS-C** |
-| **B2** | `mapping` existe no Ingestion, não é público; chave é `ingestion_id`, não `analysis_id` | delta de **backend** (exposição + ponte) | ⚠️ só a UI de resolução | **sim** | **sim** | frente própria |
-| **B3** | **Instância** não autorizada | delta de **produto + backend** | ⚠️ 7 superfícies + EVO-03 + CFG-03/04 | **sim** | **sim** (D12: gate de release) | frente própria |
-| **B4** | `recommendation_id` não chega ao documento canônico | delta de **contrato** | ⚠️ só recomendação longitudinal | **sim** | **sim** | frente própria |
-| **B5** | **Q15** — cadeia do destinatário não comprovada | **prova técnica** | não | **sim** | **sim** | prova antes de delta |
-| **B6** | **Supabase Auth** vivo e roteado | delta obrigatório de **erradicação** | não | **sim** | **sim** | frente própria |
-| **B7** | contrato de **preferências** (idioma) inexistente | delta de **backend** | ⚠️ só CFG-02 | **sim** | **sim** | frente própria |
-| **B8** | **`prepared` abandonado nunca expira** | delta de **lifecycle** | não | não | **sim** | frente própria |
-| **B9** | **canonicalização física dos contratos** | **autoridade documental** | **não** | **sim** | **sim** | patches §11 do Architecture |
-| **B10** | **exclusão de análise** — operação real inexistente (D28) | delta de **backend** | não | não | **sim** | frente própria |
-| **B11** | **ownership de `/`** — `/home → /` não decidido | **decisão de owner** | ⚠️ bloqueia congelar o Shell | não | não | decisão |
+| **B1** | 4 operações contratadas sem cliente (`progress`, `analytics`, `export/download`, `timeline`) | delta de **Front** | ⚠️ bloqueia RES-01 e AN-03 | não | não | **M20–M23** |
+| **B2** | `mapping` existe no Ingestion, não é público; chave é `ingestion_id`, não `analysis_id` | delta de **backend** (exposição + ponte) | ⚠️ só a UI de resolução | **sim** | **sim** | **BD01** |
+| **B3** | **Instância** — ✅ **AUTORIZADA** como requisito da V1, em missão backend própria | delta de **backend** | ⚠️ 7 superfícies + EVO-03 + CFG-03/04 | **sim** | **sim** (D12) | **BD02** |
+| **B4** | `recommendation_id` não chega ao documento canônico | delta de **contrato** | ⚠️ só recomendação longitudinal | **sim** | **sim** | **BD03** |
+| **B5** | **Q15** — cadeia do destinatário não comprovada | **prova técnica** | não | **sim** | **sim** | **M43** (+ BD09 se revelar delta) |
+| **B6** | **Supabase Auth** — ✅ **erradicação AUTORIZADA**; cada fluxo provado no Keycloak **antes** de remover | delta obrigatório | não | **sim** | **sim** | **M01 → M02** |
+| **B7** | contrato de **preferências** (idioma) inexistente | delta de **backend** | ⚠️ só CFG-02 | **sim** | **sim** | **BD04** |
+| **B8** | **`prepared` abandonado nunca expira** | delta de **lifecycle** | não | não | **sim** | **BD05** |
+| **B9** | **canonicalização física dos contratos** — ✅ patches **AUTORIZADOS** como missões explícitas | **autoridade documental** | **não** | **sim** | **sim** | **BD07 + BD08** |
+| **B10** | **exclusão de análise** — operação real inexistente (D28) | delta de **backend** | não | não | **sim** | **BD06** |
+| **B11** | **ownership de `/`** — ✅ **RESOLVIDO:** `/` é a landing pública; a Home autenticada permanece em `/home` | decidido | não | não | não | **M24** executa |
 
 ### Leitura oficial
 
@@ -87,23 +87,36 @@ Temos autoridade conhecida (`sentinela-facts`), mecanismo que **recusa ambiguida
 declarada e patches exatos identificados. Isso basta para planejar sem fingir que o problema não
 existe.
 
-**Nem todo gate aberto é blocker de desenvolvimento.** Só **B1, B2, B3, B4, B7 e B11** tocam
-desenvolvimento, e cinco deles apenas parcialmente — o caminho
+**Nem todo gate aberto é blocker de desenvolvimento.** Com B11 fechado, só **B1, B2, B3, B4 e B7**
+tocam desenvolvimento, e quatro deles apenas parcialmente — o caminho
 `Tokens → Primitives → Patterns → Shell → RES-01 → HOME-01 → AN-01/03/04 → EVO-01` está livre.
 
 ---
 
-## 4. Decisões que exigem o OWNER e permanecem como proposta
+## 4. Decisões do owner — resolvidas e pendentes
 
-| # | proposta | quem decide | consequência de não decidir |
+**Resolvidas em 2026-08-09** (entrada do `FRONT-V1-IMPLEMENTATION-PLAN.md`):
+
+| # | decisão | efeito |
+|---|---|---|
+| 1 | **Tema:** D23 permanece; Light/Dark **fora** da V1 | P31 continua **proposta**; D37 vira 4 combinações; `next-themes` sai |
+| 2 | **`/` é a landing pública**; Home autenticada em `/home` | **B11 fechado** |
+| 3 | **Instância AUTORIZADA** como requisito da V1, em missão backend própria | **B3** vira **BD02**, com freeze próprio |
+| 4 | **Patches de contrato AUTORIZADOS** como missões explícitas | **B9** vira **BD07 + BD08** |
+| 5 | **Erradicação do Supabase AUTORIZADA**, com prova no Keycloak antes da remoção | **B6** vira **M01 → M02**, nessa ordem |
+
+**Pendentes — autorização ainda necessária, com o momento exato:**
+
+| delta | blocker | quando decidir | consequência de não decidir |
 |---|---|---|---|
-| **P31** | Light/Dark como requisito da V1 | owner | **D23 vence** — tema não entra. O **token único** vale por si e segue no plano |
-| **B11** | `/home → /` e o ownership de `/` | owner | o Shell não pode ser congelado; deep links e comunicação ficam presos a `/home` |
-| — | autorizar o **delta de Instância** (B3) | owner | 7 superfícies + baseline + config de Instância continuam inalcançáveis; D12 mantém como gate de release |
-| — | autorizar os **patches em repo congelado** (§11 do Architecture) | owner | B9 continua aberto; `SENTINELA_CONTRACT_ORIGIN` obrigatório em CI e dev |
-| — | autorizar a **erradicação do Supabase Auth** (B6) | owner | AUTH-01/03 permanecem em contrato ambíguo e **não podem ser redesenhadas** |
+| **BD01** mapping public bridge | B2 | antes da Fase 7 fechar | AN-02 informa e não age; um estado da jornada fica sem saída |
+| **BD03** `recommendation_id` | B4 | antes da Fase 10 | recomendação longitudinal sai da V1, contradizendo D27 |
+| **BD04** preferências | B7 | antes da Fase 11 | CFG-02 fica sem operação; idioma vira preferência sem casa |
+| **BD05** `prepared` lifecycle | B8 | antes da Fase 16 | `prepared` abandonado acumula para sempre |
+| **BD06** exclusão de análise | B10 | antes da Fase 16 | D28 fica sem operação real |
+| **BD09** resolução de destinatário | B5 | **após M43**, se a prova revelar delta | comunicação externa não pode ser declarada fechada |
 
----
+**Permanece proposta:** **P31** (Light/Dark) — D23 vence.
 
 ## 5. Conflitos que ainda NÃO puderam ser consolidados
 
