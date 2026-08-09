@@ -19,19 +19,24 @@
 // Os dois primeiros da lista são os monólitos de D17, que têm missão própria e cujo bloqueio de
 // >1.000 linhas já é medido pelo gate anti-monólito.
 
-/** Ocorrências de cor literal por arquivo de produto, medidas em M08 (2026-08-09). */
+/**
+ * Ocorrências de cor literal por arquivo de produto.
+ *
+ * Medidas em M08 (406 em 28 arquivos) e **reduzidas pela M02**: a erradicação do Supabase Auth
+ * apagou os formulários mortos de `LoginPage`, `ForgotPasswordPage`, `RegisterPage` e
+ * `ResetPasswordPage`, e com eles o hardcode que moravam dentro. A lista encolheu junto, como o
+ * gate exige.
+ */
 export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
   "src/features/landing/LandingPage.tsx": 78,
   "src/features/aion/AionPage.tsx": 33,
-  "src/features/auth/LoginPage.tsx": 31,
   "src/features/profile/ProfilePage.tsx": 23,
   "src/features/settings/SettingsPage.tsx": 21,
   "src/features/history/HistoryPage.tsx": 20,
   "src/features/history/RunRow.tsx": 19,
   "src/features/history/RunComparePanel.tsx": 17,
-  "src/features/auth/ForgotPasswordPage.tsx": 15,
-  "src/features/auth/RegisterPage.tsx": 15,
   "src/shell/AuthShell.tsx": 15,
+  "src/features/auth/LoginPage.tsx": 13,
   "src/features/launchpad/AnalysisLauncher.tsx": 13,
   "src/features/launchpad/LaunchpadPage.tsx": 13,
   "src/shared/states/ErrorState.tsx": 12,

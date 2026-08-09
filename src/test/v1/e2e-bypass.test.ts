@@ -51,7 +51,8 @@ describe("bypass de auth E2E — fail-closed e local", () => {
 
   it("cliente E2E é 100% local: getSession/getAccessToken da injeção, sem backend", async () => {
     const client = createE2EAuthClient(INJECTION.session);
-    expect(client.provider).toBe("supabase");
+    // Era "supabase": rótulo inerte da sessão injetada. A M02 reduziu a união a um provider.
+    expect(client.provider).toBe("keycloak");
     expect(await client.getSession()).toEqual(INJECTION.session);
     expect(await client.getAccessToken()).toBe("tok-e2e");
     expect(client.supportsPasswordForms()).toBe(true);

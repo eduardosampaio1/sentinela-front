@@ -19,34 +19,18 @@
 //     corrigido aqui: remover import é a M02, e esta missão não antecipa. Fica registrado como
 //     pré-condição, não como suposição.
 
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { extname, relative, resolve } from "node:path";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuthClient, AuthSession } from "./types";
 
-// ── espião do Supabase ────────────────────────────────────────────────────────────────────
-// Qualquer leitura de propriedade em `supabase.auth` é registrada. Não basta espiar as funções
-// que hoje são chamadas: uma chamada NOVA em outro método passaria despercebida.
-const acessosAoSupabase: string[] = [];
-
-vi.mock("@/lib/supabase", () => ({
-  supabase: {
-    auth: new Proxy(
-      {},
-      {
-        get(_alvo, prop) {
-          acessosAoSupabase.push(String(prop));
-          return () => {
-            throw new Error(
-              `Supabase foi chamado no caminho do Keycloak: auth.${String(prop)}()`,
-            );
-          };
-        },
-      },
-    ),
-  },
-}));
+// ── o espião virou gate estático (M02) ────────────────────────────────────────────────────
+// Na M01 este arquivo mockava `@/lib/supabase` e registrava qualquer acesso. O módulo não existe
+// mais: a M02 o removeu. Espionar um módulo inexistente seria teatro — o que resta a provar é que
+// ele **não volta**, e isso é verificação de código-fonte, feita no fim deste arquivo.
 
 // ── cliente Keycloak de teste ─────────────────────────────────────────────────────────────
 const chamadas: string[] = [];
@@ -89,19 +73,15 @@ let clienteAtual: AuthClient = clienteKeycloak();
 vi.mock("@/lib/auth/index", () => ({ getAuthClient: () => clienteAtual }));
 
 beforeEach(() => {
-  acessosAoSupabase.length = 0;
   chamadas.length = 0;
   clienteAtual = clienteKeycloak();
 });
 
 describe("M01 · o instrumento antes da acusação", () => {
-  it("o espião do Supabase registra qualquer acesso, não só os métodos conhecidos", async () => {
-    const { supabase } = await import("@/lib/supabase");
-    expect(() => (supabase.auth as unknown as Record<string, () => void>).metodoQueNaoExiste()).toThrow(
-      /Supabase foi chamado/,
-    );
-    expect(acessosAoSupabase).toContain("metodoQueNaoExiste");
-    acessosAoSupabase.length = 0;
+  it("o módulo do Supabase não existe mais", () => {
+    // Verificação de ARQUIVO, não `import()`: importar um módulo inexistente não compila, e o
+    // teste não passaria do `tsc` para chegar a falhar em runtime.
+    expect(existsSync(resolve(__dirname, "../supabase.ts"))).toBe(false);
   });
 });
 
@@ -161,7 +141,6 @@ describe("M01 · LOGIN — a SPA nunca coleta senha; o provedor assume no clique
     );
     await user.click(screen.getByRole("button", { name: /continue with email/i }));
     await waitFor(() => expect(chamadas.length).toBeGreaterThan(0));
-    expect(acessosAoSupabase, "o caminho do Keycloak tocou o Supabase").toEqual([]);
   });
 });
 
@@ -176,7 +155,6 @@ describe("M01 · RECUPERAÇÃO — delegada ao provedor (D19)", () => {
     await waitFor(() => expect(chamadas).toContain("startPasswordReset"));
     // A SPA não reproduz formulário de identidade — D19 manda delegar ao provedor canônico.
     expect(document.querySelector('input[type="email"]')).toBeNull();
-    expect(acessosAoSupabase).toEqual([]);
   });
 });
 
@@ -189,14 +167,15 @@ describe("M01 · CALLBACK — a sessão nasce do provedor", () => {
       </MemoryRouter>,
     );
     await waitFor(() => expect(chamadas).toContain("completeLoginCallback"));
-    expect(acessosAoSupabase).toEqual([]);
   });
 });
 
-describe("M01 · o discriminador que sustenta os três fluxos", () => {
-  it("`supportsPasswordForms() === false` é o que desvia os três caminhos", async () => {
-    // Prova de que o desvio não é coincidência de renderização: com o mesmo cliente devolvendo
-    // `true`, a página volta a montar o formulário — e é por isso que a flag é a fronteira.
+describe("M01/M02 · a SPA não tem mais formulário de senha para reaparecer", () => {
+  it("nem com `supportsPasswordForms() === true` o formulário volta", async () => {
+    // Na M01 este caso provava que a flag DESVIAVA o caminho: com `true`, o formulário do Supabase
+    // montava. A M02 removeu o formulário, então a garantia ficou mais forte — não há mais o que
+    // desviar. A flag continua existindo porque Profile/Settings a leem para mandar credencial ao
+    // Account Console.
     clienteAtual = clienteKeycloak({ supportsPasswordForms: () => true });
     const { LoginPage } = await import("@/features/auth/LoginPage");
     render(
@@ -204,8 +183,69 @@ describe("M01 · o discriminador que sustenta os três fluxos", () => {
         <LoginPage />
       </MemoryRouter>,
     );
-    await waitFor(() =>
-      expect(document.querySelector('input[type="password"]')).not.toBeNull(),
+    expect(document.querySelector('input[type="password"]')).toBeNull();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// M02 — o Supabase não volta ao caminho de Auth
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("M02 · erradicação do Supabase Auth", () => {
+  const SRC = resolve(__dirname, "../..");
+  const arquivos: string[] = [];
+  const varrer = (d: string) => {
+    for (const e of readdirSync(d)) {
+      const p = resolve(d, e);
+      if (statSync(p).isDirectory()) varrer(p);
+      else if ([".ts", ".tsx"].includes(extname(p))) arquivos.push(p);
+    }
+  };
+  varrer(SRC);
+  // Comentário FORA da varredura: os arquivos que a M02 limpou explicam, em comentário, o que
+  // foi removido — e citam `supabase.auth` ao fazê-lo. Contar comentário faria a documentação da
+  // erradicação ser acusada de reintroduzi-la, e a saída que todo mundo escolhe é parar de
+  // documentar. Mesma distinção que o gate de fronteira da M04 já precisou fazer.
+  const semComentarios = (t: string) =>
+    t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  const conteudo = arquivos.map((a) => ({ a, t: semComentarios(readFileSync(a, "utf-8")) }));
+  // Exclusões estreitas, e cada uma por um motivo: os três arquivos CITAM o nome do módulo para
+  // testar a própria detecção. Contá-los faria o gate acusar quem o protege.
+  const semEsteArquivo = conteudo.filter((c) => !/keycloak-cadeia|authClient\.test|canonical-boundary\.test/.test(c.a));
+
+  it("nenhum arquivo importa Supabase", () => {
+    const infratores = semEsteArquivo
+      .filter((c) => /from ["'][^"']*supabase[^"']*["']|@supabase\//.test(c.t))
+      .map((c) => relative(SRC, c.a).split("\\").join("/"));
+    expect(infratores, "import de Supabase reintroduzido no front").toEqual([]);
+  });
+
+  it("nenhum arquivo chama `supabase.auth`", () => {
+    const infratores = semEsteArquivo
+      // `String.raw` e nao literal de regex: a primeira versao trazia `` dentro do literal, e
+      // isso o gravou como o caractere BACKSPACE. O regex passou a procurar `<BS>supabase...<BS>`,
+      // que nunca existe, e a mutacao sobreviveu. Quem acusou foi o `no-control-regex` do lint,
+      // nao a suite -- e e a terceira vez que este mesmo erro aparece no programa.
+      .filter((c) => new RegExp(String.raw`\bsupabase\s*\.\s*auth\b`).test(c.t))
+      .map((c) => relative(SRC, c.a).split("\\").join("/"));
+    expect(infratores).toEqual([]);
+  });
+
+  it("o pacote saiu do package.json", () => {
+    const pkg = JSON.parse(readFileSync(resolve(SRC, "../package.json"), "utf-8")) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+    expect(Object.keys({ ...pkg.dependencies, ...pkg.devDependencies })).not.toContain(
+      "@supabase/supabase-js",
     );
+  });
+
+  it("Keycloak é o único provider efetivo", async () => {
+    const { resolveProvider } = await import("./resolveProvider");
+    expect(resolveProvider(undefined)).toBe("keycloak");
+    expect(resolveProvider("keycloak")).toBe("keycloak");
+    // Configuração antiga falha ALTO, com mensagem própria — não cai em silêncio.
+    expect(() => resolveProvider("supabase")).toThrow(/não existe mais/);
   });
 });

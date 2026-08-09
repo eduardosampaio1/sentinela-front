@@ -7,7 +7,7 @@
 //   • Este arquivo NÃO contém token/sessão fixos — apenas lê o estado que o módulo
 //     dev-only `src/e2e/bypass.ts` injeta. Aquele módulo só é `import()`-ado sob o mesmo
 //     gate, então o token fixo nunca entra no bundle de produção.
-// A sessão E2E é 100% local: não consulta Supabase, Keycloak, nem qualquer backend de identidade.
+// A sessão E2E é 100% local: não consulta Keycloak nem qualquer backend de identidade.
 
 import type { AuthClient, AuthSession } from "./types";
 
@@ -67,7 +67,10 @@ export function createE2EAuthClient(initial: AuthSession): AuthClient {
   let current: AuthSession | null = initial;
   const listeners = new Set<(session: AuthSession | null) => void>();
   return {
-    provider: "supabase",
+    // Era `"supabase"` — o provider antigo servia de rótulo inerte para a sessão injetada. Com a
+    // união reduzida a um valor na M02, manter o literal antigo quebraria o tipo, e mantê-lo só
+    // para o teste compilar seria preservar o provider erradicado por conveniência.
+    provider: "keycloak",
     async getSession() {
       return current;
     },

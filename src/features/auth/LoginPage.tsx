@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
 import { getAuthClient } from "@/lib/auth/index";
 import { AuthShell } from "@/shell/AuthShell";
 import { Button } from "@/components/ui/button";
@@ -9,15 +8,8 @@ import { Label } from "@/components/ui/label";
 import { InlineError } from "@/shared/states/ErrorState";
 import { isValidEmail } from "@/lib/utils";
 
-// ─── OAuth helpers ─────────────────────────────────────────────────────────────
-
-async function signInWithOAuth(provider: "google" | "github") {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: `${window.location.origin}/home` },
-  });
-  if (error) throw error;
-}
+// O helper `signInWithOAuth` do Supabase saiu na M02. O social login NÃO mudou: passa pelo
+// `startLogin(from, { idpHint })`, que manda o Keycloak direto ao IdP via `kc_idp_hint`.
 
 // ─── Google icon ───────────────────────────────────────────────────────────────
 
@@ -81,12 +73,8 @@ export function LoginPage() {
     setError(null);
     setOauthLoading(provider);
     try {
-      if (isKeycloak) {
-        // kc_idp_hint: vai direto ao IdP (Google/GitHub) sem passar pela tela do Keycloak
-        await getAuthClient().startLogin(from, { idpHint: provider });
-        return;
-      }
-      await signInWithOAuth(provider);
+      await getAuthClient().startLogin(from, { idpHint: provider });
+      return;
     } catch (err) {
       setError({ message: err instanceof Error ? err.message : `${provider === "google" ? "Google" : "GitHub"} sign-in failed. Try again.`, type: "generic" });
       setOauthLoading(null);
@@ -114,102 +102,14 @@ export function LoginPage() {
     return Object.keys(errors).length === 0;
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!validate()) return;
-
-    setError(null);
-    setLoading(true);
-
-    try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-
-      if (authError) {
-        setError(parseAuthError(authError));
-        return;
-      }
-
-      navigate(from, { replace: true });
-    } catch (err) {
-      setError(parseAuthError(err));
-    } finally {
-      setLoading(false);
-    }
-  }
+  // `handleSubmit` chamava `supabase.auth.signInWithPassword`. A SPA não coleta senha desde
+  // que o Keycloak assumiu, então a função já era inalcançável — removida na M02.
 
   // Modo keycloak (híbrido): a tela de login vive na SPA (botões sociais via kc_idp_hint +
   // "Continue with email"); a senha continua sendo digitada só na página do Keycloak.
-  if (!getAuthClient().supportsPasswordForms()) {
-    return (
-      <AuthShell>
-        <div className="space-y-2 mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight text-[#F1F5F9]">
-            Enter your analysis workspace
-          </h1>
-          <p className="text-sm text-[#94A3B8]">
-            Don't have an account?{" "}
-            <Link to="/register" className="text-[#4F5AE8] hover:text-[#3E48C4] transition-colors">
-              Create one for free
-            </Link>
-          </p>
-        </div>
-
-        {error && (
-          <InlineError message={error.message} onDismiss={() => setError(null)} className="mb-5" />
-        )}
-
-        <div className="space-y-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleOAuth("google")}
-            disabled={loading || oauthLoading !== null}
-            className="w-full h-11 rounded-xl flex items-center justify-center gap-2.5 bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#94A3B8] hover:bg-[rgba(255,255,255,0.05)] hover:text-[#F1F5F9] transition-colors"
-          >
-            <GoogleIcon />
-            {oauthLoading === "google" ? "Redirecting…" : "Continue with Google"}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleOAuth("github")}
-            disabled={loading || oauthLoading !== null}
-            className="w-full h-11 rounded-xl flex items-center justify-center gap-2.5 bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#94A3B8] hover:bg-[rgba(255,255,255,0.05)] hover:text-[#F1F5F9] transition-colors"
-          >
-            <GitHubIcon />
-            {oauthLoading === "github" ? "Redirecting…" : "Continue with GitHub"}
-          </Button>
-        </div>
-
-        <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
-          <span className="text-xs text-[#475569]">or</span>
-          <div className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
-        </div>
-
-        <Button
-          type="button"
-          onClick={handleKeycloakEmail}
-          disabled={loading || oauthLoading !== null}
-          className="w-full h-11 rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4] transition-colors"
-        >
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <span className="w-4 h-4 spinner" />
-              Redirecting…
-            </span>
-          ) : (
-            "Continue with email"
-          )}
-        </Button>
-      </AuthShell>
-    );
-  }
-
+  // Um provider só desde a M02: este é o único caminho. O `if (!supportsPasswordForms())` que
+  // existia aqui separava a tela híbrida do formulário de senha do Supabase — e o formulário
+  // já era inalcançável. A tela abaixo é exatamente a que a M01 aprovou.
   return (
     <AuthShell>
       <div className="space-y-2 mb-8">
@@ -225,95 +125,9 @@ export function LoginPage() {
       </div>
 
       {error && (
-        <InlineError
-          message={error.message}
-          onDismiss={() => setError(null)}
-          className="mb-5"
-        />
+        <InlineError message={error.message} onDismiss={() => setError(null)} className="mb-5" />
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="email" className="text-sm text-[#94A3B8]">
-            Email
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
-            }}
-            placeholder="you@company.com"
-            autoComplete="email"
-            autoFocus
-            disabled={loading}
-            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#4F5AE8] focus:ring-[#4F5AE8]/20 rounded-xl h-11 ${
-              fieldErrors.email ? "border-[#F87171] focus:border-[#F87171]" : ""
-            }`}
-          />
-          {fieldErrors.email && (
-            <p className="text-xs text-[#F87171]">{fieldErrors.email}</p>
-          )}
-        </div>
-
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-sm text-[#94A3B8]">
-              Password
-            </Label>
-            <Link
-              to="/forgot-password"
-              className="text-xs text-[#94A3B8] hover:text-[#94A3B8] transition-colors"
-            >
-              Forgot password?
-            </Link>
-          </div>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }));
-            }}
-            placeholder="••••••••"
-            autoComplete="current-password"
-            disabled={loading}
-            className={`bg-[#0D1525] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] focus:border-[#4F5AE8] focus:ring-[#4F5AE8]/20 rounded-xl h-11 ${
-              fieldErrors.password ? "border-[#F87171] focus:border-[#F87171]" : ""
-            }`}
-          />
-          {fieldErrors.password && (
-            <p className="text-xs text-[#F87171]">{fieldErrors.password}</p>
-          )}
-        </div>
-
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full h-11 rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4] transition-colors mt-2"
-        >
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <span className="w-4 h-4 spinner" />
-              Signing in...
-            </span>
-          ) : (
-            "Sign in"
-          )}
-        </Button>
-      </form>
-
-      {/* OAuth divider */}
-      <div className="my-6 flex items-center gap-3">
-        <div className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
-        <span className="text-xs text-[#475569]">or continue with</span>
-        <div className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
-      </div>
-
-      {/* OAuth buttons */}
       <div className="space-y-3">
         <Button
           type="button"
@@ -337,6 +151,28 @@ export function LoginPage() {
           {oauthLoading === "github" ? "Redirecting…" : "Continue with GitHub"}
         </Button>
       </div>
+
+      <div className="my-6 flex items-center gap-3">
+        <div className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
+        <span className="text-xs text-[#475569]">or</span>
+        <div className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
+      </div>
+
+      <Button
+        type="button"
+        onClick={handleKeycloakEmail}
+        disabled={loading || oauthLoading !== null}
+        className="w-full h-11 rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4] transition-colors"
+      >
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <span className="w-4 h-4 spinner" />
+            Redirecting…
+          </span>
+        ) : (
+          "Continue with email"
+        )}
+      </Button>
     </AuthShell>
   );
 }

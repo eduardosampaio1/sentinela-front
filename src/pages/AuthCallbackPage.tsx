@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import AuthExperienceShell from "@/components/auth/AuthExperienceShell";
 import { clearTransientAuthLocation, normalizeNextPath } from "@/lib/authFlow";
-import { supabase } from "@/lib/supabase";
 import { getAuthClient } from "@/lib/auth/index";
 
 // O StrictMode (React 18 dev) dispara o effect 2×; o authorization code OIDC é single-use,
@@ -12,41 +11,13 @@ import { getAuthClient } from "@/lib/auth/index";
 let authExchangePromise: Promise<void> | null = null;
 
 async function exchangeAuthArtifact(): Promise<void> {
-  const authClient = getAuthClient();
-  if (authClient.provider === "keycloak") {
-    const session = await authClient.completeLoginCallback();
-    if (!session) {
-      throw new Error("Authentication callback did not return a session.");
-    }
-    clearTransientAuthLocation({ removeCode: true });
-    return;
+  // Um provider só desde a M02. O ramo Supabase que existia aqui — troca de `code`, `setSession`
+  // por token de hash e leitura de sessão existente — era código morto sob Keycloak, e saiu.
+  const session = await getAuthClient().completeLoginCallback();
+  if (!session) {
+    throw new Error("Authentication callback did not return a session.");
   }
-
-  const params = new URLSearchParams(window.location.search);
-  const authCode = params.get("code");
-  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  const accessToken = hashParams.get("access_token");
-  const refreshToken = hashParams.get("refresh_token");
-
-  if (authCode) {
-    const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-    if (error) throw error;
-    clearTransientAuthLocation({ removeCode: true });
-  } else if (accessToken && refreshToken) {
-    const { error } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-    if (error) throw error;
-    clearTransientAuthLocation();
-  } else {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) {
-      throw new Error("Authentication callback is missing a valid session.");
-    }
-  }
+  clearTransientAuthLocation({ removeCode: true });
 }
 
 export default function AuthCallbackPage() {

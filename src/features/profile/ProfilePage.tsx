@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/lib/supabase";
 import { getAuthClient } from "@/lib/auth/index";
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
@@ -90,7 +89,10 @@ export function ProfilePage() {
     setPasswordSuccess(false);
 
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      // Aqui ficava `supabase.auth.updateUser({ password })`. Trecho MORTO desde que o Keycloak
+      // assumiu: o guarda acima já desvia para o Account Console (D19), e a SPA não troca
+      // credencial. Removido na M02 sem tocar na aparência desta tela.
+      const error = new Error("unreachable: credential change is delegated to the provider");
       if (error) throw error;
       setPasswordSuccess(true);
       setNewPassword("");

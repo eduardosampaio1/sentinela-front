@@ -116,7 +116,7 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
      de essa configuração ser verificada no realm**, sob pena de a recuperação sumir em silêncio.
 - **Blocker:** **B6** (metade). **Autorização:** ✅ decisão 5.
 
-### M02 · Erradicação do Supabase Auth
+### M02 · Erradicação do Supabase Auth — CONCLUIDA
 - **Objetivo:** zero `@supabase/*` no `src/`, zero rota dependente, dependência fora do `package.json`.
 - **Existe porque:** Supabase está **aposentado** por decisão arquitetural e o resíduo continua
   roteado.
@@ -127,7 +127,11 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Testes/Gates:** **gate por AST** que falha se `@supabase/*` reaparecer — grep não prova
   ausência.
 - **DoD:** gate AST verde + suíte verde. **Evidência:** mutação que reintroduz o import → vermelho.
-- **Blocker:** **B6 fechado**. **Autorização:** ✅ decisão 5.
+- **Blocker:** **B6 FECHADO no front.** Zero import, zero `supabase.auth`, pacote removido,
+  Keycloak como único provider. 4/4 mutações.
+- 🔴 **Release gate SEPARADO, ainda aberto:** antes de deploy sem Supabase Auth em ambiente já
+  provisionado, provar **no realm em execução** `resetPasswordAllowed=true` + SMTP funcional. O
+  JSON versionado **não basta** — `--import-realm` não reimporta realm existente.
 
 ### M03 · Remoção de dependências e arquivos mortos
 - **Objetivo:** tirar peso e superfície sem dono.

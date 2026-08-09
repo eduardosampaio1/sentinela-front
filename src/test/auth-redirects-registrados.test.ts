@@ -80,14 +80,17 @@ describe("destinos de autenticação são rotas alcançáveis", () => {
     expect(orfaos).toEqual([]);
   });
 
-  it("a recuperação de senha tem UM construtor de URL, não dois", () => {
-    // Antes, `ForgotPasswordPage` montava a string na mão e divergia de `authFlow`. Dois
-    // construtores para o mesmo destino é como o e-mail passou a apontar para o lugar
-    // errado sem ninguém mudar rota nenhuma.
-    const pagina = readFileSync(`${RAIZ}/src/features/auth/ForgotPasswordPage.tsx`, "utf8");
-    expect(pagina).toContain("buildPasswordResetUrl");
-    expect(pagina, "voltou a montar a URL de reset na mão").not.toMatch(
-      /redirectTo:\s*`\$\{[^}]+\}\/reset-password`/,
+  it("a recuperação não constrói URL: ela delega ao provedor", () => {
+    // Este caso exigia UM construtor de `buildPasswordResetUrl` — a URL do e-mail do Supabase,
+    // que precisava casar com a rota registrada. Depois da M02 não há construtor nenhum: o link
+    // de recuperação é emitido pelo Keycloak e aponta para o `action-token` dele.
+    //
+    // O que resta a garantir é o inverso: a página de recuperação NÃO monta URL própria.
+    const pagina = readFileSync(
+      resolve(RAIZ, "src/features/auth/ForgotPasswordPage.tsx"),
+      "utf-8",
     );
+    expect(pagina).not.toContain("buildPasswordResetUrl");
+    expect(pagina).toContain("KeycloakRedirect");
   });
 });

@@ -1,8 +1,6 @@
 import { UserManager, WebStorageStateStore } from "oidc-client-ts";
-import { supabase } from "../supabase";
 import type { AuthClient } from "./types";
 import { resolveProvider } from "./resolveProvider";
-import { createSupabaseAuthClient } from "./supabaseAuthClient";
 import { createKeycloakAuthClient } from "./keycloakAuthClient";
 import { createE2EAuthClient, readE2EInjection } from "./e2eBridge";
 
@@ -10,7 +8,7 @@ export type { AuthClient, AuthSession, AuthUser, AuthProviderName } from "./type
 
 let cached: AuthClient | null = null;
 
-/** Cliente de auth selecionado por `VITE_AUTH_PROVIDER` (default supabase). Singleton por processo. */
+/** Cliente de auth. Keycloak é o único provider desde a M02. Singleton por processo. */
 export function getAuthClient(): AuthClient {
   if (!cached) cached = build();
   return cached;
@@ -23,8 +21,10 @@ function build(): AuthClient {
     const injected = readE2EInjection();
     if (injected) return createE2EAuthClient(injected.session);
   }
-  const provider = resolveProvider(import.meta.env.VITE_AUTH_PROVIDER);
-  if (provider === "keycloak") {
+  // Valida a variável mesmo havendo um provider só: configuração antiga apontando para
+  // `supabase` precisa falhar alto em vez de ser ignorada.
+  resolveProvider(import.meta.env.VITE_AUTH_PROVIDER);
+  {
     const issuer = String(import.meta.env.VITE_KEYCLOAK_ISSUER ?? "");
     const clientId = String(import.meta.env.VITE_KEYCLOAK_CLIENT_ID ?? "sentinela-front");
     const origin = window.location.origin;
@@ -40,5 +40,4 @@ function build(): AuthClient {
     });
     return createKeycloakAuthClient({ userManager, issuer });
   }
-  return createSupabaseAuthClient(supabase.auth);
 }

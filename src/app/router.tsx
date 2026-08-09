@@ -28,7 +28,9 @@ const SessionExpiredPage = lazy(() =>
   import("@/features/auth/SessionExpiredPage").then((m) => ({ default: m.SessionExpiredPage }))
 );
 const AuthCallbackPage = lazy(() => import("@/pages/AuthCallbackPage"));
-const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
+const ResetPasswordPage = lazy(() =>
+  import("@/pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage }))
+);
 const LaunchpadPage = lazy(() =>
   import("@/features/launchpad/LaunchpadPage").then((m) => ({ default: m.LaunchpadPage }))
 );

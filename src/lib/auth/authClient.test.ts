@@ -3,11 +3,11 @@ import { resolveProvider } from "./resolveProvider";
 import { createKeycloakAuthClient } from "./keycloakAuthClient";
 
 describe("resolveProvider (flag-gated, fail-closed)", () => {
-  it("default é supabase quando ausente/vazio", () => {
-    expect(resolveProvider(undefined)).toBe("supabase");
-    expect(resolveProvider("")).toBe("supabase");
-    expect(resolveProvider("   ")).toBe("supabase");
-    expect(resolveProvider("supabase")).toBe("supabase");
+  it("default é KEYCLOAK quando ausente/vazio (era supabase até a M02)", () => {
+    expect(resolveProvider(undefined)).toBe("keycloak");
+    expect(resolveProvider("")).toBe("keycloak");
+    expect(resolveProvider("   ")).toBe("keycloak");
+    expect(() => resolveProvider("supabase")).toThrow(/não existe mais/);
   });
 
   it("keycloak quando setado (case-insensitive)", () => {
@@ -15,7 +15,7 @@ describe("resolveProvider (flag-gated, fail-closed)", () => {
     expect(resolveProvider("KEYCLOAK")).toBe("keycloak");
   });
 
-  it("valor desconhecido lança (fail-closed, não cai em supabase silenciosamente)", () => {
+  it("valor desconhecido lança (fail-closed, não cai em provider nenhum em silêncio)", () => {
     expect(() => resolveProvider("auth0")).toThrow();
   });
 });
