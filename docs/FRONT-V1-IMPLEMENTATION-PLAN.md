@@ -163,7 +163,19 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   pasta desaparecer. Sem isso, o gate nasceria verde por não ter olhado nada.
 - **Blocker:** prepara Fase 1.
 
-### M05 · Gate de fronteira: mock não vaza
+### M05 · Gate de fronteira: mock não vaza — ✅ EXECUTADA
+> **Estado:** executada. `src/test/v1/fronteiraDoMock.ts` (analisador AST) +
+> `src/test/v1/mock-boundary.test.ts` (13 casos, 8 mutações mortas + 1 controle invertido).
+>
+> **Divergência plano ↔ árvore:** `src/mocks/**` **não existe**. A matéria de teste mora em
+> `src/test/msw/` e `src/test/fixtures/`. Um gate apontado para pasta inexistente passaria por
+> vacuidade, então ele segue a árvore real — e mantém `mocks?/` no padrão, para que a pasta já
+> nasça coberta quando a **M16–M18** a criarem. A **M19** segue devendo o apontamento contra a
+> árvore de `src/mocks/` depois que ela existir; a M05 não a antecipou.
+>
+> **Licença nominal:** só `src/e2e/bypass.ts` importa matéria de teste fora de teste. A licença é
+> por arquivo (não por pasta), carrega o motivo escrito, e há caso que a reprova se sobrar.
+
 - **Escopo:** import graph — `src/mocks/**` só importável por `src/mocks/**`, `src/test/**`,
   `*.stories.tsx` e bootstrap de dev; identificadores `mock|fixture|scenario|MSW` proibidos em
   `features/**/ui/**` e `design/**`, **por AST**.
