@@ -182,7 +182,25 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Pré:** nenhuma. **Paraleliza com:** M02–M07.
 - **DoD:** mutação (importar `src/mocks` de um componente) → vermelho. **Blocker:** prepara Fase 2.
 
-### M06 · Gate de fronteira: biblioteca externa não é API pública de página
+### M06 · Gate de fronteira: biblioteca externa não é API pública de página — ✅ EXECUTADA
+> **Estado:** executada. `src/test/v1/fronteiraDaBiblioteca.ts` (analisador AST) +
+> `src/test/v1/biblioteca-boundary.test.ts` (11 casos, 8 mutações mortas + 2 controles invertidos).
+>
+> **Dívida DECLARADA e MEDIDA — `DIVIDA_SHADCN`, 7 arquivos.** `src/components/ui/{button,dialog,`
+> `dropdown-menu,label,sheet,toast,tooltip}.tsx` importam Radix e ficam onde estão pela decisão já
+> registrada na **M10** (27 consumidores de `components/ui/button`; segunda versão reproduziria no
+> nível do componente o defeito que a M08 matou no nível do token). A lista é **nominal**, não por
+> pasta: um caso reprova se ela crescer, e outro reprova se um arquivo deixar de importar sem a
+> linha sair — é o que força a dívida a encolher no mesmo commit em que for resolvida.
+>
+> ⚠️ **Duas divergências, ambas registradas:**
+> 1. **`recharts` e `motion` não estão instalados.** A proibição dos dois é **preventiva**,
+>    declarada como tal, e provada só contra fonte sintética. O gate precisa existir antes da
+>    instalação — chegar depois é chegar tarde, porque a primeira página que importar já cria o
+>    precedente. `framer-motion` entrou junto: é o mesmo pacote com o nome antigo.
+> 2. **`src/design/**` não importa Radix hoje.** A permissão do plano existe e está provada por
+>    controle invertido, mas hoje **ninguém a exerce** — o Design System não depende de Radix.
+
 - **Escopo:** `@radix-ui/*`, `recharts`, `motion` só importáveis dentro de `src/design/**`.
 - **Pré:** nenhuma. **Paraleliza com:** M02–M07.
 - **DoD:** mutação (importar Radix em `features/**/ui/**`) → vermelho.
