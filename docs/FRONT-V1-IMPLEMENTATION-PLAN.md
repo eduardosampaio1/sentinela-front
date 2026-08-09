@@ -257,13 +257,26 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Testes/Gates:** **nunca** some no mobile; **nunca** só hover; teclado ponta a ponta.
 - **DoD:** as 4 combinações + prova mobile sem hover.
 
-### M13 · Patterns fundamentais
+### M13 · Patterns fundamentais — CONCLUIDA
 - **Escopo:** `EmptyState`, `ErrorState`, `LoadingState`, `ProgressiveState`, `ActionRequired`,
   `ConfirmDestructive`, `DataTable`, `ComparisonRow`, `Toolbar`.
 - **Pré:** M10, M11. **Paraleliza com:** Fase 2.
 - **Testes/Gates:** `ErrorState` cobre os 9 `problem_codes`; `ProgressiveState` **nunca** inventa
   percentual agregado; `ConfirmDestructive` exige **correspondência exata**.
 - **DoD:** cada pattern nas 4 combinações.
+- **Entregue:** os 9 patterns em `src/design/patterns/`. 71 casos, **4/4 mutações**. Nenhum token
+  novo: `chart-*`, `info` e `border-strong` seguem sem valor, sem consumidor.
+- **Garantias que viraram estrutura, não convenção:** `ErrorState` **lança** se declarar ação sem
+  botão · `Toolbar` **lança** se houver secundárias sem menu mobile · `ConfirmDestructive` compara
+  **estritamente** (nem `trim`, nem caixa, nem acento) · `ProgressiveState` não tem prop de total
+  · `DataTable` renderiza as **mesmas** colunas nas duas formas.
+- ⚠️ **Divergências:** (1) `EmptyState`, `ErrorState`, `LoadingState` e `ConfirmDestructive` já
+  tinham equivalentes legados em `src/shared/` com **15 consumidores**. Não migrei (seria migração
+  em massa) e não dupliquei em silêncio: o canônico passou a ser `src/design/patterns/`, e um gate
+  **congela a contagem** do legado para que tela nova não nasça no vocabulário antigo.
+  (2) `ActionRequired` e `ComparisonRow` nasceram com **duas formas explícitas** cada — com e sem
+  operação, comparável e quebrada — porque a diferença não é de aparência: no caso quebrado o delta
+  **não existe**, e uma prop booleana convidaria a passar `null` e mostrar zero.
 
 ### M14 · i18n — infraestrutura e paridade
 - **Escopo:** gate de **paridade `pt.json` × `en.json`** (hoje 506/506, quebra em silêncio); gate de

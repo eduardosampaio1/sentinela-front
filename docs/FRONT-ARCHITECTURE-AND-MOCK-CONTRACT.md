@@ -269,6 +269,10 @@ nesses arquivos**.
 | **cor nunca é canal único (V6)** | `statusBadge.test.tsx` | dois estados com mesmo tom e mesma forma; remover o ícone | **M11** |
 | **privacidade nao e falha** | idem | dar tom `negativo` a `withheld` | **M11** |
 | **contraste dos tons de estado** | `contraste-de-estado.test.ts` | apontar um tom para cor abaixo de 4.5:1 | **M11** |
+| **confirmação destrutiva é exata** | `patterns.test.tsx` | normalizar o texto digitado (`trim`/caixa) | **M13** |
+| **progresso não agrega** | idem | inserir percentual no `ProgressiveState` | **M13** |
+| **mobile não perde coluna** | idem | esconder uma coluna no modo empilhado | **M13** |
+| **legado de `shared/` não cresce** | idem | novo consumidor de `shared/states/*` | **M13** |
 
 > **A fronteira do DS é verificada por AST, não por grep.** Grep encontra texto, e texto inclui
 > comentário — reprovar `// este primitive NÃO conhece Análise` obrigaria a documentação a violar
