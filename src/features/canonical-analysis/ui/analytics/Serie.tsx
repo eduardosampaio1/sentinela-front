@@ -6,7 +6,7 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { SeriesView } from "../../result/adapterV2";
-import { Barra, Cartao, Contagens, Nota } from "./primitivas";
+import { Bar, DefinitionGrid, Note, Panel } from "@/design/primitives";
 
 export function AreaDeSerie({ series }: { series: readonly SeriesView[] }) {
   const { t } = useLanguage();
@@ -18,14 +18,14 @@ export function AreaDeSerie({ series }: { series: readonly SeriesView[] }) {
       </h3>
       <ul className="grid gap-4">
         {series.map((s) => (
-          <Cartao key={s.id} titulo={s.label}>
+          <Panel key={s.id} titulo={s.label}>
             <p className="mt-1 text-xs text-muted-foreground">
               {t("canonicalAnalysis.result.analytics.granularity")}: {s.granularity} · {s.timezone}
             </p>
             {s.windows.length > 0 && (
               <ul className="mt-3 space-y-2">
                 {s.windows.map((w) => (
-                  <Barra
+                  <Bar
                     key={w.label}
                     rotulo={w.label}
                     valor={w.countDisplay}
@@ -33,19 +33,23 @@ export function AreaDeSerie({ series }: { series: readonly SeriesView[] }) {
                     // Janela retida não desenha barra. Uma barra de largura zero seria lida
                     // como "nada aconteceu neste mês" — sobre exatamente o mês cujo número foi
                     // protegido.
-                    retida={w.count === null}
+                    suprimida={w.count === null}
+                    // O rótulo do caso suprimido é vocabulário CONGELADO, e quem o conhece é esta
+                    // camada. A barra deixou de traduzir na M10 justamente para não conhecer i18n
+                    // de produto — o significado continua aqui, onde sempre esteve.
+                    rotuloSuprimido={t("canonicalAnalysis.result.analytics.windowSuppressed")}
                   />
                 ))}
               </ul>
             )}
-            <Contagens itens={s.counts} />
+            <DefinitionGrid itens={s.counts} />
             {/* Série suprimida INTEIRA é diferente de série sem janelas: a primeira é decisão de
                 privacidade, e sem esta nota o cartão vazio pareceria dado faltando. */}
             {s.seriesSuppressed && (
-              <Nota>{t("canonicalAnalysis.result.analytics.seriesSuppressed")}</Nota>
+              <Note>{t("canonicalAnalysis.result.analytics.seriesSuppressed")}</Note>
             )}
-            {s.coarsened && <Nota>{t("canonicalAnalysis.result.analytics.coarsenedSeries")}</Nota>}
-          </Cartao>
+            {s.coarsened && <Note>{t("canonicalAnalysis.result.analytics.coarsenedSeries")}</Note>}
+          </Panel>
         ))}
       </ul>
     </section>

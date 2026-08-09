@@ -204,13 +204,28 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Testes/Gates:** nenhum timing fora dos tokens; `prefers-reduced-motion` provado por teste.
 - **DoD:** mutação (timing literal em componente) → vermelho.
 
-### M10 · Primitives
+### ✅ M10 · Primitives — **CONCLUÍDA**
 - **Escopo:** `src/design/primitives/` — promover `analytics/primitivas.tsx` (a barra) e criar
   `Button`, `Chip`, `Text`, `Stack`, `Field`, `Disclosure`, `Table`, `Icon`. **Fora:** migração em
   massa do legado.
 - **Pré:** M08, M04. **Paraleliza com:** M12, M13.
 - **Testes/Gates:** M04 ativo; nenhum primitive conhece domínio.
 - **DoD:** cada primitive nas **4 combinações**; `axe` limpo.
+- **Entregue:** 9 primitives — `Bar`, `DefinitionGrid`, `Note`, `Panel` (promovidos, com os 4
+  consumidores migrados) e `Chip`, `Stack`, `Text`, `Icon`, `Disclosure` (novos). 53 casos, 44
+  deles cobrindo as 4 combinações com `axe`.
+- ⚠️ **Três divergências, todas registradas:**
+  1. **`Button`, `Field` e `Table` NÃO foram criados.** `components/ui/button` tem **27
+     consumidores**, e `input`/`label` têm 6 cada — criar segundas versões produziria no nível de
+     componente exatamente o defeito que a M08 matou no nível do token. Convergem quando forem
+     tocados por missão própria, não por cópia. `Table` fica para o pattern `DataTable` (M13):
+     primitive sem consumidor é API especulativa.
+  2. **A barra importava `useLanguage`** e por isso não era primitive — o gate da M04 a reprovaria.
+     O rótulo do caso suprimido virou **prop**, preenchida pela camada de produto, que é quem
+     conhece o vocabulário congelado.
+  3. **`Icon` nasceu como dois componentes** (`IconeInformativo`/`IconeDecorativo`) em vez de um
+     com flag: ícone informativo sem nome acessível é informação que o leitor de tela não recebe, e
+     ícone decorativo anunciado é ruído. Sem default — quem usa escolhe.
 
 ### M11 · `StatusBadge` — semântica única de estados
 - **Objetivo:** **um** componente para os **dois** vocabulários (análise e eixos).

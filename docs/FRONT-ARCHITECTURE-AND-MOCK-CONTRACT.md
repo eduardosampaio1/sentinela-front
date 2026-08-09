@@ -272,10 +272,15 @@ nesses arquivos**.
 > a própria regra. A AST não expõe comentário como nó, e `ImportDeclaration` é
 > `ImportDeclaration`, inclusive na forma dinâmica `import()` e no re-export.
 >
-> O analisador (`fronteiraDoDesign.ts`) fica **separado** do teste porque `src/design/` ainda tem
-> zero arquivos `.ts`: varrer a pasta passaria por vacuidade. Separado, ele é provado contra
-> fontes sintéticas — cada regra com um caso que ela pega e um caso vizinho que ela **não pode**
-> pegar — e só então aplicado à árvore. O gate também reprova se `src/design/` **desaparecer**.
+> O analisador (`fronteiraDoDesign.ts`) fica **separado** do teste. Quando ele nasceu, `src/design/`
+> tinha zero arquivos `.ts` e varrer a pasta passaria por vacuidade; a separação permitiu prová-lo
+> contra fontes sintéticas — cada regra com um caso que ela pega e um vizinho que ela **não pode**
+> pegar. Desde a **M10** a pasta tem alvo real (9 primitives), e a separação continua valendo: ela
+> é o que garante que os dentes não dependem do que a árvore contém hoje. O gate também reprova se
+> `src/design/` **desaparecer**.
+>
+> A M10 mostrou o gate valendo a pena na prática: a barra promovida importava `useLanguage`, e o
+> gate a reprovou. O rótulo virou prop, e o primitive passou a ser primitive de fato.
 
 ### 9.2 Ainda propostos
 

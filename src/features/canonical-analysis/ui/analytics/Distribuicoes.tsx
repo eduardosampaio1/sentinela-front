@@ -4,7 +4,7 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { DistributionView } from "../../result/adapterV2";
-import { Barra, Cartao, Contagens, Nota } from "./primitivas";
+import { Bar, DefinitionGrid, Note, Panel } from "@/design/primitives";
 
 export function AreaDeDistribuicoes({
   distribuicoes,
@@ -24,15 +24,21 @@ export function AreaDeDistribuicoes({
       </h3>
       <ul className="grid gap-4">
         {distribuicoes.map((d) => (
-          <Cartao key={d.id} titulo={d.label}>
+          <Panel key={d.id} titulo={d.label}>
             {d.groups.length > 0 && (
               <ul className="mt-3 space-y-2">
                 {d.groups.map((g) => (
-                  <Barra key={g.label} rotulo={g.label} valor={g.countDisplay} largura={g.barWidth} />
+                  <Bar
+                    key={g.label}
+                    rotulo={g.label}
+                    valor={g.countDisplay}
+                    largura={g.barWidth}
+                    rotuloSuprimido={t("canonicalAnalysis.result.analytics.windowSuppressed")}
+                  />
                 ))}
               </ul>
             )}
-            <Contagens itens={d.counts} />
+            <DefinitionGrid itens={d.counts} />
             <dl className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-xs">
               <div className="flex items-baseline gap-2">
                 <dt className="text-muted-foreground">
@@ -55,22 +61,22 @@ export function AreaDeDistribuicoes({
                 "alguns rótulos não saíram" é o piso, e a ausência de `other` diz que nem a soma
                 dos suprimidos podia ser publicada. Colapsá-las esconderia qual aconteceu. */}
             {d.highCardinalitySuppressed && (
-              <Nota>{t("canonicalAnalysis.result.analytics.highCardinality")}</Nota>
+              <Note>{t("canonicalAnalysis.result.analytics.highCardinality")}</Note>
             )}
             {d.suppressed && !d.highCardinalitySuppressed && (
-              <Nota>
+              <Note>
                 {t("canonicalAnalysis.result.analytics.suppressedGroups")}
                 {d.otherCountDisplay === null &&
                   ` ${t("canonicalAnalysis.result.analytics.otherWithheld")}`}
-              </Nota>
+              </Note>
             )}
-            <Nota>
+            <Note>
               {t("canonicalAnalysis.result.analytics.minGroupSize").replace(
                 "{n}",
                 String(d.minGroupSize),
               )}
-            </Nota>
-          </Cartao>
+            </Note>
+          </Panel>
         ))}
       </ul>
     </section>

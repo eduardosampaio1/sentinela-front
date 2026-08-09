@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { MeasureView } from "../../result/adapterV2";
-import { Cartao, Contagens, Nota } from "./primitivas";
+import { DefinitionGrid, Note, Panel } from "@/design/primitives";
 
 export function AreaDeMedidas({ medidas }: { medidas: readonly MeasureView[] }) {
   const { t } = useLanguage();
@@ -14,7 +14,7 @@ export function AreaDeMedidas({ medidas }: { medidas: readonly MeasureView[] }) 
       </h3>
       <ul className="grid gap-4 sm:grid-cols-2">
         {medidas.map((m) => (
-          <Cartao key={m.id} titulo={`${m.label} · ${m.unit}`}>
+          <Panel key={m.id} titulo={`${m.label} · ${m.unit}`}>
             <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
               {m.stats.map((s) => (
                 <div key={s.label} className="min-w-0">
@@ -26,12 +26,12 @@ export function AreaDeMedidas({ medidas }: { medidas: readonly MeasureView[] }) 
                 </div>
               ))}
             </dl>
-            <Contagens itens={m.counts} />
+            <DefinitionGrid itens={m.counts} />
             {/* Sem este aviso, `Mínimo: —` seria indistinguível de "ninguém mediu" — e as duas
                 pedem ações opostas: a primeira é privacidade funcionando, a segunda é dado
                 faltando. */}
-            {m.suppressed && <Nota>{t("canonicalAnalysis.result.analytics.suppressedStats")}</Nota>}
-          </Cartao>
+            {m.suppressed && <Note>{t("canonicalAnalysis.result.analytics.suppressedStats")}</Note>}
+          </Panel>
         ))}
       </ul>
     </section>

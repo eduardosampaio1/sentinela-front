@@ -6,7 +6,7 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { ConcentrationView } from "../../result/adapterV2";
-import { Barra, Cartao, Contagens, Nota } from "./primitivas";
+import { Bar, DefinitionGrid, Note, Panel } from "@/design/primitives";
 
 export function AreaDeConcentracao({
   concentracoes,
@@ -22,7 +22,7 @@ export function AreaDeConcentracao({
       </h3>
       <ul className="grid gap-4">
         {concentracoes.map((c) => (
-          <Cartao key={c.id} titulo={`${c.label} · ${c.unit}`}>
+          <Panel key={c.id} titulo={`${c.label} · ${c.unit}`}>
             <dl className="mt-3 space-y-2">
               {c.statistics.map((e) => (
                 <div key={e.id} className="flex flex-wrap items-baseline justify-between gap-2">
@@ -55,18 +55,19 @@ export function AreaDeConcentracao({
                 </p>
                 <ul className="mt-2 space-y-2">
                   {c.bands.map((b) => (
-                    <Barra
+                    <Bar
                       key={b.label}
                       rotulo={b.label}
                       valor={b.entityCountDisplay}
                       largura={b.barWidth}
+                      rotuloSuprimido={t("canonicalAnalysis.result.analytics.windowSuppressed")}
                     />
                   ))}
                 </ul>
               </>
             )}
 
-            <Contagens itens={c.counts} />
+            <DefinitionGrid itens={c.counts} />
             {c.totalVolumeDisplay !== null && (
               <p className="mt-2 flex items-baseline justify-between gap-2 text-xs">
                 <span className="text-muted-foreground">
@@ -75,11 +76,11 @@ export function AreaDeConcentracao({
                 <span className="font-medium text-foreground">{c.totalVolumeDisplay}</span>
               </p>
             )}
-            {c.coarsened && <Nota>{t("canonicalAnalysis.result.analytics.coarsened")}</Nota>}
+            {c.coarsened && <Note>{t("canonicalAnalysis.result.analytics.coarsened")}</Note>}
             {c.highCardinalitySuppressed && (
-              <Nota>{t("canonicalAnalysis.result.analytics.highCardinality")}</Nota>
+              <Note>{t("canonicalAnalysis.result.analytics.highCardinality")}</Note>
             )}
-          </Cartao>
+          </Panel>
         ))}
       </ul>
     </section>
