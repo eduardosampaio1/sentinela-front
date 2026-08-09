@@ -21,31 +21,70 @@ similaridade é fabricar continuidade que ninguém mediu. Isso é a mesma regra 
 
 ---
 
-## 1. Q11 — rastreio de `Mensagem.destino` (prova pendente da Etapa 0b)
+## 0. Decisões congeladas D24–D29
 
-**Resultado: prova de AUSÊNCIA parcial — a cadeia não fecha.**
+| # | decisão | detalhe |
+|---|---|---|
+| **D24** (Q15) | **Destinatário = e-mail canônico/verificado do OWNER do Workspace** | Sem configuração arbitrária, sem endereço vindo do Front, sem e-mail inventado pelo compositor. Resolução **server-side** a partir da identidade/ownership canônica. **Prova técnica: §1 — a cadeia NÃO fecha hoje** (deltas N1–N3) |
+| **D25** (Q16) | **Baseline é uma análise MARCADA EXPLICITAMENTE pelo usuário** | Não é a primeira execução automaticamente, nem janela móvel. Uma Instância **pode não ter** baseline. Substituir é ação explícita. É **identificável e versionável** no histórico. **Nunca muda silenciosamente.** Pertence à **Instância**. Análise que é baseline ativo **não pode ser excluída** até o baseline ser removido/substituído. Janela móvel pode existir no futuro como outra forma de referência, **sem** receber o nome de baseline canônico |
+| **D26** (Q17) | **Quebra de versão quebra a comparabilidade numérica** | Mudou `indicator_registry_version` ou `measure_schema`: **não conectar valores como mesma série**. A linha do tempo da Instância continua visualmente contínua, com **descontinuidade explícita** (`segmento versão A → quebra → segmento versão B`). **Não calcular delta atravessando a fronteira.** A UI explica que houve mudança de **metodologia/vocabulário** — nunca representa isso como aumento ou queda do indicador |
+| **D27** (Q18) | **Recomendações longitudinais entram na V1** | `recommendation_id` já existe no domínio e é exatamente a identidade necessária. **Nunca parear por título, texto, similaridade ou heurística no Front.** Se o id não chegou ao documento canônico, **não existe** afirmação de persistiu/apareceu/deixou de aparecer. **L6 vira delta explícito próprio** de contrato/fiação, com testes e freeze próprios — **não misturar** com o delta de Instância. Requisito da V1; **não é autorização de implementação** |
+| **D28** (Q19) | **A V1 permite EXCLUIR análises; "arquivar" não existe como conceito** | Exclusão é destrutiva e só existe **quando houver operação real de backend e lifecycle definido**. **Nenhum botão fake.** Regra de segurança congelada: **toda exclusão exige digitar exatamente o nome da Instância** a que a análise pertence — não basta *Confirmar*, checkbox ou digitar "EXCLUIR". Ver §7.1 |
+| **D29** (Q20) | **As duas superfícies de comparação existem, com UMA fonte de verdade** | No **Resultado**: resumo automático *"esta análise vs. imediatamente anterior"*, só fatos comparáveis e publicados. Na **Instância**: superfície de **Evolução/Comparação** com seleção de duas execuções. **Um único view model/regra canônica** — Resultado consome a versão resumida, Instância a exploração completa. Incompatibilidade de schema/registry aplica **D26**. **Ausência de um sinal nunca vira automaticamente "resolveu" ou "sumiu"**, especialmente diante de privacy withholding |
 
-O que foi seguido, no `sentinela-event-dispatcher`:
+---
 
-| ponto | evidência |
-|---|---|
-| `adapters/email.py::montar(...)` | devolve `Mensagem(destino="", …)` — **nasce vazio, deliberadamente** |
-| `Mensagem` | dataclass `frozen` com `destino, assunto, texto, html` |
-| `EnvioDeEmail.enviar(...)` | recebe o destino **de fora** e monta a mensagem final |
-| **quem chama com um destino real** | ❌ **não localizado nesta auditoria** |
+## 1. Q15 — prova técnica da cadeia do destinatário
 
-**O que isso significa, sem exagero:** o compositor está correto ao não inventar destinatário — a
-mensagem é conteúdo, o endereço é destino, e são coisas diferentes. O que **não** consegui provar
-é a existência de uma **fonte canônica de destinatário**: nenhuma tabela, campo de evento ou
-configuração encontrada diz *para quem* enviar.
+**Decisão de produto (D24):** na V1 o destinatário de comunicação operacional é o **e-mail
+canônico/verificado do owner do Workspace**. Sem configuração arbitrária, sem endereço vindo do
+Front, sem e-mail inventado pelo compositor, e resolução **server-side** a partir da
+identidade/ownership canônica.
 
-**Consequência:** a comunicação externa **não pode ser considerada fechada**. Toda a
-infraestrutura provada na Etapa 0b (Dispatcher, SMTP, retry, dedup, dead letter, política de três
-eventos) permanece válida — e sem destinatário ela entrega para ninguém.
+A prova pedida foi da cadeia:
 
-**Não afirmo que não existe.** Afirmo que **não encontrei**, e nomeio onde procurar a seguir:
-configuração de assinatura/subscrição por workspace, campo no envelope público, ou tabela do
-Dispatcher que ligue workspace → endereço. Fica como **Q15**.
+```
+workspace/owner → identidade canônica → e-mail verificado → Mensagem.destino → Dispatcher
+```
+
+### 1.1 Resultado, elo a elo
+
+| # | elo | estado | evidência |
+|---|---|---|---|
+| 1 | **existe armazenamento de destino?** | ✅ **sim** | `dispatcher_subscriptions` (migration `0001`): `workspace_id`, `channel ∈ {webhook,email}`, `destination`, `event_types[]`, `active`, `language`, **`verified_at`** |
+| 2 | **o destino é congelado na intenção?** | ✅ **sim, e bem** | migration `0002_intencao_congela_o_destino`; `reivindicar()` lê canal/destino/idioma **da própria entrega**, não da assinatura atual — *"uma edição da assinatura entre a intenção e o claim redirecionaria uma entrega que já existia"* |
+| 3 | **existe serviço de ciclo de vida da assinatura?** | ✅ **sim** | `service/assinaturas.py` — criar, rotacionar, verificar, desativar. E ele **já declara a fronteira certa**: *"a autoridade sobre 'de quem é este workspace' não está aqui: ela é do contexto autenticado, no Gateway"* |
+| 4 | **alguém CHAMA esse serviço em produção?** | 🔴 **NÃO** | zero importadores fora de testes. CLI do Dispatcher tem `liveness`, `readiness`, `migrar`, `executar` — **nenhum comando de assinatura**. Gateway: **nenhuma rota** de assinatura |
+| 5 | **workspace → owner → e-mail verificado?** | 🔴 **NÃO EXISTE** | `me_workspace_fields = [id, name, role]` — **sem owner**. `me_user_fields = [id, email, name]` — é o e-mail do **usuário autenticado**, não do owner, e **não há flag de verificação**. `owner_user_id` existe só no store de contexto **legado** (fora do `public-v1`), e é um **user id**, não um e-mail |
+
+### 1.2 Veredito
+
+**A cadeia quebra em DOIS pontos**, e nenhum deles é o compositor:
+
+1. **Não há resolução `workspace → owner → e-mail verificado`.** A identidade canônica publica o
+   e-mail do **usuário autenticado**, sem marca de verificação, e não publica o owner do
+   workspace. A única fonte de `owner_user_id` é o store legado — e é um id, não um endereço.
+2. **Não há como criar a assinatura.** O serviço existe, está bem desenhado, e **nenhum caminho
+   de produção o alcança**: sem rota, sem comando, sem chamador.
+
+> A infraestrutura de **entrega** está pronta e é boa. O que falta é a **origem do destino** — e é
+> justamente o elo que D24 acabou de definir como responsabilidade do backend.
+
+### 1.3 Delta necessário (classificação, não desenho)
+
+| # | delta | classe |
+|---|---|---|
+| **N1** | identidade canônica publicar o **owner do workspace** e um **e-mail verificado** (ou marca de verificação sobre o existente) | **E** |
+| **N2** | resolução server-side `workspace → owner → destino`, materializando a assinatura de e-mail **sem** entrada do cliente | **E** |
+| **N3** | caminho de produção que chame `service/assinaturas` (rota interna, comando, ou provisionamento na criação do Workspace) | **E** |
+
+Enquanto N1–N3 não existirem, **e-mail externo continua não fechado operacionalmente** — como a
+própria decisão prevê. `verified_at` já está na tabela esperando por quem o preencha.
+
+> ⚠️ **Consequência de D24 que vale registrar:** com destinatário derivado do **owner**, uma
+> assinatura por workspace basta — e o campo `destination`, que hoje aceita qualquer endereço,
+> passa a ser **saída de uma resolução**, não entrada de configuração. O desenho da tabela
+> suporta os dois; a decisão restringe ao segundo.
 
 ---
 
@@ -296,8 +335,59 @@ nenhum: não arquiva, não exclui, não expira, não é limpo quando abandonado.
 É coerente com a história (privacidade foi frente própria e fechada), e é a lacuna que aparece
 primeiro quando um workspace acumula uso.
 
-**Deltas:** **B4** (limpeza de `prepared`, já registrado na 0b) + **B7** arquivar/excluir análise
-+ **B8** retenção de análises. Todos **E**.
+**Deltas:** **B4** (limpeza de `prepared`, já registrado na 0b) + **B7** excluir análise
++ **B8** retenção de análises. Todos **E**. *"Arquivar" sai do escopo — não é conceito da V1 (D28).*
+
+### 7.1 Exclusão de análise — regras congeladas (D28)
+
+**Confirmação por digitação do nome da Instância.** Não basta *Confirmar*, checkbox, nem digitar
+"EXCLUIR". O modal exibe:
+
+1. a **Instância** a que a análise pertence;
+2. a **análise** que será excluída, com identificação/data suficiente para **diferenciá-la** de
+   outra (duas análises do mesmo dia não podem ser confundidas);
+3. as **consequências** da exclusão;
+4. o **campo** onde o usuário digita o nome da Instância;
+5. **CTA destrutivo desabilitado** até correspondência **exata**.
+
+> Por que digitar o nome da **Instância** e não o da análise: análise não tem nome próprio — tem
+> id e data. Pedir para digitar um id é ruído que a pessoa copia sem ler. O nome da Instância é o
+> que ela reconhece, e digitá-lo obriga a **saber de qual sistema** está apagando.
+
+**Restrições congeladas:**
+
+| # | regra | por quê |
+|---|---|---|
+| R1 | **não usar para análise em processamento nem em `needs_mapping`** | exclusão não pode virar **cancelamento disfarçado** (D15) |
+| R2 | `prepared` abandonado **continua** sendo problema de lifecycle/limpeza (**B4**) | não se resolve pendência de sistema pedindo ação destrutiva ao usuário |
+| R3 | só **análises terminais** são candidatas, e só **quando o contrato existir** | nenhum botão fake |
+| R4 | análise que é **baseline ativo** não pode ser excluída até o baseline ser removido/substituído (**D25**) | apagar a régua deixa a série sem significado |
+| R5 | a exclusão deixa **evidência auditável da operação** sem **preservar indevidamente** o conteúdo que deveria ter sido destruído | o registro é do ATO, não do dado |
+
+> ⚠️ **R5 é a mais delicada e merece nome:** "evidência auditável" e "destruição efetiva" puxam em
+> direções opostas. O padrão que a plataforma já usa resolve isso — o Analytics distingue
+> `expired` (*"não entrego mais"*) de `purged_at` (*"não existe mais"*), e o Ingestion emite
+> **certidão de destruição** sem guardar o destruído. A exclusão de análise deve seguir o mesmo
+> desenho: registra-se **quem, quando, o quê (por id) e por quê**, nunca o conteúdo.
+
+### 7.2 Discovery do cascade esperado (o que precisa ser decidido no backend)
+
+**Não inventar cascade no Front.** O que a exclusão de uma análise alcança:
+
+| artefato | onde vive | cascade esperado | observação |
+|---|---|---|---|
+| **resultado v1** (`orchestrator_analysis_results`) | Orchestrator | destruir | tabela é **imutável por trigger** — a exclusão precisa de caminho próprio, não de `update` |
+| **resultado v2** (`orchestrator_integrated_results`) | Orchestrator | destruir | idem |
+| **facts** (`engine-facts-v1`) | object store + `orchestrator_engine_facts` | destruir bytes **e** referência | a referência sem os bytes vira ponteiro morto; os bytes sem a referência viram órfão |
+| **Input Artifact** | object store + metadados | ⚠️ **decisão** | pode ser compartilhado por um **retry** da mesma análise; e o descarte do dado do cliente já tem dono no Ingestion |
+| **snapshot/projeção analítica** | Analytics | destruir | é conteúdo derivado do dataset |
+| **export** | Analytics | destruir + marcar `purged_at` | o desenho já existe |
+| **timeline / eventos públicos** | outbox + Dispatcher | ⚠️ **decisão** | apagar o histórico de eventos **apaga a auditoria**; provavelmente **preservar o evento, destruir o conteúdo** |
+| **entregas do Dispatcher** | Dispatcher | ⚠️ **decisão** | envelope entregue já saiu do domínio; retenção própria (`0004`) |
+| **referências longitudinais** | Instância | **bloquear** se for baseline (R4); **desfazer** se for só ponto da série | precisa que a série tolere buraco — ou a exclusão fica proibida |
+| **comanda analítica** | Orchestrator | destruir | — |
+
+**Três perguntas de cascade que só o backend responde** (Q21–Q23, §13).
 
 ---
 
@@ -378,6 +468,57 @@ nenhum selo de confiança. Os três dependem de deltas **E**.
 
 ---
 
+### 11.1 TO-BE conceitual da Instância (congelado)
+
+```
+Instância
+├── Visão atual
+├── Ações necessárias
+├── Nova análise
+├── Análises / Histórico
+├── Evolução
+│   ├── vs. anterior
+│   ├── comparar duas execuções
+│   ├── sinais longitudinais por identidade canônica
+│   └── baseline explícito
+└── Configuração
+```
+
+Mapeamento de cada nó para o que existe:
+
+| nó | fonte | classe |
+|---|---|---|
+| Visão atual | último resultado (`result`) | **A** após Instância |
+| Ações necessárias | `status`/`progress` (needs_mapping e afins) | **A** |
+| Nova análise | `POST /v1/analyses` | **A** |
+| Análises / Histórico | `GET /v1/analyses` filtrado por Instância | **E** (filtro é delta de Instância) |
+| Evolução › **vs. anterior** | duas leituras de `/result` + regra canônica de comparação | **A** (D29) |
+| Evolução › **comparar duas execuções** | idem, com seleção | **A** (D29) |
+| Evolução › **sinais longitudinais** | `recommendation_id` no documento | **E** (L6 / D27) |
+| Evolução › **baseline explícito** | marcação persistida na Instância | **E** (L7 / D25) |
+| Configuração | contexto da Instância (D22) | **E** |
+
+### 11.2 A separação que não pode ser perdida
+
+> **delta factual ≠ drift**
+
+| a V1 **pode** dizer | a V1 **não pode** dizer |
+|---|---|
+| `0,80 → 0,72` | *"a Instância está piorando"* |
+| *"mesmo registro de indicadores, então comparáveis"* | *"essa queda é significativa"* |
+| *"este sinal aparece nas duas execuções"* (por id) | *"o problema é o mesmo"* (por semelhança) |
+| *"não há dado comparável nesta execução"* | *"resolveu"* / *"sumiu"* |
+
+A segunda coluna exige **referência + regra/limiar + owner canônico**. Sem os três, é opinião com
+cara de medição.
+
+> ⚠️ **D29 fecha a armadilha mais sutil:** a ausência de um sinal na execução B **nunca** vira
+> automaticamente "resolveu" ou "sumiu" — ele pode ter sido **retido por privacidade**
+> (`withheld`/`suppression_applied`), ou o bloco pode não ter sido publicado. Ausência de dado
+> nunca é zero, e ausência de sinal nunca é cura.
+
+---
+
 ## 12. Proposta conceitual: a Instância como objeto observado
 
 Hoje a Instância está desenhada como **agrupadora** — uma pasta que responde *"quais análises são
@@ -424,16 +565,26 @@ dizer que fazem é o tipo de afirmação que esta plataforma inteira existe para
 
 ---
 
-## 13. Perguntas realmente novas
+## 13. Perguntas
 
-| # | pergunta | por que é decisão |
+### 13.1 Encerradas por D24–D29
+
+| # | era | desfecho |
 |---|---|---|
-| **Q15** | **De onde vem o destinatário da comunicação?** (Q11 não fechou — §1) | Sem fonte canônica, a comunicação externa está bloqueada apesar de toda a infra pronta. Pode ser configuração por workspace, campo no evento, ou capacidade ausente |
-| **Q16** | A **baseline** de uma Instância é a **primeira** execução, uma **marcada manualmente**, ou uma **janela móvel**? | Cada escolha muda o significado de "piorou". É a decisão que define o produto longitudinal |
-| **Q17** | Quando o `indicator_registry_version` ou o `measure_schema` muda, o histórico anterior **quebra a comparação** ou vira **duas séries**? | Determina se longitudinalidade sobrevive à evolução do produto |
-| **Q18** | Recomendações entram no documento canônico agora (**L6**), ou o loop de evidência fica para depois da Instância? | É delta pequeno com valor grande; a ordem é sua |
-| **Q19** | Análise deve poder ser **arquivada/excluída** pelo usuário (**L9**), ou só expirar por retenção? | Muda o modelo mental: análise é registro permanente ou item gerenciável? |
-| **Q20** | "Comparar execuções" é uma **superfície própria** da Instância, ou aparece **embutida no resultado** ("vs. execução anterior")? | A segunda é mais barata e mais descoberta; a primeira permite escolher quais duas |
+| ~~Q15~~ | de onde vem o destinatário? | **D24** — e-mail canônico/verificado do **owner do Workspace**, resolvido server-side. **Prova em §1: a cadeia não fecha hoje** → deltas N1–N3 |
+| ~~Q16~~ | baseline: primeira, marcada ou janela móvel? | **D25** — **marcada explicitamente**, versionável, nunca muda em silêncio, pertence à Instância, bloqueia exclusão enquanto ativa |
+| ~~Q17~~ | quebra de versão: quebra ou vira duas séries? | **D26** — **quebra a comparabilidade numérica**, com descontinuidade explícita na mesma linha do tempo; nunca representar como aumento/queda |
+| ~~Q18~~ | recomendações longitudinais agora ou depois? | **D27** — **entram na V1**, como delta próprio (L6) com testes e freeze próprios; sem id, nenhuma afirmação |
+| ~~Q19~~ | arquivar/excluir ou só reter? | **D28** — **excluir sim, arquivar não existe**; confirmação por digitação do nome da Instância; 5 restrições (§7.1) |
+| ~~Q20~~ | superfície própria ou embutida? | **D29** — **as duas**, com **uma** regra canônica de comparação |
+
+### 13.2 Abertas — cascade da exclusão (§7.2)
+
+| # | pergunta | por que só o backend responde |
+|---|---|---|
+| **Q21** | Excluir a análise destrói o **Input Artifact**? | Ele pode ser compartilhado por um **retry** da mesma análise, e o descarte do dado do cliente já tem dono no Ingestion. Destruir junto pode apagar o insumo de outra execução; não destruir pode deixar o dado vivo depois de o usuário mandar apagar |
+| **Q22** | Excluir a análise apaga a **timeline / eventos públicos**? | Apagar apaga a **auditoria**; manter preserva metadados de algo que deveria sumir. O caminho provável é **preservar o evento e destruir o conteúdo**, mas é decisão |
+| **Q23** | A **série longitudinal** tolera buraco? | Se sim, excluir um ponto do meio é aceitável. Se não, a exclusão fica proibida para análises que participam de comparação — e R4 (baseline) vira caso particular de uma regra maior |
 
 ---
 
