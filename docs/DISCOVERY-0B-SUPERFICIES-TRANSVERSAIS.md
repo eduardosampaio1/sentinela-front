@@ -418,12 +418,14 @@ existentes condenam.
 | **D22 (Q13)** | **Ownership**, não "uma tela ou duas": **Conta/Preferências → superfície canônica Configurações**; **Workspace → configuração contextual do Workspace**; **Instância → configuração contextual da Instância**. `/profile` e `/dashboard/settings` são **superfícies legadas a convergir** para essa IA |
 | **D23 (Q14)** | **Idioma entra na V1.** **Tema não entra** sem prova de suporte canônico completo |
 
-> ⚠️ **D23 foi PARCIALMENTE superseder por D31** (frente de Design, 2026-08-09).
-> A cláusula de **idioma permanece válida e inalterada**. A cláusula de **tema** foi superada por
-> nova decisão de produto: **Light e Dark são requisitos da V1**. O texto acima é preservado como
-> história — não foi apagado nem reescrito. O **requisito de prova continua valendo**: a auditoria
-> da Design 0 mediu que a infraestrutura de tema é hoje **zero** (a única regra `.dark` do repo mora
-> em arquivo que ninguém importa). Ver [[DESIGN-0-DIRECAO-E-CONSTITUICAO.md]] §4 (D31) e §2.1.
+> ℹ️ **D23 CONTINUA SENDO A AUTORIDADE DE PRODUTO SOBRE TEMA.** Nada aqui foi superseder.
+> A frente de Design registrou **P31 — proposta técnica** de Light/Dark, com custo e viabilidade
+> medidos, mas **P31 não é decisão congelada** e não substitui D23 enquanto não houver **decisão
+> explícita do owner**. A cláusula de **idioma** de D23 segue válida e é o que a Design usa como
+> requisito. O **requisito de prova de D23 continua valendo** — e a auditoria de Design 0 mediu que
+> a infraestrutura de tema é hoje **zero** (a única regra `.dark` do repo mora em arquivo que
+> ninguém importa), o que **reforça** D23 em vez de enfraquecê-la.
+> Ver [[DESIGN-0-DIRECAO-E-CONSTITUICAO.md]] §4 (P31) e §2.1.
 
 **Q11 continua ABERTA como prova técnica** — ver [[DISCOVERY-0C-LONGITUDINALIDADE.md]] §1.
 

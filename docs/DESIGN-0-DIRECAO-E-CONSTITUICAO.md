@@ -88,7 +88,7 @@ Três consequências, todas medidas e nenhuma cosmética:
    `--primary: 236 77% 61%`. São o mesmo azul em dois vocabulários. Um componente pode consumir
    qualquer um dos dois e nenhum lint reclama.
 
-> Isto é o custo real de **D31**, e é bom sabê-lo antes de prometer: Light Mode não é "adicionar um
+> Isto é o custo que **D23 manda provar antes de autorizar tema**, e é bom sabê-lo: Light Mode não é "adicionar um
 > bloco `.dark`" — é **unificar três vocabulários em um** e depois derivar dois temas dele.
 
 ### 2.2 Dependências: declarado × instalado × usado
@@ -162,14 +162,14 @@ Não é retórica; é o que a auditoria mostrou funcionando e que a estética no
 | CVA | **já existe e fica** | Usar mais: é o lugar canônico de variante |
 | clsx / tailwind-merge | **já existe e fica** | — |
 | **Motion for React** | **não existe — recomendamos adicionar** | Com escopo: transições de estado e continuidade (§10). Só depois dos tokens de motion existirem. Antes de instalar: auditar peso e tree-shaking, e provar que respeita `prefers-reduced-motion` |
-| **Recharts** | **não existe — adicionar sob restrição** | ⚠️ **Restrição dura:** só como *renderizador*. Nenhum binning, agregação, domínio automático ou estatística da biblioteca pode chegar à tela — isso violaria `fonte-unica-do-resultado`. Se a API não permitir desligar isso, **não adotamos** e ficamos com primitivas próprias. Ver **R6** |
+| **Recharts** | **não existe — adicionar sob restrição** | ⚠️ **Pode** renderizar geometria, eixos e escalas. **Nunca** pode ser dona de **transformação ou semântica analítica** — binning, agregação, estatística, interpolação de faltantes ou escolha de domínio que altere a leitura. O domínio chega **decidido** pelo view model. Se a API não permitir separar isso, **não adotamos**. Ver **R6** |
 | **React Hook Form** | **não existe — recomendamos adicionar** | Escopo: formulários de Configurações e o modal destrutivo de D28 (digitar o nome da Instância) |
 | **Zod** | **não existe — adicionar SOMENTE em UI/forms** | D-Q8 congelou: **não substitui validador canônico**. Sugiro barreira de lint: `zod` proibido em `features/**/result/**` e `lib/v1/**` |
 | Keycloak (`oidc-client-ts`) | **já existe e fica** | Auth canônico. **Não substituir** |
 | **MSW no browser** | **existe mas precisa consolidar** | Hoje é `msw/node`, test-only. O alvo (§6) exige o **worker**. `package.json` já declara `workerDirectory: ["public"]`, mas o worker nunca é montado |
 | **Storybook** | **não existe — recomendamos adicionar** | Como devDependency, consumindo **os mesmos cenários** (§6). Sem segundo domínio fictício |
 | Vitest 3.2 · Testing Library · Playwright · axe-core | **já existem e ficam** | Base de teste completa |
-| `next-themes` | **não recomendamos manter como está** | Instalado, **zero uso**. Ou vira o comutador oficial de D31, ou sai. Não deixar meio-termo |
+| `next-themes` | **não recomendamos manter como está** | Instalado, **zero uso**. Só faz sentido **se** o owner autorizar tema (P31); enquanto isso, é peso sem dono |
 | `sonner` · `jspdf` · `tailwindcss-animate` | **não recomendamos** | Zero uso. Toast já é Radix. Remover na primeira missão que tocar o `package.json` |
 | `@supabase/supabase-js` | **não recomendamos — mas é decisão de produto** | Ver **R2**. Não é remoção de design |
 | MUI / Ant / Chakra / Mantine | **não recomendamos** | Determinariam a identidade visual. Fora de questão sem decisão explícita |
@@ -178,18 +178,39 @@ Não é retórica; é o que a auditoria mostrou funcionando e que a estética no
 
 ---
 
-## 4. Constituição provisória — D31 a D37
+## 4. Constituição provisória — P31 (proposta) e D32 a D37
 
 > **Provisória por definição.** Só congela depois de sobreviver às primeiras superfícies reais.
 > Nenhuma destas é Regra de Ouro ainda.
 
-### D31 — PT-BR, EN, Light e Dark são requisitos da V1
+### P31 — PT-BR/EN é requisito; Light/Dark é **proposta técnica não autorizada**
 
-**Supersede exclusivamente a cláusula de tema de D23.** A cláusula de idioma de D23 (*"Idioma entra
-na V1"*) **permanece válida e inalterada**. História preservada: D23 dizia *"Tema não entra sem
-prova de suporte canônico completo"* — a decisão de produto mudou; o **requisito de prova não**.
+> 🔶 **P, não D.** Corrigido em 2026-08-09 pelo owner: **D23 continua sendo a autoridade de produto
+> sobre tema.** Design 0 **não pode** superseder D23 autonomamente. O que segue vale como
+> **proposta técnica com custo e viabilidade provados** — e só vira decisão com autorização
+> explícita do owner.
+>
+> **O que está autorizado hoje:** a cláusula de **idioma** de D23 (*"Idioma entra na V1"*) — PT-BR
+> e EN são requisito da V1.
+> **O que NÃO está:** Light/Dark. D23 diz *"Tema não entra sem prova de suporte canônico completo"*,
+> e essa prova **não existe** — §2.1 mediu infraestrutura **zero**.
 
-Regras:
+**Custo medido de habilitar tema** (a prova que D23 pede, e a razão de não ser barato):
+
+| item | estado |
+|---|---|
+| vocabulário de token | **três concorrentes**, dois deles definindo os mesmos nomes com valores diferentes |
+| regra `.dark` | existe em **um arquivo morto**; a classe do `tailwind.config` não comuta nada |
+| valores dark | **assados no `:root`** do arquivo vivo — não há tema, há um tema só |
+| comutador | `next-themes` instalado, **zero uso** |
+| persistência da preferência | **sem contrato** — ver P31.8 |
+
+**Conclusão da prova:** Light/Dark é **viável**, e o caminho é conhecido (§9.2), mas exige
+unificar três vocabulários **antes** de qualquer tema existir. Enquanto o owner não decidir, a
+Design 1 entrega **token único** — que é pré-requisito dos dois temas e vale por si — e **não**
+entrega tema.
+
+Regras **se e quando** autorizado:
 
 1. todo componente funciona em **PT-BR e EN**;
 2. todo componente funciona em **Light e Dark**;
@@ -360,7 +381,7 @@ de acabamento, nunca como argumento de estrutura.
 | **Async progress** | progresso por **componente**, com estado por eixo | `/progress` já tem 4 eixos independentes | barra única que finge saber a porcentagem total | Mobbin | product component lê os 4 eixos, sem inventar agregado |
 | **Action required** | separar *"precisa de você"* de *"está andando"* | D15/`needs_mapping` já distingue | badge de contagem sem dizer o que fazer | Mobbin | padrão de fila com CTA por item |
 | **Analytics** | número grande **com** a régua ao lado (n, período, cobertura) | nossa promessa é evidência | número grande sozinho | Cosmos + Mobbin | todo indicador carrega procedência |
-| **Data visualization** | *small multiples* e comparação lado a lado em vez de um gráfico grande | comparação é par a par por `indicator.id` | gráfico 3D, donut, eixo truncado | Cosmos | biblioteca só renderiza; domínio vem pronto |
+| **Data visualization** | *small multiples* e comparação lado a lado em vez de um gráfico grande | comparação é par a par por `indicator.id` | gráfico 3D; donut; **escala que engana** — domínio recortado sem dizer (§9.5) | Cosmos | biblioteca renderiza geometria e escala; **nunca** é dona da transformação nem da semântica |
 | **Comparison** | diff explícito com **direção nomeada** e unidade | D26 exige descontinuidade explícita | seta verde/vermelha sem valor nem base | Mobbin | `ComparisonRow` com base declarada |
 | **Trust / Methodology** | "como isto foi calculado" **a um clique**, não em página escondida | explicabilidade é severidade alta, não cosmético | selo de confiança sem conteúdo | Cosmos | pattern `ProvenancePopover` |
 | **Settings** | configurações por **escopo do objeto** | é D22 literal | tela única com 40 toggles | Mobbin | uma superfície, três escopos |
@@ -395,7 +416,7 @@ alto contraste + terracota; quase-preto com um acento ácido; broadsheet com fio
 | **superfície** | painel, não cartão. Hierarquia por **régua e alinhamento**, quase sem sombra |
 | **contraste** | alto no dado, baixo na moldura. A moldura nunca compete |
 | **cor** | neutro dominante + **um** acento. Cor semântica é **reservada** — se tudo é colorido, nada é sinal |
-| **gráficos** | linha e barra finas, grid discreto, sem preenchimento gratuito, eixo **nunca** truncado |
+| **gráficos** | linha e barra finas, grid discreto, sem preenchimento gratuito; **escala honesta e exposta** (§9.5) |
 | **iconografia** | linear, peso único, sempre com rótulo |
 | **motion** | curto e preciso; o movimento é *assentar*, não *entrar* |
 | **Light/Dark** | Light = bancada clara com tinta escura; Dark = painel de instrumento. Mesma estrutura, luminância invertida — **não** inversão de cor |
@@ -501,8 +522,37 @@ lugar. Ordem de preferência:
    lugar de idioma, D23);
 3. armazenamento local **só** se passar pelo privacy gate.
 
-> Se (2) não existir, isto é **delta de contrato**, e a regra de D31.8 manda **registrar, não criar
+> Se (2) não existir, isto é **delta de contrato**, e a regra de P31.8 manda **registrar, não criar
 > hack**. Não inventar `localStorage` para preferência de conta porque foi mais fácil.
+
+### 9.5 Escala honesta — a regra que substitui "eixo nunca truncado"
+
+> **Corrigida pelo owner em 2026-08-09.** A regra absoluta *"eixo nunca truncado"* era boa intenção
+> e má regra: proibiria a leitura correta de uma série que varia 2 % em torno de 87 %, onde forçar
+> o zero esconde exatamente o que importa. O que se proíbe não é o corte — é **enganar**.
+
+**Regra: a escala nunca pode induzir leitura falsa, e nunca pode ser implícita.**
+
+| tipo | domínio | condição |
+|---|---|---|
+| **barra quantitativa** (comparação de magnitude) | **parte de zero** | exceção **explícita**, marcada na própria peça — nunca silenciosa. Barra é comparação de **área**; cortar a base multiplica a diferença percebida |
+| **série temporal** (leitura de variação) | **pode** ter domínio não-zero | os **limites ficam expostos** — eixo rotulado com mín/máx reais, sem depender de o leitor inferir |
+| **delta / comparação A×B** | domínio **simétrico** em torno de zero | senão "subiu 2" e "caiu 2" ganham tamanhos diferentes |
+
+Três regras de apoio, todas verificáveis:
+
+1. **O domínio chega decidido pelo view model.** Nenhum "auto-domínio" de biblioteca escolhe o que o
+   usuário vê. Domínio automático é uma decisão analítica disfarçada de default.
+2. **Eixo cortado é declarado, não deduzido.** Se o domínio não começa em zero, isso aparece na
+   peça — rótulo do eixo, marca de corte ou nota. O leitor nunca precisa desconfiar.
+3. **Nada de interpolação sobre buraco.** Ponto ausente é **ausência** — a linha não atravessa, e a
+   lacuna é visível. Ausência não é zero (é a mesma regra congelada em §11.2), e a série longitudinal
+   **tolera buraco** por D-Q23.
+
+**Consequência para a biblioteca:** Recharts (ou qualquer outra) **pode** desenhar geometria, eixos
+e escalas. **Não pode** ser dona de transformação nem de semântica analítica — binning, agregação,
+estatística, interpolação de faltantes ou escolha de domínio. Isso é `fonte-unica-do-resultado`, e
+não é negociável pela conveniência da API.
 
 ---
 
@@ -636,19 +686,44 @@ frentes ([[feedback_teste_verde_por_motivo_errado]]).
 
 | # | risco / contradição | gravidade | encaminhamento |
 |---|---|---|---|
-| **R1** | **Três sistemas de token concorrentes**; `--background`/`--primary` definidos duas vezes com valores diferentes; a única `.dark` mora em arquivo morto | 🔴 alta | Delta nº 1 da Missão Design 1. **D31 não é barato** |
-| **R2** | **Auth Supabase está VIVA e roteada** (`/login`, `/forgot-password`), enquanto Keycloak é o auth canônico. A narrativa "Supabase está morto" era sobre **acesso a dados** | 🔴 alta | **PRODUCT/SECURITY DELTA CANDIDATE.** Não é decisão de design. Registrado e **parado aqui** |
-| **R3** | `next-themes` instalado com **zero uso** — e é justamente a peça que D31 precisaria | 🟡 média | Decidir na Design 1: adotar como comutador oficial ou remover |
+| **R1** | **Três sistemas de token concorrentes**; `--background`/`--primary` definidos duas vezes com valores diferentes; a única `.dark` mora em arquivo morto | 🔴 alta | Delta nº 1 da Design 1 — **token único vale por si**, independente de tema. É a prova que D23 exige |
+| **R2** | **Auth Supabase está VIVA e roteada** (`/login`, `/forgot-password`), enquanto Keycloak é o auth canônico. A narrativa "Supabase está morto" era sobre **acesso a dados** | 🔴 alta | **Não é mais candidato.** A decisão arquitetural é que **Supabase está aposentado** → **DELTA OBRIGATÓRIO DE ERRADICAÇÃO**, em frente própria, **separada da Design**. Não implementado nesta missão. Ver §13.1 |
+| **R3** | `next-themes` instalado com **zero uso** — é a peça que P31 precisaria, se autorizado | 🟡 média | **Não** decidir na Design 1: sem autorização de tema, remover ou deixar quieto |
 | **R4** | `LandingPage` (1.215) e `AionPage` (1.180) **violam a regra anti-monólito**, que diz *"bloqueia fechamento"* | 🟡 média | Já é missão própria (Q7). Agora com critério objetivo: **< 1.000 linhas** |
 | **R5** | Responsive existe em **25 %** dos arquivos. D32 diz "não é retrofit", mas para o legado **será** | 🟡 média | D32 vale para superfície **nova**; legado converge por missão, sem promessa global |
-| **R6** | **Recharts pode violar `fonte-unica-do-resultado`** se fizer binning/agregação/domínio automático | 🟡 média | Adoção **condicional**: provar que dá para desligar tudo isso. Se não der, primitivas próprias |
+| **R6** | Recharts pode virar **dona de transformação/semântica analítica** (binning, agregação, interpolação, domínio automático) e violar `fonte-unica-do-resultado` | 🟡 média | Adoção **condicional**: renderizar geometria/escala é permitido; transformar não. Provar a separação, senão primitivas próprias |
 | **R7** | `web-design-guidelines` **busca a régua de uma URL externa em runtime** | 🟡 média | Vale como consultoria, **não como gate**. Para gate, congelar snapshot versionado no repo |
 | **R8** | `jspdf`, `sonner`, `tailwindcss-animate` instalados com **zero uso** | 🟢 baixa | Remover na primeira missão que abrir o `package.json` |
 | **R9** | Zod pode virar validador canônico "por conveniência" | 🟢 baixa | Barreira de lint por pasta desde o primeiro commit que instalar Zod |
 | **R10** | `package.json` declara `msw.workerDirectory`, mas o worker **nunca é montado** — a arquitetura de §6 depende dele | 🟢 baixa | Item explícito da Design 1 |
 
-**Nenhuma destas reabre D1–D30.** R2 é a única que toca produto, e por isso **para aqui**, como
-candidato a delta — não como decisão desta missão.
+**Nenhuma destas reabre D1–D30.**
+
+### 13.1 R2 — delta obrigatório de erradicação do Supabase
+
+> **Corrigido pelo owner em 2026-08-09:** R2 **não é candidato**. A decisão arquitetural já está
+> tomada — **Supabase está aposentado**. O que resta é erradicação, não avaliação.
+
+**Frente própria, separada da Design.** Não é decisão de design, não entra na Design 1, e **não foi
+implementada nesta missão**.
+
+Escopo medido do que ainda respira:
+
+| resíduo | onde | estado |
+|---|---|---|
+| `signInWithOAuth`, `signInWithPassword` | `src/features/auth/LoginPage.tsx` | **roteado** em `/login` |
+| `resetPasswordForEmail` | `src/features/auth/ForgotPasswordPage.tsx` | **roteado** em `/forgot-password` |
+| cliente | `src/lib/supabase` | vivo |
+| dependência | `@supabase/supabase-js@2.99.0` | instalada |
+
+Critério de pronto da erradicação: **zero** import de `@supabase/*` no `src/`, **zero** rota que
+dependa dele, dependência fora do `package.json`, e um **gate por AST** que falhe se voltar
+([[feedback_grep_cego_a_alias]] — grep não prova ausência).
+
+⚠️ **Atenção de sequenciamento:** as duas rotas são **caminho de autenticação real**. Apagar sem
+substituto tira o acesso de quem entra por ali. A erradicação precisa provar que o fluxo Keycloak
+cobre login, recuperação e callback **antes** de remover — e isso é trabalho da frente própria, não
+da Design.
 
 ---
 
