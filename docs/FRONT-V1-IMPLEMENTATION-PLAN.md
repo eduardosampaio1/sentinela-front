@@ -402,7 +402,24 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Pré:** M13. **Paraleliza com:** M15.
 - **DoD:** mutação (remover uma chave de `en.json`) → vermelho. **Blocker:** critério **18**.
 
-### M15 · Storybook + infraestrutura visual
+### M15 · Storybook + infraestrutura visual — ✅ EXECUTADA
+> **Estado:** executada. `.storybook/{main.ts,preview.tsx}`, 22 stories em `src/design/**`, gate
+> `src/test/v1/storybook-fonte-unica.test.ts` (12 casos, 10 mutações mortas).
+>
+> **Verificado no navegador de verdade** — o que nem a M09 nem a M12 conseguiram. Os 11 tokens de
+> motion resolvem (`--ds-duration-fast: 120ms`), e a A3 foi medida com CSS computado:
+> `1280px` → margem persistente `block`, colapsável `none`; `375px` → o inverso, gatilho de 44px.
+>
+> ⚠️ **Divergências:**
+> 1. O escopo cita `scenarios/`, que a **M18** ainda vai criar (`Pré: M17` → `Pré: M16, BD07`).
+>    O campo `Pré:` da M15 estava satisfeito, mas o escopo aponta três missões adiante.
+> 2. **Não há payload a escolher no DS.** A primeira versão das stories importou a fixture do
+>    contrato para cumprir "nenhuma story declara payload" ao pé da letra — e o gate da M04
+>    reprovou, com razão: o caminho carrega domínio. Os componentes do DS não consomem payload por
+>    construção; onde não há payload, não há cenário. A regra vale para quem consumir dado de
+>    contrato, e isso mora fora de `src/design/**`.
+> 3. **Regressão visual não entrou** — o plano põe fora até que uma mutação de token a faça falhar.
+
 - **Escopo:** Storybook consumindo **`scenarios/`**; story **não pode declarar dado inline**.
   Baseline de visual regression. **Fora:** colocar visual regression em gate (só depois de uma
   mutação de token o fazer falhar).
