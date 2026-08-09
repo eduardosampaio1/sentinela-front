@@ -22,9 +22,14 @@
 | **D8** | **Momentos da jornada, não personas.** O produto reage ao estado, não a Viewer/Admin/Analista | §6.4 |
 | **D9** | **Home do Workspace** = 1 Ações necessárias · 2 Em andamento · 3 Instâncias · 4 Resultados recentes. **Não** é dashboard de KPIs | §9.1 |
 | **D10** | **Regra "não tocar no ARGOS" REVOGADA**, substituída por regra atemporal de escopo | §1 |
+| **D11** | **A V1 terá Instância.** O nível entra como **novo delta explícito de backend**, posterior ao freeze atual. Não descongela nem reescreve as Ondas 1–8: é frente própria, com contrato, testes, provas e freeze próprios | §6.7 |
+| **D12** | **Instância é gate de RELEASE/Big Bang da V1 — não é gate de desenvolvimento das Etapas 1–7.** Essas etapas avançam sem ela, mas **não podem cristalizar `Workspace → Análise` como arquitetura definitiva** | §6.7, §14 |
 
-> **Q1 encerrada como pergunta de produto.** Instância existe. A pergunta que restava era técnica,
-> e foi **provada**: ver §6.6 — veredito **E**.
+> **Q1 e Q1' encerradas.** Instância existe (produto) e é tecnicamente **E** (prova em §6.6). A
+> decisão sobre o caminho está em **D11/D12** — não é mais pergunta aberta.
+
+> ⚠️ **Consequência de D5/D6/D7.** "V1 sem Instância" implicaria **reabrir o Experience Freeze**,
+> porque a hierarquia já está congelada como decisão de produto. Não se faz isso.
 
 ---
 
@@ -410,10 +415,56 @@ tentações estavam à mão:
 - ❌ **não** guardei pseudo-Instância local (o cadeado de privacidade proíbe, e seria mentira);
 - ❌ **não** derivei nome de Instância a partir de ID.
 
-**Delta mínimo que o backend precisaria** (para a decisão de vocês, não para eu executar):
-a análise precisa **nascer com** e **devolver** a Instância — o campo entrando no `create/submit`
-e saindo em `status`, `list` e `timeline`; e a listagem precisando filtrar por ele. Se as rotas de
-contexto forem promovidas ao contrato público, elas resolvem 1–4; **5 e 6 são o bloqueio real**.
+**Delta mínimo que o backend precisaria:** a análise precisa **nascer com** e **devolver** a
+Instância — o campo entrando no `create/submit` e saindo em `status`, `list` e `timeline`; e a
+listagem precisando filtrar por ele. Se as rotas de contexto forem promovidas ao contrato público,
+elas resolvem 1–4; **5 e 6 são o bloqueio real**.
+
+---
+
+### 6.7 Decisão sobre o caminho (D11/D12) — **Q1' encerrada**
+
+**A V1 terá Instância.** O nível entra como **novo delta explícito de backend**, posterior ao
+freeze atual.
+
+- **Não descongela nem reescreve as Ondas 1–8.** É frente própria, com **contrato, testes, provas
+  e freeze próprios**.
+- **Não implementar agora.** O backend permanece congelado até autorização explícita da frente de
+  Instância. O Big Bang permanece bloqueado.
+- **"V1 sem Instância" não é alternativa**: D5/D6/D7 já congelaram a hierarquia como decisão de
+  produto, e abandoná-la implicaria **reabrir o Experience Freeze**.
+
+#### Instância é gate de RELEASE, não gate de desenvolvimento
+
+| | |
+|---|---|
+| **gate de release / Big Bang da V1** | ✅ sim — a V1 não sai sem Instância |
+| **gate de desenvolvimento das Etapas 1–7** | ❌ não — elas avançam sem ela |
+
+A distinção tem uma consequência de projeto, e é ela que evita retrabalho: as Etapas 1–7 são
+**neutras à Instância**. Elas não dependem dela para funcionar, **e não podem cristalizar
+`Workspace → Análise` como arquitetura definitiva** — nem em rota, nem em breadcrumb, nem em
+assinatura de view model, nem em chave de cache. O que não se sabe ainda fica **aberto**, não
+fechado no formato de dois níveis.
+
+#### Critério mínimo do futuro delta — prova de ponta a ponta
+
+O delta de Instância só fecha provando, ponta a ponta:
+
+1. **catálogo/criação** da Instância **por contrato público** (hoje as rotas de contexto estão
+   fora do `public-v1` congelado);
+2. **associação** da análise à Instância no momento de criar/submeter;
+3. **persistência** da associação atravessando **Gateway → Orchestrator** (hoje o Gateway a
+   descarta e o Orchestrator nem a recebe);
+4. **recuperação** em `status`, `list` e timeline/read-model equivalente;
+5. **filtro** de análises por Instância;
+6. **reconstrução** de `Workspace → Instância → Análise` em **histórico e deep link**;
+7. **sobrevivência a reload** — sem estado local inventado, sem catálogo no browser, sem nome
+   derivado de ID.
+
+> Os itens 3, 4, 5 e 6 são exatamente o que a prova de §6.6 mostrou **não existir** hoje. O item 7
+> é o que impede a saída fácil: qualquer solução que só funcione enquanto a aba estiver aberta não
+> conta como resolvida.
 
 ## 7. Riscos de monólito (medidos, não estimados)
 
@@ -702,11 +753,11 @@ Fonte backend: `S` = `GET /{id}` (status) · `P` = `GET /{id}/progress` · `R` =
 | **W0** | sem Workspace (momento da jornada) | autenticado | criar | Workspace ativo | leva a criar o Workspace | criar Workspace | — | não | mantém | n/a | `/workspaces` | **parcial** | existe rota, não é o momento guiado |
 | W1 | Workspace vazio | escopo ativo | listar | vazio | leva a criar a **primeira Instância** | criar Instância | — | não | mantém | sim | `L` | **parcial** | hoje leva a "nova análise", sem Instância |
 | W1b | **Home do Workspace** | recorrente | abrir | Home | 1 Ações · 2 Em andamento · 3 Instâncias · 4 Recentes | resolver pendência | nova análise | sim | mantém | sim | `L` + `P` | **inexistente** | Home hoje é Launchpad sem essas 4 faixas |
-| W2 | primeira Instância | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E — §6.6** |
-| W3 | Instância sem análises | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E — §6.6** |
-| W4 | Instância com histórico | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E — §6.6** (histórico não filtra por Instância) |
-| W5 | nova análise **na Instância** | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E — §6.6** (associação é descartada) |
-| W6 | contexto do resultado / breadcrumb | resultado aberto | — | — | Workspace › Instância › Análise | — | — | — | — | sim | — | **inexistente** | 🔴 **E — §6.6** (read-model não devolve a Instância) |
+| W2 | primeira Instância | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E** → frente própria (§6.7); gate de release |
+| W3 | Instância sem análises | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E** → frente própria (§6.7) |
+| W4 | Instância com histórico | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E** → critério 5 do delta (§6.7): filtro por Instância |
+| W5 | nova análise **na Instância** | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E** → critérios 2 e 3 do delta (§6.7): associar e persistir |
+| W6 | contexto do resultado / breadcrumb | resultado aberto | — | — | Workspace › Instância › Análise | — | — | — | — | sim | — | **inexistente** | 🔴 **E** → critérios 4, 6 e 7 do delta (§6.7): recuperar, reconstruir, sobreviver ao reload |
 | W7 | papel do usuário na interface | qualquer | — | — | **nada** — sem badge "Admin" | — | — | — | — | — | `/v1/me` traz `role` | **decisão** | dado existe; **decidido não exibir** (§6.2) |
 | **U1** | arquivo válido | `prepared` | upload | `receiving`→`queued` | progresso do envio | — | cancelar | sim | retoma | sim | `S` | existe | — |
 | U2 | arquivo inválido | `prepared` | upload rejeitado | `prepared` | motivo público do erro | escolher outro | — | não | mantém | sim | problem+json | existe | — |
@@ -759,8 +810,9 @@ Fonte backend: `S` = `GET /{id}` (status) · `P` = `GET /{id}/progress` · `R` =
 
 Das 21 inexistentes:
 
-- **6 bloqueadas por delta de backend** — W2, W3, W4, W5, W6 (Instância, **§6.6 = E**) e F6
-  (cancelamento, Q4). Elas não são implementáveis só no Front;
+- **6 bloqueadas por delta de backend** — W2–W6 (Instância) e F6 (cancelamento, Q4). Não são
+  implementáveis só no Front. As cinco de Instância **têm caminho decidido**: frente própria,
+  posterior a este freeze (**D11**, §6.7), e são **gate de release da V1**, não de desenvolvimento;
 - **1 bloqueada por decisão de produto pequena** — W1b depende de como a Home compõe as 4 faixas,
   e as faixas 1/2/4 já são consumíveis do contrato congelado;
 - **14 dependem apenas de consumir contrato já congelado** (tipo **D**): os quatro eixos de
@@ -833,8 +885,8 @@ Tipos: **A** recomposição · **B** componente/feature nova · **C** DS precisa
 | Export real | CSV local do view model | `GET /analytics/export/download` + estados | **D** | baixo | S | não | não | **P0** |
 | Distinção dos 4 estados | processando × falha | + AÇÃO NECESSÁRIA e CONCLUÍDO COM RESTRIÇÃO | **A+C** | baixo | S | não | sim | **P0** |
 | Tela de mapping | banner | tela de confirmação | **B** | médio | M | não | forms | **P1** |
-| **Nível Instância** | inexistente | Workspace › Instância › Análise | 🔴 **E — confirmado (§6.6)** | **alto** | L | **SIM — delta de backend** | sim | **bloqueado** |
-| **Home do Workspace** (4 faixas) | Launchpad genérico | Ações · Em andamento · Instâncias · Recentes | **A+D** (faixa 3 depende de Instância) | baixo | M | não (faixas 1/2/4) | não | **P0** |
+| **Nível Instância** | inexistente | Workspace › Instância › Análise | 🔴 **E — delta explícito de backend, frente própria (§6.7)** | **alto** | L | **SIM** — contrato/testes/provas/freeze próprios | sim | **gate de RELEASE da V1** (não trava Etapas 1–7) |
+| **Home do Workspace** (4 faixas) | Launchpad genérico | Ações · Em andamento · Instâncias · Recentes | **A+D**; faixa 3 nasce como espaço declarado e vazio | baixo | M | não (faixas 1/2/4) | não | **P0** |
 | Badge de papel na UI | não existe | **continua não existindo** | **decisão** | — | — | não | não | **congelado (§6.2)** |
 | Hierarquia do resultado | seções planas | 6 níveis com "o que merece atenção" | **A** | baixo | M | não | tabs | **P1** |
 | Timeline da análise | inexistente | linha do tempo por eventos | **D** | baixo | S | não | pequena | **P2** |
@@ -860,37 +912,59 @@ eu **parei**, como instruído.
 
 Cada etapa é fechável e observável sozinha. Nada aqui foi iniciado.
 
-1. **Etapa 0 — ENCERRADA.** O modelo de usuário, a nomenclatura e a hierarquia estão congelados
-   (§6.1–6.5). Q1 foi **provado tecnicamente**: é **E** (§6.6). Consequência prática: as etapas
-   1–7 **não dependem** de Instância e podem ser desenhadas sem ela; a navegação por Instância
-   fica fora até haver delta de backend.
-2. **Etapa 1 — `/progress` como fonte da jornada.** Cliente + view model dos 4 eixos + os quatro
-   estados distintos. É o que desbloqueia P1/P2/P3/P5, A4/A5, X1–X5, F1/F2.
-3. **Etapa 2 — resultados progressivos.** Analytics visível antes do resultado final, com o
-   aviso honesto de que a Engine ainda roda (≠ `partial`).
-4. **Etapa 2b — Home do Workspace.** Faixas 1 (Ações necessárias), 2 (Em andamento) e 4
-   (Resultados recentes) saem de `L` + `P`, já congelados. A faixa 3 (Instâncias) fica vazia
-   até a Etapa 8. Home não vira dashboard de KPIs.
-5. **Etapa 3 — export real.** Substituir o CSV local pelo download do backend, com os 5 estados.
+> **Regra que atravessa as Etapas 1–7: NEUTRALIDADE À INSTÂNCIA.**
+> Elas avançam sem Instância (D12) — e por isso mesmo **não podem cristalizar
+> `Workspace → Análise` como arquitetura definitiva**. Na prática:
+>
+> - **rotas** não assumem que `analysisId` pendura direto no workspace;
+> - **breadcrumb** é montado a partir de uma lista de degraus, não de dois níveis fixos;
+> - **view models** e **chaves de cache de query** não são assinados como
+>   `(workspaceId, analysisId)` fechado;
+> - **listagem/histórico** já nascem preparados para receber um filtro a mais;
+> - o que ainda não se sabe fica **aberto**, não resolvido no formato de dois níveis.
+>
+> Nada disso exige a Instância para funcionar hoje. Exige apenas não fechar a porta.
+
+0. **Etapa 0 — ENCERRADA.** Modelo de usuário, nomenclatura e hierarquia congelados (§6.1–6.5).
+   Q1 provado tecnicamente (**E**, §6.6) e Q1' decidida (**D11/D12**, §6.7).
+1. **Etapa 1 — `/progress` como fonte da jornada.** Cliente + view model dos 4 eixos + os quatro
+   estados distintos. Desbloqueia P1/P2/P3/P5, A4/A5, X1–X5, F1/F2.
+2. **Etapa 2 — resultados progressivos.** Analytics visível antes do resultado final, com o aviso
+   honesto de que a Engine ainda roda (≠ `partial`).
+3. **Etapa 2b — Home do Workspace.** Faixas 1 (Ações necessárias), 2 (Em andamento) e 4
+   (Resultados recentes) saem de `L` + `P`, já congelados. A faixa 3 (Instâncias) nasce como
+   **espaço declarado e vazio** — não como faixa inexistente, para a Home não precisar ser
+   redesenhada quando o delta fechar. Home não vira dashboard de KPIs.
+4. **Etapa 3 — export real.** Substituir o CSV local pelo download do backend, com os 5 estados.
    Manter o CSV como "exportar o que está na tela" **ou** remover — decisão pequena (Q6).
-5. **Etapa 4 — higiene do legado.** Unificar histórico; decompor `LandingPage`/`AionPage`;
-   levar `shared/states` para os tokens.
+5. **Etapa 4 — higiene do legado.** Unificar histórico; decompor `LandingPage`/`AionPage`; levar
+   `shared/states` para os tokens.
 6. **Etapa 5 — hierarquia do resultado.** Recomposição em 6 níveis; cruzamentos e metodologia.
 7. **Etapa 6 — mapping como tela.** Aqui entram RHF + Zod, se aprovados.
 8. **Etapa 7 — gráficos.** Recharts só na superfície analítica, lazy, recebendo view model
    agregado.
-9. **Etapa 8 — Instância.** 🔴 **Bloqueada por delta de backend** (§6.6). Não desenhar rotas,
-   breadcrumbs nem seletor de Instância antes disso — desenhar contra um contrato que descarta a
-   associação produziria uma tela que não sobrevive ao primeiro reload.
+9. **Etapa 8 — Instância.** 🔴 **Bloqueada até o delta de backend fechar** (§6.7). Não desenhar
+   rotas, breadcrumbs nem seletor de Instância antes disso — desenhar contra um contrato que
+   descarta a associação produziria uma tela que não sobrevive ao primeiro reload.
+
+**Gate de release da V1** (≠ gate de desenvolvimento): a V1 **não sai** sem a Etapa 8. As Etapas
+1–7 podem estar prontas e entregues; o release espera o delta de Instância.
 
 ---
 
 ## 15. Perguntas e decisões que voltam para vocês
 
+### 15.1 Encerradas (não são mais perguntas)
+
+| # | era | desfecho |
+|---|---|---|
+| ~~**Q1**~~ | "Instância" existe, e o contrato congelado a suporta? | **ENCERRADA.** Produto: existe (§6.3). Técnica: **E** — o contrato aceita os IDs e os **descarta**; nenhum read-model os devolve (§6.6) |
+| ~~**Q1'**~~ | delta de backend depois do freeze, ou V1 sem Instância? | **ENCERRADA.** A V1 **terá** Instância, como **novo delta explícito** posterior ao freeze — frente própria, com contrato/testes/provas/freeze próprios. Gate de **release**, não de desenvolvimento (**D11/D12**, §6.7). "V1 sem Instância" implicaria reabrir o Experience Freeze, e isso não se faz |
+
+### 15.2 Ainda abertas
+
 | # | pergunta | por que importa | consequência |
 |---|---|---|---|
-| ~~**Q1**~~ | ~~"Instância" existe?~~ | **ENCERRADA.** Produto decidiu: Instância é conceito oficial da V1 (§6.3). A prova técnica está em §6.6 | 🔴 **E — PRODUCT/BACKEND DELTA CANDIDATE.** O contrato aceita os IDs e os **descarta**; nenhum read-model os devolve. Delta mínimo descrito em §6.6 |
-| **Q1'** | O delta de Instância entra como **novo delta de backend** depois do Experience Freeze, ou a V1 sai sem Instância? | É a única decisão que muda a navegação inteira | Define se as Etapas 1–7 assumem hierarquia de 2 ou 3 níveis |
 | **Q2** | Resultados progressivos mudam o modelo mental: o usuário passa a ver analytics **antes** do resultado final. Confirmam? | É a mudança de experiência mais profunda desta frente | Define se a Etapa 2 acontece |
 | **Q3** | "Cobertura" na hierarquia do resultado: hoje o backend publica **contagens**, não percentual. Calcular no front é **proibido** pela regra de ouro | Aparece explicitamente na hierarquia candidata | Ou exibimos as 4 contagens, ou é **delta de backend** (E) |
 | **Q4** | Cancelamento de análise (U3, F6) não tem rota pública | Aparece em dois cenários pedidos | **E** — decisão de backend pós-freeze |
