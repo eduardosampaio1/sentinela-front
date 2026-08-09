@@ -408,7 +408,21 @@ existentes condenam.
 
 ---
 
-## 13. Perguntas de produto realmente novas
+## 13. Decisões tomadas sobre Q9–Q14 (congeladas)
+
+| # | decisão |
+|---|---|
+| **D19 (Q9)** | **SIM.** Alteração de senha/credenciais **sai da SPA** e usa o **Account Management do provedor canônico**. Não criar backend novo para reproduzir formulário de identidade |
+| **D20 (Q10)** | **SIM, com restrição.** Templates transacionais carregam **identidade visual mínima e consistente** do Sentinela, preservando como **critérios de aceite**: `lang`, HTML semântico, links descritivos, acessibilidade e **legibilidade sem CSS**. E-mail operacional **não vira peça de marketing** |
+| **D21 (Q12)** | **Excluir conta FORA da V1.** Remover a promessa; **não abrir B5 agora**. Capacidade futura. **Nenhum CTA pode permanecer** enquanto não existir operação real |
+| **D22 (Q13)** | **Ownership**, não "uma tela ou duas": **Conta/Preferências → superfície canônica Configurações**; **Workspace → configuração contextual do Workspace**; **Instância → configuração contextual da Instância**. `/profile` e `/dashboard/settings` são **superfícies legadas a convergir** para essa IA |
+| **D23 (Q14)** | **Idioma entra na V1.** **Tema não entra** sem prova de suporte canônico completo |
+
+**Q11 continua ABERTA como prova técnica** — ver [[DISCOVERY-0C-LONGITUDINALIDADE.md]] §1.
+
+---
+
+## 13.1 Perguntas originais (histórico)
 
 | # | pergunta | por que é decisão, não implementação |
 |---|---|---|
