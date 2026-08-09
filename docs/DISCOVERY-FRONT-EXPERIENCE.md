@@ -24,6 +24,12 @@
 | **D10** | **Regra "não tocar no ARGOS" REVOGADA**, substituída por regra atemporal de escopo | §1 |
 | **D11** | **A V1 terá Instância.** O nível entra como **novo delta explícito de backend**, posterior ao freeze atual. Não descongela nem reescreve as Ondas 1–8: é frente própria, com contrato, testes, provas e freeze próprios | §6.7 |
 | **D12** | **Instância é gate de RELEASE/Big Bang da V1 — não é gate de desenvolvimento das Etapas 1–7.** Essas etapas avançam sem ela, mas **não podem cristalizar `Workspace → Análise` como arquitetura definitiva** | §6.7, §14 |
+| **D13** | **Analytics aparece assim que `analytics = ready \| partial`**, mesmo com `final_result` pendente. Isso é **disponibilidade progressiva** — e **não** se chama "resultado parcial" só porque a Engine ainda roda. `analytics = partial` mantém significado próprio e **não** pode ser confundido com disponibilidade progressiva | §9.3, §9.5 |
+| **D14** | **A V1 exibe as 4 contagens.** Nada de percentual de cobertura calculado no Front, e **nenhum delta de backend agora** só para criar o percentual. Se um dia existir, vem do backend como **métrica canônica** | §11 |
+| **D15** | **Cancelamento fica FORA da V1.** Nenhum CTA ou promessa de cancelar onde o backend não suporta. O sistema representa honestamente que **uma análise iniciada não pode ser cancelada pelo usuário nesta versão**. Registrado como **dívida/capacidade futura**, não como bloqueio do Big Bang | §10, §13 |
+| **D16** | **Uma única noção de exportação: o artefato do backend.** O CSV local **sai**. Com `export = ready`, download; nos demais estados, representar o estado vindo de `/progress` | §9.4, §13 |
+| **D17** | **Decomposição de `LandingPage`/`AionPage` é MISSÃO PRÓPRIA**, escopada à parte. A dívida do bloqueio >1.000 linhas continua registrada, e **nenhuma responsabilidade nova entra nesses arquivos durante esta frente** | §7.1, §14 |
+| **D18** | **Zod NÃO substitui validação canônica.** `validator.ts`, `validatorV2.ts`, `leitores.ts` e afins ficam como estão. Zod pode ser usado em **formulários de entrada da UI** (inclusive mapping). Trocar fronteira validada exigiria missão própria de **paridade formal** | §4, §14 |
 
 > **Q1 e Q1' encerradas.** Instância existe (produto) e é tecnicamente **E** (prova em §6.6). A
 > decisão sobre o caminho está em **D11/D12** — não é mais pergunta aberta.
@@ -651,7 +657,7 @@ flowchart TD
     MAP -->|Nao| MAPUI[ACAO NECESSARIA - confirmar como ler as colunas]:::act
     MAPUI --> CONF{Usuario confirma?}
     CONF -->|Sim| PROT
-    CONF -->|Abandona| PEND[Fica como pendencia na Home]:::act
+    CONF -->|Sai sem confirmar| PEND[Fica como pendencia na Home - NAO e cancelamento]:::act
     MAP -->|Sim| PROT[Protegendo informacoes sensiveis]
     PROT --> PREP[Preparando a analise]
     PREP --> OUT[[Vai para 9.3 - Processamento]]
@@ -680,7 +686,7 @@ flowchart TD
     EIXO -->|analytics ready ou partial| EARLY[Resultados analiticos JA visiveis]:::proc
     EIXO -->|analytics withheld| WH[CONCLUIDO COM RESTRICAO]:::restr
     EIXO -->|analytics failed| AF[FALHA so do componente analitico]:::fail
-    EIXO -->|export ready| DL[Download disponivel]
+    EIXO -->|export ready| DL[Download disponivel - artefato do BACKEND, export unico]
     EIXO -->|export preparing| XP[PROCESSANDO export - diferente de analytics]:::proc
     EIXO -->|engine failed| EF[FALHA do motor - analytics segue visivel]:::fail
     EIXO -->|final_result pending| WAIT[Resultado completo em preparo]:::proc
@@ -705,7 +711,7 @@ flowchart TD
     RES --> H3[Evidencias - distribuicoes e cruzamentos]
     RES --> H4[Qualidade dos dados]
     RES --> H5[Metodologia e procedencia]
-    RES --> H6[Exportacoes]
+    RES --> H6[Exportacoes - artefato do backend quando export=ready. Sem CSV local]
 
     RES --> BACK[Voltar para a Instancia]
     RES --> NEW2[Nova analise na mesma Instancia]
@@ -717,9 +723,21 @@ flowchart TD
 | estado | significa | exemplo que NÃO é |
 |---|---|---|
 | **PROCESSANDO** | trabalho ainda acontecendo | ≠ `export preparing` confundido com analytics rodando |
+| **DISPONÍVEL PROGRESSIVAMENTE** | um componente terminou e já pode ser visto, **enquanto outro ainda roda** | ⚠️ **NÃO é "resultado parcial"**, e **não é** `analytics = partial` — ver o quadro abaixo (D13) |
 | **AÇÃO NECESSÁRIA** | o sistema espera decisão do usuário | mapping pendente |
 | **CONCLUÍDO COM RESTRIÇÃO** | terminou, e parte não pode ser exibida | `withheld` ≠ `failed`; `partial` ≠ `withheld` |
 | **FALHA** | componente não conseguiu concluir | "resultado parcial porque a Engine ainda roda" ≠ `analytics partial` |
+
+#### As duas coisas que a palavra "parcial" já confundiu (D13)
+
+| o que é | o que significa | como a tela diz |
+|---|---|---|
+| **disponibilidade progressiva** | `analytics` terminou (`ready` **ou** `partial`) e `final_result` ainda está pendente | *"Os resultados analíticos já estão disponíveis. O motor de análise ainda está processando."* |
+| **`analytics = partial`** | o componente analítico **concluiu** e **omitiu blocos** por privacidade | *"Parte dos resultados foi omitida para evitar revelar grupos pequenos."* |
+
+As duas podem ocorrer **ao mesmo tempo** — `analytics = partial` com `final_result = pending` — e
+nesse caso a tela precisa dizer **as duas coisas**, não escolher uma. Colapsá-las numa palavra só
+("parcial") é o erro que D13 proíbe: a primeira é sobre **tempo**, a segunda sobre **conteúdo**.
 
 ### 9.6 Linguagem de produto ↔ vocabulário interno
 
@@ -759,21 +777,21 @@ Fonte backend: `S` = `GET /{id}` (status) · `P` = `GET /{id}/progress` · `R` =
 | W5 | nova análise **na Instância** | — | — | — | — | — | — | — | — | — | — | **inexistente** | 🔴 **E** → critérios 2 e 3 do delta (§6.7): associar e persistir |
 | W6 | contexto do resultado / breadcrumb | resultado aberto | — | — | Workspace › Instância › Análise | — | — | — | — | sim | — | **inexistente** | 🔴 **E** → critérios 4, 6 e 7 do delta (§6.7): recuperar, reconstruir, sobreviver ao reload |
 | W7 | papel do usuário na interface | qualquer | — | — | **nada** — sem badge "Admin" | — | — | — | — | — | `/v1/me` traz `role` | **decisão** | dado existe; **decidido não exibir** (§6.2) |
-| **U1** | arquivo válido | `prepared` | upload | `receiving`→`queued` | progresso do envio | — | cancelar | sim | retoma | sim | `S` | existe | — |
+| **U1** | arquivo válido | `prepared` | upload | `receiving`→`queued` | progresso do envio | — | **—** (sem cancelar, D15) | sim | retoma | sim | `S` | existe | CTA de cancelar retirado |
 | U2 | arquivo inválido | `prepared` | upload rejeitado | `prepared` | motivo público do erro | escolher outro | — | não | mantém | sim | problem+json | existe | — |
-| U3 | upload em andamento | `receiving` | — | — | indicador de envio | — | cancelar | sim | retoma | sim | `S` | **parcial** | cancelamento não existe |
+| U3 | upload em andamento | `receiving` | — | — | indicador de envio | — | **—** | sim | retoma | sim | `S` | **parcial** | **D15**: sem cancelar. *Interromper o envio* seria abortar a requisição no cliente — coisa diferente, e deixaria a análise `prepared` abandonada. Ver contradição C1 (§16) |
 | U4 | queda de rede | `receiving` | erro | `prepared` | falha explícita | tentar de novo | — | não | retoma | sim | cliente | existe | sem retomada de bytes |
 | U5 | refresh no meio | qualquer | F5 | mesmo | retoma pelo id | — | — | sim | **sim** | sim | `S` | existe | provado em E2E |
 | U6 | tamanho/formato rejeitado | `prepared` | validação | `prepared` | limite declarado | corrigir | — | não | mantém | sim | problem+json | **parcial** | limite não é declarado antes |
 | **M1** | mapeamento inequívoco | `queued` | auto | `running` | "entendendo os dados" | — | — | sim | retoma | sim | `S` | existe | linguagem ainda técnica |
-| M2 | ambíguo | `needs_mapping` | — | espera decisão | **AÇÃO NECESSÁRIA** | confirmar leitura | cancelar | não | mantém | sim | `S` | **banner apenas** | **tela de mapping não existe** |
+| M2 | ambíguo | `needs_mapping` | — | espera decisão | **AÇÃO NECESSÁRIA** | confirmar leitura | **sair (fica pendente)** | não | mantém | sim | `S` | **banner apenas** | tela de mapping não existe; sair ≠ cancelar (D15) |
 | M3 | usuário confirma | `needs_mapping` | confirmar | `queued` | volta a processar | — | — | sim | retoma | sim | — | **inexistente** | idem |
 | M4 | usuário abandona | `needs_mapping` | sair | `needs_mapping` | pendência no histórico | retomar | — | não | mantém | sim | `L` | **parcial** | lista não destaca pendência |
 | M5 | base recusada | qualquer | rejeição | `failed` | motivo público | nova análise | — | não | mantém | sim | `S` | existe | — |
 | M6 | base sem conteúdo analisável | qualquer | rejeição | `failed` | motivo público | nova análise | — | não | mantém | sim | `S` | existe | — |
-| **P1** | Engine + Analytics rodando | `running` | — | — | **PROCESSANDO** por componente | — | cancelar | sim | retoma | sim | **`P`** | **inexistente** | hoje é um estado só |
-| P2 | Analytics termina primeiro | `running` | analytics ready | parcial disponível | analytics já visível | ver analytics | aguardar | sim | retoma | sim | **`P`+`A`** | **inexistente** | **maior lacuna de UX** |
-| P3 | Engine termina primeiro | `running` | engine ready | aguarda analytics | indicadores já visíveis | — | — | sim | retoma | sim | **`P`** | **inexistente** | idem |
+| **P1** | Engine + Analytics rodando | `running` | — | — | **PROCESSANDO** por componente | — | **—** (sem cancelar, D15) | sim | retoma | sim | **`P`** | **inexistente** | hoje é um estado só |
+| P2 | Analytics termina primeiro | `running` | `analytics = ready\|partial` | **disponibilidade progressiva** | analytics já visível, com aviso de que a Engine ainda roda | ver analytics | aguardar | sim | retoma | sim | **`P`+`A`** | **inexistente** | **maior lacuna de UX**. ⚠️ **não** chamar de "resultado parcial" (D13) |
+| P3 | Engine termina primeiro | `running` | `engine = ready` | **disponibilidade progressiva** | indicadores já visíveis, analytics ainda processando | — | — | sim | retoma | sim | **`P`** | **inexistente** | idem — e também **não** é "resultado parcial" (D13) |
 | P4 | recovery da Engine | `recovering` | auto | `running` | "retomando" | — | — | sim | retoma | sim | `S` | existe | — |
 | P5 | recovery do Analytics | `running` | auto | `running` | sem ruído | — | — | sim | retoma | sim | **`P`** | **inexistente** | invisível hoje |
 | **A1** | analytics `ready` | v2 | — | — | bloco completo | explorar | exportar | sim | mantém | sim | `R` | **existe** | — |
@@ -783,7 +801,7 @@ Fonte backend: `S` = `GET /{id}` (status) · `P` = `GET /{id}/progress` · `R` =
 | A5 | analytics `unknown` | — | — | — | indisponível, sem chute | reconsultar | — | sim | mantém | sim | **`P`** | **inexistente** | — |
 | **X1** | export `unavailable` | — | — | — | ação indisponível | — | — | sim | mantém | sim | **`P`** | **inexistente** | — |
 | X2 | export `preparing` | — | — | `ready` | **PROCESSANDO** (≠ analytics) | aguardar | — | sim | mantém | sim | **`P`** | **inexistente** | — |
-| X3 | export `ready` | — | — | — | download disponível | baixar | — | sim | mantém | sim | **`E`** | **inexistente** | hoje só CSV local |
+| X3 | export `ready` | — | — | — | download disponível | baixar | — | sim | mantém | sim | **`E`** | **inexistente** | export **único** (D16); o CSV local sai |
 | X4 | export `expired` | — | — | — | expirou | gerar de novo | — | não | mantém | sim | **`P`** | **inexistente** | — |
 | X5 | export `failed` | — | — | — | **FALHA** do export | tentar de novo | — | não | mantém | sim | **`P`** | **inexistente** | — |
 | **R1** | v1 histórico | `completed` | — | — | tela sem bloco analítico | exportar | nova análise | sim | mantém | sim | `R` | **existe** | — |
@@ -796,7 +814,7 @@ Fonte backend: `S` = `GET /{id}` (status) · `P` = `GET /{id}/progress` · `R` =
 | F3 | ambos falham | `failed` | — | — | falha | tentar de novo | nova análise | não | mantém | sim | `S` | existe | — |
 | F4 | componente indisponível | — | — | — | espera neutra, sem vermelho | reconsultar | — | sim | mantém | sim | problem+json | **existe** | `capacity_wait` já é neutro |
 | F5 | retry | `failed`+`retry_allowed` | retry | `queued` | mesmo `analysis_id` | — | — | sim | retoma | sim | `S` | **existe** | provado (0 prepare, 0 upload) |
-| F6 | cancelamento | qualquer | cancelar | — | — | — | — | — | — | — | — | **inexistente** | **não há rota pública de cancelar → Q4** |
+| F6 | cancelamento | qualquer | — | — | **a tela DIZ que não é possível cancelar nesta versão** | — | — | — | — | — | — | **fora da V1 (D15)** | dívida/capacidade futura — **não** é bloqueio do Big Bang |
 | **S1** | sessão expira | qualquer | 401 | `/session-expired` | sessão encerrada | entrar de novo | — | sim | perde rota | sim | AuthContext | **parcial** | não volta à rota anterior |
 | S2 | login novamente | deslogado | login | `/home` | home | — | — | sim | — | — | AuthContext | **parcial** | idem |
 | S3 | retorno à rota anterior | — | — | — | — | — | — | — | — | — | `state.from` | **parcial** | guardado no `ProtectedRoute`, não usado após expirar |
@@ -810,9 +828,11 @@ Fonte backend: `S` = `GET /{id}` (status) · `P` = `GET /{id}/progress` · `R` =
 
 Das 21 inexistentes:
 
-- **6 bloqueadas por delta de backend** — W2–W6 (Instância) e F6 (cancelamento, Q4). Não são
-  implementáveis só no Front. As cinco de Instância **têm caminho decidido**: frente própria,
-  posterior a este freeze (**D11**, §6.7), e são **gate de release da V1**, não de desenvolvimento;
+- **5 bloqueadas por delta de backend** — W2–W6 (Instância). Têm caminho decidido: frente
+  própria, posterior a este freeze (**D11**, §6.7), e são **gate de release da V1**, não de
+  desenvolvimento;
+- **1 fora do escopo da V1 por decisão** — F6 (cancelamento, **D15**): a tela passa a **dizer**
+  que não é possível cancelar, em vez de oferecer um CTA que não faz nada;
 - **1 bloqueada por decisão de produto pequena** — W1b depende de como a Home compõe as 4 faixas,
   e as faixas 1/2/4 já são consumíveis do contrato congelado;
 - **14 dependem apenas de consumir contrato já congelado** (tipo **D**): os quatro eixos de
@@ -831,13 +851,13 @@ Das 21 inexistentes:
 | **Analytics** | **existe** | `BlocoAnalitico` | completo |
 | ↳ conversas | existe | "Conversations in the projection" | — |
 | ↳ declared turns | existe | área de Medidas | — |
-| ↳ cobertura | **parcial** | as 4 contagens aparecem como contagens | **não há percentual** — e não pode haver: o backend não publica cobertura. Ver Q3 |
+| ↳ cobertura | **existe como DECIDIDO** | as 4 contagens (`com valor` · `vazio` · `ilegível` · `campo ausente`) | **D14: a V1 exibe as 4 contagens.** Sem percentual — nem calculado no Front (proibido), nem via delta de backend agora. Se um dia existir, vem como **métrica canônica** da origem |
 | ↳ Pareto / concentração | **existe** | `AreaDeConcentracao` | com exatidão declarada |
 | ↳ evolução temporal | **existe** | `AreaDeSerie` | janelas rotuladas pela granularidade |
 | **Evidências** | **parcial** | distribuições e dimensões existem | **cruzamentos não são apresentados** (contados em "About this view") |
 | **Qualidade dos dados** | **parcial** | contagens null/inválido/ausente por bloco | espalhado, sem seção própria |
 | **Metodologia / Tracking** | **parcial** | procedência = duas versões de contrato | `method_id`/`method_version`/`method_definition_digest` chegam no documento e **não** são exibidos |
-| **Exportações** | **parcial** | botão de CSV local | export do backend não é consumido |
+| **Exportações** | **a refazer** | botão de CSV local | **D16: export único.** O CSV local **sai**; entra o artefato do backend, com os 5 estados de `/progress` |
 
 **Duplicado:** histórico em `/canonical/analyses` e `/dashboard/history`.
 **Só recomposição:** Analytics, Pareto, temporal, distribuições — já são view models prontos;
@@ -882,7 +902,7 @@ Tipos: **A** recomposição · **B** componente/feature nova · **C** DS precisa
 |---|---|---|---|---|---|---|---|---|
 | Disponibilidade progressiva | 1 status agregado | 4 eixos (`engine`/`analytics`/`export`/`final_result`) | **D** | baixo | M | não | pequena | **P0** |
 | Analytics antes do resultado final | só após `completed` | visível quando `analytics ready/partial` | **D** | médio (novo modelo mental) | M | não | não | **P0** |
-| Export real | CSV local do view model | `GET /analytics/export/download` + estados | **D** | baixo | S | não | não | **P0** |
+| **Export único** | CSV local do view model | `GET /analytics/export/download` + 5 estados; **CSV local removido** | **D + F** | baixo | S | não | não | **P0** (D16) |
 | Distinção dos 4 estados | processando × falha | + AÇÃO NECESSÁRIA e CONCLUÍDO COM RESTRIÇÃO | **A+C** | baixo | S | não | sim | **P0** |
 | Tela de mapping | banner | tela de confirmação | **B** | médio | M | não | forms | **P1** |
 | **Nível Instância** | inexistente | Workspace › Instância › Análise | 🔴 **E — delta explícito de backend, frente própria (§6.7)** | **alto** | L | **SIM** — contrato/testes/provas/freeze próprios | sim | **gate de RELEASE da V1** (não trava Etapas 1–7) |
@@ -893,13 +913,13 @@ Tipos: **A** recomposição · **B** componente/feature nova · **C** DS precisa
 | Cruzamentos (evidências) | contados, não exibidos | área própria | **A** | baixo | S | não | não | **P2** |
 | Metodologia/tracking | não exibido | seção de procedência | **A** | baixo | S | não | não | **P2** |
 | Gráficos (Recharts) | zero | só na superfície analítica | **B** | médio (peso) | M | não | sim | **P2** |
-| Formulários (RHF+Zod) | `useState` manual | validação declarativa | **B** | médio | M | não | forms | **P2** |
+| Formulários (RHF+Zod) | `useState` manual | validação declarativa **de FORMULÁRIO** | **B** | médio | M | não | forms | **P2** (D18) — Zod **não** toca validação de contrato |
 | Histórico duplicado | 2 telas | 1 | **F** | baixo | S | não | não | **P1** |
-| `LandingPage`/`AionPage` >1.000 | bloqueio da regra | decompostas | **F** | médio | L | não | não | **P1** |
-| Supabase em profile/settings | direto | pelo contrato | **F ou E** | médio | M | **decisão** | não | **P2 — Q5** |
+| `LandingPage`/`AionPage` >1.000 | bloqueio da regra | decompostas | **F** | médio | L | não | não | 🔶 **MISSÃO PRÓPRIA (D17)** — fora desta frente; nenhuma responsabilidade nova neles |
+| Supabase em profile/settings | direto | a definir | **F ou E — indeterminado** | médio | M | **prova pendente** | não | **Q5 — frente própria; NÃO entra no delta de Instância** |
 | `shared/states` com hex | fora dos tokens | dentro | **A+C** | baixo | S | não | sim | **P1** |
-| Cancelamento de análise | inexistente | cancelar | **E** | — | — | **sim** | — | **bloqueado — Q4** |
-| Cobertura como % | contagens | percentual | **E** | — | — | **sim** | — | **bloqueado — Q3** |
+| Cancelamento de análise | inexistente | **fora da V1** — a tela diz que não é possível | **decisão (D15)** | baixo | S | não | não | **dívida/capacidade futura** — não bloqueia o Big Bang |
+| Cobertura | contagens | **as 4 contagens** | **decisão (D14)** | baixo | — | não | não | **encerrado** — percentual só como métrica canônica futura |
 | Virtualização de listas | nenhuma | quando crescer | **B** | baixo | S | não | não | P3 |
 | `adapterV2.ts` 570 linhas | acima do gatilho | dividido por bloco | **A** | baixo | S | não | não | P2 |
 
@@ -929,18 +949,26 @@ Cada etapa é fechável e observável sozinha. Nada aqui foi iniciado.
    Q1 provado tecnicamente (**E**, §6.6) e Q1' decidida (**D11/D12**, §6.7).
 1. **Etapa 1 — `/progress` como fonte da jornada.** Cliente + view model dos 4 eixos + os quatro
    estados distintos. Desbloqueia P1/P2/P3/P5, A4/A5, X1–X5, F1/F2.
-2. **Etapa 2 — resultados progressivos.** Analytics visível antes do resultado final, com o aviso
-   honesto de que a Engine ainda roda (≠ `partial`).
+2. **Etapa 2 — disponibilidade progressiva.** ✅ **Autorizada conceitualmente (Q2/D13).**
+   Analytics visível assim que `analytics = ready | partial`, com o aviso honesto de que o motor
+   ainda roda. **Não** chamar de "resultado parcial"; `analytics = partial` mantém significado
+   próprio, e as duas coisas podem coexistir (ver o quadro em §9.5).
 3. **Etapa 2b — Home do Workspace.** Faixas 1 (Ações necessárias), 2 (Em andamento) e 4
    (Resultados recentes) saem de `L` + `P`, já congelados. A faixa 3 (Instâncias) nasce como
    **espaço declarado e vazio** — não como faixa inexistente, para a Home não precisar ser
    redesenhada quando o delta fechar. Home não vira dashboard de KPIs.
-4. **Etapa 3 — export real.** Substituir o CSV local pelo download do backend, com os 5 estados.
-   Manter o CSV como "exportar o que está na tela" **ou** remover — decisão pequena (Q6).
-5. **Etapa 4 — higiene do legado.** Unificar histórico; decompor `LandingPage`/`AionPage`; levar
-   `shared/states` para os tokens.
+4. **Etapa 3 — export único (D16).** O CSV local **é removido**; entra o download do artefato do
+   backend. Com `export = ready`, botão de baixar; nos demais estados, representar o estado vindo
+   de `/progress`. Uma noção só de exportação — dois "exports" com semânticas diferentes seria
+   exatamente a confusão que a decisão evita.
+5. **Etapa 4 — higiene do legado.** Unificar histórico e levar `shared/states` para os tokens.
+   🔶 **A decomposição de `LandingPage`/`AionPage` SAIU desta etapa (D17)**: é missão própria,
+   explicitamente escopada, e não se mistura com a experiência operacional. Enquanto isso,
+   **nenhuma responsabilidade nova entra nesses arquivos**.
 6. **Etapa 5 — hierarquia do resultado.** Recomposição em 6 níveis; cruzamentos e metodologia.
-7. **Etapa 6 — mapping como tela.** Aqui entram RHF + Zod, se aprovados.
+7. **Etapa 6 — mapping como tela.** Aqui entram RHF + Zod **para o formulário** (D18). Zod
+   **não** substitui `validator.ts`, `validatorV2.ts`, `leitores.ts` nem qualquer validação
+   canônica — trocar fronteira já validada exigiria missão própria de paridade formal.
 8. **Etapa 7 — gráficos.** Recharts só na superfície analítica, lazy, recebendo view model
    agregado.
 9. **Etapa 8 — Instância.** 🔴 **Bloqueada até o delta de backend fechar** (§6.7). Não desenhar
@@ -950,6 +978,14 @@ Cada etapa é fechável e observável sozinha. Nada aqui foi iniciado.
 **Gate de release da V1** (≠ gate de desenvolvimento): a V1 **não sai** sem a Etapa 8. As Etapas
 1–7 podem estar prontas e entregues; o release espera o delta de Instância.
 
+### 14.1 Missões SEPARADAS desta frente
+
+| missão | escopo | por que separada |
+|---|---|---|
+| **M-A — Decomposição dos monólitos públicos** (D17) | `LandingPage.tsx` (1.215) e `AionPage.tsx` (1.180) | são páginas públicas legadas; misturá-las com a experiência operacional atrasaria as duas e ampliaria o blast radius. A dívida do bloqueio >1.000 linhas continua registrada; a regra 11 já impede anexar feature nova a elas |
+| **M-B — Delta de Instância** (D11) | backend + front | frente própria, com contrato/testes/provas/freeze próprios (§6.7) |
+| **M-C — Prova de Q5** (Profile/Settings × Supabase) | investigação documental | ver §15.2; **não** entra no delta de Instância |
+
 ---
 
 ## 15. Perguntas e decisões que voltam para vocês
@@ -958,20 +994,49 @@ Cada etapa é fechável e observável sozinha. Nada aqui foi iniciado.
 
 | # | era | desfecho |
 |---|---|---|
-| ~~**Q1**~~ | "Instância" existe, e o contrato congelado a suporta? | **ENCERRADA.** Produto: existe (§6.3). Técnica: **E** — o contrato aceita os IDs e os **descarta**; nenhum read-model os devolve (§6.6) |
-| ~~**Q1'**~~ | delta de backend depois do freeze, ou V1 sem Instância? | **ENCERRADA.** A V1 **terá** Instância, como **novo delta explícito** posterior ao freeze — frente própria, com contrato/testes/provas/freeze próprios. Gate de **release**, não de desenvolvimento (**D11/D12**, §6.7). "V1 sem Instância" implicaria reabrir o Experience Freeze, e isso não se faz |
+| ~~**Q1**~~ | "Instância" existe, e o contrato congelado a suporta? | **ENCERRADA.** Produto: existe (§6.3). Técnica: **E** — o contrato aceita os IDs e os **descarta** (§6.6) |
+| ~~**Q1'**~~ | delta de backend depois do freeze, ou V1 sem Instância? | **ENCERRADA — D11/D12.** A V1 terá Instância, como delta explícito posterior, frente própria. Gate de **release**, não de desenvolvimento (§6.7) |
+| ~~**Q2**~~ | mostrar Analytics antes do resultado final? | **APROVADA — D13.** Sim, com `analytics = ready \| partial`. É **disponibilidade progressiva**, não "resultado parcial"; `analytics = partial` mantém significado próprio |
+| ~~**Q3**~~ | cobertura: contagens ou percentual? | **ENCERRADA — D14.** A V1 exibe as **4 contagens**. Sem cálculo no Front e sem delta de backend agora; percentual futuro só como **métrica canônica** |
+| ~~**Q4**~~ | cancelamento de análise | **ENCERRADA — D15.** **Fora da V1.** CTAs de cancelar removidos; a tela **diz** que não é possível. Dívida/capacidade futura, **não** bloqueia o Big Bang |
+| ~~**Q6**~~ | o CSV local fica ou sai? | **ENCERRADA — D16.** **Sai.** Uma única noção de exportação: o artefato do backend, com os estados de `/progress` |
+| ~~**Q7**~~ | decompor `LandingPage`/`AionPage` nesta frente? | **ENCERRADA — D17.** **Missão própria** (M-A, §14.1). Nenhuma responsabilidade nova nesses arquivos durante esta frente |
+| ~~**Q8**~~ | Zod substitui os validadores canônicos? | **ENCERRADA — D18.** **Não.** Zod só em **formulário de entrada** (inclusive mapping). Validação canônica intocada; troca exigiria missão de paridade formal |
 
-### 15.2 Ainda abertas
+### 15.2 A única pergunta realmente aberta
 
-| # | pergunta | por que importa | consequência |
+| # | pergunta | por que continua aberta |
+|---|---|---|
+| **Q5** | `ProfilePage`/`SettingsPage` chamam `supabase.auth.updateUser` direto. Isso é violação da regra 19 e o que exigiria contrato novo? | Falta **prova específica**, e ela **não entra no delta de Instância** — são dívidas arquiteturais diferentes, e empacotá-las juntas só porque ambas "precisam de contrato público" produziria um pacote de backend acumulando mudanças independentes |
+
+**Escopo da prova de Q5** (missão M-C, quando a frente correspondente chegar):
+
+1. **o que exatamente** `ProfilePage`/`SettingsPage` leem e escrevem;
+2. **quais operações já têm equivalente público** no contrato congelado;
+3. **quais realmente exigiriam contrato novo**;
+4. **se há acesso a banco de fato, ou apenas uso do cliente de Auth do Supabase** — a distinção
+   importa para interpretar corretamente a regra 19 ("front não acessa banco diretamente"):
+   trocar senha por um SDK de identidade **não é** o mesmo que ler tabela.
+
+> Observação honesta sobre o item 4: a evidência que tenho hoje é `supabase.auth.updateUser(...)`
+> nos dois arquivos — o que **sugere** cliente de Auth, e não acesso a banco. Não confirmei, e por
+> isso a pergunta continua aberta em vez de eu declará-la resolvida.
+
+---
+
+## 16. Contradições e pontos de atenção surgidos destas decisões
+
+Registro o que as decisões desta rodada deixaram em tensão. Nenhum é bloqueio; todos precisam de
+uma frase de produto na hora de implementar.
+
+| # | tensão | onde aparece | encaminhamento sugerido |
 |---|---|---|---|
-| **Q2** | Resultados progressivos mudam o modelo mental: o usuário passa a ver analytics **antes** do resultado final. Confirmam? | É a mudança de experiência mais profunda desta frente | Define se a Etapa 2 acontece |
-| **Q3** | "Cobertura" na hierarquia do resultado: hoje o backend publica **contagens**, não percentual. Calcular no front é **proibido** pela regra de ouro | Aparece explicitamente na hierarquia candidata | Ou exibimos as 4 contagens, ou é **delta de backend** (E) |
-| **Q4** | Cancelamento de análise (U3, F6) não tem rota pública | Aparece em dois cenários pedidos | **E** — decisão de backend pós-freeze |
-| **Q5** | `ProfilePage`/`SettingsPage` ainda chamam `supabase.auth.updateUser` direto | Contradiz "front não acessa banco diretamente na arquitetura-alvo" (Top 40, item 19) | Migrar exige rota pública equivalente → possivelmente **E** |
-| **Q6** | O botão "Export" atual gera CSV **local** do view model. Com o export do backend, ele fica, vira "exportar esta tela", ou sai? | Dois exports com nomes parecidos confundem | Decisão pequena, mas de produto |
-| **Q7** | `LandingPage` e `AionPage` violam o bloqueio de 1.000 linhas hoje. Decompor entra nesta frente ou vira missão própria? | A regra 11 proíbe anexar feature nova a elas — não proíbe deixá-las como estão | Define escopo da Etapa 4 |
-| **Q8** | Zod substituiria validadores manuais que hoje carregam semântica difícil (coerência estado×valor, `null` ≠ zero, folha ilegível derruba bloco) | Trocar sem preservar isso seria regressão silenciosa | Se sim, exige paridade provada antes da troca |
+| **C1** | **"Interromper envio" ≠ "cancelar análise".** D15 remove o cancelamento — mas abortar um **upload em curso** é ação de cliente (a análise já existe em `prepared` desde o `prepare`). Sem CTA nenhum, o usuário que escolheu o arquivo errado fica esperando um envio que ele sabe inútil | matriz U1/U3 | manter **sem CTA** na V1 (posição atual, e é a honesta). Se um dia entrar, chamar de **interromper envio** e dizer que a análise fica abandonada em preparação — nunca "cancelar" |
+| **C2** | **Análises abandonadas passam a ser visíveis.** Sem cancelamento (D15) e sem confirmação de mapping (M4), `prepared` e `needs_mapping` se acumulam no histórico | matriz M4, W1b | a faixa **"Ações necessárias"** da Home (D9) é o lugar natural — ela transforma lixo em pendência acionável |
+| **C3** | **Dois avisos simultâneos.** `analytics = partial` **com** `final_result = pending` pede que a tela diga **as duas coisas** (uma sobre conteúdo, outra sobre tempo) | §9.5 | tratado no quadro de §9.5; virou requisito, não descoberta tardia |
+| **C4** | **Export único remove uma capacidade que hoje funciona.** O CSV local existe e funciona; o export do backend ainda não é consumido. Removê-lo **antes** da Etapa 3 deixaria a V1 sem exportação nenhuma | §13, §14 | remover o CSV **na mesma etapa** em que o download do backend entra (Etapa 3) — não antes |
+| **C5** | **D14 vs. hierarquia candidata.** A hierarquia pedia "cobertura"; a decisão entrega **4 contagens**. A tela precisa nomeá-las de forma que ninguém as leia como percentual | §11 | rótulos explícitos (`com valor` · `vazio` · `ilegível` · `campo ausente`), como já estão no adapter |
+| **C6** | **D17 vs. regra do escoteiro.** A regra manda organizar o monólito que se toca; D17 diz para não tocar | §7, §14.1 | não há conflito **se** a frente não tocar esses arquivos — e é exatamente o que D17 determina. Se alguma etapa precisar tocá-los, ela para e aciona M-A |
 
 ---
 
