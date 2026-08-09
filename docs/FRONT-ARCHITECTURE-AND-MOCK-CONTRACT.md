@@ -253,18 +253,39 @@ nesses arquivos**.
 
 ---
 
-## 9. Gates de fronteira propostos (ainda não implementados)
+## 9. Gates de fronteira
+
+### 9.1 Implementados
+
+| gate | arquivo | mutação que o mata | missão |
+|---|---|---|---|
+| **um só vocabulário de token** | `design-tokens-unico.test.ts` | duplicar token semântico em segunda fonte | M08 |
+| **nenhum `#hex` novo em componente** | idem | cor literal em arquivo fora da dívida declarada | M08 |
+| **apelido aponta para papel existente** | idem | `var(--ds-inexistente)` | M08 |
+| **DS não conhece domínio** | `design-boundary.test.ts` | escrever `analysis` em `src/design/**` | **M04** |
+| **DS não acessa query** | idem | importar `@tanstack/react-query` em `src/design/**` | **M04** |
+| **TOKENS não importa nada** | idem | qualquer `import` na camada de tokens | **M04** |
+| **nenhum CSS órfão** | `css-orfao.test.ts` | criar `.css` sem consumidor | M03 |
+
+> **A fronteira do DS é verificada por AST, não por grep.** Grep encontra texto, e texto inclui
+> comentário — reprovar `// este primitive NÃO conhece Análise` obrigaria a documentação a violar
+> a própria regra. A AST não expõe comentário como nó, e `ImportDeclaration` é
+> `ImportDeclaration`, inclusive na forma dinâmica `import()` e no re-export.
+>
+> O analisador (`fronteiraDoDesign.ts`) fica **separado** do teste porque `src/design/` ainda tem
+> zero arquivos `.ts`: varrer a pasta passaria por vacuidade. Separado, ele é provado contra
+> fontes sintéticas — cada regra com um caso que ela pega e um caso vizinho que ela **não pode**
+> pegar — e só então aplicado à árvore. O gate também reprova se `src/design/` **desaparecer**.
+
+### 9.2 Ainda propostos
 
 | gate | mutação que precisa matá-lo |
 |---|---|
-| um só vocabulário de token | reintroduzir `--background` num segundo arquivo |
-| zero `#hex` em componente | trocar um token por literal |
-| primitive não conhece domínio | escrever `analysis` em `src/design/**` |
-| DS não acessa query | importar `@tanstack/react-query` em `src/design/**` |
 | fixture não vaza | importar `src/mocks/**` de um componente |
 | fixture × contrato | remover campo obrigatório da fixture |
 | segundo canal (V6) | remover o ícone do chip, deixando só cor |
 | **nome × valor do token** | apontar `--success` para um azul |
+| biblioteca externa não é API pública de página | importar Radix em `features/**/ui/**` |
 
 🔒 **Nenhum gate entra sem uma mutação que o faça falhar.** Gate verde sem prova vermelha é
 decoração — e esta casa já pagou esse preço.

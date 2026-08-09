@@ -131,11 +131,18 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **DoD:** `package.json` sem os quatro; nenhum CSS não importado. **Evidência:** diff + build.
 - **Blocker:** nenhum. Higiene.
 
-### M04 · Gate de fronteira: DS não conhece domínio nem query
+### ✅ M04 · Gate de fronteira: DS não conhece domínio nem query — **CONCLUÍDA**
 - **Escopo:** gate AST — `src/design/**` não pode conter `analysis|instance|workspace` nem importar
   `@tanstack/react-query`.
 - **Pré:** nenhuma (o gate pode nascer antes da pasta). **Paraleliza com:** M02, M03, M05–M07.
 - **Testes/Gates:** o próprio. **DoD:** mutação (escrever `analysis` em `src/design/**`) → vermelho.
+- **Evidência:** `fronteiraDoDesign.ts` (AST via API do TypeScript, zero dependência nova) +
+  `design-boundary.test.ts`. **4/4 mutações** mataram o caso esperado, com controle verde antes:
+  domínio no DS · import de query · import na camada TOKENS · **apagar `src/design/`**.
+- ⚠️ **Acrescentado ao previsto, com motivo:** a pasta tem **zero arquivos `.ts`**, então varrê-la
+  passaria por vacuidade. O analisador foi separado do teste e provado contra fontes sintéticas —
+  cada regra com um caso que pega e um vizinho que **não** pode pegar — e o gate reprova se a
+  pasta desaparecer. Sem isso, o gate nasceria verde por não ter olhado nada.
 - **Blocker:** prepara Fase 1.
 
 ### M05 · Gate de fronteira: mock não vaza
