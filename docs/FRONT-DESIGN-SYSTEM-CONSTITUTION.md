@@ -160,12 +160,30 @@ construção** em vez de improvável por disciplina. É o desenho medido na Verc
 `DESIGN-05`, com uma diferença: lá o legado ainda tem valor próprio (e um `success` azul); aqui a
 camada legada é **proibida** de ter valor.
 
-**Papéis desta Constituição que ainda NÃO têm valor**, e por quê: `border-strong`, `info`,
-`state-running|partial|withheld` e `chart-*`. Nenhum existe no sistema atual, e escolher cor agora
-seria decidir sem a prova que a própria Constituição exige — contraste ≥ 3:1 entre séries
-adjacentes, distinção em escala de cinza e sob deuteranopia. Essa prova só existe junto com o
-componente que os consome: `StatusBadge` (M11) e a primeira superfície analítica. **Existem como
-decisão; não existem como valor.**
+**Papéis desta Constituição que ainda NÃO têm valor**: `border-strong`, `info`,
+`state-running|partial|withheld` e `chart-*`.
+
+### Decidido na M11: `state-*` NÃO recebeu valor, e a razão é evidência
+
+A M11 construiu o `StatusBadge` — o componente que consumiria esses tokens — e a conclusão foi que
+**eles não são necessários**. O produto já havia materializado a decisão em código: `Retido.tsx`
+desenha retenção com `border-border bg-card text-muted-foreground` (**neutro**), e `notices.tsx`
+reserva `destructive` para `isError`, usando spinner neutro no indeterminado.
+
+Inventar `state-running`, `state-partial` e `state-withheld` teria **contrariado decisão já em
+produção** e violado V5: se cada um dos dezoito estados tivesse cor própria, nenhuma seria sinal.
+Os dezoito mapeiam para **quatro tons que já existiam**, e quem os distingue é a **forma** — que é
+o que V6 sempre exigiu.
+
+`border-strong`, `info` e `chart-*` seguem sem valor pela razão original: nenhum consumidor.
+
+### Achado medido na M11, ABERTO
+
+`--ds-success` e `--ds-warning` estão a **1,14:1** um do outro — em escala de cinza, praticamente a
+mesma mancha. Os valores vieram da paleta viva e foram **preservados** pela M08; alterá-los seria
+regressão visual em todo consumidor. A consequência **não** é que a tela mente: nenhum par de
+estados depende só desses tons, porque a forma os separa, e há gate provando. Fica como candidato
+à revisão da primeira superfície real.
 
 **Alvos verificáveis:** texto **≥ 4.5:1** · UI e não-texto **≥ 3:1** · séries adjacentes de
 gráfico **≥ 3:1** entre si.

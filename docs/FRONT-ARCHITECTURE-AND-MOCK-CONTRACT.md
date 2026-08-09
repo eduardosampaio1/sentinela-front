@@ -266,6 +266,9 @@ nesses arquivos**.
 | **DS não acessa query** | idem | importar `@tanstack/react-query` em `src/design/**` | **M04** |
 | **TOKENS não importa nada** | idem | qualquer `import` na camada de tokens | **M04** |
 | **nenhum CSS órfão** | `css-orfao.test.ts` | criar `.css` sem consumidor | M03 |
+| **cor nunca é canal único (V6)** | `statusBadge.test.tsx` | dois estados com mesmo tom e mesma forma; remover o ícone | **M11** |
+| **privacidade nao e falha** | idem | dar tom `negativo` a `withheld` | **M11** |
+| **contraste dos tons de estado** | `contraste-de-estado.test.ts` | apontar um tom para cor abaixo de 4.5:1 | **M11** |
 
 > **A fronteira do DS é verificada por AST, não por grep.** Grep encontra texto, e texto inclui
 > comentário — reprovar `// este primitive NÃO conhece Análise` obrigaria a documentação a violar

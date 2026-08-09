@@ -227,7 +227,7 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
      com flag: ícone informativo sem nome acessível é informação que o leitor de tela não recebe, e
      ícone decorativo anunciado é ruído. Sem default — quem usa escolhe.
 
-### M11 · `StatusBadge` — semântica única de estados
+### M11 · `StatusBadge` — semântica única de estados — CONCLUIDA
 - **Objetivo:** **um** componente para os **dois** vocabulários (análise e eixos).
 - **Existe porque:** é a defesa contra `HomeStatus`/`InstanceStatus`/`AnalysisStatus` com três
   linguagens para o mesmo estado — o critério 17 de UI COMPLETE.
@@ -239,6 +239,13 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   failed` **e** os 4 eixos; prova em **escala de cinza** e sob **deuteranopia**.
 - **DoD:** as 4 combinações + as duas provas de canal. **Evidência:** mutação (remover o ícone,
   deixar só cor) → vermelho.
+- **Entregue:** `src/design/patterns/` com `estados.ts` (a **única** tradução estado→aparência,
+  cobrindo os **8** estados públicos e os **10** de eixo) e `StatusBadge.tsx`. 36 casos, 4/4
+  mutações. **Nenhum token novo** — os 18 estados usam 4 tons já existentes.
+- **Três achados da execução:** (1) o gate da M04 reprovou meus tipos batizados a partir de objeto
+  de domínio, com razão — renomeados para o vocabulário do contrato, sem exceção; (2) o teste de V6
+  achou três colisões no meu próprio mapa, resolvidas com as formas `reservado`, `recebendo` e
+  `montando`; (3) `success` × `warning` medem 1,14:1 — registrado como aberto.
 - **Blocker:** habilita critério **17**.
 
 ### M12 · `ProvenanceMargin` — a assinatura
