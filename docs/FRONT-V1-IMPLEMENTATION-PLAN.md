@@ -462,6 +462,25 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Pré:** M05. **Paraleliza com:** Fase 1 tardia.
 - **DoD:** trocar mock↔real muda **uma variável**, zero arquivo de UI. **Blocker:** B10-front.
 
+### M17 · Fixtures presas ao schema publicado — EXECUTADA
+> **Estado:** executada. `src/test/fixtures/public-v1/selo.ts` +
+> `src/test/v1/fixtures-presas-ao-schema.test.ts` (13 casos, 8 mutacoes mortas).
+>
+> **Tres ligacoes, nenhuma duplicando schema:**
+> 1. **DIGESTO** — as fixtures selam o SHA-256 do contrato do qual foram derivadas. `version` nao
+>    serve de sentinela: continuou `public-v1` depois da BD07, que acrescentou uma operacao e
+>    alinhou 16 chaves. O digest muda com qualquer byte.
+> 2. **NAO INVENTAR** — toda chave existe no `*_fields` publicado.
+> 3. **NAO OMITIR** — obrigatorio = publicado pelo contrato **E** nao-opcional no tipo. A lista vem
+>    do contrato, a cardinalidade vem da AST do tipo canonico, e o gate nao redeclara nenhuma das
+>    duas — redigitar o schema aqui criaria a terceira representacao que a WS-A passou uma missao
+>    reduzindo a duas.
+>
+> **Cobertura declarada:** `PUBLICADO_SEM_FIXTURE` = 1 item
+> (`list_item_fields.observed_conversations`). Achado da missao: as fixtures de LISTA nao
+> exercitam esse campo, que o contrato publica e que a BD07 acabou de alinhar no mirror. Nao e
+> erro — o tipo o marca opcional — mas deixou de ser silencioso. A lista bate exatamente com a
+> realidade nos dois sentidos e so pode encolher.
 ### M17 · Fixtures presas ao schema publicado
 - **Existe porque:** é a barreira que mata em silêncio — o contrato evolui, a fixture não, e a
   suíte segue verde porque testa a fixture contra ela mesma.
