@@ -1003,11 +1003,14 @@ Cada etapa é fechável e observável sozinha. Nada aqui foi iniciado.
 | ~~**Q7**~~ | decompor `LandingPage`/`AionPage` nesta frente? | **ENCERRADA — D17.** **Missão própria** (M-A, §14.1). Nenhuma responsabilidade nova nesses arquivos durante esta frente |
 | ~~**Q8**~~ | Zod substitui os validadores canônicos? | **ENCERRADA — D18.** **Não.** Zod só em **formulário de entrada** (inclusive mapping). Validação canônica intocada; troca exigiria missão de paridade formal |
 
-### 15.2 A única pergunta realmente aberta
+### 15.2 Q5 — ENCERRADA e reformulada pela Etapa 0b
 
-| # | pergunta | por que continua aberta |
+| # | era | desfecho |
 |---|---|---|
-| **Q5** | `ProfilePage`/`SettingsPage` chamam `supabase.auth.updateUser` direto. Isso é violação da regra 19 e o que exigiria contrato novo? | Falta **prova específica**, e ela **não entra no delta de Instância** — são dívidas arquiteturais diferentes, e empacotá-las juntas só porque ambas "precisam de contrato público" produziria um pacote de backend acumulando mudanças independentes |
+| ~~**Q5**~~ | `supabase.auth.updateUser` viola a regra 19? | **ENCERRADA.** A pergunta estava errada: **Supabase não faz parte da arquitetura-alvo** — qualquer vestígio é legado a eliminar, e o critério é **zero Supabase no produto ativo**, não "zero acesso a banco". Inventário completo, classificação e mapa de substituição em **[[DISCOVERY-0B-SUPERFICIES-TRANSVERSAIS.md]] §3–§4** |
+
+> **Nenhuma pergunta da Etapa 0 continua aberta.** As perguntas novas nasceram na Etapa 0b
+> (Q9–Q14) e vivem naquele documento.
 
 **Escopo da prova de Q5** (missão M-C, quando a frente correspondente chegar):
 
