@@ -276,14 +276,33 @@ hoje executa `del project_id, environment_id`. Nenhuma destas é construível co
 | id | nome | rota pretendida | AS-IS | CTA principal | estados que suporta | contrato |
 |---|---|---|---|---|---|---|
 | **AN-01** | **Preparo + upload** | `/analyses/new` | `/canonical/analyses/new` | "Enviar conversas" | idle · `preparing` · `receiving` · **upload inválido** · **falha de rede** · `idempotency_conflict` | **REAL** (`prepare`, `data`, `submit`) |
-| **AN-02** | **Ação necessária** (`needs_mapping`) | `/analyses/{id}` | `/canonical/analyses/:id` | "Confirmar interpretação" | `needs_mapping` | 🔶 **APPROVED DELTA** — o estado é REAL; **a operação de confirmar não existe** |
+| **AN-02** | **Ação necessária** (`needs_mapping`) | `/analyses/{id}` | `/canonical/analyses/:id` | "Confirmar interpretação" | `needs_mapping` | 🔶 **APPROVED DELTA** — estado REAL; operação **existe no Ingestion**, **não** na fronteira pública |
 | **AN-03** | **Processamento** | `/analyses/{id}` | `/canonical/analyses/:id` | — (acompanhar) | `queued · running · recovering` + 4 eixos | **REAL** (`/progress` sem cliente) |
 | **AN-04** | **Falha** | `/analyses/{id}` | `/canonical/analyses/:id` | "Tentar novamente" se `retry_allowed` | `failed` retryable / não-retryable · `capacity_wait` | **REAL** (`retry`) |
 
-> 🔴 **AN-02 é o blocker mais silencioso do inventário.** `needs_mapping` é estado público
-> congelado, o front sabe exibi-lo — e **não há operação pública para resolvê-lo**. Uma tela que
-> diz "ação necessária" com um CTA sem operação viola a regra de nunca prometer ação inexistente
-> (a mesma que custou D21). Enquanto o delta não existir, AN-02 **informa e não age**.
+> 🔴 **AN-02 — corrigido em 2026-08-09 após verificação exigida pelo owner.** A afirmação
+> anterior (*"não há operação para resolvê-lo"*) estava **errada**. A operação **existe**, e o par
+> completo existe, no **Ingestion Service**:
+>
+> - `POST /ingestions/{ingestion_id}/profile` — *"Olha o arquivo e **PROPÕE**. Não decide nada — a
+>   confirmação é outra rota."* → é a **leitura** que a tela precisa;
+> - `POST /ingestions/{ingestion_id}/mapping` — *"**O portão humano.** Depois daqui a ingestão
+>   entra na fila de validação."* → é a **escrita**;
+> - `mapping/sugestao.py` foi escrito **para a tela**: *"opções na tela, confirmação"*;
+> - `mapping/ativacao.py` documenta as **oito condições conjuntivas** — faltando uma,
+>   `needs_mapping`.
+>
+> **O que realmente falta são três coisas, e todas menores do que construir a jornada:**
+> 1. **exposição pública** — `public-v1.json` não tem nenhuma operação de mapping;
+> 2. **ponte de identidade** — o público é chaveado por `analysis_id`; o Ingestion, por
+>    `ingestion_id`. A ponte existe no banco (`orchestrator_ingestion_inbox.analysis_id`), **não**
+>    na fronteira pública;
+> 3. **leitura pública dos candidatos** — o `PerfilDaIngestao` existe e é `extra="forbid"`, mas não
+>    atravessa o `/v1`.
+>
+> Isto rebaixa B2 de *"delta de backend grande"* para **exposição no Gateway + ponte de
+> identidade** — a lógica de domínio já está construída e testada. Continua sendo delta explícito,
+> e **nenhuma tela de mapping pode ser aprovada antes dele**.
 
 ### 4.6 Resultado — 1 superfície, 9 regiões
 
@@ -299,7 +318,7 @@ compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browse
 | **Analytics** | `GET /analytics` — `component_status`, `snapshot`, `withheld` | **REAL** (sem cliente — delta FE) |
 | **Evidências** | `result` v2 (facts) | **REAL** |
 | **Qualidade** | contagens A/B/C reconciliadas | **REAL** |
-| **Trust / procedência** | §10 | **REAL parcial** |
+| **Trust / procedência** | §10 | **REAL** — 11/11 campos existem; parte só precisa ser lida |
 | **Export** | `GET /analytics/export/download` + eixo `export` | **REAL** (sem cliente — delta FE) |
 | **Comparação com anterior** | duas leituras de `/result` + `indicator.id` | **REAL** para o par; **APPROVED DELTA** para "anterior da Instância" |
 
@@ -524,12 +543,27 @@ Só informação canônica **existente**. Nenhum "trust score" inventado.
 | momento da geração | `generated_at` | ✅ |
 | contagens reconciliadas | A/B/C (MF6.3) | ✅ |
 | **linha do tempo** | `GET /timeline` (`public-events-v1`) — lida dos **eventos duráveis**, não remontada | ✅ contrato / ❌ sem cliente |
-| `method_id`, `method_version`, parâmetros | — | ❌ **não existem** no contrato público |
-| `min_group_size` | — | ❌ **não existe** como campo público (o efeito aparece via `withheld`) |
+| **`min_group_size`** | `snapshot` → `ResumoDeDistribuicao`, `Concentracao`, `Cruzamento` | ✅ **existe E chega ao front** — `analyticsProjection.ts:63` o declara; `adapterV2.ts:365` mapeia `minGroupSize` |
+| **`method_id`, `method_version`, `method_parameters`, `method_definition_digest`** | `analytics_service/contracts/metodo.py` + `snapshot.py:120-125` | ⚠️ **existem no documento, o front NÃO os lê** |
+| `privacy_policy_version` | `contracts/distribuicao.py` | ⚠️ idem — existe, não é lido |
 
-> Registro honesto: dos 11 itens que a missão pediu, **9 existem** e **2 não**. Uma superfície de
-> trust que exibisse `method_id` ou `min_group_size` estaria **inventando**. Se forem requisito,
-> viram delta — não fixture.
+> 🔴 **Correção de 2026-08-09, exigida pelo owner — a versão anterior desta tabela estava errada.**
+> Eu havia declarado que `method_id`/`method_version`/`min_group_size` *"não existem no contrato
+> público"*. **Existem.** O erro foi de **instrumento, não de leitura**: procurei apenas em
+> `public-v1.json` e em `canonicalSchemaV2.ts`. Mas `analytics_read_model_fields` lista `snapshot`
+> como um documento **aninhado**, e é **dentro dele** que esses campos vivem — o JSON de topo nunca
+> os mostraria.
+>
+> **Não houve mudança de autoridade nem divergência de versão.** A `0c` estava certa. O que muda:
+>
+> - dos 11 itens pedidos, **11 existem** — nenhum precisa ser inventado, nenhum vira delta de
+>   contrato;
+> - **`min_group_size` já chega ao front** e já é consumido;
+> - `method_*` e `privacy_policy_version` **chegam no documento e são descartados na leitura** —
+>   é **delta de frontend** (ler o que já vem), não delta de backend;
+> - `method_definition_digest` é o campo que transforma *"method_version = 1"* numa **afirmação
+>   verificável** — mudar a fórmula sem trocar a versão fica detectável. É exatamente a matéria da
+>   superfície de trust, e está disponível.
 
 ---
 
@@ -777,7 +811,7 @@ Todos os critérios, sem exceção:
 | # | blocker | classe |
 |---|---|---|
 | **B1** | 4 operações contratadas **sem cliente** no front | **delta de frontend** — desbloqueável sozinho |
-| **B2** | `needs_mapping` **sem operação** de resolução | delta de backend |
+| **B2** | `needs_mapping`: operação **existe no Ingestion** (`/profile` + `/mapping`), mas **não é pública** e a chave é `ingestion_id`, não `analysis_id` | **exposição no Gateway + ponte de identidade** |
 | **B3** | **Instância** não autorizada | delta de produto+backend |
 | **B4** | `recommendation_id` **não chega** ao documento canônico | delta de contrato |
 | **B5** | **Q15** — cadeia do destinatário não comprovada | prova técnica |
@@ -832,7 +866,7 @@ Todos os critérios, sem exceção:
 
 ### Deltas necessários
 
-**Backend:** operação de resolução de `needs_mapping` (B2) · Instância inteira (B3) ·
+**Backend:** **expor** `/profile` + `/mapping` no `/v1` e ligar `analysis_id ↔ ingestion_id` (B2 — a lógica já existe) · Instância inteira (B3) ·
 `recommendation_id` no documento canônico (B4) · cadeia do destinatário (B5) · contrato de
 preferências (B7) · expiração de `prepared` (B8) · operação de exclusão de análise (D28).
 
