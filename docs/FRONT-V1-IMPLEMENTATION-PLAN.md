@@ -205,7 +205,22 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Pré:** nenhuma. **Paraleliza com:** M02–M07.
 - **DoD:** mutação (importar Radix em `features/**/ui/**`) → vermelho.
 
-### M07 · Gate anti-monólito ativo
+### M07 · Gate anti-monólito ativo — ✅ EXECUTADA
+> **Estado:** executada. `src/test/v1/anti-monolito.test.ts` (12 casos, 8 mutações mortas +
+> 1 controle invertido).
+>
+> **Baseline — 3 arquivos, nominal, com TETO congelado:**
+> `LandingPage.tsx` **1215** · `AionPage.tsx` **1180** · `test/fixtures/canonical-result/`
+> `massasV2.ts` **1035**. Nome sem teto seria permissão vitalícia; com teto, a dívida é catraca —
+> desce e nunca sobe, e um caso reprova a folga se o teto não descer no mesmo commit.
+>
+> ⚠️ **Divergência:** o plano previu **dois** arquivos; a árvore tem **três**. `massasV2.ts` é
+> massa de teste, mas a regra da casa não abre exceção por tipo nem por pasta — entrou
+> nominalmente, com motivo escrito, em vez de sair por `src/test/**`.
+>
+> **Fora do escopo, como o plano manda:** decompor os monólitos (D17, missão própria).
+- **Pré:** nenhuma. *(Decisão de owner: a ausência deste campo era omissão editorial, não*
+  *dependência escondida. M07 está no mesmo bloco de M05–M07, que declara paralelismo com M02–M07.)*
 - **Objetivo:** transformar a regra literal em gate.
 - **Existe porque:** *"acima de 1.000 linhas bloqueia fechamento"* é regra da casa, e
   `LandingPage` (1.215) e `AionPage` (1.180) a violam **hoje**.
