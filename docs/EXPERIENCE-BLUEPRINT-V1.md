@@ -57,12 +57,15 @@ operações**. Quatro operações contratadas não têm cliente no front e nada 
 O contrato eleito congela `me_read_model_fields`, `me_user_fields`, `me_workspace_fields`,
 `me_capabilities` e diz *"Congelado a partir da Onda 8"* — mas **`/v1/me` não aparece no array
 `operations`**. O read model é autoridade; a lista de operações está incompleta. **Vence o read
-model** (é o que o gate compara e o que o cliente usa). Registrar para correção na consolidação.
+model** (é o que o gate compara e o que o cliente usa). **WS-A3 resolveu por prova: é defeito do
+manifesto**, não semântica intencional — o Gateway implementa a rota e o contrato congela quatro
+grupos de campos dela. O patch JSON exato está em `WS-A-AUTORIDADE-DO-CONTRATO.md` §A3, **não
+aplicado** (repo congelado).
 
 ### 1.4 Conflito C3 — `/canonical/*` vaza nome de implementação
 
 As rotas AS-IS `/canonical/analyses…` publicam um nome de **camada interna** na URL. Sem decisão
-explícita, isso não pode virar IA pública. **Proposta em §3.4**, não aplicada.
+explícita, isso não pode virar IA pública. **Decidido em §3.4** (WS-A10).
 
 ---
 
@@ -177,8 +180,9 @@ Legenda: **verde** = REAL · **âmbar** = APPROVED DELTA · **azul** = parcialme
 
 ### 3.2 Deep links canônicos (pretendidos)
 
-`/analyses/{id}` · `/analyses/{id}/result` · `/analyses/{id}/result#comparison` ·
-`/instances/{id}` · `/instances/{id}/evolution` — os dois últimos dependem do delta de Instância.
+`/analyses/{id}` · `/analyses/{id}/result` · `/analyses/{id}/result#comparison` — **registrados**.
+`/instances/{id}` · `/instances/{id}/evolution` — **conceituais e bloqueados por B3**.
+`/canonical/*` é **interno/compatibilidade**, nunca IA pública.
 
 ### 3.3 Rotas de compatibilidade AS-IS (existem e redirecionam)
 
@@ -186,7 +190,7 @@ Legenda: **verde** = REAL · **âmbar** = APPROVED DELTA · **azul** = parcialme
 `/manage-context`, `/dashboard/workspaces`, `/dashboard/manage-context` → `/workspaces` ·
 `/dashboard/history/:id` → detalhe canônico.
 
-### 3.4 Proposta de rota pública (C3) — **não aplicada, exige decisão**
+### 3.4 Rotas públicas — **DECISÃO REGISTRADA** (WS-A10, 2026-08-09)
 
 | AS-IS | proposta | motivo |
 |---|---|---|
@@ -194,7 +198,7 @@ Legenda: **verde** = REAL · **âmbar** = APPROVED DELTA · **azul** = parcialme
 | `/canonical/analyses/new` | `/analyses/new` | idem |
 | `/canonical/analyses/:id` | `/analyses/:id` | idem |
 | `/canonical/analyses/:id/result` | `/analyses/:id/result` | idem |
-| `/home` | `/` autenticado | `/home/welcome` duplica `/home` sem diferença |
+| `/home` | 🔶 **NÃO congelado** | primeiro é preciso provar o *ownership* de `/`, hoje da `LandingPage`. Pergunta aberta, não decisão adiada em silêncio |
 
 ---
 
@@ -788,9 +792,16 @@ Todos os critérios, sem exceção:
 12. **visual regression** quando a infraestrutura existir — e só entra em gate depois de uma
     mutação de token o fazer falhar;
 13. **zero violação das fronteiras** de §17, provada por gate;
-14. **zero uso de vocabulário interno** na UI (`nunca_publicos`).
+14. **zero uso de vocabulário interno** na UI (`nunca_publicos`);
+15. **zero `#hex` literal em componente** — a E7 já provou que dá para manter em zero;
+16. **um único vocabulário de tokens**, com **mutação de duplicidade falhando**;
+17. **uma única semântica pública de estados** — sem estado bruto de backend na tela e sem
+    vocabulário paralelo por superfície (a defesa contra `HomeStatus`/`InstanceStatus`/
+    `AnalysisStatus` com três linguagens);
+18. **paridade `pt.json` × `en.json`**.
 
-> Isto é o futuro **UI EXPERIENCE FREEZE**. Não é atingível hoje: ver §20.
+> Isto é o futuro **UI EXPERIENCE FREEZE**, agora com **18 gates** (WS-A11). Não é atingível
+> hoje: ver §20.
 
 ---
 
@@ -810,7 +821,7 @@ Todos os critérios, sem exceção:
 
 | # | blocker | classe |
 |---|---|---|
-| **B1** | 4 operações contratadas **sem cliente** no front | **delta de frontend** — desbloqueável sozinho |
+| **B1** | 4 operações contratadas **sem cliente** no front | **delta de frontend** — confirmado por gate no WS-A7; desbloqueável sozinho (WS-C) |
 | **B2** | `needs_mapping`: operação **existe no Ingestion** (`/profile` + `/mapping`), mas **não é pública** e a chave é `ingestion_id`, não `analysis_id` | **exposição no Gateway + ponte de identidade** |
 | **B3** | **Instância** não autorizada | delta de produto+backend |
 | **B4** | `recommendation_id` **não chega** ao documento canônico | delta de contrato |
@@ -818,7 +829,7 @@ Todos os critérios, sem exceção:
 | **B6** | **Supabase Auth** vivo e roteado | delta obrigatório separado |
 | **B7** | Contrato de **preferências** (idioma) inexistente | delta de backend |
 | **B8** | **`prepared` abandonado nunca expira** | delta de lifecycle |
-| **B9** | 🔴 **três contratos divergentes** (C1) e gate cego a operações | **higiene de contrato — bloqueia a confiança em tudo acima** |
+| **B9** | três contratos divergentes (C1) | 🔶 **PARCIAL após WS-A** — o gate deixou de ser cego: compara operações, resolve autoridade por digest e recusa escolher em ambiguidade. Restam os **patches em repo congelado**. Ver `WS-A-AUTORIDADE-DO-CONTRATO.md` §A12.13 |
 
 ---
 
