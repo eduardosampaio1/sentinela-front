@@ -109,12 +109,16 @@ const ALVOS = ZONAS.flatMap((z) => arquivos(z))
 
 describe("M05 · 2. o gate não passa por vacuidade", () => {
   it("a matéria de teste EXISTE no disco — senão não há fronteira a proteger", () => {
-    // `src/mocks/**` (o nome que o plano supôs) não existe. Se um dia ninguém achar matéria de
-    // teste nenhuma, este caso falha em vez de o gate reportar verde por não ter o que varrer.
-    const materia = arquivos(resolve(SRC, "test")).filter((p) => {
-      const rel = posix(p);
-      return rel.includes("/test/msw/") || rel.includes("/test/fixtures/");
-    });
+    // Quando a M05 rodou, `src/mocks/**` não existia e a matéria vivia só em `src/test/`. A M16
+    // criou a pasta, e ela entra na conta — era o motivo de o padrão já cobrir `mocks?/` desde o
+    // começo. Se um dia ninguém achar matéria de teste nenhuma, este caso falha em vez de o gate
+    // reportar verde por não ter o que varrer.
+    const materia = [...arquivos(resolve(SRC, "test")), ...arquivos(resolve(SRC, "mocks"))].filter(
+      (p) => {
+        const rel = posix(p);
+        return rel.includes("/test/msw/") || rel.includes("/test/fixtures/") || rel.includes("/mocks/");
+      },
+    );
     expect(materia.length, "nenhuma matéria de teste encontrada em src/test/{msw,fixtures}").
       toBeGreaterThan(0);
   });
@@ -157,13 +161,24 @@ const BOOTSTRAP_LICENCIADO: ReadonlyMap<string, string> = new Map([
   [
     "src/e2e/bypass.ts",
     "só é `import()`-ado por main.tsx sob `import.meta.env.DEV && VITE_E2E`, que o Rollup elimina " +
-      "do bundle de produção; a prova de bundle vive em src/test/v1/e2e-bypass-lockdown.test.ts",
+      "do bundle de produção; a prova de bundle vive em src/test/onda8.unknowns-e-supabase.gate.test.ts",
+  ],
+  [
+    "src/main.tsx",
+    "M16 — arranca o MSW por `import()` dinâmico sob `import.meta.env.DEV`, literal `false` em " +
+      "produção; é o único ponto do app anterior ao render, e pôr o arranque em qualquer outro " +
+      "lugar significaria um componente sabendo que existe mock",
   ],
 ]);
 
 describe("M05 · 4. só teste, story e bootstrap declarado importam matéria de teste", () => {
+  // Matéria de teste importando matéria de teste é o caso normal, não uma violação: `src/mocks/`
+  // compõe os handlers que vivem em `src/test/msw/`, e é assim que a M16 evita um segundo
+  // universo de fixtures. O gate já classificava `src/mocks/` como matéria de teste do lado
+  // IMPORTADO — faltava fazer o mesmo do lado IMPORTADOR. A regra não mudou: produto continua
+  // sem poder importar mock; o que mudou é que `src/mocks/**` nunca foi produto.
   const importadores = arquivos(SRC)
-    .filter((p) => !posix(p).startsWith("src/test/"))
+    .filter((p) => !ehMateriaDeTeste(posix(p)))
     .map((p) => ({
       rel: posix(p),
       imports: analisarVazamentoDeMock(posix(p), readFileSync(p, "utf-8")).filter(

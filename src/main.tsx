@@ -54,10 +54,25 @@ function e2eAuthRequested(): boolean {
   }
 }
 
+// CADEADO do MSW (M16). Duas condições, e nenhuma delas mora num componente:
+//   1. `import.meta.env.DEV` — literal `false` em produção, então o Rollup elimina este ramo e
+//      nem `src/mocks/**` nem o pacote `msw` entram no bundle do usuário;
+//   2. `VITE_SENTINELA_MOCK=on` — a variável ÚNICA do DoD. Ausente ou diferente disso, o app fala
+//      com o Gateway real, e nada mais precisa mudar.
+//
+// O arranque acontece ANTES do render de propósito: um worker que sobe depois da primeira
+// requisição deixa passar exatamente a chamada que a tela faz ao montar, e o mock pareceria
+// intermitente em vez de desligado.
+async function arrancarMockSePedido(): Promise<void> {
+  if (!import.meta.env.DEV) return;
+  const { mockLigado, iniciarMockDoBrowser } = await import("./mocks/browser");
+  if (mockLigado()) await iniciarMockDoBrowser();
+}
+
 if (import.meta.env.DEV && import.meta.env.VITE_E2E === "true" && e2eAuthRequested()) {
   import("./e2e/bypass")
     .then(({ installE2EBypass }) => installE2EBypass())
     .finally(renderApp);
 } else {
-  renderApp();
+  void arrancarMockSePedido().finally(renderApp);
 }

@@ -416,7 +416,29 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > **Gate de saída (Mock → UI):** os **27 scenarios não bloqueados** reproduzíveis **por nome**,
 > toda fixture validando contra o **schema publicado**, e nenhuma UI conhecendo mock.
 
-### M16 · MSW no browser
+### M16 · MSW no browser — ✅ EXECUTADA
+> **Estado:** executada. `src/mocks/browser.ts` + `src/mocks/node.ts`, arranque em `main.tsx`,
+> gate `src/test/v1/msw-browser.test.ts` (15 casos, 11 mutações mortas).
+>
+> **A variável é `VITE_SENTINELA_MOCK=on`.** Lida em UM lugar só, sob `import.meta.env.DEV`.
+> Ausente ou diferente disso → Gateway real, sem tocar em arquivo nenhum.
+>
+> **A base vem de `resolveGatewayBaseUrl()`** — a mesma função do cliente canônico. Handlers numa
+> base própria deixariam o worker inerte: ele sobe, diz que está ligado, e não intercepta nada.
+> Lendo da mesma fonte, divergir é impossível por construção.
+>
+> **Cadeado provado no BUNDLE, não na leitura do código:** 216 módulos no sourcemap de produção,
+> **zero** de `/mocks/`, `msw` ou `/test/`.
+>
+> ⚠️ **Divergências:**
+> 1. O plano diz *"o worker nunca é montado"*. Ele **é** — por `src/e2e/bypass.ts`, sob
+>    `DEV && VITE_E2E`, para o Playwright. O que não existia era a infraestrutura de mock de
+>    desenvolvimento.
+> 2. `node.ts` nasce como **fachada** de `src/test/msw/server.ts`, não como segunda
+>    implementação — reescrevê-lo criaria o universo paralelo que a Fase 2 existe para impedir.
+>    Migrar os 18 importadores fica como dívida de arrumação.
+> 3. **Não verifiquei no browser.** O `.env.local` do repo aponta para o Gateway de homologação no
+>    Railway, e subir o dev server faria a app conversar com ele.
 - **Existe porque:** `package.json` declara `msw.workerDirectory` e o **worker nunca é montado**.
   A arquitetura exige `MSW OFF → Gateway` sem tocar em componente.
 - **Escopo:** `src/mocks/browser.ts` + `node.ts`; ligado **por env**, nunca por código de UI.
