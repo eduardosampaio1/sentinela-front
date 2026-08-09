@@ -260,7 +260,25 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   A colisão real era outra e mais perigosa: `--accent` significa **superfície** no shadcn e **cor
   de ação** na Constituição. Resolvida por namespace `--ds-`.
 
-### M09 · Tokens de motion + reduced motion
+### M09 · Tokens de motion + reduced motion — ✅ EXECUTADA
+> **Estado:** executada. Tokens em `src/design/tokens/tokens.css`; reduced motion em
+> `src/styles/globals.css`; gate `src/test/v1/motion-tokens.test.tsx` (25 casos, 12 mutações).
+>
+> 🔴 **Defeito real corrigido — o reduced motion existia e estava ERRADO.** O bloco anterior fazia
+> `transition-duration: 0.01ms !important` em `*`: o *"desligar tudo"* que a D34 proíbe com essas
+> palavras. A mudança de COR que comunica estado virava um salto sem transição — quem pedia menos
+> movimento recebia menos **informação**. A separação correta é por PROPRIEDADE, não por duração.
+>
+> **Dívida de timing literal — medida, 5 arquivos / 24 ocorrências:** `globals.css` 13 ·
+> `AionPage` 5 · `LoadingState` 4 · `sheet.tsx` 1 · `LandingPage` 1. Migrá-los é migração em massa,
+> vetada nesta missão. `src/design/**` ficou em **zero**.
+>
+> ⚠️ **Divergência:** `--ds-skeleton-pulse-period` (1200ms) **não é uma sexta duração** — é outra
+> grandeza. As cinco medem transições; esta mede o período de um ritmo de espera, restrito pela
+> regra própria *"esqueleto não pulsa mais rápido que 1 Hz"*. A maior duração (480ms) pulsaria a
+> ~2 Hz. Nome separado é o que mantém o FROZEN de cinco durações intacto.
+>
+> **Nenhuma dependência instalada** — `motion`/`framer-motion` seguem proibidos pelo gate da M06.
 - **Escopo:** 5 durações, 4 curvas, `spring-direct`; tabela de reduced motion que **preserva a
   informação e remove o deslocamento**. **Fora:** instalar Motion for React (Fase 5, se necessário).
 - **Pré:** M08. **Paraleliza com:** M10, M12.

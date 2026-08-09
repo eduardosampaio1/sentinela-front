@@ -101,6 +101,59 @@
   /* ── Forma ───────────────────────────────────────────────────────────────────────────────── */
 
   --ds-radius-default: 0.75rem;
+
+  /* ── Motion ──────────────────────────────────────────────────────────────────────────────
+     🔒 Constituição §5, FROZEN: cinco durações, quatro curvas. Não mais.
+
+     Os nomes são PAPÉIS, não medidas. `duration-base` é "transição de estado"; quem precisa de
+     200ms para outra coisa está usando o papel errado, e o próximo a ler vai herdar a confusão.
+     Uma sexta duração é a porta pela qual o vocabulário congelado deixa de ser congelado, e o
+     gate da M09 reprova exatamente isso.
+
+     O movimento aqui é *assentar*, não *entrar* (V-11): ele explica uma mudança que já aconteceu.
+     Movimento que não comunica mudança de estado, continuidade ou hierarquia é ornamento, e
+     ornamento não tem token. */
+
+  /** Troca sem deslocamento. É o valor que `reduced` usa para o que deslocaria. */
+  --ds-duration-instant: 0ms;
+  /** Microinteração: hover, foco, o botão reconhecendo o clique. */
+  --ds-duration-fast: 120ms;
+  /** Transição de estado — o papel mais comum, e o default de quem está em dúvida. */
+  --ds-duration-base: 200ms;
+  /** Overlay e mudança de rota: a superfície é maior, e o olho precisa acompanhar. */
+  --ds-duration-slow: 320ms;
+  /** Só onde a demora COMUNICA. Se não comunica, é `slow`. */
+  --ds-duration-deliberate: 480ms;
+
+  /** Padrão. Acelera e desacelera — serve à maioria das transições de estado. */
+  --ds-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  /** Entrada: começa rápido e assenta. */
+  --ds-easing-enter: cubic-bezier(0, 0, 0.2, 1);
+  /** Saída: sempre mais rápida que entrar — o que sai não merece a atenção de quem chega. */
+  --ds-easing-exit: cubic-bezier(0.4, 0, 1, 1);
+  /** Ênfase, com UM overshoot. Raro por definição: repetido, vira tique. */
+  --ds-easing-emphasis: cubic-bezier(0.2, 0, 0, 1.2);
+
+  /**
+   * Manipulação direta APENAS — arrastar, redimensionar, o que o dedo está tocando agora.
+   *
+   * CSS não tem spring; o valor é a aproximação que a Constituição autoriza para o caso em que
+   * o movimento acompanha a mão. Fora de manipulação direta, use `easing-standard`.
+   */
+  --ds-spring-direct: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /**
+   * Período do pulso do esqueleto. **Não é uma sexta duração** — é outra grandeza.
+   *
+   * As cinco durações acima medem TRANSIÇÕES: o tempo entre dois estados. Isto mede o PERÍODO de
+   * um ritmo de espera, e a Constituição o restringe por uma regra própria: *"esqueleto não pulsa
+   * mais rápido que 1 Hz"*. Nenhuma das cinco serve — a maior (`deliberate`, 480ms) pulsaria a
+   * ~2 Hz e violaria a regra.
+   *
+   * Criar `--ds-duration-*` para isto quebraria o FROZEN de cinco durações por uma necessidade que
+   * não é de transição. O nome diferente é o que mantém as duas coisas separadas.
+   */
+  --ds-skeleton-pulse-period: 1200ms;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════════════════

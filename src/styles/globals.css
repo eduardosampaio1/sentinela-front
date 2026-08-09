@@ -147,12 +147,32 @@
     cursor: not-allowed;
   }
 
-  /* prefers-reduced-motion — skill requirement P1 */
+  /* ── prefers-reduced-motion (Constituição D34 🔒) ────────────────────────────────────────
+     **Preserva a informação, remove o deslocamento** — e a Constituição diz explicitamente que
+     isso **não é "desligar tudo"**.
+
+     A versão anterior deste bloco desligava tudo: `transition-duration: 0.01ms` em `*`. O efeito
+     colateral é o que a regra existe para impedir — a mudança de COR que comunica um estado
+     (sucesso, erro, item selecionado) virava um salto sem transição nenhuma. Quem pediu menos
+     movimento recebia menos informação, que é o oposto do que a preferência significa.
+
+     A separação correta é por PROPRIEDADE, não por duração:
+
+       • o que carrega informação — opacidade, tinta, borda, sombra — continua transicionando,
+         em `fast`, porque é assim que a mudança continua sendo percebida;
+       • o que carrega deslocamento — `transform`, `width`, `height`, posição — sai da lista e
+         passa a valer no ato: a barra já nasce no valor final, o painel aparece na posição.
+
+     Animação vai a `instant` e a uma iteração: o esqueleto para de pulsar e o rótulo textual
+     assume (ver `EstadosDeTela`, que já publica o rótulo sob `motion-reduce`). */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
-      animation-duration: 0.01ms !important;
+      transition-property: opacity, color, background-color, border-color, fill, stroke,
+        box-shadow, outline-color !important;
+      transition-duration: var(--ds-duration-fast) !important;
+      transition-timing-function: var(--ds-easing-standard) !important;
+      animation-duration: var(--ds-duration-instant) !important;
       animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
   }

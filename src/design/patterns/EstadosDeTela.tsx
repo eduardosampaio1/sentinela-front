@@ -131,7 +131,9 @@ export function LoadingState({
           key={i}
           aria-hidden="true"
           className="block h-4 rounded bg-muted motion-safe:animate-pulse"
-          style={{ animationDuration: "1200ms" }}
+          // O período vem do token, não do componente: a regra "não pulsa mais rápido que 1 Hz"
+          // é da Constituição, e um literal aqui a deixaria à mercê de quem editar esta linha.
+          style={{ animationDuration: "var(--ds-skeleton-pulse-period)" }}
         />
       ))}
       <Text papel="rotulo" tom="discreto" className="motion-safe:sr-only">
