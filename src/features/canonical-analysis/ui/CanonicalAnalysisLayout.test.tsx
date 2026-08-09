@@ -25,9 +25,9 @@ const { CanonicalAnalysisLayout } = await import("./CanonicalAnalysisLayout");
 
 function montar() {
   return render(
-    <MemoryRouter initialEntries={["/canonical/analyses/new"]}>
+    <MemoryRouter initialEntries={["/analyses/new"]}>
       <Routes>
-        <Route path="/canonical" element={<CanonicalAnalysisLayout />}>
+        <Route path="/" element={<CanonicalAnalysisLayout />}>
           <Route path="analyses/new" element={<p>jornada</p>} />
         </Route>
         <Route path="/home" element={<p>home</p>} />

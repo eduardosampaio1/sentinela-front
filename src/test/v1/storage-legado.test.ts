@@ -223,7 +223,7 @@ describe("prova 8 — a rota de compatibilidade só redireciona", () => {
     const corpo = router.slice(inicio, router.indexOf("\n}", inicio));
 
     // O que ela FAZ: redirecionar para o caminho canônico, que consulta o Gateway.
-    expect(corpo).toContain("/canonical/analyses/");
+    expect(corpo).toContain("/analyses/");
     expect(corpo).toContain("Navigate");
 
     // O que ela NÃO faz.

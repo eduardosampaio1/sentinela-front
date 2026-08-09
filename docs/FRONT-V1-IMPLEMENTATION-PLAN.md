@@ -380,7 +380,12 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 
 > **Gate de saída:** IA pública congelada; todo deep link resolve; `/canonical/*` só redireciona.
 
-### M24 · Rotas públicas e redirects
+### M24 · Rotas públicas e redirects — ✅ EXECUTADA
+> **Estado:** executada. Gate: `src/test/v1/rotas-publicas.test.tsx` (17 casos, 5 mutações mortas).
+> **B11 fechado.** `/canonical/*` e `/home/welcome` sobrevivem **só** como redirect: saem como
+> destino, não como endereço. 404 numa URL que já circulou é defeito que só aparece para quem
+> não está por perto para reclamar.
+
 - **Escopo:** `/analyses`, `/analyses/new`, `/analyses/:id`, `/analyses/:id/result`,
   `#comparison`; `/canonical/*` → redirect permanente; remover `/home/welcome` (duplicata).
   **`/` permanece landing pública e `/home` permanece a Home autenticada** (decisão 2).

@@ -99,7 +99,7 @@ export function RecentRuns({ maxRuns = 5 }: RecentRunsProps) {
       <div className="flex items-center justify-between mb-4">
         <p className="section-label">Recent analyses</p>
         <button
-          onClick={() => navigate("/canonical/analyses")}
+          onClick={() => navigate("/analyses")}
           className="text-xs text-[#4F5AE8] hover:text-[#3E48C4] transition-colors"
         >
           View all
@@ -112,7 +112,7 @@ export function RecentRuns({ maxRuns = 5 }: RecentRunsProps) {
             key={linha.analysisId}
             // O resultado vive na rota canônica. `result_available` continua significando
             // EXISTÊNCIA do resultado — não a forma interna do documento.
-            onClick={() => navigate(`/canonical/analyses/${encodeURIComponent(linha.analysisId)}/result`)}
+            onClick={() => navigate(`/analyses/${encodeURIComponent(linha.analysisId)}/result`)}
             disabled={!linha.resultAvailable}
             className={cn(
               "w-full flex items-center gap-4 px-4 py-3 rounded-xl border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] transition-all group text-left",

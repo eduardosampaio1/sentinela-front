@@ -88,7 +88,7 @@ describe("Jornada canônica — upload SEM materialização (E2 item 5)", () => 
 });
 
 describe("Jornada canônica — prepare cria a identidade durável (E2 itens 3-4)", () => {
-  it("clicar iniciar → prepare → navega para /canonical/analyses/:analysis_id", async () => {
+  it("clicar iniciar → prepare → navega para /analyses/:analysis_id", async () => {
     let idem: string | null = null;
     server.use(
       http.post(`${MSW_BASE}/v1/analyses`, ({ request }) => {
@@ -98,7 +98,7 @@ describe("Jornada canônica — prepare cria a identidade durável (E2 itens 3-4
     );
     render(wrap(<StartAnalysisPage />));
     await userEvent.click(screen.getByRole("button", { name: /start analysis|iniciar análise/i }));
-    await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith("/canonical/analyses/an-abc"));
+    await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith("/analyses/an-abc"));
     expect(idem).toBeTruthy(); // Idempotency-Key da intenção foi enviada
   });
 });

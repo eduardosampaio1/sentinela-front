@@ -42,9 +42,9 @@ function renderAt(id: string) {
     <LanguageProvider>
       <QueryClientProvider client={qc}>
         <CanonicalClientProvider client={client}>
-          <MemoryRouter initialEntries={[`/canonical/analyses/${id}`]}>
+          <MemoryRouter initialEntries={[`/analyses/${id}`]}>
             <Routes>
-              <Route path="/canonical/analyses/:analysisId" element={<AnalysisPage />} />
+              <Route path="/analyses/:analysisId" element={<AnalysisPage />} />
             </Routes>
           </MemoryRouter>
         </CanonicalClientProvider>

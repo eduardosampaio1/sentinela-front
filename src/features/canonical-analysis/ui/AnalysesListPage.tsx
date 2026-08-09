@@ -35,7 +35,7 @@ function ItemLinha({ item }: { item: AnalysisListItem }) {
   return (
     <li>
       <Link
-        to={`/canonical/analyses/${encodeURIComponent(item.analysis_id)}`}
+        to={`/analyses/${encodeURIComponent(item.analysis_id)}`}
         aria-label={t("canonicalAnalysis.list.open", { id: item.analysis_id })}
         className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
       >
@@ -107,7 +107,7 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
       <div className="space-y-4 rounded-lg border border-dashed border-border bg-muted/20 p-8 text-center">
         <p className="text-muted-foreground">{t("canonicalAnalysis.list.empty")}</p>
         <Button asChild>
-          <Link to="/canonical/analyses/new">{t("canonicalAnalysis.list.newAnalysis")}</Link>
+          <Link to="/analyses/new">{t("canonicalAnalysis.list.newAnalysis")}</Link>
         </Button>
       </div>
     );
@@ -150,7 +150,7 @@ export function AnalysesListPage() {
               <p className="mt-1 text-muted-foreground">{t("canonicalAnalysis.list.subtitle")}</p>
             </div>
             <Button asChild>
-              <Link to="/canonical/analyses/new">{t("canonicalAnalysis.list.newAnalysis")}</Link>
+              <Link to="/analyses/new">{t("canonicalAnalysis.list.newAnalysis")}</Link>
             </Button>
           </div>
           {scope ? (

@@ -62,11 +62,11 @@ function fabricaDeArvore() {
               {/* Alvos do redirecionamento, renderizados como marcadores: o teste afirma PARA
                   ONDE a rota mandou, não o conteúdo do destino (que tem testes próprios). */}
               <Route
-                path="/canonical/analyses/:analysisId/result"
+                path="/analyses/:analysisId/result"
                 element={<div data-testid="destino-canonico" />}
               />
-              <Route path="/canonical/analyses" element={<div data-testid="destino-historico" />} />
-              <Route path="/canonical/analyses/new" element={<div data-testid="destino-nova" />} />
+              <Route path="/analyses" element={<div data-testid="destino-historico" />} />
+              <Route path="/analyses/new" element={<div data-testid="destino-nova" />} />
             </Routes>
           </MemoryRouter>
         </CanonicalClientProvider>
@@ -141,7 +141,7 @@ describe("prova 1 — `/dashboard` não é mais um dashboard", () => {
 // ── prova 2 — análise concluída redireciona para o resultado canônico ─────────
 
 describe("prova 2 — concluída redireciona para o renderizador canônico", () => {
-  it("vai para /canonical/analyses/{id}/result", async () => {
+  it("vai para /analyses/{id}/result", async () => {
     servirListagem({ "ws-A": concluida("an-alvo") });
     const { unmount } = montar();
     await waitFor(() => expect(screen.getByTestId("destino-canonico")).toBeTruthy());

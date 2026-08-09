@@ -107,7 +107,7 @@ export function DashboardCompatRoute() {
     // `replace`: o histórico do navegador não deve guardar a rota de compatibilidade, senão o
     // botão voltar cai nela e redireciona de novo, num laço.
     return (
-      <Navigate to={`/canonical/analyses/${encodeURIComponent(resolucao.analysisId)}/result`} replace />
+      <Navigate to={`/analyses/${encodeURIComponent(resolucao.analysisId)}/result`} replace />
     );
   }
 
@@ -125,10 +125,10 @@ export function DashboardCompatRoute() {
           </p>
           <div className="flex items-center justify-center gap-3">
             <Button asChild>
-              <Link to="/canonical/analyses/new">{t("dashboardCompat.startAnalysis")}</Link>
+              <Link to="/analyses/new">{t("dashboardCompat.startAnalysis")}</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link to="/canonical/analyses">{t("dashboardCompat.openHistory")}</Link>
+              <Link to="/analyses">{t("dashboardCompat.openHistory")}</Link>
             </Button>
           </div>
         </div>

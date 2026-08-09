@@ -41,7 +41,7 @@ function montar() {
     <MemoryRouter initialEntries={["/home"]}>
       <Routes>
         <Route path="/home" element={<AnalysisLauncher />} />
-        <Route path="/canonical/analyses/new" element={<Espelho />} />
+        <Route path="/analyses/new" element={<Espelho />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -110,7 +110,7 @@ describe("AnalysisLauncher — entrada leva à jornada canônica", () => {
     await screen.findByText("entrada canônica");
 
     const url = screen.getByTestId("url").textContent ?? "";
-    expect(url).toBe("/canonical/analyses/new");
+    expect(url).toBe("/analyses/new");
     expect(url).not.toContain("conversation_id");
     expect(url).not.toContain("dataset.jsonl");
   });

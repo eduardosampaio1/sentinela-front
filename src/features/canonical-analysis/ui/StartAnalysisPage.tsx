@@ -27,7 +27,7 @@ export function StartAnalysisPage() {
       {
         onSuccess: (handle) => {
           intent.reset();
-          navigate(`/canonical/analyses/${encodeURIComponent(handle.analysis_id)}`);
+          navigate(`/analyses/${encodeURIComponent(handle.analysis_id)}`);
         },
       },
     );

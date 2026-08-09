@@ -69,7 +69,7 @@ export function AnalysisLauncher() {
 
   /** Leva a jornada canonica com o modo pretendido. Nada de conteudo, nada de rede. */
   function irParaJornadaCanonica(modo: "file" | "paste") {
-    navigate("/canonical/analyses/new", { state: { modo } });
+    navigate("/analyses/new", { state: { modo } });
   }
 
   function handleDragOver(e: DragEvent) {

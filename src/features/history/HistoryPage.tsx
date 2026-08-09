@@ -242,7 +242,7 @@ export function HistoryPage() {
           <EmptyState
             title="No analyses yet"
             description="No analyses have been recorded for this workspace. Run your first analysis to start building a history."
-            action={{ label: "Run first analysis", onClick: () => navigate("/canonical/analyses/new") }}
+            action={{ label: "Run first analysis", onClick: () => navigate("/analyses/new") }}
           />
         )}
 

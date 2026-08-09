@@ -129,7 +129,7 @@ export function ResultPage() {
           <p className="text-foreground">{t("canonicalAnalysis.result.unsupported")}</p>
           <p className="text-sm text-muted-foreground">{t("canonicalAnalysis.result.unsupportedHint")}</p>
           <Button variant="outline" asChild>
-            <Link to="/canonical/analyses">{t("canonicalAnalysis.result.backToHistory")}</Link>
+            <Link to="/analyses">{t("canonicalAnalysis.result.backToHistory")}</Link>
           </Button>
         </div>
       );
@@ -148,7 +148,7 @@ export function ResultPage() {
               <p className="mt-1 truncate text-muted-foreground">{analysisId}</p>
             </div>
             <Button variant="outline" asChild>
-              <Link to="/canonical/analyses">{t("canonicalAnalysis.result.backToHistory")}</Link>
+              <Link to="/analyses">{t("canonicalAnalysis.result.backToHistory")}</Link>
             </Button>
           </div>
           {corpo()}

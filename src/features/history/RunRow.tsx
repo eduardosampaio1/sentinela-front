@@ -133,7 +133,7 @@ export function RunRow({
       onToggleSelect?.(linha.analysisId);
       return;
     }
-    navigate(`/canonical/analyses/${encodeURIComponent(linha.analysisId)}/result`);
+    navigate(`/analyses/${encodeURIComponent(linha.analysisId)}/result`);
   }
 
   return (

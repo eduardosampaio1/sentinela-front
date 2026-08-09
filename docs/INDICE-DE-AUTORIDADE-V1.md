@@ -76,7 +76,7 @@ Os documentos oficiais não fingem que tudo está resolvido.
 | **B8** | **`prepared` abandonado nunca expira** | delta de **lifecycle** | não | não | **sim** | **BD05** |
 | **B9** | **canonicalização física dos contratos** — ✅ patches **AUTORIZADOS** como missões explícitas | **autoridade documental** | **não** | **sim** | **sim** | **BD07 + BD08** |
 | **B10** | **exclusão de análise** — operação real inexistente (D28) | delta de **backend** | não | não | **sim** | **BD06** |
-| **B11** | **ownership de `/`** — ✅ **RESOLVIDO:** `/` é a landing pública; a Home autenticada permanece em `/home` | decidido | não | não | não | **M24** executa |
+| **B11** | **ownership de `/`** — ✅ **FECHADO:** `/` é a landing pública; a Home autenticada permanece em `/home`. Executado na **M24**, com gate (`src/test/v1/rotas-publicas.test.tsx`) | fechado | não | não | não | — |
 
 ### Leitura oficial
 

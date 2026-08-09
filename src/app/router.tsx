@@ -3,6 +3,7 @@ import {
   createBrowserRouter,
   Navigate,
   Outlet,
+  useLocation,
   useParams,
   type RouteObject,
 } from "react-router-dom";
@@ -70,9 +71,26 @@ const SecurityPage = lazy(() =>
   import("@/features/legal/SecurityPage").then((m) => ({ default: m.SecurityPage }))
 );
 
-// ── Jornada canônica /v1 (Onda 6; gated por VITE_SENTINELA_CANONICAL_ANALYSIS_ENABLED) ──────────
+// ── Jornada canônica /v1 ────────────────────────────────────────────────────────────────────────
 /**
- * `/dashboard/history/:id` -> `/canonical/analyses/:id/result`.
+ * `/canonical/*` -> a mesma rota sem o prefixo.
+ *
+ * `canonical` era nome de camada INTERNA, e vazou para a URL que a pessoa lê, guarda nos favoritos
+ * e cola em e-mail. A decisão A10 tirou isso da IA pública. O que não pode acontecer é a URL antiga
+ * dar 404: link em e-mail já enviado e favorito continuam existindo no mundo, e esse defeito só
+ * aparece para quem não está por perto para reclamar.
+ *
+ * `search` e `hash` viajam junto de propósito. `#comparison` é âncora contratada — um redirect que
+ * a descartasse levaria a pessoa à página certa e ao lugar errado dela, o que é pior que 404
+ * porque parece ter funcionado. `replace` para que o botão voltar não repique na URL aposentada.
+ */
+function RedirecionaCanonicoLegado() {
+  const { pathname, search, hash } = useLocation();
+  return <Navigate to={pathname.replace(/^\/canonical/, "") + search + hash} replace />;
+}
+
+/**
+ * `/dashboard/history/:id` -> `/analyses/:id/result`.
  *
  * Preserva deep links antigos (favorito, link compartilhado) sem manter uma segunda tela de
  * resultado. `replace` para que o botao voltar nao caia no redirect de novo.
@@ -80,7 +98,7 @@ const SecurityPage = lazy(() =>
 function RedirecionaDetalheLegado() {
   const { id } = useParams();
   if (!id) return <Navigate to="/dashboard/history" replace />;
-  return <Navigate to={`/canonical/analyses/${encodeURIComponent(id)}/result`} replace />;
+  return <Navigate to={`/analyses/${encodeURIComponent(id)}/result`} replace />;
 }
 
 const CanonicalAnalysisLayout = lazy(() =>
@@ -249,7 +267,10 @@ const routes: RouteObject[] = [
     children: [
       // Launchpad — primary entry for authenticated users
       { path: "/home", element: <PageSuspense><LaunchpadPage /></PageSuspense> },
-      { path: "/home/welcome", element: <PageSuspense><LaunchpadPage /></PageSuspense> },
+      // `/home/welcome` renderizava a MESMA `LaunchpadPage` que `/home`, e nenhuma navegação
+      // apontava para ela: duas rotas públicas para a mesma tela, sem diferença. A duplicata sai
+      // como DESTINO — mas não vira 404, porque ela existiu e pode estar em favorito de alguém.
+      { path: "/home/welcome", element: <Navigate to="/home" replace /> },
 
       // Profile
       { path: "/profile", element: <PageSuspense><ProfilePage /></PageSuspense> },
@@ -269,16 +290,22 @@ const routes: RouteObject[] = [
       // Settings
       { path: "/dashboard/settings", element: <PageSuspense><SettingsPage /></PageSuspense> },
 
-      // Canonical analysis journey (Onda 6) — flag-gated layout; legacy routes untouched when OFF
+      // A jornada de análise, na IA pública. Estes são os endereços que a pessoa vê.
       {
         element: <PageSuspense><CanonicalAnalysisLayout /></PageSuspense>,
         children: [
-          { path: "/canonical/analyses", element: <PageSuspense><CanonicalAnalysesList /></PageSuspense> },
-          { path: "/canonical/analyses/new", element: <PageSuspense><CanonicalStartPage /></PageSuspense> },
-          { path: "/canonical/analyses/:analysisId", element: <PageSuspense><CanonicalAnalysisPage /></PageSuspense> },
-          { path: "/canonical/analyses/:analysisId/result", element: <PageSuspense><CanonicalResultPage /></PageSuspense> },
+          { path: "/analyses", element: <PageSuspense><CanonicalAnalysesList /></PageSuspense> },
+          { path: "/analyses/new", element: <PageSuspense><CanonicalStartPage /></PageSuspense> },
+          { path: "/analyses/:analysisId", element: <PageSuspense><CanonicalAnalysisPage /></PageSuspense> },
+          { path: "/analyses/:analysisId/result", element: <PageSuspense><CanonicalResultPage /></PageSuspense> },
         ],
       },
+
+      // COMPATIBILIDADE, e só. `/canonical/*` recebe quem chega de um link antigo e devolve para o
+      // endereço público. Nenhuma navegação nova pode GERAR estas rotas — é o que o gate da M24
+      // prova, varrendo `to=`, `navigate(` e `href=` em todo o `src/`.
+      { path: "/canonical/analyses", element: <RedirecionaCanonicoLegado /> },
+      { path: "/canonical/analyses/*", element: <RedirecionaCanonicoLegado /> },
 
       // `/dashboard` — COMPATIBILIDADE. Resolve a análise canônica no backend e redireciona.
       // Sem portão de "análise completa": a própria rota decide entre redirecionar e mostrar

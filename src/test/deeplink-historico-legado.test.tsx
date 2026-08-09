@@ -33,8 +33,10 @@ describe("deep link legado /dashboard/history/:id", () => {
     expect(linha).not.toContain("RunDetailPage");
   });
 
-  it("o destino é a rota canônica de resultado", () => {
-    expect(fonte).toContain("/canonical/analyses/${encodeURIComponent(id)}/result");
+  it("o destino é a rota PÚBLICA de resultado", () => {
+    // M24: o destino era `/canonical/analyses/:id/result`. `canonical` era nome de camada interna
+    // e saiu da URL por decisão A10 — este caso passou a guardar o endereço público.
+    expect(fonte).toContain("/analyses/${encodeURIComponent(id)}/result");
   });
 
   it("o router não importa mais RunDetailPage", () => {

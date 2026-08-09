@@ -43,9 +43,9 @@ function montar(id = "an-abc") {
     <LanguageProvider>
       <QueryClientProvider client={qc}>
         <CanonicalClientProvider client={client}>
-          <MemoryRouter initialEntries={[`/canonical/analyses/${id}/result`]}>
+          <MemoryRouter initialEntries={[`/analyses/${id}/result`]}>
             <Routes>
-              <Route path="/canonical/analyses/:analysisId/result" element={<ResultPage />} />
+              <Route path="/analyses/:analysisId/result" element={<ResultPage />} />
             </Routes>
           </MemoryRouter>
         </CanonicalClientProvider>

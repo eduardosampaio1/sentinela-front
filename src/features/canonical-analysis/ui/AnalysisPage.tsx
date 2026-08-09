@@ -104,7 +104,7 @@ export function AnalysisPage() {
             {view.result_available ? (
               // E5: a ação agora leva à página canônica de resultado (deep-linkável).
               <Button variant="outline" asChild>
-                <Link to={`/canonical/analyses/${encodeURIComponent(analysisId)}/result`}>
+                <Link to={`/analyses/${encodeURIComponent(analysisId)}/result`}>
                   {t("canonicalAnalysis.action.viewResult")}
                 </Link>
               </Button>
@@ -131,10 +131,10 @@ export function AnalysisPage() {
               // explícita (novo prepare + nova Idempotency-Key), não um retry falso da mesma.
               <div className="flex flex-wrap gap-2">
                 <Button asChild>
-                  <Link to="/canonical/analyses/new">{t("canonicalAnalysis.action.newAnalysis")}</Link>
+                  <Link to="/analyses/new">{t("canonicalAnalysis.action.newAnalysis")}</Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link to="/canonical/analyses">{t("canonicalAnalysis.action.back")}</Link>
+                  <Link to="/analyses">{t("canonicalAnalysis.action.back")}</Link>
                 </Button>
               </div>
             )}
