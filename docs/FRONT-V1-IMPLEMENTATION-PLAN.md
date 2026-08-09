@@ -488,6 +488,22 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   consumido com o do contrato.
 - **Pré:** M16, BD07. **DoD:** mutação (remover campo obrigatório da fixture) → vermelho.
 
+### M18 · Catálogo dos 27 scenarios — EXECUTADA
+> **Estado:** executada. `src/mocks/scenarios/{catalogo,index}.ts` +
+> `src/test/v1/scenarios-catalogo.test.ts` (52 casos, 11 mutacoes mortas).
+>
+> **O catalogo tem 32 entradas, nao 27.** O Blueprint §11 lista 32: **27 disponiveis**,
+> **1 parcial** (`needs-mapping`) e **4 BLOQUEADOS**. Os 5 nao-executaveis ficam declarados em vez
+> de sumirem — um catalogo que so mostra o que funciona faz o que falta parecer inexistente.
+>
+> **Bloqueado LANCA, nao devolve vazio.** `handlersDoScenario()` de um bloqueado joga
+> `ScenarioIndisponivel` com a razao e o blocker. Uma lista vazia seria "completar pelo mock" com
+> outro nome: a tela montaria, o estado vazio pareceria legitimo, e o delta ausente ficaria
+> invisivel.
+>
+> **Achado:** dois codigos de problema foram INVENTADOS na primeira versao (`export_expired`,
+> `unauthenticated`); o typecheck reprovou. O catalogo canonico tem 9 codigos, e a distincao
+> expirado/purgado e do PRODUTO, nao do envelope de erro.
 ### M18 · Catálogo dos 27 scenarios
 - **Escopo:** os 32 do Blueprint **menos os 4 bloqueados** (`instance-empty`,
   `recommendation-persisted`, `no-baseline`, `baseline-active`) e menos o parcial
