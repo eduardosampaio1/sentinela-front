@@ -263,6 +263,23 @@ describe("M32 · 6. a composição da HomePage", () => {
     expect(fundos.filter((x) => !["transparent", "secondary"].includes(x))).toEqual([]);
   });
 
+  it("com cursor, a Home DECLARA que mostra só a primeira página", () => {
+    // Fila que mostra parte e se cala afirma completude que não tem: um item de "Ações
+    // necessárias" na página seguinte não existiria para quem olha.
+    const f = PAGINA();
+    expect(f).toContain("next_cursor");
+    expect(f).toContain('t("home.truncated")');
+    expect(f).toContain('to="/analyses"');
+  });
+
+  it("a cópia de erro não fala de infraestrutura", () => {
+    for (const idioma of [pt, en]) {
+      const e = (idioma as unknown as Record<string, Record<string, Record<string, string>>>).home.error;
+      expect(e.explain.toLowerCase()).not.toContain("backend");
+      expect(e.explain.length).toBeGreaterThan(20);
+    }
+  });
+
   it("controle positivo: a leitura da página enxerga o que existe", () => {
     expect(PAGINA()).toContain("HomePage");
     expect(PAGINA().length).toBeGreaterThan(1500);

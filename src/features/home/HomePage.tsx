@@ -90,6 +90,12 @@ export function HomePage() {
     }
 
     const r = classificarRegioes(itens);
+    // A Home lê a PRIMEIRA página e nada além dela. Enquanto houver cursor, dizer isso é
+    // obrigatório: uma fila que mostra parte e se cala afirma completude que não tem, e um item
+    // em "Ações necessárias" na página seguinte simplesmente não existiria para quem olha. Não é
+    // paginação aqui — navegar o histórico é da superfície de análises; é a Home declarando o
+    // próprio recorte.
+    const truncada = lista.data?.next_cursor !== null && lista.data?.next_cursor !== undefined;
     return (
       <div className="space-y-8">
         {/* A ordem É a hierarquia: primeiro quem espera por alguém, depois o que está em curso,
@@ -98,6 +104,14 @@ export function HomePage() {
         <RegiaoEmAndamento itens={r.emAndamento} />
         <RegiaoDeResultados itens={r.resultadosRecentes} semResultado={r.concluidasSemResultado} />
         <RegiaoDeInstancias />
+        {truncada && (
+          <p className="text-sm text-muted-foreground">
+            {t("home.truncated")}{" "}
+            <Link to="/analyses" className="inline-block py-1 text-foreground underline-offset-4 hover:underline">
+              {t("home.seeAll")}
+            </Link>
+          </p>
+        )}
         {/* Estado que a fronteira deveria ter recusado. Visível, com o valor bruto, porque um
             estado novo engolido em silêncio é a tela mentindo sobre o que existe. */}
         {r.estadoNaoReconhecido.length > 0 && (

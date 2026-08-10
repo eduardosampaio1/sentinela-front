@@ -769,8 +769,10 @@
     },
     "error": {
       "title": "Não foi possível carregar as análises",
-      "explain": "A listagem deste workspace não respondeu. O que existe continua no backend — só esta leitura falhou."
-    }
+      "explain": "A listagem deste workspace não respondeu. Nada foi perdido — só esta leitura falhou."
+    },
+    "truncated": "Esta é a primeira página. Há mais análises no histórico.",
+    "seeAll": "Ver histórico"
   },
   "estadoPublico": {
     "preparing": "Reservada",

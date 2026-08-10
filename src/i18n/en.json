@@ -769,8 +769,10 @@
     },
     "error": {
       "title": "We could not load the analyses",
-      "explain": "This workspace's listing did not respond. Whatever exists is still in the backend — only this read failed."
-    }
+      "explain": "This workspace's listing did not respond. Nothing was lost — only this read failed."
+    },
+    "truncated": "This is the first page. There are more analyses in the history.",
+    "seeAll": "See history"
   },
   "estadoPublico": {
     "preparing": "Reserved",
