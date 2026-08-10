@@ -642,5 +642,26 @@
     "noCompletedBody": "Há análises neste workspace, mas nenhuma concluída com resultado disponível. Abra o histórico para acompanhar.",
     "startAnalysis": "Iniciar análise",
     "openHistory": "Abrir histórico"
+  },
+  "shell": {
+    "nav": {
+      "primary": "Navegação principal",
+      "home": "Início",
+      "analyses": "Análises",
+      "workspaces": "Workspaces"
+    },
+    "workspace": {
+      "label": "Workspace ativo",
+      "switch": "Trocar de workspace",
+      "none": "Sem workspace",
+      "list": "Seus workspaces",
+      "current": "Workspace atual"
+    },
+    "user": {
+      "menu": "Menu do usuário",
+      "account": "Gerenciar conta",
+      "accountHint": "Abre o provedor de identidade",
+      "signOut": "Sair"
+    }
   }
 }

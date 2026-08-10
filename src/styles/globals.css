@@ -30,6 +30,17 @@
      `--ds-surface-selected`. A cor de ação da marca é `--ds-accent`, e chega aqui como
      `--primary`. */
   :root {
+    /* M25 — `color-scheme` no `<html>`, com UM valor. `:root` É o `<html>`.
+       O valor não foi escolhido: ele foi LIDO da base visual. `tokens.css` é a fonte única de
+       valor visual, e lá `--ds-surface-base` é `220 50% 5%` contra `--ds-text-primary` a
+       `210 40% 95%` — claro sobre escuro. D23 mantém tema fora da V1 e P31 continua proposta,
+       então o eixo tem um valor só e a matriz de D37 é `2 × 1 × 2 = 4`.
+       Declarar isto faz o navegador acertar o que não é nosso: scrollbar, caret, `<select>`,
+       autofill e form controls nativos, que sem a dica renderizam claros sobre a superfície
+       escura. NÃO é toggle, não tem segundo valor e não lê preferência do sistema — um
+       `prefers-color-scheme` aqui seria o tema entrando pela porta dos fundos. */
+    color-scheme: dark;
+
     --background: var(--ds-surface-base);
     --foreground: var(--ds-text-primary);
 

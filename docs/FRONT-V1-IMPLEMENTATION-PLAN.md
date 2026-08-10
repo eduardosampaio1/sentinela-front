@@ -675,6 +675,18 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 ### M25 · Shell, workspace context e menu do usuário
 - **Escopo:** navegação principal, seletor de Workspace (escopo **sempre visível**), menu do usuário
   com link externo de conta (D19), `color-scheme` no `<html>` com **um** valor.
+- **Fora:** *(omissão editorial fechada por decisão de owner em 2026-08-10, antes da implementação —
+  esta é a missão com a maior superfície de alargamento do plano, e era a única da Fase 4 sem cerca)*
+  criação/configuração de Workspace sem operação pública · **CTA fake para WS-02/WS-04** ·
+  seletor ou persistência de idioma enquanto **BD04/B7** não existir · theme switcher, dark mode
+  como opção ou segundo valor de tema · redesign de Settings/Profile · gestão de credencial dentro
+  da SPA · criação de rotas públicas novas · navegação canônica para `/dashboard*` · persistência de
+  membership/role como verdade local · mudança de backend ou de contrato · expansão do Storybook
+  para produto · correção de dívida herdada.
+- **IA do shell canônico** *(decisão de owner, 2026-08-10)*: Home → `/home` · Análises →
+  `/analyses` · Workspaces → `/workspaces` · Conta → Account Management **externo** do provedor.
+  `/dashboard*` permanece só como legado/compatibilidade — **compatibilidade ≠ navegação
+  canônica**. Não inventar `/settings` nem outra rota ainda não congelada.
 - **Pré:** M13, M24. **Contratos:** `GET /v1/me` (**única** autoridade de membership).
 - **Testes/Gates:** troca de workspace **invalida o cache por construção** (`workspaceKeys.root`);
   `role` governa o que aparece e **nunca vira rótulo** (D3).

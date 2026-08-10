@@ -642,5 +642,26 @@
     "noCompletedBody": "There are analyses in this workspace, but none completed with a result available. Open the history to follow along.",
     "startAnalysis": "Start analysis",
     "openHistory": "Open history"
+  },
+  "shell": {
+    "nav": {
+      "primary": "Primary navigation",
+      "home": "Home",
+      "analyses": "Analyses",
+      "workspaces": "Workspaces"
+    },
+    "workspace": {
+      "label": "Active workspace",
+      "switch": "Switch workspace",
+      "none": "No workspace",
+      "list": "Your workspaces",
+      "current": "Current workspace"
+    },
+    "user": {
+      "menu": "User menu",
+      "account": "Manage account",
+      "accountHint": "Opens your identity provider",
+      "signOut": "Sign out"
+    }
   }
 }
