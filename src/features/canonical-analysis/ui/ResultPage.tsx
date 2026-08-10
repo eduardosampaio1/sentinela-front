@@ -26,7 +26,9 @@ import {
 import { resolverResultado, type ResultadoResolvido } from "../result/adaptar";
 import { ordenarPorAtencao } from "../result/atencao";
 import { zonasDeProcedencia } from "../result/procedencia";
+import { compararComAnterior } from "../result/comparacao";
 import { formatarInstante } from "../result/formatacao";
+import { useAnalysesList } from "../data/list";
 import { useCanonicalScope } from "./scope";
 import { ProblemFeedback } from "./notices";
 import { BlocoAnalitico } from "./analytics/BlocoAnalitico";
@@ -34,6 +36,7 @@ import { SecaoDeAtencao } from "./analytics/SecaoDeAtencao";
 import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
 import { PainelDeProcedencia } from "./analytics/PainelDeProcedencia";
 import { LinhaDoTempo } from "./analytics/LinhaDoTempo";
+import { ComparacaoComAnterior } from "./analytics/ComparacaoComAnterior";
 import { AcaoDeExport } from "./analytics/AcaoDeExport";
 import {
   ResumoDaAnalise,
@@ -60,6 +63,17 @@ export function ResultPage() {
   // M29 — o eixo `export` é quem decide se há o que baixar. D16: "com `export = ready`,
   // download; nos demais estados, representar o estado vindo de `/progress`".
   const progress = useAnalysisProgress(scope, analysisId);
+  // M30 — "esta vs. imediatamente anterior". O par vem de DUAS leituras de `/result`, que o
+  // Blueprint §4.6 declara REAL; a série da Instância é que continua APPROVED DELTA (Fase 10).
+  // A anterior é SELECIONADA da listagem (ordem do produtor, cursor opaco), nunca calculada.
+  const lista = useAnalysesList(scope);
+  const anteriorId = (() => {
+    const itens = lista.data?.items ?? [];
+    const i = itens.findIndex((it) => it.analysis_id === analysisId);
+    if (i < 0) return null;
+    return itens.slice(i + 1).find((it) => it.result_available)?.analysis_id ?? null;
+  })();
+  const anterior = useAnalysisResult(scope, anteriorId, Boolean(anteriorId));
   const eixoExport =
     progress.data?.axes.find((a) => a.axis === "export")?.state ?? null;
 
@@ -107,6 +121,17 @@ export function ResultPage() {
 
         {/* M28 — Trust deixa de ser uma linha solta no rodapé e vira zona com origem apontável. */}
         <PainelDeProcedencia zonas={zonasDeProcedencia(resolvido, t)} />
+
+        {(() => {
+          // Só compara documento com documento resolvido: um payload que a fronteira recusou não
+          // vira "anterior", ele vira ausência.
+          const resolvidoAnterior = anterior.data ? resolverResultado(anterior.data, language) : null;
+          const par =
+            resolvidoAnterior && resolvidoAnterior.contrato !== "nenhum"
+              ? compararComAnterior(v, resolvidoAnterior.view)
+              : null;
+          return <ComparacaoComAnterior comparacao={par} />;
+        })()}
 
         {timeline.data && <LinhaDoTempo vista={timeline.data} />}
       </div>

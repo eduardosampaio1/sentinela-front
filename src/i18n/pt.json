@@ -270,7 +270,14 @@
       "provContractDoc": "Contrato",
       "provRegistryDoc": "Registro",
       "provMeasurement": "Medição",
-      "provOmission": "Desfecho analítico"
+      "provOmission": "Desfecho analítico",
+      "compareTitle": "Comparado com a anterior",
+      "compareBase": "anterior",
+      "compareBroken": "Vocabulário de indicadores diferente — não são a mesma série.",
+      "compareNone": "Não há análise anterior para comparar.",
+      "compareOnlyHere": "Só nesta análise.",
+      "compareOnlyThere": "Só na anterior.",
+      "compareBrokenShort": "série diferente"
     },
     "problem": {
       "authentication_required": "Sua sessão não é mais válida. Entre novamente.",

@@ -270,7 +270,14 @@
       "provContractDoc": "Result contract",
       "provRegistryDoc": "Indicator registry",
       "provMeasurement": "Measurement contract",
-      "provOmission": "Analytics outcome"
+      "provOmission": "Analytics outcome",
+      "compareTitle": "Compared with the previous",
+      "compareBase": "previous",
+      "compareBroken": "Different indicator vocabulary — these values are not the same series.",
+      "compareNone": "No previous analysis to compare with.",
+      "compareOnlyHere": "Only in this analysis.",
+      "compareOnlyThere": "Only in the previous one.",
+      "compareBrokenShort": "not the same series"
     },
     "problem": {
       "authentication_required": "Your session is no longer valid. Please sign in again.",
