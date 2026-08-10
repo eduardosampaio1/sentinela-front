@@ -346,8 +346,10 @@ describe("M22 · 6. `SEM_CLIENTE_NO_FRONT`", () => {
     expect(SEM_CLIENTE_NO_FRONT, "a dívida não encolheu: a M22 não fechou").not.toContain(OPERACAO);
   });
 
-  it("resta exatamente `/timeline` — B1 NÃO fecha aqui", () => {
-    // Encolher demais seria declarar fechado o que a M23 ainda deve.
-    expect([...SEM_CLIENTE_NO_FRONT]).toEqual(["GET /v1/analyses/{analysis_id}/timeline"]);
+  it("a declaração não contém mais o export — e a M23 zerou o resto", () => {
+    // Quando este caso nasceu, ele exigia `["…/timeline"]`: encolher demais teria declarado
+    // fechado o que a M23 ainda devia. A M23 fechou, então a catraca subiu para o vazio — e
+    // continua sendo catraca: qualquer operação nova sem cliente reprova aqui contra `[]`.
+    expect([...SEM_CLIENTE_NO_FRONT]).toEqual([]);
   });
 });

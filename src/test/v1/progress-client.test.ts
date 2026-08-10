@@ -244,13 +244,13 @@ describe("M20 · 6. `/progress` saiu de SEM_CLIENTE_NO_FRONT", () => {
     ).not.toContain("GET /v1/analyses/{analysis_id}/progress");
   });
 
-  it("resta 1 operação sem cliente — B1 encolheu, não fechou", () => {
+  it("nenhuma operação sem cliente — B1 FECHADO", () => {
     // Honestidade sobre o blocker. A contagem é uma CATRACA: ela reprova até que a missão que
-    // encolhe a dívida a atualize no mesmo commit. Foi o que aconteceu aqui — era `2` desde a
-    // M20, e a **M22** (cliente de `/export/download`) a levou a `1`. Resta a **M23**
-    // (`/timeline`), e só ela fecha o B1.
+    // encolhe a dívida a atualize no mesmo commit — e reprovou duas vezes, nas duas certas.
+    // Era `2` desde a M20; a **M22** (`/export/download`) a levou a `1`; a **M23**
+    // (`/timeline`) a zerou. B1 fechado, Fase 3 encerrada.
     return import("./divergenciaDeclarada").then(({ SEM_CLIENTE_NO_FRONT }) => {
-      expect(SEM_CLIENTE_NO_FRONT).toHaveLength(1);
+      expect(SEM_CLIENTE_NO_FRONT).toHaveLength(0);
     });
   });
 });

@@ -13,6 +13,7 @@ import type {
   AnalysisProgressView,
   AnalysisResultView,
   AnalysisStatusView,
+  AnalysisTimelineView,
   CanonicalScope,
   ListParams,
   MeView,
@@ -62,6 +63,12 @@ export interface V1Client {
    * `forbidden_or_not_found` exatamente para impedir isso.
    */
   getExportDownload(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisExportDownloadView>;
+  /**
+   * Eventos duráveis desta análise, na ordem em que o produtor os entrega. **Lido, nunca
+   * remontado**: o front não deriva evento do estado atual, não completa lacuna e não ordena —
+   * ordenar aqui seria o cliente opinando sobre a história que o backend gravou.
+   */
+  getTimeline(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisTimelineView>;
   uploadData(analysisId: string, scope: CanonicalScope, body: BodyInit, opts?: RequestOptions): Promise<AnalysisStatusView>;
   submit(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
   getStatus(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisStatusView>;
@@ -235,6 +242,8 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       pedir<AnalysisProgressView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/progress`, { workspace_id: scope.workspaceId }, opts),
     getExportDownload: (analysisId, scope, opts) =>
       pedir<AnalysisExportDownloadView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics/export/download`, { workspace_id: scope.workspaceId }, opts),
+    getTimeline: (analysisId, scope, opts) =>
+      pedir<AnalysisTimelineView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/timeline`, { workspace_id: scope.workspaceId }, opts),
     getResult: (analysisId, scope, opts) =>
       pedir<AnalysisResultView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/result`, { workspace_id: scope.workspaceId }, opts),
     list: (params, opts) =>

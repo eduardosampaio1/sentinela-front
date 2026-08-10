@@ -10,6 +10,7 @@ import {
   type AnalysisResultView,
   type AnalysisStatus,
   type AnalysisStatusView,
+  type AnalysisTimelineView,
   type CanonicalScope,
 } from "@/lib/v1";
 import { useV1Client } from "./client";
@@ -143,6 +144,33 @@ export function useAnalysisProgress(
     enabled: Boolean(scope && analysisId) && habilitado,
     queryFn: ({ signal }) =>
       client.getProgress(analysisId as string, scope as CanonicalScope, { signal }),
+  });
+}
+
+/**
+ * Linha do tempo (`GET /{id}/timeline`) — M23.
+ *
+ * Devolve os eventos **como chegam**. Nada de ordenar, agrupar, deduplicar, preencher lacuna ou
+ * derivar evento do estado atual: a linha do tempo é LIDA dos eventos duráveis, e remontá-la
+ * produziria uma história plausível em vez da que aconteceu — as duas divergem justamente no
+ * caso interessante, a análise que foi e voltou.
+ *
+ * **Sem percentual**, aqui e em qualquer lugar: não existe fonte confiável para "37%".
+ *
+ * `useQuery`, e desta vez está certo: o que se guarda são eventos duráveis, não a credencial
+ * curta da M22.
+ */
+export function useAnalysisTimeline(
+  scope: CanonicalScope | null,
+  analysisId: string | null,
+  habilitado = true,
+): UseQueryResult<AnalysisTimelineView> {
+  const client = useV1Client();
+  return useQuery({
+    queryKey:
+      scope && analysisId ? workspaceKeys.timeline(scope.workspaceId, analysisId) : IDLE_KEY,
+    enabled: Boolean(scope && analysisId) && habilitado,
+    queryFn: ({ signal }) => client.getTimeline(analysisId as string, scope as CanonicalScope, { signal }),
   });
 }
 

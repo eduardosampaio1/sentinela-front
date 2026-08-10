@@ -300,3 +300,90 @@ export interface AnalysisExportDownloadView {
   export_contract_version: string;
   format: string;
 }
+
+// ── Linha do tempo (M23) ────────────────────────────────────────────────────────────────────
+
+/**
+ * Os oito `event_type` de `public-events-v1`. **União FECHADA, e fechada de propósito:** um tipo
+ * novo do produtor deixa de compilar aqui, e é assim que se descobre que o contrato mudou — em
+ * vez de a tela renderizar um evento cujo significado ninguém declarou.
+ *
+ * `analysis.completed` e `result.available` mapeiam ambos para o estado público `completed` e
+ * **não** são a mesma coisa: um diz que a execução terminou, o outro que existe documento
+ * publicável. Colapsá-los apagaria a janela em que a análise acabou e o resultado ainda não
+ * estava lá — que é justamente o caso em que alguém pergunta o que houve.
+ */
+export type TimelineEventType =
+  | "analysis.created"
+  | "analysis.data_received"
+  | "analysis.queued"
+  | "analysis.started"
+  | "analysis.recovering"
+  | "analysis.completed"
+  | "analysis.failed"
+  | "result.available";
+
+/** `data.reason` de `analysis.recovering` — enum fechado do contrato. */
+export type TimelineRecoveringReason = "capacity" | "interrupted";
+
+/** `data.failure_stage` de `analysis.failed` — enum fechado do contrato. */
+export type TimelineFailureStage = "input" | "execution" | "cancelled";
+
+/** Os seis campos do envelope que não discriminam. `sequence` é inteiro; o resto, texto. */
+interface TimelineEventBase {
+  event_id: string;
+  event_schema_version: string;
+  analysis_id: string;
+  workspace_id: string;
+  /** Cursor lógico POR análise, crescente na origem. Não é ordem global, e não é relógio. */
+  sequence: number;
+  occurred_at: string;
+}
+
+/**
+ * Um evento durável. **União discriminada por `event_type`**, como os eixos de `/progress`: o
+ * contrato declara `data_keys` por tipo, então um `failure_stage` num `analysis.queued` deixa de
+ * compilar em vez de virar campo ignorado em silêncio.
+ *
+ * **`record_count` e `result_available` são `unknown` de propósito.** O contrato publica a
+ * CHAVE, não o tipo escalar (`data_keys` lista nomes; só `data_enums` fecha valores). Escrever
+ * `number`/`boolean` aqui seria o front inferindo um tipo que o produtor não declarou — e a
+ * inferência erraria calada no dia em que a contagem viesse como string. Quem precisar do valor
+ * estreita explicitamente, e a estreitagem fica visível.
+ */
+export type TimelineEvent =
+  | (TimelineEventBase & { event_type: "analysis.created"; data: Record<string, never> })
+  | (TimelineEventBase & { event_type: "analysis.data_received"; data: { record_count: unknown } })
+  | (TimelineEventBase & { event_type: "analysis.queued"; data: Record<string, never> })
+  | (TimelineEventBase & { event_type: "analysis.started"; data: Record<string, never> })
+  | (TimelineEventBase & {
+      event_type: "analysis.recovering";
+      data: { reason: TimelineRecoveringReason };
+    })
+  | (TimelineEventBase & {
+      event_type: "analysis.completed";
+      data: { result_available: unknown };
+    })
+  | (TimelineEventBase & {
+      event_type: "analysis.failed";
+      data: { failure_stage: TimelineFailureStage };
+    })
+  | (TimelineEventBase & { event_type: "result.available"; data: Record<string, never> });
+
+/**
+ * `GET /v1/analyses/{analysis_id}/timeline`.
+ *
+ * A linha do tempo é **LIDA** dos eventos duráveis, nunca remontada a partir do estado atual:
+ * remontar produziria uma história plausível em vez da que aconteceu, e as duas divergem
+ * exatamente no caso interessante — a análise que foi e voltou.
+ *
+ * **Não há percentual, e não haverá.** Não existe fonte confiável para "37%", e inventar o
+ * número é a forma mais rápida de o cliente perder a confiança no resto da tela.
+ *
+ * A ordem vem do produtor (crescente por `sequence`, por análise). O front **não** reordena:
+ * ordenar seria calcular a linha do tempo, e o cliente passaria a ter opinião sobre a história.
+ */
+export interface AnalysisTimelineView {
+  analysis_id: string;
+  events: readonly TimelineEvent[];
+}

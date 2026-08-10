@@ -19,4 +19,10 @@ export const workspaceKeys = {
     ["workspace", workspaceId, "analyses", "detail", analysisId, "progress"] as const,
   result: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "result"] as const,
+  /**
+   * M23 — eventos duráveis. Cacheável, ao contrário da capability de export: aqui o que se
+   * guarda é história gravada, não credencial de cinco minutos.
+   */
+  timeline: (workspaceId: string, analysisId: string) =>
+    ["workspace", workspaceId, "analyses", "detail", analysisId, "timeline"] as const,
 } as const;

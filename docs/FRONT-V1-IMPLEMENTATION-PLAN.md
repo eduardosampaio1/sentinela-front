@@ -530,10 +530,17 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 
 ---
 
-# FASE 3 — Clientes públicos faltantes
+# FASE 3 — Clientes públicos faltantes — ✅ ENCERRADA
 
 > **Gate de saída:** `missing_in_front` **vazio** e `SEM_CLIENTE_NO_FRONT` **esvaziada no mesmo
 > commit**. B1 fechado.
+>
+> **✅ SATISFEITO em 2026-08-10.** As quatro operações contratadas ganharam cliente, uma por
+> missão: `/progress` (M20), `/analytics` (M21), `/analytics/export/download` (M22) e `/timeline`
+> (M23). `missing_in_front` está **vazio** — e `path_mismatch`, `method_mismatch` e
+> `projection_mismatch` também, senão o vazio mentiria. `SEM_CLIENTE_NO_FRONT` ficou `[]`,
+> **vazia e não apagada**: é ela que acusa a próxima operação contratada sem consumidor.
+> **B1 FECHADO.**
 
 ### M20 · Cliente `/progress` — EXECUTADA
 > **Estado:** executada em `bc9e625` (2026-08-09). `data/analysis.ts`, `lib/v1/client.ts`,
@@ -572,7 +579,15 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **DoD:** `PUBLICADO_E_NAO_LIDO` reduzida aos **deliberados**; `lido_sem_publicacao` continua zero.
 - **Blocker:** fecha a faixa "contratado e não consumido" do Trust.
 
-### M22 · Cliente `/analytics/export/download`
+### M22 · Cliente `/analytics/export/download` — EXECUTADA
+> **Estado:** executada em `ca11b89` (2026-08-10). `getExportDownload` +
+> `AnalysisExportDownloadView` + `useExportDownload`; `src/test/v1/export-download-client.test.ts`
+> (18 casos, 8/8 mutações mortas). `SEM_CLIENTE_NO_FRONT`: 2 → 1.
+>
+> **`useMutation`, não `useQuery`:** a `download_url` é assinada com TTL de 5 min. Uma query a
+> cachearia e revalidaria sozinha, e o usuário clicaria num link morto. A credencial também não
+> ganha chave em `queryKeys`.
+>
 > 🔧 **CORREÇÃO DE AUTORIDADE.** *(Esta nota citava "discovery da BD09-A". Não existe `BD09-A`, e
 > `BD09` é **resolução de destinatário** (B5/M43 → M44, M48) nas outras sete citações do programa —
 > tabela §2, `INDICE-DE-AUTORIDADE-V1.md:117`, gate 12→13. A canonicalização de contrato é a
@@ -617,7 +632,22 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   > o Gateway não emite `410`, e o corpo de `result_not_available` já declara `status: 404`.
   > Corrigido em `src/mocks/scenarios/catalogo.ts` na mesma passada.
 
-### M23 · Cliente `/timeline`
+### M23 · Cliente `/timeline` — EXECUTADA
+> **Estado:** executada em 2026-08-10. `getTimeline` + `AnalysisTimelineView` +
+> `useAnalysisTimeline` + `workspaceKeys.timeline`; `src/test/v1/timeline-client.test.ts`
+> (18 casos, 9/9 mutações mortas). **`SEM_CLIENTE_NO_FRONT`: 1 → 0. B1 FECHADO.**
+>
+> **`TimelineEvent` é união DISCRIMINADA por `event_type`**, como os eixos da M20, e o gate
+> compara os oito tipos e os `data_keys` de cada um contra `public-events-v1` do produtor — nas
+> DUAS direções. Um tipo inventado no front reprova; um tipo novo do produtor também, porque um
+> evento que a tela não sabe nomear não pode chegar calado.
+>
+> **`record_count` e `result_available` ficaram `unknown`:** o contrato publica a CHAVE, não o
+> tipo escalar (só `data_enums` fecha valores, e esses viraram uniões literais). Escrever
+> `number`/`boolean` seria o front inferindo um tipo que o produtor não declarou.
+>
+> **`useQuery` aqui está certo**, ao contrário da M22: o que se guarda são eventos duráveis, não
+> credencial de cinco minutos.
 - **Escopo:** leitura dos eventos duráveis (`public-events-v1`); **não remontar** do estado atual —
   remontar produz uma história plausível em vez da que aconteceu, e as duas divergem no caso
   interessante. **Sem percentual.**

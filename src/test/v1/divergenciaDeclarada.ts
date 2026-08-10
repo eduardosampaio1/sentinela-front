@@ -8,13 +8,19 @@
 // vermelho; um item resolvido também — a lista precisa encolher junto com a dívida, senão vira
 // folclore.
 
-/** Operação contratada que ainda não tem cliente no frontend. É o blocker B1 (missão WS-C). */
-export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
-  // O download do export (MF5.2) saiu daqui na M22: `getExportDownload` existe em
-  // `lib/v1/client.ts` e a resposta é tipada como `AnalysisExportDownloadView`.
-  // Linha do tempo LIDA dos eventos duráveis (Onda 7) — não remontada do estado atual.
-  "GET /v1/analyses/{analysis_id}/timeline",
-] as const;
+/**
+ * Operação contratada que ainda não tem cliente no frontend. Era o blocker **B1** (missão WS-C).
+ *
+ * **VAZIA desde a M23 — B1 FECHADO.** As quatro saíram na Fase 3, uma por missão: `/progress`
+ * (M20), `/analytics` (M21), `/analytics/export/download` (M22) e `/timeline` (M23). Todas as 12
+ * operações de `operations[]` têm cliente, e `missing_in_front` está vazio.
+ *
+ * A lista fica aqui, vazia, em vez de sumir — mesmo mecanismo de `SEM_ENTRADA_NO_CONTRATO`: uma
+ * operação nova sem cliente acusa vermelho contra `[]`, e ninguém precisa lembrar de recriar a
+ * declaração. Apagá-la devolveria o problema que a WS-A2 existe para impedir: contrato crescendo
+ * sem consumidor, com a suíte verde.
+ */
+export const SEM_CLIENTE_NO_FRONT: readonly string[] = [] as const;
 
 /**
  * Operação que o cliente chama e o array `operations[]` do contrato não lista.
