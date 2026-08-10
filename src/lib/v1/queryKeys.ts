@@ -17,6 +17,9 @@ export const workspaceKeys = {
   /** M20 — progresso por eixo. Tenant-scoped como todo o resto: a troca de workspace isola. */
   progress: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "progress"] as const,
+  /** M27 — projeção analítica, lida independentemente do documento de resultado. */
+  analytics: (workspaceId: string, analysisId: string) =>
+    ["workspace", workspaceId, "analyses", "detail", analysisId, "analytics"] as const,
   result: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "result"] as const,
   /**

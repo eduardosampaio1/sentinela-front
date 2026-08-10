@@ -4,6 +4,7 @@
 import { useMutation, useQuery, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
 import {
   workspaceKeys,
+  type AnalysisAnalyticsView,
   type AnalysisHandle,
   type AnalysisExportDownloadView,
   type AnalysisProgressView,
@@ -144,6 +145,34 @@ export function useAnalysisProgress(
     enabled: Boolean(scope && analysisId) && habilitado,
     queryFn: ({ signal }) =>
       client.getProgress(analysisId as string, scope as CanonicalScope, { signal }),
+  });
+}
+
+/**
+ * Projeção analítica pública (`GET /{id}/analytics`) — M27.
+ *
+ * O cliente existe desde a M21 e **não tinha consumidor de produto**: o bloco analítico de RES-01
+ * lia o analytics já embutido no `analysis-result-v2`. Os dois são o mesmo produtor com prazos
+ * diferentes — o documento v2 só existe depois da barreira, e este componente responde antes.
+ *
+ * É essa diferença de prazo que sustenta a disponibilidade progressiva: com o documento ausente,
+ * a página deixava de mostrar um analytics que podia estar pronto.
+ *
+ * Habilitado independentemente do resultado, de propósito. Um componente indisponível não pode
+ * bloquear outro disponível.
+ */
+export function useAnalysisAnalytics(
+  scope: CanonicalScope | null,
+  analysisId: string | null,
+  habilitado = true,
+): UseQueryResult<AnalysisAnalyticsView> {
+  const client = useV1Client();
+  return useQuery({
+    queryKey:
+      scope && analysisId ? workspaceKeys.analytics(scope.workspaceId, analysisId) : IDLE_KEY,
+    enabled: Boolean(scope && analysisId) && habilitado,
+    queryFn: ({ signal }) =>
+      client.getAnalytics(analysisId as string, scope as CanonicalScope, { signal }),
   });
 }
 

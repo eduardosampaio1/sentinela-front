@@ -16,7 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/shared/states/LoadingState";
-import { useAnalysisResult, useAnalysisStatus } from "../data/analysis";
+import { useAnalysisAnalytics, useAnalysisResult, useAnalysisStatus } from "../data/analysis";
 import { resolverResultado, type ResultadoResolvido } from "../result/adaptar";
 import { ordenarPorAtencao } from "../result/atencao";
 import { formatarInstante } from "../result/formatacao";
@@ -24,6 +24,7 @@ import { useCanonicalScope } from "./scope";
 import { ProblemFeedback } from "./notices";
 import { BlocoAnalitico } from "./analytics/BlocoAnalitico";
 import { SecaoDeAtencao } from "./analytics/SecaoDeAtencao";
+import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
 import { BotaoDeExport } from "./analytics/BotaoDeExport";
 import {
   ResumoDaAnalise,
@@ -50,6 +51,8 @@ export function ResultPage() {
   const status = useAnalysisStatus(scope, analysisId);
   const pronto = status.data?.status === "completed" && status.data.result_available === true;
   const resultado = useAnalysisResult(scope, analysisId, pronto);
+  // Habilitado SEM depender de `pronto`: é essa independência que sustenta a leitura progressiva.
+  const analytics = useAnalysisAnalytics(scope, analysisId);
 
   function documento(resolvido: Extract<ResultadoResolvido, { contrato: "v1" | "v2" }>) {
     const v = resolvido.view;
@@ -113,11 +116,26 @@ export function ResultPage() {
       return <ProblemFeedback error={status.error} onRetry={() => void status.refetch()} retryDisabled={status.isFetching} />;
     }
     // Concluída mas sem resultado disponível: estado seguro da E6 (sem dashboard vazio).
+    //
+    // M27 — DISPONIBILIDADE PROGRESSIVA. Antes, este ramo devolvia só a frase e mais nada, e com
+    // isso um componente analítico já PRONTO ficava escondido atrás de um documento que ainda não
+    // existia. O documento v2 só nasce depois da barreira; `GET /analytics` responde antes. Um
+    // componente indisponível não pode bloquear outro disponível.
     if (status.data && !pronto) {
       return (
-        <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
-          {t("canonicalAnalysis.action.resultPreparing")}
-        </p>
+        <div className="space-y-8">
+          <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
+            {t("canonicalAnalysis.action.resultPreparing")}
+          </p>
+          {analytics.data && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                {t("canonicalAnalysis.result.analytics.waitingDocument")}
+              </p>
+              <RegiaoDeAnalyticsAoVivo vista={analytics.data} />
+            </>
+          )}
+        </div>
       );
     }
     if (resultado.isError) {

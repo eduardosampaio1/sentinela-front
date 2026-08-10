@@ -206,7 +206,22 @@
         "unreadableBlocks": "{{n}} bloco(s) não correspondiam ao contrato e não foram interpretados.",
         "lineage": "Contrato analítico",
         "export": "Exportar",
-        "exportHint": "Baixa exatamente os números desta página."
+        "exportHint": "Baixa exatamente os números desta página.",
+        "liveTitle": "Componente analítico",
+        "liveSubtitle": "Lido do componente analítico, independentemente do documento de resultado.",
+        "noReadable": "Nenhum bloco legível nesta projeção.",
+        "waitingDocument": "O documento de resultado ainda não está disponível. O que segue foi lido do componente analítico.",
+        "provGenerated": "Gerado em",
+        "provSnapshot": "Contrato do snapshot",
+        "provDisclosure": "Regra de divulgação",
+        "provProjection": "Digest da projeção",
+        "state": {
+          "ready": "Entregue.",
+          "partial": "Entregue em parte. O que falta não foi medido — não é zero.",
+          "failed": "O componente analítico falhou. O resto desta página não é afetado.",
+          "unknown": "Estado desconhecido. Nada está sendo afirmado sobre o componente analítico."
+        },
+        "stateGroup": "Estado"
       },
       "attentionTitle": "O que merece atenção",
       "attentionNone": "Nada neste resultado foi assinalado pela análise.",

@@ -206,7 +206,22 @@
         "unreadableBlocks": "{{n}} block(s) did not match the contract and were not interpreted.",
         "lineage": "Analytics contract",
         "export": "Export",
-        "exportHint": "Downloads exactly the numbers on this page."
+        "exportHint": "Downloads exactly the numbers on this page.",
+        "liveTitle": "Analytics component",
+        "liveSubtitle": "Read from the analytics component, independently of the result document.",
+        "noReadable": "No readable block in this projection.",
+        "waitingDocument": "The result document is not available yet. What follows was read from the analytics component.",
+        "provGenerated": "Generated at",
+        "provSnapshot": "Snapshot contract",
+        "provDisclosure": "Disclosure rule",
+        "provProjection": "Projection digest",
+        "state": {
+          "ready": "Delivered.",
+          "partial": "Delivered in part. What is missing was not measured — it is not zero.",
+          "failed": "The analytics component failed. The rest of this page is unaffected.",
+          "unknown": "State unknown. Nothing is being asserted about the analytics component."
+        },
+        "stateGroup": "State"
       },
       "attentionTitle": "What deserves attention",
       "attentionNone": "Nothing in this result was flagged by the analysis.",
