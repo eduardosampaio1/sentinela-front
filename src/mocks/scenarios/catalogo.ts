@@ -146,13 +146,20 @@ export const CATALOGO: readonly Scenario[] = [
     id: "export-expired",
     superficies: ["RES-01"],
     estado: "disponivel",
-    // `expired` ≠ purged: o pacote existiu e caducou. Pode ser refeito; purgado, não.
+    // `expired` ≠ purged no DOMÍNIO — campos e eventos diferentes. Publicamente são a MESMA
+    // condição: o produtor colapsa quatro causas (inexistente, de outro workspace, expirado e
+    // purgado) num único `forbidden_or_not_found`/`404`, para a rota não virar oráculo de
+    // existência. É decisão da MF5.2, e a mutação `g4-detalhe-distingue-as-negativas` mata quem
+    // tentar distinguir uma das quatro no `detail`.
     //
     // O contrato NÃO publica um `export_expired` — inventei esse código na primeira versão e o
-    // typecheck reprovou. O catálogo canônico tem 9 códigos, e o que cabe aqui é
-    // `result_not_available`. A distinção expirado/purgado é do PRODUTO, não do envelope de erro;
-    // fabricar um código para carregá-la seria exigir contrato inexistente e defaultá-lo.
-    handlers: (b) => [erro(b, "/v1/analyses/:id/analytics/export/download", 410, "result_not_available")],
+    // typecheck reprovou. O que veio no lugar, `410 result_not_available`, também não era o
+    // produtor: o Gateway nunca emite `410`, e o corpo de `result_not_available` já declara
+    // `status: 404` — o mock contradizia a si mesmo antes de contradizer o backend. Conferido
+    // contra `api/routes/analyses_v1.py:739` e `infra/analyses_public.py:111`.
+    handlers: (b) => [
+      erro(b, "/v1/analyses/:id/analytics/export/download", 404, "forbidden_or_not_found"),
+    ],
   },
   {
     id: "comparison-compatible",

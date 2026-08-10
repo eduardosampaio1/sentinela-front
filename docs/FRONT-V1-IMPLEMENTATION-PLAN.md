@@ -553,7 +553,11 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Blocker:** fecha a faixa "contratado e não consumido" do Trust.
 
 ### M22 · Cliente `/analytics/export/download`
-> 🔧 **CORREÇÃO DE AUTORIDADE (discovery da BD09-A).** O escopo dizia `expired` ≠ `purged`, e a
+> 🔧 **CORREÇÃO DE AUTORIDADE.** *(Esta nota citava "discovery da BD09-A". Não existe `BD09-A`, e
+> `BD09` é **resolução de destinatário** (B5/M43 → M44, M48) nas outras sete citações do programa —
+> tabela §2, `INDICE-DE-AUTORIDADE-V1.md:117`, gate 12→13. A canonicalização de contrato é a
+> **BD07**. Referência corrigida em 2026-08-10; o conteúdo da correção abaixo continua válido.)*
+> O escopo dizia `expired` ≠ `purged`, e a
 > leitura natural disso era exigir dois estados/problems públicos distintos. O **produtor
 > contradiz essa leitura, e deliberadamente**: `persistence/exports.py` projeta
 > `purged_at is not None → "expired"`, porque *"para quem consulta, 'venceu' e 'os bytes já
@@ -573,10 +577,25 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > observabilidade interna em superfície de produto sem necessidade.
 - **Escopo:** download + estados do eixo `export`; indisponibilidade pública é **uma** condição
   (`expired`, que já inclui o purgado). **Fora:** gerar export.
-- **Pré:** BD07 + **BD09** (contrato de `/analytics/export/download`) + implementação do produtor
-  no Gateway. **Scenarios:** 17–19. **DoD:** operação sai do `missing_in_front`.
-- 🔴 **BLOQUEADA:** `CONTRATO_DECLARA_OPERACAO_SEM_PRODUTOR` — a operação está em `operations[]`
-  e o Gateway **não a implementa**. Não remover do manifesto: a resolução é implementar o produtor.
+- **Pré:** **BD07** (canonicalização de contrato — ✅ decisão 4) + implementação do produtor no
+  Gateway. **Scenarios:** 17–19. **DoD:** operação sai do `missing_in_front`.
+- 🟢 **DESBLOQUEADA em 2026-08-10.** O blocker era `CONTRATO_DECLARA_OPERACAO_SEM_PRODUTOR` — "a
+  operação está em `operations[]` e o Gateway não a implementa". **A premissa era de branch.** O
+  produtor existe em `api/routes/analyses_v1.py:739` do tip `develop` (worktree `sentinela-facts`,
+  `4cd8bf9`), registrado em `api/main.py:123` atrás de `public_api_v1_enabled()`; suíte
+  `test_mf52_export_download_fachada.py` **15/15**, mutação anti-bypass **5/5 mortas**. A rota é
+  ausente só em `fix/argos-analysis-pipeline` e `main` — e é lá que a árvore principal do repo
+  `sentinela` está parada, 83 commits atrás. Ver [[project_argos_onda8_topologia]].
+- **Contrato observado, para a M22 não redescobrir:** sucesso é **`200` com JSON** —
+  `download_url` (assinada pelo broker, TTL de 5 min, **transporte**, nunca produto),
+  `expires_in_seconds`, `sha256`, `size_bytes`, `export_contract_version`, `format`. O Gateway
+  **não** proxia bytes, não monta ZIP e não deriva `object_key`. Indisponibilidade é **`404`
+  `forbidden_or_not_found`** com `detail` fixo `analytics_export_not_available` — e o front já
+  tem esse código em `src/lib/v1/problem.ts:16`, com `status`/`retryable`/`title` idênticos aos
+  do Gateway. **A M22 não precisa de problem code novo.**
+  > ⚠️ O antigo `410 result_not_available` do scenario `export-expired` **nunca foi o produtor**:
+  > o Gateway não emite `410`, e o corpo de `result_not_available` já declara `status: 404`.
+  > Corrigido em `src/mocks/scenarios/catalogo.ts` na mesma passada.
 
 ### M23 · Cliente `/timeline`
 - **Escopo:** leitura dos eventos duráveis (`public-events-v1`); **não remontar** do estado atual —
