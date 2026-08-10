@@ -9,87 +9,80 @@
 // direção da divergência. Um campo publicado e não lido é dívida; um campo lido e não publicado
 // é invenção.
 
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const RAIZ = resolve(__dirname, "../../..");
 
-// Mesmo desenho do `SENTINELA_CONTRACT_ORIGIN`: quem sabe qual checkout é a autoridade diz o
-// caminho. Aqui isso também é o que permite a prova negativa do A5 mutar uma CÓPIA — o repo do
-// produtor está congelado e não é tocado por teste nenhum.
-export const CONTRATOS_ANALYTICS = process.env.SENTINELA_ANALYTICS_CONTRACTS
-  ? resolve(process.env.SENTINELA_ANALYTICS_CONTRACTS)
-  : resolve(RAIZ, "../sentinela-analytics-service/src/analytics_service/contracts");
-
-export const ARQUIVOS_ANALYTICS = [
-  "distribuicao.py",
-  "concentracao.py",
-  "cruzamento.py",
-  "serie_temporal.py",
-  "snapshot.py",
-];
+/**
+ * O contrato PUBLICADO da superfície aninhada — BD08.
+ *
+ * Antes daqui, este módulo lia e parseava os `.py` do produtor: o consumidor dependia do
+ * CÓDIGO-FONTE de outro repositório para conhecer o contrato. Funcionava, e atravessava uma
+ * fronteira que não deveria existir — um refactor interno do Analytics quebrava o gate do front
+ * sem que contrato nenhum tivesse mudado.
+ *
+ * Mesmo desenho de `SENTINELA_CONTRACT_ORIGIN`: quem sabe qual checkout é a autoridade diz o
+ * caminho, e é o que permite a prova negativa mutar uma CÓPIA sem tocar o repo do produtor.
+ */
+export const CONTRATO_ANALYTICS_PUBLICADO = process.env.SENTINELA_ANALYTICS_CONTRATO
+  ? resolve(process.env.SENTINELA_ANALYTICS_CONTRATO)
+  : resolve(RAIZ, "../sentinela-analytics-service/docs/contracts/analytics-snapshot-v9.json");
 
 export function analyticsDisponivel(): boolean {
-  return (
-    existsSync(CONTRATOS_ANALYTICS) &&
-    ARQUIVOS_ANALYTICS.every((a) => existsSync(resolve(CONTRATOS_ANALYTICS, a)))
-  );
+  return existsSync(CONTRATO_ANALYTICS_PUBLICADO);
 }
 
 export interface Projecao {
   nome: string;
   campos: string[];
-  /** Campos declarados como `| None` (Python) ou `| null` (TS). */
+  /** Campos que aceitam `null`. */
   anulaveis: string[];
 }
 
-// `class Nome(Base):` — captura o nome e a base para herdar campos de bases privadas.
-const CLASSE_PY = /^class\s+([A-Za-z0-9_]+)\s*\(\s*([A-Za-z0-9_]+)\s*\)\s*:/gm;
-// `    campo: tipo` no corpo da classe, ignorando `_privados` e métodos.
-const CAMPO_PY = /^ {4}([a-z][a-z0-9_]*)\s*:\s*([^\n=]+)/gm;
+interface SchemaDeObjeto {
+  properties?: Record<string, unknown>;
+  required?: string[];
+}
 
-/** Extrai as projeções declaradas em um módulo Pydantic, resolvendo herança de bases locais. */
-export function projecoesPython(fonte: string): Map<string, Projecao> {
-  const limites: { nome: string; base: string; inicio: number }[] = [];
-  for (const m of fonte.matchAll(CLASSE_PY)) {
-    limites.push({ nome: m[1], base: m[2], inicio: m.index! });
-  }
-  const brutas = new Map<string, Projecao & { base: string }>();
-  limites.forEach((c, i) => {
-    const fim = i + 1 < limites.length ? limites[i + 1].inicio : fonte.length;
-    const corpo = fonte.slice(c.inicio, fim);
-    const campos: string[] = [];
-    const anulaveis: string[] = [];
-    for (const m of corpo.matchAll(CAMPO_PY)) {
-      const [, nome, tipo] = m;
-      campos.push(nome);
-      if (/\|\s*None|Optional\[/.test(tipo)) anulaveis.push(nome);
-    }
-    brutas.set(c.nome, { nome: c.nome, base: c.base, campos, anulaveis });
-  });
+/** Um campo aceita `null`? No JSON Schema do Pydantic isso vira `anyOf` com `{"type":"null"}`. */
+function aceitaNulo(esquema: unknown): boolean {
+  const texto = JSON.stringify(esquema ?? {});
+  return texto.includes('"type":"null"');
+}
 
-  // Herança: uma base privada (`_CruzamentoBase`, `_SerieBase`) contribui seus campos para a
-  // subclasse. Sem isto, comparar `SerieTemporal` compararia metade da superfície e daria verde.
-  const resolvido = new Map<string, Projecao>();
-  for (const [nome, c] of brutas) {
-    const campos = new Set(c.campos);
-    const anulaveis = new Set(c.anulaveis);
-    let base = c.base;
-    const visto = new Set<string>([nome]);
-    while (brutas.has(base) && !visto.has(base)) {
-      visto.add(base);
-      const b = brutas.get(base)!;
-      b.campos.forEach((f) => campos.add(f));
-      b.anulaveis.forEach((f) => anulaveis.add(f));
-      base = b.base;
-    }
-    resolvido.set(nome, {
-      nome,
-      campos: [...campos].sort(),
-      anulaveis: [...anulaveis].sort(),
-    });
-  }
-  return resolvido;
+/**
+ * As projeções da superfície publicada.
+ *
+ * Vem de `$defs` — o que o Pydantic resolveu como estruturalmente alcançável a partir do read
+ * model público — mais o próprio topo. Nenhum nome é digitado aqui: a transitividade é do
+ * produtor, e este módulo só a lê.
+ */
+export function projecoesPublicadas(): Map<string, Projecao> {
+  const doc = JSON.parse(readFileSync(CONTRATO_ANALYTICS_PUBLICADO, "utf-8")) as {
+    version?: string;
+    schema?: SchemaDeObjeto & { $defs?: Record<string, SchemaDeObjeto>; title?: string };
+  };
+  const schema = doc.schema ?? {};
+  const out = new Map<string, Projecao>();
+
+  const registrar = (nome: string, obj: SchemaDeObjeto) => {
+    const props = obj.properties ?? {};
+    const campos = Object.keys(props).sort();
+    const anulaveis = campos.filter((c) => aceitaNulo(props[c])).sort();
+    out.set(nome, { nome, campos, anulaveis });
+  };
+
+  if (schema.title) registrar(schema.title, schema);
+  for (const [nome, def] of Object.entries(schema.$defs ?? {})) registrar(nome, def);
+  return out;
+}
+
+/** A versão publicada, para o gate poder afirmar contra qual superfície ele comparou. */
+export function versaoPublicada(): string | null {
+  if (!analyticsDisponivel()) return null;
+  const doc = JSON.parse(readFileSync(CONTRATO_ANALYTICS_PUBLICADO, "utf-8")) as { version?: string };
+  return doc.version ?? null;
 }
 
 // `export interface Nome {` … `}` — o corpo até a chave de fechamento na coluna 0.

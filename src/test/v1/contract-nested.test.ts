@@ -13,10 +13,9 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   analyticsDisponivel,
-  ARQUIVOS_ANALYTICS,
   compararProjecao,
-  CONTRATOS_ANALYTICS,
-  projecoesPython,
+  CONTRATO_ANALYTICS_PUBLICADO,
+  projecoesPublicadas,
   projecoesTypeScript,
   type Projecao,
 } from "./nestedProjection";
@@ -31,9 +30,8 @@ const doFio = (campo: string) => !/[A-Z]/.test(campo);
 
 function lados() {
   const py = new Map<string, Projecao>();
-  for (const arquivo of ARQUIVOS_ANALYTICS) {
-    const fonte = readFileSync(resolve(CONTRATOS_ANALYTICS, arquivo), "utf-8");
-    for (const [nome, p] of projecoesPython(fonte)) {
+  {
+    for (const [nome, p] of projecoesPublicadas()) {
       // Bases privadas não são projeção pública — só contribuem campos por herança.
       if (!nome.startsWith("_")) py.set(nome, p);
     }
@@ -50,7 +48,7 @@ describe("WS-A4 · superfície pública ANINHADA", () => {
     if (disponivel) return;
     expect(
       process.env.SENTINELA_ANALYTICS_ORIGIN_ABSENT === "1",
-      `contratos do produtor não encontrados em ${CONTRATOS_ANALYTICS}. Os casos de comparação ` +
+      `contrato publicado não encontrado em ${CONTRATO_ANALYTICS_PUBLICADO}. Os casos de comparação ` +
         "NÃO rodaram. Para rodar assim de propósito, declare SENTINELA_ANALYTICS_ORIGIN_ABSENT=1.",
     ).toBe(true);
   });
