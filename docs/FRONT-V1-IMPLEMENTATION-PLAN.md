@@ -553,8 +553,30 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Blocker:** fecha a faixa "contratado e não consumido" do Trust.
 
 ### M22 · Cliente `/analytics/export/download`
-- **Escopo:** download + estados do eixo `export`; `expired` ≠ `purged`. **Fora:** gerar export.
-- **Pré:** BD07. **Scenarios:** 17–19. **DoD:** operação sai do `missing_in_front`.
+> 🔧 **CORREÇÃO DE AUTORIDADE (discovery da BD09-A).** O escopo dizia `expired` ≠ `purged`, e a
+> leitura natural disso era exigir dois estados/problems públicos distintos. O **produtor
+> contradiz essa leitura, e deliberadamente**: `persistence/exports.py` projeta
+> `purged_at is not None → "expired"`, porque *"para quem consulta, 'venceu' e 'os bytes já
+> saíram' têm a mesma ação possível"*.
+>
+> **Semântica corrigida:** `expired` e `purged` são distintos **no domínio** — `expires_at` e
+> `purged_at` são campos diferentes, com eventos diferentes —, mas **`purged` projeta publicamente
+> como `expired`**. O escopo da M22 é o estado público, então ela vê **uma** condição de
+> indisponibilidade, não duas.
+>
+> Não confundir nenhuma das duas com o **TTL de 5 minutos da capability interna**, que é transporte
+> recuperável e nunca chega ao frontend.
+>
+> A distinção interna **não deve ser removida**: o tombstone `purged_at` é o que permitiria evoluir
+> o contrato no dia em que as ações públicas divergirem, sem reconstruir a história do domínio.
+> Enquanto elas não divergem, aumentar a cardinalidade do contrato público seria transformar
+> observabilidade interna em superfície de produto sem necessidade.
+- **Escopo:** download + estados do eixo `export`; indisponibilidade pública é **uma** condição
+  (`expired`, que já inclui o purgado). **Fora:** gerar export.
+- **Pré:** BD07 + **BD09** (contrato de `/analytics/export/download`) + implementação do produtor
+  no Gateway. **Scenarios:** 17–19. **DoD:** operação sai do `missing_in_front`.
+- 🔴 **BLOQUEADA:** `CONTRATO_DECLARA_OPERACAO_SEM_PRODUTOR` — a operação está em `operations[]`
+  e o Gateway **não a implementa**. Não remover do manifesto: a resolução é implementar o produtor.
 
 ### M23 · Cliente `/timeline`
 - **Escopo:** leitura dos eventos duráveis (`public-events-v1`); **não remontar** do estado atual —
