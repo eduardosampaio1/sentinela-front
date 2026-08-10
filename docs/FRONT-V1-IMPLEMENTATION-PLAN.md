@@ -511,7 +511,21 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Pré:** M17. **DoD:** cada scenario invocável por nome; os 4 bloqueados **falham explicitamente**
   com a razão.
 
-### M19 · Gates de import do mock
+### M19 · Gates de import do mock — EXECUTADA
+> **Estado:** executada. `src/test/v1/mock-import-gates.test.ts` (12 casos, 9 mutacoes mortas).
+>
+> **A direcao que faltava.** A M05 protegia `produto -> mock`. Nada impedia o inverso: um cenario
+> de `src/mocks/**` importando o Design System ou uma tela. Isso nao vaza mock para producao —
+> vaza PRODUTO para dentro do mock, e o cenario passa a depender da UI que deveria alimentar.
+> Camadas permitidas: `msw`, `@/test/**`, `@/lib/v1/**` e relativo interno.
+>
+> **Anti-vacuidade real:** quando a M05 rodou, `src/mocks/` nao existia. Agora existe e esta
+> povoada — e ha caso que reprova a pasta sumir ou esvaziar.
+>
+> **Achado:** DUAS listas de excecao estavam sem trava (a licenca nominal e a lista de camadas
+> permitidas). Ampliar qualquer uma cegava o gate e nada reprovava. Excecao sem trava nao e
+> excecao, e porta.
+- **Pré:** M05, M18. *(Decisão de owner: o campo ausente era omissão editorial.)*
 - **Escopo:** ativar M05 contra a árvore real de `src/mocks/`. **DoD:** mutação → vermelho.
 
 ---
