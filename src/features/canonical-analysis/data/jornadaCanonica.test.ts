@@ -117,6 +117,50 @@ describe("o frontend não conhece o interior do sistema", () => {
     "ingestion_id",
   ];
 
+
+/**
+ * MICROCORREÇÃO (M21) — `max_time_buckets` é PROPRIEDADE PUBLICADA, não infraestrutura.
+ *
+ * `bucket` entrou na lista como conceito de storage: MinIO, `object_key`, caminho de objeto. Depois
+ * da BD08, o contrato aninhado publica `SerieTemporal.max_time_buckets` — o parâmetro de
+ * agregação temporal —, e a palavra passou a ter dois significados. O gate acusava o segundo.
+ *
+ * A exceção NASCE DA SEMÂNTICA, não de uma lista: a ocorrência só é neutralizada se o schema
+ * publicado pela BD08 de fato declarar essa propriedade. Se a BD08 sumir, se o campo sair do
+ * contrato, ou se o schema não for encontrado, `max_time_buckets` volta a ser tratado como
+ * vazamento — sem ninguém precisar lembrar de reverter nada.
+ *
+ * O CONCEITO segue proibido em qualquer forma: `const bucket`, `bucketName`, `object_key`,
+ * `minio`, URL de storage. Só o nome exato da propriedade publicada é perdoado.
+ */
+const CONTRATO_ANINHADO = path.resolve(
+  __dirname,
+  "../../../../../sentinela-analytics-service/docs/contracts/analytics-snapshot-v9.json",
+);
+
+/** Nomes de propriedade que o contrato aninhado publica e que colidem com token interno. */
+function propriedadesPublicadasQueColidem(): string[] {
+  if (!fs.existsSync(CONTRATO_ANINHADO)) return [];
+  const doc = JSON.parse(fs.readFileSync(CONTRATO_ANINHADO, "utf-8")) as {
+    schema?: { $defs?: Record<string, { properties?: Record<string, unknown> }> };
+  };
+  const nomes = new Set<string>();
+  for (const def of Object.values(doc.schema?.$defs ?? {})) {
+    for (const prop of Object.keys(def.properties ?? {})) nomes.add(prop);
+  }
+  // Só as que de fato contêm um token proibido. Um campo publicado sem colisão não entra aqui.
+  return [...nomes].filter((n) => PROIBIDOS.some((p) => n.toLowerCase().includes(p)));
+}
+
+/** Remove do texto APENAS os nomes de propriedade publicados — o conceito continua visível. */
+function semPropriedadesPublicadas(fonte: string): string {
+  let out = fonte;
+  for (const nome of propriedadesPublicadasQueColidem()) {
+    out = out.split(nome.toLowerCase()).join("");
+  }
+  return out;
+}
+
   it("os estados públicos não usam vocabulário interno", () => {
     for (const status of PUBLIC_STATES) {
       for (const proibido of PROIBIDOS) {
@@ -163,10 +207,51 @@ describe("o frontend não conhece o interior do sistema", () => {
         .replace(/\/\*[\s\S]*?\*\//g, " ")
         .replace(/(^|[^:])\/\/.*$/gm, "$1")
         .toLowerCase();
+      // A exceção semântica entra AQUI, e só aqui: nomes de propriedade que o contrato aninhado
+      // publica saem do texto antes da varredura. O que sobra é o conceito.
+      const limpo = semPropriedadesPublicadas(src);
       for (const proibido of noCodigo) {
-        if (src.includes(proibido)) culpados.push(`${path.relative(raiz, a)}: ${proibido}`);
+        if (limpo.includes(proibido)) culpados.push(`${path.relative(raiz, a)}: ${proibido}`);
       }
     }
     expect(culpados).toEqual([]);
+  });
+
+  it("a exceção vem do CONTRATO, e cobre `max_time_buckets`", () => {
+    // Se este caso ficar vazio, a exceção deixou de nascer da semântica — e o gate voltaria a
+    // acusar o campo publicado, ou pior, passaria a perdoar por outro motivo.
+    expect(
+      propriedadesPublicadasQueColidem(),
+      "o contrato da BD08 não foi encontrado ou não publica mais o campo",
+    ).toContain("max_time_buckets");
+  });
+
+  it("o CONCEITO de infraestrutura continua proibido em qualquer forma", () => {
+    // A direção que importa: a exceção perdoa o NOME publicado, nunca o conceito.
+    for (const uso of [
+      "const bucket = obterBucket();",
+      "const bucketName = 's3';",
+      "type Storage = { object_key: string };",
+      "fetch('https://minio.local/bucket/x')",
+      "import { presigned } from './storage';",
+    ]) {
+      const limpo = semPropriedadesPublicadas(uso.toLowerCase());
+      const pegou = PROIBIDOS.filter((p) => p !== "attempt").some((p) => limpo.includes(p));
+      expect(pegou, `conceito de infraestrutura passou: ${uso}`).toBe(true);
+    }
+  });
+
+  it("`max_time_buckets` legítimo passa; `bucket` solto na MESMA linha não", () => {
+    const legitimo = "max_time_buckets: contagem(bruto.max_time_buckets),".toLowerCase();
+    expect(
+      PROIBIDOS.some((p) => semPropriedadesPublicadas(legitimo).includes(p)),
+      "o campo publicado foi acusado",
+    ).toBe(false);
+
+    const misturado = "max_time_buckets: 1; const bucket = 2;".toLowerCase();
+    expect(
+      semPropriedadesPublicadas(misturado).includes("bucket"),
+      "o conceito escondeu-se atrás do campo publicado",
+    ).toBe(true);
   });
 });
