@@ -34,6 +34,41 @@ import { ehObjeto, lista, listaEstrita, numeroOuNulo, textoOuNulo } from "./leit
 // ── medidas numéricas ────────────────────────────────────────────────────────────────────
 
 /** Uma medida quantitativa, resumida. As quatro estatísticas são anuláveis por DUAS razões. */
+/**
+ * PROCEDÊNCIA de uma projeção — o "de onde veio e sob que regra" que a V9 exige (M21).
+ *
+ * Todos os campos são `| null`, e isso não é frouxidão: **ausência ≠ zero**. `min_group_size`
+ * ausente não é "sem mínimo"; `top_k` ausente não é "sem corte". Um default aqui faria a tela
+ * afirmar um parâmetro de privacidade que ninguém publicou — e parâmetro de privacidade inventado
+ * é pior que ausente, porque parece verificado.
+ *
+ * O quarteto do método (`method_id`, `method_version`, `method_parameters`,
+ * `method_definition_digest`) anda junto de propósito: é ele que torna a versão VERIFICÁVEL. O
+ * digest é identidade, nunca qualidade — não vira score, nota nem semáforo.
+ */
+/**
+ * PROCEDÊNCIA — os campos publicados que dizem "de onde veio e sob que regra" (M21, V9).
+ *
+ * Ficam ACHATADOS em cada projeção, em `snake_case`, como qualquer campo do fio. A primeira
+ * versão os agrupou sob um `procedenciaPublicada` em camelCase, e a suíte ficou verde com o
+ * OBSERVADOR CEGO: o gate `contract-nested` separa campo do fio de derivação do view model pelo
+ * camelCase, então passou a tratar o bloco inteiro como derivação e deixou de enxergar que os
+ * campos estavam sendo lidos. `PUBLICADO_E_NAO_LIDO` não reduziu, e nada ficou vermelho.
+ *
+ * Campo do fio se chama como no fio, até a fronteira onde a derivação de fato acontece.
+ *
+ * NÃO são `| null`, e a razão é o contrato: o schema da BD08 os publica como OBRIGATÓRIOS. Ausência
+ * aqui não é um valor legítimo do view model — é violação de contrato, e o leitor a trata como
+ * tal: a projeção inteira fica ILEGÍVEL e entra em `blocosIlegiveis`, o mesmo mecanismo que
+ * `lerConcentracao` já aplica a `measure_id`.
+ *
+ * Sintetizar `0`, `""` ou `null` para "não quebrar" seria esconder a violação atrás de um valor
+ * que ninguém publicou — e um parâmetro de privacidade inventado é pior que ausente, porque
+ * parece verificado. O digest é IDENTIDADE, nunca qualidade: não vira score nem semáforo.
+ *
+ * Cada projeção lê SOMENTE o que o schema da BD08 publica para ela. Nenhuma leitura especulativa.
+ */
+
 export interface ResumoNumerico {
   measure_id: string;
   unit: string;
@@ -48,6 +83,11 @@ export interface ResumoNumerico {
   mean: number | null;
   /** `true` ⇒ os nulos acima são o PISO de privacidade, não ausência de dado. */
   suppression_applied: boolean;
+  // ── procedência publicada (M21) ──
+  method_id: string;
+  method_version: number;
+  method_parameters: Record<string, string>;
+  method_definition_digest: string;
 }
 
 // ── distribuições de rótulo ──────────────────────────────────────────────────────────────
@@ -71,6 +111,14 @@ export interface ResumoDeDistribuicao {
   other_count: number | null;
   suppression_applied: boolean;
   high_cardinality_suppressed: boolean;
+  // ── procedência publicada (M21) ──
+  method_id: string;
+  method_version: number;
+  method_parameters: Record<string, string>;
+  method_definition_digest: string;
+  privacy_policy_version: string;
+  top_k: number;
+  max_tracked_categories: number;
 }
 
 // ── concentração (Pareto) ────────────────────────────────────────────────────────────────
@@ -112,6 +160,14 @@ export interface ResumoDeConcentracao {
   suppression_applied: boolean;
   high_cardinality_suppressed: boolean;
   statistics: EstatisticaDeConcentracao[];
+  // ── procedência publicada (M21) ──
+  method_id: string;
+  method_version: number;
+  method_parameters: Record<string, string>;
+  method_definition_digest: string;
+  privacy_policy_version: string;
+  min_group_size: number;
+  max_tracked_values: number;
 }
 
 // ── séries temporais ─────────────────────────────────────────────────────────────────────
@@ -134,6 +190,15 @@ export interface SerieTemporal {
   windows: JanelaDaSerie[];
   temporal_series_suppressed: boolean;
   suppression_applied: boolean;
+  // ── procedência publicada (M21) ──
+  method_id: string;
+  method_version: number;
+  method_parameters: Record<string, string>;
+  method_definition_digest: string;
+  privacy_policy_version: string;
+  min_group_size: number;
+  max_time_buckets: number;
+  series_contract_version: string;
 }
 
 // ── o snapshot ───────────────────────────────────────────────────────────────────────────
@@ -156,7 +221,23 @@ export interface SnapshotAnalitico {
   blocosIlegiveis: number;
 }
 
+
+/**
+ * Lê a procedência publicada. Campo ausente vira `null` — nunca zero, nunca default.
+ *
+ * Não valida, não deriva, não completa: a M21 é LEITURA. Qualquer regra sobre o que fazer com um
+ * parâmetro ausente é decisão de produto, e ela mora na tela, não aqui.
+ */
+/** `method_parameters` como publicado — não reinterpretado, não normalizado, não traduzido. */
+function lerParametros(bruto: unknown): Record<string, string> | null {
+  if (!ehObjeto(bruto)) return null;
+  return Object.fromEntries(Object.entries(bruto).map(([k, v]) => [k, String(v)]));
+}
+
+
+
 // ── leitores ─────────────────────────────────────────────────────────────────────────────
+
 
 /** Contagem não-negativa obrigatória, ou `null` (que o chamador trata como bloco ilegível). */
 function contagem(v: unknown): number | null {
@@ -195,6 +276,17 @@ function lerNumerico(bruto: unknown): ResumoNumerico | null {
   ) {
     return null;
   }
+  // Procedência é CONTRATO, não enfeite: o schema da BD08 publica estes campos como
+  // obrigatórios. Faltando um, o documento violou o contrato e a projeção é ilegível —
+  // preencher com `null` a transformaria em meia-verdade que a tela exibiria como fato.
+  const proc = {
+    method_id: textoOuNulo(bruto.method_id),
+    method_version: contagem(bruto.method_version),
+    method_definition_digest: textoOuNulo(bruto.method_definition_digest),
+    method_parameters: lerParametros(bruto.method_parameters),
+  };
+  if (Object.values(proc).some((v) => v === null)) return null;
+
   return {
     measure_id: measureId,
     unit,
@@ -208,6 +300,7 @@ function lerNumerico(bruto: unknown): ResumoNumerico | null {
     total: numeroOuNulo(bruto.total),
     mean: numeroOuNulo(bruto.mean),
     suppression_applied: booleano(bruto.suppression_applied),
+    ...(proc as Required<typeof proc>),
   };
 }
 
@@ -252,10 +345,24 @@ function lerDistribuicao(bruto: unknown): ResumoDeDistribuicao | null {
   const grupos = listaEstrita(bruto.groups, lerGrupo);
   if (grupos === null) return null;
 
+  // Procedência é CONTRATO, não enfeite: o schema da BD08 publica estes campos como
+  // obrigatórios. Faltando um, o documento violou o contrato e a projeção é ilegível —
+  // preencher com `null` a transformaria em meia-verdade que a tela exibiria como fato.
+  const proc = {
+    method_id: textoOuNulo(bruto.method_id),
+    method_version: contagem(bruto.method_version),
+    method_definition_digest: textoOuNulo(bruto.method_definition_digest),
+    privacy_policy_version: textoOuNulo(bruto.privacy_policy_version),
+    min_group_size: contagem(bruto.min_group_size),
+    top_k: contagem(bruto.top_k),
+    max_tracked_categories: contagem(bruto.max_tracked_categories),
+    method_parameters: lerParametros(bruto.method_parameters),
+  };
+  if (Object.values(proc).some((v) => v === null)) return null;
+
   return {
     measure_id: measureId,
     value_type: valueType,
-    min_group_size: piso,
     value_count: valid,
     null_count: nulos,
     invalid_count: invalidos,
@@ -265,6 +372,7 @@ function lerDistribuicao(bruto: unknown): ResumoDeDistribuicao | null {
     other_count: outros,
     suppression_applied: booleano(bruto.suppression_applied),
     high_cardinality_suppressed: booleano(bruto.high_cardinality_suppressed),
+    ...(proc as Required<typeof proc>),
   };
 }
 
@@ -321,6 +429,20 @@ function lerConcentracao(bruto: unknown): ResumoDeConcentracao | null {
   const estatisticas = listaEstrita(bruto.statistics, lerEstatistica);
   if (faixas === null || estatisticas === null) return null;
 
+  // Procedência é CONTRATO, não enfeite: o schema da BD08 publica estes campos como
+  // obrigatórios. Faltando um, o documento violou o contrato e a projeção é ilegível —
+  // preencher com `null` a transformaria em meia-verdade que a tela exibiria como fato.
+  const proc = {
+    method_id: textoOuNulo(bruto.method_id),
+    method_version: contagem(bruto.method_version),
+    method_definition_digest: textoOuNulo(bruto.method_definition_digest),
+    privacy_policy_version: textoOuNulo(bruto.privacy_policy_version),
+    min_group_size: contagem(bruto.min_group_size),
+    max_tracked_values: contagem(bruto.max_tracked_values),
+    method_parameters: lerParametros(bruto.method_parameters),
+  };
+  if (Object.values(proc).some((v) => v === null)) return null;
+
   return {
     measure_id: measureId,
     unit,
@@ -335,6 +457,7 @@ function lerConcentracao(bruto: unknown): ResumoDeConcentracao | null {
     suppression_applied: booleano(bruto.suppression_applied),
     high_cardinality_suppressed: booleano(bruto.high_cardinality_suppressed),
     statistics: estatisticas,
+    ...(proc as Required<typeof proc>),
   };
 }
 
@@ -378,6 +501,21 @@ function lerSerie(bruto: unknown): SerieTemporal | null {
   const janelas = listaEstrita(bruto.windows, lerJanela);
   if (janelas === null) return null;
 
+  // Procedência é CONTRATO, não enfeite: o schema da BD08 publica estes campos como
+  // obrigatórios. Faltando um, o documento violou o contrato e a projeção é ilegível —
+  // preencher com `null` a transformaria em meia-verdade que a tela exibiria como fato.
+  const proc = {
+    method_id: textoOuNulo(bruto.method_id),
+    method_version: contagem(bruto.method_version),
+    method_definition_digest: textoOuNulo(bruto.method_definition_digest),
+    privacy_policy_version: textoOuNulo(bruto.privacy_policy_version),
+    series_contract_version: textoOuNulo(bruto.series_contract_version),
+    min_group_size: contagem(bruto.min_group_size),
+    max_time_buckets: contagem(bruto.max_time_buckets),
+    method_parameters: lerParametros(bruto.method_parameters),
+  };
+  if (Object.values(proc).some((v) => v === null)) return null;
+
   return {
     dimension_id: dimensionId,
     effective_granularity: granularidade,
@@ -389,6 +527,7 @@ function lerSerie(bruto: unknown): SerieTemporal | null {
     windows: janelas,
     temporal_series_suppressed: booleano(bruto.temporal_series_suppressed),
     suppression_applied: booleano(bruto.suppression_applied),
+    ...(proc as Required<typeof proc>),
   };
 }
 

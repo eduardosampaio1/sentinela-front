@@ -232,3 +232,38 @@ export interface AnalysisProgressView {
   analysis_id: string;
   axes: readonly ProgressEntry[];
 }
+
+// ── Projeção analítica pública (M21) ────────────────────────────────────────────────────────
+
+/** `component_status` — o vocabulário da projeção. `partial` ≠ `failed`, `withheld` ≠ erro. */
+export type AnalyticsComponentStatus = "ready" | "partial" | "withheld" | "failed" | "unknown";
+
+/**
+ * Retenção por privacidade. **Não é erro**: a medida existe e foi RETIDA por regra.
+ * `reason_code` diz por quê; convertê-la em erro apagaria a diferença entre "não pôde ser
+ * publicado" e "não pôde ser calculado".
+ */
+export interface AnalyticsWithheld {
+  reason_code: string;
+  [k: string]: unknown;
+}
+
+/**
+ * `GET /v1/analyses/{analysis_id}/analytics` — os 9 campos de
+ * `analytics_read_model_fields`.
+ *
+ * `snapshot` é `unknown` de propósito: sua forma é o contrato ANINHADO que a BD08 publicou
+ * (`analytics-snapshot-v9`), e quem o abre é `analyticsProjection`. Tipá-lo aqui duplicaria a
+ * superfície num segundo lugar que envelheceria sozinho.
+ */
+export interface AnalysisAnalyticsView {
+  analysis_id: string;
+  component_status: AnalyticsComponentStatus;
+  snapshot_contract_version: string | null;
+  snapshot_digest: string | null;
+  snapshot: unknown;
+  disclosure_rule_version: string | null;
+  projection_digest: string | null;
+  withheld: AnalyticsWithheld | null;
+  generated_at: string | null;
+}

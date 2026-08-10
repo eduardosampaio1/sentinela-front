@@ -10,8 +10,6 @@
 
 /** Operação contratada que ainda não tem cliente no frontend. É o blocker B1 (missão WS-C). */
 export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
-  // Projeção analítica pública (MF5.1) — `component_status`, `snapshot`, `withheld`.
-  "GET /v1/analyses/{analysis_id}/analytics",
   // Download do pacote de export (MF5.2).
   "GET /v1/analyses/{analysis_id}/analytics/export/download",
   // Linha do tempo LIDA dos eventos duráveis (Onda 7) — não remontada do estado atual.
@@ -57,45 +55,18 @@ export const SEM_ENTRADA_NO_CONTRATO: readonly string[] = [] as const;
  *       chave de saída não atravessa a fronteira pública.
  */
 export const PUBLICADO_E_NAO_LIDO: Readonly<Record<string, readonly string[]>> = {
-  // (a) trust — o quarteto do método é o que torna `method_version` verificável.
-  ResumoNumerico: [
-    "method_definition_digest",
-    "method_id",
-    "method_parameters",
-    "method_version",
-  ],
-  // (a) trust + parâmetros de privacidade. `min_group_size` NÃO está aqui: já é lido.
-  ResumoDeDistribuicao: [
-    "max_tracked_categories",
-    "method_definition_digest",
-    "method_id",
-    "method_parameters",
-    "method_version",
-    "privacy_policy_version",
-    "top_k",
-  ],
-  // (a) idem — e aqui `min_group_size` ESTÁ, porque nesta projeção o front não o lê.
-  ResumoDeConcentracao: [
-    "max_tracked_values",
-    "method_definition_digest",
-    "method_id",
-    "method_parameters",
-    "method_version",
-    "min_group_size",
-    "privacy_policy_version",
-  ],
-  // (a) idem, mais a versão do contrato da própria série.
-  SerieTemporal: [
-    "max_time_buckets",
-    "method_definition_digest",
-    "method_id",
-    "method_parameters",
-    "method_version",
-    "min_group_size",
-    "privacy_policy_version",
-    "series_contract_version",
-  ],
-  // (b) deliberado + procedência do plano ainda não exibida.
+  /**
+   * (b) DELIBERADO — o que a fatia decidiu não apresentar, e documentou.
+   *
+   * `flag_crosses`, `numeric_crosses`, `flag_series` e `numeric_series` são CONTADOS em
+   * `blocosNaoApresentados`; `unsupported_measure_ids` e `unauthorized_measure_ids` são contados e
+   * nunca nomeados, porque `measure_id` é chave de saída e a MF5 congelou que chave de saída não
+   * atravessa a fronteira pública. `plan_digest`, `plan_contract_version` e `input_artifact_id`
+   * são procedência do PLANO, não da medida — outra superfície, outra missão.
+   *
+   * As quatro projeções saíram desta lista na M21: seus campos de trust passaram a ser LIDOS.
+   * Restam só os deliberados, que é o que o DoD pedia.
+   */
   SnapshotAnalitico: [
     "flag_crosses",
     "flag_series",
@@ -119,6 +90,9 @@ export const PUBLICADO_E_NAO_LIDO: Readonly<Record<string, readonly string[]>> =
  */
 export const DERIVADOS_DO_VIEW_MODEL: readonly string[] = [
   "blocosIlegiveis",
+  // M21 — `procedencia` AGRUPA campos que o produtor publica soltos (o quarteto do método e os
+  // parâmetros de privacidade). Não é campo do fio nem invenção: é a mesma informação, reunida
+  // sob um nome, para que a tela peça "a procedência desta projeção" em vez de onze campos.
   "blocosNaoApresentados",
   "medidasNaoAutorizadas",
   "medidasNaoResumidas",

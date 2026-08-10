@@ -8,6 +8,7 @@
 import type {
   AnalysisHandle,
   AnalysisListPage,
+  AnalysisAnalyticsView,
   AnalysisProgressView,
   AnalysisResultView,
   AnalysisStatusView,
@@ -44,6 +45,11 @@ export interface V1Client {
    * sem completar os que faltarem. Ausência de um eixo é ausência, não `pending`.
    */
   getProgress(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisProgressView>;
+  /**
+   * Projeção analítica pública. Entrega o documento como veio — `withheld` NÃO vira erro, e
+   * `partial` NÃO vira `failed`: as três situações são distintas e a tela precisa distingui-las.
+   */
+  getAnalytics(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisAnalyticsView>;
   uploadData(analysisId: string, scope: CanonicalScope, body: BodyInit, opts?: RequestOptions): Promise<AnalysisStatusView>;
   submit(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
   getStatus(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisStatusView>;
@@ -211,6 +217,8 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       pedir<AnalysisHandle>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/submit`, { workspace_id: scope.workspaceId }, opts, undefined, true),
     getStatus: (analysisId, scope, opts) =>
       pedir<AnalysisStatusView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}`, { workspace_id: scope.workspaceId }, opts),
+    getAnalytics: (analysisId, scope, opts) =>
+      pedir<AnalysisAnalyticsView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics`, { workspace_id: scope.workspaceId }, opts),
     getProgress: (analysisId, scope, opts) =>
       pedir<AnalysisProgressView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/progress`, { workspace_id: scope.workspaceId }, opts),
     getResult: (analysisId, scope, opts) =>

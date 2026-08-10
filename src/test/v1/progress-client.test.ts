@@ -244,10 +244,10 @@ describe("M20 · 6. `/progress` saiu de SEM_CLIENTE_NO_FRONT", () => {
     ).not.toContain("GET /v1/analyses/{analysis_id}/progress");
   });
 
-  it("restam 3 operações sem cliente — B1 encolheu, não fechou", () => {
+  it("restam 2 operações sem cliente — B1 encolheu, não fechou", () => {
     // Honestidade sobre o blocker: M21–M23 fecham as outras três.
     return import("./divergenciaDeclarada").then(({ SEM_CLIENTE_NO_FRONT }) => {
-      expect(SEM_CLIENTE_NO_FRONT).toHaveLength(3);
+      expect(SEM_CLIENTE_NO_FRONT).toHaveLength(2);
     });
   });
 });
