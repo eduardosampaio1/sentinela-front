@@ -233,7 +233,35 @@
       "attentionMotivo": {
         "out_of_range": "outside the expected range for its unit",
         "partially_measured": "measured on part of the sample"
-      }
+      },
+      "trustTitle": "Why trust this result",
+      "trustIntro": "Every line below names the contract field it came from.",
+      "trustDocument": "Document",
+      "trustProjection": "Projection",
+      "trustPrivacy": "Privacy rule",
+      "trustSource": "source",
+      "timelineTitle": "What happened",
+      "timelineIntro": "Read from the durable events, in the order the producer delivered them.",
+      "timelineEmpty": "No durable event for this analysis yet.",
+      "timelineSeq": "seq",
+      "timelineEvent": {
+        "analysis": {
+          "created": "Analysis created",
+          "data_received": "Dataset received",
+          "queued": "Queued",
+          "started": "Execution started",
+          "recovering": "Recovering",
+          "completed": "Execution finished",
+          "failed": "Execution failed"
+        },
+        "result": {
+          "available": "Result document available"
+        }
+      },
+      "provContractDoc": "Result contract",
+      "provRegistryDoc": "Indicator registry",
+      "provMeasurement": "Measurement contract",
+      "provOmission": "Analytics outcome"
     },
     "problem": {
       "authentication_required": "Your session is no longer valid. Please sign in again.",

@@ -233,7 +233,35 @@
       "attentionMotivo": {
         "out_of_range": "fora da faixa esperada para a unidade",
         "partially_measured": "medido em parte da amostra"
-      }
+      },
+      "trustTitle": "Por que confiar",
+      "trustIntro": "Cada linha abaixo nomeia o campo de contrato que a produziu.",
+      "trustDocument": "Documento",
+      "trustProjection": "Projeção",
+      "trustPrivacy": "Privacidade",
+      "trustSource": "origem",
+      "timelineTitle": "O que aconteceu",
+      "timelineIntro": "Lido dos eventos duráveis, na ordem em que o produtor entregou.",
+      "timelineEmpty": "Nenhum evento durável nesta análise ainda.",
+      "timelineSeq": "seq",
+      "timelineEvent": {
+        "analysis": {
+          "created": "Análise criada",
+          "data_received": "Dados recebidos",
+          "queued": "Na fila",
+          "started": "Execução iniciada",
+          "recovering": "Retomando",
+          "completed": "Execução concluída",
+          "failed": "Execução falhou"
+        },
+        "result": {
+          "available": "Documento disponível"
+        }
+      },
+      "provContractDoc": "Contrato",
+      "provRegistryDoc": "Registro",
+      "provMeasurement": "Medição",
+      "provOmission": "Desfecho analítico"
     },
     "problem": {
       "authentication_required": "Sua sessão não é mais válida. Entre novamente.",

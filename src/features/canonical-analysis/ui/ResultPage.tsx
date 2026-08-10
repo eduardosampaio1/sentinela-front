@@ -16,15 +16,23 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/shared/states/LoadingState";
-import { useAnalysisAnalytics, useAnalysisResult, useAnalysisStatus } from "../data/analysis";
+import {
+  useAnalysisAnalytics,
+  useAnalysisResult,
+  useAnalysisStatus,
+  useAnalysisTimeline,
+} from "../data/analysis";
 import { resolverResultado, type ResultadoResolvido } from "../result/adaptar";
 import { ordenarPorAtencao } from "../result/atencao";
+import { zonasDeProcedencia } from "../result/procedencia";
 import { formatarInstante } from "../result/formatacao";
 import { useCanonicalScope } from "./scope";
 import { ProblemFeedback } from "./notices";
 import { BlocoAnalitico } from "./analytics/BlocoAnalitico";
 import { SecaoDeAtencao } from "./analytics/SecaoDeAtencao";
 import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
+import { PainelDeProcedencia } from "./analytics/PainelDeProcedencia";
+import { LinhaDoTempo } from "./analytics/LinhaDoTempo";
 import { BotaoDeExport } from "./analytics/BotaoDeExport";
 import {
   ResumoDaAnalise,
@@ -32,16 +40,10 @@ import {
   SecaoDeRecomendacoes,
 } from "./analytics/SecoesDaEngine";
 
-/** Procedência legível: QUAL contrato e QUAL registro de indicadores produziram isto.
- *  É o registro, não o schema, que explica um indicador que apareceu ou sumiu. */
-function Procedencia({ schemaVersion, registro }: { schemaVersion: string; registro: string }) {
-  return (
-    <p className="text-xs text-muted-foreground">
-      {schemaVersion}
-      {registro && ` · ${registro}`}
-    </p>
-  );
-}
+// AQUI FICAVA `Procedencia` — uma linha de texto no rodapé com `schemaVersion · registro`.
+// A M28 a substituiu pelo `PainelDeProcedencia`, que diz as MESMAS duas coisas e mais, e diz de
+// ONDE cada uma veio. Manter as duas daria dois lugares para o mesmo fato; manter a antiga sem
+// chamador seria código morto, que a regra da casa proíbe.
 
 export function ResultPage() {
   const { t, language } = useLanguage();
@@ -53,6 +55,7 @@ export function ResultPage() {
   const resultado = useAnalysisResult(scope, analysisId, pronto);
   // Habilitado SEM depender de `pronto`: é essa independência que sustenta a leitura progressiva.
   const analytics = useAnalysisAnalytics(scope, analysisId);
+  const timeline = useAnalysisTimeline(scope, analysisId);
 
   function documento(resolvido: Extract<ResultadoResolvido, { contrato: "v1" | "v2" }>) {
     const v = resolvido.view;
@@ -96,7 +99,10 @@ export function ResultPage() {
 
         {resolvido.contrato === "v2" && <BlocoAnalitico analytics={resolvido.view.analytics} />}
 
-        <Procedencia schemaVersion={v.schemaVersion} registro={v.indicatorRegistryVersion} />
+        {/* M28 — Trust deixa de ser uma linha solta no rodapé e vira zona com origem apontável. */}
+        <PainelDeProcedencia zonas={zonasDeProcedencia(resolvido, t)} />
+
+        {timeline.data && <LinhaDoTempo vista={timeline.data} />}
       </div>
     );
   }
