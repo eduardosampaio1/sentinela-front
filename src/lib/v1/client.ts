@@ -18,7 +18,7 @@ import type {
   ListParams,
   MeView,
 } from "./contract/public-v1.types";
-import { normalizeProblem, PROBLEM_MEDIA_TYPE, ProblemError } from "./problem";
+import { normalizeProblem, PROBLEM_MEDIA_TYPE, ProblemError, TransportError } from "./problem";
 
 export interface V1ClientConfig {
   /** Base URL do Gateway (ex.: VITE_SENTINELA_API_URL). SEM fallback para outra base. */
@@ -168,7 +168,9 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       });
     } catch (erro) {
       if (erro instanceof DOMException && erro.name === "AbortError") throw erro; // cancelamento propaga
-      throw new ProblemError(normalizeProblem({ code: "temporarily_unavailable" }, 503, correlationId));
+      // TRANSPORTE: não houve resposta. Mesmo código público, subclasse distinta — a superfície
+      // precisa poder dizer "não sabemos se chegou" em vez de "o serviço está indisponível".
+      throw new TransportError(normalizeProblem({ code: "temporarily_unavailable" }, 503, correlationId));
     }
 
     // 5) parsing seguro + validação de content-type

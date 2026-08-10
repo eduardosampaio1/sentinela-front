@@ -25,7 +25,7 @@
 // `submit`). Não há garantia publicada de repetição segura. Afirmar "não foi enviado" e reenviar
 // seria inventar uma semântica que o contrato não dá.
 
-import { ProblemError } from "@/lib/v1";
+import { ProblemError, TransportError } from "@/lib/v1";
 
 /**
  * O erro é de transporte?
@@ -36,7 +36,13 @@ import { ProblemError } from "@/lib/v1";
  */
 export function ehFalhaDeTransporte(erro: unknown): boolean {
   if (erro == null) return false;
+  // A subclasse vem ANTES: `TransportError` É um `ProblemError` (carrega o código público
+  // `temporarily_unavailable` para quem só conhece os nove), e checar a superclasse primeiro o
+  // classificaria como resposta do servidor. Foi assim que a captura mostrou a AN-01 dizendo
+  // "o serviço está temporariamente indisponível" numa queda de rede.
+  if (erro instanceof TransportError) return true;
   if (erro instanceof ProblemError) return false;
   if (erro instanceof DOMException && erro.name === "AbortError") return false;
+  // Rejeição crua (cliente injetado em teste, ou caminho que não passa pelo cliente canônico).
   return true;
 }

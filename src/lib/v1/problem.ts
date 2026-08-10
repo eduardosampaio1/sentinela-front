@@ -95,3 +95,27 @@ export class ProblemError extends Error {
     this.problem = problem;
   }
 }
+
+/**
+ * A requisição não chegou a ter resposta — M33.
+ *
+ * O cliente colapsava TRÊS coisas em `temporarily_unavailable`: rejeição do `fetch`, `200` sem
+ * JSON e JSON malformado. Nas duas últimas o servidor **respondeu**, e "temporariamente
+ * indisponível" descreve o que houve. Na primeira não houve resposta nenhuma — e afirmar que o
+ * serviço está indisponível é dizer o que o navegador não tem como saber: pode ser a rede local,
+ * o DNS, o TLS, ou a resposta que se perdeu depois de o pedido chegar.
+ *
+ * A captura da AN-01 mostrou o custo: uma queda de rede durante o upload aparecia como
+ * *"O serviço está temporariamente indisponível"* — importando o vocabulário de ERR-503 para uma
+ * situação em que o dado **pode ter sido recebido**.
+ *
+ * O `code` público continua `temporarily_unavailable`: quem só conhece os nove códigos do contrato
+ * não muda de comportamento, e nada novo é publicado. O que a subclasse acrescenta é a distinção
+ * que a superfície precisa para não afirmar o que não sabe.
+ */
+export class TransportError extends ProblemError {
+  constructor(problem: Problem) {
+    super(problem);
+    this.name = "TransportError";
+  }
+}

@@ -7,6 +7,7 @@ export {
   PROBLEM_CODES,
   PROBLEM_MEDIA_TYPE,
   ProblemError,
+  TransportError,
   isProblem,
   normalizeProblem,
 } from "./problem";

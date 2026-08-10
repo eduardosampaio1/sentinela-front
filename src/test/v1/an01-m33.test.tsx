@@ -17,7 +17,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import pt from "@/i18n/pt.json";
-import { ProblemError } from "@/lib/v1";
+import { ProblemError, TransportError, createV1Client } from "@/lib/v1";
 import { ehFalhaDeTransporte } from "@/features/canonical-analysis/ui/falhaDeTransporte";
 import { UploadStep } from "@/features/canonical-analysis/ui/UploadStep";
 import { CanonicalClientProvider } from "@/features/canonical-analysis/data/client";
@@ -149,6 +149,10 @@ describe("M33 · 2. falha de rede (scenario 5)", () => {
     expect(alerta.textContent).toContain(pt.canonicalAnalysis.upload.transport.meaning);
     // A ação é PERGUNTAR o estado, não adivinhar nem reenviar às cegas.
     expect(screen.getByRole("button", { name: pt.canonicalAnalysis.upload.transport.check })).toBeTruthy();
+    // E o REENVIO não é oferecido ao lado dela: sem saber se a base chegou, e sem repetição
+    // segura publicada para `POST /data`, reenviar é a ação arriscada. Só a consulta é oferecida.
+    expect(screen.queryByRole("button", { name: pt.canonicalAnalysis.upload.retry })).toBeNull();
+    expect(screen.queryByRole("button", { name: pt.canonicalAnalysis.upload.send })).toBeNull();
   });
 
   it("a frase de transporte não promete nem nega o recebimento", () => {
@@ -291,5 +295,65 @@ describe("M33 · 6. scenarios 3, 4, 5, 31", () => {
     expect(c.slice(i, i + 200)).toContain('estado: "bloqueado"');
     // E AN-01 não o menciona em lugar nenhum.
     for (const arq of AN01) expect(semComentarios(ler(arq))).not.toContain("recommendation");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 7. O CLIENTE REAL, não o injetado
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("M33 · 7. a queda de rede atravessa o cliente canônico", () => {
+  // Os casos da seção 2 injetam um cliente que rejeita com `TypeError` cru — e passavam ANTES
+  // da correção, porque o cliente real não fazia isso. A captura em navegador mostrou a AN-01
+  // dizendo "O serviço está temporariamente indisponível" numa queda de rede: o cliente
+  // colapsava a rejeição do `fetch` em `temporarily_unavailable`, importando o vocabulário de
+  // ERR-503 para um caso em que o dado PODE ter sido recebido.
+  //
+  // O seam injetável tinha reduzido a saída do teste. Este caso usa o cliente de verdade.
+  const clienteReal = (rejeitar: unknown) =>
+    createV1Client({
+      baseUrl: "https://gw.test/",
+      getAccessToken: async () => "tok",
+      fetchImpl: (() => Promise.reject(rejeitar)) as unknown as typeof fetch,
+      newCorrelationId: () => "corr-1",
+      newIdempotencyKey: () => "idem-1",
+    });
+
+  it("rejeição do `fetch` vira `TransportError`, e a AN-01 a reconhece", async () => {
+    const client = clienteReal(new TypeError("Failed to fetch"));
+    const erro = await client
+      .uploadData("an-1", { workspaceId: "ws-1" }, new Blob(["{}"]))
+      .then(() => null, (e: unknown) => e);
+    expect(erro).toBeInstanceOf(TransportError);
+    expect(ehFalhaDeTransporte(erro), "a superfície trataria como resposta do servidor").toBe(true);
+  });
+
+  it("o código público continua sendo um dos nove — nada novo foi publicado", async () => {
+    const client = clienteReal(new TypeError("Failed to fetch"));
+    const erro = (await client
+      .uploadData("an-1", { workspaceId: "ws-1" }, new Blob(["{}"]))
+      .catch((e: unknown) => e)) as ProblemError;
+    expect(erro).toBeInstanceOf(ProblemError);
+    expect(erro.problem.code).toBe("temporarily_unavailable");
+  });
+
+  it("resposta do SERVIDOR com 503 NÃO é transporte — o servidor respondeu", async () => {
+    const client = createV1Client({
+      baseUrl: "https://gw.test/",
+      getAccessToken: async () => "tok",
+      fetchImpl: (async () =>
+        new Response(JSON.stringify({ code: "temporarily_unavailable" }), {
+          status: 503,
+          headers: { "content-type": "application/problem+json" },
+        })) as unknown as typeof fetch,
+      newCorrelationId: () => "corr-1",
+      newIdempotencyKey: () => "idem-1",
+    });
+    const erro = await client
+      .uploadData("an-1", { workspaceId: "ws-1" }, new Blob(["{}"]))
+      .then(() => null, (e: unknown) => e);
+    expect(erro).toBeInstanceOf(ProblemError);
+    expect(erro).not.toBeInstanceOf(TransportError);
+    expect(ehFalhaDeTransporte(erro)).toBe(false);
   });
 });

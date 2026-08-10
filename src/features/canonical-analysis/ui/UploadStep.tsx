@@ -105,7 +105,16 @@ export function UploadStep({
               operação que existe e não muda nada. Reenviar às cegas seria inventar repetição
               segura onde o contrato não a publica. */}
           <div className="pt-1">
-            <Button variant="outline" onClick={onUploaded}>
+            {/* Verificar LIMPA o erro além de revalidar: sem isso o botão de envio continuaria
+                rotulado "tentar de novo" depois da consulta, e a pessoa reenviaria a base sem ter
+                lido a resposta que acabou de pedir. */}
+            <Button
+              variant="outline"
+              onClick={() => {
+                upload.reset();
+                onUploaded();
+              }}
+            >
               {t("canonicalAnalysis.upload.transport.check")}
             </Button>
           </div>
@@ -116,8 +125,12 @@ export function UploadStep({
         <ProblemFeedback error={upload.error} />
       )}
 
+      {/* Durante o estado de transporte o envio NÃO é oferecido ao lado da consulta. Reenviar sem
+          saber se a base chegou é a ação arriscada — `POST /data` não publica repetição segura —, e
+          oferecê-la com o mesmo peso da consulta convidaria justamente a ela. Depois de verificar,
+          o erro é limpo e o envio volta, se a análise ainda estiver esperando base. */}
       <div className="flex flex-wrap gap-2">
-        {!enviando && (
+        {!enviando && !transporte && (
           <Button onClick={enviar} disabled={!file || bloqueado}>
             {upload.isError ? t("canonicalAnalysis.upload.retry") : t("canonicalAnalysis.upload.send")}
           </Button>
