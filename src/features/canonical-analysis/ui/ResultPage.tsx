@@ -19,6 +19,7 @@ import { LoadingState } from "@/shared/states/LoadingState";
 import {
   useAnalysisAnalytics,
   useAnalysisResult,
+  useAnalysisProgress,
   useAnalysisStatus,
   useAnalysisTimeline,
 } from "../data/analysis";
@@ -33,7 +34,7 @@ import { SecaoDeAtencao } from "./analytics/SecaoDeAtencao";
 import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
 import { PainelDeProcedencia } from "./analytics/PainelDeProcedencia";
 import { LinhaDoTempo } from "./analytics/LinhaDoTempo";
-import { BotaoDeExport } from "./analytics/BotaoDeExport";
+import { AcaoDeExport } from "./analytics/AcaoDeExport";
 import {
   ResumoDaAnalise,
   SecaoDeIndicadores,
@@ -56,13 +57,18 @@ export function ResultPage() {
   // Habilitado SEM depender de `pronto`: é essa independência que sustenta a leitura progressiva.
   const analytics = useAnalysisAnalytics(scope, analysisId);
   const timeline = useAnalysisTimeline(scope, analysisId);
+  // M29 — o eixo `export` é quem decide se há o que baixar. D16: "com `export = ready`,
+  // download; nos demais estados, representar o estado vindo de `/progress`".
+  const progress = useAnalysisProgress(scope, analysisId);
+  const eixoExport =
+    progress.data?.axes.find((a) => a.axis === "export")?.state ?? null;
 
   function documento(resolvido: Extract<ResultadoResolvido, { contrato: "v1" | "v2" }>) {
     const v = resolvido.view;
     return (
       <div className="space-y-8">
         <div className="flex justify-end">
-          <BotaoDeExport resolvido={resolvido} />
+          <AcaoDeExport analysisId={v.analysisId} estado={eixoExport} />
         </div>
 
         <ResumoDaAnalise

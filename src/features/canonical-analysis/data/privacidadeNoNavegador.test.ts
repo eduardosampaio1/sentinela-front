@@ -89,50 +89,34 @@ describe("a jornada canônica não deixa dado no navegador", () => {
   ];
 
   /**
-   * A ÚNICA exceção, e ela é de um arquivo para um padrão só.
+   * A EXCEÇÃO ACABOU — e acabou porque o motivo dela acabou.
    *
-   * `BotaoDeExport` chama `createObjectURL` sobre um Blob de CSV montado a partir do VIEW MODEL —
-   * ou seja, sobre o documento público que o Gateway já liberou e que a tela já está mostrando.
-   * Ele nunca vê o arquivo enviado pelo usuário: a função que monta o texto (`result/exportar`)
-   * não recebe payload, não recebe `File`, e não tem como alcançar nenhum dos dois.
+   * Havia aqui uma dispensa de `createObjectURL` para `BotaoDeExport`, que montava um CSV no
+   * navegador a partir do view model. A **M29 removeu esse export local**: a D16 é literal —
+   * *"uma única noção de exportação: o artefato do backend; o CSV local SAI"*.
    *
-   * A exceção é por CAMINHO e por PADRÃO, e não uma frouxidão do cadeado: `createObjectURL` em
-   * `UploadStep` continua reprovando, e este arquivo continua reprovando em `FileReader`,
-   * `.text()`, `.arrayBuffer()` e no resto da família.
-   *
-   * As duas provas abaixo mantêm a exceção honesta: ela precisa existir (senão vira permissão
-   * para um arquivo que nem usa o recurso) e precisa continuar sem tocar no arquivo do usuário.
+   * Sem o arquivo, a dispensa viraria exatamente o que o caso que a guardava existia para
+   * impedir: permissão solta para quem não usa o recurso. O cadeado ficou **mais** estrito, não
+   * menos — `createObjectURL` agora reprova em toda a jornada canônica, sem exceção de caminho.
    */
-  const EXCECAO = {
-    caminho: path.join("ui", "analytics", "BotaoDeExport.tsx"),
-    padrao: /\bcreateObjectURL\b/,
-  };
-
   for (const padrao of LEITURAS) {
     it(`a jornada não lê o CONTEÚDO do arquivo do usuário via ${padrao.source}`, () => {
-      const dispensado = padrao.source === EXCECAO.padrao.source ? EXCECAO.caminho : null;
       const culpados = arquivos
         .filter((a) => padrao.test(codigo(a)))
-        .map((c) => path.relative(RAIZ, c))
-        .filter((rel) => rel !== dispensado);
+        .map((c) => path.relative(RAIZ, c));
       expect(culpados).toEqual([]);
     });
   }
 
-  it("a exceção do export EXISTE — permissão para quem não usa o recurso é permissão solta", () => {
-    const alvo = path.join(RAIZ, EXCECAO.caminho);
-    expect(fs.existsSync(alvo), EXCECAO.caminho).toBe(true);
-    expect(EXCECAO.padrao.test(codigo(alvo))).toBe(true);
-  });
-
-  it("o arquivo dispensado não alcança o arquivo do usuário por nenhuma outra porta", () => {
-    const src = codigo(path.join(RAIZ, EXCECAO.caminho));
-    for (const padrao of LEITURAS) {
-      if (padrao.source === EXCECAO.padrao.source) continue;
-      expect(padrao.test(src), padrao.source).toBe(false);
+  it("NINGUÉM monta artefato local — o export é do backend (D16)", () => {
+    // Substitui os dois casos que mantinham a antiga exceção honesta. O que importa agora é o
+    // oposto do que eles guardavam: nenhum arquivo da jornada pode fabricar arquivo no cliente.
+    for (const a of arquivos) {
+      expect(
+        /\bnew Blob\b|\bcreateObjectURL\b/.test(codigo(a)),
+        path.relative(RAIZ, a),
+      ).toBe(false);
     }
-    // E não recebe `File`/`FormData` por nenhum caminho: o que ele exporta é o view model.
-    expect(/\bFile\b|\bFormData\b|\bfiles\[/.test(src)).toBe(false);
   });
 });
 

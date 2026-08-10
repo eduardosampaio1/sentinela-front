@@ -205,8 +205,6 @@
         "measuresNotAuthorized": "{{n}} medida(s) não foram autorizadas para publicação.",
         "unreadableBlocks": "{{n}} bloco(s) não correspondiam ao contrato e não foram interpretados.",
         "lineage": "Contrato analítico",
-        "export": "Exportar",
-        "exportHint": "Baixa exatamente os números desta página.",
         "liveTitle": "Componente analítico",
         "liveSubtitle": "Lido do componente analítico, independentemente do documento de resultado.",
         "noReadable": "Nenhum bloco legível nesta projeção.",
@@ -221,7 +219,18 @@
           "failed": "O componente analítico falhou. O resto desta página não é afetado.",
           "unknown": "Estado desconhecido. Nada está sendo afirmado sobre o componente analítico."
         },
-        "stateGroup": "Estado"
+        "stateGroup": "Estado",
+        "exportTitle": "Pacote de export",
+        "exportDownload": "Baixar pacote",
+        "exportReadyHint": "Produzido pelo backend.",
+        "exportState": {
+          "unavailable": "Sem export nesta análise.",
+          "preparing": "O pacote está sendo preparado.",
+          "ready": "Disponível para download.",
+          "expired": "O pacote não está mais disponível.",
+          "failed": "O pacote não pôde ser produzido.",
+          "unknown": "Estado desconhecido."
+        }
       },
       "attentionTitle": "O que merece atenção",
       "attentionNone": "Nada neste resultado foi assinalado pela análise.",

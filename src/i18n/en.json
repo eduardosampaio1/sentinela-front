@@ -205,8 +205,6 @@
         "measuresNotAuthorized": "{{n}} measure(s) were not authorized for publication.",
         "unreadableBlocks": "{{n}} block(s) did not match the contract and were not interpreted.",
         "lineage": "Analytics contract",
-        "export": "Export",
-        "exportHint": "Downloads exactly the numbers on this page.",
         "liveTitle": "Analytics component",
         "liveSubtitle": "Read from the analytics component, independently of the result document.",
         "noReadable": "No readable block in this projection.",
@@ -221,7 +219,18 @@
           "failed": "The analytics component failed. The rest of this page is unaffected.",
           "unknown": "State unknown. Nothing is being asserted about the analytics component."
         },
-        "stateGroup": "State"
+        "stateGroup": "State",
+        "exportTitle": "Export package",
+        "exportDownload": "Download package",
+        "exportReadyHint": "Produced by the backend.",
+        "exportState": {
+          "unavailable": "No export for this analysis.",
+          "preparing": "The package is being prepared.",
+          "ready": "Available for download.",
+          "expired": "The package is no longer available for download.",
+          "failed": "The package could not be produced.",
+          "unknown": "Export state unknown."
+        }
       },
       "attentionTitle": "What deserves attention",
       "attentionNone": "Nothing in this result was flagged by the analysis.",

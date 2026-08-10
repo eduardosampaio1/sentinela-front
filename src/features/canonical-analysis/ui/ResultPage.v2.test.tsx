@@ -257,48 +257,12 @@ describe("Analytics pronto antes da Engine não vira meia-tela", () => {
 });
 
 // ── export ──────────────────────────────────────────────────────────────────
-
-describe("export — o arquivo diz o mesmo que a tela", () => {
-  it("baixa um CSV com os números exibidos, e sem o digest", async () => {
-    servirV2(V2_READY);
-    montar();
-    await screen.findByRole("heading", { name: "Volume concentration" });
-
-    // O Blob é interceptado: o que importa provar é o CONTEÚDO gerado, não a API do navegador.
-    //
-    // `URL.createObjectURL` NÃO EXISTE no jsdom — por isso os dois são definidos, e não
-    // espionados. A ausência é do ambiente de teste, não do produto: o navegador real a tem, e é
-    // por isso que a prova de ponta a ponta desta fatia roda também no browser (E2E).
-    // `Blob.text()` também não existe no jsdom — daí o `FileReader`, que existe. Ele é proibido
-    // no CÓDIGO da jornada (cadeado de privacidade) e não aqui: o cadeado varre os fontes, não
-    // os testes, e o que se lê é um CSV do resultado público, não o arquivo do usuário.
-    let baixado = "";
-    let revogou = false;
-    const original = { criar: URL.createObjectURL, revogar: URL.revokeObjectURL };
-    URL.createObjectURL = (b: Blob | MediaSource) => {
-      const leitor = new FileReader();
-      leitor.onload = () => {
-        baixado = String(leitor.result ?? "");
-      };
-      leitor.readAsText(b as Blob);
-      return "blob:teste";
-    };
-    URL.revokeObjectURL = () => {
-      revogou = true;
-    };
-
-    fireEvent.click(screen.getByRole("button", { name: "Export" }));
-    await vi.waitFor(() => expect(baixado.length).toBeGreaterThan(0));
-
-    expect(baixado).toContain("analysis-result-v2");
-    expect(baixado).toContain("62.3%"); // a mesma participação que está na tela
-    expect(baixado).toContain("whatsapp");
-    // O digest não está na tela, e não pode estar no arquivo.
-    expect(baixado).not.toContain(V2_READY.analytics.projection_digest);
-    // Sem revogar, cada download segura o Blob inteiro em memória até a aba morrer.
-    expect(revogou).toBe(true);
-
-    URL.createObjectURL = original.criar;
-    URL.revokeObjectURL = original.revogar;
-  });
-});
+//
+// AQUI FICAVA "baixa um CSV com os números exibidos, e sem o digest".
+//
+// Ele provava, com rigor, um comportamento que a **M29 removeu por autoridade**: o CSV montado no
+// navegador a partir do view model. A D16 é literal — *"uma única noção de exportação: o artefato
+// do backend; o CSV local SAI"*. O teste não estava errado; o produto é que deixou de fazer aquilo.
+//
+// O que substituiu está em `src/test/v1/res01-m29.test.tsx`: a ação de export passa pelo cliente
+// canônico da M22, e só existe quando o eixo `export` de `/progress` diz `ready`.
