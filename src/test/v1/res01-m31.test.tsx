@@ -307,6 +307,22 @@ describe("M31 · 8. atalho entre regiões e densidade da comparação", () => {
     ]);
   });
 
+  it("cada link do índice tem alvo de toque acima do mínimo do WCAG 2.2 AA", () => {
+    // 2.5.8 pede 24×24. Texto de 14px sem padding dava ~20px de altura, e o axe não mede isso.
+    montar(
+      <IndiceDeRegioes
+        regioes={[
+          { ancora: "res-resumo", rotulo: "Resumo" },
+          { ancora: "res-trust", rotulo: "Por que confiar" },
+        ]}
+      />,
+    );
+    for (const a of screen.getAllByRole("link")) {
+      expect(a.className, "link do índice sem padding vertical").toContain("py-1.5");
+      expect(a.className, "padding vertical não vale em elemento inline").toContain("inline-block");
+    }
+  });
+
   it("com menos de duas regiões o índice não nasce — sumário de um item é ruído", () => {
     const { container } = montar(
       <IndiceDeRegioes regioes={[{ ancora: "res-resumo", rotulo: "Resumo" }]} />,

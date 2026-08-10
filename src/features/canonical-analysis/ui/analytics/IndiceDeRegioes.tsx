@@ -51,9 +51,13 @@ export function IndiceDeRegioes({ regioes }: { regioes: readonly RegiaoIndexada[
           <li key={r.ancora}>
             {/* Âncora de verdade, não `scrollTo`: o histórico do navegador continua funcionando,
                 o link é copiável e abre onde deve. `focus-visible` herda o anel do tema. */}
+            {/* `inline-block py-1.5` dá ~32px de alvo. Como texto puro de 14px o link tinha ~20px
+                de altura — abaixo dos 24×24 que o WCAG 2.2 AA exige em 2.5.8, e é no mobile, onde
+                a página tem 4432px, que o índice mais serve. O axe não mede tamanho de alvo; esta
+                veio da revisão de design, não da ferramenta. */}
             <a
               href={`#${r.ancora}`}
-              className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:text-foreground"
+              className="inline-block py-1.5 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:text-foreground"
             >
               {r.rotulo}
             </a>
