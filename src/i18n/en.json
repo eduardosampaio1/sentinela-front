@@ -735,5 +735,51 @@
       "accountHint": "Opens your identity provider",
       "signOut": "Sign out"
     }
+  },
+  "home": {
+    "subtitle": "What needs you in this workspace.",
+    "newAnalysis": "New analysis",
+    "openAnalysis": "Open analysis",
+    "followAnalysis": "Follow progress",
+    "openResult": "Open result",
+    "resultUnavailable": "Result unavailable",
+    "recordCount": "{{n}} records",
+    "recordCountAbsent": "record count not informed",
+    "loading": "Loading this workspace's analyses",
+    "unknownState": "State not recognized by this version of the interface",
+    "actions": {
+      "title": "Actions needed",
+      "none": "Nothing in this workspace is waiting on you right now.",
+      "needsMappingExplain": "The data arrived, but how some fields should be interpreted still needs confirming.",
+      "needsMappingBlocked": "The operation that resolves this is not exposed in the public contract yet."
+    },
+    "running": {
+      "title": "In progress"
+    },
+    "recent": {
+      "title": "Most recent results"
+    },
+    "instances": {
+      "title": "Instances",
+      "unavailable": "Grouping by Instance does not exist in the public contract yet. This region stays unavailable instead of showing an invented grouping."
+    },
+    "empty": {
+      "title": "No analyses here yet",
+      "explain": "This workspace has not received any analysis yet. The first one starts by uploading conversations."
+    },
+    "error": {
+      "title": "We could not load the analyses",
+      "explain": "This workspace's listing did not respond. Whatever exists is still in the backend — only this read failed."
+    }
+  },
+  "estadoPublico": {
+    "preparing": "Reserved",
+    "receiving": "Receiving",
+    "queued": "Queued",
+    "running": "Running",
+    "recovering": "Recovering",
+    "needs_mapping": "Action required",
+    "completed": "Completed",
+    "failed": "Failed"
   }
 }

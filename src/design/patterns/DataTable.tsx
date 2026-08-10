@@ -5,7 +5,10 @@
 // MESMA informação em duas formas — tabela acima do breakpoint, lista de pares rótulo/valor abaixo
 // — e o rótulo da coluna acompanha o valor no modo empilhado, senão o número fica órfão.
 
-import { Stack, Text } from "@/design/primitives";
+// `Stack` saiu do import na M32: estava morto. Nao apareceu antes porque nada no grafo de
+// typecheck alcançava este arquivo — a HOME-01 passou a importar o barrel de patterns e o erro
+// herdado veio junto. Codigo inalcancavel esconde defeito.
+import { Text } from "@/design/primitives";
 import { cn } from "@/lib/utils";
 
 export interface ColunaDaTabela<L> {

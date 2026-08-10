@@ -32,8 +32,11 @@ const AuthCallbackPage = lazy(() => import("@/pages/AuthCallbackPage"));
 const ResetPasswordPage = lazy(() =>
   import("@/pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage }))
 );
-const LaunchpadPage = lazy(() =>
-  import("@/features/launchpad/LaunchpadPage").then((m) => ({ default: m.LaunchpadPage }))
+// M32 — `/home` deixou de servir o `LaunchpadPage` legado. HOME-01 e a composicao do Blueprint
+// D9/§4.3; o que havia ali (behavior score, launcher inline, dataset format, CTA para
+// `/dashboard`) nao pertence a esta superficie e saiu por decisao de owner.
+const HomePage = lazy(() =>
+  import("@/features/home/HomePage").then((m) => ({ default: m.HomePage }))
 );
 // `/dashboard` NÃO é mais um dashboard: é rota de compatibilidade que resolve a análise
 // canônica no backend e redireciona para o renderizador único.
@@ -266,7 +269,7 @@ const routes: RouteObject[] = [
     element: <FundacaoV1 />,
     children: [
       // Launchpad — primary entry for authenticated users
-      { path: "/home", element: <PageSuspense><LaunchpadPage /></PageSuspense> },
+      { path: "/home", element: <PageSuspense><HomePage /></PageSuspense> },
       // `/home/welcome` renderizava a MESMA `LaunchpadPage` que `/home`, e nenhuma navegação
       // apontava para ela: duas rotas públicas para a mesma tela, sem diferença. A duplicata sai
       // como DESTINO — mas não vira 404, porque ela existiu e pode estar em favorito de alguém.

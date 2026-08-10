@@ -253,10 +253,15 @@ describe("M31 · 5. a ordem e as casas das regiões", () => {
     expect(f).toContain("bg-primary/10 text-foreground ring-1");
   });
 
-  it("nenhum rótulo de acessibilidade do shell está cravado em inglês", () => {
+  it("o TopBar não oferece um SEGUNDO menu de usuário", () => {
+    // A M31 traduziu o `aria-label` deste gatilho e reportou a duplicidade como decisão de owner
+    // pendente. A M32 recebeu a decisão — o único menu canônico é o `UserMenu` da barra lateral —
+    // e o gatilho saiu inteiro. O caso não estava errado; o produto é que deixou de ter o alvo.
     const f = semComentarios(ler("src/shell/TopBar.tsx"));
-    expect(f).not.toContain('aria-label="Open user menu"');
-    expect(f).toContain('aria-label={t("shell.user.menu")}');
+    expect(f).not.toContain("aria-label");
+    expect(f).not.toContain("DropdownMenu");
+    // E o menu canônico continua de pé.
+    expect(semComentarios(ler("src/shell/UserMenu.tsx"))).toContain('t("shell.user.menu")');
   });
 });
 

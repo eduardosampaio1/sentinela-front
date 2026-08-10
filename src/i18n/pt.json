@@ -735,5 +735,51 @@
       "accountHint": "Abre o provedor de identidade",
       "signOut": "Sair"
     }
+  },
+  "home": {
+    "subtitle": "O que precisa de você neste workspace.",
+    "newAnalysis": "Nova análise",
+    "openAnalysis": "Abrir análise",
+    "followAnalysis": "Acompanhar",
+    "openResult": "Ver resultado",
+    "resultUnavailable": "Resultado indisponível",
+    "recordCount": "{{n}} registros",
+    "recordCountAbsent": "registros não informados",
+    "loading": "Carregando as análises deste workspace",
+    "unknownState": "Estado não reconhecido nesta versão da interface",
+    "actions": {
+      "title": "Ações necessárias",
+      "none": "Nada neste workspace espera por você agora.",
+      "needsMappingExplain": "O dado chegou, mas falta confirmar como alguns campos devem ser interpretados.",
+      "needsMappingBlocked": "A operação que resolve isto ainda não está exposta no contrato público."
+    },
+    "running": {
+      "title": "Em andamento"
+    },
+    "recent": {
+      "title": "Resultados recentes"
+    },
+    "instances": {
+      "title": "Instâncias",
+      "unavailable": "O agrupamento por Instância ainda não existe no contrato público. Esta região fica indisponível em vez de mostrar um agrupamento inventado."
+    },
+    "empty": {
+      "title": "Nenhuma análise ainda",
+      "explain": "Este workspace ainda não recebeu nenhuma análise. A primeira começa pelo envio de conversas."
+    },
+    "error": {
+      "title": "Não foi possível carregar as análises",
+      "explain": "A listagem deste workspace não respondeu. O que existe continua no backend — só esta leitura falhou."
+    }
+  },
+  "estadoPublico": {
+    "preparing": "Reservada",
+    "receiving": "Recebendo",
+    "queued": "Na fila",
+    "running": "Em execução",
+    "recovering": "Retomando",
+    "needs_mapping": "Ação necessária",
+    "completed": "Concluída",
+    "failed": "Falha"
   }
 }
