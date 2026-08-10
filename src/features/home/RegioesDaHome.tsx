@@ -30,7 +30,7 @@
 
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ActionRequiredSemOperacao, StatusBadge } from "@/design/patterns";
+import { StatusBadge } from "@/design/patterns";
 import type { AnalysisListItem, AnalysisStatus } from "@/lib/v1";
 
 /**
@@ -46,41 +46,56 @@ function rotuloDeEstado(estado: AnalysisStatus, t: (c: string) => string): strin
   return t(`estadoPublico.${estado}`);
 }
 
-/** Uma linha de análise. Sem caixa: quem separa é o fio da lista. */
+/**
+ * Uma linha de análise. Sem caixa: quem separa é o fio da lista.
+ *
+ * Abaixo de `sm` ela vira DUAS alturas — estado + identificador na primeira, contagem + ação na
+ * segunda. A versão de uma linha só truncava o `analysis_id` para `an-…` em 342px, e ele é a
+ * ÚNICA identidade da análise: o contrato não publica título, e inventar um ("Análise de 31 de
+ * julho") seria fabricar nome. Identidade truncada é informação desaparecendo.
+ *
+ * A ação fica na MESMA célula que a contagem, nunca solta numa linha órfã: ação separada do item
+ * a que pertence é ação sem contexto. `sm:contents` dissolve os dois invólucros a partir de 640px,
+ * e os quatro elementos voltam a ser filhos diretos da linha.
+ */
 function LinhaDeAnalise({
   item,
   acao,
+  nota,
 }: {
   item: AnalysisListItem;
   /** O que se pode fazer com esta análise AQUI. `null` quando não há operação real. */
   acao: React.ReactNode;
+  /** Explicação abaixo da linha. Só onde o estado exige — não é subtítulo de todo item. */
+  nota?: React.ReactNode;
 }) {
   const { t } = useLanguage();
   return (
-    <li className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border/60 py-2 last:border-b-0">
-      {/* `rotulo` é obrigatório por design da M11: o badge não conhece i18n de produto. A chave
-          vive na RAIZ (`estadoPublico.*`), e não sob `home.*`, porque o critério 17 exige UMA
-          semântica pública de estados — um segundo conjunto por superfície seria exatamente o
-          `HomeStatus`/`AnalysisStatus` com duas linguagens contra o qual o pattern foi criado.
-          Família declarada, nunca `t(variavel)`: o gate da M14 não decide orfandade sobre chamada
-          opaca. */}
-      <StatusBadge
-        vocabulario="publico"
-        estado={item.status}
-        rotulo={rotuloDeEstado(item.status, t)}
-      />
-      {/* O identificador é o nome que a pessoa reconhece entre execuções — não há título de
-          análise no contrato, e inventar um ("Análise de 31 de julho") seria fabricar nome. */}
-      <span className="min-w-0 flex-1 truncate font-mono text-sm text-foreground">
-        {item.analysis_id}
-      </span>
-      {/* `record_count` é `null` quando ausente, e ausência NUNCA vira zero. */}
-      <span className="tabular-nums text-sm text-muted-foreground">
-        {item.record_count === null
-          ? t("home.recordCountAbsent")
-          : t("home.recordCount", { n: String(item.record_count) })}
-      </span>
-      {acao}
+    <li className="border-b border-border/60 py-2 last:border-b-0 sm:flex sm:flex-wrap sm:items-baseline sm:gap-x-3">
+      <div className="flex min-w-0 items-baseline gap-x-3 sm:contents">
+        {/* `rotulo` é obrigatório por design da M11: o badge não conhece i18n de produto. A chave
+            vive na RAIZ (`estadoPublico.*`), e não sob `home.*`, porque o critério 17 exige UMA
+            semântica pública de estados — um segundo conjunto por superfície seria exatamente o
+            `HomeStatus`/`AnalysisStatus` com duas linguagens contra o qual o pattern foi criado. */}
+        <StatusBadge
+          vocabulario="publico"
+          estado={item.status}
+          rotulo={rotuloDeEstado(item.status, t)}
+        />
+        <span className="min-w-0 flex-1 truncate font-mono text-sm text-foreground">
+          {item.analysis_id}
+        </span>
+      </div>
+      <div className="mt-1 flex flex-wrap items-baseline gap-x-3 sm:mt-0 sm:contents">
+        {/* `record_count` é `null` quando ausente, e ausência NUNCA vira zero. */}
+        <span className="tabular-nums text-sm text-muted-foreground">
+          {item.record_count === null
+            ? t("home.recordCountAbsent")
+            : t("home.recordCount", { n: String(item.record_count) })}
+        </span>
+        {acao}
+      </div>
+      {nota}
     </li>
   );
 }
@@ -119,34 +134,40 @@ export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] })
       <TituloDaRegiao id="home-acoes" texto={t("home.actions.title")} />
       {/* A ÚNICA região com moldura. O peso é a mensagem: é aqui que alguém é esperado. */}
       <ul className="rounded-lg border border-border bg-card px-4">
-        {itens.map((item) =>
-          item.status === "needs_mapping" ? (
-            // Estado público sem operação pública: o catálogo o declara `parcial` — "EXIBIR sim,
-            // RESOLVER não" —, e o pattern do DS existe exatamente para isso. Nenhum "Confirmar"
-            // funcional, nenhum deep link para fluxo inexistente.
-            <li key={item.analysis_id} className="border-b border-border/60 py-3 last:border-b-0">
-              <ActionRequiredSemOperacao
-                titulo={item.analysis_id}
-                explicacao={t("home.actions.needsMappingExplain")}
-                rotuloDoEstado={rotuloDeEstado("needs_mapping", t)}
-                motivo={t("home.actions.needsMappingBlocked")}
-              />
-            </li>
-          ) : (
-            <LinhaDeAnalise
-              key={item.analysis_id}
-              item={item}
-              acao={
-                <Link
-                  to={`/analyses/${encodeURIComponent(item.analysis_id)}`}
-                  className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                >
-                  {t("home.openAnalysis")}
-                </Link>
-              }
-            />
-          ),
-        )}
+        {itens.map((item) => (
+          <LinhaDeAnalise
+            key={item.analysis_id}
+            item={item}
+            // `failed` NAO oferece "Tentar novamente": `retry_allowed` nao vem na listagem.
+            acao={
+              <Link
+                to={`/analyses/${encodeURIComponent(item.analysis_id)}`}
+                className="inline-block py-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                {t("home.openAnalysis")}
+              </Link>
+            }
+            nota={
+              // Estado publico sem operacao publica: o catalogo declara o scenario `parcial` --
+              // "EXIBIR sim, RESOLVER nao". O motivo fica VISIVEL, e nao ha nenhum "Confirmar".
+              //
+              // Nao usa `ActionRequiredSemOperacao` aqui: aquele pattern desenha a propria
+              // moldura, e dentro da fila isso dava caixa-dentro-de-caixa. O efeito nao era
+              // estetico -- na MESMA regiao um item virava cartao e o outro linha, e o peso
+              // afirmava uma urgencia entre eles que a semantica nao afirma (a ordem e a da
+              // origem, sem prioridade inventada). A distincao de "acao necessaria" continua,
+              // pelo `StatusBadge`, que e o componente do DS para isso.
+              item.status === "needs_mapping" ? (
+                <p className="mt-1 text-xs text-muted-foreground sm:w-full">
+                  {t("home.actions.needsMappingExplain")}{" "}
+                  <span className="text-muted-foreground">
+                    {t("home.actions.needsMappingBlocked")}
+                  </span>
+                </p>
+              ) : undefined
+            }
+          />
+        ))}
       </ul>
     </section>
   );
@@ -169,7 +190,7 @@ export function RegiaoEmAndamento({ itens }: { itens: readonly AnalysisListItem[
             acao={
               <Link
                 to={`/analyses/${encodeURIComponent(item.analysis_id)}`}
-                className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                className="inline-block py-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
               >
                 {t("home.followAnalysis")}
               </Link>
@@ -203,7 +224,7 @@ export function RegiaoDeResultados({
             acao={
               <Link
                 to={`/analyses/${encodeURIComponent(item.analysis_id)}/result`}
-                className="text-sm text-foreground underline-offset-4 hover:underline"
+                className="inline-block py-1 text-sm text-foreground underline-offset-4 hover:underline"
               >
                 {t("home.openResult")}
               </Link>

@@ -92,6 +92,27 @@ const TONS = {
 /** O badge vive sobre painel (`--card`) e sobre o fundo da aplicação (`--background`). */
 const FUNDOS = ["--card", "--background"] as const;
 
+/**
+ * O ponto cego que a M32 fechou.
+ *
+ * Este arquivo mede cada tom contra `--card` e `--background`, e estava verde. O axe, na HOME-01,
+ * acusou **4,12:1** no rótulo do chip neutro — porque a ênfase `neutro` pintava `bg-muted`, um
+ * terceiro fundo que ninguém media. Acrescentar `--muted` à lista faria o gate medir um par que
+ * o produto deixou de desenhar; a correção honesta é impedir que a ênfase invente fundo.
+ *
+ * Se um chip precisar de preenchimento novo, este caso reprova e o token entra em `FUNDOS`.
+ */
+describe("M32 · nenhuma ênfase de chip inventa fundo fora do que o gate mede", () => {
+  it("as ênfases usam só `transparent`, `--card`/`--background` implícitos, ou `--secondary`", () => {
+    const chip = readFileSync(resolve(__dirname, "../primitives/Chip.tsx"), "utf-8")
+      .replace(/\/\*[\s\S]*?\*\//g, " ")
+      .replace(/\/\/.*$/gm, " ");
+    const fundos = [...chip.matchAll(/bg-([a-z-]+)/g)].map((m) => m[1]);
+    // `secondary` é o sólido, e ele carrega `text-secondary-foreground` — par próprio, declarado.
+    expect(fundos.filter((f) => !["transparent", "secondary"].includes(f))).toEqual([]);
+  });
+});
+
 describe("M11 · contraste dos tons de estado, calculado dos valores declarados", () => {
   it("o instrumento está certo antes de acusar o código", () => {
     // Controle: branco sobre preto é 21:1, e branco sobre branco é 1:1. Sem isto, um erro na

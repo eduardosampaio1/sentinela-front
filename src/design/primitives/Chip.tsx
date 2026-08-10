@@ -16,7 +16,15 @@
 import { cn } from "@/lib/utils";
 
 const ENFASE = {
-  neutro: "bg-muted text-muted-foreground border-border",
+  // M32 — o chip neutro perdeu o preenchimento.  sobre  mede
+  // **4,12:1**, abaixo dos 4,5 que a 1.4.3 exige para texto pequeno; sobre o fundo do cartão o
+  // mesmo token passa. O gate de contraste da M11 estava verde porque media os tons contra
+  //  e  e nunca contra  — o fundo do próprio chip. Gate que não
+  // mede o par que existe.
+  //
+  // Tirar o preenchimento também é a leitura certa: neutro é o estado que NÃO acrescenta
+  // informação por cor, e um chip preenchido pesa mais que os contornados ao lado dele.
+  neutro: "text-muted-foreground border-border",
   contorno: "bg-transparent text-foreground border-border",
   solido: "bg-secondary text-secondary-foreground border-transparent",
 } as const;

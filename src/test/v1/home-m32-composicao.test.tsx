@@ -75,9 +75,19 @@ describe("M32 · 2. Ações necessárias", () => {
   it("`needs_mapping` aparece com o motivo do bloqueio e SEM operação", () => {
     montar(<RegiaoDeAcoes itens={[item({ analysis_id: "an-nm", status: "needs_mapping" })]} />);
     expect(screen.getByText(pt.home.actions.needsMappingBlocked)).toBeTruthy();
-    // Nenhum "Confirmar" funcional, nenhum deep link para fluxo inexistente.
+    // Nenhum "Confirmar" funcional e nenhum estado local fingindo resolução.
     expect(screen.queryByRole("button")).toBeNull();
-    expect(screen.queryByRole("link")).toBeNull();
+    // O único caminho oferecido é ABRIR a análise — rota que existe. Isto não é deep link para
+    // fluxo inexistente: o que não existe é a operação que RESOLVE, e ela não é oferecida.
+    const links = screen.getAllByRole("link");
+    expect(links).toHaveLength(1);
+    expect(links[0].textContent).toBe(pt.home.openAnalysis);
+    expect(links[0].getAttribute("href")).toBe("/analyses/an-nm");
+    // E a linha do `needs_mapping` NÃO desenha moldura própria dentro da fila: na mesma região,
+    // um item em cartão e outro em linha afirmaria uma urgência entre eles que ninguém mediu.
+    const linha = links[0].closest("li")!;
+    expect(linha.className).not.toContain("rounded");
+    expect(linha.querySelectorAll("[class*='rounded-lg']")).toHaveLength(0);
   });
 
   it("`failed` NÃO oferece `Tentar novamente` — a listagem não publica `retry_allowed`", () => {
@@ -200,4 +210,61 @@ describe("M32 · 5. o `/home` legado saiu inteiro", () => {
     ]
       .map((f) => semComentarios(ler(f)))
       .join("\n");
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 6. A PÁGINA, e não só as regiões
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("M32 · 6. a composição da HomePage", () => {
+  // Estes casos leem a fonte em vez de montar a página: `HomePage` depende de contexto de auth,
+  // de escopo e de cliente HTTP, e montá-la aqui exigiria um provider inteiro só para provar
+  // COMPOSIÇÃO — que é estrutura, não comportamento. O comportamento de cada região já é provado
+  // por render acima. O gate de mutação confirmou que sem estes casos seis mutações reais
+  // sobreviviam: sumir com uma região, colapsar dois estados, e reintroduzir `/dashboard`.
+  const PAGINA = () => semComentarios(ler("src/features/home/HomePage.tsx"));
+
+  it("as QUATRO regiões de D9 estão na composição", () => {
+    const f = PAGINA();
+    for (const regiao of [
+      "<RegiaoDeAcoes",
+      "<RegiaoEmAndamento",
+      "<RegiaoDeResultados",
+      "<RegiaoDeInstancias",
+    ]) {
+      expect(f, `região ausente da composição: ${regiao}`).toContain(regiao);
+    }
+  });
+
+  it("os TRÊS estados são distintos, cada um usado uma vez", () => {
+    const f = PAGINA();
+    for (const estado of ["<LoadingState", "<ErrorState", "<EmptyState"]) {
+      expect(f.split(estado).length - 1, `${estado} não aparece exatamente uma vez`).toBe(1);
+    }
+    // E cada um tem a sua condição própria: colapsar duas delas foi mutação que sobreviveu.
+    expect(f).toContain("lista.isPending");
+    expect(f).toContain("lista.isError");
+    expect(f).toContain("homeVazia(itens)");
+  });
+
+  it("nenhuma rota legada volta para a Home", () => {
+    const f = PAGINA();
+    expect(f).not.toContain("/dashboard");
+    // O CTA principal do §4.3 aponta para a rota canônica.
+    expect(f).toContain('to="/analyses/new"');
+  });
+
+  it("nenhuma ênfase de chip inventa fundo que o gate de contraste não meça", () => {
+    // O axe mediu 4,12:1 no rótulo do chip neutro sobre `bg-muted`, um fundo que o gate da M11
+    // não conhecia. A regra vive aqui também porque é nesta superfície que ela foi violada.
+    const chip = semComentarios(ler("src/design/primitives/Chip.tsx"));
+    const fundos = [...chip.matchAll(/bg-([a-z-]+)/g)].map((m) => m[1]);
+    expect(fundos.length, "a varredura não achou fundo nenhum").toBeGreaterThan(0);
+    expect(fundos.filter((x) => !["transparent", "secondary"].includes(x))).toEqual([]);
+  });
+
+  it("controle positivo: a leitura da página enxerga o que existe", () => {
+    expect(PAGINA()).toContain("HomePage");
+    expect(PAGINA().length).toBeGreaterThan(1500);
+  });
 });
