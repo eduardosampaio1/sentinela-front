@@ -157,10 +157,10 @@
           "description": "Variância média das respostas dentro de cada intenção. Mede dispersão — não é consistência, drift nem confiança."
         }
       },
-      "calculationFailed": "Calculation failed",
-      "partiallyMeasured": "Measured on part of the sample",
+      "calculationFailed": "Cálculo falhou",
+      "partiallyMeasured": "Medido em parte da amostra",
       "denominator": "Denominator",
-      "unsupportedIndicators": "Indicators received but not recognized by this interface",
+      "unsupportedIndicators": "Indicadores recebidos que esta interface não reconhece",
       "analytics": {
         "title": "Analytics",
         "subtitle": "Produzido pelo componente analítico sobre o mesmo dataset.",

@@ -281,3 +281,41 @@ describe("M31 · 6. cópia do export", () => {
     expect(p.length).toBeLessThanOrEqual(Math.ceil(e.length * 1.3));
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 7. Nenhuma frase inglesa morando no locale PT
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("M31 · 7. o locale PT está em PT", () => {
+  // A paridade de CHAVES já tinha gate (`i18n-paridade`), e ele estava verde: as chaves existiam
+  // nos dois arquivos. O que ninguém media era o VALOR. Três frases de RES-01 estavam em inglês
+  // dentro de `pt.json` — `calculationFailed`, `partiallyMeasured` e `unsupportedIndicators` — e
+  // as três são renderizadas na tela: a primeira é o próprio valor do indicador quando o cálculo
+  // falha. Chave presente não é tradução feita.
+  const achatar = (o: unknown, pre = ""): [string, string][] =>
+    typeof o === "string"
+      ? [[pre, o]]
+      : Object.entries(o as Record<string, unknown>).flatMap(([k, v]) =>
+          achatar(v, pre ? `${pre}.${k}` : k),
+        );
+
+  it("nenhuma frase de RES-01 é idêntica à sua versão inglesa", () => {
+    const ingles = new Map(achatar(en.canonicalAnalysis.result));
+    // Frases, não termos: `delta`, `drift` e `P1` são iguais nos dois idiomas POR CONGELAMENTO
+    // (§15), e exigir que difiram quebraria o vocabulário congelado. Duas palavras ou mais.
+    const iguais = achatar(pt.canonicalAnalysis.result).filter(
+      ([chave, valor]) => valor.split(/\s+/).length >= 2 && ingles.get(chave) === valor,
+    );
+    expect(iguais.map(([c]) => c)).toEqual([]);
+  });
+
+  it("controle positivo: o comparador enxerga uma frase idêntica quando ela existe", () => {
+    // Sem isto, o caso acima passaria com um `achatar` que devolvesse lista vazia.
+    const ingles = new Map(achatar(en.canonicalAnalysis.result));
+    expect(ingles.size).toBeGreaterThan(100);
+    const iguais = achatar({ a: "Calculation failed" }).filter(
+      ([, valor]) => valor.split(/\s+/).length >= 2 && "Calculation failed" === valor,
+    );
+    expect(iguais).toHaveLength(1);
+  });
+});
