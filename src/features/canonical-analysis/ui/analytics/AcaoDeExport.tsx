@@ -34,6 +34,7 @@
 // vivia — Linear (§3, linha 1): separação por borda e alinhamento, não por caixa. E é frase, não
 // cor: em escala de cinza a informação é a mesma.
 
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { ExportAxisState } from "@/lib/v1";
@@ -72,7 +73,14 @@ export function AcaoDeExport({
     <div className="flex flex-col items-end gap-1">
       {estado === "ready" ? (
         <>
-          <Button variant="outline" onClick={baixar} disabled={pedir.isPending}>
+          {/* M31, 2ª volta — `ghost` no lugar de `outline`, e um ícone no lugar da caixa.
+              Com borda, esta era a coisa de maior peso visual da área de conteúdo, disputando com
+              o título da página; e export é capability SECUNDÁRIA — a tela existe para ler o
+              resultado. Mudou o peso, não a função: mesma operação, mesmo `disabled` enquanto
+              pende, mesmo foco, e continua sendo `<button>` de verdade. O ícone entra porque
+              `ghost` sem borda precisa de um segundo sinal de que ali se clica. */}
+          <Button variant="ghost" size="sm" onClick={baixar} disabled={pedir.isPending}>
+            <Download aria-hidden="true" className="mr-2 h-4 w-4" />
             {t("canonicalAnalysis.result.analytics.exportDownload")}
           </Button>
           <p className="text-xs text-muted-foreground">

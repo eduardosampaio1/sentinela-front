@@ -390,6 +390,59 @@ describe("M31 · 8. atalho entre regiões e densidade da comparação", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
+// 9. Os três achados que a própria crítica deixou abertos
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("M31 · 9. estiramento, peso do export e índice no mobile", () => {
+  it("a célula é coluna de altura cheia, e a glosa assenta no pé dela", () => {
+    // Numa grade de duas colunas a linha assume a altura da célula mais alta. A sobra ia toda para
+    // o rodapé da célula baixa, deixando as glosas das duas colunas desalinhadas entre si.
+    const { container } = montar(<ul><CartaoIndicador item={ind()} /></ul>);
+    const celula = container.querySelector("li")!;
+    expect(celula.className).toContain("flex");
+    expect(celula.className).toContain("h-full");
+    expect(celula.className).toContain("flex-col");
+    const glosa = screen.getByText(pt.canonicalAnalysis.result.indicator.useful_outcome_rate.description);
+    const grupo = glosa.parentElement!;
+    expect(grupo.className, "a glosa não é empurrada para o pé da célula").toContain("mt-auto");
+    // E continua VISÍVEL: congelado pelo owner em 2026-08-10, nada de disclosure.
+    expect(grupo.className).not.toContain("hidden");
+    expect(glosa.textContent!.length).toBeGreaterThan(20);
+  });
+
+  it("a nota de parcialidade e a de fora de faixa acompanham a glosa no mesmo grupo", () => {
+    // Se ficassem fora do grupo do pé, `mt-auto` empurraria só a glosa e a ordem de leitura
+    // quebraria: explicação embaixo, ressalva solta no meio.
+    montar(<ul><CartaoIndicador item={ind({ state: "partially_measured", outOfRange: true })} /></ul>);
+    const glosa = screen.getByText(pt.canonicalAnalysis.result.indicator.useful_outcome_rate.description);
+    const grupo = glosa.parentElement!;
+    expect(within(grupo as HTMLElement).getAllByRole("note")).toHaveLength(2);
+  });
+
+  it("o export tem peso de ação secundária — sem caixa, com ícone, e continua `<button>`", () => {
+    const f = semComentarios(ler("src/features/canonical-analysis/ui/analytics/AcaoDeExport.tsx"));
+    expect(f).toContain('variant="ghost"');
+    expect(f).not.toContain('variant="outline"');
+    // `ghost` não tem borda: sem um segundo sinal, o alvo vira texto solto.
+    expect(f).toContain("<Download");
+    // A função não mudou: só `ready` age, e o resto continua frase.
+    expect(f).toContain('estado === "ready"');
+    expect(f).toContain("pedir.mutate");
+  });
+
+  it("o rótulo do índice só divide a linha a partir de `sm`", () => {
+    // Medido: em 342px dividir a linha estreita a lista e ela quebra em MAIS linhas — 141px
+    // contra 139. O ganho é de desktop e tablet (67→45px e 103→77px).
+    const f = semComentarios(ler("src/features/canonical-analysis/ui/analytics/IndiceDeRegioes.tsx"));
+    expect(f).toContain("sm:flex sm:flex-wrap sm:items-baseline");
+    expect(f).toContain("sm:min-w-0 sm:flex-1");
+    // Nenhuma forma que esconda: sem rolagem horizontal, sem colapso.
+    expect(f).not.toContain("overflow-x-auto");
+    expect(f).not.toContain("<details");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 // 7. Nenhuma frase inglesa morando no locale PT
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 

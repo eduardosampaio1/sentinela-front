@@ -40,15 +40,24 @@ export function IndiceDeRegioes({ regioes }: { regioes: readonly RegiaoIndexada[
   if (regioes.length < 2) return null;
 
   return (
-    <nav aria-label={t("canonicalAnalysis.result.regionIndexLabel")} className="border-b border-border pb-3">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">
-        {t("canonicalAnalysis.result.regionIndexLabel")}
-      </p>
-      {/* Lista, não linha de botões: é sumário, e leitor de tela anuncia "lista com N itens" —
-          que é exatamente a resposta à pergunta "quais são minhas opções neste nível?". */}
-      <ul className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
-        {regioes.map((r) => (
-          <li key={r.ancora}>
+    <nav data-testid="indice-de-regioes" aria-label={t("canonicalAnalysis.result.regionIndexLabel")} className="border-b border-border pb-3">
+      {/* M31, 2ª volta — o rótulo divide a linha com os primeiros links em vez de ocupar uma
+          faixa própria — de `sm` para cima. Abaixo disso ele volta a empilhar: em 342px, dividir a
+          linha estreita a lista e ela quebra em MAIS linhas, medido em 141px contra 139.
+          No mobile o índice custa 139px numa página de 4452px, e NENHUMA forma compacta serviu:
+          rolagem horizontal deixa cinco dos sete fora da tela em 342px; duas colunas quebram
+          "Comparado com a anterior" em duas linhas e ficam mais altas; encurtar o rótulo o faria
+          divergir do título da seção; reduzir o alvo é proibido. Fica o custo, medido e declarado
+          — 3% da altura para não precisar rolar os outros 97%. */}
+      <div className="sm:flex sm:flex-wrap sm:items-baseline sm:gap-x-4">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          {t("canonicalAnalysis.result.regionIndexLabel")}
+        </p>
+        {/* Lista, não linha de botões: é sumário, e leitor de tela anuncia "lista com N itens" —
+            que é exatamente a resposta à pergunta "quais são minhas opções neste nível?". */}
+        <ul className="mt-1.5 flex flex-wrap gap-x-4 sm:mt-0 sm:min-w-0 sm:flex-1">
+          {regioes.map((r) => (
+            <li key={r.ancora}>
             {/* Âncora de verdade, não `scrollTo`: o histórico do navegador continua funcionando,
                 o link é copiável e abre onde deve. `focus-visible` herda o anel do tema. */}
             {/* `inline-block py-1.5` dá ~32px de alvo. Como texto puro de 14px o link tinha ~20px
@@ -62,8 +71,9 @@ export function IndiceDeRegioes({ regioes }: { regioes: readonly RegiaoIndexada[
               {r.rotulo}
             </a>
           </li>
-        ))}
-      </ul>
+          ))}
+        </ul>
+      </div>
     </nav>
   );
 }

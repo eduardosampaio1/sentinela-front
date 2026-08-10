@@ -95,8 +95,16 @@ export function CartaoIndicador({ item }: { item: IndicatorView }) {
   // vezes. Linear (DESIGN-05 §3, linha 1) separa por **rampa de borda e alinhamento**, não por
   // caixa. Quem desenha a moldura agora é `SecaoDeIndicadores`, uma vez, e os fios internos saem
   // do `gap-px` da grade — o mesmo fio para todos, sem soma de bordas adjacentes.
+  //
+  // M31, 2ª volta — a célula é uma COLUNA de altura cheia, e a glosa é empurrada para o pé dela.
+  //
+  // Numa grade de duas colunas a linha assume a altura da célula mais alta, e a diferença ia toda
+  // para o rodapé da célula mais baixa: sobra sem significado, e as glosas das duas colunas
+  // desalinhadas entre si. Com `mt-auto` a sobra migra para ENTRE o valor e a glosa, e as glosas
+  // das duas células passam a assentar na mesma linha de base. É alinhamento, não preenchimento —
+  // nenhum conteúdo mudou, nada foi esticado, e a célula segue sem borda própria.
   return (
-    <li className="bg-card p-4">
+    <li className="flex h-full flex-col bg-card p-4">
       {/* A margem ENVOLVE o valor: é ela que prende a procedência ao dado, em vez de mandar o
           leitor procurar um rodapé de página. No mobile ela colapsa num gatilho com nome; no
           desktop fica ao lado. A informação é a mesma nos dois — muda a forma. */}
@@ -118,8 +126,11 @@ export function CartaoIndicador({ item }: { item: IndicatorView }) {
           <p className="mt-1">{valor}</p>
         </>
       )}
-      {/* o "porquê" do número, sempre legível — nunca só a cor/valor */}
-      <p className="mt-2 text-xs text-muted-foreground">{t(item.descriptor.descriptionKey)}</p>
+      <div className="mt-auto pt-2">
+        {/* o "porquê" do número, sempre legível — nunca só a cor/valor. Owner congelou em
+            2026-08-10: a glosa fica VISÍVEL, não vai para disclosure. Escondê-la para reduzir
+            palavras trocaria a primeira leitura por um ponto de K3. */}
+        <p className="text-xs text-muted-foreground">{t(item.descriptor.descriptionKey)}</p>
       {/* Medido em PARTE da amostra: o numero e real, a cobertura nao e total. Dizer isso e a
           diferenca entre informar e enganar. */}
       {item.state === "partially_measured" && (
@@ -136,6 +147,7 @@ export function CartaoIndicador({ item }: { item: IndicatorView }) {
           {t("canonicalAnalysis.result.outOfRange")}
         </p>
       )}
+      </div>
     </li>
   );
 }
