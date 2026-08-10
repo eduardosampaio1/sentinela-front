@@ -10,8 +10,8 @@
 
 /** Operação contratada que ainda não tem cliente no frontend. É o blocker B1 (missão WS-C). */
 export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
-  // Download do pacote de export (MF5.2).
-  "GET /v1/analyses/{analysis_id}/analytics/export/download",
+  // O download do export (MF5.2) saiu daqui na M22: `getExportDownload` existe em
+  // `lib/v1/client.ts` e a resposta é tipada como `AnalysisExportDownloadView`.
   // Linha do tempo LIDA dos eventos duráveis (Onda 7) — não remontada do estado atual.
   "GET /v1/analyses/{analysis_id}/timeline",
 ] as const;

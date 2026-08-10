@@ -535,14 +535,34 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > **Gate de saída:** `missing_in_front` **vazio** e `SEM_CLIENTE_NO_FRONT` **esvaziada no mesmo
 > commit**. B1 fechado.
 
-### M20 · Cliente `/progress`
+### M20 · Cliente `/progress` — EXECUTADA
+> **Estado:** executada em `bc9e625` (2026-08-09). `data/analysis.ts`, `lib/v1/client.ts`,
+> `contract/public-v1.types.ts`, `lib/v1/queryKeys.ts` + `src/test/v1/progress-client.test.ts`
+> (253 linhas) e `canonical-boundary.test.ts`. A operação saiu de `SEM_CLIENTE_NO_FRONT`.
+>
+> *(Marcação de sincronização factual, 2026-08-10: a missão estava executada e commitada desde
+> 08-09, e só o PLAN não refletia. Nenhum escopo alterado.)*
 - **Escopo:** cliente + tipos dos **4 eixos** com seus vocabulários próprios; query key
   tenant-scoped. **Fora:** qualquer agregação — **nunca** um percentual único.
 - **Pré:** BD07. **Paraleliza com:** M21–M23.
 - **Superfícies:** AN-03, HOME-01, RES-01. **Scenarios:** 7–10, 13–15, 17–19.
 - **DoD:** `contract-operations` deixa de listar a operação; `contract-sync` cobre os 4 eixos.
 
-### M21 · Cliente `/analytics` + leitura de trust
+### M21 · Cliente `/analytics` + leitura de trust — EXECUTADA
+> **Estado:** executada em `f86218d` (2026-08-09), sobre a **BD08(front)** `87192b4` e o gate
+> `f8fb036`. `analyticsProjection.ts` (+141), `client.ts`, `public-v1.types.ts`;
+> `PUBLICADO_E_NAO_LIDO` reduzida aos deliberados.
+>
+> **O custo registrado:** a primeira versão agrupou a procedência sob `procedenciaPublicada` em
+> camelCase e a suíte ficou verde com o **observador cego** — o gate `contract-nested` separa
+> campo do fio de derivação do view model pelo camelCase, então tratou o bloco como derivação e
+> deixou de enxergar que os campos eram lidos. **Campo do fio se chama como no fio.**
+>
+> ⚠️ **Os 4 `TS2322` do baseline de typecheck estão em `analyticsProjection.ts`** (290, 363, 446,
+> 519) — superfície desta missão. Não corrigidos, sem dono declarado.
+>
+> *(Marcação de sincronização factual, 2026-08-10: executada e commitada desde 08-09; só o PLAN
+> não refletia. Nenhum escopo alterado.)*
 - **Escopo:** cliente + `component_status`, `snapshot`, `withheld`; **passa a ler** `method_id`,
   `method_version`, `method_parameters`, `method_definition_digest`, `privacy_policy_version`,
   `top_k`, `max_tracked_categories`, `max_tracked_values`, `max_time_buckets`,
@@ -832,6 +852,12 @@ Dispatcher → **ORCHESTRATOR** → Gateway.
 | **BD07** | **Canonicalização de contrato** (C1+C2) | B9 | ✅ decisão 4 | Fase 3, M48 |
 | **BD08** | **Schema aninhado do Analytics** (C5) | B9 | ✅ decisão 4 | M21 |
 | **BD09** | **Resolução de destinatário** — **condicional** ao resultado de M43 | B5 | condicional | M44, M48 |
+
+> **A coluna "autorizado?" é AUTORIZAÇÃO, não execução.** Estado de execução em 2026-08-10:
+> **BD07 ✅ EXECUTADA** (`746abec` no front + o mirror byte-a-byte no repo do Gateway — as duas
+> cópias de `public-v1.json` têm o mesmo SHA-256, e a origem resolve `candidatas-identicas`) ·
+> **BD08 ✅ EXECUTADA** (`87192b4`, com o gate `f8fb036`). As demais continuam **não executadas**.
+> **B9 permanece FECHADO** por BD07 + BD08 — não reabrir por divergência de inventário.
 
 ---
 

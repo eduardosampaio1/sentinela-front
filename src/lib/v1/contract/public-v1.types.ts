@@ -267,3 +267,36 @@ export interface AnalysisAnalyticsView {
   withheld: AnalyticsWithheld | null;
   generated_at: string | null;
 }
+
+// ── Download do pacote de export (M22) ──────────────────────────────────────────────────────
+
+/**
+ * `GET /v1/analyses/{analysis_id}/analytics/export/download`.
+ *
+ * **O Gateway não entrega bytes.** Ele devolve a capability de leitura que o broker assinou, e a
+ * resposta de sucesso é `200 application/json` — não um ZIP. Existe **uma** noção de exportação,
+ * e é o artefato do backend (Product Freeze D16): o front não monta pacote, não gera CSV e não
+ * recalcula nada.
+ *
+ * `download_url` é **transporte de vida curta** — o produtor assina com TTL de 5 minutos. Não é
+ * entidade de domínio: não se guarda, não se cacheia, não se persiste. Uma URL assinada em cache
+ * é uma credencial que vence sozinha, e a pessoa clicaria num link morto achando que o Sentinela
+ * quebrou.
+ *
+ * **`object_key` não está aqui, e a ausência é o contrato.** A chave do storage pertence ao
+ * Orchestrator; o produtor a omite deliberadamente (`assert "object_key" not in corpo`) e o front
+ * não teria o que fazer com ela além de vazá-la.
+ *
+ * `sha256` e `size_bytes` vêm do descritor do Analytics para o cliente conferir o que baixou —
+ * sem eles, "baixei o arquivo" seria uma afirmação sobre o que o storage devolveu.
+ */
+export interface AnalysisExportDownloadView {
+  analysis_id: string;
+  export_id: string;
+  download_url: string;
+  expires_in_seconds: number;
+  sha256: string;
+  size_bytes: number;
+  export_contract_version: string;
+  format: string;
+}

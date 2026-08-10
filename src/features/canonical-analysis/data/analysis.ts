@@ -5,6 +5,7 @@ import { useMutation, useQuery, type UseMutationResult, type UseQueryResult } fr
 import {
   workspaceKeys,
   type AnalysisHandle,
+  type AnalysisExportDownloadView,
   type AnalysisProgressView,
   type AnalysisResultView,
   type AnalysisStatus,
@@ -142,6 +143,35 @@ export function useAnalysisProgress(
     enabled: Boolean(scope && analysisId) && habilitado,
     queryFn: ({ signal }) =>
       client.getProgress(analysisId as string, scope as CanonicalScope, { signal }),
+  });
+}
+
+/**
+ * Capability de download do export (`GET /{id}/analytics/export/download`) — M22.
+ *
+ * **Mutation, e não query — de propósito.** A resposta carrega uma URL assinada com TTL de 5
+ * minutos. Uma `useQuery` a guardaria em cache e a revalidaria por conta própria; o usuário
+ * clicaria num link já expirado e leria isso como defeito do Sentinela. Aqui a chamada acontece
+ * quando alguém pede: uma por intenção, nada em cache, nada em background.
+ *
+ * **Quem autoriza oferecer o download é o eixo `export` de `useAnalysisProgress`**, não este
+ * hook. Product Freeze D16: com `export = ready`, download; nos demais estados a tela representa
+ * o estado vindo de `/progress`. Chamar para descobrir o estado usaria a resposta de erro como
+ * oráculo — e o produtor colapsa quatro causas no mesmo `forbidden_or_not_found` justamente para
+ * fechar esse oráculo.
+ *
+ * Não gera export, não monta pacote, não escreve arquivo: a exportação é UMA só, e é o artefato
+ * do backend.
+ */
+export function useExportDownload(): UseMutationResult<
+  AnalysisExportDownloadView,
+  unknown,
+  { analysisId: string; scope: CanonicalScope; signal?: AbortSignal }
+> {
+  const client = useV1Client();
+  return useMutation({
+    mutationFn: ({ analysisId, scope, signal }) =>
+      client.getExportDownload(analysisId, scope, { signal }),
   });
 }
 

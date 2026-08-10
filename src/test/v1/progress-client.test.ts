@@ -244,10 +244,13 @@ describe("M20 · 6. `/progress` saiu de SEM_CLIENTE_NO_FRONT", () => {
     ).not.toContain("GET /v1/analyses/{analysis_id}/progress");
   });
 
-  it("restam 2 operações sem cliente — B1 encolheu, não fechou", () => {
-    // Honestidade sobre o blocker: M21–M23 fecham as outras três.
+  it("resta 1 operação sem cliente — B1 encolheu, não fechou", () => {
+    // Honestidade sobre o blocker. A contagem é uma CATRACA: ela reprova até que a missão que
+    // encolhe a dívida a atualize no mesmo commit. Foi o que aconteceu aqui — era `2` desde a
+    // M20, e a **M22** (cliente de `/export/download`) a levou a `1`. Resta a **M23**
+    // (`/timeline`), e só ela fecha o B1.
     return import("./divergenciaDeclarada").then(({ SEM_CLIENTE_NO_FRONT }) => {
-      expect(SEM_CLIENTE_NO_FRONT).toHaveLength(2);
+      expect(SEM_CLIENTE_NO_FRONT).toHaveLength(1);
     });
   });
 });

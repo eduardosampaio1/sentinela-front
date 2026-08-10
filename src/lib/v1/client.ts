@@ -9,6 +9,7 @@ import type {
   AnalysisHandle,
   AnalysisListPage,
   AnalysisAnalyticsView,
+  AnalysisExportDownloadView,
   AnalysisProgressView,
   AnalysisResultView,
   AnalysisStatusView,
@@ -50,6 +51,17 @@ export interface V1Client {
    * `partial` NÃO vira `failed`: as três situações são distintas e a tela precisa distingui-las.
    */
   getAnalytics(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisAnalyticsView>;
+  /**
+   * Capability de download do pacote de export. **Uma chamada por intenção**, nunca especulativa:
+   * a URL devolvida é assinada e curta, e pedi-la "por via das dúvidas" gastaria a validade antes
+   * de existir alguém querendo baixar.
+   *
+   * Quem diz SE há o que baixar é o eixo `export` de `getProgress` — usar a tentativa de download
+   * para DESCOBRIR o estado trataria a resposta de erro como oráculo, e o produtor colapsa quatro
+   * causas distintas (inexistente, de outro workspace, expirado, purgado) no mesmo
+   * `forbidden_or_not_found` exatamente para impedir isso.
+   */
+  getExportDownload(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisExportDownloadView>;
   uploadData(analysisId: string, scope: CanonicalScope, body: BodyInit, opts?: RequestOptions): Promise<AnalysisStatusView>;
   submit(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
   getStatus(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisStatusView>;
@@ -221,6 +233,8 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       pedir<AnalysisAnalyticsView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics`, { workspace_id: scope.workspaceId }, opts),
     getProgress: (analysisId, scope, opts) =>
       pedir<AnalysisProgressView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/progress`, { workspace_id: scope.workspaceId }, opts),
+    getExportDownload: (analysisId, scope, opts) =>
+      pedir<AnalysisExportDownloadView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics/export/download`, { workspace_id: scope.workspaceId }, opts),
     getResult: (analysisId, scope, opts) =>
       pedir<AnalysisResultView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/result`, { workspace_id: scope.workspaceId }, opts),
     list: (params, opts) =>
