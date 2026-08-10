@@ -18,10 +18,12 @@ import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/shared/states/LoadingState";
 import { useAnalysisResult, useAnalysisStatus } from "../data/analysis";
 import { resolverResultado, type ResultadoResolvido } from "../result/adaptar";
+import { ordenarPorAtencao } from "../result/atencao";
 import { formatarInstante } from "../result/formatacao";
 import { useCanonicalScope } from "./scope";
 import { ProblemFeedback } from "./notices";
 import { BlocoAnalitico } from "./analytics/BlocoAnalitico";
+import { SecaoDeAtencao } from "./analytics/SecaoDeAtencao";
 import { BotaoDeExport } from "./analytics/BotaoDeExport";
 import {
   ResumoDaAnalise,
@@ -74,6 +76,11 @@ export function ResultPage() {
                 : null
           }
         />
+
+        {/* M26 — atenção ANTES dos indicadores. A ordem da página é a ordem da leitura: primeiro
+            o que o documento assinalou, depois o conjunto completo. Inverter faria a pessoa
+            varrer a grade inteira para descobrir se havia algo a conferir. */}
+        <SecaoDeAtencao itens={ordenarPorAtencao(v.indicators)} />
 
         <SecaoDeIndicadores
           indicators={v.indicators}

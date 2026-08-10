@@ -207,6 +207,17 @@
         "lineage": "Contrato analítico",
         "export": "Exportar",
         "exportHint": "Baixa exatamente os números desta página."
+      },
+      "attentionTitle": "O que merece atenção",
+      "attentionNone": "Nada neste resultado foi assinalado pela análise.",
+      "attentionOrderNote": "Ordem de leitura, vinda do documento — nada foi recalculado aqui.",
+      "provenanceLabel": "Procedência",
+      "provenanceAbsent": "não informado",
+      "provDenominator": "Denominador",
+      "provCoverage": "Cobertura",
+      "attentionMotivo": {
+        "out_of_range": "fora da faixa esperada para a unidade",
+        "partially_measured": "medido em parte da amostra"
       }
     },
     "problem": {

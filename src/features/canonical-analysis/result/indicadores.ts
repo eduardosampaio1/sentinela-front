@@ -45,6 +45,21 @@ export interface IndicatorView {
   outOfRange: boolean;
 }
 
+/**
+ * O rótulo humano de um indicador. **Um lugar só, e é de propósito.**
+ *
+ * `t(item.descriptor.labelKey)` é uma chamada OPACA: o gate da M14 não consegue decidir orfandade
+ * a partir dela, e por isso congela a contagem dessas chamadas. Quando a M26 precisou do mesmo
+ * rótulo na região de atenção, copiar a expressão teria elevado a contagem — e a dívida — por uma
+ * duplicação. Concentrando aqui, dois consumidores custam uma chamada.
+ */
+export function rotuloDoIndicador(
+  item: Pick<IndicatorView, "descriptor">,
+  t: (chave: string) => string,
+): string {
+  return t(item.descriptor.labelKey);
+}
+
 /** Apresentação de UM indicador. `ratio` → percentual SOMENTE porque a origem declarou razão. */
 export function apresentar(
   ind: CanonicalIndicator,

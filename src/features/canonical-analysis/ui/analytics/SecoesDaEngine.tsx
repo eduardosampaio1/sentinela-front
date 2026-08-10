@@ -11,7 +11,43 @@
 // fato com dois nomes, e a decisão de qual ler é da fronteira, não daqui.
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ProvenanceMargin, type ItemDeProcedencia } from "@/design/patterns/ProvenanceMargin";
+import { rotuloDoIndicador } from "../../result/indicadores";
 import type { IndicatorView, RecommendationView } from "../../result/indicadores";
+
+/**
+ * A procedência de UM indicador — M26.
+ *
+ * **Só o que é DAQUELE número.** A 1ª versão trazia também o registro de indicadores e a versão
+ * do contrato — que são do DOCUMENTO. O resultado foi `analysis-result-v1` repetido uma vez por
+ * cartão, e outra por breakpoint; a suíte da MF6.4b reprovou com "Found multiple elements", e
+ * estava certa. Procedência de documento tem uma casa só: o rodapé da página.
+ *
+ * Por indicador o `analysis-result-v1/v2` publica `denominator` e `coverage`, e mais nada. **Não
+ * existe `source` nem `calculation_version` por indicador** — inventá-los seria escrever sob o
+ * número uma origem que ninguém declarou.
+ *
+ * `null` desce como `null`: o `ProvenanceMargin` o transforma na palavra do produto, nunca em
+ * `0`, nunca num traço decorativo. Com os dois ausentes a margem diz "não informado" — porque
+ * não saber a procedência não é uma procedência ruim.
+ */
+function procedenciaDoIndicador(
+  item: IndicatorView,
+  t: (chave: string) => string,
+): ItemDeProcedencia[] {
+  return [
+    {
+      rotulo: t("canonicalAnalysis.result.provDenominator"),
+      // O denominador é o "sobre o quê" do número. Ausente, some — não vira 1, não vira total.
+      valor: item.denominator ? String(item.denominator.value) : null,
+    },
+    {
+      rotulo: t("canonicalAnalysis.result.provCoverage"),
+      // Já formatado pelo adapter: multiplicar por 100 é formatação, e formatação mora num lugar.
+      valor: item.coverageDisplay,
+    },
+  ];
+}
 
 function ValorIndicador({ item }: { item: IndicatorView }) {
   const { t } = useLanguage();
@@ -40,12 +76,23 @@ function ValorIndicador({ item }: { item: IndicatorView }) {
 
 export function CartaoIndicador({ item }: { item: IndicatorView }) {
   const { t } = useLanguage();
+  const rotulo = rotuloDoIndicador(item, t);
   return (
     <li className="rounded-lg border border-border bg-card p-4">
-      <p className="text-sm font-medium text-muted-foreground">{t(item.descriptor.labelKey)}</p>
-      <p className="mt-1">
+      {/* A margem ENVOLVE o valor: é ela que prende a procedência ao dado, em vez de mandar o
+          leitor procurar um rodapé de página. No mobile ela colapsa num gatilho com nome; no
+          desktop fica ao lado. A informação é a mesma nos dois — muda a forma. */}
+      <ProvenanceMargin
+        rotuloDoIndicador={rotulo}
+        procedencia={procedenciaDoIndicador(item, t)}
+        rotuloDaMargem={t("canonicalAnalysis.result.provenanceLabel")}
+        textoQuandoAusente={t("canonicalAnalysis.result.provenanceAbsent")}
+      >
+        {/* SÓ o valor. O rótulo é responsabilidade da margem — ela o usa como `aria-label` do
+            grupo E o imprime. Repeti-lo aqui na 1ª versão fez o nome aparecer duas vezes no
+            cartão, e a suíte da MF6.4b pegou na hora ("Found multiple elements"). */}
         <ValorIndicador item={item} />
-      </p>
+      </ProvenanceMargin>
       {/* o "porquê" do número, sempre legível — nunca só a cor/valor */}
       <p className="mt-2 text-xs text-muted-foreground">{t(item.descriptor.descriptionKey)}</p>
       {/* Medido em PARTE da amostra: o numero e real, a cobertura nao e total. Dizer isso e a
@@ -56,12 +103,9 @@ export function CartaoIndicador({ item }: { item: IndicatorView }) {
           {item.coverageDisplay && ` (${item.coverageDisplay})`}
         </p>
       )}
-      {/* Sobre o que a razao foi calculada — auditabilidade do numero, vinda da origem. */}
-      {item.denominator && (
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t("canonicalAnalysis.result.denominator")}: {item.denominator.value}
-        </p>
-      )}
+      {/* O denominador SAIU do corpo do cartão na M26: ele É procedência do número, e passou a
+          viver na margem, ancorado ao valor. Mantê-lo nos dois lugares daria duas leituras do
+          mesmo dado no mesmo cartão. */}
       {item.outOfRange && (
         <p role="note" className="mt-2 text-xs text-destructive">
           {t("canonicalAnalysis.result.outOfRange")}
@@ -125,7 +169,11 @@ export function SecaoDeIndicadores({
       {indicators.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("canonicalAnalysis.result.noIndicators")}</p>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        // DUAS colunas no desktop, não três. Enquanto o cartão era só rótulo + valor, três
+        // cabiam. Com a procedência ancorada ao lado do número (M26), a terceira coluna espremia
+        // a margem a ponto de "não informado" quebrar em duas linhas — a evidência ficava mais
+        // difícil de ler que o dado que ela explica. Medido em 1440×900, no navegador.
+        <ul className="grid gap-4 lg:grid-cols-2">
           {indicators.map((item) => (
             <CartaoIndicador key={item.id} item={item} />
           ))}

@@ -207,6 +207,17 @@
         "lineage": "Analytics contract",
         "export": "Export",
         "exportHint": "Downloads exactly the numbers on this page."
+      },
+      "attentionTitle": "What deserves attention",
+      "attentionNone": "Nothing in this result was flagged by the analysis.",
+      "attentionOrderNote": "Reading order, from the document — nothing was recalculated here.",
+      "provenanceLabel": "Provenance",
+      "provenanceAbsent": "not informed",
+      "provDenominator": "Denominator",
+      "provCoverage": "Sample coverage",
+      "attentionMotivo": {
+        "out_of_range": "outside the expected range for its unit",
+        "partially_measured": "measured on part of the sample"
       }
     },
     "problem": {
