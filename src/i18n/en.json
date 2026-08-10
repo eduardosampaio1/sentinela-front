@@ -5,7 +5,10 @@
       "subtitle": "Upload a dataset and follow the analysis through its states.",
       "start": "Start analysis",
       "starting": "Starting…",
-      "workspaceMissing": "Select a workspace to start an analysis."
+      "workspaceMissing": "Select a workspace to start an analysis.",
+      "conflictTitle": "This start had already been registered",
+      "conflictMeaning": "The request was refused as a repeat, so an analysis for it may already exist.",
+      "conflictAction": "See the history"
     },
     "upload": {
       "title": "Add your dataset",
@@ -16,10 +19,14 @@
       "noFile": "No file selected",
       "invalid": "This file type isn't accepted.",
       "sending": "Sending your dataset…",
-      "cancel": "Cancel",
       "retry": "Try again",
       "submit": "Submit for analysis",
-      "selectedFile": "Selected file"
+      "selectedFile": "Selected file",
+      "transport": {
+        "title": "The connection dropped during the upload",
+        "meaning": "There is no way to tell whether the dataset arrived: the response never came back. It may have been received.",
+        "check": "Check the analysis state"
+      }
     },
     "state": {
       "preparing": {

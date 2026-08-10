@@ -5,7 +5,10 @@
       "subtitle": "Envie uma base e acompanhe a análise pelos seus estados.",
       "start": "Iniciar análise",
       "starting": "Iniciando…",
-      "workspaceMissing": "Selecione um workspace para iniciar uma análise."
+      "workspaceMissing": "Selecione um workspace para iniciar uma análise.",
+      "conflictTitle": "Este início já havia sido registrado",
+      "conflictMeaning": "O pedido foi recusado como repetido, então pode já existir uma análise para ele.",
+      "conflictAction": "Ver o histórico"
     },
     "upload": {
       "title": "Adicione sua base",
@@ -16,10 +19,14 @@
       "noFile": "Nenhum arquivo selecionado",
       "invalid": "Este tipo de arquivo não é aceito.",
       "sending": "Enviando sua base…",
-      "cancel": "Cancelar",
       "retry": "Tentar de novo",
       "submit": "Enviar para análise",
-      "selectedFile": "Arquivo selecionado"
+      "selectedFile": "Arquivo selecionado",
+      "transport": {
+        "title": "A conexão caiu durante o envio",
+        "meaning": "Não é possível saber se a base chegou: a resposta nunca voltou. Ela pode ter sido recebida.",
+        "check": "Verificar o estado da análise"
+      }
     },
     "state": {
       "preparing": {
