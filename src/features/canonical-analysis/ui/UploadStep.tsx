@@ -26,6 +26,7 @@ import type { CanonicalScope } from "@/lib/v1";
 import { useUploadData } from "../data/analysis";
 import { ProblemFeedback } from "./notices";
 import { ehFalhaDeTransporte } from "./falhaDeTransporte";
+import { AvisoDaJornada } from "./AvisoDaJornada";
 
 const ACEITOS = ".jsonl,.ndjson,application/x-ndjson,application/jsonl";
 
@@ -65,6 +66,14 @@ export function UploadStep({
         <p id="canonical-upload-help" className="mt-1 text-sm text-muted-foreground">
           {t("canonicalAnalysis.upload.help")}
         </p>
+        {/* M33 — ONDE a pessoa está, e QUAL análise ela está preenchendo.
+            Medido: vindo de `/analyses/new` nada confirmava que a análise fora criada, e por deep
+            link ou refresh a tela não dizia a que ela pertencia. Não é stepper nem wizard: é o
+            estado público `preparing` dito em palavras, e a identidade que já existe na rota. */}
+        <p className="mt-2 flex flex-wrap items-baseline gap-x-2 text-sm">
+          <span className="text-muted-foreground">{t("canonicalAnalysis.upload.journeyReserved")}</span>
+          <span className="font-mono text-xs text-foreground">{analysisId}</span>
+        </p>
       </div>
 
       <label
@@ -94,20 +103,14 @@ export function UploadStep({
       )}
 
       {transporte ? (
-        <div role="alert" className="space-y-2 rounded-md border border-border bg-card p-4 text-sm">
-          {/* Sem `destructive`: não é o backend recusando, é a conversa que caiu. Pintar de erro
-              faria a pessoa procurar defeito na base dela. */}
-          <p className="font-medium text-foreground">{t("canonicalAnalysis.upload.transport.title")}</p>
-          {/* O que isto significa para a análise. `POST /data` não exige `Idempotency-Key` no
-              contrato, então NÃO afirmamos que o dado não chegou — nem que chegou. */}
-          <p className="text-muted-foreground">{t("canonicalAnalysis.upload.transport.meaning")}</p>
-          {/* A ação possível é PERGUNTAR, não adivinhar: o estado público é o oráculo, e lê-lo é
-              operação que existe e não muda nada. Reenviar às cegas seria inventar repetição
-              segura onde o contrato não a publica. */}
-          <div className="pt-1">
-            {/* Verificar LIMPA o erro além de revalidar: sem isso o botão de envio continuaria
-                rotulado "tentar de novo" depois da consulta, e a pessoa reenviaria a base sem ter
-                lido a resposta que acabou de pedir. */}
+        <AvisoDaJornada
+          titulo={t("canonicalAnalysis.upload.transport.title")}
+          // `POST /data` não exige `Idempotency-Key` no contrato: sem repetição segura publicada,
+          // não afirmamos que o dado não chegou — nem que chegou.
+          significado={t("canonicalAnalysis.upload.transport.meaning")}
+          acao={
+            // Verificar LIMPA o erro além de revalidar: sem isso o botão seguiria rotulado
+            // "tentar de novo" depois da consulta, e a pessoa reenviaria sem ler a resposta.
             <Button
               variant="outline"
               onClick={() => {
@@ -117,8 +120,8 @@ export function UploadStep({
             >
               {t("canonicalAnalysis.upload.transport.check")}
             </Button>
-          </div>
-        </div>
+          }
+        />
       ) : (
         // Envelope público: o backend viu a base e respondeu. `invalid_input` não consome a
         // operação — a análise segue em `preparing`, e escolher outro arquivo continua possível.

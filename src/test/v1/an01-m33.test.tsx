@@ -357,3 +357,32 @@ describe("M33 · 7. a queda de rede atravessa o cliente canônico", () => {
     expect(ehFalhaDeTransporte(erro)).toBe(false);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 8. A jornada é visível — achado do /ux-heuristics
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("M33 · 8. onde a pessoa está", () => {
+  it("a tela de upload diz que a análise foi reservada e QUAL é ela", () => {
+    // Medido em 8,46: vindo de `/analyses/new` nada confirmava a criação, e por deep link a tela
+    // não dizia a que análise pertencia. Não é stepper: é o estado público dito em palavras.
+    montar(<UploadStep analysisId="an-xyz" scope={{ workspaceId: "ws-1" }} onUploaded={vi.fn()} />);
+    expect(screen.getByText(pt.canonicalAnalysis.upload.journeyReserved)).toBeTruthy();
+    expect(screen.getByText("an-xyz")).toBeTruthy();
+  });
+
+  it("o subtítulo do prepare descreve o que AQUELA tela faz", () => {
+    // Ele prometia "Envie uma base" numa tela que não envia base nenhuma — ela reserva.
+    const sub = pt.canonicalAnalysis.entry.subtitle.toLowerCase();
+    expect(sub).toContain("reserve");
+    expect(sub).toContain("passo seguinte");
+  });
+
+  it("os dois avisos da jornada usam UM componente, não duas cópias", () => {
+    for (const arq of AN01) {
+      const f = semComentarios(ler(arq));
+      expect(f, `${arq} voltou a desenhar o cartão à mão`).toContain("AvisoDaJornada");
+      expect(f).not.toContain('role="alert" className="space-y-2 rounded-md');
+    }
+  });
+});

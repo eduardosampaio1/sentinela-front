@@ -10,6 +10,7 @@ import { useCreateAnalysis } from "../data/analysis";
 import { useIdempotencyIntent } from "../data/intent";
 import { useCanonicalScope } from "./scope";
 import { ProblemNotice, problemCodeOf } from "./notices";
+import { AvisoDaJornada } from "./AvisoDaJornada";
 
 export function StartAnalysisPage() {
   const { t } = useLanguage();
@@ -62,15 +63,15 @@ export function StartAnalysisPage() {
             </p>
           )}
           {conflito ? (
-            <div role="alert" className="space-y-2 rounded-md border border-border bg-card p-4 text-sm">
-              <p className="font-medium text-foreground">{t("canonicalAnalysis.entry.conflictTitle")}</p>
-              <p className="text-muted-foreground">{t("canonicalAnalysis.entry.conflictMeaning")}</p>
-              <div className="pt-1">
+            <AvisoDaJornada
+              titulo={t("canonicalAnalysis.entry.conflictTitle")}
+              significado={t("canonicalAnalysis.entry.conflictMeaning")}
+              acao={
                 <Button variant="outline" asChild>
                   <Link to="/analyses">{t("canonicalAnalysis.entry.conflictAction")}</Link>
                 </Button>
-              </div>
-            </div>
+              }
+            />
           ) : (
             <ProblemNotice error={create.error} />
           )}

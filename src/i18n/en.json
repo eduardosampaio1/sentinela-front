@@ -2,7 +2,7 @@
   "canonicalAnalysis": {
     "entry": {
       "title": "New analysis",
-      "subtitle": "Upload a dataset and follow the analysis through its states.",
+      "subtitle": "Reserve the analysis and, in the next step, upload the conversation dataset.",
       "start": "Start analysis",
       "starting": "Starting…",
       "workspaceMissing": "Select a workspace to start an analysis.",
@@ -26,7 +26,8 @@
         "title": "The connection dropped during the upload",
         "meaning": "There is no way to tell whether the dataset arrived: the response never came back. It may have been received.",
         "check": "Check the analysis state"
-      }
+      },
+      "journeyReserved": "Analysis reserved. It is waiting for its dataset."
     },
     "state": {
       "preparing": {

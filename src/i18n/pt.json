@@ -2,7 +2,7 @@
   "canonicalAnalysis": {
     "entry": {
       "title": "Nova análise",
-      "subtitle": "Envie uma base e acompanhe a análise pelos seus estados.",
+      "subtitle": "Reserve a análise e, no passo seguinte, envie a base de conversas.",
       "start": "Iniciar análise",
       "starting": "Iniciando…",
       "workspaceMissing": "Selecione um workspace para iniciar uma análise.",
@@ -26,7 +26,8 @@
         "title": "A conexão caiu durante o envio",
         "meaning": "Não é possível saber se a base chegou: a resposta nunca voltou. Ela pode ter sido recebida.",
         "check": "Verificar o estado da análise"
-      }
+      },
+      "journeyReserved": "Análise reservada. Ela está esperando a base."
     },
     "state": {
       "preparing": {
