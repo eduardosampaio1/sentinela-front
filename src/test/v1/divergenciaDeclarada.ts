@@ -10,9 +10,6 @@
 
 /** Operação contratada que ainda não tem cliente no frontend. É o blocker B1 (missão WS-C). */
 export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
-  // Os quatro eixos de progresso por componente (MF5.3). A Home e a tela de processamento
-  // dependem deles para não inventar percentual agregado.
-  "GET /v1/analyses/{analysis_id}/progress",
   // Projeção analítica pública (MF5.1) — `component_status`, `snapshot`, `withheld`.
   "GET /v1/analyses/{analysis_id}/analytics",
   // Download do pacote de export (MF5.2).

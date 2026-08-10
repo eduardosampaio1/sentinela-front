@@ -5,6 +5,7 @@ import { useMutation, useQuery, type UseMutationResult, type UseQueryResult } fr
 import {
   workspaceKeys,
   type AnalysisHandle,
+  type AnalysisProgressView,
   type AnalysisResultView,
   type AnalysisStatus,
   type AnalysisStatusView,
@@ -119,6 +120,28 @@ export function useAnalysisStatus(
     refetchInterval: (query) => proximoPolling(query.state.data?.status, query.state.data?.result_available),
     // não consulta em background (aba invisível) — pausa por padrão do React Query
     refetchIntervalInBackground: false,
+  });
+}
+
+/**
+ * Progresso por EIXO (`GET /{id}/progress`) — M20.
+ *
+ * Devolve os eixos como chegam. Nenhuma agregação: um percentual único inventaria uma média entre
+ * eixos que medem coisas incomparáveis, e a pessoa leria como medida o que seria opinião do front.
+ * O plano põe isso fora de escopo, e a Constituição já dizia que eixo nunca vira barra única.
+ */
+export function useAnalysisProgress(
+  scope: CanonicalScope | null,
+  analysisId: string | null,
+  habilitado = true,
+): UseQueryResult<AnalysisProgressView> {
+  const client = useV1Client();
+  return useQuery({
+    queryKey:
+      scope && analysisId ? workspaceKeys.progress(scope.workspaceId, analysisId) : IDLE_KEY,
+    enabled: Boolean(scope && analysisId) && habilitado,
+    queryFn: ({ signal }) =>
+      client.getProgress(analysisId as string, scope as CanonicalScope, { signal }),
   });
 }
 

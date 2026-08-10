@@ -169,3 +169,66 @@ export interface MeView {
   workspaces: WorkspaceMembershipView[];
   capabilities: { canonical_analysis_enabled: boolean };
 }
+
+// ── Progresso por eixo (M20) ────────────────────────────────────────────────────────────────
+//
+// `progress_axes` do contrato: quatro eixos, e cada um com VOCABULÁRIO PRÓPRIO. Eles não são o
+// mesmo enum com nomes diferentes:
+//
+//   • `withheld` só existe em `analytics` — retenção por privacidade não acontece na Engine;
+//   • `expired` e `unavailable` só existem em `export` — só um pacote caduca;
+//   • `partial` só existe em `analytics` — a Engine termina ou falha, não entrega metade.
+//
+// Um `estado: string` comum aceitaria `expired` num eixo que nunca expira, e a tela mostraria um
+// estado que aquele componente não tem. Os tipos separados são o que impede isso no compilador,
+// e é a mesma razão pela qual o `StatusBadge` da M11 usa união discriminada.
+
+/** Estados do eixo `engine`. Termina ou falha — não há meio-termo. */
+export type EngineAxisState = "pending" | "running" | "ready" | "failed";
+
+/** Estados do eixo `analytics`. Único que conhece `partial` e `withheld`. */
+export type AnalyticsAxisState =
+  | "pending"
+  | "running"
+  | "ready"
+  | "partial"
+  | "withheld"
+  | "failed"
+  | "unknown";
+
+/** Estados do eixo `export`. Único que conhece `expired` e `unavailable`. */
+export type ExportAxisState =
+  | "unavailable"
+  | "preparing"
+  | "ready"
+  | "expired"
+  | "failed"
+  | "unknown";
+
+/** Estados do eixo `final_result`. */
+export type FinalResultAxisState = "pending" | "ready" | "failed";
+
+/** Nome de eixo, exatamente como `progress_axes` publica. */
+export type ProgressAxis = "engine" | "analytics" | "export" | "final_result";
+
+/**
+ * Uma entrada de progresso. União DISCRIMINADA pelo eixo: passar um estado de `export` onde se
+ * espera `engine` deixa de compilar.
+ */
+export type ProgressEntry =
+  | { axis: "engine"; state: EngineAxisState }
+  | { axis: "analytics"; state: AnalyticsAxisState }
+  | { axis: "export"; state: ExportAxisState }
+  | { axis: "final_result"; state: FinalResultAxisState };
+
+/**
+ * `GET /v1/analyses/{analysis_id}/progress`.
+ *
+ * **Não há percentual, e não haverá.** O plano põe agregação fora de escopo, e o motivo é de
+ * produto: um número único inventaria uma média entre eixos que medem coisas incomparáveis, e a
+ * pessoa leria "63%" como se fosse uma medida quando é uma opinião do front.
+ */
+export interface AnalysisProgressView {
+  analysis_id: string;
+  axes: readonly ProgressEntry[];
+}

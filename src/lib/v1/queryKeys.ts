@@ -14,6 +14,9 @@ export const workspaceKeys = {
     ["workspace", workspaceId, "analyses", "detail", analysisId] as const,
   status: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "status"] as const,
+  /** M20 — progresso por eixo. Tenant-scoped como todo o resto: a troca de workspace isola. */
+  progress: (workspaceId: string, analysisId: string) =>
+    ["workspace", workspaceId, "analyses", "detail", analysisId, "progress"] as const,
   result: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "result"] as const,
 } as const;

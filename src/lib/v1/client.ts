@@ -8,6 +8,7 @@
 import type {
   AnalysisHandle,
   AnalysisListPage,
+  AnalysisProgressView,
   AnalysisResultView,
   AnalysisStatusView,
   CanonicalScope,
@@ -38,6 +39,11 @@ export interface V1Client {
   /** Sessão e workspaces permitidos. Única operação SEM escopo de tenant, por definição. */
   me(opts?: RequestOptions): Promise<MeView>;
   prepare(scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
+  /**
+   * Progresso por EIXO. Devolve os eixos como o backend os manda — sem agregar, sem ordenar,
+   * sem completar os que faltarem. Ausência de um eixo é ausência, não `pending`.
+   */
+  getProgress(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisProgressView>;
   uploadData(analysisId: string, scope: CanonicalScope, body: BodyInit, opts?: RequestOptions): Promise<AnalysisStatusView>;
   submit(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
   getStatus(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisStatusView>;
@@ -205,6 +211,8 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       pedir<AnalysisHandle>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/submit`, { workspace_id: scope.workspaceId }, opts, undefined, true),
     getStatus: (analysisId, scope, opts) =>
       pedir<AnalysisStatusView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}`, { workspace_id: scope.workspaceId }, opts),
+    getProgress: (analysisId, scope, opts) =>
+      pedir<AnalysisProgressView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/progress`, { workspace_id: scope.workspaceId }, opts),
     getResult: (analysisId, scope, opts) =>
       pedir<AnalysisResultView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/result`, { workspace_id: scope.workspaceId }, opts),
     list: (params, opts) =>
