@@ -35,8 +35,12 @@ export function ComparisonRow({
   delta: string | null;
 }) {
   return (
-    <Moldura rotulo={rotulo} base={base} className={className}>
+    <Moldura rotulo={rotulo} className={className}>
       <Stack direcao="horizontal" espaco="sm" alinhamento="base" className="flex-wrap">
+        {/* M31 — a base vem ANTES do número que ela nomeia. Ela morava numa linha abaixo do par,
+            e `80 → 80` com a palavra "anterior" embaixo obrigava o leitor a deduzir qual dos dois
+            números era o anterior. Continua sempre visível; mudou de posição, não de existência. */}
+        <Text papel="rotulo" tom="discreto">{base}</Text>
         <Text numerico tom="discreto">{antes ?? "—"}</Text>
         <ArrowRight aria-hidden="true" className="h-3 w-3 shrink-0 text-muted-foreground" />
         <Text numerico>{depois ?? "—"}</Text>
@@ -66,8 +70,9 @@ export function ComparisonRowQuebrada({
   className,
 }: Comum & { motivo: string }) {
   return (
-    <Moldura rotulo={rotulo} base={base} className={className}>
+    <Moldura rotulo={rotulo} className={className}>
       <Stack direcao="horizontal" espaco="sm" alinhamento="base" className="flex-wrap">
+        <Text papel="rotulo" tom="discreto">{base}</Text>
         <Text numerico tom="discreto">{antes ?? "—"}</Text>
         <Unlink aria-hidden="true" className="h-3 w-3 shrink-0 text-muted-foreground" />
         <Text numerico tom="discreto">{depois ?? "—"}</Text>
@@ -81,20 +86,15 @@ export function ComparisonRowQuebrada({
 
 function Moldura({
   rotulo,
-  base,
   className,
   children,
-}: Pick<Comum, "rotulo" | "base" | "className"> & { children: React.ReactNode }) {
+}: Pick<Comum, "rotulo" | "className"> & { children: React.ReactNode }) {
   return (
     <Stack espaco="xs" className={cn("border-b border-border/60 py-2", className)}>
       <Text papel="rotulo" tom="discreto">
         {rotulo}
       </Text>
       {children}
-      {/* A base fica SEMPRE visível: "subiu 12" sem dizer em relação a quê é anedota. */}
-      <Text papel="rotulo" tom="discreto">
-        {base}
-      </Text>
     </Stack>
   );
 }

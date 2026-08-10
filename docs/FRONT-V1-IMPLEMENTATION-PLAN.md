@@ -733,7 +733,26 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 ### M31 · RES-01 — hardening
 - **Escopo:** responsive (§8 do DS), PT/EN, `axe`, teclado, `/design-critique`,
   `/ux-heuristics` ≥ 8, `/ux-copy`. **DoD:** os 18 critérios **nesta superfície**.
+- **Pré:** M26, M27, M28, M29, M30. *(Omissão editorial fechada por decisão de owner em
+  2026-08-10: era a única missão da Fase 5 sem `Pré:`, enquanto M26–M30 todas tinham. Satisfeitas
+  em `95b9956`, `f6280eb`, `7e247cb`, `41df5ab`, `fed4157`.)*
+- **Fora:** Light/Dark ou segundo tema · **P31** · Behavior Score, Drift e Confidence, que não são
+  publicados · features novas · BDs novas · correção de backend · correção do baseline técnico
+  herdado · **fabricar fixture para melhorar screenshot** · redesenhar outras superfícies ·
+  qualquer escopo além dos 18 critérios de UI Complete.
 - **Evidência:** relatório por critério. **Gate de fase: Fase 5 → 6.**
+- **EXECUTADA em 2026-08-10 — o gate de fase NÃO fechou.** 17 dos 18 critérios passam; o **9**
+  (`/ux-heuristics` ≥ 8/10) ficou em **7,7/10**, contra 6,2/10 medidos antes. O critério **12**
+  não foi ativado: a infraestrutura de visual regression não existe no repositório (a única
+  ocorrência de `toHaveScreenshot`/Chromatic/Percy em toda a árvore é o comentário do teste da
+  M31 dizendo que ela não existe). O que separa a superfície do 8/10 está registrado como
+  **P2-1** (a comparação repete os catorze indicadores e é ~40% da altura da página) e **N7** (uma
+  página de ~2900px sem nenhum atalho entre as sete regiões) — os dois são decisão de produto, não
+  de hardening, e por isso não foram tomados aqui.
+> **A unidade de julgamento é a SUPERFÍCIE.** O gate diz *"RES-01 passa nos 18 critérios
+> **sozinha**"*, o critério 8 pede `/design-critique` *"a cada superfície"* e o 9 impõe
+> `/ux-heuristics` **≥ 8/10 por superfície**. "Cada fatia passou" não satisfaz nenhum dos três:
+> uma tela pode ter dez pedaços corretos e tirar 6/10 de usabilidade.
 
 ---
 

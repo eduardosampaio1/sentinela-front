@@ -81,11 +81,12 @@ export function ResultPage() {
     const v = resolvido.view;
     return (
       <div className="space-y-8">
-        <div className="flex justify-end">
-          <AcaoDeExport analysisId={v.analysisId} estado={eixoExport} />
-        </div>
-
+        {/* M31 — a ação de export tinha uma faixa de largura inteira só para si, encostada à
+            direita: uma linha morta acima do resumo, e a exportação com o peso visual da
+            navegação global. Ela desceu para o lado do título do Resumo, que é o resultado sobre
+            o qual ela age. Nada mudou no que ela faz nem em quem decide se há o que baixar. */}
         <ResumoDaAnalise
+          acao={<AcaoDeExport analysisId={v.analysisId} estado={eixoExport} />}
           recordCountDisplay={
             resolvido.contrato === "v2"
               ? resolvido.view.summary.engineWindowRecordCountDisplay
@@ -122,6 +123,11 @@ export function ResultPage() {
         {/* M28 — Trust deixa de ser uma linha solta no rodapé e vira zona com origem apontável. */}
         <PainelDeProcedencia zonas={zonasDeProcedencia(resolvido, t)} />
 
+        {/* M31 — a linha do tempo vem ANTES da comparação. "O que aconteceu" é a narrativa deste
+            resultado; "Comparado com a anterior" é uma leitura derivada dele contra outro
+            documento. A ordem estava invertida, e a narrativa ficava no fim de 3400px. */}
+        {timeline.data && <LinhaDoTempo vista={timeline.data} />}
+
         {(() => {
           // Só compara documento com documento resolvido: um payload que a fronteira recusou não
           // vira "anterior", ele vira ausência.
@@ -132,8 +138,6 @@ export function ResultPage() {
               : null;
           return <ComparacaoComAnterior comparacao={par} />;
         })()}
-
-        {timeline.data && <LinhaDoTempo vista={timeline.data} />}
       </div>
     );
   }

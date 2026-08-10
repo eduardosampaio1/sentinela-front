@@ -222,7 +222,7 @@
         "stateGroup": "Estado",
         "exportTitle": "Pacote de export",
         "exportDownload": "Baixar pacote",
-        "exportReadyHint": "Produzido pelo backend.",
+        "exportReadyHint": "Gerado pela análise, não por esta tela.",
         "exportState": {
           "unavailable": "Sem export nesta análise.",
           "preparing": "O pacote está sendo preparado.",
@@ -730,6 +730,7 @@
     "user": {
       "menu": "Menu do usuário",
       "account": "Gerenciar conta",
+      "settings": "Configurações",
       "accountHint": "Abre o provedor de identidade",
       "signOut": "Sair"
     }

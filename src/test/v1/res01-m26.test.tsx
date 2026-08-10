@@ -176,17 +176,37 @@ describe("M26 · 3. IndicatorCard", () => {
     expect(within(grupo).getAllByText("92%").length).toBeGreaterThan(0);
   });
 
-  it("procedência AUSENTE vira a palavra do produto — nunca `0`, nunca traço", () => {
-    const { container } = montar(
+  it("procedência PARCIAL: o campo ausente vira a palavra do produto, nunca `0`", () => {
+    // A M31 mudou a REGRA de quando a margem existe, com prova visual: com `denominator` E
+    // `coverage` ambos nulos ela imprimia "Procedência / não informado" em catorze cartões — o
+    // Ataque 3 do DESIGN-05 §4 se realizando. Não há procedência publicada ali para suprimir.
+    //
+    // O que este caso guardava — ausência nunca vira zero — continua válido e continua provado,
+    // agora onde a margem de fato existe: um campo publicado e o outro ausente.
+    montar(
       <ul>
-        <CartaoIndicador item={ind({ denominator: null, coverageDisplay: null })} />
+        <CartaoIndicador item={ind({ denominator: { kind: "conversations", value: 1240 }, coverageDisplay: null })} />
       </ul>,
     );
     const grupo = screen.getByRole("group", {
       name: pt.canonicalAnalysis.result.indicator.useful_outcome_rate.label,
     });
+    expect(within(grupo).getAllByText("1240").length).toBeGreaterThan(0);
     expect(within(grupo).getAllByText(pt.canonicalAnalysis.result.provenanceAbsent).length).toBeGreaterThan(0);
-    expect(container.textContent).not.toMatch(/Denominador:\s*0\b/);
+    // Ausência NUNCA vira `0`: nenhum zero solto dentro do grupo de procedência deste número.
+    expect(within(grupo).queryAllByText("0")).toHaveLength(0);
+  });
+
+  it("sem NENHUMA procedência publicada, a margem não nasce — e o valor continua rotulado", () => {
+    montar(
+      <ul>
+        <CartaoIndicador item={ind({ denominator: null, coverageDisplay: null })} />
+      </ul>,
+    );
+    expect(screen.queryByRole("group")).toBeNull();
+    // O rótulo e o valor permanecem: o que sumiu foi a moldura vazia, não a informação.
+    expect(screen.getByText(pt.canonicalAnalysis.result.indicator.useful_outcome_rate.label)).toBeTruthy();
+    expect(screen.getByText("80")).toBeTruthy();
   });
 
   it("o cartão NÃO inventa origem: sem `source`, sem `calculation_version`", () => {

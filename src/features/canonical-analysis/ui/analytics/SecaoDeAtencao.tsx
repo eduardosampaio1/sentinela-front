@@ -34,17 +34,23 @@ export function SecaoDeAtencao({ itens }: { itens: readonly ItemDeAtencao[] }) {
         {t("canonicalAnalysis.result.attentionTitle")}
       </h2>
 
+      {/* M31 — vazia, esta região era uma frase cinza de 14px entre dois títulos: a primeira
+          leitura da página era a menor coisa dela. Agora o estado vazio ocupa a MESMA moldura que
+          a lista ocuparia, então a região tem presença igual esteja cheia ou vazia — que é o que
+          "ausência é estado, não vazio" quer dizer visualmente. */}
       {itens.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          {t("canonicalAnalysis.result.attentionNone")}
-        </p>
+        <div className="rounded-lg border border-border bg-card px-4 py-3">
+          <p className="text-sm text-muted-foreground">
+            {t("canonicalAnalysis.result.attentionNone")}
+          </p>
+        </div>
       ) : (
         <>
-          <ul className="space-y-2">
+          <ul className="grid gap-px overflow-hidden rounded-lg border border-border bg-border">
             {itens.map(({ item, motivo }) => (
               <li
                 key={item.id}
-                className="flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-lg border border-border bg-card px-4 py-3"
+                className="flex flex-wrap items-baseline gap-x-2 gap-y-1 bg-card px-4 py-3"
               >
                 {/* O nome do indicador é o gancho: a pessoa encontra o mesmo rótulo na seção de
                     Indicadores abaixo, com valor e procedência. Aqui não se repete o número —

@@ -96,8 +96,13 @@ function SidebarNavItem({ item }: { item: NavItem }) {
       end={item.exact}
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150",
+        // M31 — o RÓTULO do item ativo não é mais `text-primary`. O axe-core mediu 3,44:1
+        // (`#4f59e8` sobre `#0d1328`) contra os 4,5:1 que a AA exige para texto normal: o item
+        // que marca "você está aqui" era o menos legível da barra. O identificador de ativo não
+        // dependia da cor do texto — continua no fundo, no anel, no ícone e no ponto à direita,
+        // que são quatro canais, nenhum deles texto. Nada do tema foi reaberto (D23).
         isActive
-          ? "bg-primary/10 text-primary ring-1 ring-inset ring-primary/[0.12]"
+          ? "bg-primary/10 text-foreground ring-1 ring-inset ring-primary/[0.12]"
           : "text-muted-foreground hover:text-muted-foreground hover:bg-muted/60"
       )}
     >

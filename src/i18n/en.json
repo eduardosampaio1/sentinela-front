@@ -222,7 +222,7 @@
         "stateGroup": "State",
         "exportTitle": "Export package",
         "exportDownload": "Download package",
-        "exportReadyHint": "Produced by the backend.",
+        "exportReadyHint": "Produced by the analysis, not by this screen.",
         "exportState": {
           "unavailable": "No export for this analysis.",
           "preparing": "The package is being prepared.",
@@ -730,6 +730,7 @@
     "user": {
       "menu": "User menu",
       "account": "Manage account",
+      "settings": "Settings",
       "accountHint": "Opens your identity provider",
       "signOut": "Sign out"
     }
