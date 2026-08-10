@@ -84,17 +84,38 @@ export function ComparisonRowQuebrada({
   );
 }
 
+/**
+ * Uma linha é UMA linha — M31.
+ *
+ * A moldura empilhava rótulo, valores e base em três alturas. Com catorze indicadores isso dava
+ * ~950px, quase 40% da página, para dizer catorze vezes `80 → 80`. A captura da tela inteira
+ * mostrou a comparação ocupando mais espaço vertical que os próprios indicadores que ela compara.
+ *
+ * Agora o rótulo e os valores dividem a mesma linha de base: rótulo à esquerda, par à direita,
+ * alinhados numa grade. **Nada foi escondido nem colapsado atrás de gatilho** — os catorze pares
+ * continuam todos visíveis, na mesma ordem, com os mesmos valores. Mudou a altura, não o conteúdo.
+ *
+ * Abaixo de `sm` volta a empilhar: 342px de coluna útil não comportam rótulo e par lado a lado sem
+ * quebrar o par no meio, e um par partido em duas linhas é pior que duas linhas declaradas.
+ */
 function Moldura({
   rotulo,
   className,
   children,
 }: Pick<Comum, "rotulo" | "className"> & { children: React.ReactNode }) {
   return (
-    <Stack espaco="xs" className={cn("border-b border-border/60 py-2", className)}>
+    <div
+      className={cn(
+        "grid gap-x-4 gap-y-0.5 border-b border-border/60 py-1.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline",
+        className,
+      )}
+    >
       <Text papel="rotulo" tom="discreto">
         {rotulo}
       </Text>
-      {children}
-    </Stack>
+      <Stack espaco="xs" className="sm:items-end">
+        {children}
+      </Stack>
+    </div>
   );
 }

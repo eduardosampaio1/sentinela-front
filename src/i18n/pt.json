@@ -85,6 +85,7 @@
     },
     "result": {
       "title": "Resultado da análise",
+      "regionIndexLabel": "Nesta página",
       "loading": "Carregando resultado…",
       "backToHistory": "Voltar ao histórico",
       "summaryTitle": "Resumo",
@@ -92,6 +93,7 @@
       "analyzedAt": "Analisado em",
       "indicatorsTitle": "Indicadores",
       "recommendationsTitle": "Recomendações",
+      "recommendationPriority": "Prioridade",
       "partialNotice": "Algumas seções não estão disponíveis neste resultado.",
       "unsupported": "Este resultado veio num formato que esta página ainda não suporta.",
       "unsupportedHint": "Nada foi interpretado. Você pode voltar ao seu histórico.",
@@ -730,7 +732,6 @@
     "user": {
       "menu": "Menu do usuário",
       "account": "Gerenciar conta",
-      "settings": "Configurações",
       "accountHint": "Abre o provedor de identidade",
       "signOut": "Sair"
     }

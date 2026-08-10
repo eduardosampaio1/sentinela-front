@@ -38,6 +38,7 @@ import { PainelDeProcedencia } from "./analytics/PainelDeProcedencia";
 import { LinhaDoTempo } from "./analytics/LinhaDoTempo";
 import { ComparacaoComAnterior } from "./analytics/ComparacaoComAnterior";
 import { AcaoDeExport } from "./analytics/AcaoDeExport";
+import { IndiceDeRegioes, type RegiaoIndexada } from "./analytics/IndiceDeRegioes";
 import {
   ResumoDaAnalise,
   SecaoDeIndicadores,
@@ -79,8 +80,28 @@ export function ResultPage() {
 
   function documento(resolvido: Extract<ResultadoResolvido, { contrato: "v1" | "v2" }>) {
     const v = resolvido.view;
+    // As regiões do índice saem das MESMAS condições que as renderizam logo abaixo. Duas listas
+    // independentes divergiriam no primeiro ajuste, e o índice passaria a apontar para o vazio.
+    const regioes: RegiaoIndexada[] = [
+      { ancora: "res-resumo", rotulo: t("canonicalAnalysis.result.summaryTitle") },
+      { ancora: "res-atencao", rotulo: t("canonicalAnalysis.result.attentionTitle") },
+      { ancora: "res-indicadores", rotulo: t("canonicalAnalysis.result.indicatorsTitle") },
+      ...(v.recommendations.length > 0
+        ? [{ ancora: "res-recs", rotulo: t("canonicalAnalysis.result.recommendationsTitle") }]
+        : []),
+      ...(resolvido.contrato === "v2"
+        ? [{ ancora: "res-analytics", rotulo: t("canonicalAnalysis.result.analytics.title") }]
+        : []),
+      { ancora: "res-trust", rotulo: t("canonicalAnalysis.result.trustTitle") },
+      ...(timeline.data
+        ? [{ ancora: "res-timeline", rotulo: t("canonicalAnalysis.result.timelineTitle") }]
+        : []),
+      { ancora: "res-comparacao", rotulo: t("canonicalAnalysis.result.compareTitle") },
+    ];
     return (
       <div className="space-y-8">
+        <IndiceDeRegioes regioes={regioes} />
+
         {/* M31 — a ação de export tinha uma faixa de largura inteira só para si, encostada à
             direita: uma linha morta acima do resumo, e a exportação com o peso visual da
             navegação global. Ela desceu para o lado do título do Resumo, que é o resultado sobre

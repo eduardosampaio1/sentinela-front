@@ -85,6 +85,7 @@
     },
     "result": {
       "title": "Analysis result",
+      "regionIndexLabel": "On this page",
       "loading": "Loading result…",
       "backToHistory": "Back to history",
       "summaryTitle": "Summary",
@@ -92,6 +93,7 @@
       "analyzedAt": "Analyzed at",
       "indicatorsTitle": "Indicators",
       "recommendationsTitle": "Recommendations",
+      "recommendationPriority": "Priority",
       "partialNotice": "Some sections aren't available in this result.",
       "unsupported": "This result was produced in a format this page doesn't support yet.",
       "unsupportedHint": "Nothing was interpreted. You can go back to your history.",
@@ -730,7 +732,6 @@
     "user": {
       "menu": "User menu",
       "account": "Manage account",
-      "settings": "Settings",
       "accountHint": "Opens your identity provider",
       "signOut": "Sign out"
     }

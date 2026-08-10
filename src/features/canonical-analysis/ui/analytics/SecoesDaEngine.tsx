@@ -266,8 +266,16 @@ export function SecaoDeRecomendacoes({
         {recommendations.map((rec) => (
           <li key={rec.id} className="bg-card p-4">
             <p className="font-medium text-foreground">{rec.title}</p>
-            {/* Prioridade vem da ORIGEM. A UI preserva a ordem recebida e nao reordena. */}
-            <p className="mt-1 text-sm text-muted-foreground">{rec.priority}</p>
+            {/* Prioridade vem da ORIGEM. A UI preserva a ordem recebida e nao reordena.
+                M31 — `P1` sozinho na tela nao dizia de que ele era P1. O campo do contrato passa a
+                ser NOMEADO, do mesmo jeito que o painel de Trust nomeia a origem de cada linha; o
+                valor continua o que a origem mandou, sem traducao nem reordenacao. */}
+            <p className="mt-1 text-sm text-muted-foreground">
+              <span className="text-xs uppercase tracking-wide">
+                {t("canonicalAnalysis.result.recommendationPriority")}
+              </span>{" "}
+              {rec.priority}
+            </p>
           </li>
         ))}
       </ol>

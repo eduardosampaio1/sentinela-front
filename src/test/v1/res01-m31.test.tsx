@@ -16,7 +16,7 @@
 // `toHaveScreenshot` nem baseline de imagem versionada), e inventá-la não era escopo. O que existe
 // é a matriz capturada em navegador real, fora da árvore, e estes testes sobre o que é asserível.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
@@ -29,7 +29,9 @@ import { SecaoDeAtencao } from "@/features/canonical-analysis/ui/analytics/Secao
 import {
   CartaoIndicador,
   SecaoDeIndicadores,
+  SecaoDeRecomendacoes,
 } from "@/features/canonical-analysis/ui/analytics/SecoesDaEngine";
+import { IndiceDeRegioes } from "@/features/canonical-analysis/ui/analytics/IndiceDeRegioes";
 
 const RAIZ = resolve(__dirname, "../../..");
 const ler = (rel: string) => readFileSync(resolve(RAIZ, rel), "utf-8");
@@ -279,6 +281,95 @@ describe("M31 · 6. cópia do export", () => {
     const p = pt.canonicalAnalysis.result.analytics.exportReadyHint;
     const e = en.canonicalAnalysis.result.analytics.exportReadyHint;
     expect(p.length).toBeLessThanOrEqual(Math.ceil(e.length * 1.3));
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 8. O índice das regiões, a prioridade nomeada e a linha de uma linha
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("M31 · 8. atalho entre regiões e densidade da comparação", () => {
+  it("o índice aponta para as âncoras que existem, com o nome que a seção usa", () => {
+    montar(
+      <IndiceDeRegioes
+        regioes={[
+          { ancora: "res-resumo", rotulo: pt.canonicalAnalysis.result.summaryTitle },
+          { ancora: "res-trust", rotulo: pt.canonicalAnalysis.result.trustTitle },
+        ]}
+      />,
+    );
+    const nav = screen.getByRole("navigation", { name: pt.canonicalAnalysis.result.regionIndexLabel });
+    const links = within(nav).getAllByRole("link");
+    expect(links.map((a) => a.getAttribute("href"))).toEqual(["#res-resumo", "#res-trust"]);
+    expect(links.map((a) => a.textContent)).toEqual([
+      pt.canonicalAnalysis.result.summaryTitle,
+      pt.canonicalAnalysis.result.trustTitle,
+    ]);
+  });
+
+  it("com menos de duas regiões o índice não nasce — sumário de um item é ruído", () => {
+    const { container } = montar(
+      <IndiceDeRegioes regioes={[{ ancora: "res-resumo", rotulo: "Resumo" }]} />,
+    );
+    expect(container.innerHTML).toBe("");
+  });
+
+  it("as âncoras do índice são as MESMAS que os `<h2 id>` das seções", () => {
+    // Índice apontando para âncora morta é pior que ausência de índice. As duas listas vivem em
+    // arquivos diferentes, então o gate as confronta.
+    const pagina = semComentarios(ler("src/features/canonical-analysis/ui/ResultPage.tsx"));
+    const ancoras = [...pagina.matchAll(/ancora: "([^"]+)"/g)].map((m) => m[1]);
+    expect(ancoras.length).toBeGreaterThanOrEqual(6);
+    const fontes = [
+      "src/features/canonical-analysis/ui/analytics/SecoesDaEngine.tsx",
+      "src/features/canonical-analysis/ui/analytics/SecaoDeAtencao.tsx",
+      "src/features/canonical-analysis/ui/analytics/PainelDeProcedencia.tsx",
+      "src/features/canonical-analysis/ui/analytics/LinhaDoTempo.tsx",
+      "src/features/canonical-analysis/ui/analytics/ComparacaoComAnterior.tsx",
+      "src/features/canonical-analysis/ui/analytics/BlocoAnalitico.tsx",
+    ].map(ler).join("\n");
+    for (const a of ancoras) {
+      expect(fontes, `âncora sem seção correspondente: ${a}`).toContain(`id="${a}"`);
+    }
+  });
+
+  it("a recomendação NOMEIA o campo de prioridade em vez de largar `P1` solto", () => {
+    montar(
+      <SecaoDeRecomendacoes
+        recommendations={[{ id: "r1", title: "Revisar intenções", priority: "P1" }] as never}
+      />,
+    );
+    expect(screen.getByText(pt.canonicalAnalysis.result.recommendationPriority)).toBeTruthy();
+    expect(screen.getByText("P1")).toBeTruthy();
+  });
+
+  it("o par da comparação cabe em UMA linha a partir de `sm`", () => {
+    // ~950px de comparação era quase 40% da página, para dizer catorze vezes `80 → 80`. Nada foi
+    // colapsado atrás de gatilho: os catorze pares seguem visíveis, na mesma ordem.
+    const f = semComentarios(ler("src/design/patterns/ComparisonRow.tsx"));
+    expect(f).toContain("sm:grid-cols-[minmax(0,1fr)_auto]");
+    expect(f).toContain("sm:items-baseline");
+  });
+
+  it("nenhuma UI oferece ou nomeia a rota legada de configuracoes", () => {
+    // A rota segue registrada no router — superfície legada, e apagá-la não é escopo. O que sai é
+    // qualquer caminho pela interface até ela: item de menu, rótulo de breadcrumb, link.
+    //
+    // O alvo é montado em pedaços de propósito: escrito por extenso, ESTE arquivo passaria a
+    // conter a rota e o gate se acusaria — foi o que aconteceu na primeira execução.
+    const ALVO = ["/dashboard", "settings"].join("/");
+    const arquivos: string[] = [];
+    const varrer = (dir: string) => {
+      for (const e of readdirSync(dir, { withFileTypes: true })) {
+        const p = `${dir}/${e.name}`;
+        if (e.isDirectory()) varrer(p);
+        else if (/\.tsx?$/.test(e.name) && !p.endsWith("src/app/router.tsx")) arquivos.push(p);
+      }
+    };
+    varrer(resolve(RAIZ, "src"));
+    expect(arquivos.length, "a varredura não achou arquivo nenhum").toBeGreaterThan(100);
+    const culpados = arquivos.filter((p) => semComentarios(readFileSync(p, "utf-8")).includes(ALVO));
+    expect(culpados.map((p) => p.replace(RAIZ, ""))).toEqual([]);
   });
 });
 
