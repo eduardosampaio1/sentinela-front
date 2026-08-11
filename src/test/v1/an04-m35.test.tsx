@@ -263,6 +263,18 @@ describe("M35 · 5. o catálogo alcança AN-04, e só pelo scenario que a repres
     expect(e).not.toContain('status1(b, "failed")');
   });
 
+  it("no `both-failed`, o export do CATÁLOGO é `unavailable` — não `failed`", () => {
+    // Lido da autoridade, não da fixture do teste: o gate provou que mutar o catálogo passava
+    // batido enquanto eu só olhava a massa que eu mesmo escrevi.
+    //
+    // O componente de export nunca foi acionado — engine e analytics falharam antes. Dizer que ele
+    // falhou afirmaria uma tentativa que não houve, e é a diferença entre "não produzimos o pacote"
+    // e "tentamos produzir e não conseguimos".
+    const e = entrada("both-failed");
+    expect(e).toContain('export: "unavailable"');
+    expect(e, "o export passou a ser reportado como falho sem ter sido acionado").not.toContain('export: "failed"');
+  });
+
   it("controle positivo: a leitura de entrada do catálogo funciona", () => {
     expect(entrada("needs-mapping")).toContain('status1(b, "needs_mapping")');
     expect(entrada("both-failed").length).toBeGreaterThan(80);
