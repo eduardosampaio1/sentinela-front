@@ -156,8 +156,20 @@ export function AnalysisPage() {
         );
       case "failed":
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <StateBanner view={view} />
+            {/* M35 — falha é GRANULAR enquanto o contrato permitir granularidade.
+                Antes, o ramo terminal mostrava só o banner: uma análise que falhou não dizia QUAL
+                componente falhou nem qual continuava pronto. Os scenarios 13 e 14 existem
+                exatamente para isso — `engine: failed` com `analytics: ready`, e o inverso. Apagar
+                os eixos transformaria "um componente falhou" em "tudo falhou", que é uma
+                afirmação que o produtor não fez.
+                O eixo `failed` também NÃO autoriza retry: quem autoriza é `retry_allowed`, e são
+                dimensões diferentes. */}
+            <PainelDeEixos eixos={eixos} />
+            {/* O que já estava disponível continua disponível. Uma falha em outro eixo não
+                desfaz o que o componente analítico entregou. */}
+            {analyticsPronto && analytics.data && <RegiaoDeAnalyticsAoVivo vista={analytics.data} />}
             {view.retry_allowed ? (
               // Recuperável: retry canônico (mesmo analysis_id, sem prepare/upload).
               <Button onClick={dispararRetry} disabled={retryBloqueado} aria-busy={retry.isPending}>
