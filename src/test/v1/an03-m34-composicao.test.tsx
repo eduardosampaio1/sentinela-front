@@ -6,7 +6,7 @@
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import pt from "@/i18n/pt.json";
@@ -34,7 +34,9 @@ const montar = (axes: ProgressEntry[]) => {
 const DESSINCRONIZADO: ProgressEntry[] = [
   { axis: "engine", state: "running" },
   { axis: "analytics", state: "ready" },
-  { axis: "export", state: "pending" },
+  // `export` NÃO tem `pending` no contrato — a união discriminada recusou, e estava certa. O
+  // estado equivalente publicado para esse eixo é `unavailable`.
+  { axis: "export", state: "unavailable" },
   { axis: "final_result", state: "pending" },
 ];
 
@@ -59,7 +61,10 @@ describe("M34 · 1. a faixa dos quatro eixos", () => {
     montar(DESSINCRONIZADO);
     expect(screen.getByText(pt.estadoEixo.running)).toBeTruthy();
     expect(screen.getByText(pt.estadoEixo.ready)).toBeTruthy();
-    expect(screen.getAllByText(pt.estadoEixo.pending)).toHaveLength(2);
+    // Um `pending` (final_result) e um `unavailable` (export): vocabulários diferentes por eixo,
+    // exatamente o que a M34 se recusou a normalizar.
+    expect(screen.getAllByText(pt.estadoEixo.pending)).toHaveLength(1);
+    expect(screen.getByText(pt.estadoEixo.unavailable)).toBeTruthy();
   });
 
   it("o estado é PALAVRA, não só cor — e o badge traz ícone junto", () => {
