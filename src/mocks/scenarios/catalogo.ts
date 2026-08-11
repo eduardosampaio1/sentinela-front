@@ -20,6 +20,12 @@
 
 import { http, HttpResponse } from "msw";
 import type { HttpHandler } from "msw";
+import type {
+  AnalyticsAxisState,
+  EngineAxisState,
+  ExportAxisState,
+  FinalResultAxisState,
+} from "@/lib/v1";
 import {
   HANDLE,
   LIST_PAGE_1,
@@ -55,7 +61,29 @@ const erro = (base: string, rota: string, status: number, code: Parameters<typeo
 const status1 = (base: string, s: Parameters<typeof statusView>[0]) =>
   http.get(`${base}/v1/analyses/:id`, () => json(statusView(s)));
 
-const progresso = (base: string, eixos: Record<string, string>) =>
+/**
+ * Progresso por eixo — TIPADO por eixo, desde a M34.
+ *
+ * A assinatura era `Record<string, string>`, e é exatamente o *"`estado: string` comum"* contra o
+ * qual a M20 escreveu a união discriminada: ela aceita qualquer nome de eixo com qualquer estado.
+ * O resultado foi `export: "pending"` em SETE scenarios — um estado que o eixo `export` não tem
+ * (`unavailable · preparing · ready · expired · failed · unknown`), renderizado como
+ * "Exportação — Pendente" nas capturas da AN-03.
+ *
+ * Agora cada eixo carrega o seu próprio vocabulário e o compilador recusa o impossível. O mock
+ * deixa de poder expressar aquilo que o produtor público não pode publicar — que é a única forma
+ * de o defeito não voltar. Nenhum tipo foi afrouxado para acomodar o catálogo; foi o catálogo que
+ * se ajustou ao contrato.
+ */
+const progresso = (
+  base: string,
+  eixos: {
+    engine: EngineAxisState;
+    analytics: AnalyticsAxisState;
+    export: ExportAxisState;
+    final_result: FinalResultAxisState;
+  },
+) =>
   http.get(`${base}/v1/analyses/:id/progress`, () =>
     json({
       analysis_id: "an-abc",
@@ -118,10 +146,10 @@ export const CATALOGO: readonly Scenario[] = [
       "público nem tem ponte `analysis_id ↔ ingestion_id`. É o B2.",
     handlers: (b) => [status1(b, "needs_mapping")],
   },
-  { id: "engine-running", superficies: ["AN-03"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "running", analytics: "pending", export: "pending", final_result: "pending" })] },
-  { id: "analytics-running", superficies: ["AN-03"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "ready", analytics: "running", export: "pending", final_result: "pending" })] },
-  { id: "analytics-ready-engine-running", superficies: ["AN-03"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "running", analytics: "ready", export: "pending", final_result: "pending" })] },
-  { id: "engine-ready-analytics-running", superficies: ["AN-03"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "ready", analytics: "running", export: "pending", final_result: "pending" })] },
+  { id: "engine-running", superficies: ["AN-03"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "running", analytics: "pending", export: "unavailable", final_result: "pending" })] },
+  { id: "analytics-running", superficies: ["AN-03"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "ready", analytics: "running", export: "unavailable", final_result: "pending" })] },
+  { id: "analytics-ready-engine-running", superficies: ["AN-03"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "running", analytics: "ready", export: "unavailable", final_result: "pending" })] },
+  { id: "engine-ready-analytics-running", superficies: ["AN-03"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "ready", analytics: "running", export: "unavailable", final_result: "pending" })] },
   {
     id: "analytics-partial",
     superficies: ["RES-01"],
@@ -136,9 +164,9 @@ export const CATALOGO: readonly Scenario[] = [
     // `withheld` NÃO é erro: a medida existe e foi RETIDA por regra de privacidade.
     handlers: (b) => [analytics(b, { component_status: "withheld", snapshot: null, withheld: { reason_code: "min_group_size" } })],
   },
-  { id: "engine-failed-analytics-ready", superficies: ["AN-04", "RES-01"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "failed", analytics: "ready", export: "pending", final_result: "pending" })] },
-  { id: "analytics-failed-engine-ready", superficies: ["AN-04", "RES-01"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "ready", analytics: "failed", export: "pending", final_result: "pending" })] },
-  { id: "both-failed", superficies: ["AN-04"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "failed", analytics: "failed", export: "pending", final_result: "failed" })] },
+  { id: "engine-failed-analytics-ready", superficies: ["AN-04", "RES-01"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "failed", analytics: "ready", export: "unavailable", final_result: "pending" })] },
+  { id: "analytics-failed-engine-ready", superficies: ["AN-04", "RES-01"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "ready", analytics: "failed", export: "unavailable", final_result: "pending" })] },
+  { id: "both-failed", superficies: ["AN-04"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "failed", analytics: "failed", export: "unavailable", final_result: "failed" })] },
   { id: "final-ready", superficies: ["RES-01"], estado: "disponivel", handlers: (b) => [http.get(`${b}/v1/analyses/:id/result`, () => json(RESULT_VIEW))] },
   { id: "export-preparing", superficies: ["RES-01"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "ready", analytics: "ready", export: "preparing", final_result: "ready" })] },
   { id: "export-ready", superficies: ["RES-01"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "ready", analytics: "ready", export: "ready", final_result: "ready" })] },
