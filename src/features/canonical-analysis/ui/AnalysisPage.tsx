@@ -10,10 +10,19 @@ import { workspaceKeys } from "@/lib/v1";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/shared/states/LoadingState";
-import { useAnalysisStatus, useRetryAnalysis, useSubmitAnalysis } from "../data/analysis";
+import {
+  useAnalysisAnalytics,
+  useAnalysisProgress,
+  useAnalysisStatus,
+  useRetryAnalysis,
+  useSubmitAnalysis,
+} from "../data/analysis";
 import { useIdempotencyIntent } from "../data/intent";
 import { useCanonicalScope } from "./scope";
 import { UploadStep } from "./UploadStep";
+import { PainelDeEixos } from "./PainelDeEixos";
+import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
+import { analyticsUtilizavel, lerEixos } from "../result/eixos";
 import { ProblemFeedback, StateBanner } from "./notices";
 
 export function AnalysisPage() {
@@ -23,6 +32,16 @@ export function AnalysisPage() {
   const scope = useCanonicalScope();
   const queryClient = useQueryClient();
   const status = useAnalysisStatus(scope, analysisId);
+  // M34 — AN-03 é a primeira superfície a consumir `/progress`. O progresso é lido SEMPRE que há
+  // escopo: os eixos existem independentemente do estado da análise, e condicioná-los ao status
+  // faria a tela decidir quando o backend tem algo a dizer.
+  const progresso = useAnalysisProgress(scope, analysisId);
+  const eixos = lerEixos(progresso.data);
+  // D13: `analytics` utilizável (`ready|partial`) aparece MESMO com `final_result` pendente. A
+  // consulta só é feita quando o eixo autoriza — não se busca projeção de um componente que o
+  // próprio produtor diz não ter entregue.
+  const analyticsPronto = analyticsUtilizavel(eixos);
+  const analytics = useAnalysisAnalytics(scope, analysisId, analyticsPronto);
   const submit = useSubmitAnalysis();
   const retry = useRetryAnalysis();
   // Idempotency-Key por INTENÇÃO também no submit/retry: reusada em retry de falha transitória,
@@ -58,6 +77,24 @@ export function AnalysisPage() {
       return <LoadingState message={t("canonicalAnalysis.state.preparing.title")} size="md" />;
     }
     if (status.isError) {
+      // M34 — a espera numa parte do lifecycle NÃO apaga o que outra parte já disse.
+      //
+      // `capacity_wait` (scenario 29) chega como 503 na leitura de STATUS. Antes, isso derrubava a
+      // tela inteira: os quatro eixos sumiam mesmo quando `/progress` havia respondido. Mas não
+      // saber em que estado a análise está não desfaz o que o produtor publicou sobre cada
+      // componente — e apagar o disponível por causa do indisponível é a definição de esconder
+      // dado pronto atrás de um estado global.
+      //
+      // O aviso de espera vem primeiro, porque é ele que explica por que o resto está incompleto.
+      const algumEixoPublicado = eixos.some((e) => e.entrada !== null);
+      if (algumEixoPublicado) {
+        return (
+          <div className="space-y-6">
+            <ProblemFeedback error={status.error} onRetry={() => void status.refetch()} retryDisabled={status.isFetching} />
+            <PainelDeEixos eixos={eixos} />
+          </div>
+        );
+      }
       // Erro da LEITURA de status (deep link inválido, 401, indisponível): apresentação pelo código.
       // Leitura PODE re-tentar (limitado) por ação do usuário — item 22 (nunca auto p/ mutation).
       return <ProblemFeedback error={status.error} onRetry={() => void status.refetch()} retryDisabled={status.isFetching} />;
@@ -143,8 +180,22 @@ export function AnalysisPage() {
           </div>
         );
       default:
-        // queued / running / recovering
-        return <StateBanner view={view} />;
+        // queued / running / recovering — o território de AN-03.
+        return (
+          <div className="space-y-6">
+            {/* O status da ANÁLISE fica ao redor dos eixos, não dentro de um deles. `recovering` é
+                estado da análise (§B: "`recovering` e `needs_mapping` não são estados de eixo"), e
+                empurrá-lo para dentro faria "recuperando" parecer um quinto componente. O
+                `StateBanner` já o distingue por palavra e forma, nunca só por cor. */}
+            <StateBanner view={view} />
+            <PainelDeEixos eixos={eixos} />
+            {/* Disponibilidade progressiva: o que já está pronto NÃO espera o resultado final.
+                Reusa o portador canônico da M27 — nenhuma segunda interpretação de
+                `ready`/`partial`/`withheld`. E isto não é "resultado parcial": `partial` pertence
+                ao componente analítico, e `final_result` não tem meio-termo no contrato. */}
+            {analyticsPronto && analytics.data && <RegiaoDeAnalyticsAoVivo vista={analytics.data} />}
+          </div>
+        );
     }
   }
 

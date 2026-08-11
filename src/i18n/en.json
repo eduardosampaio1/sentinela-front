@@ -300,6 +300,9 @@
       "capacity_wait": "The system is at capacity right now. It will proceed automatically.",
       "temporarily_unavailable": "The service is temporarily unavailable. Please try again in a moment.",
       "non_retryable_failure": "The request couldn't be completed. Retrying won't help — contact support if it persists."
+    },
+    "progress": {
+      "title": "What is happening"
     }
   },
   "common": {
@@ -792,5 +795,23 @@
     "needs_mapping": "Action required",
     "completed": "Completed",
     "failed": "Failed"
+  },
+  "eixo": {
+    "engine": "Processing",
+    "analytics": "Analytics",
+    "export": "Export",
+    "final_result": "Final result"
+  },
+  "estadoEixo": {
+    "pending": "Pending",
+    "running": "Running",
+    "ready": "Ready",
+    "partial": "Partial",
+    "withheld": "Withheld",
+    "failed": "Failed",
+    "unknown": "Unknown",
+    "unavailable": "Unavailable",
+    "preparing": "Preparing",
+    "expired": "Expired"
   }
 }

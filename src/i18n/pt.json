@@ -300,6 +300,9 @@
       "capacity_wait": "O sistema está sem capacidade agora. Prosseguirá automaticamente.",
       "temporarily_unavailable": "O serviço está temporariamente indisponível. Tente de novo em instantes.",
       "non_retryable_failure": "A requisição não pôde ser concluída. Repetir não ajuda — contate o suporte se persistir."
+    },
+    "progress": {
+      "title": "O que está acontecendo"
     }
   },
   "common": {
@@ -792,5 +795,23 @@
     "needs_mapping": "Ação necessária",
     "completed": "Concluída",
     "failed": "Falha"
+  },
+  "eixo": {
+    "engine": "Processamento",
+    "analytics": "Analytics",
+    "export": "Exportação",
+    "final_result": "Resultado final"
+  },
+  "estadoEixo": {
+    "pending": "Pendente",
+    "running": "Em execução",
+    "ready": "Pronto",
+    "partial": "Parcial",
+    "withheld": "Restrito",
+    "failed": "Falha",
+    "unknown": "Desconhecido",
+    "unavailable": "Indisponível",
+    "preparing": "Em preparação",
+    "expired": "Expirado"
   }
 }
