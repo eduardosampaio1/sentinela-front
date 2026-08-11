@@ -144,3 +144,57 @@ describe("M34 · 3. sem agregação, sem percentual, sem semáforo", () => {
     expect(FONTE().length).toBeGreaterThan(800);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 4. O vocabulário público dos eixos, alinhado com a autoridade
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("M34 · 4. eixo.* e estadoEixo.* como fonte única", () => {
+  const ler = (rel: string) => readFileSync(resolve(RAIZ, rel), "utf-8");
+  const pt = JSON.parse(ler("src/i18n/pt.json"));
+  const en = JSON.parse(ler("src/i18n/en.json"));
+
+  it("os QUATRO eixos têm rótulo nos dois idiomas, com as chaves do contrato", () => {
+    for (const axis of EIXOS_PUBLICADOS) {
+      expect(pt.eixo[axis], `pt sem rótulo para ${axis}`).toBeTruthy();
+      expect(en.eixo[axis], `en sem rótulo para ${axis}`).toBeTruthy();
+    }
+  });
+
+  it("o identificador técnico nunca vira copy", () => {
+    // A UI mostra "Processamento", não a chave. `engine_version` é `nunca_publico`; a chave
+    // `engine` é publicada pelo contrato, mas continua sendo identificador, não texto de tela.
+    expect(pt.eixo.engine).toBe("Processamento");
+    expect(en.eixo.engine).toBe("Processing");
+    for (const [k, v] of Object.entries({ ...pt.eixo, ...pt.estadoEixo })) {
+      expect(String(v).toLowerCase(), `copy virou identificador em ${k}`).not.toContain("engine");
+      expect(String(v).toLowerCase()).not.toContain("_");
+    }
+  });
+
+  it("`withheld` é `restrito` — e o Blueprint §15 diz o mesmo", () => {
+    // A divergência existiu: o §15 congelava "retido" e a implementação usava "Restrito". O
+    // `/ux-copy` da M34 resolveu a favor de "restrito" e o §15 foi alinhado na mesma missão —
+    // este caso existe para que produto e autoridade não voltem a discordar em silêncio.
+    expect(pt.estadoEixo.withheld.toLowerCase()).toBe("restrito");
+    expect(en.estadoEixo.withheld.toLowerCase()).toBe("withheld");
+    const bp = ler("docs/EXPERIENCE-BLUEPRINT-V1.md");
+    expect(bp).toContain("| `withheld` | restrito | withheld |");
+    expect(bp).not.toContain("| `withheld` | retido |");
+  });
+
+  it("`withheld` não colide com `recovering` na mesma tela", () => {
+    // O argumento que decidiu: AN-03 é a primeira superfície onde o status da análise e o estado
+    // do eixo aparecem juntos. "Retomando" e "Retido" partilham radical e significam o oposto.
+    const recovering = pt.estadoPublico.recovering.toLowerCase();
+    expect(recovering).toBe("retomando");
+    expect(pt.estadoEixo.withheld.toLowerCase().slice(0, 3)).not.toBe(recovering.slice(0, 3));
+  });
+
+  it("`partial` nunca vira `resultado parcial`", () => {
+    expect(pt.estadoEixo.partial.toLowerCase()).toBe("parcial");
+    for (const v of Object.values(pt.estadoEixo) as string[]) {
+      expect(v.toLowerCase()).not.toContain("resultado parcial");
+    }
+  });
+});

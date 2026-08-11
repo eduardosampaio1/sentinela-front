@@ -683,7 +683,7 @@ actor · timestamp · motivo/ação · resultado` (**D30**), nunca o conteúdo d
 | conceito | PT-BR | EN | **nunca** |
 |---|---|---|---|
 | `partial` | parcial | partial | "incompleto", "com erro" |
-| `withheld` | retido | withheld | "vazio", "zero" |
+| `withheld` | restrito | withheld | "vazio", "zero", "retido" |
 | `needs_mapping` | ação necessária | action required | "erro", "pendente" |
 | `recovering` | retomando | recovering | "falhou" |
 | `failed` | falha | failed | "erro temporário" |
@@ -691,6 +691,13 @@ actor · timestamp · motivo/ação · resultado` (**D30**), nunca o conteúdo d
 | `expired` | expirado | expired | "apagado" |
 | delta | delta | delta | "drift" |
 | drift | drift | drift | "delta", "variação" |
+
+> **`withheld` = "restrito", corrigido pela M34 (2026-08-10).** A tabela dizia "retido", e o
+> `/ux-copy` da AN-03 mostrou por que não serve: `recovering` é **"Retomando"**, e AN-03 é a
+> primeira superfície onde os dois aparecem juntos — o banner da análise diria "Retomando"
+> enquanto o eixo diria "Retido", duas palavras do mesmo radical significando coisas opostas.
+> "Retido" também sugere atraso, colidindo com `pending`. "Restrito" diz que há uma regra
+> impedindo mostrar, que é o que `withheld` é. EN permanece `withheld`.
 
 **CTAs canonizados:** "Nova análise" / *New analysis* · "Enviar conversas" / *Upload conversations*
 · "Abrir resultado" / *Open result* · "Tentar novamente" / *Try again* · "Baixar" / *Download* ·
