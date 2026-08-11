@@ -27,7 +27,8 @@
         "meaning": "There is no way to tell whether the dataset arrived: the response never came back. It may have been received.",
         "check": "Check the analysis state"
       },
-      "journeyReserved": "Analysis reserved. It is waiting for its dataset."
+      "journeyReserved": "Analysis reserved. It is waiting for its dataset.",
+      "topBar": "Analysis · add dataset"
     },
     "state": {
       "preparing": {

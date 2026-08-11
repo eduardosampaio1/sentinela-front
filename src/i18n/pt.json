@@ -27,7 +27,8 @@
         "meaning": "Não é possível saber se a base chegou: a resposta nunca voltou. Ela pode ter sido recebida.",
         "check": "Verificar o estado da análise"
       },
-      "journeyReserved": "Análise reservada. Ela está esperando a base."
+      "journeyReserved": "Análise reservada. Ela está esperando a base.",
+      "topBar": "Análise · adicionar base"
     },
     "state": {
       "preparing": {

@@ -149,7 +149,24 @@ export function AnalysisPage() {
   }
 
   return (
-    <AppShell topBarTitle={t("canonicalAnalysis.entry.title")}>
+    // M33 — a barra superior identifica a superfície SOMENTE em `preparing`.
+    //
+    // Medido pelo trunk test: com a análise já reservada, a barra dizia "Nova análise" enquanto o
+    // título da seção dizia "Adicione sua base" — a mesma tela respondendo de duas formas a "onde
+    // estou?". Em `preparing` ela passa a nomear o lugar (uma análise que existe) e a tarefa; a
+    // identidade `analysis_id` continua no corpo, onde já estava.
+    //
+    // A ramificação é a MENOR possível de propósito: esta página também atende `receiving` e os
+    // estados de AN-03/AN-04, que são de M34/M35. Nenhum outro estado muda, não há tabela de
+    // títulos por estado esperando uso futuro, e há teste varrendo `PUBLIC_STATES` para provar que
+    // os demais seguem exatamente como antes.
+    <AppShell
+      topBarTitle={
+        status.data?.status === "preparing"
+          ? t("canonicalAnalysis.upload.topBar")
+          : t("canonicalAnalysis.entry.title")
+      }
+    >
       <PageFrame maxWidth="md">
         <div className="space-y-6" data-testid="canonical-analysis-page">
           {corpo()}
