@@ -166,7 +166,25 @@ export const CATALOGO: readonly Scenario[] = [
   },
   { id: "engine-failed-analytics-ready", superficies: ["AN-04", "RES-01"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "failed", analytics: "ready", export: "unavailable", final_result: "pending" })] },
   { id: "analytics-failed-engine-ready", superficies: ["AN-04", "RES-01"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "ready", analytics: "failed", export: "unavailable", final_result: "pending" })] },
-  { id: "both-failed", superficies: ["AN-04"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "failed", analytics: "failed", export: "unavailable", final_result: "failed" })] },
+  // M35 — o único scenario que publica o STATUS da análise além dos eixos.
+  //
+  // Ele já dizia `final_result: "failed"`, mas deixava o status global no default (`running`): o
+  // progresso afirmava que o resultado final falhou enquanto o status afirmava execução em curso.
+  // A superfície terminal (AN-04) ficava inalcançável por qualquer scenario do catálogo.
+  //
+  // A correção é de COERÊNCIA do mock com o que ele mesmo declara — não de produto. Os scenarios
+  // 13 e 14 continuam `running` de propósito: um componente falho com `final_result: pending` não
+  // autoriza terminalizar a análise inteira, e forçá-los a `failed` só para caírem em AN-04 seria
+  // inventar terminalidade que nenhuma autoridade publica.
+  {
+    id: "both-failed",
+    superficies: ["AN-04"],
+    estado: "disponivel",
+    handlers: (b) => [
+      progresso(b, { engine: "failed", analytics: "failed", export: "unavailable", final_result: "failed" }),
+      status1(b, "failed"),
+    ],
+  },
   { id: "final-ready", superficies: ["RES-01"], estado: "disponivel", handlers: (b) => [http.get(`${b}/v1/analyses/:id/result`, () => json(RESULT_VIEW))] },
   { id: "export-preparing", superficies: ["RES-01"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "ready", analytics: "ready", export: "preparing", final_result: "ready" })] },
   { id: "export-ready", superficies: ["RES-01"], estado: "disponivel", handlers: (b) => [progresso(b, { engine: "ready", analytics: "ready", export: "ready", final_result: "ready" })] },

@@ -222,3 +222,49 @@ describe("M35 · 4. `Tentar novamente`, a forma congelada", () => {
     expect(describeProblem("non_retryable_failure").action).toBe("none");
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 5. Alcançabilidade da superfície terminal
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("M35 · 5. o catálogo alcança AN-04, e só pelo scenario que a representa", () => {
+  const CATALOGO = () => ler("src/mocks/scenarios/catalogo.ts");
+  /** O bloco de um scenario, do seu `id:` até o próximo. */
+  const entrada = (nome: string) => {
+    const c = CATALOGO();
+    const i = c.indexOf(`id: "${nome}"`);
+    expect(i, `scenario ausente: ${nome}`).toBeGreaterThan(-1);
+    const j = c.indexOf('id: "', i + 10);
+    return c.slice(i, j === -1 ? c.length : j);
+  };
+
+  it("`both-failed` publica o próprio status — sem ele, AN-04 era inalcançável", () => {
+    // Uma única entrada do catálogo definia status (`needs-mapping`); todas as outras herdavam o
+    // default `running`. O 15 dizia `final_result: "failed"` e o status dizia execução em curso:
+    // o progresso e o status afirmavam coisas contraditórias sobre a mesma análise.
+    const e = entrada("both-failed");
+    expect(e).toContain('final_result: "failed"');
+    expect(e, "o scenario terminal voltou a herdar o status default").toContain('status1(b, "failed")');
+  });
+
+  it("13 e 14 CONTINUAM em execução — falha de componente não terminaliza a análise", () => {
+    // Trava explícita: forçá-los a `failed` só para caírem em AN-04 inventaria terminalidade que
+    // nenhuma autoridade publica. Eles provam granularidade, não o ramo terminal.
+    for (const nome of ["engine-failed-analytics-ready", "analytics-failed-engine-ready"]) {
+      const e = entrada(nome);
+      expect(e).toContain('final_result: "pending"');
+      expect(e, `${nome} foi terminalizado sem autoridade`).not.toContain('status1(b, "failed")');
+    }
+  });
+
+  it("`capacity-wait` continua espera, não terminalidade", () => {
+    const e = entrada("capacity-wait");
+    expect(e).toContain("capacity_wait");
+    expect(e).not.toContain('status1(b, "failed")');
+  });
+
+  it("controle positivo: a leitura de entrada do catálogo funciona", () => {
+    expect(entrada("needs-mapping")).toContain('status1(b, "needs_mapping")');
+    expect(entrada("both-failed").length).toBeGreaterThan(80);
+  });
+});
