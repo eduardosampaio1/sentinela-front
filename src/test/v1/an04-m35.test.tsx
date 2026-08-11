@@ -173,3 +173,52 @@ describe("M35 · 3. sem toast, sem cor sozinha, sem AN-02", () => {
     expect(ramo.length).toBeGreaterThan(400);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 4. O CTA de retomada é o do §15 — achado do /ux-copy
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("M35 · 4. `Tentar novamente`, a forma congelada", () => {
+  // O §15 canoniza *"Tentar novamente" / Try again*, e o escopo literal da M35 usa essa mesma
+  // palavra: *"`non_retryable_failure` **sem** 'tentar novamente'"*. A implementação dizia
+  // "Tentar de novo" em TRÊS chaves de ação e em duas frases orientativas — divergência silenciosa
+  // contra autoridade congelada, sem decisão de owner que a sustentasse. Diferente do `withheld`,
+  // aqui não havia o que julgar: foi a implementação que voltou para a autoridade.
+  const en = JSON.parse(ler("src/i18n/en.json"));
+  const achatar = (o: unknown, pre = ""): [string, string][] =>
+    typeof o === "string"
+      ? [[pre, o]]
+      : Object.entries(o as Record<string, unknown>).flatMap(([k, v]) =>
+          achatar(v, pre ? `${pre}.${k}` : k),
+        );
+
+  it("os TRÊS rótulos de ação usam a forma canônica, nos dois idiomas", () => {
+    const a = pt.canonicalAnalysis as unknown as Record<string, Record<string, string>>;
+    for (const grupo of ["action", "upload", "list"]) {
+      expect(a[grupo].retry, `${grupo}.retry fora da forma congelada`).toBe("Tentar novamente");
+      expect((en.canonicalAnalysis as Record<string, Record<string, string>>)[grupo].retry).toBe("Try again");
+    }
+  });
+
+  it("a forma recusada não sobrevive em NENHUMA string dos dois locales", () => {
+    // Varredura da árvore inteira de i18n, não só das chaves que eu conhecia: a busca inicial
+    // achou três consumidores e a varredura revelou cinco strings.
+    for (const [nome, arvore] of [["pt", pt], ["en", en]] as const) {
+      const recusadas = achatar(arvore).filter(([, v]) => v.toLowerCase().includes("de novo"));
+      expect(recusadas.map(([k]) => `${nome}.${k}`)).toEqual([]);
+    }
+  });
+
+  it("a frase orientativa é imperativa, e o rótulo é infinitivo — não são dois conceitos", () => {
+    const p = pt.canonicalAnalysis.problem as Record<string, string>;
+    expect(p.temporarily_unavailable).toContain("Tente novamente em instantes");
+    expect(pt.canonicalAnalysis.action.retry).toBe("Tentar novamente");
+  });
+
+  it("o CTA canônico NÃO aparece onde a semântica proíbe retomada", () => {
+    const p = pt.canonicalAnalysis.problem as Record<string, string>;
+    expect(p.non_retryable_failure.toLowerCase()).not.toContain("tentar novamente");
+    expect(p.non_retryable_failure).toContain("Repetir não ajuda");
+    expect(describeProblem("non_retryable_failure").action).toBe("none");
+  });
+});

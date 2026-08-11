@@ -19,7 +19,7 @@
       "noFile": "Nenhum arquivo selecionado",
       "invalid": "Este tipo de arquivo não é aceito.",
       "sending": "Enviando sua base…",
-      "retry": "Tentar de novo",
+      "retry": "Tentar novamente",
       "submit": "Enviar para análise",
       "selectedFile": "Arquivo selecionado",
       "transport": {
@@ -67,7 +67,7 @@
     "action": {
       "viewResult": "Ver resultado",
       "checkAgain": "Verificar novamente",
-      "retry": "Tentar de novo",
+      "retry": "Tentar novamente",
       "back": "Voltar",
       "newAnalysis": "Nova análise",
       "resultPreparing": "A análise foi concluída. O resultado ainda está sendo preparado."
@@ -80,7 +80,7 @@
       "errorRecoverable": "Não foi possível carregar suas análises agora. Tente novamente.",
       "errorGeneric": "Não conseguimos carregar suas análises.",
       "sessionExpired": "Sua sessão não é mais válida. Entre novamente.",
-      "retry": "Tentar de novo",
+      "retry": "Tentar novamente",
       "newAnalysis": "Nova análise",
       "previous": "Anterior",
       "next": "Próxima",
@@ -293,12 +293,12 @@
     "problem": {
       "authentication_required": "Sua sessão não é mais válida. Entre novamente.",
       "forbidden_or_not_found": "Esta análise não existe ou não está disponível no seu workspace.",
-      "invalid_input": "A requisição não pôde ser processada como enviada. Revise e tente de novo.",
+      "invalid_input": "A requisição não pôde ser processada como enviada. Revise e tente novamente.",
       "idempotency_conflict": "Esta requisição já foi enviada. Usando a análise existente.",
       "analysis_not_ready": "A análise ainda não está pronta.",
       "result_not_available": "Nenhum resultado disponível para esta análise.",
       "capacity_wait": "O sistema está sem capacidade agora. Prosseguirá automaticamente.",
-      "temporarily_unavailable": "O serviço está temporariamente indisponível. Tente de novo em instantes.",
+      "temporarily_unavailable": "O serviço está temporariamente indisponível. Tente novamente em instantes.",
       "non_retryable_failure": "A requisição não pôde ser concluída. Repetir não ajuda — contate o suporte se persistir."
     },
     "progress": {
