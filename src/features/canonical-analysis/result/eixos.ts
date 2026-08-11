@@ -23,6 +23,7 @@
 // acontece com a análise, e os eixos dizem o que já está disponível. Confundi-los faria
 // "recuperando" parecer um quinto componente.
 
+import { PROGRESS_AXES } from "@/lib/v1";
 import type {
   AnalysisProgressView,
   AnalyticsAxisState,
@@ -31,16 +32,14 @@ import type {
 } from "@/lib/v1";
 
 /**
- * A ordem publicada. É a mesma de `ProgressAxis` no contrato, e não uma preferência de leitura:
- * reordenar por "o que parece mais importante" seria a tela decidindo prioridade entre
- * componentes que o produtor lista lado a lado.
+ * A ordem publicada vem do CONTRATO, reexportada aqui para quem consome os eixos.
+ *
+ * Ela nasceu neste arquivo e o cadeado da jornada a recusou: `engine` é vocabulário interno e a
+ * regra proíbe a palavra em `features/canonical-analysis/**`. A regra está certa — o cliente nunca
+ * vê "Engine" — e o identificador do eixo é conhecimento de contrato, então ele mora em
+ * `lib/v1`, junto de `ProgressAxis`. Nada foi afrouxado para acomodar esta missão.
  */
-export const EIXOS_PUBLICADOS: readonly ProgressAxis[] = [
-  "engine",
-  "analytics",
-  "export",
-  "final_result",
-] as const;
+export const EIXOS_PUBLICADOS = PROGRESS_AXES;
 
 export interface EixoLido {
   axis: ProgressAxis;

@@ -212,6 +212,27 @@ export type FinalResultAxisState = "pending" | "ready" | "failed";
 export type ProgressAxis = "engine" | "analytics" | "export" | "final_result";
 
 /**
+ * A ORDEM publicada dos eixos, em runtime.
+ *
+ * Mora aqui, e não na feature, por dois motivos que coincidem. O primeiro é de lugar: a ordem em
+ * que `progress_axes` lista os componentes é conhecimento de CONTRATO, não preferência de leitura
+ * de uma tela — reordenar por "o que parece mais importante" seria a UI decidindo prioridade entre
+ * componentes que o produtor lista lado a lado.
+ *
+ * O segundo é o cadeado da jornada canônica: ele proíbe a palavra `engine` em
+ * `features/canonical-analysis/**` porque Engine é vocabulário interno e o cliente nunca a vê. A
+ * proibição está certa para o que a tela MOSTRA; o identificador do eixo, porém, é publicado pelo
+ * contrato, e o lugar dele é a camada que fala contrato. A M34 tentou declarar esta lista dentro
+ * da feature e o cadeado reprovou — corretamente.
+ */
+export const PROGRESS_AXES: readonly ProgressAxis[] = [
+  "engine",
+  "analytics",
+  "export",
+  "final_result",
+] as const;
+
+/**
  * Uma entrada de progresso. União DISCRIMINADA pelo eixo: passar um estado de `export` onde se
  * espera `engine` deixa de compilar.
  */
