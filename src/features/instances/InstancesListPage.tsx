@@ -45,7 +45,7 @@ export default function InstancesListPage() {
 
         <div className="mt-6">
           {lista.isPending ? (
-            <LoadingState message={t("instances.loading")} size="md" />
+            <LoadingState rotulo={t("instances.loading")} />
           ) : lista.isError ? (
             <ErrorState
               titulo={t("instances.listTitle")}

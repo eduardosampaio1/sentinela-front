@@ -16,7 +16,15 @@ function item(
   status: AnalysisListItem["status"],
   result_available = true,
 ): AnalysisListItem {
-  return { analysis_id, status, result_available, record_count: 10, created_at: null };
+  // BD02: `instance_id` é chave obrigatória do read model; `null` = análise sem Instance.
+  return {
+    analysis_id,
+    status,
+    result_available,
+    record_count: 10,
+    created_at: null,
+    instance_id: null,
+  };
 }
 
 /** O mock carrega a assinatura REAL de `V1Client["list"]`.

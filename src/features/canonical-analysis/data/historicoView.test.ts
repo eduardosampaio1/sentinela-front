@@ -16,6 +16,9 @@ const BASE: AnalysisListItem = {
   record_count: 120,
   result_available: true,
   created_at: "2026-08-01T10:00:00Z",
+  // BD02: a chave EXISTE sempre. `null` = análise sem Instance — que é o caso de toda a massa
+  // legada. Omitir obrigaria o consumidor a distinguir "não veio" de "não tem".
+  instance_id: null,
 };
 
 describe("linha de histórico canônica", () => {

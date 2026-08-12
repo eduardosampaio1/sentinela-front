@@ -56,7 +56,7 @@ export default function InstancePage() {
     return (
       <AppShell>
         <PageFrame>
-          <LoadingState message={t("instances.loading")} size="md" />
+          <LoadingState rotulo={t("instances.loading")} />
         </PageFrame>
       </AppShell>
     );
@@ -127,7 +127,7 @@ export default function InstancePage() {
           </h2>
 
           {historico.isPending ? (
-            <LoadingState message={t("instances.loadingHistory")} size="md" />
+            <LoadingState rotulo={t("instances.loadingHistory")} />
           ) : historico.isError ? (
             <ErrorState
               titulo={t("instances.historyTitle")}

@@ -285,7 +285,20 @@ function lerNumerico(bruto: unknown): ResumoNumerico | null {
     method_definition_digest: textoOuNulo(bruto.method_definition_digest),
     method_parameters: lerParametros(bruto.method_parameters),
   };
-  if (Object.values(proc).some((v) => v === null)) return null;
+  // O guarda abaixo é por CAMPO, e não `Object.values(proc).some(v => v === null)`, porque
+  // aquela forma prova em runtime e não estreita nada para o compilador — foi por isso que
+  // existia um `as Required<typeof proc>` logo adiante. `Required` remove OPCIONALIDADE, não
+  // NULABILIDADE: o cast era inerte e o erro de tipo sobreviveu a ele. Desestruturar e checar
+  // dá o mesmo comportamento com estreitamento que o compilador verifica, sem cast nenhum.
+  const { method_id, method_version, method_definition_digest, method_parameters } = proc;
+  if (
+    method_id === null ||
+    method_version === null ||
+    method_definition_digest === null ||
+    method_parameters === null
+  ) {
+    return null;
+  }
 
   return {
     measure_id: measureId,
@@ -300,7 +313,10 @@ function lerNumerico(bruto: unknown): ResumoNumerico | null {
     total: numeroOuNulo(bruto.total),
     mean: numeroOuNulo(bruto.mean),
     suppression_applied: booleano(bruto.suppression_applied),
-    ...(proc as Required<typeof proc>),
+    method_id,
+    method_version,
+    method_definition_digest,
+    method_parameters,
   };
 }
 
@@ -358,7 +374,33 @@ function lerDistribuicao(bruto: unknown): ResumoDeDistribuicao | null {
     max_tracked_categories: contagem(bruto.max_tracked_categories),
     method_parameters: lerParametros(bruto.method_parameters),
   };
-  if (Object.values(proc).some((v) => v === null)) return null;
+  // O guarda abaixo é por CAMPO, e não `Object.values(proc).some(v => v === null)`, porque
+  // aquela forma prova em runtime e não estreita nada para o compilador — foi por isso que
+  // existia um `as Required<typeof proc>` logo adiante. `Required` remove OPCIONALIDADE, não
+  // NULABILIDADE: o cast era inerte e o erro de tipo sobreviveu a ele. Desestruturar e checar
+  // dá o mesmo comportamento com estreitamento que o compilador verifica, sem cast nenhum.
+  const {
+    method_id,
+    method_version,
+    method_definition_digest,
+    privacy_policy_version,
+    min_group_size,
+    top_k,
+    max_tracked_categories,
+    method_parameters,
+  } = proc;
+  if (
+    method_id === null ||
+    method_version === null ||
+    method_definition_digest === null ||
+    privacy_policy_version === null ||
+    min_group_size === null ||
+    top_k === null ||
+    max_tracked_categories === null ||
+    method_parameters === null
+  ) {
+    return null;
+  }
 
   return {
     measure_id: measureId,
@@ -372,7 +414,14 @@ function lerDistribuicao(bruto: unknown): ResumoDeDistribuicao | null {
     other_count: outros,
     suppression_applied: booleano(bruto.suppression_applied),
     high_cardinality_suppressed: booleano(bruto.high_cardinality_suppressed),
-    ...(proc as Required<typeof proc>),
+    method_id,
+    method_version,
+    method_definition_digest,
+    privacy_policy_version,
+    min_group_size,
+    top_k,
+    max_tracked_categories,
+    method_parameters,
   };
 }
 
@@ -441,7 +490,31 @@ function lerConcentracao(bruto: unknown): ResumoDeConcentracao | null {
     max_tracked_values: contagem(bruto.max_tracked_values),
     method_parameters: lerParametros(bruto.method_parameters),
   };
-  if (Object.values(proc).some((v) => v === null)) return null;
+  // O guarda abaixo é por CAMPO, e não `Object.values(proc).some(v => v === null)`, porque
+  // aquela forma prova em runtime e não estreita nada para o compilador — foi por isso que
+  // existia um `as Required<typeof proc>` logo adiante. `Required` remove OPCIONALIDADE, não
+  // NULABILIDADE: o cast era inerte e o erro de tipo sobreviveu a ele. Desestruturar e checar
+  // dá o mesmo comportamento com estreitamento que o compilador verifica, sem cast nenhum.
+  const {
+    method_id,
+    method_version,
+    method_definition_digest,
+    privacy_policy_version,
+    min_group_size,
+    max_tracked_values,
+    method_parameters,
+  } = proc;
+  if (
+    method_id === null ||
+    method_version === null ||
+    method_definition_digest === null ||
+    privacy_policy_version === null ||
+    min_group_size === null ||
+    max_tracked_values === null ||
+    method_parameters === null
+  ) {
+    return null;
+  }
 
   return {
     measure_id: measureId,
@@ -457,7 +530,13 @@ function lerConcentracao(bruto: unknown): ResumoDeConcentracao | null {
     suppression_applied: booleano(bruto.suppression_applied),
     high_cardinality_suppressed: booleano(bruto.high_cardinality_suppressed),
     statistics: estatisticas,
-    ...(proc as Required<typeof proc>),
+    method_id,
+    method_version,
+    method_definition_digest,
+    privacy_policy_version,
+    min_group_size,
+    max_tracked_values,
+    method_parameters,
   };
 }
 
@@ -514,7 +593,33 @@ function lerSerie(bruto: unknown): SerieTemporal | null {
     max_time_buckets: contagem(bruto.max_time_buckets),
     method_parameters: lerParametros(bruto.method_parameters),
   };
-  if (Object.values(proc).some((v) => v === null)) return null;
+  // O guarda abaixo é por CAMPO, e não `Object.values(proc).some(v => v === null)`, porque
+  // aquela forma prova em runtime e não estreita nada para o compilador — foi por isso que
+  // existia um `as Required<typeof proc>` logo adiante. `Required` remove OPCIONALIDADE, não
+  // NULABILIDADE: o cast era inerte e o erro de tipo sobreviveu a ele. Desestruturar e checar
+  // dá o mesmo comportamento com estreitamento que o compilador verifica, sem cast nenhum.
+  const {
+    method_id,
+    method_version,
+    method_definition_digest,
+    privacy_policy_version,
+    series_contract_version,
+    min_group_size,
+    max_time_buckets,
+    method_parameters,
+  } = proc;
+  if (
+    method_id === null ||
+    method_version === null ||
+    method_definition_digest === null ||
+    privacy_policy_version === null ||
+    series_contract_version === null ||
+    min_group_size === null ||
+    max_time_buckets === null ||
+    method_parameters === null
+  ) {
+    return null;
+  }
 
   return {
     dimension_id: dimensionId,
@@ -527,7 +632,14 @@ function lerSerie(bruto: unknown): SerieTemporal | null {
     windows: janelas,
     temporal_series_suppressed: booleano(bruto.temporal_series_suppressed),
     suppression_applied: booleano(bruto.suppression_applied),
-    ...(proc as Required<typeof proc>),
+    method_id,
+    method_version,
+    method_definition_digest,
+    privacy_policy_version,
+    series_contract_version,
+    min_group_size,
+    max_time_buckets,
+    method_parameters,
   };
 }
 
