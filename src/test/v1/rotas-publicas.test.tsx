@@ -167,8 +167,29 @@ describe("M24 · 7. deep link não depende de estado transitório", () => {
   });
 });
 
-describe("M24 · rotas de Instância continuam bloqueadas", () => {
-  it("nenhuma rota `/instances` foi registrada — o delta segue não autorizado", () => {
-    expect(semComentarios(router)).not.toContain('path: "/instances');
+describe("M36 · as rotas de Instância existem, e são exatamente duas", () => {
+  // A M24 congelou aqui "nenhuma rota `/instances`", e estava certa: o delta de Instância era
+  // NÃO AUTORIZADO, e uma rota registrada teria sido superfície nascendo sem backend.
+  //
+  // A BD02 publicou a capacidade e a M36 a entrega. O caso não foi apagado — ele inverteu de
+  // direção e continua sendo catraca: agora exige as DUAS que a missão autoriza, e recusa uma
+  // terceira. Apagá-lo devolveria o problema que a M24 existia para impedir, só que em silêncio.
+  const rotasDeInstancia = () =>
+    [...semComentarios(router).matchAll(/path: "(\/instances[^"]*)"/g)].map((m) => m[1]);
+
+  it("`/instances` e `/instances/:instanceId`, e nada além", () => {
+    expect(rotasDeInstancia().sort()).toEqual(["/instances", "/instances/:instanceId"]);
+  });
+
+  it("a identidade está no PATH — é dela que o deep link reconstrói o contexto", () => {
+    expect(rotasDeInstancia()).toContain("/instances/:instanceId");
+  });
+
+  it("nenhuma rota de Instância expõe subrecurso que o contrato não tem", () => {
+    // Sem `/instances/:id/timeline` nem `/instances/:id/analyses`: a BD02 recusou os dois no
+    // backend, e uma rota visual para eles prometeria tela sem produtor.
+    for (const r of rotasDeInstancia()) {
+      expect(r.split("/").length, `subrecurso inesperado: ${r}`).toBeLessThanOrEqual(3);
+    }
   });
 });

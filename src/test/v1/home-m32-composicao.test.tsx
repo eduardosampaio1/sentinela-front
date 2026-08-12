@@ -131,12 +131,49 @@ describe("M32 · 3. andamento, resultados e Instâncias", () => {
     expect(screen.getByText(pt.home.resultUnavailable)).toBeTruthy();
   });
 
-  it("Instâncias é nomeada e declarada indisponível, sem placeholder nem CTA", () => {
-    montar(<RegiaoDeInstancias />);
+  // A M32 entregou esta região deliberadamente inalcançável — *"fica inalcançável até BD02 (não
+  // meio-construída)"* — e o caso original travava exatamente isso. A BD02 congelou, e o caso
+  // inverteu de direção em vez de sumir: ele agora exige que a região LEVE a algum lugar, e
+  // continua recusando CTA de criação, que é da M37.
+  it("Instâncias leva ao detalhe e à lista — e continua sem CTA de criação", () => {
+    montar(
+      <RegiaoDeInstancias
+        itens={[{ instance_id: "i-1", name: "Produção", created_at: "2026-07-20T09:00:00Z" }]}
+      />,
+    );
     expect(screen.getByRole("heading", { name: pt.home.instances.title })).toBeTruthy();
-    expect(screen.getByText(pt.home.instances.unavailable)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Produção" }).getAttribute("href")).toBe("/instances/i-1");
+    expect(screen.getByRole("link", { name: pt.home.instances.openAll }).getAttribute("href")).toBe(
+      "/instances",
+    );
+    // Nenhum botão: criar Instância é `create_instance`, e ele é da M37.
     expect(screen.queryByRole("button")).toBeNull();
-    expect(screen.queryByRole("link")).toBeNull();
+  });
+
+  it("sem Instâncias: a região DIZ que está vazia e ainda assim leva à lista", () => {
+    // O ramo "Não possui" do Discovery §9.1 aponta para "Criar primeira Instância" — capacidade
+    // que a M37 entrega. Até lá o vazio é honesto: nomeia o estado, sem ação inventada.
+    montar(<RegiaoDeInstancias itens={[]} />);
+    expect(screen.getByText(pt.home.instances.empty)).toBeTruthy();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/instances"]);
+  });
+
+  it("a região NÃO conta nem qualifica as Instâncias", () => {
+    // D9: a Home não é dashboard de KPIs. Contador aqui exigiria contar no browser, e estado
+    // exigiria um produtor que a BD02 deliberadamente não criou (é a razão de INST-02 não existir).
+    montar(
+      <RegiaoDeInstancias
+        itens={[
+          { instance_id: "i-1", name: "Produção", created_at: null },
+          { instance_id: "i-2", name: "Homologação", created_at: null },
+        ]}
+      />,
+    );
+    const texto = document.body.textContent ?? "";
+    for (const proibido of ["2", "duas", "ativa", "saúde", "status"]) {
+      expect(texto.toLowerCase()).not.toContain(proibido.toLowerCase());
+    }
   });
 });
 
@@ -244,7 +281,22 @@ describe("M32 · 6. a composição da HomePage", () => {
     // E cada um tem a sua condição própria: colapsar duas delas foi mutação que sobreviveu.
     expect(f).toContain("lista.isPending");
     expect(f).toContain("lista.isError");
-    expect(f).toContain("homeVazia(itens)");
+    // O vazio passou a medir as DUAS fontes da Home. Antes da BD02 a região de Instâncias era
+    // inalcançável e as análises eram tudo o que havia; agora um workspace com Instância e sem
+    // análise nenhuma cairia no vazio e ESCONDERIA a região — a tela diria "não há nada" tendo
+    // o que mostrar.
+    expect(f).toContain("homeVazia(itens, instancias");
+  });
+
+  it("o vazio da Home exige as DUAS fontes ausentes", async () => {
+    const { homeVazia } = await import("@/features/home/regioes");
+    const analise = [{ analysis_id: "a", status: "completed" }] as never[];
+    const instancia = [{ instance_id: "i", name: "P", created_at: null }] as never[];
+    expect(homeVazia([], [])).toBe(true);
+    expect(homeVazia(analise, [])).toBe(false);
+    // O caso que o defeito produzia: só Instância, nenhuma análise.
+    expect(homeVazia([], instancia), "Home vazia escondendo a região de Instâncias").toBe(false);
+    expect(homeVazia(analise, instancia)).toBe(false);
   });
 
   it("nenhuma rota legada volta para a Home", () => {

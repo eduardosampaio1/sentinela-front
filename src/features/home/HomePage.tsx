@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { EmptyState, ErrorState, LoadingState } from "@/design/patterns";
 import { useAnalysesList } from "@/features/canonical-analysis/data/list";
+import { useInstancesList } from "@/features/instances/data/instance";
 import { useCanonicalScope } from "@/features/canonical-analysis/ui/scope";
 import { classificarRegioes, homeVazia } from "./regioes";
 import {
@@ -55,6 +56,10 @@ export function HomePage() {
   const { t } = useLanguage();
   const scope = useCanonicalScope();
   const lista = useAnalysesList(scope);
+  // BD02 — a região 3 de D9 pergunta "possui Instância?" (Discovery §9.1), então ela LÊ. É a
+  // segunda origem desta tela, e não muda a primeira: a classificação nas outras três regiões
+  // continua vindo inteira de `GET /v1/analyses`.
+  const instancias = useInstancesList(scope);
 
   function corpo() {
     // Os três estados são DISTINTOS, e cada um diz coisa diferente: carregando é "ainda não sei",
@@ -79,7 +84,7 @@ export function HomePage() {
     }
 
     const itens = lista.data?.items ?? [];
-    if (homeVazia(itens)) {
+    if (homeVazia(itens, instancias.data?.items ?? [])) {
       return (
         <EmptyState
           titulo={t("home.empty.title")}
@@ -99,11 +104,13 @@ export function HomePage() {
     return (
       <div className="space-y-8">
         {/* A ordem É a hierarquia: primeiro quem espera por alguém, depois o que está em curso,
-            depois o que já pode ser lido. Instâncias fica por último porque não é alcançável. */}
+            depois o que já pode ser lido. Instâncias fica por último porque é CONTEXTO, não fila:
+            ela não pede ação de ninguém — antes da BD02 ficava ali por ser inalcançável, e agora
+            fica pelo mesmo lugar na hierarquia, com outra razão.. */}
         <RegiaoDeAcoes itens={r.acoesNecessarias} />
         <RegiaoEmAndamento itens={r.emAndamento} />
         <RegiaoDeResultados itens={r.resultadosRecentes} semResultado={r.concluidasSemResultado} />
-        <RegiaoDeInstancias />
+        <RegiaoDeInstancias itens={instancias.data?.items ?? []} />
         {truncada && (
           <p className="text-sm text-muted-foreground">
             {t("home.truncated")}{" "}

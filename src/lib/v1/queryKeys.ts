@@ -12,6 +12,14 @@ export const workspaceKeys = {
     ["workspace", workspaceId, "analyses", "list", params ?? {}] as const,
   detail: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId] as const,
+  /** BD02 — Instances do workspace. Mesma raiz: trocar de workspace invalida tudo junto. */
+  instances: (workspaceId: string) => ["workspace", workspaceId, "instances"] as const,
+  instance: (workspaceId: string, instanceId: string) =>
+    ["workspace", workspaceId, "instances", "detail", instanceId] as const,
+  /** Histórico DA Instance: é a listagem de analyses com o filtro, e a chave diz isso — cache
+   *  separado da listagem geral, senão uma invalidaria a outra sem relação. */
+  instanceHistory: (workspaceId: string, instanceId: string, params?: { cursor?: string | null }) =>
+    ["workspace", workspaceId, "analyses", "list", { instanceId, ...(params ?? {}) }] as const,
   status: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "status"] as const,
   /** M20 — progresso por eixo. Tenant-scoped como todo o resto: a troca de workspace isola. */

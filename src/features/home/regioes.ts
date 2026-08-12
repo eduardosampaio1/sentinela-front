@@ -124,7 +124,18 @@ export function classificarRegioes(itens: readonly AnalysisListItem[]): RegioesD
  * pergunta é feita sobre a lista recebida, e não sobre a soma das regiões — se um dia um estado
  * novo caísse em `estadoNaoReconhecido`, a Home mostraria o estado vazio enquanto houvesse
  * análises, que é a mentira mais fácil de cometer aqui.
+ *
+ * **A BD02 acrescentou uma SEGUNDA fonte.** Enquanto a região 3 era inalcançável, medir só as
+ * análises era medir tudo o que a Home tinha. Com Instâncias vivas, um workspace com Instância e
+ * sem análise nenhuma cairia no estado vazio e ESCONDERIA a região — a tela diria "não há nada"
+ * tendo o que mostrar. Vazio passa a ser a ausência das duas coisas.
+ *
+ * O parâmetro é opcional de propósito: quem ainda chama com uma lista só recebe o comportamento
+ * anterior, e nenhum chamador antigo muda de significado sem passar por aqui.
  */
-export function homeVazia(itens: readonly AnalysisListItem[]): boolean {
-  return itens.length === 0;
+export function homeVazia(
+  itens: readonly AnalysisListItem[],
+  instancias: readonly unknown[] = [],
+): boolean {
+  return itens.length === 0 && instancias.length === 0;
 }

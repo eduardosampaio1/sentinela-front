@@ -183,6 +183,51 @@ const view = (id: string, status: AnalysisStatus, retryAllowed = false) =>
  * Handlers da sequência ligados a uma `base`. O node/vitest usa `MSW_BASE` (`journeyHandlers`);
  * o browser worker usa `window.location.origin` (mesma origem → sem CORS no cross-origin do SW).
  */
+/** A Instância da jornada E2E. Mesma massa dos scenarios oficiais, para a prova visual e a
+ *  automatizada olharem o mesmo produto. */
+const INSTANCIA_E2E = {
+  instance_id: "inst-e2e-0000-4000-8000-000000000001",
+  name: "Produção",
+  created_at: "2026-07-20T09:00:00Z",
+} as const;
+
+const analiseE2E = (analysis_id: string, over: Record<string, unknown> = {}) => ({
+  analysis_id,
+  status: "completed",
+  record_count: 1240,
+  result_available: true,
+  created_at: "2026-07-30T10:00:00Z",
+  instance_id: INSTANCIA_E2E.instance_id,
+  ...over,
+});
+
+// A ordem é DELIBERADAMENTE contrária a qualquer sort local por id: o backend ordena por
+// `(created_at desc, analysis_id desc)`, e uma massa já crescente faria um `sort()` no browser
+// passar despercebido — foi o que um mutante sobrevivente mostrou.
+const HISTORICO_E2E_PAGINA_1 = {
+  items: [
+    analiseE2E("an-inst-0002", { status: "failed", result_available: false, record_count: 300 }),
+    analiseE2E("an-inst-0001"),
+  ],
+  next_cursor: "cursor-inst-2",
+};
+
+const HISTORICO_E2E_PAGINA_2 = {
+  items: [analiseE2E("an-inst-0003", { status: "running", result_available: false, record_count: null })],
+  next_cursor: null,
+};
+
+/** Chave que pede a lista de Instâncias VAZIA — o estado de workspace autorizado sem nenhuma. */
+export const CHAVE_INSTANCIAS_VAZIAS = "sentinela:e2e:instancias-vazias";
+
+function vazioPedido(): boolean {
+  try {
+    return typeof sessionStorage !== "undefined" && sessionStorage.getItem(CHAVE_INSTANCIAS_VAZIAS) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export function makeJourneyHandlers(base: string) {
   const b = base.replace(/\/+$/, "");
   return [
@@ -229,8 +274,47 @@ export function makeJourneyHandlers(base: string) {
       const u = new URL(request.url);
       const ws = u.searchParams.get("workspace_id") ?? "";
       const cursor = u.searchParams.get("cursor");
+      // BD02/M36 — o histórico DA Instância é esta mesma operação, filtrada. O handler EXIGE o
+      // filtro para responder o histórico: sem `instance_id` ele devolve a listagem geral, e é
+      // essa diferença que faz a tela falhar caso deixe de enviá-lo.
+      const instancia = u.searchParams.get("instance_id");
+      if (instancia) {
+        return HttpResponse.json(
+          instancia === INSTANCIA_E2E.instance_id
+            ? cursor
+              ? HISTORICO_E2E_PAGINA_2
+              : HISTORICO_E2E_PAGINA_1
+            : { items: [], next_cursor: null },
+        );
+      }
       return HttpResponse.json(getList(ws, cursor));
     }),
+    // M36 — as Instâncias. Três campos e nada mais: é o que o contrato publica, e é a razão de
+    // INST-02 (Estado) não existir nesta jornada.
+    http.get(`${b}/v1/instances`, () =>
+      // O vazio é pedido por `sessionStorage`, no MESMO mecanismo que a jornada já usa para o
+      // resto do estado. `page.route` do Playwright não serve aqui: o MSW é service worker e
+      // intercepta antes — o teste "passaria" mostrando a lista populada.
+      HttpResponse.json(
+        vazioPedido() ? { items: [], next_cursor: null } : { items: [INSTANCIA_E2E], next_cursor: null },
+      ),
+    ),
+    http.get(`${b}/v1/instances/:id`, ({ params }) =>
+      String(params.id) === INSTANCIA_E2E.instance_id
+        ? HttpResponse.json(INSTANCIA_E2E)
+        : HttpResponse.json(
+            {
+              type: "urn:sentinela:error:forbidden_or_not_found",
+              title: "Nao encontrado",
+              status: 404,
+              code: "forbidden_or_not_found",
+              detail: "forbidden_or_not_found",
+              instance: "",
+              retryable: false,
+            },
+            { status: 404 },
+          ),
+    ),
     http.get(`${b}/v1/analyses/:id`, ({ params }) => {
       const id = String(params.id);
       const err = getStatusError(id);

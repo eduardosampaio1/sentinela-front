@@ -310,7 +310,7 @@ eles — o dado já chega e é descartado na leitura.
 hoje ele pertence à `LandingPage` (site público) e que a fronteira com auth passa por ali. Fica
 como pergunta aberta, não como decisão adiada em silêncio.
 
-**Rotas de Instância permanecem conceituais e bloqueadas por B3.**
+**Rotas de Instância entregues pela M36** (`/instances`, `/instances/:instanceId`) — B3 fechou com a BD02. `/instances/{id}/evolution` continua conceitual.
 
 ---
 

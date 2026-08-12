@@ -31,7 +31,7 @@
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { StatusBadge } from "@/design/patterns";
-import type { AnalysisListItem, AnalysisStatus } from "@/lib/v1";
+import type { AnalysisListItem, AnalysisStatus, InstanceView } from "@/lib/v1";
 
 /**
  * O rótulo publicado de cada estado.
@@ -256,14 +256,52 @@ export function RegiaoDeResultados({
  * Some da tela? Não. O catálogo de mocks já fixou a regra para o que está bloqueado: *"um catálogo
  * que só mostra o que funciona faz o que falta parecer inexistente"*. Aqui vale igual.
  */
-export function RegiaoDeInstancias() {
+/**
+ * Região 3 de D9 — Instâncias. **Viva desde a BD02.**
+ *
+ * A M32 a entregou deliberadamente inalcançável: *"a região de Instâncias fica inalcançável até
+ * BD02 (não meio-construída)"*. Ela dizia que o agrupamento por Instância não existia no contrato
+ * público — verdade na época, falsa desde que a BD02 congelou. Isto não é redesenho da HOME-01: é
+ * remover um placeholder que descrevia o mundo antigo e ligar a região à capacidade que nasceu.
+ *
+ * O Discovery §9.1 define o fluxo: a região pergunta *"possui Instância?"* — e por isso ela LÊ as
+ * Instâncias, em vez de ser só um link. O ramo "Sim" leva ao detalhe; o ramo "Não" do Discovery
+ * leva a *"Criar primeira Instância"*, que é `create_instance` e pertence à **M37**. Enquanto ele
+ * não existir, o vazio diz o que a região é e não oferece ação — anunciar funcionalidade futura
+ * ou pôr botão morto seria pior que a ausência.
+ *
+ * Sem contador, sem estado, sem "última execução": a Instância publica identidade, nome e data de
+ * criação. E a Home *"não é dashboard de KPIs"* (D9).
+ */
+export function RegiaoDeInstancias({ itens }: { itens: readonly InstanceView[] }) {
   const { t } = useLanguage();
   return (
     <section aria-labelledby="home-instancias" className="space-y-2">
       <TituloDaRegiao id="home-instancias" texto={t("home.instances.title")} />
-      <p role="note" className="text-sm text-muted-foreground">
-        {t("home.instances.unavailable")}
-      </p>
+      {itens.length === 0 ? (
+        <p role="note" className="text-sm text-muted-foreground">
+          {t("home.instances.empty")}
+        </p>
+      ) : (
+        <ul>
+          {itens.map((inst) => (
+            <li key={inst.instance_id}>
+              <Link
+                to={`/instances/${encodeURIComponent(inst.instance_id)}`}
+                className="inline-block py-1.5 text-sm text-foreground underline-offset-4 hover:underline"
+              >
+                {inst.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link
+        to="/instances"
+        className="inline-block py-1.5 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+      >
+        {t("home.instances.openAll")}
+      </Link>
     </section>
   );
 }

@@ -107,6 +107,8 @@ function RedirecionaDetalheLegado() {
 const CanonicalAnalysisLayout = lazy(() =>
   import("@/features/canonical-analysis/ui/CanonicalAnalysisLayout").then((m) => ({ default: m.CanonicalAnalysisLayout }))
 );
+const InstancesList = lazy(() => import("@/features/instances/InstancesListPage"));
+const InstanceDetail = lazy(() => import("@/features/instances/InstancePage"));
 const CanonicalAnalysesList = lazy(() =>
   import("@/features/canonical-analysis/ui/AnalysesListPage").then((m) => ({ default: m.AnalysesListPage }))
 );
@@ -289,6 +291,13 @@ const routes: RouteObject[] = [
       // documento `analysis-result-v1`. Reconstruir um segundo renderizador do mesmo documento
       // seria duplicar a `CanonicalResultPage` com semantica legada.
       { path: "/dashboard/history/:id", element: <RedirecionaDetalheLegado /> },
+
+      // Instância (M36). O endereço é o que o Blueprint já congelava como IA pública —
+      // `/instances/{id}` — e a forma segue a convenção de `/analyses`: recurso no plural, com
+      // a identidade DURÁVEL no path. É por ela que deep link e refresh reconstroem o contexto;
+      // nada da Instância vem de estado de navegação.
+      { path: "/instances", element: <PageSuspense><InstancesList /></PageSuspense> },
+      { path: "/instances/:instanceId", element: <PageSuspense><InstanceDetail /></PageSuspense> },
 
       // Settings
       { path: "/dashboard/settings", element: <PageSuspense><SettingsPage /></PageSuspense> },

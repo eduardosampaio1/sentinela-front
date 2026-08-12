@@ -217,7 +217,7 @@ fronteira de serviço. Timeline **preservada como fato do processo**, conteúdo 
 🔶 **`/home → /` NÃO congelado** — falta provar o *ownership* de `/`, hoje da `LandingPage`.
 Pergunta aberta registrada, não decisão adiada em silêncio.
 
-🔴 **Rotas de Instância permanecem conceituais**, bloqueadas por B3.
+✅ **Rotas de Instância entregues pela M36** — `/instances` e `/instances/:instanceId`. B3 fechou com a BD02; `/instances/{id}/evolution` segue conceitual, por ser outra superfície.
 
 ---
 

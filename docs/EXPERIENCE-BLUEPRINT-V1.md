@@ -190,7 +190,7 @@ Legenda: **verde** = REAL · **âmbar** = APPROVED DELTA · **azul** = parcialme
 ### 3.2 Deep links canônicos (pretendidos)
 
 `/analyses/{id}` · `/analyses/{id}/result` · `/analyses/{id}/result#comparison` — **registrados**.
-`/instances/{id}` · `/instances/{id}/evolution` — **conceituais e bloqueados por B3**.
+`/instances/{id}` — **entregue pela M36** (`/instances` e `/instances/:instanceId`). `/instances/{id}/evolution` segue **conceitual**: B3 fechou, mas Evolution é outra superfície e nenhuma missão a implementou.
 `/canonical/*` é **interno/compatibilidade**, nunca IA pública.
 
 ### 3.3 Rotas de compatibilidade AS-IS (existem e redirecionam)
