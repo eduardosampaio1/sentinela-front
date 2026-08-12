@@ -208,9 +208,9 @@ describe("M36 · 5. B1 vai de 3 para 1", () => {
     expect([...SEM_CLIENTE_NO_FRONT]).not.toContain("GET /v1/instances/{analysis_id}");
   });
 
-  it("`create_instance` CONTINUA — B1 não fecha na M36", async () => {
+  it("`create_instance` CONTINUA — e não fecha na M37 também", async () => {
     // Criar Instance é `Fora` do escopo desta missão. Tirar daqui sem ter o cliente seria
-    // declarar fechado o que a M37 ainda deve.
+    // declarar fechado o que ninguém entregou — `create_instance` não tem missão dona.
     const { SEM_CLIENTE_NO_FRONT } = await import("./divergenciaDeclarada");
     expect([...SEM_CLIENTE_NO_FRONT]).toEqual(["POST /v1/instances"]);
   });

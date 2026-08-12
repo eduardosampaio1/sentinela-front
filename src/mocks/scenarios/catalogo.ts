@@ -1,14 +1,19 @@
 // M18 — o CATÁLOGO canônico dos cenários de mock.
 //
-// ## Por que o catálogo tem 34 entradas e não 30
+// ## Por que o catálogo tem 35 entradas e não 31
 //
-// O Blueprint §11 lista **34**. Destes, **30 são executáveis**, **1 é parcial** (`needs-mapping`:
+// O Blueprint §11 lista **35**. Destes, **31 são executáveis**, **1 é parcial** (`needs-mapping`:
 // exibir sim, resolver não) e **3 estão BLOQUEADOS** por delta de backend que não existe.
 //
-// Eram 32/27/1/4. A **BD02** desbloqueou `instance-empty` (o delta de Instância deixou de faltar)
-// e a **M36** acrescentou `instance-present` e `instance-history`, que representam o produtor
-// agora real. O total cresce por DECISÃO de produto, registrada no Blueprint antes de chegar
-// aqui — nunca porque o código precisou de mais um caso.
+// Eram 32/27/1/4. A **BD02** desbloqueou `instance-empty` (o delta de Instância deixou de faltar),
+// a **M36** acrescentou `instance-present` e `instance-history`, e o **Checkpoint 0 da M37**
+// acrescentou `instance-new-analysis` — os três representam produtor que já existe. O total cresce
+// por DECISÃO de produto, registrada no Blueprint antes de chegar aqui — nunca porque o código
+// precisou de mais um caso.
+//
+// E há o simétrico: **INST-02 e INST-07 não entram**, porque lhes falta PRODUTOR, não massa. Não
+// existe estado corrente publicado nem operação de configuração (`update`/`PATCH`/`delete` não
+// estão no contrato), e o D22 da INST-07 depende da BD04. Ficam declaradas no Blueprint.
 //
 // Os 5 não-executáveis ficam aqui, declarados, em vez de sumirem da lista. Um catálogo que só
 // mostra o que funciona faz o que falta parecer inexistente — e é assim que alguém "descobre",
@@ -43,6 +48,7 @@ import {
   HISTORICO_PAGINA_1,
   HISTORICO_PAGINA_2,
   INSTANCIA,
+  OUTRA_INSTANCIA,
 } from "@/test/fixtures/public-v1/instances";
 
 export type EstadoDoScenario = "disponivel" | "parcial" | "bloqueado";
@@ -181,6 +187,55 @@ export const CATALOGO: readonly Scenario[] = [
         return json(q.get("cursor") ? HISTORICO_PAGINA_2 : HISTORICO_PAGINA_1);
       }),
     ],
+  },
+  {
+    // M37 · Checkpoint 0 — INST-04. A única entrada do catálogo que LEMBRA o que recebeu.
+    //
+    // ## Por que a memória é necessária, e não é invenção
+    //
+    // No produtor real (`prepare_analysis` @ ac81633) o `instance_id` é **query param OPCIONAL e
+    // ADITIVO**, e a resposta do prepare é `{analysis_id, status}` — a associação NÃO volta nela.
+    // Ela só se torna legível depois, no status (`instance_id` é campo publicado do read model).
+    //
+    // Um handler sem memória devolveria 201 com ou sem contexto, exatamente como o Gateway real —
+    // e um Front que perdesse o `instance_id` no caminho passaria: a análise nasceria solta e a
+    // tela pareceria funcionar. Guardar o que o write recebeu e refleti-lo no read é o produtor
+    // sendo representado por inteiro, e não um oráculo acrescentado ao mock.
+    //
+    // ## Por que a ausência NÃO vira erro aqui
+    //
+    // Tentador, e seria mentira: publicamente, preparar sem Instância continua válido — é o
+    // caminho de toda análise legada e de toda análise fora de Instância. O mock que recusasse
+    // faria o Front pensar que o campo é obrigatório. A detecção vem do status, não do 4xx.
+    //
+    // ## Duas Instâncias, de propósito
+    //
+    // Com uma só, mandar "a Instância errada" é indistinguível de mandar a certa. `OUTRA_INSTANCIA`
+    // é o que transforma *"envia um `instance_id`"* em *"envia EXATAMENTE o desta tela"*.
+    id: "instance-new-analysis",
+    superficies: ["INST-04"],
+    estado: "disponivel",
+    handlers: (b) => {
+      // Escopo por invocação: cada `handlersDoScenario()` nasce sem memória, e um teste não
+      // herda o contexto que o anterior enviou.
+      let recebido: string | null = null;
+      return [
+        http.get(`${b}/v1/instances`, () =>
+          json({ items: [INSTANCIA, OUTRA_INSTANCIA], next_cursor: null }),
+        ),
+        http.get(`${b}/v1/instances/:id`, ({ params }) =>
+          json(params.id === OUTRA_INSTANCIA.instance_id ? OUTRA_INSTANCIA : INSTANCIA),
+        ),
+        http.post(`${b}/v1/analyses`, ({ request }) => {
+          // QUERY, e não body: é onde o Gateway real lê o campo. Um mock que o lesse do corpo
+          // aceitaria um Front que envia no lugar errado — e o defeito só apareceria no
+          // Gateway de verdade.
+          recebido = new URL(request.url).searchParams.get("instance_id");
+          return json(HANDLE, 201);
+        }),
+        http.get(`${b}/v1/analyses/:id`, () => json(statusView("preparing", { instance_id: recebido }))),
+      ];
+    },
   },
   {
     id: "analysis-uploading",

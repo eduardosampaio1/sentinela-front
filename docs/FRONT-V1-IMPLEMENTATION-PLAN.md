@@ -38,7 +38,7 @@
 | **6** | Home operacional | M32 | HOME-01 aprovada |
 | **7** | Jornada de análise | M33–M35 | jornada REAL completa |
 | **8** | Backend delta de Instância | BD02 | freeze próprio |
-| **9** | Instância | M36–M37 | INST navegável |
+| **9** | Instância | M36–M37 | INST-01/03/04 navegáveis · INST-02/07 declaradas sem produtor |
 | **10** | Evolução | M38–M40 | comparação canônica |
 | **11** | Configurações | M41–M42 | ownership de D22 |
 | **12** | Comunicação / re-entry | M43–M44 | deep links corretos |
@@ -840,8 +840,50 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > Criar um campo `status` genérico para satisfazer uma tela poria a mentira no servidor em vez do
 > Front.
 
-### M37 · INST-04/07 — nova análise contextual e configuração
-- **Pré:** M36. **Escopo:** pré-preencher escopo; configuração contextual (D22).
+### M37 · INST-04 — nova análise a partir da Instância
+- **Pré:** ✅ **M36** (fechada em `34d65e2`). **Scenarios:** `instance-new-analysis`.
+- **Escopo:** **INST-04** — iniciar o fluxo canônico de nova Análise **a partir de** uma Instância
+  existente, com o contexto dela pré-preenchido. Usa capacidade já publicada: `prepare_analysis`
+  aceita `instance_id`. Não criar uma segunda experiência de Análise se o fluxo canônico existente
+  puder receber esse contexto.
+- **INST-07 SAIU desta missão.** *"Configuração da Instância"* não tem produtor: o contrato publica
+  três operações — `create`/`list`/`get` — e **nenhuma** de `update`, `PATCH`, `PUT` ou `delete`;
+  os campos são `instance_id`, `name`, `created_at`, e nem renomear é possível. Além disso o D22
+  depende de **BD04** (contrato de preferências), que segue sem autorização. Ver o delta abaixo.
+- **Fora:** `create_instance` · INST-07 · configuração/preferências · BD04 · rename/update/delete
+  de Instância · status/health · backend novo · nova arquitetura de Análise · M38+.
+- **DoD:** a partir de uma Instância existente o usuário inicia o fluxo canônico de nova Análise ·
+  o contexto usa a identidade durável · `prepare_analysis` recebe o `instance_id` correto ·
+  nenhuma associação inferida por nome · o fluxo geral de nova Análise **fora** de Instância
+  continua igual · PT/EN · responsivo · teclado · axe · `/ux-copy` · `/design-critique` ·
+  `/ux-heuristics` **≥ 9,0** · typecheck, lint, testes e mutação verdes.
+- **Gates:** o Front não cria Instância · não inventa configuração · a Instância viaja como
+  `instance_id` explícito, nunca pelo nome · ausência de contexto continua válida, porque o
+  contrato aceita o campo como opcional · INST-07 não reaparece informalmente.
+- **Autoridades:** Product Freeze · Blueprint §11 · Discovery §9.1 (o ramo "nova análise a partir
+  da Instância") · DS Constitution · Architecture & Mock · contrato público `@ ac81633` ·
+  scenario `instance-new-analysis`.
+
+> **DELTA DECLARADO — INST-07 · Configuração da Instância, sem produtor e bloqueada por BD04.**
+> **Dono:** Produto/Arquitetura de Instância, com dependência de **BD04** — que já existe no
+> registro e **não** precisa de BD nova.
+> **Reentrada:** 1) BD04 autorizada · 2) semântica da configuração definida · 3) contrato de
+> leitura/escrita publicado · 4) operação provada · 5) scenario oficial · 6) superfície autorizada.
+> Não decidir hoje quais campos existirão: preferências, environment, tags, descrição, rename,
+> status e secrets são todos hipótese.
+
+> **DELTA DECLARADO — `create_instance` · capacidade pública sem superfície nem missão.**
+> **Dono:** Produto/Arquitetura de Instância. **Sem número**, pela mesma razão da INST-02.
+> A operação existe no contrato desde a BD02 e o Discovery §9.1 tem o nó *"Criar primeira
+> Instância"* — a necessidade está registrada. O que não existe é **superfície no Blueprint**
+> (zero ocorrências de criação nas sete INST) e **missão no PLAN**.
+>
+> A afirmação de que *"a M37 fecha o B1"* foi **inferência de execução, não autoridade**: o escopo
+> literal da M37 sempre foi INST-04/07, e nenhuma das duas é criar Instância. **B1 permanece
+> aberto depois da M37.**
+>
+> **Reentrada:** produto define a superfície → Blueprint a incorpora → PLAN atribui missão →
+> scenario oficial → client/UX → só então B1 pode fechar.
 
 ---
 
@@ -1091,7 +1133,7 @@ depois começa sem ela.
 | AN-01 | M33 · AN-03 → M34 · AN-04 → M35 · **AN-02 → bloqueada por BD01** |
 | **RES-01** | M26–M31 |
 | EVO-01 | M38 · EVO-02 → M39 · EVO-03 → M40 |
-| INST-01/03 | M36 (após BD02) · INST-04/07 → M37 · **INST-02 sem missão: delta declarado, sem produtor** |
+| INST-01/03 | M36 · **INST-04** → M37 · **INST-02 e INST-07: delta declarado, sem produtor** · **criar Instância: sem superfície nem missão** |
 | CFG-01/02 | M41 · CFG-03/04 → M42 |
 | erros globais | M13 (`ErrorState`) + M25 |
 

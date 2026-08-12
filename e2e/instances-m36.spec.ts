@@ -72,7 +72,7 @@ test("INST-01 vazio (desktop e mobile): workspace sem Instâncias", async ({ pag
   for (const vp of [VIEWPORTS[0], VIEWPORTS[2]]) {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto("/instances");
-    // O vazio EXPLICA o que é uma Instância — não oferece ação, porque criar é da M37.
+    // O vazio EXPLICA o que é uma Instância — não oferece ação, porque criar não tem missão dona.
     await expect(
       page.getByText(/agrupam análises do mesmo sistema|group analyses of the same system/),
     ).toBeVisible();
@@ -231,7 +231,7 @@ test("a entrada pela Home funciona por TECLADO", async ({ page }) => {
 
 test("nenhum item de Instâncias foi criado na sidebar, e nenhum CTA de criação existe", async ({ page }) => {
   // A alcançabilidade veio da seam que o produto já tinha, e não de navegação global nova —
-  // isso era decisão de IA e ficou fora da M36. E criar Instância continua sendo M37.
+  // isso era decisão de IA e ficou fora da M36. E criar Instância continua sem superfície autorizada.
   await comAuth(page);
   await page.goto("/home");
   const nav = page.getByRole("navigation").first();
@@ -241,7 +241,7 @@ test("nenhum item de Instâncias foi criado na sidebar, e nenhum CTA de criaçã
     await page.goto(rota);
     const corpo = (await page.locator("body").innerText()).toLowerCase();
     for (const proibido of ["criar instância", "nova instância", "create instance", "new instance"]) {
-      expect(corpo, `${rota} oferece criação, que é da M37: ${proibido}`).not.toContain(proibido);
+      expect(corpo, `${rota} oferece criação, que não tem missão dona: ${proibido}`).not.toContain(proibido);
     }
   }
 });

@@ -282,7 +282,7 @@ hoje executa `del project_id, environment_id`. Nenhuma destas é construível co
 | **INST-04** | Nova análise (a partir da Instância) | pré-preencher o escopo | **APPROVED DELTA** |
 | **INST-05** | Baseline | marcar/substituir/remover a régua (D25) | **APPROVED DELTA** |
 | **INST-06** | Evolução | superfície própria de comparação (D29) | **APPROVED DELTA** |
-| **INST-07** | Configuração da Instância (D22) | | **APPROVED DELTA** |
+| **INST-07** | Configuração da Instância (D22) | | 🔴 **DELTA DECLARADO — sem produtor de configuração; D22 depende de BD04** |
 
 ### 4.5 Análise — 4 superfícies (os demais itens são **estados**, §5)
 
@@ -580,7 +580,7 @@ Só informação canônica **existente**. Nenhum "trust score" inventado.
 
 ---
 
-## 11. Mock Scenario Catalog — 34 cenários
+## 11. Mock Scenario Catalog — 35 cenários
 
 Todo scenario é **nome + lista de handlers**. Fixture derivada do schema publicado (§17).
 
@@ -620,8 +620,23 @@ Todo scenario é **nome + lista de handlers**. Fixture derivada do schema public
 | 32 | `list-pagination` | EVO-01, HOME-01 | `/v1/analyses` | `next_cursor` → 2ª página | — |
 | 33 | `instance-present` | INST-01 | `/v1/instances`, `/v1/instances/{id}` | uma Instance: `instance_id`, `name`, `created_at` | — |
 | 34 | `instance-history` | INST-03 | `/v1/analyses?instance_id=` | análises DA Instance, em ordem, com `next_cursor` | — |
+| 35 | `instance-new-analysis` | INST-04 | `POST /v1/analyses?instance_id=` | prepare COM contexto: a associação nasce no write e só é legível no status | — |
 
-Os dois últimos nasceram com a **M36**, e existem porque `instance-empty` só prova o vazio: não se
+O 35 nasceu com o **Checkpoint 0 da M37** e existe porque INST-04 não é uma tela nova de Análise:
+é o fluxo canônico recebendo o contexto da Instância. O produtor já publica essa capacidade —
+`prepare_analysis` aceita `instance_id` como **query param OPCIONAL e ADITIVO**, e é o Orchestrator,
+não o Gateway, que valida existência e tenant. A associação **não volta na resposta do prepare**
+(`{analysis_id, status}` e nada mais): ela só se torna legível depois, em `status_read_model_fields`.
+Por isso o scenario é o único do catálogo que **lembra o que o write recebeu** — um mock que
+devolvesse 201 e esquecesse deixaria passar um Front que perdeu o contexto pelo caminho, e a tela
+pareceria funcionar criando análise solta.
+
+**INST-07 não recebe scenario, e INST-02 continua sem.** As duas são falta de PRODUTOR, não de
+massa: não há operação de configuração — nem `update`, `PATCH` ou `delete` —, não há estado
+corrente publicado, e o D22 de que a INST-07 depende está preso à **BD04**. Fabricar fixture para
+qualquer uma faria a tela montar e o delta parecer feito.
+
+Os cenários 33 e 34 nasceram com a **M36**, e existem porque `instance-empty` só prova o vazio: não se
 constrói "visão atual da Instância" sem nenhuma Instância. Eles representam o produtor REAL já
 congelado pela BD02 — `instance_id`, `name`, `created_at` e nada mais. Nenhum `status`, `health`,
 contador ou `updated_at`, porque nada disso existe no contrato; é a mesma razão pela qual
@@ -801,7 +816,17 @@ contrato público — `create_instance`/`list_instances`/`get_instance`, `instan
 de Analysis e histórico por Instance —, e o scenario 2 saiu de bloqueado.
 
 Desbloqueado é AUTORIZADO A IMPLEMENTAR, não entregue: nenhuma superfície INST existe ainda. A
-implementação de INST-01/03 é a M36; INST-04/07 é a M37.
+implementação de INST-01/03 é a M36; **INST-04** é a M37.
+
+**Duas superfícies e uma operação ficam registradas sem missão.** INST-02 (Estado) e INST-07
+(Configuração) não têm produtor: o contrato publica `instance_id`, `name`, `created_at` e as
+operações `create`/`list`/`get` — não há estado, nem `update`/`PATCH`/`delete`, e nem renomear é
+possível. O D22, de que a INST-07 depende, está ligado a **BD04**, ainda sem autorização.
+
+E `create_instance` é o caso inverso: a operação **existe** no contrato e o Discovery §9.1 tem o
+nó *"Criar primeira Instância"*, mas **nenhuma das sete superfícies INST é criar Instância** — a
+M37 é INST-04, nova *análise* a partir dela. Capacidade pública sem superfície é o simétrico de
+superfície sem produtor, e as duas ficam declaradas em vez de silenciosas.
 
 **INST-02 é a exceção, e ela não é de cronograma.** A BD02 publicou a Instance com três campos —
 `instance_id`, `name`, `created_at` — e congelou deliberadamente **sem** `status`, `health`,
@@ -852,7 +877,7 @@ Todos os critérios, sem exceção:
 
 | detecção | ocorrências |
 |---|---|
-| 🔴 **superfície sem scenario** | INST-02/04, INST-06/07, CFG-02/03/04, WS-02/04 — **9** (INST-01 e INST-03 saíram: a M36 lhes dá scenario). INST-04/06/07 é cronograma (M37+); **INST-02 é falta de PRODUTOR**, e não terá scenario enquanto não tiver o que servir |
+| 🔴 **superfície sem scenario** | INST-02/06/07, CFG-02/03/04, WS-02/04 — **8** (INST-04 saiu: o Checkpoint 0 da M37 lhe dá `instance-new-analysis`; INST-01 e INST-03 saíram na M36). Só **INST-06** é cronograma; **INST-02 e INST-07 são falta de PRODUTOR** — não há estado corrente publicado nem operação de configuração —, e nenhuma das duas terá scenario enquanto não tiver o que servir |
 | 🔴 **scenario sem superfície construível** | `no-baseline`, `baseline-active` — **2** (`instance-empty` saiu: INST-01 passou a ser construível com a BD02) |
 | ⚠️ **componente duplicado (risco)** | `StatusBadge` — **evitado por construção**: um componente para os dois vocabulários |
 | 🔴 **CTA sem operação** | **AN-02** "Confirmar interpretação"; WS-02 "Criar Workspace"; CFG-02 "Salvar idioma"; EVO-03 "Definir baseline" — **4** |

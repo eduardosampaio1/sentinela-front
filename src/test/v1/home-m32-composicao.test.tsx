@@ -134,7 +134,7 @@ describe("M32 · 3. andamento, resultados e Instâncias", () => {
   // A M32 entregou esta região deliberadamente inalcançável — *"fica inalcançável até BD02 (não
   // meio-construída)"* — e o caso original travava exatamente isso. A BD02 congelou, e o caso
   // inverteu de direção em vez de sumir: ele agora exige que a região LEVE a algum lugar, e
-  // continua recusando CTA de criação, que é da M37.
+  // continua recusando CTA de criação, que não tem missão dona.
   it("Instâncias leva ao detalhe e à lista — e continua sem CTA de criação", () => {
     montar(
       <RegiaoDeInstancias
@@ -146,13 +146,13 @@ describe("M32 · 3. andamento, resultados e Instâncias", () => {
     expect(screen.getByRole("link", { name: pt.home.instances.openAll }).getAttribute("href")).toBe(
       "/instances",
     );
-    // Nenhum botão: criar Instância é `create_instance`, e ele é da M37.
+    // Nenhum botão: criar Instância é `create_instance`, publicado e sem superfície autorizada.
     expect(screen.queryByRole("button")).toBeNull();
   });
 
   it("sem Instâncias: a região DIZ que está vazia e ainda assim leva à lista", () => {
     // O ramo "Não possui" do Discovery §9.1 aponta para "Criar primeira Instância" — capacidade
-    // que a M37 entrega. Até lá o vazio é honesto: nomeia o estado, sem ação inventada.
+    // que NENHUMA missão entrega hoje. Até lá o vazio é honesto: nomeia o estado, sem ação inventada.
     montar(<RegiaoDeInstancias itens={[]} />);
     expect(screen.getByText(pt.home.instances.empty)).toBeTruthy();
     expect(screen.queryByRole("button")).toBeNull();

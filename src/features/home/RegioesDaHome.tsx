@@ -266,9 +266,10 @@ export function RegiaoDeResultados({
  *
  * O Discovery §9.1 define o fluxo: a região pergunta *"possui Instância?"* — e por isso ela LÊ as
  * Instâncias, em vez de ser só um link. O ramo "Sim" leva ao detalhe; o ramo "Não" do Discovery
- * leva a *"Criar primeira Instância"*, que é `create_instance` e pertence à **M37**. Enquanto ele
- * não existir, o vazio diz o que a região é e não oferece ação — anunciar funcionalidade futura
- * ou pôr botão morto seria pior que a ausência.
+ * leva a *"Criar primeira Instância"*, que é `create_instance` — capacidade publicada e SEM missão
+ * dona: a M37 é INST-04 (nova análise), não criação. Enquanto não houver superfície autorizada, o
+ * vazio diz o que a região é e não oferece ação — anunciar funcionalidade futura ou pôr botão morto
+ * seria pior que a ausência.
  *
  * Sem contador, sem estado, sem "última execução": a Instância publica identidade, nome e data de
  * criação. E a Home *"não é dashboard de KPIs"* (D9).

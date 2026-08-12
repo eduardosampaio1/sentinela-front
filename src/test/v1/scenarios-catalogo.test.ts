@@ -33,7 +33,25 @@ async function servir(hs: ReturnType<typeof handlersDoScenario>, url: string): P
   throw new Error(`nenhum handler respondeu ${url}`);
 }
 
-/** Os 34 nomes do Blueprint §11 — a autoridade de MAPA. */
+/** Executa o handler que casa com um POST — o prepare é write, e `servir` só faz GET.
+ *
+ * O retorno é tipado no shape real do prepare (`{analysis_id, status}`) em vez de `any`: a
+ * resposta desta operação é justamente onde a associação com a Instância NÃO aparece, e um
+ * `any` aqui deixaria passar um caso que a lê deste corpo em vez de ler do status. */
+async function servirPost(
+  hs: ReturnType<typeof handlersDoScenario>,
+  url: string,
+): Promise<{ analysis_id: string; status: string }> {
+  const pedido = new Request(url, { method: "POST" });
+  for (const h of hs) {
+    const r = await h.run({ request: pedido, requestId: "t", cookies: {} } as never);
+    const resposta = (r as { response?: Response } | null)?.response;
+    if (resposta) return resposta.json();
+  }
+  throw new Error(`nenhum handler respondeu POST ${url}`);
+}
+
+/** Os 35 nomes do Blueprint §11 — a autoridade de MAPA. */
 const BLUEPRINT = readFileSync(resolve(RAIZ, "docs/EXPERIENCE-BLUEPRINT-V1.md"), "utf-8");
 
 /** Os bloqueados que o plano nomeia, literalmente.
@@ -52,17 +70,18 @@ const BLOQUEADOS_DO_PLANO = [
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M18 · 1. o catálogo está completo", () => {
-  it("tem as 34 entradas do Blueprint §11", () => {
+  it("tem as 35 entradas do Blueprint §11", () => {
     // Um catálogo curto passaria em todos os outros casos: o que ele não lista, ele não erra.
-    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(34);
+    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(35);
   });
 
-  it("30 disponíveis · 1 parcial · 3 bloqueados", () => {
+  it("31 disponíveis · 1 parcial · 3 bloqueados", () => {
     // Duas mudanças distintas, e os números as separam. A BD02 moveu `instance-empty` de
     // bloqueado para disponível sem alterar o TOTAL — nada nasceu nem morreu. A M36 acrescentou
-    // `instance-present` e `instance-history`, e aí o total SOBE: 32 → 34, 28 → 30. Conferir os
-    // três juntos é o que distingue "mudou de estado" de "entrou no catálogo".
-    expect(nomesPorEstado("disponivel").length).toBe(30);
+    // `instance-present` e `instance-history` e o Checkpoint 0 da M37 acrescentou
+    // `instance-new-analysis`, e aí o total SOBE: 32 → 34 → 35, 28 → 30 → 31. Conferir os três
+    // juntos é o que distingue "mudou de estado" de "entrou no catálogo".
+    expect(nomesPorEstado("disponivel").length).toBe(31);
     expect(nomesPorEstado("parcial").length).toBe(1);
     expect(nomesPorEstado("bloqueado").length).toBe(3);
   });
@@ -151,6 +170,87 @@ describe("M18 · 1. o catálogo está completo", () => {
     expect(BLUEPRINT).toContain("DELTA DECLARADO — sem produtor de estado corrente");
   });
 
+  it("INST-07 também fica SEM scenario, e pela MESMA classe de razão", () => {
+    // A M37 nasceu no PLAN como "INST-04/07". A 07 saiu no Checkpoint 0 porque o contrato não tem
+    // operação de configuração — nem `update`, nem `PATCH`, nem `delete` —, e o D22 depende da
+    // BD04. Sem esta trava, a próxima pessoa acrescenta `instance-config` para "destravar a tela"
+    // e o delta some do mapa.
+    expect(
+      CATALOGO.filter((c) => c.superficies.includes("INST-07")),
+      "INST-07 ganhou massa sem produtor de configuração",
+    ).toEqual([]);
+    expect(BLUEPRINT).toContain("DELTA DECLARADO — sem produtor de configuração");
+    // E o motivo declarado é falta de PRODUTOR, não atraso de cronograma: a distinção é o que
+    // impede a superfície de ser reagendada como se fosse só uma missão que não coube.
+    expect(BLUEPRINT).toMatch(/INST-02 e INST-07 são falta de PRODUTOR/);
+  });
+
+  it("`instance-new-analysis`: o prepare leva EXATAMENTE o `instance_id` da tela", async () => {
+    // INST-04 é o fluxo canônico recebendo contexto — e a associação não volta na resposta do
+    // prepare (`{analysis_id, status}`). Ela só aparece no status, que é onde este caso a lê.
+    const hs = handlersDoScenario("instance-new-analysis", BASE);
+    const lista = await servir(hs, `${BASE}/v1/instances`);
+    const alvo = lista.items[0].instance_id;
+    expect(lista.items.length, "com uma só Instance, a errada é indistinguível da certa").toBe(2);
+
+    const handle = await servirPost(hs, `${BASE}/v1/analyses?workspace_id=w-1&instance_id=${alvo}`);
+    expect(handle.analysis_id, "o prepare não devolveu identidade").toBeTruthy();
+    const st = await servir(hs, `${BASE}/v1/analyses/${handle.analysis_id}`);
+    expect(st.instance_id, "a análise nasceu sem a Instância que a originou").toBe(alvo);
+  });
+
+  it("`instance-new-analysis`: mandar a OUTRA Instância é detectável", async () => {
+    // A mutação óbvia — enviar um `instance_id` qualquer, ou o primeiro da lista em vez do da
+    // rota — passaria em qualquer asserção de "enviou alguma coisa".
+    const hs = handlersDoScenario("instance-new-analysis", BASE);
+    const lista = await servir(hs, `${BASE}/v1/instances`);
+    const [uma, outra] = lista.items.map((x: { instance_id: string }) => x.instance_id);
+    const h = await servirPost(hs, `${BASE}/v1/analyses?instance_id=${outra}`);
+    const st = await servir(hs, `${BASE}/v1/analyses/${h.analysis_id}`);
+    expect(st.instance_id).toBe(outra);
+    expect(st.instance_id, "o mock responde a mesma coisa para Instâncias diferentes").not.toBe(uma);
+  });
+
+  it("`instance-new-analysis`: preparar SEM Instância continua válido — e visivelmente solto", async () => {
+    // O produtor real aceita a ausência: `instance_id` é query param OPCIONAL e ADITIVO, e é o
+    // caminho de toda análise fora de Instância. Um mock que devolvesse 4xx aqui ensinaria ao
+    // Front que o campo é obrigatório — mentira sobre o contrato. A detecção é o `null` no
+    // status, não um erro.
+    const hs = handlersDoScenario("instance-new-analysis", BASE);
+    const h = await servirPost(hs, `${BASE}/v1/analyses?workspace_id=w-1`);
+    expect(h.analysis_id, "a ausência de Instância virou erro").toBeTruthy();
+    const st = await servir(hs, `${BASE}/v1/analyses/${h.analysis_id}`);
+    expect(st.instance_id, "sem contexto, a análise tem de aparecer SOLTA").toBeNull();
+  });
+
+  it("`instance-new-analysis`: o campo é lido da QUERY, como no Gateway real", async () => {
+    // `prepare_analysis` @ ac81633 declara `instance_id: Annotated[str | None, Query()]`. Um mock
+    // que o aceitasse no corpo deixaria passar um Front que envia no lugar errado, e o defeito só
+    // apareceria contra o Gateway de verdade.
+    const hs = handlersDoScenario("instance-new-analysis", BASE);
+    const inst = (await servir(hs, `${BASE}/v1/instances`)).items[0].instance_id;
+    const pedido = new Request(`${BASE}/v1/analyses`, {
+      method: "POST",
+      body: JSON.stringify({ instance_id: inst }),
+      headers: { "content-type": "application/json" },
+    });
+    for (const h of hs) await h.run({ request: pedido, requestId: "t", cookies: {} } as never);
+    const st = await servir(hs, `${BASE}/v1/analyses/an-abc`);
+    expect(st.instance_id, "o mock aceitou o `instance_id` pelo CORPO").toBeNull();
+  });
+
+  it("a memória do scenario não vaza entre invocações", async () => {
+    // Cada `handlersDoScenario()` nasce sem contexto. Sem isto, um teste herdaria o `instance_id`
+    // que o anterior enviou e passaria sem mandar nada.
+    const primeiro = handlersDoScenario("instance-new-analysis", BASE);
+    const inst = (await servir(primeiro, `${BASE}/v1/instances`)).items[0].instance_id;
+    await servirPost(primeiro, `${BASE}/v1/analyses?instance_id=${inst}`);
+
+    const segundo = handlersDoScenario("instance-new-analysis", BASE);
+    const st = await servir(segundo, `${BASE}/v1/analyses/an-abc`);
+    expect(st.instance_id, "a segunda invocação herdou o contexto da primeira").toBeNull();
+  });
+
   it("todo nome do catálogo aparece no Blueprint", () => {
     // A direção que impede o catálogo de INVENTAR cenário: um id que não está no mapa é um
     // segundo catálogo nascendo ao lado do primeiro.
@@ -161,7 +261,7 @@ describe("M18 · 1. o catálogo está completo", () => {
   it("todo cenário do Blueprint está no catálogo", () => {
     // A direção inversa: o que o mapa promete e o catálogo não entrega.
     const doMapa = [...BLUEPRINT.matchAll(/^\|\s*\d+\s*\|\s*`([a-z0-9-]+)`/gm)].map((m) => m[1]);
-    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(34);
+    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(35);
     const faltando = doMapa.filter((n) => !NOMES.includes(n));
     expect(faltando, "cenário do Blueprint ausente do catálogo").toEqual([]);
   });

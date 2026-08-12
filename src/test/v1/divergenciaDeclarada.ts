@@ -21,15 +21,26 @@
  * sem consumidor, com a suíte verde.
  *
  * **REABERTO PELA BD02.** Ela publicou três operações de Instance, e o Front ainda não as
- * consome. O gate acusou exatamente o que existe para acusar — a lista vazia fez o trabalho
- * dela. Manter B1 verde aqui exigiria escrever cliente de missão futura só por estética, e
- * `create_instance` é criação de Instance, explicitamente **`Fora`** do escopo da M36.
+ * consome. O gate acusou exatamente o que existe para acusar — a lista vazia fez o trabalho dela.
  *
- * Trajetória CONGELADA — qualquer resultado diferente exige explicação antes de fechar o blocker:
+ * **`create_instance` NÃO TEM MISSÃO DONA, e isto foi MEDIDO.** A trajetória que este comentário
+ * declarava — *"após M37: 0, B1 fecha"* — era inferência NOSSA, repetida até parecer autoridade.
+ * O preflight da M37 leu o PLAN: o escopo literal dela é *"pré-preencher escopo; configuração
+ * contextual"*, e as superfícies são INST-04 (nova ANÁLISE a partir da Instância) e INST-07
+ * (configuração). Nenhuma das duas é criar Instância, e o Blueprint não tem superfície de
+ * criação — zero ocorrências nas sete INST.
+ *
+ * O Discovery §9.1 tem o nó *"Criar primeira Instância"*, então a NECESSIDADE existe. O que não
+ * existe é superfície, missão e scenario. Owner semântico: **Produto/Arquitetura de Instância**.
+ *
+ * Reentrada, nesta ordem: produto define a superfície → Blueprint a incorpora → PLAN atribui
+ * missão → scenario oficial → client/UX → só então B1 pode fechar.
+ *
+ * Estado, SEM data de fechamento:
  *
  *     BD02       3 divergências   B1 reaberto
- *     M36        1 (`create_instance`)   ← ESTAMOS AQUI
- *     após M37   0                B1 fecha
+ *     M36        1 (`create_instance`)
+ *     após M37   1                B1 CONTINUA aberto — a M37 é INST-04, não criação
  *
  * Sobre `{analysis_id}` numa rota de Instance: não é engano. `operationInventory` normaliza
  * QUALQUER parâmetro de caminho para esse literal — token escolhido quando toda rota
@@ -40,7 +51,7 @@ export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
   // A M36 entregou `listInstances` e `getInstance`, e as duas SAÍRAM daqui. A lista encolhe
   // junto com a dívida — se ficasse, viraria folclore, que é o que esta declaração existe para
   // impedir.
-  "POST /v1/instances", // create_instance — dona: M37
+  "POST /v1/instances", // create_instance — SEM missão dona; owner: Produto/Arquitetura de Instância
 ] as const;
 
 /**

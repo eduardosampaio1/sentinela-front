@@ -384,7 +384,9 @@ describe("M23 · 6. o blocker B1", () => {
     // conjunto vigente em vez de `[]`, porque "vazia" era estado global que a M23 não podia
     // congelar contra missões futuras.
     //
-    // Trajetória: 3 agora → 1 após a M36 (`create_instance`) → 0 após a M37, quando B1 fecha.
+    // Estado: 3 com a BD02 → 1 após a M36. NÃO há "0 após a M37": o preflight da M37 mediu que
+    // o escopo dela é INST-04 (nova análise a partir da Instância), e criar Instância não tem
+    // superfície nem missão. `create_instance` fica publicado sem dono até o produto definir uma.
     expect([...SEM_CLIENTE_NO_FRONT].sort(), "a dívida de B1 divergiu do declarado").toEqual(
       ["POST /v1/instances"].sort(),
     );

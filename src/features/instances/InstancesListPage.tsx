@@ -6,9 +6,10 @@
 // publica três campos — identidade, nome e data de criação — e mais nada. Um contador aqui
 // exigiria contar no browser, e o Gate da missão proíbe: *o Front não calcula estado de backend*.
 //
-// Sem CTA de criação. Criar Instância é INST-04/M37, e um botão morto ou um "em breve" seriam
-// pior que a ausência: o primeiro mente sobre o que a tela faz, o segundo anuncia cronograma na
-// interface.
+// Sem CTA de criação. Criar Instância NÃO tem missão dona — INST-04 é nova ANÁLISE a partir da
+// Instância, não criação, e o Blueprint não tem superfície de criar. Botão morto ou "em breve" seriam
+// piores que a ausência: o primeiro mente sobre o que a tela faz, o segundo anuncia cronograma que
+// ninguém tem. Owner semântico da lacuna: Produto/Arquitetura de Instância.
 //
 // ## O vazio é o caso interessante
 //
@@ -61,7 +62,7 @@ export default function InstancesListPage() {
               }
             />
           ) : lista.data.items.length === 0 ? (
-            // Sem `acao`: a única ação útil seria criar, e criar é da M37.
+            // Sem `acao`: a única ação útil seria criar, e criar não tem missão dona.
             <EmptyState
               titulo={t("instances.listTitle")}
               explicacao={t("instances.emptyWorkspace")}
