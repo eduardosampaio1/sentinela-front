@@ -22,10 +22,22 @@ Juntos precisam conter a árvore inteira. **Arquivo novo nasce coberto**: ningu�
 
 | projeto | o que carrega |
 |---|---|
-| `tsconfig.prod.json` | `src` inteiro **menos** testes |
+| `tsconfig.prod.json` | `src` inteiro **menos** testes · **+ `.storybook/preview.tsx`** |
 | `tsconfig.tests.json` | `src/test/**` + `**/*.test.ts(x)` |
 | `tsconfig.e2e.json` | `e2e/**` + `playwright.config.ts` |
-| `tsconfig.node.json` | `vite.config.ts`, `vitest.config.ts`, `tailwind.config.ts` |
+| `tsconfig.node.json` | `vite.config.ts`, `vitest.config.ts`, `tailwind.config.ts` · **+ `.storybook/main.ts`** |
+
+> **Os dois arquivos do Storybook não moram no mesmo projeto, e isso é classificação, não
+> conveniência.** `main.ts` é config de **build**: roda em Node, sem JSX e sem DOM — cabe entre as
+> configs de ferramenta do `node.json`. `preview.tsx` é **runtime de preview**: usa JSX, DOM e
+> importa `src/design/tokens/tokens.css` e `src/styles/globals.css`, então precisa do contexto
+> browser/app que o `prod.json` já fornece. Estar ali **não** o torna código de produção.
+>
+> Medido antes de decidir: incluir `preview.tsx` no `node.json` dá **4× `TS17004`**, porque aquele
+> projeto não declara `jsx`. Subir opção de compilador para acomodá-lo seria mudar a régua para o
+> arquivo caber, em vez de pôr o arquivo onde ele pertence. Cada um está em **exatamente um**
+> projeto: `preview.tsx` é nomeado arquivo a arquivo no `prod.json`, e não `.storybook` inteiro,
+> justamente para `main.ts` não cair nos dois.
 
 Rigor: o do `tsconfig.app.json` (não-estrito). O objetivo aqui é **alcance**. Subir a régua no
 mesmo passo em que se amplia o alcance mistura duas medições — não daria para saber se um erro
@@ -70,23 +82,28 @@ O gate antigo tolerava N erros fora das superfícies estritas (`EXPECTED_LEGACY`
 Com zero, o mecanismo virou custo sem função: hoje **qualquer** erro em **qualquer** projeto
 reprova. Não há allowlist para crescer em silêncio.
 
-## Estado corrente do gate — 2026-08-12, `064247b`
+## Estado corrente do gate — 2026-08-12
 
-**O gate está VERMELHO. Não se escreve "typecheck verde" enquanto isto valer.**
+✅ **VERDE.** `npm run typecheck` sai com **exit code 0**.
 
 | medida | valor |
 |---|---|
-| ocorrências reportadas pelo comando oficial | **19** |
-| defeitos distintos (arquivo + linha) | **11** |
-| projetos vermelhos | `v1` 7 · `v1-ui` 5 · `prod` 3 · `tests` 4 |
-| projetos verdes | `e2e` 0 · `node` 0 |
+| erros de tipo | **0** nos seis projetos |
+| arquivos compilados | **298**, cobertura completa |
+| projetos | `v1` 190 · `v1-ui` 141 · `prod` 171 · `tests` 241 · `e2e` 23 · `node` 5 |
+| verificações | erros ✅ · execução ✅ · cobertura ✅ · raiz inerte ✅ |
 
-As duas famílias se sobrepõem, então o mesmo defeito é contado em mais de um projeto: **19 é
-contagem de ocorrências, não de defeitos**.
+**Verde é o comando inteiro, não só a contagem de erros.** Houve um estado intermediário em que os
+erros de tipo estavam em 0 e o comando ainda saía diferente de zero, porque `.storybook/main.ts` e
+`.storybook/preview.tsx` estavam fora de todo projeto e a verificação 3 reprovava. "0 erros" não é
+sinônimo de "gate verde": só `exit 0` é.
 
-### Origens, datadas por checkout pristino
+## Histórico — a regressão 19 → 0
 
-O gate esteve **genuinamente em 0** entre a M18 e a M20. Três eventos o quebraram:
+Preservado de propósito: sem a trilha, a próxima pessoa reintroduz o mesmo defeito.
+
+O gate esteve **genuinamente em 0** entre a M18 e a M20, e três eventos o quebraram. Datado por
+`git checkout --detach`, com resíduo verificado em zero a cada ponto:
 
 | origem | commit | o que entrou | ocorrências |
 |---|---|---|---|
@@ -94,9 +111,17 @@ O gate esteve **genuinamente em 0** entre a M18 e a M20. Três eventos o quebrar
 | **contract-sync da BD02** | `9b81286` | `instance_id` virou obrigatório em `AnalysisListItem`; 4 arquivos de teste constroem itens sem ele | +8 |
 | **M36** | `34d65e2` | `LoadingState` recebe `message`/`size` e espera `rotulo`/`linhas` — `InstancePage` ×2, `InstancesListPage` | +3 |
 
-As três missões fecharam declarando typecheck verde com o comando oficial vermelho — provavelmente
-rodando variante mais estreita. **O saneamento é missão própria (`TYPECHECK RECOVERY · 19 → 0`) e
-não pertence a nenhuma missão de produto.** Até lá, toda missão prova **delta ≤ 0**, não zero.
+As três fecharam declarando typecheck verde com o comando oficial vermelho — provavelmente rodando
+variante mais estreita. As duas famílias de projeto se sobrepõem, então o mesmo defeito era contado
+mais de uma vez: **19 eram ocorrências de 11 defeitos distintos** (4 + 4 + 3).
+
+**`TYPECHECK RECOVERY` — encerrada.** Dois commits: `fdddc27` corrigiu os 11 defeitos (19 → 11 → 3
+→ 0, medindo depois de cada grupo) e o seguinte fechou a cobertura dos dois arquivos do Storybook.
+Nenhum cast, nenhum `@ts-ignore`, nenhum downgrade de strictness, nenhuma opção de compilador
+alterada. O defeito da M21 merece registro à parte: o código provava em runtime com
+`Object.values(proc).some(v => v === null)` e espalhava `...(proc as Required<typeof proc>)` —
+**`Required` remove opcionalidade, não nulabilidade**, então o cast era inerte e o erro sobreviveu
+a ele por quinze missões.
 
 > **Como datar regressão de gate.** Use `git checkout --detach <commit>`. **Nunca**
 > `git checkout <commit> -- .`: ele *sobrepõe* a árvore atual em vez de substituí-la, mantém

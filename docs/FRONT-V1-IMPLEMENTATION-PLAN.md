@@ -1228,25 +1228,31 @@ depois começa sem ela.
 
 ## 5. Definition of Done — por missão e por fase
 
-### Baseline oficial de medição — 2026-08-12, `064247b`
+### Baseline oficial de medição — 2026-08-12, pós-`TYPECHECK RECOVERY`
 
 Um comando por gate. Variante mais estreita **não é evidência substituta**.
 
 | gate | comando oficial | baseline |
 |---|---|---|
 | suíte | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts npx vitest run` | **1238 passed · 97 arquivos · 0 skips** |
-| typecheck | `npm run typecheck` | 🔴 **19 ocorrências / 11 defeitos** — ver `TYPECHECK-GATE.md` |
+| typecheck | `npm run typecheck` | ✅ **0 erros · exit 0** · 298 arquivos, cobertura completa — ver `TYPECHECK-GATE.md` |
 | lint | `npm run lint` | 🟡 **9 erros / 14 warnings** |
 | mutação | script por missão, **controle verde nas duas pontas** | por missão |
 | visual | `npx playwright test` — mock local, **zero Railway** | 10 specs em `e2e/` |
 
-**Regra de linguagem.** Enquanto houver defeito aberto, **não se escreve "typecheck verde" nem
-"lint verde"**: escreve-se o número e o **delta da missão**, que precisa ser **≤ 0**. `0` e `19`
-só voltam a ser comparáveis depois do `TYPECHECK RECOVERY`, que é **missão própria** — nenhuma
-missão de produto corrige esses defeitos de passagem.
+**Regra de linguagem.** Só se escreve *"verde"* quando o comando oficial sai com **exit 0** — e
+não quando uma contagem parcial zerou. O typecheck passou nesse teste; o **lint ainda não**, e
+enquanto tiver defeito aberto escreve-se o número e o **delta da missão**, que precisa ser **<= 0**.
+
+> **`TYPECHECK RECOVERY` — ENCERRADA.** Era missão própria, e foi: `fdddc27` corrigiu os 11
+> defeitos e o commit seguinte fechou a cobertura dos dois arquivos do Storybook. Nenhuma missão
+> de produto corrigiu isso de passagem. A trilha `19 -> 0` e as três origens (M21, contract-sync
+> da BD02, M36) ficam registradas em `TYPECHECK-GATE.md`, e **não** devem ser apagadas: o valor
+> 19 é história, não estado.
 
 **Não são evidência de typecheck:** `npx tsc --noEmit` na raiz (verifica **zero** arquivos) e
-`npm run typecheck:e2e` (cobre só as specs de browser). Os dois retornam 0 e não provam nada.
+`npm run typecheck:e2e` (cobre só as specs de browser). Os dois retornam 0 e não provam nada — e
+agora que o gate oficial está verde, a confusão fica mais barata de cometer, não mais cara.
 
 ### Padrão de DoD por missão (todas)
 

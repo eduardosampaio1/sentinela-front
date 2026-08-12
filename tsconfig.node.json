@@ -22,5 +22,16 @@
   // fora de qualquer projeto — não quebravam nada porque ninguém os checava, que é a mesma
   // razão pela qual `features/dashboard` passou despercebida. `playwright.config.ts` mora no
   // `tsconfig.e2e.json`, com os tipos do runner dele.
-  "include": ["vite.config.ts", "vitest.config.ts", "tailwind.config.ts"]
+  //
+  // `.storybook/main.ts` entra aqui por ser config de BUILD do Storybook: roda em Node, não
+  // usa JSX nem DOM. O par dele, `preview.tsx`, NÃO cabe neste projeto — ele é browser/app
+  // (JSX, DOM, imports de `src/`) e mora no `tsconfig.prod.json`. Medido: incluí-lo aqui dá
+  // 4x TS17004, porque este projeto não declara `jsx` — e subir opção de compilador para
+  // acomodar um arquivo seria mudar a régua para caber, não classificar.
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "tailwind.config.ts",
+    ".storybook/main.ts"
+  ]
 }

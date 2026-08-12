@@ -30,7 +30,12 @@
   "compilerOptions": {
     "noEmit": true
   },
-  "include": ["src"],
+  // `.storybook/preview.tsx` é RUNTIME de preview, não config: usa JSX, DOM e importa
+  // `src/design/tokens/tokens.css` e `src/styles/globals.css`. Precisa do contexto de
+  // compilação browser/app que este projeto já fornece — estar aqui não o torna código de
+  // produção. Nomeado ARQUIVO A ARQUIVO, e não `.storybook`, para que `main.ts` fique em
+  // exatamente um projeto (o `tsconfig.node.json`).
+  "include": ["src", ".storybook/preview.tsx"],
   "exclude": [
     "src/test",
     "src/**/*.test.ts",
