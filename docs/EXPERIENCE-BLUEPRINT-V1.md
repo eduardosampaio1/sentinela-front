@@ -279,7 +279,7 @@ pela **BD02** (`FREEZE: PASS`, E2E por processos reais) e o gate **B3 está fech
 não descarta o escopo, e `instance_id` é campo publicado.
 
 **Construível ≠ entregue, e ≠ tem produtor.** Das sete: **INST-01 e INST-03 entregues** (M36);
-**INST-04 autorizada e não implementada** (M37); **INST-06** pertence à M39 (cronograma);
+**INST-04 entregue** (M37); **INST-06** pertence à M39 (cronograma);
 **INST-05** depende de baseline, que **não existe no contrato e nenhuma BD cria**; **INST-02 e
 INST-07** são delta declarado por falta de produtor. O contrato de Instance publica
 `instance_id`, `name`, `created_at` — e `create`/`list`/`get`, sem `update`, `PATCH` nem `delete`.
@@ -289,7 +289,7 @@ INST-07** são delta declarado por falta de produtor. O contrato de Instance pub
 | **INST-01** | Visão atual | o que este sistema é e como está agora | **APPROVED DELTA** |
 | **INST-02** | Estado | leitura do estado corrente + procedência | 🔴 **DELTA DECLARADO — sem produtor de estado corrente** |
 | **INST-03** | Histórico | execuções em ordem | **APPROVED DELTA** |
-| **INST-04** | Nova análise (a partir da Instância) | pré-preencher o escopo | **APPROVED DELTA** |
+| **INST-04** | Nova análise (a partir da Instância) | pré-preencher o escopo | ✅ **ENTREGUE** — M37 |
 | **INST-05** | Baseline | marcar/substituir/remover a régua (D25) | **APPROVED DELTA** |
 | **INST-06** | Evolução | superfície própria de comparação (D29) | **APPROVED DELTA** |
 | **INST-07** | Configuração da Instância (D22) | | 🔴 **DELTA DECLARADO — sem produtor de configuração; D22 depende de BD04** |
@@ -825,8 +825,9 @@ recomendação longitudinal.
 contrato público — `create_instance`/`list_instances`/`get_instance`, `instance_id` nas projeções
 de Analysis e histórico por Instance —, e o scenario 2 saiu de bloqueado.
 
-Desbloqueado é AUTORIZADO A IMPLEMENTAR, não entregue: nenhuma superfície INST existe ainda. A
-implementação de INST-01/03 é a M36; **INST-04** é a M37.
+Desbloqueado é AUTORIZADO A IMPLEMENTAR, não entregue — e a distinção continua valendo para as
+que faltam. **Entregues: INST-01 e INST-03 (M36) e INST-04 (M37).** Seguem sem caminho INST-02 e
+INST-07 (delta declarado, sem produtor), INST-05 (baseline sem produtor) e INST-06 (M39).
 
 **Duas superfícies e uma operação ficam registradas sem missão.** INST-02 (Estado) e INST-07
 (Configuração) não têm produtor: o contrato publica `instance_id`, `name`, `created_at` e as

@@ -57,11 +57,14 @@ export function proximoPolling(
 export function useCreateAnalysis(): UseMutationResult<
   AnalysisHandle,
   unknown,
-  { scope: CanonicalScope; idempotencyKey: string }
+  // M37: `instanceId` OPCIONAL. Ausente = jornada geral, e a requisição sai igual à de antes.
+  { scope: CanonicalScope; idempotencyKey: string; instanceId?: string }
 > {
   const client = useV1Client();
   return useMutation({
-    mutationFn: ({ scope, idempotencyKey }) => client.prepare(scope, { idempotencyKey }),
+    mutationFn: ({ scope, idempotencyKey, instanceId }) =>
+      // `instanceId` entra em `PrepareParams` (query), NUNCA no corpo: é onde o Gateway lê.
+      client.prepare({ ...scope, instanceId }, { idempotencyKey }),
   });
 }
 

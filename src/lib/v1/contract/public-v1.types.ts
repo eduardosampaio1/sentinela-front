@@ -160,6 +160,22 @@ export interface CanonicalScope {
   workspaceId: string;
 }
 
+/**
+ * Parâmetros do `prepare` (M37 · INST-04).
+ *
+ * `instanceId` é OPCIONAL e ADITIVO, espelhando o produtor: no Gateway `@ ac81633`,
+ * `prepare_analysis` declara `instance_id: Annotated[str | None, Query()] = None`. Ausente = a
+ * análise nasce sem Instance, que é o caminho de toda a jornada geral e de toda a massa legada —
+ * **o campo não pode virar obrigatório aqui**, sob pena de o Front mentir sobre o contrato.
+ *
+ * Quem valida existência e tenant é o **Orchestrator**, não o Gateway e muito menos o Front. E a
+ * associação NÃO volta na resposta do `prepare` (`{analysis_id, status}`): ela só se torna legível
+ * depois, no `instance_id` do read model de status.
+ */
+export interface PrepareParams extends CanonicalScope {
+  instanceId?: string;
+}
+
 /** Parâmetros de listagem (cursor determinístico; sem offset). */
 export interface ListParams extends CanonicalScope {
   limit?: number;

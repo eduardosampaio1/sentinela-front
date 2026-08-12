@@ -38,8 +38,8 @@
 > `list_instances` e `get_instance`; `instance_id` é campo publicado do read model de Analysis.
 >
 > **Isto não quer dizer que Instância está entregue.** O domínio existe e é construível; das sete
-> superfícies, **duas foram entregues** (INST-01 e INST-03, na M36), **uma está autorizada e não
-> implementada** (INST-04, na M37) e **quatro não têm caminho hoje**:
+> superfícies, **três foram entregues** — INST-01 e INST-03 na M36, **INST-04 na M37** — e
+> **quatro não têm caminho hoje**:
 >
 > | superfície | estado | razão literal |
 > |---|---|---|

@@ -508,6 +508,7 @@
     "createdOn": "Criada em",
     "createdUnknown": "Data de criação não registrada",
     "emptyHistory": "Nenhuma análise nesta instância ainda.",
+    "emptyHistoryAction": "Nenhuma análise nesta instância ainda. Inicie a primeira e ela aparecerá aqui.",
     "emptyWorkspace": "Nenhuma instância neste workspace. Instâncias agrupam análises do mesmo sistema ao longo do tempo.",
     "errorHistory": "Não foi possível carregar as análises desta instância agora. Tente novamente.",
     "historyTitle": "Análises desta instância",
@@ -516,7 +517,10 @@
     "listTitle": "Instâncias",
     "loading": "Carregando instância…",
     "loadingHistory": "Carregando análises…",
-    "notFound": "Não encontramos esta instância neste workspace."
+    "notFound": "Não encontramos esta instância neste workspace.",
+    "startAnalysis": "Iniciar análise",
+    "startAnalysisIn": "Iniciar análise em {{name}}",
+    "startingAnalysis": "Iniciando…"
   },
   "intentsPage": {
     "title": "Intents",

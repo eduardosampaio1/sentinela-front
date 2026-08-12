@@ -15,6 +15,7 @@ import type {
   AnalysisStatusView,
   AnalysisTimelineView,
   CanonicalScope,
+  PrepareParams,
   InstanceListPage,
   InstanceListParams,
   InstanceView,
@@ -44,7 +45,12 @@ export interface RequestOptions {
 export interface V1Client {
   /** Sessão e workspaces permitidos. Única operação SEM escopo de tenant, por definição. */
   me(opts?: RequestOptions): Promise<MeView>;
-  prepare(scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
+  /**
+   * Reserva a análise. `params.instanceId` viaja como query OPCIONAL — nunca no corpo, que é onde
+   * o Gateway real NÃO lê. `CanonicalScope` continua satisfazendo `PrepareParams` por estrutura,
+   * então o chamador da jornada geral não muda.
+   */
+  prepare(params: PrepareParams, opts?: RequestOptions): Promise<AnalysisHandle>;
   /**
    * Progresso por EIXO. Devolve os eixos como o backend os manda — sem agregar, sem ordenar,
    * sem completar os que faltarem. Ausência de um eixo é ausência, não `pending`.
@@ -242,8 +248,13 @@ export function createV1Client(config: V1ClientConfig): V1Client {
      * o frontend não mantém lista autoritativa de membership nem a deriva de dado local antigo.
      */
     me: (opts) => enviar<MeView>("GET", "/v1/me", {}, opts),
-    prepare: (scope, opts) =>
-      pedir<AnalysisHandle>("POST", "/v1/analyses", { workspace_id: scope.workspaceId }, opts, undefined, true),
+    prepare: (params, opts) =>
+      pedir<AnalysisHandle>("POST", "/v1/analyses", {
+        workspace_id: params.workspaceId,
+        // M37: mesmo mecanismo do filtro da listagem — o loop de query descarta vazios, então
+        // omitir mantém a requisição da jornada geral byte a byte igual à de antes.
+        instance_id: params.instanceId,
+      }, opts, undefined, true),
     uploadData: (analysisId, scope, body, opts) =>
       pedir<AnalysisStatusView>(
         "POST",

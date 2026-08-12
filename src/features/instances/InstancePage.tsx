@@ -36,6 +36,10 @@ import { PageFrame } from "@/shell/PageFrame";
 import { EmptyState, ErrorState, LoadingState } from "@/design/patterns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCanonicalScope } from "@/features/canonical-analysis/ui/scope";
+import { Button } from "@/components/ui/button";
+import { useIniciarAnalise } from "@/features/canonical-analysis/ui/useIniciarAnalise";
+import { ProblemNotice } from "@/features/canonical-analysis/ui/notices";
+import { AvisoDaJornada } from "@/features/canonical-analysis/ui/AvisoDaJornada";
 import { useInstance, useInstanceHistory } from "./data/instance";
 import { HistoricoDaInstancia } from "./HistoricoDaInstancia";
 
@@ -51,6 +55,11 @@ export default function InstancePage() {
 
   const instancia = useInstance(scope, instanceId);
   const historico = useInstanceHistory(scope, instanceId, cursor);
+
+  // M37 · INST-04. A identidade vem do `useParams` — a MESMA que carregou a tela —, e não do
+  // objeto em cache: é o que garante que a análise nasça presa à Instância deste endereço,
+  // inclusive em deep link e refresh. Nome nunca viaja: ele não é identidade.
+  const inicio = useIniciarAnalise(instanceId);
 
   if (instancia.isPending) {
     return (
@@ -93,7 +102,8 @@ export default function InstancePage() {
   return (
     <AppShell>
       <PageFrame>
-        <header className="space-y-1">
+        <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+          <div className="min-w-0 space-y-1">
           {/* Volta para a lista. Sem ela, quem chega por deep link fica sem saber onde está na
               hierarquia — o Trunk Test pergunta "onde estou?" e a tela não respondia. O link
               existe SEMPRE, e não só no erro: chegar por URL é o caminho normal desta tela. */}
@@ -109,7 +119,56 @@ export default function InstancePage() {
             {t("instances.label")}
           </p>
           <h1 className="text-2xl font-semibold text-foreground">{inst.name}</h1>
+
+            {/* A procedência fica COLADA no título, e é por isso que o CTA não entra aqui no
+                meio: a primeira composição pôs o botão entre os dois, e a captura mostrou a data
+                virando legenda do botão em vez de assinatura da Instância. */}
+            <p className="pt-1 text-sm text-muted-foreground">
+              {criadaEm ? `${t("instances.createdOn")} ${criadaEm}` : t("instances.createdUnknown")}
+            </p>
+          </div>
+
+          {/* INST-04. A ação mora no cabeçalho, alinhada ao título — é dali que ela nasce, e
+              deixá-la abaixo do histórico a esconderia justamente na Instância movimentada. O
+              rótulo visível é curto porque o contexto já está no <h1> ao lado; o nome acessível
+              repete a Instância por extenso, para quem não "vê" essa vizinhança. O identificador
+              opaco continua interno — ele é endereço, não informação de tela. */}
+          <div className="flex flex-none flex-wrap items-center gap-3">
+            <Button
+            onClick={inicio.iniciar}
+            disabled={!inicio.escopo || inicio.pendente}
+            aria-busy={inicio.pendente}
+              aria-label={t("instances.startAnalysisIn", { name: inst.name })}
+            >
+              {inicio.pendente ? t("instances.startingAnalysis") : t("instances.startAnalysis")}
+            </Button>
+            {!inicio.escopo && (
+              <p role="alert" className="text-sm text-muted-foreground">
+                {t("canonicalAnalysis.entry.workspaceMissing")}
+              </p>
+            )}
+          </div>
         </header>
+
+        {/* O 409 e os nove problem codes reusam os avisos da jornada canônica: uma segunda
+            representação de erro faria a mesma falha ter dois textos na mesma aplicação. */}
+        {inicio.conflito ? (
+          <div className="mt-3">
+            <AvisoDaJornada
+              titulo={t("canonicalAnalysis.entry.conflictTitle")}
+              significado={t("canonicalAnalysis.entry.conflictMeaning")}
+              acao={
+                <Button variant="outline" asChild>
+                  <Link to="/analyses">{t("canonicalAnalysis.entry.conflictAction")}</Link>
+                </Button>
+              }
+            />
+          </div>
+        ) : (
+          <div className="mt-3 empty:mt-0">
+            <ProblemNotice error={inicio.erro} />
+          </div>
+        )}
 
         {/* A procedência fica JUNTO do título, não numa margem flutuante.
             `ProvenanceMargin` foi recusado aqui, e a razão veio da captura: ele existe para
@@ -117,10 +176,6 @@ export default function InstancePage() {
             A Instância não tem indicador nenhum; usá-lo repetia o nome como se fosse medida e
             deixava a margem pairando à direita, longe do que explicava. Reusar componente pela
             forma, e não pela função, é o que produz tela que parece certa e não é. */}
-        <p className="mt-2 text-sm text-muted-foreground">
-          {criadaEm ? `${t("instances.createdOn")} ${criadaEm}` : t("instances.createdUnknown")}
-        </p>
-
         <section aria-labelledby="inst-historico" className="mt-8 space-y-3">
           <h2 id="inst-historico" className="text-lg font-semibold text-foreground">
             {t("instances.historyTitle")}
@@ -144,12 +199,22 @@ export default function InstancePage() {
               }
             />
           ) : historico.data.items.length === 0 ? (
-            // Sem CTA: iniciar análise A PARTIR da Instância é INST-04/M37, e um botão que
-            // levasse à criação genérica perderia justamente o contexto que a tela tem.
+            // M37 fechou a lacuna que a M36 registrou aqui: o vazio agora aponta a ação útil, e
+            // ela é a MESMA do cabeçalho — mesmo hook, mesma intenção, mesmo contexto. Um segundo
+            // botão que levasse à criação genérica perderia justamente o contexto desta tela.
             <EmptyState
               titulo={t("instances.historyTitle")}
-              explicacao={t("instances.emptyHistory")}
-              acao={null}
+              explicacao={t("instances.emptyHistoryAction")}
+              acao={
+                <Button
+                  variant="outline"
+                  onClick={inicio.iniciar}
+                  disabled={!inicio.escopo || inicio.pendente}
+                  aria-label={t("instances.startAnalysisIn", { name: inst.name })}
+                >
+                  {inicio.pendente ? t("instances.startingAnalysis") : t("instances.startAnalysis")}
+                </Button>
+              }
             />
           ) : (
             <HistoricoDaInstancia

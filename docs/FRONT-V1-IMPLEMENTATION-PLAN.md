@@ -866,9 +866,17 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > Criar um campo `status` genérico para satisfazer uma tela poria a mentira no servidor em vez do
 > Front.
 
-### M37 · INST-04 — nova análise a partir da Instância — CHECKPOINT 0 CONCLUÍDO
-> **Estado:** **implementação NÃO iniciada.** O **Checkpoint 0** — alinhamento de autoridade e
-> scenario oficial, sem uma linha de código visual — fechou em `064247b` (2026-08-12).
+### M37 · INST-04 — nova análise a partir da Instância — EXECUTADA
+> **Estado:** executada em 2026-08-12. O **Checkpoint 0** (autoridade + scenario, sem código
+> visual) fechou em `064247b`; a implementação fechou no commit desta missão.
+>
+> A ação nasce no cabeçalho de `/instances/:instanceId` e dispara o **mesmo** início da jornada
+> canônica — `prepare` → `/analyses/:analysis_id` —, agora com `instance_id` na **query**. A
+> intenção virou peça única (`useIniciarAnalise`), consumida pelas duas chamadoras; não há segundo
+> construtor de Análise. **Nenhuma rota nova e nenhum query param novo na IA pública:** o contexto
+> vive no endereço de cada fase — `/instances/:id` antes do prepare, `/analyses/:id` depois —, e a
+> associação passa a ser legível no `instance_id` do status. Sem storage, sem navigation state.
+> `/ux-heuristics` **9,4**.
 - **Pré:** ✅ **M36** (fechada em `34d65e2`). **Scenarios:** `instance-new-analysis`.
 - **Escopo:** **INST-04** — iniciar o fluxo canônico de nova Análise **a partir de** uma Instância
   existente, com o contexto dela pré-preenchido. Usa capacidade já publicada: `prepare_analysis`
@@ -1196,7 +1204,7 @@ depois começa sem ela.
 | AN-01 | M33 · AN-03 → M34 · AN-04 → M35 · **AN-02 → bloqueada por BD01** |
 | **RES-01** | M26–M31 |
 | EVO-01 | M38 · EVO-02 → M39 · EVO-03 → M40 (**bloqueada: Baseline sem produtor**) |
-| INST-01/03 | M36 · **INST-04** → M37 · **INST-05** → M40 (bloqueada: Baseline sem produtor) · **INST-06** → M39 (junto de EVO-02) · **INST-02 e INST-07: delta declarado, sem produtor** · **criar Instância: sem superfície nem missão** |
+| INST-01/03 | M36 · **INST-04 ✅ entregue** na M37 · **INST-05** → M40 (bloqueada: Baseline sem produtor) · **INST-06** → M39 (junto de EVO-02) · **INST-02 e INST-07: delta declarado, sem produtor** · **criar Instância: sem superfície nem missão** |
 | CFG-01/02 | M41 · CFG-03/04 → M42 |
 | erros globais | M13 (`ErrorState`) + M25 |
 
@@ -1242,8 +1250,9 @@ depois começa sem ela.
 | origem contratual **obrigatória** | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts` — sem ela o resolver recusa escolher entre worktrees divergentes, e recusar é o comportamento correto |
 | catálogo de scenarios | **35** · 31 executáveis · 1 parcial · 3 bloqueados |
 | B1 | **aberto em 1** — `create_instance`, sem superfície no Blueprint e sem missão no PLAN |
-| última missão fechada | **M36** (INST-01 + INST-03) em `34d65e2` |
-| missão corrente | **M37 / INST-04** — Checkpoint 0 concluído em `064247b`; **implementação visual NÃO iniciada** |
+| missões fechadas | **M36** (INST-01 + INST-03) em `34d65e2` |
+| última missão fechada | **M37** (INST-04 — nova análise a partir da Instância) |
+| próxima possível | **M38 / EVO-01** — `Pré: M25` satisfeita, scenario `list-pagination` disponível. **Não iniciada.** |
 
 Como se chegou aqui: `4c96256` reconciliou a autoridade com o estado entregue; `fdddc27` e
 `2771e6d` fecharam a `TYPECHECK RECOVERY`. Nenhum dos três tocou código de produto.
@@ -1254,11 +1263,11 @@ Um comando por gate. Variante mais estreita **não é evidência substituta**.
 
 | gate | comando oficial | baseline |
 |---|---|---|
-| suíte | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts npx vitest run` | **1238 passed · 97 arquivos · 0 skips** |
+| suíte | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts npx vitest run` | **1250 passed · 98 arquivos · 0 skips** |
 | typecheck | `npm run typecheck` | ✅ **0 erros · exit 0** · 298 arquivos, cobertura completa — ver `TYPECHECK-GATE.md` |
 | lint | `npm run lint` | 🟡 **9 erros / 14 warnings** |
 | mutação | script por missão, **controle verde nas duas pontas** | por missão |
-| visual | `npx playwright test` — mock local, **zero Railway** | 10 specs em `e2e/` |
+| visual | `npx playwright test` — mock local, **zero Railway** | 11 specs em `e2e/` |
 
 **Regra de linguagem.** Só se escreve *"verde"* quando o comando oficial sai com **exit 0** — e
 não quando uma contagem parcial zerou. O typecheck passou nesse teste; o **lint ainda não**, e

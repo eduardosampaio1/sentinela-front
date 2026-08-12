@@ -32,6 +32,12 @@ const AN01 = [
   "src/features/canonical-analysis/ui/UploadStep.tsx",
 ];
 
+/** M37: a INTENCAO de iniciar saiu da pagina para um hook, porque ganhou uma segunda chamadora
+ *  (INST-04, em `/instances/:instanceId`). O que estes casos provam nao mudou — mudou o endereco.
+ *  Ler so a pagina deixaria o gate medindo um arquivo que nao decide mais nada, e ele ficaria
+ *  verde por ausencia. */
+const INTENCAO = "src/features/canonical-analysis/ui/useIniciarAnalise.ts";
+
 const problema = (code: string) =>
   new ProblemError({ type: "about:blank", title: code, status: 400, code } as never);
 
@@ -113,7 +119,7 @@ describe("M33 · 1. nenhum CTA sugere cancelamento", () => {
 
   it("controle positivo: a varredura enxerga termos que existem nesses arquivos", () => {
     expect(semComentarios(ler(AN01[1]))).toContain("upload.mutate");
-    expect(semComentarios(ler(AN01[0]))).toContain("create.mutate");
+    expect(semComentarios(ler(INTENCAO))).toContain("create.mutate");
   });
 });
 
@@ -240,7 +246,9 @@ describe("M33 · 4. as distinções da jornada", () => {
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M33 · 5. o 409 do prepare", () => {
-  const INICIO = () => semComentarios(ler(AN01[0]));
+  // O estado do 409 mora no hook; a COPY que o nomeia, na pagina. Os dois juntos sao a
+  // superficie que este describe julga.
+  const INICIO = () => semComentarios(ler(INTENCAO)) + semComentarios(ler(AN01[0]));
 
   it("tem estado próprio, e não vira erro genérico", () => {
     const f = INICIO();
@@ -253,7 +261,9 @@ describe("M33 · 5. o 409 do prepare", () => {
     const f = INICIO();
     // `reset` da intenção acontece no erro — mas nada é reenviado. Um segundo início exige um
     // segundo clique, que é uma segunda intenção declarada por uma pessoa.
-    expect(f).not.toContain("create.mutate({ scope, idempotencyKey })\n");
+    // A forma literal antiga sumiu com a M37, e asserção que proíbe texto inexistente passa por
+    // vacuidade. O que vale é a garantia: existe UM único disparo, e ele é o do clique.
+    expect(f.split("create.mutate(").length - 1, "mais de um disparo de prepare").toBe(1);
     const trecho = f.slice(f.indexOf("onError:"), f.indexOf("onError:") + 200);
     expect(trecho).not.toContain("mutate");
     expect(trecho).not.toContain("navigate");

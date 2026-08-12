@@ -15,6 +15,8 @@ interface JourneyEntry {
   seq: AnalysisStatus[]; // roteiro a partir do submit
   idx: number;
   retryAllowed: boolean;
+  /** M37: a Instância que originou a análise. `null` = análise solta, o caso da jornada geral. */
+  instanceId?: string | null;
 }
 
 let backend: "memory" | "session" = "memory";
@@ -159,24 +161,26 @@ export function seedJourney(analysisId: string, seq: AnalysisStatus[], retryAllo
   putEntry(analysisId, { seq, idx: 0, retryAllowed });
 }
 
-function corrente(id: string): { status: AnalysisStatus; retryAllowed: boolean } {
+function corrente(id: string): { status: AnalysisStatus; retryAllowed: boolean; instanceId: string | null } {
   const e = getEntry(id);
-  if (!e) return { status: "running", retryAllowed: false };
+  if (!e) return { status: "running", retryAllowed: false, instanceId: null };
   const status = e.seq[Math.min(e.idx, e.seq.length - 1)];
   if (e.idx < e.seq.length - 1) {
     putEntry(id, { ...e, idx: e.idx + 1 }); // avança a cada poll até o terminal
   }
-  return { status, retryAllowed: e.retryAllowed };
+  return { status, retryAllowed: e.retryAllowed, instanceId: e.instanceId ?? null };
 }
 
 /** Roteiro pós-submit padrão: fila → execução → recuperação → execução → concluída. */
 const ROTEIRO_PADRAO: AnalysisStatus[] = ["queued", "running", "recovering", "running", "completed"];
 
-const view = (id: string, status: AnalysisStatus, retryAllowed = false) =>
+const view = (id: string, status: AnalysisStatus, retryAllowed = false, instanceId: string | null = null) =>
   statusView(status, {
     analysis_id: id,
     result_available: status === "completed",
     retry_allowed: retryAllowed, // controlado pela semente (permite failed NÃO recuperável)
+    // M37: a associação só aparece AQUI — nunca na resposta do prepare.
+    instance_id: instanceId,
   });
 
 /**
@@ -231,9 +235,13 @@ function vazioPedido(): boolean {
 export function makeJourneyHandlers(base: string) {
   const b = base.replace(/\/+$/, "");
   return [
-    http.post(`${b}/v1/analyses`, () => {
+    http.post(`${b}/v1/analyses`, ({ request }) => {
       const id = "an-e2e";
-      putEntry(id, { seq: ["preparing"], idx: 0, retryAllowed: false });
+      // M37 · INST-04: o journey espelha o produtor e o scenario oficial — a associação chega
+      // pela QUERY, é GUARDADA no write e só se torna legível no status. Ausência continua
+      // válida: o campo é opcional, e um 4xx aqui mentiria sobre o contrato.
+      const instancia = new URL(request.url).searchParams.get("instance_id");
+      putEntry(id, { seq: ["preparing"], idx: 0, retryAllowed: false, instanceId: instancia });
       return HttpResponse.json({ analysis_id: id, status: "preparing" }, { status: 201 });
     }),
     http.post(`${b}/v1/analyses/:id/data`, ({ params }) => {
@@ -324,8 +332,8 @@ export function makeJourneyHandlers(base: string) {
           { status: err.http, headers: { "content-type": "application/problem+json" } },
         );
       }
-      const { status, retryAllowed } = corrente(id);
-      return HttpResponse.json(view(id, status, retryAllowed));
+      const { status, retryAllowed, instanceId } = corrente(id);
+      return HttpResponse.json(view(id, status, retryAllowed, instanceId));
     }),
   ];
 }

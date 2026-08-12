@@ -508,6 +508,7 @@
     "createdOn": "Created on",
     "createdUnknown": "Creation date not recorded",
     "emptyHistory": "No analyses in this instance yet.",
+    "emptyHistoryAction": "No analyses in this instance yet. Start the first one and it will show up here.",
     "emptyWorkspace": "No instances in this workspace. Instances group analyses of the same system over time.",
     "errorHistory": "We couldn't load the analyses for this instance right now. Try again.",
     "historyTitle": "Analyses in this instance",
@@ -516,7 +517,10 @@
     "listTitle": "Instances",
     "loading": "Loading instance…",
     "loadingHistory": "Loading analyses…",
-    "notFound": "We couldn't find this instance in this workspace."
+    "notFound": "We couldn't find this instance in this workspace.",
+    "startAnalysis": "Start analysis",
+    "startAnalysisIn": "Start analysis in {{name}}",
+    "startingAnalysis": "Starting…"
   },
   "intentsPage": {
     "title": "Intents",
