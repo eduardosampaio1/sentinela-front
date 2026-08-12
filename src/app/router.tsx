@@ -43,9 +43,6 @@ const HomePage = lazy(() =>
 const DashboardCompatRoute = lazy(() =>
   import("@/features/dashboard/DashboardCompatRoute").then((m) => ({ default: m.DashboardCompatRoute }))
 );
-const HistoryPage = lazy(() =>
-  import("@/features/history/HistoryPage").then((m) => ({ default: m.HistoryPage }))
-);
 const WorkspacesPage = lazy(() =>
   import("@/features/workspaces/WorkspacesPage").then((m) => ({ default: m.WorkspacesPage }))
 );
@@ -100,7 +97,7 @@ function RedirecionaCanonicoLegado() {
  */
 function RedirecionaDetalheLegado() {
   const { id } = useParams();
-  if (!id) return <Navigate to="/dashboard/history" replace />;
+  if (!id) return <Navigate to="/analyses" replace />;
   return <Navigate to={`/analyses/${encodeURIComponent(id)}/result`} replace />;
 }
 
@@ -283,8 +280,12 @@ const routes: RouteObject[] = [
       // Workspaces
       { path: "/workspaces", element: <PageSuspense><WorkspacesPage /></PageSuspense> },
 
-      // History (accessible without an active analysis)
-      { path: "/dashboard/history", element: <PageSuspense><HistoryPage /></PageSuspense> },
+      // M38 · EVO-01. `/dashboard/history` era a SEGUNDA implementação do histórico: uma página
+      // própria, com estados próprios, lendo o mesmo `GET /v1/analyses` que a rota canônica já
+      // lia. O Discovery registrou a duplicidade desde a Etapa 0; a M38 a encerra em vez de
+      // manter duas telas que envelhecem separadas. A rota sobrevive só como compatibilidade,
+      // para URLs salvas e compartilhadas — mesmo mecanismo do detalhe legado logo abaixo.
+      { path: "/dashboard/history", element: <Navigate to="/analyses" replace /> },
       // Deep link legado do detalhe. Nada navega mais para ca desde a migracao do historico
       // (4A/3): a linha leva direto a rota canonica. O redirect existe para que URLs salvas e
       // compartilhadas continuem funcionando -- e leva ao renderizador CANONICO, que le o

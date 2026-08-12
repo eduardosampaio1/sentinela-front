@@ -32,7 +32,6 @@ export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
   "src/features/aion/AionPage.tsx": 33,
   "src/features/profile/ProfilePage.tsx": 23,
   "src/features/settings/SettingsPage.tsx": 21,
-  "src/features/history/HistoryPage.tsx": 20,
   "src/features/history/RunRow.tsx": 19,
   "src/features/history/RunComparePanel.tsx": 17,
   "src/shell/AuthShell.tsx": 15,
