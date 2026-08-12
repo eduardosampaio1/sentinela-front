@@ -244,13 +244,17 @@ describe("M20 · 6. `/progress` saiu de SEM_CLIENTE_NO_FRONT", () => {
     ).not.toContain("GET /v1/analyses/{analysis_id}/progress");
   });
 
-  it("nenhuma operação sem cliente — B1 FECHADO", () => {
-    // Honestidade sobre o blocker. A contagem é uma CATRACA: ela reprova até que a missão que
-    // encolhe a dívida a atualize no mesmo commit — e reprovou duas vezes, nas duas certas.
-    // Era `2` desde a M20; a **M22** (`/export/download`) a levou a `1`; a **M23**
-    // (`/timeline`) a zerou. B1 fechado, Fase 3 encerrada.
+  it("a dívida contém EXATAMENTE o que está declarado — nada a mais", () => {
+    // Honestidade sobre o blocker, e a catraca continua recusando nos DOIS sentidos: item novo
+    // não declarado reprova, item declarado que já tem cliente também.
+    //
+    // Era `2` desde a M20; a M22 levou a `1`; a M23 zerou e a Fase 3 encerrou. A **BD02**
+    // reabriu B1 ao publicar três operações de Instance sem cliente no Front — e o caso deixou
+    // de afirmar "vazia" porque essa era uma afirmação GLOBAL que a M20 não tem como sustentar:
+    // qualquer missão futura que publique contrato a derruba. O que a M20 prova é o de baixo:
+    // que a operação DELA saiu.
     return import("./divergenciaDeclarada").then(({ SEM_CLIENTE_NO_FRONT }) => {
-      expect(SEM_CLIENTE_NO_FRONT).toHaveLength(0);
+      expect([...SEM_CLIENTE_NO_FRONT].sort()).toEqual(["GET /v1/instances", "GET /v1/instances/{analysis_id}", "POST /v1/instances"].sort());
     });
   });
 });

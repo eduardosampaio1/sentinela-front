@@ -19,8 +19,28 @@
  * operação nova sem cliente acusa vermelho contra `[]`, e ninguém precisa lembrar de recriar a
  * declaração. Apagá-la devolveria o problema que a WS-A2 existe para impedir: contrato crescendo
  * sem consumidor, com a suíte verde.
+ *
+ * **REABERTO PELA BD02.** Ela publicou três operações de Instance, e o Front ainda não as
+ * consome. O gate acusou exatamente o que existe para acusar — a lista vazia fez o trabalho
+ * dela. Manter B1 verde aqui exigiria escrever cliente de missão futura só por estética, e
+ * `create_instance` é criação de Instance, explicitamente **`Fora`** do escopo da M36.
+ *
+ * Trajetória CONGELADA — qualquer resultado diferente exige explicação antes de fechar o blocker:
+ *
+ *     agora      3 divergências   B1 aberto
+ *     após M36   1 (`create_instance`)
+ *     após M37   0                B1 fecha
+ *
+ * Sobre `{analysis_id}` numa rota de Instance: não é engano. `operationInventory` normaliza
+ * QUALQUER parâmetro de caminho para esse literal — token escolhido quando toda rota
+ * parametrizada era de análise. Ele ficou enganoso com a BD02, mas continua correto porque
+ * normaliza contrato e clientes do mesmo jeito. Trocá-lo é missão de harness, não daqui.
  */
-export const SEM_CLIENTE_NO_FRONT: readonly string[] = [] as const;
+export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
+  "GET /v1/instances", // list_instances — dona: M36
+  "GET /v1/instances/{analysis_id}", // get_instance — dona: M36
+  "POST /v1/instances", // create_instance — dona: M37
+] as const;
 
 /**
  * Operação que o cliente chama e o array `operations[]` do contrato não lista.

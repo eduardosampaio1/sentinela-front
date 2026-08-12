@@ -49,6 +49,15 @@ export interface AnalysisStatusView {
   retry_allowed: boolean;
   created_at: string | null;
   updated_at: string | null;
+  /**
+   * BD02 — a Instance a que esta analise pertence. `null` = analise SEM Instance, o que inclui
+   * toda a legada: a chave existe sempre, e omiti-la para significar ausencia obrigaria o
+   * cliente a distinguir "nao veio" de "nao tem".
+   *
+   * Identidade duravel entre execucoes; e por ela que a navegacao reconstroi o contexto depois
+   * de um refresh. Nunca inferida, nunca preenchida por Default.
+   */
+  instance_id: string | null;
 }
 
 /** Item de listagem (GET /v1/analyses). */
@@ -77,6 +86,15 @@ export interface AnalysisListItem {
    * O invariante estava certo e o código errado. Quem some é o campo.
    */
   observed_conversations?: number | null;
+  /**
+   * BD02 — a Instance a que esta analise pertence. `null` = analise SEM Instance, o que inclui
+   * toda a legada. A chave existe sempre: omiti-la para significar ausencia obrigaria a lista a
+   * distinguir "nao veio" de "nao tem".
+   *
+   * E o mesmo campo do read model de STATUS, e de proposito: e ele que liga a linha do
+   * historico ao contexto duravel, sem o Front recalcular nada.
+   */
+  instance_id: string | null;
 }
 
 /** Página de listagem por cursor determinístico. */

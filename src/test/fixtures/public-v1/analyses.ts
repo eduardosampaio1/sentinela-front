@@ -24,6 +24,11 @@ export function statusView(status: AnalysisStatus, over: Partial<AnalysisStatusV
     retry_allowed: status === "failed" || status === "recovering",
     created_at: "2026-07-31T10:00:00Z",
     updated_at: "2026-07-31T10:01:00Z",
+    // BD02: estas amostras são análises SEM Instance, e agora dizem isso em voz alta. `null` e
+    // chave AUSENTE são estados diferentes — o contrato só aceita o primeiro, e omitir aqui
+    // faria a fixture treinar o Front a ler um payload que o backend não emite.
+    // Quem quiser uma amostra associada passa `instance_id` em `over`.
+    instance_id: null,
     ...over,
   };
 }
@@ -54,15 +59,15 @@ export const RESULT_VIEW: AnalysisResultView = {
 
 export const LIST_PAGE_1: AnalysisListPage = {
   items: [
-    { analysis_id: "an-abc", status: "completed", record_count: 1240, result_available: true, created_at: "2026-07-31T10:00:00Z" },
-    { analysis_id: "an-def", status: "running", record_count: 300, result_available: false, created_at: "2026-07-31T09:00:00Z" },
+    { analysis_id: "an-abc", status: "completed", record_count: 1240, result_available: true, created_at: "2026-07-31T10:00:00Z", instance_id: null },
+    { analysis_id: "an-def", status: "running", record_count: 300, result_available: false, created_at: "2026-07-31T09:00:00Z", instance_id: null },
   ],
   next_cursor: "cursor-2",
 };
 
 export const LIST_PAGE_2: AnalysisListPage = {
   items: [
-    { analysis_id: "an-ghi", status: "failed", record_count: 50, result_available: false, created_at: "2026-07-31T08:00:00Z" },
+    { analysis_id: "an-ghi", status: "failed", record_count: 50, result_available: false, created_at: "2026-07-31T08:00:00Z", instance_id: null },
   ],
   next_cursor: null,
 };

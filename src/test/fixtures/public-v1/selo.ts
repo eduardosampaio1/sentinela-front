@@ -19,15 +19,25 @@
 /**
  * SHA-256 do contrato público do qual estas fixtures foram derivadas e conferidas.
  *
- * Atualizado pela **BD07**, que acrescentou `get_me` a `operations[]` e alinhou o mirror byte a
- * byte ao authoritative.
+ * Atualizado pela **BD02**, que publicou a Instance: tres operacoes novas
+ * (`create_instance`/`list_instances`/`get_instance`, 12 -> 15) e `instance_id` nas projecoes de
+ * Analysis. As fixtures foram RECONFERIDAS antes deste selo — as 12 amostras de status e de
+ * listagem passaram a declarar `instance_id: null`, tornando explicita a ausencia que ja era
+ * verdade nelas.
+ *
+ * Origem usada: `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts` (develop @
+ * ac81633). A declaracao foi necessaria porque existem DOIS worktrees do mesmo repo logico com
+ * contratos diferentes nesta maquina, e o resolver recusa escolher em silencio — corretamente.
+ *
+ * Antes da BD02: `37b2c019382133750c347a7e59f0c414ec14b1f5839bb6a85c19cb879c5216ce` (BD07,
+ * 12 operacoes).
  *
  * **Como atualizar:** não edite este valor para "consertar" um gate vermelho. O vermelho diz que
  * o contrato mudou; o trabalho é reconferir as fixtures contra a mudança e só então trazer o
  * digest novo — no mesmo commit.
  */
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "37b2c019382133750c347a7e59f0c414ec14b1f5839bb6a85c19cb879c5216ce";
+  "98506592e3b913f2445134f82cb949df054c8b33c0ad0815ed99677bcd2d117d";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.

@@ -378,11 +378,19 @@ describe("M23 · 5. as negativas", () => {
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M23 · 6. o blocker B1", () => {
-  it("`SEM_CLIENTE_NO_FRONT` está VAZIA", () => {
-    expect([...SEM_CLIENTE_NO_FRONT], "B1 não fechou").toEqual([]);
+  it("`SEM_CLIENTE_NO_FRONT` contém exatamente a dívida REABERTA pela BD02", () => {
+    // A M23 zerou esta lista e fechou B1. A BD02 o reabriu ao publicar `create_instance`,
+    // `list_instances` e `get_instance` sem cliente no Front — e este caso passou a medir o
+    // conjunto vigente em vez de `[]`, porque "vazia" era estado global que a M23 não podia
+    // congelar contra missões futuras.
+    //
+    // Trajetória: 3 agora → 1 após a M36 (`create_instance`) → 0 após a M37, quando B1 fecha.
+    expect([...SEM_CLIENTE_NO_FRONT].sort(), "a dívida de B1 divergiu do declarado").toEqual(
+      ["GET /v1/instances", "GET /v1/instances/{analysis_id}", "POST /v1/instances"].sort(),
+    );
   });
 
-  it("`missing_in_front` está vazio — toda operação contratada tem cliente", () => {
+  it("`missing_in_front` é EXATAMENTE a dívida declarada — nem mais, nem menos", () => {
     const doc = JSON.parse(
       readFileSync(resolve(origem.escolhida!.caminho, "public-v1.json"), "utf-8"),
     );
@@ -391,7 +399,15 @@ describe("M23 · 6. o blocker B1", () => {
     const diff = compararOperacoes(ops, cli, tiposDeclarados(FONTE_TIPOS));
 
     expect(ops.length, "âncora quebrada: contrato sem operações").toBeGreaterThan(0);
-    expect(diff.missing_in_front, "operação contratada sem cliente").toEqual([]);
+    // A divergência REAL tem de bater com a DECLARADA, e não ser zero: a BD02 publicou três
+    // operações de Instance sem cliente no Front, e elas estão declaradas com dona (M36/M37).
+    // Comparar contra a declaração — em vez de contra `[]` — mantém a recusa nos dois sentidos:
+    // operação nova não declarada reprova, e declaração que sobrou depois de o cliente existir
+    // também. Exigir `[]` aqui obrigaria a escrever cliente de missão futura só para o gate.
+    expect(
+      [...diff.missing_in_front].sort(),
+      "operação contratada sem cliente e sem declaração",
+    ).toEqual([...SEM_CLIENTE_NO_FRONT].sort());
     // As outras categorias também precisam estar limpas: um `path_mismatch` faria a operação
     // "existir" com o endereço errado, e `missing_in_front` vazio mentiria.
     expect(diff.path_mismatch).toEqual([]);

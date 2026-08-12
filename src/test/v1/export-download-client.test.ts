@@ -346,10 +346,11 @@ describe("M22 · 6. `SEM_CLIENTE_NO_FRONT`", () => {
     expect(SEM_CLIENTE_NO_FRONT, "a dívida não encolheu: a M22 não fechou").not.toContain(OPERACAO);
   });
 
-  it("a declaração não contém mais o export — e a M23 zerou o resto", () => {
+  it("a declaração não contém mais o export — e o resto é a dívida vigente", () => {
     // Quando este caso nasceu, ele exigia `["…/timeline"]`: encolher demais teria declarado
-    // fechado o que a M23 ainda devia. A M23 fechou, então a catraca subiu para o vazio — e
-    // continua sendo catraca: qualquer operação nova sem cliente reprova aqui contra `[]`.
-    expect([...SEM_CLIENTE_NO_FRONT]).toEqual([]);
+    // fechado o que a M23 ainda devia. A M23 fechou e a catraca subiu para o vazio. A **BD02**
+    // publicou três operações de Instance sem cliente, e a catraca desceu de novo — de
+    // propósito. Ela continua sendo catraca: operação nova NÃO declarada reprova aqui.
+    expect([...SEM_CLIENTE_NO_FRONT].sort()).toEqual(["GET /v1/instances", "GET /v1/instances/{analysis_id}", "POST /v1/instances"].sort());
   });
 });
