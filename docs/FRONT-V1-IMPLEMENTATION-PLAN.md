@@ -39,7 +39,7 @@
 | **7** | Jornada de análise | M33–M35 | jornada REAL completa |
 | **8** | Backend delta de Instância | BD02 | freeze próprio |
 | **9** | Instância | M36–M37 | INST-01/03/04 navegáveis · INST-02/07 declaradas sem produtor |
-| **10** | Evolução | M38–M40 | comparação canônica |
+| **10** | Evolução | M38 ✅ · M39–M40 | comparação canônica |
 | **11** | Configurações | M41–M42 | ownership de D22 |
 | **12** | Comunicação / re-entry | M43–M44 | deep links corretos |
 | **13** | Hardening | M45 | 18 gates verdes |
@@ -925,16 +925,21 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 
 # FASE 10 — Evolução
 
-### M38 · EVO-01 — histórico cronológico canônico de análises — EM ANDAMENTO
+### M38 · EVO-01 — histórico cronológico canônico de análises — EXECUTADA
 > **Estado:** implementação **não iniciada**. O preflight zero-write de 2026-08-12 devolveu
 > `NEEDS AUTHORITY ALIGNMENT` — produtor completo, mas a entrada era esparsa e a rota não estava
 > congelada. O alinhamento fechou em `2aa1dee`.
 >
-> **Em andamento, dois checkpoints intermediários fechados.** `89e7fd3` aposentou a
-> `HistoryPage` e pôs `/dashboard/history` como redirect; o checkpoint 3A recuperou o baseline de
-> browser e migrou a cobertura legada para `/analyses`. **Falta a parte visual**: `/ux-copy`,
-> composição, `/design-critique`, `/ux-heuristics` e o DOC-CLOSE final. **EVO-01 ainda NÃO está
-> declarada entregue.**
+> **Executada em três etapas.** `89e7fd3` aposentou a `HistoryPage` e pôs `/dashboard/history`
+> como redirect; `791a5a0` recuperou o baseline de browser (45/7 → 55/0) e migrou a cobertura
+> legada para `/analyses`, promovendo o Playwright a gate oficial; o fechamento entregou a prova
+> visual, os três estados e a acessibilidade. **EVO-01 está ENTREGUE em `/analyses`.**
+>
+> **Uma correção de composição saiu do `/design-critique`:** o estado vazio era um `div` sem papel
+> de acessibilidade — o erro anunciava (`role="alert"`), o carregando anunciava (`role="status"`) e
+> o vazio ficava mudo, então os três só eram distintos para quem enxerga. Passou a usar o
+> `EmptyState` do DS, o mesmo de INST-01/03 e HOME-01, **reusando a copy existente**: nenhuma
+> chave nova. `/ux-heuristics` **9,3**.
 >
 > **Dívida intencional criada aqui, com dono.** `RunRow.tsx` e `RunComparePanel.tsx` ficaram
 > **órfãos intencionais** depois que a `HistoryPage` saiu: nenhum consumidor os alcança, e mesmo
@@ -1288,7 +1293,8 @@ depois começa sem ela.
 | B1 | **aberto em 1** — `create_instance`, sem superfície no Blueprint e sem missão no PLAN |
 | missões fechadas | **M36** (INST-01 + INST-03) em `34d65e2` |
 | última missão fechada | **M37** (INST-04 — nova análise a partir da Instância) |
-| próxima possível | **M38 / EVO-01** — autoridade alinhada em 2026-08-12; rota canônica `/analyses`. **Implementação não iniciada.** |
+| última missão fechada | **M38** (EVO-01 — histórico cronológico canônico em `/analyses`) |
+| próxima possível | **M39 / EVO-02 + INST-06** — `Pré: M30, M38`, ambas satisfeitas. **Não iniciada.** Herda a decisão sobre `RunRow`/`RunComparePanel` e a cobertura browser de comparação. |
 
 Como se chegou aqui: `4c96256` reconciliou a autoridade com o estado entregue; `fdddc27` e
 `2771e6d` fecharam a `TYPECHECK RECOVERY`. Nenhum dos três tocou código de produto.
@@ -1299,11 +1305,11 @@ Um comando por gate. Variante mais estreita **não é evidência substituta**.
 
 | gate | comando oficial | baseline |
 |---|---|---|
-| suíte | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts npx vitest run` | **1267 passed · 99 arquivos · 0 skips** |
+| suíte | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts npx vitest run` | **1262 passed · 98 arquivos · 0 skips** |
 | typecheck | `npm run typecheck` | ✅ **0 erros · exit 0** · 298 arquivos, cobertura completa — ver `TYPECHECK-GATE.md` |
 | lint | `npm run lint` | 🟡 **9 erros / 14 warnings** |
 | mutação | script por missão, **controle verde nas duas pontas** | por missão |
-| visual / browser | `npx playwright test` — mock local, **zero Railway** | ✅ **exit 0** · 55 casos |
+| visual / browser | `npx playwright test` — mock local, **zero Railway** | ✅ **exit 0** · 64 casos |
 
 > **`npx playwright test` é GATE OBRIGATÓRIO** desde 2026-08-12, e não uma sugestão da tabela.
 > Vale para: missão Front **visual** · missão que altera **rota** · missão que altera **navegação**

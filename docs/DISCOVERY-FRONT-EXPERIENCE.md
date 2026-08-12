@@ -227,7 +227,7 @@ Total de produção: **15.733 linhas** em **121 arquivos** (excluindo testes e e
 | `/home` `/home/welcome` | LaunchpadPage | existe |
 | `/profile` `/dashboard/settings` | perfil/config | existe, **usa Supabase direto** |
 | `/workspaces` | WorkspacesPage | existe |
-| `/dashboard/history` | HistoryPage | existe (303 linhas) |
+| `/dashboard/history` | HistoryPage | existe (303 linhas) — *inventário de 2026-08-08; **aposentada pela M38**, hoje é redirect para `/analyses`* |
 | `/dashboard/history/:id` | redirect legado | compat |
 | **`/canonical/analyses`** | AnalysesListPage | **eixo vivo** |
 | **`/canonical/analyses/new`** | StartAnalysisPage | **eixo vivo** |

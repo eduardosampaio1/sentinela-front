@@ -15,6 +15,7 @@ import type { AnalysisListItem, CanonicalScope } from "@/lib/v1";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/shared/states/LoadingState";
+import { EmptyState } from "@/design/patterns";
 import { useAnalysesList } from "../data/list";
 import { classifyListError } from "../data/listView";
 import { useCanonicalScope } from "./scope";
@@ -103,13 +104,21 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
 
   const items = list.data?.items ?? [];
   if (items.length === 0) {
+    // M38 · EVO-01. Era um `div` a mão, sem papel de acessibilidade: o erro anunciava
+    // (`role="alert"`) e o carregando anunciava (`role="status"`), mas o vazio ficava mudo para
+    // quem usa leitor de tela — os três estados só eram distintos para quem enxerga. O
+    // `EmptyState` do DS é o mesmo que INST-01/03 e HOME-01 já usam, e traz o papel por
+    // construção. Copy REUSADA: nenhuma chave nova, mesmo texto de antes.
     return (
-      <div className="space-y-4 rounded-lg border border-dashed border-border bg-muted/20 p-8 text-center">
-        <p className="text-muted-foreground">{t("canonicalAnalysis.list.empty")}</p>
-        <Button asChild>
-          <Link to="/analyses/new">{t("canonicalAnalysis.list.newAnalysis")}</Link>
-        </Button>
-      </div>
+      <EmptyState
+        titulo={t("canonicalAnalysis.list.title")}
+        explicacao={t("canonicalAnalysis.list.empty")}
+        acao={
+          <Button asChild>
+            <Link to="/analyses/new">{t("canonicalAnalysis.list.newAnalysis")}</Link>
+          </Button>
+        }
+      />
     );
   }
 

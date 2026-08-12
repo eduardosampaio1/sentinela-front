@@ -103,6 +103,10 @@ function getList(workspaceId: string, cursor: string | null): AnalysisListPage {
 // ── ERRO de status por analysis_id (E6): GET /{id} devolve um problem+json semeado (ex.: 401). ──
 const errMem = new Map<string, { http: number; code: string }>();
 const ERR_SESSION_KEY = "__sentinela_status_error__";
+/** M38 — seams da LISTAGEM, mesma convenção do erro de status acima. O `page.route` do Playwright
+ *  não serve: o MSW é service worker e intercepta antes dele. Erro e atraso precisam nascer aqui. */
+const LIST_ERR_KEY = "__sentinela_list_error__";
+const LIST_DELAY_KEY = "__sentinela_list_delay__";
 
 export function seedStatusError(analysisId: string, httpStatus: number, code: string): void {
   if (backend === "memory") {
@@ -278,7 +282,12 @@ export function makeJourneyHandlers(base: string) {
         result: payload,
       });
     }),
-    http.get(`${b}/v1/analyses`, ({ request }) => {
+    http.get(`${b}/v1/analyses`, async ({ request }) => {
+      // Atraso opcional: é o único jeito de o `loading` da lista ficar observável em browser.
+      if (typeof sessionStorage !== "undefined") {
+        const espera = Number(sessionStorage.getItem(LIST_DELAY_KEY) ?? 0);
+        if (espera > 0) await new Promise((r) => setTimeout(r, espera));
+      }
       const u = new URL(request.url);
       const ws = u.searchParams.get("workspace_id") ?? "";
       const cursor = u.searchParams.get("cursor");
@@ -293,6 +302,14 @@ export function makeJourneyHandlers(base: string) {
               ? HISTORICO_E2E_PAGINA_2
               : HISTORICO_E2E_PAGINA_1
             : { items: [], next_cursor: null },
+        );
+      }
+      // Erro da LISTAGEM (M38 · EVO-01). `problem+json`, como o Gateway responde — e não um 500
+      // cru, que faria a tela exercitar um caminho que produção nunca produz.
+      if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(LIST_ERR_KEY)) {
+        return HttpResponse.json(
+          { type: "about:blank", title: "temporarily_unavailable", status: 503, code: "temporarily_unavailable" },
+          { status: 503, headers: { "content-type": "application/problem+json" } },
         );
       }
       return HttpResponse.json(getList(ws, cursor));

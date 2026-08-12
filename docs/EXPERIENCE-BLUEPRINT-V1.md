@@ -351,7 +351,7 @@ compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browse
 
 | id | nome | rota canônica | contrato |
 |---|---|---|---|
-| **EVO-01** | **Histórico cronológico** | **`/analyses`** | **REAL** (`GET /v1/analyses` por cursor) |
+| **EVO-01** | **Histórico cronológico** | **`/analyses`** | ✅ **ENTREGUE** — M38 · **REAL** (`GET /v1/analyses` por cursor) |
 | **EVO-02** | **Comparação A×B** — AS-IS `RunComparePanel` | **REAL** para escolher duas análises; **APPROVED DELTA** para série de Instância |
 | **EVO-02** | — | — | (acima) |
 | **EVO-03** | **Baseline** | — | **APPROVED DELTA** (pertence à Instância) |
