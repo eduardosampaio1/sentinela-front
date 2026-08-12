@@ -25,14 +25,31 @@ import { ComparisonRow, ComparisonRowQuebrada } from "@/design/patterns/Comparis
 import { rotuloDoIndicador } from "../../result/indicadores";
 import type { Comparacao } from "../../result/comparacao";
 
-export function ComparacaoComAnterior({ comparacao }: { comparacao: Comparacao | null }) {
+/**
+ * M39 — os RÓTULOS passaram a ser injetáveis, a REGRA não.
+ *
+ * Na RES-01 o lado esquerdo é mesmo "a anterior", e o título diz isso com verdade. Na EVO-02 os
+ * dois lados vêm da URL e **nenhuma ordem cronológica é publicada**: chamar A de "anterior" ali
+ * seria a tela afirmando um fato que nem a rota nem o contrato sustentam. Um segundo componente
+ * resolveria a copy e duplicaria a apresentação — que é exatamente o que D29 proíbe. Então o
+ * componente é um só, e quem sabe a relação entre os dois lados informa como chamá-los.
+ */
+export function ComparacaoComAnterior({
+  comparacao,
+  tituloKey = "canonicalAnalysis.result.compareTitle",
+  baseKey = "canonicalAnalysis.result.compareBase",
+}: {
+  comparacao: Comparacao | null;
+  tituloKey?: string;
+  baseKey?: string;
+}) {
   const { t } = useLanguage();
 
   return (
     <section aria-labelledby="res-comparacao" className="space-y-3">
       <div>
         <h2 id="res-comparacao" className="text-lg font-semibold text-foreground">
-          {t("canonicalAnalysis.result.compareTitle")}
+          {t(tituloKey)}
         </h2>
         {/* A quebra é dita ANTES das linhas, e em texto. Escondê-la num tooltip faria a pessoa
             ler dezenas de pares como série antes de descobrir que não são. */}
@@ -49,7 +66,7 @@ export function ComparacaoComAnterior({ comparacao }: { comparacao: Comparacao |
         <div>
           {comparacao.linhas.map((l) => {
             const rotulo = rotuloDoIndicador(l, t);
-            const base = t("canonicalAnalysis.result.compareBase");
+            const base = t(baseKey);
             return l.comparavel ? (
               <ComparisonRow
                 key={l.id}

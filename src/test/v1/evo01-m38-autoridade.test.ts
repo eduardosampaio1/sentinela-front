@@ -178,11 +178,18 @@ describe("M38 · 5. fronteira com M39, M40 e a listagem canônica", () => {
     }
   });
 
-  it("baseline e comparação A×B não entram na EVO-01", () => {
+  it("baseline e a REGRA de comparação não entram na EVO-01", () => {
+    // ESTREITADO na M39 (2026-08-12). Enquanto comparação era proibida, bastava proibir a
+    // palavra `compare`. Agora a M39 autoriza a EVO-01 a ser o PONTO DE ENTRADA: ela pode
+    // navegar para `/analyses/compare/{a}/{b}`. O que ela continua não podendo é COMPARAR —
+    // regra, pareamento, delta ou baseline aqui dentro. Proibir a palavra viraria gate cego à
+    // diferença entre navegar e decidir.
     const f = semComentarios(ler(LISTA));
-    for (const proibido of ["baseline", "ComparisonPanel", "ComparisonRow", "compare"]) {
+    for (const proibido of ["baseline", "ComparisonPanel", "ComparisonRow", "compararComAnterior", "delta"]) {
       expect(f, `M39/M40 antecipada na EVO-01: ${proibido}`).not.toContain(proibido);
     }
+    // Navegar, sim — e só para a rota congelada.
+    expect(f, "a entrada da comparação sumiu").toContain("/analyses/compare/");
   });
 
   it("EVO-01 usa o `StatusBadge` canônico — uma linguagem só para o estado público", () => {

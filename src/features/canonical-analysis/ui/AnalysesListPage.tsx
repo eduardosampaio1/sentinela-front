@@ -8,14 +8,14 @@
 // janela em que um cursor do workspace anterior é enviado ao novo — Codex E4 R1 [P2]).
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { AnalysisListItem, CanonicalScope } from "@/lib/v1";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/shared/states/LoadingState";
-import { EmptyState, StatusBadge } from "@/design/patterns";
+import { EmptyState, StatusBadge, Toolbar } from "@/design/patterns";
 import type { EstadoPublico } from "@/design/patterns/estados";
 import { useAnalysesList } from "../data/list";
 import { classifyListError } from "../data/listView";
@@ -28,18 +28,38 @@ function formatarData(iso: string | null): string {
   return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
 }
 
-function ItemLinha({ item }: { item: AnalysisListItem }) {
+/** M39 — a seleção é um controle SEPARADO do link, não o link mudando de comportamento.
+ *  Sequestrar o clique da linha faria "abrir" e "escolher" morarem no mesmo alvo, e quem navega
+ *  por teclado ou leitor de tela perderia a distinção. O checkbox tem nome próprio. */
+function ItemLinha({
+  item,
+  selecao,
+}: {
+  item: AnalysisListItem;
+  selecao?: { marcada: boolean; alternar: () => void; bloqueada: boolean };
+}) {
   const { t } = useLanguage();
   const registros =
     item.record_count === null
       ? t("canonicalAnalysis.list.recordsUnknown")
       : t("canonicalAnalysis.list.records", { count: item.record_count });
   return (
-    <li>
+    <li className={selecao ? "flex items-center gap-3" : undefined}>
+      {selecao && (
+        <input
+          type="checkbox"
+          className="h-4 w-4 flex-none accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          checked={selecao.marcada}
+          // Bloqueia a TERCEIRA, nunca desmarcar: quem já escolheu duas ainda pode trocar.
+          disabled={selecao.bloqueada && !selecao.marcada}
+          onChange={selecao.alternar}
+          aria-label={t("canonicalAnalysis.list.open", { id: item.analysis_id })}
+        />
+      )}
       <Link
         to={`/analyses/${encodeURIComponent(item.analysis_id)}`}
         aria-label={t("canonicalAnalysis.list.open", { id: item.analysis_id })}
-        className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
+        className="flex min-w-0 flex-1 flex-col gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
       >
         <div className="min-w-0">
           <span className="block truncate font-medium text-foreground">{item.analysis_id}</span>
@@ -68,6 +88,17 @@ function ItemLinha({ item }: { item: AnalysisListItem }) {
 
 /** Lista + paginação de UM workspace. Remonta (key=workspaceId) na troca → estado sempre fresco. */
 function ListaCanonica({ scope }: { scope: CanonicalScope }) {
+  // M39 · EVO-02 — escolher EXATAMENTE duas. A lista não compara: ela só reúne a intenção e
+  // navega para a rota canônica, que é onde a comparação é reconstruída pelos dois ids.
+  const navigate = useNavigate();
+  const [selecionando, setSelecionando] = useState(false);
+  const [escolhidas, setEscolhidas] = useState<string[]>([]);
+  const alternar = (id: string) =>
+    setEscolhidas((s) => (s.includes(id) ? s.filter((x) => x !== id) : s.length >= 2 ? s : [...s, id]));
+  const sairDaSelecao = () => {
+    setSelecionando(false);
+    setEscolhidas([]);
+  };
   const { t } = useLanguage();
   // Cursor OPACO corrente + pilha de cursores anteriores (para "voltar" sem offset local).
   const [cursor, setCursor] = useState<string | null>(null);
@@ -134,9 +165,62 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
   const podeAvancar = Boolean(list.data?.next_cursor);
   return (
     <div className="space-y-6">
+      {/* A `Toolbar` do DS entra aqui porque agora existe função REAL — a decisão da M38 dizia
+          que ela não nasce vazia nem por decreto. Fora do modo de seleção há uma ação; dentro,
+          três, e o contador diz onde a pessoa está. */}
+      <Toolbar
+        primaria={
+          selecionando ? (
+            <Button
+              onClick={() => navigate(`/analyses/compare/${encodeURIComponent(escolhidas[0])}/${encodeURIComponent(escolhidas[1])}`)}
+              disabled={escolhidas.length !== 2}
+            >
+              {t("canonicalAnalysis.compare.compareNow")}
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={() => setSelecionando(true)}>
+              {t("canonicalAnalysis.compare.select")}
+            </Button>
+          )
+        }
+        secundarias={
+          selecionando
+            ? [
+                <span key="contador" role="status" className="text-sm text-muted-foreground">
+                  {t("canonicalAnalysis.compare.selected", { n: escolhidas.length })}
+                </span>,
+                <Button key="cancelar" variant="ghost" onClick={sairDaSelecao}>
+                  {t("canonicalAnalysis.compare.cancel")}
+                </Button>,
+              ]
+            : []
+        }
+        menuSecundarias={
+          selecionando ? (
+            <Button variant="ghost" onClick={sairDaSelecao}>
+              {t("canonicalAnalysis.compare.cancel")}
+            </Button>
+          ) : undefined
+        }
+      />
+      {selecionando && (
+        <p className="text-sm text-muted-foreground">{t("canonicalAnalysis.compare.selectHint")}</p>
+      )}
       <ul aria-label={t("canonicalAnalysis.list.title")} className="space-y-3">
         {items.map((item) => (
-          <ItemLinha key={item.analysis_id} item={item} />
+          <ItemLinha
+            key={item.analysis_id}
+            item={item}
+            selecao={
+              selecionando
+                ? {
+                    marcada: escolhidas.includes(item.analysis_id),
+                    alternar: () => alternar(item.analysis_id),
+                    bloqueada: escolhidas.length >= 2,
+                  }
+                : undefined
+            }
+          />
         ))}
       </ul>
       {(podeVoltar || podeAvancar) && (

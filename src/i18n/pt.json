@@ -31,6 +31,28 @@
     "redirecting": "Redirecionando..."
   },
   "canonicalAnalysis": {
+    "action": {
+      "viewResult": "Ver resultado",
+      "checkAgain": "Verificar novamente",
+      "retry": "Tentar novamente",
+      "back": "Voltar",
+      "newAnalysis": "Nova análise",
+      "resultPreparing": "A análise foi concluída. O resultado ainda está sendo preparado."
+    },
+    "compare": {
+      "backToList": "Ver todas as análises",
+      "cancel": "Cancelar",
+      "compareNow": "Comparar as duas",
+      "error": "Não foi possível carregar uma das análises agora. Tente novamente.",
+      "loading": "Carregando as duas análises…",
+      "pair": "A: {{a}} · B: {{b}}",
+      "sectionTitle": "Indicadores lado a lado",
+      "select": "Comparar",
+      "selectHint": "Escolha exatamente duas análises para comparar.",
+      "selected": "{{n}} de 2 selecionadas",
+      "sideA": "A",
+      "title": "Comparar análises"
+    },
     "entry": {
       "title": "Nova análise",
       "subtitle": "Reserve a análise e, no passo seguinte, envie a base de conversas.",
@@ -40,68 +62,6 @@
       "conflictTitle": "Este início já havia sido registrado",
       "conflictMeaning": "O pedido foi recusado como repetido, então pode já existir uma análise para ele.",
       "conflictAction": "Ver o histórico"
-    },
-    "upload": {
-      "title": "Adicione sua base",
-      "help": "Selecione um arquivo JSONL para analisar. O arquivo é enviado como está; nada é lido no seu navegador.",
-      "choose": "Escolher arquivo",
-      "send": "Enviar base",
-      "dropHint": "Arraste um arquivo aqui ou escolha um",
-      "noFile": "Nenhum arquivo selecionado",
-      "invalid": "Este tipo de arquivo não é aceito.",
-      "sending": "Enviando sua base…",
-      "retry": "Tentar novamente",
-      "submit": "Enviar para análise",
-      "selectedFile": "Arquivo selecionado",
-      "transport": {
-        "title": "A conexão caiu durante o envio",
-        "meaning": "Não é possível saber se a base chegou: a resposta nunca voltou. Ela pode ter sido recebida.",
-        "check": "Verificar o estado da análise"
-      },
-      "journeyReserved": "Análise reservada. Ela está esperando a base.",
-      "topBar": "Análise · adicionar base"
-    },
-    "state": {
-      "preparing": {
-        "title": "Preparando",
-        "message": "Preparando a análise."
-      },
-      "receiving": {
-        "title": "Recebendo",
-        "message": "Enviando e validando sua base."
-      },
-      "queued": {
-        "title": "Na fila",
-        "message": "Recebida e aguardando disponibilidade."
-      },
-      "running": {
-        "title": "Em execução",
-        "message": "Sua análise está sendo processada."
-      },
-      "recovering": {
-        "title": "Retomando",
-        "message": "Retomando o processamento."
-      },
-      "needs_mapping": {
-        "title": "Confirmação necessária",
-        "message": "Precisamos confirmar como alguns campos devem ser interpretados."
-      },
-      "completed": {
-        "title": "Concluída",
-        "message": "Análise concluída."
-      },
-      "failed": {
-        "title": "Não concluída",
-        "message": "A análise não pôde ser concluída."
-      }
-    },
-    "action": {
-      "viewResult": "Ver resultado",
-      "checkAgain": "Verificar novamente",
-      "retry": "Tentar novamente",
-      "back": "Voltar",
-      "newAnalysis": "Nova análise",
-      "resultPreparing": "A análise foi concluída. O resultado ainda está sendo preparado."
     },
     "list": {
       "title": "Suas análises",
@@ -122,6 +82,20 @@
       "open": "Abrir análise {{id}}",
       "records": "{{count}} registros",
       "recordsUnknown": "Registros indisponíveis"
+    },
+    "problem": {
+      "authentication_required": "Sua sessão não é mais válida. Entre novamente.",
+      "forbidden_or_not_found": "Esta análise não existe ou não está disponível no seu workspace.",
+      "invalid_input": "A requisição não pôde ser processada como enviada. Revise e tente novamente.",
+      "idempotency_conflict": "Esta requisição já foi enviada. Usando a análise existente.",
+      "analysis_not_ready": "A análise ainda não está pronta.",
+      "result_not_available": "Nenhum resultado disponível para esta análise.",
+      "capacity_wait": "O sistema está sem capacidade agora. Prosseguirá automaticamente.",
+      "temporarily_unavailable": "O serviço está temporariamente indisponível. Tente novamente em instantes.",
+      "non_retryable_failure": "A requisição não pôde ser concluída. Repetir não ajuda — contate o suporte se persistir."
+    },
+    "progress": {
+      "title": "O que está acontecendo"
     },
     "result": {
       "title": "Resultado da análise",
@@ -321,19 +295,59 @@
       "compareOnlyThere": "Só na anterior.",
       "compareBrokenShort": "série diferente"
     },
-    "problem": {
-      "authentication_required": "Sua sessão não é mais válida. Entre novamente.",
-      "forbidden_or_not_found": "Esta análise não existe ou não está disponível no seu workspace.",
-      "invalid_input": "A requisição não pôde ser processada como enviada. Revise e tente novamente.",
-      "idempotency_conflict": "Esta requisição já foi enviada. Usando a análise existente.",
-      "analysis_not_ready": "A análise ainda não está pronta.",
-      "result_not_available": "Nenhum resultado disponível para esta análise.",
-      "capacity_wait": "O sistema está sem capacidade agora. Prosseguirá automaticamente.",
-      "temporarily_unavailable": "O serviço está temporariamente indisponível. Tente novamente em instantes.",
-      "non_retryable_failure": "A requisição não pôde ser concluída. Repetir não ajuda — contate o suporte se persistir."
+    "state": {
+      "preparing": {
+        "title": "Preparando",
+        "message": "Preparando a análise."
+      },
+      "receiving": {
+        "title": "Recebendo",
+        "message": "Enviando e validando sua base."
+      },
+      "queued": {
+        "title": "Na fila",
+        "message": "Recebida e aguardando disponibilidade."
+      },
+      "running": {
+        "title": "Em execução",
+        "message": "Sua análise está sendo processada."
+      },
+      "recovering": {
+        "title": "Retomando",
+        "message": "Retomando o processamento."
+      },
+      "needs_mapping": {
+        "title": "Confirmação necessária",
+        "message": "Precisamos confirmar como alguns campos devem ser interpretados."
+      },
+      "completed": {
+        "title": "Concluída",
+        "message": "Análise concluída."
+      },
+      "failed": {
+        "title": "Não concluída",
+        "message": "A análise não pôde ser concluída."
+      }
     },
-    "progress": {
-      "title": "O que está acontecendo"
+    "upload": {
+      "title": "Adicione sua base",
+      "help": "Selecione um arquivo JSONL para analisar. O arquivo é enviado como está; nada é lido no seu navegador.",
+      "choose": "Escolher arquivo",
+      "send": "Enviar base",
+      "dropHint": "Arraste um arquivo aqui ou escolha um",
+      "noFile": "Nenhum arquivo selecionado",
+      "invalid": "Este tipo de arquivo não é aceito.",
+      "sending": "Enviando sua base…",
+      "retry": "Tentar novamente",
+      "submit": "Enviar para análise",
+      "selectedFile": "Arquivo selecionado",
+      "transport": {
+        "title": "A conexão caiu durante o envio",
+        "meaning": "Não é possível saber se a base chegou: a resposta nunca voltou. Ela pode ter sido recebida.",
+        "check": "Verificar o estado da análise"
+      },
+      "journeyReserved": "Análise reservada. Ela está esperando a base.",
+      "topBar": "Análise · adicionar base"
     }
   },
   "common": {

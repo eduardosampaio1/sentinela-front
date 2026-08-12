@@ -109,6 +109,11 @@ const InstanceDetail = lazy(() => import("@/features/instances/InstancePage"));
 const CanonicalAnalysesList = lazy(() =>
   import("@/features/canonical-analysis/ui/AnalysesListPage").then((m) => ({ default: m.AnalysesListPage }))
 );
+// M39 · EVO-02. Os DOIS ids no caminho: a comparação é reconstruível pelo endereço, sem query
+// param, sem storage e sem navigation state. A ordem A/B é a da rota.
+const CanonicalComparePage = lazy(() =>
+  import("@/features/canonical-analysis/ui/CompareAnalysesPage").then((m) => ({ default: m.CompareAnalysesPage })),
+);
 const CanonicalStartPage = lazy(() =>
   import("@/features/canonical-analysis/ui/StartAnalysisPage").then((m) => ({ default: m.StartAnalysisPage }))
 );
@@ -309,6 +314,10 @@ const routes: RouteObject[] = [
         children: [
           { path: "/analyses", element: <PageSuspense><CanonicalAnalysesList /></PageSuspense> },
           { path: "/analyses/new", element: <PageSuspense><CanonicalStartPage /></PageSuspense> },
+          {
+            path: "/analyses/compare/:analysisAId/:analysisBId",
+            element: <PageSuspense><CanonicalComparePage /></PageSuspense>,
+          },
           { path: "/analyses/:analysisId", element: <PageSuspense><CanonicalAnalysisPage /></PageSuspense> },
           { path: "/analyses/:analysisId/result", element: <PageSuspense><CanonicalResultPage /></PageSuspense> },
         ],

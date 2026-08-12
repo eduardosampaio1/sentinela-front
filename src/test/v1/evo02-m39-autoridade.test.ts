@@ -68,10 +68,14 @@ describe("M39 · 2. a rota canônica está congelada", () => {
     expect(e).toMatch(/sem query param, sem storage, sem navigation state/i);
   });
 
-  it("o router ainda NÃO tem a rota — este checkpoint é só de autoridade", () => {
-    // Se ela aparecer aqui, alguém implementou dentro do alinhamento. O gate vira prova de
-    // router quando a M39 executar, como o de `/dashboard/history` virou na M38.
-    expect(semComentarios(ler("src/app/router.tsx"))).not.toContain("/analyses/compare");
+  it("o router declara a rota congelada, com os DOIS ids no caminho", () => {
+    // PROMOVIDO com a implementação da M39, como o comentário anterior previa. Antes ele exigia
+    // que a rota NÃO existisse (o alinhamento era só de autoridade); agora prova o router.
+    const r = semComentarios(ler("src/app/router.tsx"));
+    expect(r).toContain('path: "/analyses/compare/:analysisAId/:analysisBId"');
+    // Nenhuma variante com query param ou id único entrou pela porta dos fundos.
+    expect(r).not.toMatch(/path: "\/analyses\/compare"/);
+    expect(r).not.toMatch(/path: "\/analyses\/compare\/:[a-zA-Z]+"/);
   });
 });
 
