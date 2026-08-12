@@ -1228,7 +1228,27 @@ depois começa sem ela.
 
 ## 5. Definition of Done — por missão e por fase
 
-### Baseline oficial de medição — 2026-08-12, pós-`TYPECHECK RECOVERY`
+### BASELINE OFICIAL — rebaseline de 2026-08-12, pós-reconciliação
+
+> **Este bloco é o registro de ESTADO CORRENTE do Front.** É aqui que se lê o ponto de partida de
+> qualquer missão nova — não no vault, não em validação de ciclo, não no histórico de commits.
+> Autoridade viva no repositório, conforme a regra congelada em `INDEX.md` do vault.
+
+| eixo | valor |
+|---|---|
+| Front | `sentinela-front-e1` · `develop` · **`2771e6d`** · árvore limpa |
+| Gateway / contrato público | `sentinela-facts` · **`ac81633`** · 15 operações · 9 problem codes |
+| Orchestrator | `sentinela-orchestrator` · `integracao/bd02-instancia` · **`8996a75`** |
+| origem contratual **obrigatória** | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts` — sem ela o resolver recusa escolher entre worktrees divergentes, e recusar é o comportamento correto |
+| catálogo de scenarios | **35** · 31 executáveis · 1 parcial · 3 bloqueados |
+| B1 | **aberto em 1** — `create_instance`, sem superfície no Blueprint e sem missão no PLAN |
+| última missão fechada | **M36** (INST-01 + INST-03) em `34d65e2` |
+| missão corrente | **M37 / INST-04** — Checkpoint 0 concluído em `064247b`; **implementação visual NÃO iniciada** |
+
+Como se chegou aqui: `4c96256` reconciliou a autoridade com o estado entregue; `fdddc27` e
+`2771e6d` fecharam a `TYPECHECK RECOVERY`. Nenhum dos três tocou código de produto.
+
+#### Comandos oficiais
 
 Um comando por gate. Variante mais estreita **não é evidência substituta**.
 
