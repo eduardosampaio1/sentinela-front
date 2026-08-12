@@ -194,6 +194,10 @@ Legenda: **verde** = REAL · **âmbar** = APPROVED DELTA · **azul** = parcialme
 
 `/analyses/{id}` · `/analyses/{id}/result` · `/analyses/{id}/result#comparison` — **registrados**.
 `/instances/{id}` — **entregue pela M36** (`/instances` e `/instances/:instanceId`). `/instances/{id}/evolution` segue **conceitual**: B3 fechou, mas Evolution é outra superfície e nenhuma missão a implementou.
+`/analyses/compare/{analysisAId}/{analysisBId}` — **congelada em 2026-08-12** para **EVO-02**.
+Os dois identificadores são **identidade durável na URL**, e a ordem A/B é a da rota: refresh e
+deep link reconstroem a comparação pelos dois ids. **Sem query param, sem storage, sem navigation
+state** como fonte de verdade — a mesma regra que a M37 aplicou ao contexto de Instância.
 `/canonical/*` é **interno/compatibilidade**, nunca IA pública.
 
 ### 3.3 Rotas de compatibilidade AS-IS (existem e redirecionam)
@@ -281,7 +285,7 @@ pela **BD02** (`FREEZE: PASS`, E2E por processos reais) e o gate **B3 está fech
 não descarta o escopo, e `instance_id` é campo publicado.
 
 **Construível ≠ entregue, e ≠ tem produtor.** Das sete: **INST-01 e INST-03 entregues** (M36);
-**INST-04 entregue** (M37); **INST-06** pertence à M39 (cronograma);
+**INST-04 entregue** (M37); **INST-06** é **delta declarado** — evolução longitudinal sem produtor;
 **INST-05** depende de baseline, que **não existe no contrato e nenhuma BD cria**; **INST-02 e
 INST-07** são delta declarado por falta de produtor. O contrato de Instance publica
 `instance_id`, `name`, `created_at` — e `create`/`list`/`get`, sem `update`, `PATCH` nem `delete`.
@@ -293,7 +297,7 @@ INST-07** são delta declarado por falta de produtor. O contrato de Instance pub
 | **INST-03** | Histórico | execuções em ordem | **APPROVED DELTA** |
 | **INST-04** | Nova análise (a partir da Instância) | pré-preencher o escopo | ✅ **ENTREGUE** — M37 |
 | **INST-05** | Baseline | marcar/substituir/remover a régua (D25) | **APPROVED DELTA** |
-| **INST-06** | Evolução | superfície própria de comparação (D29) | **APPROVED DELTA** |
+| **INST-06** | Evolução | 🔴 **DELTA DECLARADO — evolução longitudinal da Instance sem produtor** |
 | **INST-07** | Configuração da Instância (D22) | | 🔴 **DELTA DECLARADO — sem produtor de configuração; D22 depende de BD04** |
 
 ### 4.5 Análise — 4 superfícies (os demais itens são **estados**, §5)
@@ -352,8 +356,7 @@ compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browse
 | id | nome | rota canônica | contrato |
 |---|---|---|---|
 | **EVO-01** | **Histórico cronológico** | **`/analyses`** | ✅ **ENTREGUE** — M38 · **REAL** (`GET /v1/analyses` por cursor) |
-| **EVO-02** | **Comparação A×B** — AS-IS `RunComparePanel` | **REAL** para escolher duas análises; **APPROVED DELTA** para série de Instância |
-| **EVO-02** | — | — | (acima) |
+| **EVO-02** | **Comparação A×B** | **`/analyses/compare/{analysisAId}/{analysisBId}`** | **REAL** — duas leituras de `/result`, regra canônica em `comparacao.ts` |
 | **EVO-03** | **Baseline** | — | **APPROVED DELTA** (pertence à Instância) |
 
 > **EVO-01 mora em `/analyses`, e não nasce como terceira tela.** Decisão de owner de 2026-08-12.
@@ -498,6 +501,13 @@ semântico, formatar número de domínio, ler i18n de produto.
 | `WorkspaceSwitcher` | shell | `MeView.workspaces` | trocar escopo |
 | `ProvenancePopover` | RES-01 | procedência | §10 |
 | `ComparisonPanel` | EVO-02, RES-01 | par de resultados | §8 |
+
+> **`comparacao.ts` é a ÚNICA regra canônica de comparação A×B** (D29). Nenhum componente
+> implementa regra concorrente — de pareamento, de quebra, de delta ou de ausência. O
+> `RunComparePanel` legado **não é AS-IS de regra**: ele é **referência visual/estrutura legada**,
+> e a sua subtração local (`delta: number`) mais a decisão de comparabilidade **por linha**
+> contradizem D26 e D29. Sobreviver, ele só sobrevive como *presenter* sobre a regra canônica —
+> ou é substituído.
 
 **PAGE COMPOSITIONS:** uma por superfície de §4. **Nenhuma interpreta payload bruto.**
 
@@ -674,6 +684,15 @@ congelado pela BD02 — `instance_id`, `name`, `created_at` e nada mais. Nenhum 
 contador ou `updated_at`, porque nada disso existe no contrato; é a mesma razão pela qual
 **INST-02 não recebe scenario**.
 
+> **O core A×B da EVO-02 é executável com 20 e 21.** `comparison-compatible` e
+> `comparison-schema-break` bastam: o primeiro prova o par comparável, o segundo prova que a
+> quebra de `indicator_registry_version` **interrompe a comparabilidade do DOCUMENTO** (D26) — e
+> não que algumas linhas sigam comparando porque o `indicator.id` coincidiu.
+>
+> O **22** (`recommendation-persisted`) continua **🔴 bloqueado por BD03** e **não faz parte do
+> DoD da M39**: recomendação longitudinal exige `recommendation_id` no documento canônico, que o
+> produtor não entrega. Ele estar mapeado para EVO-02 não o torna requisito de fechamento.
+
 **Bloqueados: 3** (`recommendation-persisted`, `no-baseline`, `baseline-active`)
 **+ 1 parcial** (`needs-mapping`). **Nenhuma fixture será inventada para eles.**
 
@@ -849,7 +868,8 @@ de Analysis e histórico por Instance —, e o scenario 2 saiu de bloqueado.
 
 Desbloqueado é AUTORIZADO A IMPLEMENTAR, não entregue — e a distinção continua valendo para as
 que faltam. **Entregues: INST-01 e INST-03 (M36) e INST-04 (M37).** Seguem sem caminho INST-02 e
-INST-07 (delta declarado, sem produtor), INST-05 (baseline sem produtor) e INST-06 (M39).
+INST-07 (delta declarado, sem produtor), INST-05 (baseline sem produtor) e INST-06 (evolução
+longitudinal sem produtor — saiu da M39 em 2026-08-12).
 
 **Duas superfícies e uma operação ficam registradas sem missão.** INST-02 (Estado) e INST-07
 (Configuração) não têm produtor: o contrato publica `instance_id`, `name`, `created_at` e as
@@ -910,7 +930,7 @@ Todos os critérios, sem exceção:
 
 | detecção | ocorrências |
 |---|---|
-| 🔴 **superfície sem scenario** | INST-02/06/07, CFG-02/03/04, WS-02/04 — **8** (INST-04 saiu: o Checkpoint 0 da M37 lhe dá `instance-new-analysis`; INST-01 e INST-03 saíram na M36). Só **INST-06** é cronograma; **INST-02 e INST-07 são falta de PRODUTOR** — não há estado corrente publicado nem operação de configuração —, e nenhuma das duas terá scenario enquanto não tiver o que servir |
+| 🔴 **superfície sem scenario** | INST-02/06/07, CFG-02/03/04, WS-02/04 — **8** (INST-04 saiu: o Checkpoint 0 da M37 lhe dá `instance-new-analysis`; INST-01 e INST-03 saíram na M36). **Nenhuma é cronograma**; **INST-02, INST-06 e INST-07 são falta de PRODUTOR** — não há estado corrente publicado nem operação de configuração —, e nenhuma das duas terá scenario enquanto não tiver o que servir |
 | 🔴 **scenario sem superfície construível** | `no-baseline`, `baseline-active` — **2** (`instance-empty` saiu: INST-01 passou a ser construível com a BD02) |
 | ⚠️ **componente duplicado (risco)** | `StatusBadge` — **evitado por construção**: um componente para os dois vocabulários |
 | 🔴 **CTA sem operação** | **AN-02** "Confirmar interpretação"; WS-02 "Criar Workspace"; CFG-02 "Salvar idioma"; EVO-03 "Definir baseline" — **4** |

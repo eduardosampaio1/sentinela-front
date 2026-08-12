@@ -39,7 +39,7 @@
 | **7** | Jornada de análise | M33–M35 | jornada REAL completa |
 | **8** | Backend delta de Instância | BD02 | freeze próprio |
 | **9** | Instância | M36–M37 | INST-01/03/04 navegáveis · INST-02/07 declaradas sem produtor |
-| **10** | Evolução | M38 ✅ · M39–M40 | comparação canônica |
+| **10** | Evolução | M38 ✅ · M39 (autoridade alinhada) · M40 🔴 | comparação canônica |
 | **11** | Configurações | M41–M42 | ownership de D22 |
 | **12** | Comunicação / re-entry | M43–M44 | deep links corretos |
 | **13** | Hardening | M45 | 18 gates verdes |
@@ -953,7 +953,8 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 >
 > **Dívida intencional criada aqui, com dono.** `RunRow.tsx` e `RunComparePanel.tsx` ficaram
 > **órfãos intencionais** depois que a `HistoryPage` saiu: nenhum consumidor os alcança, e mesmo
-> assim foram preservados porque o Blueprint cita `RunComparePanel` como **AS-IS da EVO-02**.
+> assim foram preservados como referência da EVO-02. *(A M39 reclassificou `RunComparePanel`
+> em 2026-08-12: **referência visual**, não autoridade de regra.)*
 > **Owner: M39** — a ela cabe reutilizar, refatorar, substituir ou remover. A M38 só cortou o
 > vínculo com EVO-01. A cobertura browser de **comparação** saiu da spec de histórico junto com
 > eles, sem `skip`, e **renasce na M39**, na superfície certa.
@@ -980,9 +981,65 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   Discovery (registro da duplicidade + resolução de 2026-08-12) · Product Freeze · DS Constitution ·
   contrato público `@ ac81633` (`GET /v1/analyses`, cursor, workspace-scoped) · scenario
   `list-pagination`.
-### M39 · EVO-02 — comparação A×B e quebra de comparabilidade
-- **Pré:** M30, M38. **Escopo:** **uma** regra canônica compartilhada com RES-01 (D29).
-  **Scenarios:** 20, 21.
+### M39 · EVO-02 — comparação A×B — AUTORIDADE ALINHADA
+> **Estado:** implementação **não iniciada**. O preflight zero-write de 2026-08-12 devolveu
+> `NEEDS AUTHORITY ALIGNMENT`: o backend **não** bloqueava o par avulso — o que bloqueava era a
+> autoridade misturar A×B com evolução longitudinal de Instance, e chamar de "AS-IS" um componente
+> cuja regra contradiz a canônica.
+- **Pré:** ✅ **M30** (`fed4157`) e ✅ **M38** (`9d33c5a`) — ambas satisfeitas.
+- **Superfícies:** **EVO-02**, e só ela. **INST-06 SAIU da M39** em 2026-08-12: evolução
+  longitudinal da Instance é **delta declarado sem produtor**. Ver o delta abaixo.
+- **Rota canônica:** **`/analyses/compare/{analysisAId}/{analysisBId}`** — congelada. Os dois
+  identificadores são **identidade durável na URL** e a ordem A/B é a da rota. Refresh e deep link
+  reconstroem a comparação pelos dois ids; **sem query param, sem storage, sem navigation state**
+  como fonte de verdade.
+- **Entrada:** a superfície canônica **`/analyses`** (EVO-01). A M39 pode acrescentar a capacidade
+  de escolher **exatamente duas** análises e navegar para a rota acima. **Não transforma EVO-01 em
+  EVO-02:** a lista segue sendo histórico. É aqui, e só aqui, que uma `Toolbar` ganha função real —
+  e mesmo assim ela **não** vira obrigatória por decreto: a composição passa pelo quality stack.
+- **Escopo:** selecionar ou receber duas Analyses · reconstruir A e B **pelos ids** · ler os dois
+  resultados · usar **somente** `comparacao.ts` · apresentar a comparação compatível · apresentar a
+  **quebra documental** · refresh e deep link.
+- **Fora:** INST-06 · série/evolução longitudinal de Instance · `/instances/{id}/evolution` ·
+  Baseline · referência · régua · "comparar com baseline" · EVO-03 · M40 · **delta calculado no
+  Front** · recommendation longitudinal · `recommendation_id` · scenario 22 · BD03 · backend ·
+  segunda regra de comparação · rota diferente da congelada.
+- **DoD:** a rota canônica funciona · **A e B recuperadas independentemente**, pelos ids ·
+  **exatamente duas** leituras de `/result` · nenhuma leitura **antes** da intenção de comparar ·
+  `comparison-compatible` verde · `comparison-schema-break` verde · **uma** regra canônica ·
+  **nenhum delta inventado** · PT/EN · responsivo · teclado · axe · `/ux-copy` ·
+  `/design-critique` · `/ux-heuristics` **≥ 9,0** · **Playwright obrigatório** (rota nova) ·
+  typecheck `exit 0`, lint delta **≤ 0**, suíte e mutação verdes · **DOC-CLOSE**.
+- **Herança de cobertura, com dono.** A M38 aposentou o caso browser de comparação junto da
+  `HistoryPage`. Ele **renasce aqui**, na superfície certa, provando as três invariantes que
+  protegia: **nenhuma** `/result` antes da ação · **exatamente duas** leituras, para A e B ·
+  **nenhuma** rota ou implementação legada acordada.
+- **`RunRow` é artefato herdado, não requisito.** Se ganhar consumidor real na M39, o
+  `StatusBadge` **local** dele morre em favor do canônico — a decisão fechada em `9d33c5a`. Se
+  continuar órfão no fechamento, é removido ali, depois de provada a ausência de consumidores.
+  **Não se antecipa qual dos dois caminhos ocorre.**
+- **Gates:** recusam INST-06 voltando para a M39 · terceira regra de comparação · o
+  `RunComparePanel` como autoridade de domínio · **delta numérico local** · quebra **por linha**
+  contra D26 · Baseline entrando · scenario 22 virando requisito de fechamento · recommendation
+  longitudinal no core · rota diferente da congelada · M40 antecipada.
+- **Autoridades:** Product Freeze D26, D29 · Blueprint §3.2 (rota), §4.7, §9 e §11 · regra canônica
+  `src/features/canonical-analysis/result/comparacao.ts` · contrato público `@ ac81633`
+  (`GET /v1/analyses/{id}/result`) · scenarios `comparison-compatible` e `comparison-schema-break`.
+
+> **DELTA DECLARADO — INST-06 · evolução longitudinal da Instance, sem produtor.**
+> **Dono:** Produto/Arquitetura de Evolution + Instance. **Sem BD cunhada.**
+> O Blueprint publica a comparação **por par**, sob demanda; não existe série acumulada, nem
+> operação que a produza. A rota `/instances/{id}/evolution` **continua conceitual**.
+> **Reentrada:** 1) definir a semântica da série longitudinal · 2) definir produtor/read model ·
+> 3) publicar contrato · 4) criar scenario · 5) congelar rota · 6) autorizar superfície.
+
+> **A regra de comparação tem UM dono: `comparacao.ts`.** Ele já implementa D26 e D29 — a quebra é
+> de **documento** (mudou `indicator_registry_version` ou `measure_schema`, nenhum par conecta) e
+> o **delta é `null` sempre**, porque nada no `analysis-result-v1/v2` publica diferença entre duas
+> análises. O `RunComparePanel` legado faz o contrário nos dois pontos: subtrai localmente
+> (`delta: number`) e decide comparabilidade **por linha**. Por isso ele **deixa de ser AS-IS de
+> regra** e passa a **referência visual/estrutura legada**. A M39 não o "conserta": ela primeiro
+> lhe retira o direito de decidir o que comparação significa.
 ### M40 · EVO-03 + INST-05 — baseline explícito — BLOQUEADA POR FALTA DE PRODUTOR
 - **Pré:** ✅ **BD02** (satisfeita em 2026-08-12) **— e isso NÃO a destrava.**
 - 🔴 **A BD02 entregou Instância, não Baseline.** A `Pré:` desta missão dizia apenas `BD02` e os
@@ -1255,7 +1312,7 @@ depois começa sem ela.
 | AN-01 | M33 · AN-03 → M34 · AN-04 → M35 · **AN-02 → bloqueada por BD01** |
 | **RES-01** | M26–M31 |
 | EVO-01 | M38 · EVO-02 → M39 · EVO-03 → M40 (**bloqueada: Baseline sem produtor**) |
-| INST-01/03 | M36 · **INST-04 ✅ entregue** na M37 · **INST-05** → M40 (bloqueada: Baseline sem produtor) · **INST-06** → M39 (junto de EVO-02) · **INST-02 e INST-07: delta declarado, sem produtor** · **criar Instância: sem superfície nem missão** |
+| INST-01/03 | M36 · **INST-04 ✅ entregue** na M37 · **INST-05** → M40 (bloqueada: Baseline sem produtor) · **INST-06**: delta declarado, evolução longitudinal sem produtor · **INST-02 e INST-07: delta declarado, sem produtor** · **criar Instância: sem superfície nem missão** |
 | CFG-01/02 | M41 · CFG-03/04 → M42 |
 | erros globais | M13 (`ErrorState`) + M25 |
 
@@ -1304,7 +1361,7 @@ depois começa sem ela.
 | missões fechadas | **M36** (INST-01 + INST-03) em `34d65e2` |
 | última missão fechada | **M37** (INST-04 — nova análise a partir da Instância) |
 | última missão fechada | **M38** (EVO-01 — histórico cronológico canônico em `/analyses`) |
-| próxima possível | **M39 / EVO-02 + INST-06** — `Pré: M30, M38`, ambas satisfeitas. **Não iniciada.** Herda a decisão sobre `RunRow`/`RunComparePanel` e a cobertura browser de comparação. |
+| próxima possível | **M39 / EVO-02** (só ela — INST-06 saiu) — autoridade alinhada em 2026-08-12; rota `/analyses/compare/{a}/{b}` congelada. **Implementação não iniciada.** |
 
 Como se chegou aqui: `4c96256` reconciliou a autoridade com o estado entregue; `fdddc27` e
 `2771e6d` fecharam a `TYPECHECK RECOVERY`. Nenhum dos três tocou código de produto.
@@ -1315,7 +1372,7 @@ Um comando por gate. Variante mais estreita **não é evidência substituta**.
 
 | gate | comando oficial | baseline |
 |---|---|---|
-| suíte | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts npx vitest run` | **1264 passed · 98 arquivos · 0 skips** |
+| suíte | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts npx vitest run` | **1282 passed · 99 arquivos · 0 skips** |
 | typecheck | `npm run typecheck` | ✅ **0 erros · exit 0** · 298 arquivos, cobertura completa — ver `TYPECHECK-GATE.md` |
 | lint | `npm run lint` | 🟡 **9 erros / 14 warnings** |
 | mutação | script por missão, **controle verde nas duas pontas** | por missão |

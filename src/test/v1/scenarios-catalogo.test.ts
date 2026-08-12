@@ -182,7 +182,10 @@ describe("M18 · 1. o catálogo está completo", () => {
     expect(BLUEPRINT).toContain("DELTA DECLARADO — sem produtor de configuração");
     // E o motivo declarado é falta de PRODUTOR, não atraso de cronograma: a distinção é o que
     // impede a superfície de ser reagendada como se fosse só uma missão que não coube.
-    expect(BLUEPRINT).toMatch(/INST-02 e INST-07 são falta de PRODUTOR/);
+    // Âncora por SUBSTÂNCIA, não pela frase exata: a lista cresceu quando a M39 declarou
+    // INST-06 também sem produtor, e uma âncora literal teria caído por motivo errado — o
+    // fato que este caso protege é que INST-07 falta PRODUTOR, não que a frase seja aquela.
+    expect(BLUEPRINT).toMatch(/INST-07.*são falta de PRODUTOR/);
   });
 
   it("`instance-new-analysis`: o prepare leva EXATAMENTE o `instance_id` da tela", async () => {

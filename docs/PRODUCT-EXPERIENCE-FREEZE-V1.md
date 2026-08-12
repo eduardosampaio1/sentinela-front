@@ -45,7 +45,7 @@
 > |---|---|---|
 > | **INST-02** Estado | 🔴 delta declarado | não há estado corrente publicado — o read model é `instance_id`, `name`, `created_at` |
 > | **INST-05** Baseline | 🔴 bloqueada | baseline não existe no contrato público; nenhuma BD o cria |
-> | **INST-06** Evolução | ⏳ cronograma | pertence à M39, junto de EVO-02 |
+> | **INST-06** Evolução | 🔴 delta declarado | evolução longitudinal sem produtor; **saiu da M39** em 2026-08-12 |
 > | **INST-07** Configuração | 🔴 delta declarado | não há operação de configuração — nem `update`, `PATCH` ou `delete`; D22 depende de **BD04** |
 >
 > E **criar Instância** é o caso inverso: a operação existe no contrato e o Discovery §9.1 tem o nó
