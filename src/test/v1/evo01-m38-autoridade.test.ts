@@ -5,7 +5,7 @@
 // a torna executável. Nenhum deles testa comportamento de tela: eles testam que a autoridade diz
 // o que decidimos e que o código não pode contradizê-la sem ficar vermelho.
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CATALOGO, handlersDoScenario, scenario } from "@/mocks/scenarios";
@@ -86,11 +86,28 @@ describe("M38 · 3. nenhuma terceira rota nasce", () => {
     }
   });
 
-  it("`/dashboard/history` não pode ganhar lista própria de novo", () => {
-    // Hoje ela ainda aponta para a `HistoryPage` legada; a M38 a transforma em redirect. Este caso
-    // trava a DIREÇÃO: qualquer rota legada de histórico só pode existir como compatibilidade.
-    // Enquanto a M38 não roda, ele documenta o alvo lendo a autoridade — e depois dela, o router.
+  it("`/dashboard/history` resolve para `/analyses` no ROUTER, não numa página própria", () => {
+    // PROMOVIDO em 2026-08-12. Este caso lia só o Blueprint enquanto a rota ainda apontava para a
+    // `HistoryPage`; agora que a M38 entregou o redirect, ele prova o router de verdade. Um gate
+    // que continuasse medindo a prosa ficaria verde no dia em que alguém reintroduzisse a página.
+    const r = ROUTER();
+    expect(r).toMatch(/path: "\/dashboard\/history",\s*element: <Navigate to="\/analyses" replace \/>/);
+    expect(r, "a HistoryPage voltou ao router").not.toContain("HistoryPage");
     expect(BLUEPRINT).toContain("não pode voltar a ter lista própria");
+  });
+
+  it("a `HistoryPage` não existe mais como módulo", () => {
+    expect(existsSync(resolve(RAIZ, "src/features/history/HistoryPage.tsx")), "a segunda implementação voltou").toBe(false);
+  });
+
+  it("`RunRow`/`RunComparePanel` seguem no repo — órfãos INTENCIONAIS, owner M39", () => {
+    // Não é código morto esquecido: o Blueprint cita `RunComparePanel` como AS-IS da EVO-02, e
+    // decidir o destino dele é da M39. Este caso existe para que a preservação seja deliberada e
+    // visível, e não vire achado de auditoria daqui a três missões.
+    for (const f of ["src/features/history/RunRow.tsx", "src/features/history/RunComparePanel.tsx"]) {
+      expect(existsSync(resolve(RAIZ, f)), `${f} foi removido sem decisão da M39`).toBe(true);
+    }
+    expect(PLAN).toContain("órfãos intencionais");
   });
 });
 

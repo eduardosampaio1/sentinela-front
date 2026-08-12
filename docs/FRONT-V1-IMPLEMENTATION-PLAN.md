@@ -925,10 +925,23 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 
 # FASE 10 — Evolução
 
-### M38 · EVO-01 — histórico cronológico canônico de análises — AUTORIDADE ALINHADA
+### M38 · EVO-01 — histórico cronológico canônico de análises — EM ANDAMENTO
 > **Estado:** implementação **não iniciada**. O preflight zero-write de 2026-08-12 devolveu
 > `NEEDS AUTHORITY ALIGNMENT` — produtor completo, mas a entrada era esparsa e a rota não estava
-> congelada. O alinhamento fechou no commit desta etapa; a implementação é a missão em si.
+> congelada. O alinhamento fechou em `2aa1dee`.
+>
+> **Em andamento, dois checkpoints intermediários fechados.** `89e7fd3` aposentou a
+> `HistoryPage` e pôs `/dashboard/history` como redirect; o checkpoint 3A recuperou o baseline de
+> browser e migrou a cobertura legada para `/analyses`. **Falta a parte visual**: `/ux-copy`,
+> composição, `/design-critique`, `/ux-heuristics` e o DOC-CLOSE final. **EVO-01 ainda NÃO está
+> declarada entregue.**
+>
+> **Dívida intencional criada aqui, com dono.** `RunRow.tsx` e `RunComparePanel.tsx` ficaram
+> **órfãos intencionais** depois que a `HistoryPage` saiu: nenhum consumidor os alcança, e mesmo
+> assim foram preservados porque o Blueprint cita `RunComparePanel` como **AS-IS da EVO-02**.
+> **Owner: M39** — a ela cabe reutilizar, refatorar, substituir ou remover. A M38 só cortou o
+> vínculo com EVO-01. A cobertura browser de **comparação** saiu da spec de histórico junto com
+> eles, sem `skip`, e **renasce na M39**, na superfície certa.
 - **Pré:** ✅ **M25** (executada em `92bd174`). **Paraleliza com:** Fase 5.
 - **Superfícies:** **EVO-01**. **Scenarios:** 32 `list-pagination` — nenhum scenario novo.
 - **Rota canônica:** **`/analyses`**. A lista já vive ali desde a Onda 6 E4 (renomeada pela M24):
@@ -1290,7 +1303,21 @@ Um comando por gate. Variante mais estreita **não é evidência substituta**.
 | typecheck | `npm run typecheck` | ✅ **0 erros · exit 0** · 298 arquivos, cobertura completa — ver `TYPECHECK-GATE.md` |
 | lint | `npm run lint` | 🟡 **9 erros / 14 warnings** |
 | mutação | script por missão, **controle verde nas duas pontas** | por missão |
-| visual | `npx playwright test` — mock local, **zero Railway** | 11 specs em `e2e/` |
+| visual / browser | `npx playwright test` — mock local, **zero Railway** | ✅ **exit 0** · 55 casos |
+
+> **`npx playwright test` é GATE OBRIGATÓRIO** desde 2026-08-12, e não uma sugestão da tabela.
+> Vale para: missão Front **visual** · missão que altera **rota** · missão que altera **navegação**
+> · missão que altera **jornada** · **rebaseline** oficial do Front. Checkpoint puramente
+> documental ou contratual, sem impacto em nenhuma dessas classes, não precisa executá-lo.
+>
+> **Exit 0 é o critério — contagem parcial não substitui.** Uma spec vermelha no HEAD **bloqueia**
+> o fechamento de missão visual/rota/jornada.
+>
+> **Por que virou regra.** A tabela já listava o comando e nada o executava por missão. Foi assim
+> que `historico-cluster.spec.ts` ficou vermelha por **três missões** sem ninguém ver: uma
+> expectativa obsoleta desde a **M24** (`/canonical/...` deixou de ser IA pública) e outra desde a
+> **M32** (o gancho da Home legada). Nenhuma das duas era regressão de quem estava executando no
+> dia — eram gates não executados. **A lição do typecheck vale aqui: não executado ≠ verde.**
 
 **Regra de linguagem.** Só se escreve *"verde"* quando o comando oficial sai com **exit 0** — e
 não quando uma contagem parcial zerou. O typecheck passou nesse teste; o **lint ainda não**, e
