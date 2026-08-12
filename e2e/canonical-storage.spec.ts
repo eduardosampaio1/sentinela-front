@@ -174,8 +174,9 @@ test.describe("as outras portas de persistência do navegador", () => {
     expect(forasteiros, `service worker não-MSW registrado: ${forasteiros.join(", ")}`).toEqual([]);
 
     // A URL carrega o `analysis_id` (persistível e NÃO sensível) e nada mais: sem query, sem
-    // hash, e sem nenhum marcador do cliente.
-    expect(portas.url).toContain("/canonical/analyses/an-store/result");
+    // hash, e sem nenhum marcador do cliente. O endereço público perdeu o prefixo `/canonical`
+    // em `f182e4b` (M24) — a navegação acima entra pelo antigo e termina no novo.
+    expect(portas.url).toContain("/analyses/an-store/result");
     expect(portas.url).not.toContain("?");
     expect(portas.url).not.toContain("#");
     expect(portas.url).not.toContain(MARCADOR);

@@ -39,8 +39,13 @@ test.describe("Jornada canônica autenticada (browser real + MSW stateful)", () 
     await expect(page.getByRole("button", { name: "Start analysis" })).toBeVisible();
     await page.getByRole("button", { name: "Start analysis" }).click();
 
-    // identidade durável: navega p/ /canonical/analyses/an-e2e
-    await page.waitForURL(/\/canonical\/analyses\/an-e2e/);
+    // Identidade durável: navega p/ `/analyses/an-e2e`.
+    //
+    // Era `/canonical/analyses/an-e2e` até `f182e4b` (M24), que tirou o nome de camada interna da
+    // URL pública e deixou `/canonical/*` como redirect de compatibilidade. A entrada da spec
+    // segue pelo endereço antigo DE PROPÓSITO — é assim que o redirect continua coberto —, mas a
+    // identidade que a app publica depois da ação é a nova. A expectativa acompanhou a autoridade.
+    await page.waitForURL(/\/analyses\/an-e2e/);
 
     // upload sem materialização (File direto)
     await page.setInputFiles("#canonical-file", JSONL);
@@ -54,9 +59,12 @@ test.describe("Jornada canônica autenticada (browser real + MSW stateful)", () 
     // E5 mudou este contrato de propósito: na E3 a ação era um botão DESABILITADO (não existia
     // página de resultado); agora é um link real para a rota canônica, deep-linkável. A asserção
     // não foi afrouxada — ficou mais forte: exige o href EXATO do analysis_id desta jornada.
+    //
+    // O href também perdeu o `/canonical` em `f182e4b` (M24). Esta linha ficou anos-luz de ser
+    // vista: o `waitForURL` acima matava o caso antes, e uma assertion morta não acusa nada.
     const verResultado = page.getByRole("link", { name: "View result" });
     await expect(verResultado).toBeVisible();
-    await expect(verResultado).toHaveAttribute("href", "/canonical/analyses/an-e2e/result");
+    await expect(verResultado).toHaveAttribute("href", "/analyses/an-e2e/result");
 
     expect(legacy, "nenhuma chamada legada (/api|/rest|/graphql|/auth)").toEqual([]);
     expect(v1Calls, "a jornada fala com o Gateway /v1").toBeGreaterThan(0);
@@ -68,7 +76,7 @@ test.describe("Jornada canônica autenticada (browser real + MSW stateful)", () 
     await enableAuth(page);
     await page.goto("/canonical/analyses/new");
     await page.getByRole("button", { name: "Start analysis" }).click();
-    await page.waitForURL(/\/canonical\/analyses\/an-e2e/);
+    await page.waitForURL(/\/analyses\/an-e2e/); // rota pública pós-M24 — ver o comentário acima
     await page.setInputFiles("#canonical-file", JSONL);
     await page.getByRole("button", { name: "Send dataset" }).click();
     await page.getByRole("button", { name: "Submit for analysis" }).click();

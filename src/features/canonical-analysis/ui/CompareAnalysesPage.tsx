@@ -79,8 +79,8 @@ export function CompareAnalysesPage() {
     return (
       <ComparacaoComAnterior
         comparacao={comparacao}
-        tituloKey="canonicalAnalysis.compare.sectionTitle"
-        baseKey="canonicalAnalysis.compare.sideA"
+        titulo={t("canonicalAnalysis.compare.sectionTitle")}
+        base={t("canonicalAnalysis.compare.sideA")}
       />
     );
   }

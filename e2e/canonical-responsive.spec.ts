@@ -40,7 +40,9 @@ for (const vp of VIEWPORTS) {
 
     // upload: dropzone utilizável + ação acessível
     await page.getByRole("button", { name: "Start analysis" }).click();
-    await page.waitForURL(/\/canonical\/analyses\/an-e2e/);
+    // `/analyses/…`, não `/canonical/analyses/…`: `f182e4b` (M24) tirou o nome de camada interna
+    // da URL pública. A entrada acima segue pelo endereço antigo, que hoje é redirect.
+    await page.waitForURL(/\/analyses\/an-e2e/);
     await expect(page.getByText("Add your dataset")).toBeVisible(); // título da dropzone
     const enviar = page.getByRole("button", { name: "Send dataset" });
     await expect(enviar).toBeVisible();

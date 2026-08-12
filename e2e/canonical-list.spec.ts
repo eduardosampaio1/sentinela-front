@@ -98,7 +98,9 @@ test.describe("E4 — listagem, histórico e retomada (browser real)", () => {
     await seed(page);
     await page.goto("/canonical/analyses");
     await page.getByRole("link", { name: /Open analysis an-list-1/i }).click();
-    await page.waitForURL(/\/canonical\/analyses\/an-list-1/);
+    // `/analyses/…`, não `/canonical/analyses/…`: `f182e4b` (M24) tirou o nome de camada interna
+    // da URL pública. A entrada acima segue pelo endereço antigo, que hoje é redirect.
+    await page.waitForURL(/\/analyses\/an-list-1/);
     await expect(page.getByRole("heading", { name: "Completed" })).toBeVisible({ timeout: 30_000 });
   });
 

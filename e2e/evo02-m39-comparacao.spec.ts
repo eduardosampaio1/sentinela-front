@@ -32,17 +32,25 @@ const ITENS: Linha[] = [
   { analysis_id: A, status: "completed", record_count: 800, result_available: true, created_at: "2026-08-01T10:00:00Z" },
 ];
 
-async function preparar(page: Page, opts: { registryB?: string } = {}) {
+// A quebra documental (`comparison-schema-break`, scenario 21) NÃO é semeada aqui, e isso é
+// decisão, não esquecimento. `indicator_registry_version` vem do envelope e não varia por
+// `analysis_id` no journey; fabricar a variação exigiria um seam que o produto não tem. O DoD
+// pede o scenario verde na REGRA canônica — e lá ele é provado em unidade, sobre o documento.
+// O que esta spec deve ao browser são as três invariantes herdadas da M38: nenhuma leitura de
+// `/result` antes da ação, exatamente duas depois, e nenhuma rota legada acordada.
+//
+// Houve aqui um ramo `registryB` que fingia cobrir isso. Nenhum caso o acionava, e o corpo
+// sobrescrevia o seam inteiro com `{ [regB]: true }` — teria destruído MASSA_A/MASSA_B se
+// alguém o tivesse chamado. Código morto que promete capacidade é pior que ausência: ele
+// responde "coberto" a quem procurar pelo nome.
+async function preparar(page: Page) {
   await page.addInitScript(
-    ([ws, itens, regB, ids, docs]) => {
+    ([ws, itens, ids, docs]) => {
       (window as unknown as Record<string, unknown>).__SENTINELA_E2E_AUTH__ = true;
       sessionStorage.setItem("__sentinela_list__", JSON.stringify({ [`${ws}|`]: { items: itens, next_cursor: null } }));
       sessionStorage.setItem("__sentinela_result__", JSON.stringify({ [ids[0]]: docs[0], [ids[1]]: docs[1] }));
-      // Quando informado, o segundo documento muda de `indicator_registry_version` — é o
-      // scenario 21: a quebra é do DOCUMENTO, e nenhuma linha conecta.
-      if (regB) sessionStorage.setItem("__sentinela_result__", JSON.stringify({ [String(regB)]: true }));
     },
-    [WS, ITENS, opts.registryB ?? "", [A, B], [MASSA_A, MASSA_B]] as const,
+    [WS, ITENS, [A, B], [MASSA_A, MASSA_B]] as const,
   );
 }
 

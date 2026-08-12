@@ -33,23 +33,33 @@ import type { Comparacao } from "../../result/comparacao";
  * seria a tela afirmando um fato que nem a rota nem o contrato sustentam. Um segundo componente
  * resolveria a copy e duplicaria a apresentação — que é exatamente o que D29 proíbe. Então o
  * componente é um só, e quem sabe a relação entre os dois lados informa como chamá-los.
+ *
+ * O que entra é **texto resolvido**, não chave. A primeira versão recebia `tituloKey`/`baseKey` e
+ * chamava `t(chave)` aqui dentro — e `t(variavel)` é exatamente o que a catraca da M14 proíbe:
+ * sem literal no programa, a AST não sabe qual chave foi pedida e a paridade PT×EN deixa de ser
+ * verificável. Passar a chave para dentro empurra o custo para o gate; passar o texto deixa as
+ * duas pontas literais, cada uma no `t("...")` de quem sabe qual superfície está falando.
  */
 export function ComparacaoComAnterior({
   comparacao,
-  tituloKey = "canonicalAnalysis.result.compareTitle",
-  baseKey = "canonicalAnalysis.result.compareBase",
+  titulo,
+  base,
 }: {
   comparacao: Comparacao | null;
-  tituloKey?: string;
-  baseKey?: string;
+  /** Já resolvido pelo chamador. Ausente = a copy da RES-01, que é a superfície de origem. */
+  titulo?: string;
+  /** Idem — o nome do lado esquerdo, que na RES-01 é "a anterior" e na EVO-02 é "A". */
+  base?: string;
 }) {
   const { t } = useLanguage();
+  const tituloDaSecao = titulo ?? t("canonicalAnalysis.result.compareTitle");
+  const rotuloDaBase = base ?? t("canonicalAnalysis.result.compareBase");
 
   return (
     <section aria-labelledby="res-comparacao" className="space-y-3">
       <div>
         <h2 id="res-comparacao" className="text-lg font-semibold text-foreground">
-          {t(tituloKey)}
+          {tituloDaSecao}
         </h2>
         {/* A quebra é dita ANTES das linhas, e em texto. Escondê-la num tooltip faria a pessoa
             ler dezenas de pares como série antes de descobrir que não são. */}
@@ -66,7 +76,7 @@ export function ComparacaoComAnterior({
         <div>
           {comparacao.linhas.map((l) => {
             const rotulo = rotuloDoIndicador(l, t);
-            const base = t(baseKey);
+            const base = rotuloDaBase;
             return l.comparavel ? (
               <ComparisonRow
                 key={l.id}
