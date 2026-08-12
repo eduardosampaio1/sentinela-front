@@ -804,17 +804,23 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 
 # FASE 9 — Instância
 
-### M36 · INST-01/02/03 — visão, estado e histórico
+### M36 · INST-01/03 — visão e histórico
 - **Pré:** ✅ **BD02 congelada** (`FREEZE: PASS`, B3 fechado). **Scenarios:** 2 `instance-empty`,
   agora **disponível**.
-- **Escopo:** **INST-01** visão atual da Instance · **INST-02** estado da Instance, em LEITURA,
-  com procedência junto do dado · **INST-03** histórico de Analyses da Instance em ordem canônica.
-  Consumir **somente** capacidades já publicadas pela BD02. Navegação e contexto têm de sobreviver
-  ao refresh pela identidade durável.
+- **Escopo:** **INST-01** visão atual da Instance · **INST-03** histórico de Analyses da Instance
+  em ordem canônica. Consumir **somente** capacidades já publicadas pela BD02. Navegação e
+  contexto têm de sobreviver ao refresh pela identidade durável.
+- **INST-02 SAIU desta missão** — retirada da autoridade ANTES do primeiro write, não dispensada
+  no fim. Ela pede *"leitura do estado corrente"*, e o contrato de Instance publica três campos:
+  `instance_id`, `name`, `created_at`. A BD02 congelou deliberadamente **sem** `status`, `health`,
+  contadores ou `updated_at`, e as derivações possíveis estão todas proibidas: última Analysis
+  como estado, histórico como saúde, `created_at` como status, contagem no Front. Não é falta de
+  fixture — é contradição entre o Blueprint visual e o produto entregue. Ver o delta declarado
+  abaixo.
 - **Fora:** criar/editar/remover Instance · health sintético · métrica nova · timeline própria de
   Instance · re-parenting · Default Instance · configuração técnica/secrets · Workspace CRUD ·
   qualquer backend novo.
-- **DoD:** INST-01/02/03 conforme Blueprint · scenario 2 exercitado · estado vazio honesto ·
+- **DoD:** INST-01/03 conforme Blueprint · scenario 2 exercitado · estado vazio honesto ·
   histórico a partir do read model publicado, **sem cálculo no Front** · refresh/deep link
   reconstrói o contexto pela identidade · PT/EN · desktop/tablet/mobile · teclado · axe ·
   `/ux-copy` · `/design-critique` · `/ux-heuristics` com gate de owner **≥ 9,0** · typecheck,
@@ -824,6 +830,16 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   depende de estado efêmero do browser.
 - **Autoridades:** Product Freeze · Blueprint §11 · Blueprint §§460/465 (`StatusBadge`,
   `AnalysisListItem`) · DS Constitution · Architecture & Mock · scenario 2. Sem Discovery nova.
+> **DELTA DECLARADO — INST-02 · Estado da Instância, sem produtor.**
+> **Dono:** Produto/Arquitetura de Instância. **Sem número de BD**: a convenção do registro abaixo
+> é `BD01`…`BD09`, e cunhar `BD10` aqui seria decidir que existe delta de backend antes de existir
+> a decisão de produto que o define.
+> **Razão:** o contrato não publica estado corrente de Instance, e o Front não pode inferi-lo.
+> **Reentrada, nesta ordem:** 1) definir o que "estado corrente da Instância" significa ·
+> 2) definir o produtor · 3) publicar contrato/read model · 4) só então autorizar a superfície.
+> Criar um campo `status` genérico para satisfazer uma tela poria a mentira no servidor em vez do
+> Front.
+
 ### M37 · INST-04/07 — nova análise contextual e configuração
 - **Pré:** M36. **Escopo:** pré-preencher escopo; configuração contextual (D22).
 
@@ -1075,7 +1091,7 @@ depois começa sem ela.
 | AN-01 | M33 · AN-03 → M34 · AN-04 → M35 · **AN-02 → bloqueada por BD01** |
 | **RES-01** | M26–M31 |
 | EVO-01 | M38 · EVO-02 → M39 · EVO-03 → M40 |
-| INST-01…07 | M36, M37 (após BD02) |
+| INST-01/03 | M36 (após BD02) · INST-04/07 → M37 · **INST-02 sem missão: delta declarado, sem produtor** |
 | CFG-01/02 | M41 · CFG-03/04 → M42 |
 | erros globais | M13 (`ErrorState`) + M25 |
 

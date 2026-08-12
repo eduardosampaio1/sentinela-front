@@ -1,9 +1,14 @@
 // M18 — o CATÁLOGO canônico dos cenários de mock.
 //
-// ## Por que o catálogo tem 32 entradas e não 27
+// ## Por que o catálogo tem 34 entradas e não 30
 //
-// O Blueprint §11 lista **32**. Destes, **27 são executáveis**, **1 é parcial** (`needs-mapping`:
-// exibir sim, resolver não) e **4 estão BLOQUEADOS** por delta de backend que não existe.
+// O Blueprint §11 lista **34**. Destes, **30 são executáveis**, **1 é parcial** (`needs-mapping`:
+// exibir sim, resolver não) e **3 estão BLOQUEADOS** por delta de backend que não existe.
+//
+// Eram 32/27/1/4. A **BD02** desbloqueou `instance-empty` (o delta de Instância deixou de faltar)
+// e a **M36** acrescentou `instance-present` e `instance-history`, que representam o produtor
+// agora real. O total cresce por DECISÃO de produto, registrada no Blueprint antes de chegar
+// aqui — nunca porque o código precisou de mais um caso.
 //
 // Os 5 não-executáveis ficam aqui, declarados, em vez de sumirem da lista. Um catálogo que só
 // mostra o que funciona faz o que falta parecer inexistente — e é assim que alguém "descobre",
@@ -34,6 +39,11 @@ import {
   problem,
   statusView,
 } from "@/test/fixtures/public-v1/analyses";
+import {
+  HISTORICO_PAGINA_1,
+  HISTORICO_PAGINA_2,
+  INSTANCIA,
+} from "@/test/fixtures/public-v1/instances";
 
 export type EstadoDoScenario = "disponivel" | "parcial" | "bloqueado";
 
@@ -123,6 +133,53 @@ export const CATALOGO: readonly Scenario[] = [
     estado: "disponivel",
     handlers: (b) => [
       http.get(`${b}/v1/instances`, () => json({ items: [], next_cursor: null })),
+    ],
+  },
+  {
+    // M36. `instance-empty` prova o vazio, e só ele — não se constrói "visão atual da Instância"
+    // sem nenhuma Instância. Este é o par populado dela.
+    //
+    // O shape é o publicado, e nada além: `instance_read_model_fields` do contrato @ ac81633 é
+    // exatamente `["instance_id", "name", "created_at"]`. Sem `status`, `health`, contador,
+    // `description`, `tags` ou `updated_at` — nenhum deles existe no produtor, e é a MESMA razão
+    // pela qual INST-02 (Estado) não tem scenario nem missão.
+    //
+    // `get` devolve a mesma identidade que `list`: é o que sustenta o deep link e o refresh, em
+    // que a tela chega sabendo só o `instance_id`.
+    id: "instance-present",
+    superficies: ["INST-01"],
+    estado: "disponivel",
+    handlers: (b) => [
+      http.get(`${b}/v1/instances`, () => json({ items: [INSTANCIA], next_cursor: null })),
+      http.get(`${b}/v1/instances/:id`, () => json(INSTANCIA)),
+    ],
+  },
+  {
+    // M36. O histórico é a listagem canônica FILTRADA — não existe subrecurso
+    // `/v1/instances/{id}/analyses`, e a BD02 recusou criá-lo de propósito.
+    //
+    // O handler afirma a associação em vez de presumi-la: só responde quando o `instance_id`
+    // pedido é o desta Instance, e devolve itens que carregam esse mesmo `instance_id`. Um mock
+    // que ignorasse o filtro deixaria passar um Front que esqueceu de enviá-lo — e a tela
+    // pareceria funcionar mostrando análise de outra Instância.
+    //
+    // Duas páginas com `next_cursor` real: a prova de histórico precisa atravessar fronteira de
+    // página, e uma página feliz não distingue paginação correta de ausência de paginação.
+    id: "instance-history",
+    superficies: ["INST-03"],
+    estado: "disponivel",
+    handlers: (b) => [
+      http.get(`${b}/v1/instances`, () => json({ items: [INSTANCIA], next_cursor: null })),
+      http.get(`${b}/v1/instances/:id`, () => json(INSTANCIA)),
+      http.get(`${b}/v1/analyses`, ({ request }) => {
+        const q = new URL(request.url).searchParams;
+        if (q.get("instance_id") !== INSTANCIA.instance_id) {
+          // Sem o filtro, o histórico não existe. Devolver a lista geral aqui seria o mock
+          // completando o que o Front esqueceu.
+          return json({ items: [], next_cursor: null });
+        }
+        return json(q.get("cursor") ? HISTORICO_PAGINA_2 : HISTORICO_PAGINA_1);
+      }),
     ],
   },
   {

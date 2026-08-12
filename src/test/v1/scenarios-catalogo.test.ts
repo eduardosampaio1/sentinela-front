@@ -22,7 +22,18 @@ import {
 const RAIZ = resolve(__dirname, "../../..");
 const BASE = "http://gw.test";
 
-/** Os 32 nomes do Blueprint §11 — a autoridade de MAPA. */
+/** Executa o handler MSW que casa com a URL e devolve o corpo — a prova é o que ele SERVE. */
+async function servir(hs: ReturnType<typeof handlersDoScenario>, url: string): Promise<any> {
+  const pedido = new Request(url);
+  for (const h of hs) {
+    const r = await h.run({ request: pedido, requestId: "t", cookies: {} } as never);
+    const resposta = (r as { response?: Response } | null)?.response;
+    if (resposta) return resposta.json();
+  }
+  throw new Error(`nenhum handler respondeu ${url}`);
+}
+
+/** Os 34 nomes do Blueprint §11 — a autoridade de MAPA. */
 const BLUEPRINT = readFileSync(resolve(RAIZ, "docs/EXPERIENCE-BLUEPRINT-V1.md"), "utf-8");
 
 /** Os bloqueados que o plano nomeia, literalmente.
@@ -41,16 +52,17 @@ const BLOQUEADOS_DO_PLANO = [
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M18 · 1. o catálogo está completo", () => {
-  it("tem as 32 entradas do Blueprint §11", () => {
+  it("tem as 34 entradas do Blueprint §11", () => {
     // Um catálogo curto passaria em todos os outros casos: o que ele não lista, ele não erra.
-    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(32);
+    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(34);
   });
 
-  it("28 disponíveis · 1 parcial · 3 bloqueados", () => {
-    // `instance-empty` saiu de bloqueado para disponível com o freeze da BD02 (B3 fechado). O
-    // TOTAL não muda: nenhum cenário nasceu nem morreu, só um mudou de estado — e é por isso
-    // que os três números são conferidos juntos, e não só o do estado que mudou.
-    expect(nomesPorEstado("disponivel").length).toBe(28);
+  it("30 disponíveis · 1 parcial · 3 bloqueados", () => {
+    // Duas mudanças distintas, e os números as separam. A BD02 moveu `instance-empty` de
+    // bloqueado para disponível sem alterar o TOTAL — nada nasceu nem morreu. A M36 acrescentou
+    // `instance-present` e `instance-history`, e aí o total SOBE: 32 → 34, 28 → 30. Conferir os
+    // três juntos é o que distingue "mudou de estado" de "entrou no catálogo".
+    expect(nomesPorEstado("disponivel").length).toBe(30);
     expect(nomesPorEstado("parcial").length).toBe(1);
     expect(nomesPorEstado("bloqueado").length).toBe(3);
   });
@@ -76,6 +88,69 @@ describe("M18 · 1. o catálogo está completo", () => {
     expect(alvo.razao, "cenário disponível não pode manter razão de bloqueio").toBeFalsy();
   });
 
+  it("`instance-present`: list e get devolvem a MESMA identidade, e só campos publicados", async () => {
+    // O deep link chega sabendo apenas o `instance_id`. Se `get` devolvesse outra identidade que
+    // a `list`, o refresh mostraria uma Instance e a navegação outra — e nenhum dos dois erraria
+    // sozinho.
+    const hs = handlersDoScenario("instance-present", BASE);
+    const lista = await servir(hs, `${BASE}/v1/instances`);
+    const um = await servir(hs, `${BASE}/v1/instances/${lista.items[0].instance_id}`);
+    expect(lista.next_cursor).toBeNull();
+    expect(um.instance_id).toBe(lista.items[0].instance_id);
+    // Nada além do publicado: `instance_read_model_fields` sao exatamente estes tres.
+    for (const corpo of [lista.items[0], um]) {
+      expect(Object.keys(corpo).sort()).toEqual(["created_at", "instance_id", "name"]);
+    }
+  });
+
+  it("`instance-history`: os itens pertencem à Instance, e o filtro é EXIGIDO", async () => {
+    const hs = handlersDoScenario("instance-history", BASE);
+    const inst = (await servir(hs, `${BASE}/v1/instances`)).items[0].instance_id;
+
+    const p1 = await servir(hs, `${BASE}/v1/analyses?instance_id=${inst}`);
+    expect(p1.items.length).toBeGreaterThan(0);
+    for (const it of p1.items) expect(it.instance_id).toBe(inst);
+    expect(p1.next_cursor, "sem 2ª página não se prova travessia").toBeTruthy();
+
+    // Sem o filtro, o histórico não existe. Um mock que devolvesse a lista geral aqui deixaria
+    // passar um Front que esqueceu de enviar o `instance_id`.
+    const semFiltro = await servir(hs, `${BASE}/v1/analyses`);
+    expect(semFiltro.items).toEqual([]);
+  });
+
+  it("`instance-history`: a 2ª página fecha a travessia sem repetir nem perder", async () => {
+    const hs = handlersDoScenario("instance-history", BASE);
+    const inst = (await servir(hs, `${BASE}/v1/instances`)).items[0].instance_id;
+    const p1 = await servir(hs, `${BASE}/v1/analyses?instance_id=${inst}`);
+    const p2 = await servir(hs, `${BASE}/v1/analyses?instance_id=${inst}&cursor=${p1.next_cursor}`);
+    const ids = [...p1.items, ...p2.items].map((x: { analysis_id: string }) => x.analysis_id);
+    expect(p2.next_cursor, "a travessia não termina").toBeNull();
+    expect(new Set(ids).size, "a paginação repetiu").toBe(ids.length);
+  });
+
+  it("`instance-empty` continua VAZIO e distinto do populado", async () => {
+    const vazio = await servir(handlersDoScenario("instance-empty", BASE), `${BASE}/v1/instances`);
+    expect(vazio).toEqual({ items: [], next_cursor: null });
+  });
+
+  it("nenhum scenario de Instance publica campo que o contrato não tem", async () => {
+    // A trava contra o mock crescer com `status`/`health`/contador — que e a mesma razao pela
+    // qual INST-02 nao tem scenario.
+    const proibidos = ["status", "health", "description", "tags", "slug", "updated_at", "count"];
+    for (const nome of ["instance-present", "instance-history"]) {
+      const corpo = await servir(handlersDoScenario(nome, BASE), `${BASE}/v1/instances`);
+      for (const chave of Object.keys(corpo.items[0] ?? {})) {
+        expect(proibidos, `${nome} publica \`${chave}\``).not.toContain(chave);
+      }
+    }
+  });
+
+  it("INST-02 continua SEM scenario — e isso é registrado, não esquecido", () => {
+    const comInst02 = CATALOGO.filter((c) => c.superficies.includes("INST-02"));
+    expect(comInst02, "INST-02 ganhou massa sem produtor de estado corrente").toEqual([]);
+    expect(BLUEPRINT).toContain("DELTA DECLARADO — sem produtor de estado corrente");
+  });
+
   it("todo nome do catálogo aparece no Blueprint", () => {
     // A direção que impede o catálogo de INVENTAR cenário: um id que não está no mapa é um
     // segundo catálogo nascendo ao lado do primeiro.
@@ -86,7 +161,7 @@ describe("M18 · 1. o catálogo está completo", () => {
   it("todo cenário do Blueprint está no catálogo", () => {
     // A direção inversa: o que o mapa promete e o catálogo não entrega.
     const doMapa = [...BLUEPRINT.matchAll(/^\|\s*\d+\s*\|\s*`([a-z0-9-]+)`/gm)].map((m) => m[1]);
-    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(32);
+    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(34);
     const faltando = doMapa.filter((n) => !NOMES.includes(n));
     expect(faltando, "cenário do Blueprint ausente do catálogo").toEqual([]);
   });

@@ -277,7 +277,7 @@ hoje executa `del project_id, environment_id`. Nenhuma destas é construível co
 | id | nome | objetivo | contrato |
 |---|---|---|---|
 | **INST-01** | Visão atual | o que este sistema é e como está agora | **APPROVED DELTA** |
-| **INST-02** | Estado | leitura do estado corrente + procedência | **APPROVED DELTA** |
+| **INST-02** | Estado | leitura do estado corrente + procedência | 🔴 **DELTA DECLARADO — sem produtor de estado corrente** |
 | **INST-03** | Histórico | execuções em ordem | **APPROVED DELTA** |
 | **INST-04** | Nova análise (a partir da Instância) | pré-preencher o escopo | **APPROVED DELTA** |
 | **INST-05** | Baseline | marcar/substituir/remover a régua (D25) | **APPROVED DELTA** |
@@ -580,7 +580,7 @@ Só informação canônica **existente**. Nenhum "trust score" inventado.
 
 ---
 
-## 11. Mock Scenario Catalog — 32 cenários
+## 11. Mock Scenario Catalog — 34 cenários
 
 Todo scenario é **nome + lista de handlers**. Fixture derivada do schema publicado (§17).
 
@@ -618,6 +618,14 @@ Todo scenario é **nome + lista de handlers**. Fixture derivada do schema public
 | 30 | `result-v1-legacy` | RES-01 | `/result` | `result_schema_version: analysis-result-v1` | — |
 | 31 | `idempotency-conflict` | AN-01 | 409 | resubmit do mesmo | — |
 | 32 | `list-pagination` | EVO-01, HOME-01 | `/v1/analyses` | `next_cursor` → 2ª página | — |
+| 33 | `instance-present` | INST-01 | `/v1/instances`, `/v1/instances/{id}` | uma Instance: `instance_id`, `name`, `created_at` | — |
+| 34 | `instance-history` | INST-03 | `/v1/analyses?instance_id=` | análises DA Instance, em ordem, com `next_cursor` | — |
+
+Os dois últimos nasceram com a **M36**, e existem porque `instance-empty` só prova o vazio: não se
+constrói "visão atual da Instância" sem nenhuma Instância. Eles representam o produtor REAL já
+congelado pela BD02 — `instance_id`, `name`, `created_at` e nada mais. Nenhum `status`, `health`,
+contador ou `updated_at`, porque nada disso existe no contrato; é a mesma razão pela qual
+**INST-02 não recebe scenario**.
 
 **Bloqueados: 3** (`recommendation-persisted`, `no-baseline`, `baseline-active`)
 **+ 1 parcial** (`needs-mapping`). **Nenhuma fixture será inventada para eles.**
@@ -788,12 +796,20 @@ flowchart LR
 **Bloqueadas por delta:** EVO-03 · CFG-02/03/04 · WS-02/04 · AN-02 (o CTA) · AUTH-01/03 ·
 recomendação longitudinal.
 
-**Desbloqueadas pela BD02** (`FREEZE: PASS`, B3 fechado): **INST-01…07**. A Instância existe no
+**Desbloqueadas pela BD02** (`FREEZE: PASS`, B3 fechado): **INST-01 e INST-03…07**. A Instância existe no
 contrato público — `create_instance`/`list_instances`/`get_instance`, `instance_id` nas projeções
 de Analysis e histórico por Instance —, e o scenario 2 saiu de bloqueado.
 
 Desbloqueado é AUTORIZADO A IMPLEMENTAR, não entregue: nenhuma superfície INST existe ainda. A
-implementação de INST-01/02/03 é a M36; INST-04/07 é a M37.
+implementação de INST-01/03 é a M36; INST-04/07 é a M37.
+
+**INST-02 é a exceção, e ela não é de cronograma.** A BD02 publicou a Instance com três campos —
+`instance_id`, `name`, `created_at` — e congelou deliberadamente **sem** `status`, `health`,
+contadores ou `updated_at`. INST-02 pede *"estado corrente"*, e nenhuma derivação honesta existe:
+última Analysis como estado seria inferir saúde pelo histórico, e `created_at` como status seria
+transformar data em diagnóstico. A superfície fica registrada, **sem missão dona**, até que o
+produto defina o que "estado corrente da Instância" significa e alguém o produza. Ver o delta
+declarado no PLAN, na Fase 9.
 
 **Paralelizável:** a coluna de Patterns e o catálogo de scenarios podem correr em paralelo com o
 delta de frontend dos quatro clientes faltantes.
@@ -836,7 +852,7 @@ Todos os critérios, sem exceção:
 
 | detecção | ocorrências |
 |---|---|
-| 🔴 **superfície sem scenario** | INST-02/03/04, INST-06/07, CFG-02/03/04, WS-02/04 — **10** (INST-01 saiu: tem o `instance-empty`); as de INST não são mais por delta ausente, e sim por implementar |
+| 🔴 **superfície sem scenario** | INST-02/04, INST-06/07, CFG-02/03/04, WS-02/04 — **9** (INST-01 e INST-03 saíram: a M36 lhes dá scenario). INST-04/06/07 é cronograma (M37+); **INST-02 é falta de PRODUTOR**, e não terá scenario enquanto não tiver o que servir |
 | 🔴 **scenario sem superfície construível** | `no-baseline`, `baseline-active` — **2** (`instance-empty` saiu: INST-01 passou a ser construível com a BD02) |
 | ⚠️ **componente duplicado (risco)** | `StatusBadge` — **evitado por construção**: um componente para os dois vocabulários |
 | 🔴 **CTA sem operação** | **AN-02** "Confirmar interpretação"; WS-02 "Criar Workspace"; CFG-02 "Salvar idioma"; EVO-03 "Definir baseline" — **4** |
