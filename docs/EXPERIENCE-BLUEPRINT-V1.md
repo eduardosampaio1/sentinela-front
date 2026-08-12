@@ -8,8 +8,11 @@
 > **Roteador:** `INDICE-DE-AUTORIDADE-V1.md`
 >
 > **Base:** `sentinela-front-e1` @ `77641c8`, atualizado após WS-A (`cf782e0`).
-> Backend **congelado** · delta de Instância **não autorizado** · Big Bang **bloqueado** ·
-> Supabase Auth = **delta obrigatório separado**, não autorização de remoção aqui.
+> Backend **congelado** · delta de Instância ✅ **AUTORIZADO e EXECUTADO** (BD02, `FREEZE: PASS`;
+> B3 fechado) · Big Bang **bloqueado** · Supabase Auth ✅ **erradicado** (M01→M02).
+>
+> *(Banner reconciliado em 2026-08-12 sobre `064247b`. A linha `Base:` acima registra o commit em
+> que o documento nasceu e não é atualizada a cada missão.)*
 
 ---
 
@@ -271,8 +274,15 @@ Workspace. Refresh: reconstrói de `GET /v1/analyses`; nenhum estado de fila viv
 
 ### 4.4 Instância — 7 superfícies, **todas APPROVED DELTA**
 
-Produto decidiu (Q1′) que a V1 terá Instância. O **delta continua não autorizado**, e o Gateway
-hoje executa `del project_id, environment_id`. Nenhuma destas é construível contra contrato real.
+Produto decidiu (Q1′) que a V1 terá Instância. O delta foi **autorizado, executado e congelado**
+pela **BD02** (`FREEZE: PASS`, E2E por processos reais) e o gate **B3 está fechado** — o Gateway já
+não descarta o escopo, e `instance_id` é campo publicado.
+
+**Construível ≠ entregue, e ≠ tem produtor.** Das sete: **INST-01 e INST-03 entregues** (M36);
+**INST-04 autorizada e não implementada** (M37); **INST-06** pertence à M39 (cronograma);
+**INST-05** depende de baseline, que **não existe no contrato e nenhuma BD cria**; **INST-02 e
+INST-07** são delta declarado por falta de produtor. O contrato de Instance publica
+`instance_id`, `name`, `created_at` — e `create`/`list`/`get`, sem `update`, `PATCH` nem `delete`.
 
 | id | nome | objetivo | contrato |
 |---|---|---|---|
@@ -520,8 +530,8 @@ cortado é **declarado, não deduzido** · quebra de `result_schema_version` ou
 | camada | o que é | disponível hoje? |
 |---|---|---|
 | **1. Continuidade** | as execuções existem e são listáveis em ordem | ✅ **SIM** — `GET /v1/analyses` por cursor |
-| **2. Identidade** | duas execuções pertencem ao **mesmo sistema observado** | ❌ **NÃO** — é a Instância; delta não autorizado |
-| **3. Referência** | existe uma régua (baseline) | ❌ **NÃO** — depende da camada 2 |
+| **2. Identidade** | duas execuções pertencem ao **mesmo sistema observado** | ✅ **SIM** — `instance_id` na Instance e no read model de Analysis (BD02) |
+| **3. Referência** | existe uma régua (baseline) | ❌ **NÃO** — a camada 2 deixou de ser o impedimento; **baseline não existe no contrato público**: nenhuma operação a cria, lê ou compara, e nenhuma BD a produz |
 | **4. Comportamento** | o sistema **mudou de comportamento** (drift) | ❌ **NÃO** — falta referência + limiar + owner canônico |
 
 **Hoje a camada 1 permite dizer:** *"esta análise vs. a imediatamente anterior desta lista"*.
@@ -889,9 +899,9 @@ Todos os critérios, sem exceção:
 
 | # | blocker | classe |
 |---|---|---|
-| **B1** | 4 operações contratadas **sem cliente** no front | **delta de frontend** — confirmado por gate no WS-A7; desbloqueável sozinho (WS-C) |
+| **B1** | **1** operação contratada **sem cliente** no front: `create_instance`. As quatro da Fase 3 fecharam (M20–M23); a **BD02 reabriu** o gate com três operações de Instance e a M36 o levou de 3 a 1 | **delta de frontend** — mas **sem missão dona**: falta superfície no Blueprint e missão no PLAN, não código |
 | **B2** | `needs_mapping`: operação **existe no Ingestion** (`/profile` + `/mapping`), mas **não é pública** e a chave é `ingestion_id`, não `analysis_id` | **exposição no Gateway + ponte de identidade** |
-| **B3** | **Instância** não autorizada | delta de produto+backend |
+| **B3** | ✅ **FECHADO** — Instância autorizada, executada e congelada pela **BD02** (`FREEZE: PASS`) | delta de produto+backend, **concluído** |
 | **B4** | `recommendation_id` **não chega** ao documento canônico | delta de contrato |
 | **B5** | **Q15** — cadeia do destinatário não comprovada | prova técnica |
 | **B6** | **Supabase Auth** vivo e roteado | delta obrigatório separado |

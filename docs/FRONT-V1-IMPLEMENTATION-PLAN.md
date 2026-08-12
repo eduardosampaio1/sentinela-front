@@ -47,6 +47,10 @@
 | **15** | Integração | M47 | 🏁 MSW OFF |
 | **16** | Pre-Big-Bang | M48 | 🏁 evidência final |
 
+> **A coluna "fecha com" é o CRITÉRIO DE SAÍDA da fase, não o estado de hoje.** A Fase 3 fechou com
+> B1 fechado em 2026-08-10, e o B1 foi **reaberto pela BD02**; hoje está em 1. O estado corrente de
+> cada missão está no marcador da sua entrada.
+
 **Deltas de backend, cada um com contrato/testes/freeze próprios:** `BD01` mapping bridge ·
 `BD02` Instância · `BD03` `recommendation_id` · `BD04` preferências · `BD05` `prepared` lifecycle ·
 `BD06` exclusão de análise · `BD07` canonicalização de contrato · `BD08` schema aninhado do
@@ -541,6 +545,13 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > `projection_mismatch` também, senão o vazio mentiria. `SEM_CLIENTE_NO_FRONT` ficou `[]`,
 > **vazia e não apagada**: é ela que acusa a próxima operação contratada sem consumidor.
 > **B1 FECHADO.**
+>
+> ⚠️ **Qualificação de 2026-08-12 — o registro acima descreve 2026-08-10 e continua correto como
+> história.** O B1 **foi reaberto depois**, pela **BD02**: o contrato passou de 12 para 15
+> operações e as três de Instance nasceram sem cliente. A M36 entregou duas e o levou de 3 para 1.
+> **Estado corrente: B1 aberto em 1**, com `create_instance` — que não tem superfície no Blueprint
+> nem missão neste PLAN. A Fase 3 continua encerrada; o que não vale é ler "B1 FECHADO" como
+> estado de hoje.
 
 ### M20 · Cliente `/progress` — EXECUTADA
 > **Estado:** executada em `bc9e625` (2026-08-09). `data/analysis.ts`, `lib/v1/client.ts`,
@@ -672,7 +683,8 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Testes/Gates:** gate que proíbe `canonical` em rota **nova**; todo deep link do Blueprint resolve.
 - **DoD:** nenhuma rota pública nova carrega nome de camada interna. **Blocker:** **B11 fechado**.
 
-### M25 · Shell, workspace context e menu do usuário
+### M25 · Shell, workspace context e menu do usuário — EXECUTADA
+> **Estado:** executada em `92bd174` (2026-08-10). shell canônico: escopo visível, papel que governa sem rotular, conta fora da SPA.
 - **Escopo:** navegação principal, seletor de Workspace (escopo **sempre visível**), menu do usuário
   com link externo de conta (D19), `color-scheme` no `<html>` com **um** valor.
 - **Fora:** *(omissão editorial fechada por decisão de owner em 2026-08-10, antes da implementação —
@@ -702,35 +714,41 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 >
 > **Gate de saída:** RES-01 passa nos **18 critérios** sozinha.
 
-### M26 · RES-01 — composição, atenção e indicadores
+### M26 · RES-01 — composição, atenção e indicadores — EXECUTADA
+> **Estado:** executada em `95b9956` (2026-08-10). atenção por ordenação; procedência ao lado do número.
 - **Escopo:** página que **compõe**; nenhuma interpretação de payload bruto; "o que merece atenção"
   por ordenação (sem recálculo); `IndicatorCard` com `ProvenanceMargin`.
 - **Pré:** M11, M12, M13, M21. **Superfícies:** RES-01. **Scenarios:** 16, 30.
 - **DoD:** v1 e v2 discriminados por `result_schema_version`; **sem fallback silencioso**.
 
-### M27 · RES-01 — analytics, partial/withheld e qualidade
+### M27 · RES-01 — analytics, partial/withheld e qualidade — EXECUTADA
+> **Estado:** executada em `f6280eb` (2026-08-10). `partial` ≠ falha e `withheld` ≠ zero, por asserção separada.
 - **Escopo:** `AnalyticsBlock` por união discriminada; `PrivacyNotice` com
   `{applied, output_count, reason_code}`; as **contagens A/B/C**; `withheld` **some da escala**,
   nunca vira 0.
 - **Pré:** M21, M26. **Scenarios:** 11, 12, 23.
 - **DoD:** `partial` ≠ falha e `withheld` ≠ zero, provados por asserção separada.
 
-### M28 · RES-01 — Trust e timeline
+### M28 · RES-01 — Trust e timeline — EXECUTADA
+> **Estado:** executada em `7e247cb` (2026-08-10). Trust com origem apontável; timeline como régua, não feed.
 - **Escopo:** superfície de procedência com os **11 elementos**; `ProvenancePopover`; timeline lida
   do `/timeline`. **Fora:** qualquer "trust score" — não existe e não se inventa.
 - **Pré:** M21, M23, M12. **DoD:** cada elemento exibido tem origem canônica apontável.
 
-### M29 · RES-01 — export
+### M29 · RES-01 — export — EXECUTADA
+> **Estado:** executada em `41df5ab` (2026-08-10). o CSV do navegador saiu; `expired` deixou de prometer.
 - **Escopo:** um botão **por estado** do eixo, não um botão que mente. **Pré:** M22.
 - **Scenarios:** 17–19. **DoD:** `expired` oferece o caminho certo, sem prometer o que não há.
 
-### M30 · RES-01 — comparação com a anterior
+### M30 · RES-01 — comparação com a anterior — EXECUTADA
+> **Estado:** executada em `fed4157` (2026-08-10). a ruptura não aparece como delta.
 - **Escopo:** resumo *"esta vs. imediatamente anterior"*; pareamento **só por `indicator.id`**;
   **quebra de `indicator_registry_version` interrompe a comparabilidade** com descontinuidade
   explícita. **Fora:** série de Instância (Fase 10).
 - **Pré:** M26. **Scenarios:** 20, 21. **DoD:** a quebra **nunca** vira aumento ou queda.
 
-### M31 · RES-01 — hardening
+### M31 · RES-01 — hardening — EXECUTADA
+> **Estado:** executada em `29d534d` (2026-08-10). cinco rodadas; alvo de toque do índice corrigido para o mínimo do WCAG 2.2 AA.
 - **Escopo:** responsive (§8 do DS), PT/EN, `axe`, teclado, `/design-critique`,
   `/ux-heuristics` ≥ 8, `/ux-copy`. **DoD:** os 18 critérios **nesta superfície**.
 - **Pré:** M26, M27, M28, M29, M30. *(Omissão editorial fechada por decisão de owner em
@@ -758,7 +776,8 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 
 # FASE 6 — Home operacional
 
-### M32 · HOME-01
+### M32 · HOME-01 — EXECUTADA
+> **Estado:** executada em `6e2f017` (2026-08-10). a Home operacional substituiu o `/home` legado; quatro regiões de D9.
 - **Escopo:** as 4 regiões de D9 — ações necessárias, em andamento, Instâncias, resultados
   recentes — mais empty/loading/error **distintos**. A região de Instâncias fica **inalcançável**
   até BD02 (não meio-construída).
@@ -769,17 +788,20 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 
 # FASE 7 — Jornada de análise
 
-### M33 · AN-01 — nova análise, upload e erros
+### M33 · AN-01 — nova análise, upload e erros — EXECUTADA
+> **Estado:** executada em `b148977` (2026-08-10). cancelamento sai por D15; a queda de rede deixou de ser silenciosa.
 - **Escopo:** `prepare → data → submit`; upload inválido, falha de rede, `idempotency_conflict`.
   **Fora:** cancelar (D15 — fora da V1, e nenhum CTA pode sugerir).
 - **Pré:** M25, M13. **Scenarios:** 3, 4, 5, 31.
 
-### M34 · AN-03 — processamento, recovery e disponibilidade progressiva
+### M34 · AN-03 — processamento, recovery e disponibilidade progressiva — EXECUTADA
+> **Estado:** executada em `10c444d` (2026-08-10). quatro eixos lado a lado; o mock deixou de poder expressar estado não publicado.
 - **Escopo:** 4 eixos lado a lado; `recovering` ≠ falha; **analytics aparece com `ready|partial`
   mesmo com `final_result` pendente** (D13) — e isso **não** se chama "resultado parcial".
 - **Pré:** M20, M33. **Scenarios:** 7–10, 29.
 
-### M35 · AN-04 — falhas terminais
+### M35 · AN-04 — falhas terminais — EXECUTADA
+> **Estado:** executada em `9883a73` (2026-08-11). falha granular; retomada só onde `retry_allowed` autoriza.
 - **Escopo:** `retry` só quando `retry_allowed`; `non_retryable_failure` **sem** "tentar novamente";
   `capacity_wait` com espera. **Pré:** M33. **Scenarios:** 13–15, 29.
 - 🔴 **AN-02 (`needs_mapping`) fica INACESSÍVEL** até `BD01`. Exibir sim, **agir não** — CTA sem
@@ -789,7 +811,10 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 
 # FASE 8 — Backend delta de Instância
 
-### BD02 · Instância (missão backend própria)
+### BD02 · Instância (missão backend própria) — EXECUTADA E CONGELADA
+> **Estado:** executada e congelada com `FREEZE: PASS` e E2E por processos reais. **B3 fechado.**
+> Publicou `create_instance`, `list_instances`, `get_instance` e `instance_id` no read model de
+> Analysis — e **reabriu o B1**, que a M36 levou de 3 para 1.
 - **Objetivo:** o nível `Instância` existir no contrato, com contrato/testes/**freeze próprios**.
 - **Existe porque:** o Gateway hoje executa `del project_id, environment_id`; sem isso não há
   identidade entre execuções (camada 2 de longitudinalidade).
@@ -804,7 +829,8 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 
 # FASE 9 — Instância
 
-### M36 · INST-01/03 — visão e histórico
+### M36 · INST-01/03 — visão e histórico — EXECUTADA
+> **Estado:** executada em `34d65e2` (2026-08-12). INST-01 e INST-03 na mesma página, alcançáveis pela região 3 da Home.
 - **Pré:** ✅ **BD02 congelada** (`FREEZE: PASS`, B3 fechado). **Scenarios:** 2 `instance-empty`,
   agora **disponível**.
 - **Escopo:** **INST-01** visão atual da Instance · **INST-03** histórico de Analyses da Instance
@@ -840,7 +866,9 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > Criar um campo `status` genérico para satisfazer uma tela poria a mentira no servidor em vez do
 > Front.
 
-### M37 · INST-04 — nova análise a partir da Instância
+### M37 · INST-04 — nova análise a partir da Instância — CHECKPOINT 0 CONCLUÍDO
+> **Estado:** **implementação NÃO iniciada.** O **Checkpoint 0** — alinhamento de autoridade e
+> scenario oficial, sem uma linha de código visual — fechou em `064247b` (2026-08-12).
 - **Pré:** ✅ **M36** (fechada em `34d65e2`). **Scenarios:** `instance-new-analysis`.
 - **Escopo:** **INST-04** — iniciar o fluxo canônico de nova Análise **a partir de** uma Instância
   existente, com o contexto dela pré-preenchido. Usa capacidade já publicada: `prepare_analysis`
@@ -889,14 +917,28 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 
 # FASE 10 — Evolução
 
-### M38 · EVO-01 — histórico cronológico
+### M38 · EVO-01 — histórico cronológico — PRONTA, NÃO INICIADA
+> **Estado:** não iniciada, e **sem impedimento conhecido**: `Pré: M25` satisfeita em `92bd174` e o
+> scenario `list-pagination` está disponível no catálogo. Auditada em 2026-08-12.
 - **Pré:** M25. **Paraleliza com:** Fase 5. **Scenarios:** 32. É a superfície mais barata do plano.
 ### M39 · EVO-02 — comparação A×B e quebra de comparabilidade
 - **Pré:** M30, M38. **Escopo:** **uma** regra canônica compartilhada com RES-01 (D29).
   **Scenarios:** 20, 21.
-### M40 · EVO-03 — baseline explícito
-- **Pré:** 🔴 **BD02.** **Escopo:** marcar/substituir/remover; **nunca muda em silêncio**; baseline
-  ativo **bloqueia exclusão**. **Scenarios:** 24, 25 (destravados).
+### M40 · EVO-03 + INST-05 — baseline explícito — BLOQUEADA POR FALTA DE PRODUTOR
+- **Pré:** ✅ **BD02** (satisfeita em 2026-08-12) **— e isso NÃO a destrava.**
+- 🔴 **A BD02 entregou Instância, não Baseline.** A `Pré:` desta missão dizia apenas `BD02` e os
+  scenarios 24/25 apareciam como *"destravados"* por ela. Era consequência falsa: os dois seguem
+  **bloqueados** no catálogo, com a razão literal *"Baseline NÃO existe no contrato público.
+  Nenhuma operação a cria, lê ou compara."* Fechar a BD02 não mudou nada disso.
+- **Bloqueio real:** não há produtor de Baseline — nem operação, nem read model, nem lifecycle — e
+  **nenhuma BD existente o cria**. BD03 é `recommendation_id`; BD04 é preferências. Nenhum número
+  novo é atribuído aqui: antes de qualquer backend será preciso **definir a semântica de Baseline**
+  e só então abrir um delta próprio.
+- **Baseline permanece requisito da V1.** EVO-03 e INST-05 continuam no mapa; o que muda é a razão
+  documentada do bloqueio.
+- **Escopo (quando destravar):** marcar/substituir/remover; **nunca muda em silêncio**; baseline
+  ativo **bloqueia exclusão**. **Superfícies:** EVO-03, **INST-05**. **Scenarios:** `no-baseline`,
+  `baseline-active` — **os dois seguem bloqueados; não desbloquear enquanto não houver produtor**.
 
 > **Recomendação longitudinal só após `BD03`.** Sem `recommendation_id` no documento canônico,
 > **nenhuma afirmação** de persistiu/apareceu/sumiu. **Delta ≠ drift**, e drift continua fora.
@@ -908,9 +950,16 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 ### M41 · CFG-01/02 — conta e idioma
 - **Pré:** 🔴 **BD04** (contrato de preferências). **Escopo:** leitura de `/v1/me`; alteração de
   credencial **delegada** ao provedor (D19); idioma. **Tema não entra** (decisão 1).
-### M42 · CFG-03/04 — Workspace e Instância
-- **Pré:** 🔴 **BD02** e BD04. **Escopo:** ownership de D22. Ações destrutivas **só** quando
-  suportadas — `ConfirmDestructive` exige digitar o nome da Instância (D28).
+### M42 · CFG-03/04 + WS-02/04 — Workspace e Instância
+- **Pré:** ✅ **BD02** · 🔴 **BD04** · 🔴 **delta de lifecycle/configuração de Workspace, inexistente**.
+- 🔴 **Três impedimentos distintos, e BD04 cobre só um.** (a) **CFG-02** espera o contrato de
+  preferências — é BD04. (b) **CFG-04 / INST-07** espera configuração de *Instância*: o contrato
+  publica `create`/`list`/`get` e **nenhuma** operação de `update`, `PATCH` ou `delete` — nem
+  renomear é possível. (c) **WS-02 e WS-04** esperam criar e configurar *Workspace*, e **não existe
+  operação nenhuma** — BD04 é preferências, **não** lifecycle de Workspace, e nenhuma BD existente
+  cobre isso. Nenhum número novo é atribuído aqui.
+- **Escopo:** ownership de D22. Ações destrutivas **só** quando suportadas — `ConfirmDestructive`
+  exige digitar o nome da Instância (D28).
 
 ---
 
@@ -993,8 +1042,20 @@ Dispatcher → **ORCHESTRATOR** → Gateway.
 > **A coluna "autorizado?" é AUTORIZAÇÃO, não execução.** Estado de execução em 2026-08-10:
 > **BD07 ✅ EXECUTADA** (`746abec` no front + o mirror byte-a-byte no repo do Gateway — as duas
 > cópias de `public-v1.json` têm o mesmo SHA-256, e a origem resolve `candidatas-identicas`) ·
-> **BD08 ✅ EXECUTADA** (`87192b4`, com o gate `f8fb036`). As demais continuam **não executadas**.
+> **BD08 ✅ EXECUTADA** (`87192b4`, com o gate `f8fb036`) · **BD02 ✅ EXECUTADA e CONGELADA**
+> (`FREEZE: PASS`, E2E por processos reais; **B3 fechado**). **BD01, BD03, BD04, BD05 e BD06
+> continuam não executadas.**
 > **B9 permanece FECHADO** por BD07 + BD08 — não reabrir por divergência de inventário.
+>
+> **Classificação das cinco pendentes (2026-08-12).** Não são entidades indefinidas: são
+> **obrigações reconhecidas da V1, autorizadas para especificação e preflight, e NÃO autorizadas em
+> bloco para implementação**. Cada uma ainda precisa, individualmente, de objetivo literal,
+> pré-condições, contrato, critérios, freeze próprio e missão dependente nomeada — e de
+> autorização explícita do owner para começar. **Existir no plano não é estar pronta para código.**
+>
+> **Duas obrigações da V1 não têm BD alguma** e por isso não aparecem na tabela acima:
+> **Baseline** (EVO-03/INST-05 — ver M40) e **lifecycle/configuração de Workspace** (WS-02/WS-04 —
+> ver M42). Nenhum número foi criado para elas aqui: falta a semântica antes do delta.
 
 ---
 
@@ -1066,7 +1127,9 @@ flowchart LR
   M25 --> M38
   M31 --> M39
   BD02 --> M36 --> M37
-  BD02 --> M40
+  BD02 --> M36
+  %% M40 NAO depende de BD02: depende de um delta de Baseline que ainda nao existe
+  BASELINE["delta de Baseline — INEXISTENTE"] --> M40
   BD02 --> M41 --> M42
   M43 --> M44
   M32 & M33 & M36 & M39 & M40 & M42 & M44 --> M45 --> M46 --> M47 --> M48
@@ -1128,12 +1191,12 @@ depois começa sem ela.
 | superfície | missão |
 |---|---|
 | AUTH-01/02/03/04 | M01, M02, M25 |
-| WS-01/03 | M25 · WS-02/04 → M42 |
+| WS-01/03 | M25 · **WS-02/04 → M42 — mas sem produtor**: não existe operação de criação nem de configuração de Workspace, e **nenhuma BD a cria**. BD04 é *preferências*, não lifecycle de Workspace |
 | **HOME-01** | M32 |
 | AN-01 | M33 · AN-03 → M34 · AN-04 → M35 · **AN-02 → bloqueada por BD01** |
 | **RES-01** | M26–M31 |
-| EVO-01 | M38 · EVO-02 → M39 · EVO-03 → M40 |
-| INST-01/03 | M36 · **INST-04** → M37 · **INST-02 e INST-07: delta declarado, sem produtor** · **criar Instância: sem superfície nem missão** |
+| EVO-01 | M38 · EVO-02 → M39 · EVO-03 → M40 (**bloqueada: Baseline sem produtor**) |
+| INST-01/03 | M36 · **INST-04** → M37 · **INST-05** → M40 (bloqueada: Baseline sem produtor) · **INST-06** → M39 (junto de EVO-02) · **INST-02 e INST-07: delta declarado, sem produtor** · **criar Instância: sem superfície nem missão** |
 | CFG-01/02 | M41 · CFG-03/04 → M42 |
 | erros globais | M13 (`ErrorState`) + M25 |
 
@@ -1164,6 +1227,26 @@ depois começa sem ela.
 ---
 
 ## 5. Definition of Done — por missão e por fase
+
+### Baseline oficial de medição — 2026-08-12, `064247b`
+
+Um comando por gate. Variante mais estreita **não é evidência substituta**.
+
+| gate | comando oficial | baseline |
+|---|---|---|
+| suíte | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts npx vitest run` | **1238 passed · 97 arquivos · 0 skips** |
+| typecheck | `npm run typecheck` | 🔴 **19 ocorrências / 11 defeitos** — ver `TYPECHECK-GATE.md` |
+| lint | `npm run lint` | 🟡 **9 erros / 14 warnings** |
+| mutação | script por missão, **controle verde nas duas pontas** | por missão |
+| visual | `npx playwright test` — mock local, **zero Railway** | 10 specs em `e2e/` |
+
+**Regra de linguagem.** Enquanto houver defeito aberto, **não se escreve "typecheck verde" nem
+"lint verde"**: escreve-se o número e o **delta da missão**, que precisa ser **≤ 0**. `0` e `19`
+só voltam a ser comparáveis depois do `TYPECHECK RECOVERY`, que é **missão própria** — nenhuma
+missão de produto corrige esses defeitos de passagem.
+
+**Não são evidência de typecheck:** `npx tsc --noEmit` na raiz (verifica **zero** arquivos) e
+`npm run typecheck:e2e` (cobre só as specs de browser). Os dois retornam 0 e não provam nada.
 
 ### Padrão de DoD por missão (todas)
 

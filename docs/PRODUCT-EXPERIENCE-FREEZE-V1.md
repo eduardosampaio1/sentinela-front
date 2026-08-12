@@ -26,16 +26,34 @@
 | **D8** | **Momentos da jornada, não personas.** O produto reage ao **estado**, nunca a Viewer/Admin/Analista | idem |
 | **D10** | A regra *"não tocar no ARGOS"* está **REVOGADA**, substituída por regra atemporal de escopo | idem · `REGRA DE OURO ZERO` §6 |
 
-### Instância — decidida, não autorizada
+### Instância — decidida, autorizada e parcialmente entregue
 
 | # | regra | evidência |
 |---|---|---|
 | **D11** | **A V1 terá Instância.** Entra como **delta explícito de backend**, posterior ao freeze atual. Não descongela nem reescreve as Ondas 1–8: é frente própria, com contrato, testes, provas e freeze próprios | `DISCOVERY-FRONT-EXPERIENCE` (Q1′) |
 | **D12** | **Instância é gate de RELEASE / Big Bang — não é gate de desenvolvimento.** As frentes avançam sem ela, mas **não podem cristalizar `Workspace → Análise` como arquitetura definitiva** | idem |
 
-> 🔴 **Delta de Instância permanece NÃO AUTORIZADO.** O Gateway hoje executa
-> `del project_id, environment_id`. Nenhuma superfície de Instância é construível contra contrato
-> real (`Blueprint` §4.4, gate **B3**).
+> ✅ **Delta de Instância AUTORIZADO, EXECUTADO e CONGELADO** — `BD02`, com `FREEZE: PASS` e E2E
+> por processos reais. O gate **B3 está FECHADO**. O contrato público publica `create_instance`,
+> `list_instances` e `get_instance`; `instance_id` é campo publicado do read model de Analysis.
+>
+> **Isto não quer dizer que Instância está entregue.** O domínio existe e é construível; das sete
+> superfícies, **duas foram entregues** (INST-01 e INST-03, na M36), **uma está autorizada e não
+> implementada** (INST-04, na M37) e **quatro não têm caminho hoje**:
+>
+> | superfície | estado | razão literal |
+> |---|---|---|
+> | **INST-02** Estado | 🔴 delta declarado | não há estado corrente publicado — o read model é `instance_id`, `name`, `created_at` |
+> | **INST-05** Baseline | 🔴 bloqueada | baseline não existe no contrato público; nenhuma BD o cria |
+> | **INST-06** Evolução | ⏳ cronograma | pertence à M39, junto de EVO-02 |
+> | **INST-07** Configuração | 🔴 delta declarado | não há operação de configuração — nem `update`, `PATCH` ou `delete`; D22 depende de **BD04** |
+>
+> E **criar Instância** é o caso inverso: a operação existe no contrato e o Discovery §9.1 tem o nó
+> *"Criar primeira Instância"*, mas **nenhuma superfície do Blueprint e nenhuma missão do PLAN** a
+> reivindicam. É o que mantém **B1 aberto em 1**. Owner semântico: Produto/Arquitetura de Instância.
+>
+> *(Reconciliado em 2026-08-12 sobre `064247b`. Até então este bloco dizia "permanece NÃO
+> AUTORIZADO", o que deixou de ser verdade com o freeze da BD02.)*
 
 ---
 

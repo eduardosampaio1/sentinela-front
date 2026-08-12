@@ -66,9 +66,9 @@ Os documentos oficiais não fingem que tudo está resolvido.
 
 | # | gate | classe | bloqueia **dev**? | bloqueia **integração**? | bloqueia **release**? | missão futura |
 |---|---|---|---|---|---|---|
-| **B1** | 4 operações contratadas sem cliente (`progress`, `analytics`, `export/download`, `timeline`) | delta de **Front** | ⚠️ bloqueia RES-01 e AN-03 | não | não | **M20–M23** |
+| **B1** | **1** operação contratada sem cliente: `create_instance`. As quatro da Fase 3 fecharam em M20–M23; a **BD02 reabriu o gate** ao publicar três operações de Instance, e a M36 o reduziu de 3 para 1 | delta de **Front** | não | não | **sim** | 🔴 **nenhuma** — sem superfície e sem missão dona |
 | **B2** | `mapping` existe no Ingestion, não é público; chave é `ingestion_id`, não `analysis_id` | delta de **backend** (exposição + ponte) | ⚠️ só a UI de resolução | **sim** | **sim** | **BD01** |
-| **B3** | **Instância** — ✅ **AUTORIZADA** como requisito da V1, em missão backend própria | delta de **backend** | ⚠️ 7 superfícies + EVO-03 + CFG-03/04 | **sim** | **sim** (D12) | **BD02** |
+| **B3** | **Instância** — ✅ **FECHADO**: BD02 executada e congelada (`FREEZE: PASS`). Domínio construível; INST-01/03 entregues na M36. Não confundir com "todas as superfícies entregues" — ver `Product Freeze` §1 | delta de **backend** | não | não | não | ✅ **BD02** |
 | **B4** | `recommendation_id` não chega ao documento canônico | delta de **contrato** | ⚠️ só recomendação longitudinal | **sim** | **sim** | **BD03** |
 | **B5** | **Q15** — cadeia do destinatário não comprovada | **prova técnica** | não | **sim** | **sim** | **M43** (+ BD09 se revelar delta) |
 | **B6** | **Supabase Auth** — ✅ **erradicação AUTORIZADA**; cada fluxo provado no Keycloak **antes** de remover | delta obrigatório | não | **sim** | **sim** | **M01 → M02** |
@@ -127,6 +127,9 @@ tocam desenvolvimento, e quatro deles apenas parcialmente — o caminho
 | **C3** | `/canonical/*` na URL pública | **resolvido** como decisão (rotas `/analyses…`); falta **executar** a migração e decidir `/` (B11) | `Product Freeze` §10 |
 | **C4** | D23 × P31 | **resolvido por autoridade**: D23 vence, P31 é proposta | `Product Freeze` §5 |
 | **C5** | superfície aninhada sem publicação canônica | o gate funciona atravessando fronteira de repo; o certo é o Analytics publicar schema | `Architecture` §11 |
+| **C6** | **Baseline sem produtor** — EVO-03 e INST-05 são requisito da V1, e nenhuma operação a cria, lê ou compara. **BD02 não a entregou**: entregou Instância | exige delta de backend próprio, ainda sem semântica definida e sem número atribuído | `PLAN` M40 · `Blueprint` §4.4 |
+| **C7** | **Lifecycle de Workspace sem produtor** — WS-02 (criar) e WS-04 (configurar) têm nó no Discovery, superfície no Blueprint e missão no PLAN (M42), e **não existe operação**. BD04 é *preferências*, não lifecycle de Workspace | idem — delta próprio, sem número atribuído | `PLAN` M42 · `Blueprint` §3 |
+| **C8** | **`create_instance` publicado sem consumidor** — capacidade pública sem superfície nem missão; é o inverso de C6/C7 | exige decisão de produto antes de qualquer código; mantém **B1 aberto em 1** | `PLAN` (delta declarado na Fase 9) · `divergenciaDeclarada.ts` |
 
 ---
 

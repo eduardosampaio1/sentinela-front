@@ -11,11 +11,16 @@
 /**
  * Operação contratada que ainda não tem cliente no frontend. Era o blocker **B1** (missão WS-C).
  *
- * **VAZIA desde a M23 — B1 FECHADO.** As quatro saíram na Fase 3, uma por missão: `/progress`
- * (M20), `/analytics` (M21), `/analytics/export/download` (M22) e `/timeline` (M23). Todas as 12
- * operações de `operations[]` têm cliente, e `missing_in_front` está vazio.
+ * **ESTEVE vazia entre a M23 e a BD02 — o B1 chegou a fechar.** As quatro operações da Fase 3
+ * ganharam cliente, uma por missão: `/progress` (M20), `/analytics` (M21),
+ * `/analytics/export/download` (M22) e `/timeline` (M23), e `missing_in_front` ficou vazio sobre
+ * as 12 operações que o contrato tinha então.
  *
- * A lista fica aqui, vazia, em vez de sumir — mesmo mecanismo de `SEM_ENTRADA_NO_CONTRATO`: uma
+ * **Hoje NÃO está vazia.** A BD02 levou o contrato a 15 operações e reabriu o gate — ver o
+ * parágrafo seguinte. Este registro fica porque descrever o fechamento da Fase 3 continua correto
+ * como história; o que estava errado era lê-lo como estado corrente.
+ *
+ * A lista fica aqui mesmo quando vazia, em vez de sumir — mesmo mecanismo de `SEM_ENTRADA_NO_CONTRATO`: uma
  * operação nova sem cliente acusa vermelho contra `[]`, e ninguém precisa lembrar de recriar a
  * declaração. Apagá-la devolveria o problema que a WS-A2 existe para impedir: contrato crescendo
  * sem consumidor, com a suíte verde.

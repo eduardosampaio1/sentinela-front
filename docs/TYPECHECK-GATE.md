@@ -70,6 +70,39 @@ O gate antigo tolerava N erros fora das superfícies estritas (`EXPECTED_LEGACY`
 Com zero, o mecanismo virou custo sem função: hoje **qualquer** erro em **qualquer** projeto
 reprova. Não há allowlist para crescer em silêncio.
 
+## Estado corrente do gate — 2026-08-12, `064247b`
+
+**O gate está VERMELHO. Não se escreve "typecheck verde" enquanto isto valer.**
+
+| medida | valor |
+|---|---|
+| ocorrências reportadas pelo comando oficial | **19** |
+| defeitos distintos (arquivo + linha) | **11** |
+| projetos vermelhos | `v1` 7 · `v1-ui` 5 · `prod` 3 · `tests` 4 |
+| projetos verdes | `e2e` 0 · `node` 0 |
+
+As duas famílias se sobrepõem, então o mesmo defeito é contado em mais de um projeto: **19 é
+contagem de ocorrências, não de defeitos**.
+
+### Origens, datadas por checkout pristino
+
+O gate esteve **genuinamente em 0** entre a M18 e a M20. Três eventos o quebraram:
+
+| origem | commit | o que entrou | ocorrências |
+|---|---|---|---|
+| **M21** | `f86218d` | `analyticsProjection.ts` linhas 290, 363, 446, 519 — `TS2322` | +8 |
+| **contract-sync da BD02** | `9b81286` | `instance_id` virou obrigatório em `AnalysisListItem`; 4 arquivos de teste constroem itens sem ele | +8 |
+| **M36** | `34d65e2` | `LoadingState` recebe `message`/`size` e espera `rotulo`/`linhas` — `InstancePage` ×2, `InstancesListPage` | +3 |
+
+As três missões fecharam declarando typecheck verde com o comando oficial vermelho — provavelmente
+rodando variante mais estreita. **O saneamento é missão própria (`TYPECHECK RECOVERY · 19 → 0`) e
+não pertence a nenhuma missão de produto.** Até lá, toda missão prova **delta ≤ 0**, não zero.
+
+> **Como datar regressão de gate.** Use `git checkout --detach <commit>`. **Nunca**
+> `git checkout <commit> -- .`: ele *sobrepõe* a árvore atual em vez de substituí-la, mantém
+> arquivos que missões posteriores apagaram e produz números inflados. Uma medição feita assim
+> nesta mesma frente errou por ordem de grandeza.
+
 ## Provas do próprio instrumento
 
 `npm run typecheck:alcance` (`scripts/typecheck-alcance.mjs`) não confere configuração — ele
