@@ -587,7 +587,7 @@ Todo scenario é **nome + lista de handlers**. Fixture derivada do schema public
 | # | id | superfícies | contrato | estado inicial → transições | bloqueado? |
 |---|---|---|---|---|---|
 | 1 | `workspace-empty` | WS-01 | `/v1/me` | `workspaces: []` | — |
-| 2 | `instance-empty` | INST-01 | — | — | 🔴 **BLOQUEADO** — Instância não existe no contrato |
+| 2 | `instance-empty` | INST-01 | `/v1/instances` | `items: []` | **desbloqueado pela BD02** |
 | 3 | `analysis-uploading` | AN-01 | prepare→data | `preparing → receiving` | — |
 | 4 | `upload-invalid` | AN-01 | `invalid_input` 400 | erro sem consumir a operação | — |
 | 5 | `upload-network-failure` | AN-01 | — | falha de transporte, retomável | — |
@@ -619,8 +619,12 @@ Todo scenario é **nome + lista de handlers**. Fixture derivada do schema public
 | 31 | `idempotency-conflict` | AN-01 | 409 | resubmit do mesmo | — |
 | 32 | `list-pagination` | EVO-01, HOME-01 | `/v1/analyses` | `next_cursor` → 2ª página | — |
 
-**Bloqueados: 4** (`instance-empty`, `recommendation-persisted`, `no-baseline`, `baseline-active`)
+**Bloqueados: 3** (`recommendation-persisted`, `no-baseline`, `baseline-active`)
 **+ 1 parcial** (`needs-mapping`). **Nenhuma fixture será inventada para eles.**
+
+`instance-empty` saiu desta lista pela BD02: o produtor real existe e devolve
+`{"items": [], "next_cursor": null}` para workspace autorizado sem Instances — medido por Gateway
+real, não fixture inventada. É a única saída de bloqueio autorizada até aqui.
 
 ---
 
@@ -767,7 +771,7 @@ flowchart LR
   DFE["Delta FE: clientes progress/analytics/export/timeline"] --> RES
   DFE --> AN
 
-  DINST["DELTA Instancia — NAO AUTORIZADO"]:::blk --> INST["INST-01..07"]
+  DINST["DELTA Instancia — BD02 CONGELADA"] --> INST["INST-01..07"]
   DINST --> EVO3["EVO-03 Baseline"]
   DINST --> CFG34["CFG-03/04"]
   DNM["DELTA operacao needs_mapping"]:::blk --> AN2["AN-02 Acao necessaria"]
@@ -781,8 +785,15 @@ flowchart LR
 **Construíveis sem nenhum delta:** Tokens → Primitives → Patterns → Shell → **RES-01** → **HOME-01**
 → **AN-01/03/04** → **EVO-01** → **EVO-02** (par avulso) → AUTH-02/04 → WS-01/03 → erros.
 
-**Bloqueadas por delta:** INST-01…07 · EVO-03 · CFG-02/03/04 · WS-02/04 · AN-02 (o CTA) ·
-AUTH-01/03 · recomendação longitudinal.
+**Bloqueadas por delta:** EVO-03 · CFG-02/03/04 · WS-02/04 · AN-02 (o CTA) · AUTH-01/03 ·
+recomendação longitudinal.
+
+**Desbloqueadas pela BD02** (`FREEZE: PASS`, B3 fechado): **INST-01…07**. A Instância existe no
+contrato público — `create_instance`/`list_instances`/`get_instance`, `instance_id` nas projeções
+de Analysis e histórico por Instance —, e o scenario 2 saiu de bloqueado.
+
+Desbloqueado é AUTORIZADO A IMPLEMENTAR, não entregue: nenhuma superfície INST existe ainda. A
+implementação de INST-01/02/03 é a M36; INST-04/07 é a M37.
 
 **Paralelizável:** a coluna de Patterns e o catálogo de scenarios podem correr em paralelo com o
 delta de frontend dos quatro clientes faltantes.
@@ -825,8 +836,8 @@ Todos os critérios, sem exceção:
 
 | detecção | ocorrências |
 |---|---|
-| 🔴 **superfície sem scenario** | INST-01…04, INST-06/07, CFG-02/03/04, WS-02/04 — **11**, todas por delta ausente |
-| 🔴 **scenario sem superfície construível** | `instance-empty`, `no-baseline`, `baseline-active` — **3** |
+| 🔴 **superfície sem scenario** | INST-02/03/04, INST-06/07, CFG-02/03/04, WS-02/04 — **10** (INST-01 saiu: tem o `instance-empty`); as de INST não são mais por delta ausente, e sim por implementar |
+| 🔴 **scenario sem superfície construível** | `no-baseline`, `baseline-active` — **2** (`instance-empty` saiu: INST-01 passou a ser construível com a BD02) |
 | ⚠️ **componente duplicado (risco)** | `StatusBadge` — **evitado por construção**: um componente para os dois vocabulários |
 | 🔴 **CTA sem operação** | **AN-02** "Confirmar interpretação"; WS-02 "Criar Workspace"; CFG-02 "Salvar idioma"; EVO-03 "Definir baseline" — **4** |
 | 🔴 **mock sem contrato** | `recommendation-persisted` (id não chega ao documento) — **1** |

@@ -805,7 +805,25 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 # FASE 9 — Instância
 
 ### M36 · INST-01/02/03 — visão, estado e histórico
-- **Pré:** 🔴 **BD02 congelada.** **Scenarios:** 2 (destravado por BD02).
+- **Pré:** ✅ **BD02 congelada** (`FREEZE: PASS`, B3 fechado). **Scenarios:** 2 `instance-empty`,
+  agora **disponível**.
+- **Escopo:** **INST-01** visão atual da Instance · **INST-02** estado da Instance, em LEITURA,
+  com procedência junto do dado · **INST-03** histórico de Analyses da Instance em ordem canônica.
+  Consumir **somente** capacidades já publicadas pela BD02. Navegação e contexto têm de sobreviver
+  ao refresh pela identidade durável.
+- **Fora:** criar/editar/remover Instance · health sintético · métrica nova · timeline própria de
+  Instance · re-parenting · Default Instance · configuração técnica/secrets · Workspace CRUD ·
+  qualquer backend novo.
+- **DoD:** INST-01/02/03 conforme Blueprint · scenario 2 exercitado · estado vazio honesto ·
+  histórico a partir do read model publicado, **sem cálculo no Front** · refresh/deep link
+  reconstrói o contexto pela identidade · PT/EN · desktop/tablet/mobile · teclado · axe ·
+  `/ux-copy` · `/design-critique` · `/ux-heuristics` com gate de owner **≥ 9,0** · typecheck,
+  lint, testes e gates de mutação aplicáveis verdes.
+- **Gates:** o Front não calcula estado de backend · o Front não inventa Instance · `instance_id`
+  é a identidade da navegação · legado/`null` não vira Default · nenhuma superfície da missão
+  depende de estado efêmero do browser.
+- **Autoridades:** Product Freeze · Blueprint §11 · Blueprint §§460/465 (`StatusBadge`,
+  `AnalysisListItem`) · DS Constitution · Architecture & Mock · scenario 2. Sem Discovery nova.
 ### M37 · INST-04/07 — nova análise contextual e configuração
 - **Pré:** M36. **Escopo:** pré-preencher escopo; configuração contextual (D22).
 

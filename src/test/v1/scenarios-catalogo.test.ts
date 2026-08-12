@@ -25,9 +25,12 @@ const BASE = "http://gw.test";
 /** Os 32 nomes do Blueprint §11 — a autoridade de MAPA. */
 const BLUEPRINT = readFileSync(resolve(RAIZ, "docs/EXPERIENCE-BLUEPRINT-V1.md"), "utf-8");
 
-/** Os 4 bloqueados que o plano nomeia, literalmente. */
+/** Os bloqueados que o plano nomeia, literalmente.
+ *
+ * Eram 4. `instance-empty` saiu com o freeze da BD02 (B3 fechado): a razão dele nomeava três
+ * ausências no contrato público — operação, read model e campo — e as três acabaram. Sair daqui
+ * é o que faz o cenário deixar de recusar servir. */
 const BLOQUEADOS_DO_PLANO = [
-  "instance-empty",
   "recommendation-persisted",
   "no-baseline",
   "baseline-active",
@@ -43,10 +46,34 @@ describe("M18 · 1. o catálogo está completo", () => {
     expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(32);
   });
 
-  it("27 disponíveis · 1 parcial · 4 bloqueados", () => {
-    expect(nomesPorEstado("disponivel").length).toBe(27);
+  it("28 disponíveis · 1 parcial · 3 bloqueados", () => {
+    // `instance-empty` saiu de bloqueado para disponível com o freeze da BD02 (B3 fechado). O
+    // TOTAL não muda: nenhum cenário nasceu nem morreu, só um mudou de estado — e é por isso
+    // que os três números são conferidos juntos, e não só o do estado que mudou.
+    expect(nomesPorEstado("disponivel").length).toBe(28);
     expect(nomesPorEstado("parcial").length).toBe(1);
-    expect(nomesPorEstado("bloqueado").length).toBe(4);
+    expect(nomesPorEstado("bloqueado").length).toBe(3);
+  });
+
+  it("o desbloqueio da BD02 foi de ESTADO, não de composição do catálogo", () => {
+    // A prova de que o checkpoint foi administrativo: `instance-empty` continua existindo, com
+    // a mesma superfície, e os que continuam bloqueados são exatamente os outros três.
+    const alvo = CATALOGO.find((c) => c.id === "instance-empty");
+    expect(alvo, "o cenário sumiu do catálogo").toBeTruthy();
+    expect(alvo!.superficies).toEqual(["INST-01"]);
+    expect(alvo!.estado).toBe("disponivel");
+    expect(new Set(nomesPorEstado("bloqueado"))).toEqual(
+      new Set(["recommendation-persisted", "no-baseline", "baseline-active"]),
+    );
+  });
+
+  it("o vazio de `instance-empty` é o do produtor REAL, não fixture inventada", () => {
+    // `{"items": [], "next_cursor": null}` é o que o Gateway real devolve para workspace
+    // autorizado sem Instances — medido no gate E2E da BD02. Um cenário que servisse Instance
+    // fabricada faria a tela montar sobre dado que ninguém produz.
+    const alvo = CATALOGO.find((c) => c.id === "instance-empty")!;
+    expect(alvo.handlers, "cenário disponível sem handler não serve nada").toBeTruthy();
+    expect(alvo.razao, "cenário disponível não pode manter razão de bloqueio").toBeFalsy();
   });
 
   it("todo nome do catálogo aparece no Blueprint", () => {
@@ -124,8 +151,8 @@ describe("M18 · 3. um nome que não existe falha alto", () => {
 // 4. DoD 4 e 6 — os bloqueados recusam, com a razão, e ninguém os "completa"
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
-describe("M18 · 4. os 4 bloqueados falham explicitamente", () => {
-  it("são exatamente os 4 que o plano nomeia", () => {
+describe("M18 · 4. os bloqueados falham explicitamente", () => {
+  it("são exatamente os que o plano nomeia", () => {
     expect([...nomesPorEstado("bloqueado")].sort()).toEqual([...BLOQUEADOS_DO_PLANO].sort());
   });
 
@@ -154,7 +181,6 @@ describe("M18 · 4. os 4 bloqueados falham explicitamente", () => {
 
   it("cada bloqueado aponta o blocker ou o delta que o destrava", () => {
     const esperado: Record<string, RegExp> = {
-      "instance-empty": /B3|não existe no contrato/i,
       "recommendation-persisted": /recommendation_id|BD03/i,
       "no-baseline": /baseline/i,
       "baseline-active": /baseline/i,

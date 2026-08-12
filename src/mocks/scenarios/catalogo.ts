@@ -108,10 +108,22 @@ export const CATALOGO: readonly Scenario[] = [
   {
     id: "instance-empty",
     superficies: ["INST-01"],
-    estado: "bloqueado",
-    razao:
-      "Instância NÃO existe no contrato público. Não há operação, read model nem campo que a " +
-      "represente — servir uma lista vazia faria a tela montar e o delta parecer feito. É o B3.",
+    // Desbloqueado pela BD02 (`FREEZE: PASS`, B3 fechado). A razão do bloqueio nomeava três
+    // ausências — operação, read model e campo — e as três acabaram: `create_instance`/
+    // `list_instances`/`get_instance` estão no contrato público, `instance_read_model_fields`
+    // existe, e `instance_id` entrou nas projeções de Analysis.
+    //
+    // O vazio aqui NÃO é fixture inventada: é a resposta que o produtor real devolve para
+    // workspace autorizado sem Instances, medida por Gateway real em
+    // `sentinela-facts/scripts/gate_bd02_instancia_e2e.py`.
+    //
+    // Workspace AUTORIZADO e sem Instances, e não workspace alheio: o alheio devolveria
+    // `forbidden_or_not_found`, que mede autorização e não lista vazia. A primeira versão
+    // daquele gate confundiu as duas coisas e ficou vermelha com razão.
+    estado: "disponivel",
+    handlers: (b) => [
+      http.get(`${b}/v1/instances`, () => json({ items: [], next_cursor: null })),
+    ],
   },
   {
     id: "analysis-uploading",
