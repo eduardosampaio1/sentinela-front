@@ -164,6 +164,45 @@ export interface CanonicalScope {
 export interface ListParams extends CanonicalScope {
   limit?: number;
   cursor?: string | null;
+  /**
+   * BD02 — filtra a listagem pela Instance. Ausente = listagem geral do workspace, o
+   * comportamento de sempre.
+   *
+   * É assim que o histórico por Instance existe: filtro na operação canônica, e NÃO um
+   * subrecurso `/v1/instances/{id}/analyses` — a BD02 recusou criá-lo de propósito. A seleção
+   * acontece na query tenant-scoped do backend; filtrar aqui quebraria o cursor e a contagem
+   * da página.
+   */
+  instanceId?: string;
+}
+
+// ── /v1/instances — a identidade DURÁVEL entre execuções (BD02) ───────────────
+
+/**
+ * A Instance, como o contrato a publica: `instance_read_model_fields` é exatamente estes três.
+ *
+ * Não há `status`, `health`, contador, `description`, `tags` nem `updated_at` — a BD02 os
+ * recusou deliberadamente, e é por isso que **INST-02 (Estado) não tem produtor** e ficou fora
+ * da M36. Acrescentar campo aqui sem que o contrato o publique faria o Front nascer sabendo ler
+ * algo que ninguém manda.
+ */
+export interface InstanceView {
+  instance_id: string;
+  name: string;
+  created_at: string | null;
+}
+
+/** Página de Instances (cursor determinístico, mesma semântica de `AnalysisListPage`). */
+export interface InstanceListPage {
+  items: InstanceView[];
+  next_cursor: string | null;
+}
+
+/** Parâmetros de listagem de Instances. Mesma forma de `ListParams`, sem o filtro por Instance —
+ *  filtrar Instances por Instance não significa nada. */
+export interface InstanceListParams extends CanonicalScope {
+  limit?: number;
+  cursor?: string | null;
 }
 
 // ── /v1/me — projeção da sessão (Supabase = 0) ────────────────────────────────

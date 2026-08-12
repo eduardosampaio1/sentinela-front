@@ -351,6 +351,6 @@ describe("M22 · 6. `SEM_CLIENTE_NO_FRONT`", () => {
     // fechado o que a M23 ainda devia. A M23 fechou e a catraca subiu para o vazio. A **BD02**
     // publicou três operações de Instance sem cliente, e a catraca desceu de novo — de
     // propósito. Ela continua sendo catraca: operação nova NÃO declarada reprova aqui.
-    expect([...SEM_CLIENTE_NO_FRONT].sort()).toEqual(["GET /v1/instances", "GET /v1/instances/{analysis_id}", "POST /v1/instances"].sort());
+    expect([...SEM_CLIENTE_NO_FRONT].sort()).toEqual(["POST /v1/instances"].sort());
   });
 });

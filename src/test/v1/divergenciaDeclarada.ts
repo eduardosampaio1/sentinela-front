@@ -27,8 +27,8 @@
  *
  * Trajetória CONGELADA — qualquer resultado diferente exige explicação antes de fechar o blocker:
  *
- *     agora      3 divergências   B1 aberto
- *     após M36   1 (`create_instance`)
+ *     BD02       3 divergências   B1 reaberto
+ *     M36        1 (`create_instance`)   ← ESTAMOS AQUI
  *     após M37   0                B1 fecha
  *
  * Sobre `{analysis_id}` numa rota de Instance: não é engano. `operationInventory` normaliza
@@ -37,8 +37,9 @@
  * normaliza contrato e clientes do mesmo jeito. Trocá-lo é missão de harness, não daqui.
  */
 export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
-  "GET /v1/instances", // list_instances — dona: M36
-  "GET /v1/instances/{analysis_id}", // get_instance — dona: M36
+  // A M36 entregou `listInstances` e `getInstance`, e as duas SAÍRAM daqui. A lista encolhe
+  // junto com a dívida — se ficasse, viraria folclore, que é o que esta declaração existe para
+  // impedir.
   "POST /v1/instances", // create_instance — dona: M37
 ] as const;
 

@@ -15,6 +15,9 @@ import type {
   AnalysisStatusView,
   AnalysisTimelineView,
   CanonicalScope,
+  InstanceListPage,
+  InstanceListParams,
+  InstanceView,
   ListParams,
   MeView,
 } from "./contract/public-v1.types";
@@ -75,6 +78,21 @@ export interface V1Client {
   getResult(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisResultView>;
   list(params: ListParams, opts?: RequestOptions): Promise<AnalysisListPage>;
   retry(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
+  /**
+   * As Instances do workspace (BD02). Lista vazia é sucesso, não erro: workspace autorizado
+   * ainda sem Instance nenhuma é estado legítimo, e o produtor devolve
+   * `{"items": [], "next_cursor": null}`.
+   */
+  listInstances(params: InstanceListParams, opts?: RequestOptions): Promise<InstanceListPage>;
+  /**
+   * Uma Instance pela identidade durável.
+   *
+   * NÃO depende de `listInstances` ter sido chamada antes — é essa independência que sustenta
+   * deep link, refresh e carga fria, em que a tela chega sabendo apenas o `instance_id`.
+   * Instance de outro workspace e inexistente colapsam no mesmo `forbidden_or_not_found`; o
+   * Front não distingue o que o contrato deliberadamente não distingue.
+   */
+  getInstance(instanceId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<InstanceView>;
 }
 
 /**
@@ -249,8 +267,22 @@ export function createV1Client(config: V1ClientConfig): V1Client {
     getResult: (analysisId, scope, opts) =>
       pedir<AnalysisResultView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/result`, { workspace_id: scope.workspaceId }, opts),
     list: (params, opts) =>
-      pedir<AnalysisListPage>("GET", "/v1/analyses", { workspace_id: params.workspaceId, limit: params.limit, cursor: params.cursor }, opts),
+      pedir<AnalysisListPage>("GET", "/v1/analyses", {
+        workspace_id: params.workspaceId,
+        limit: params.limit,
+        cursor: params.cursor,
+        // BD02: só viaja quando informado. O loop de query descarta vazios, então omitir mantém
+        // a requisição byte a byte igual à de antes — consumidor da listagem geral não muda.
+        instance_id: params.instanceId,
+      }, opts),
     retry: (analysisId, scope, opts) =>
       pedir<AnalysisHandle>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/retry`, { workspace_id: scope.workspaceId }, opts, undefined, true),
+    listInstances: (params, opts) =>
+      pedir<InstanceListPage>("GET", "/v1/instances", { workspace_id: params.workspaceId, limit: params.limit, cursor: params.cursor }, opts),
+    getInstance: (instanceId, scope, opts) =>
+      // `encodeAnalysisId` é o encoder de segmento de path deste arquivo — o nome é herança de
+      // quando só havia análise. Reusá-lo é o certo: um segundo encoder divergiria no primeiro
+      // caractere especial, e o nome é dívida de harness, não motivo para duplicar.
+      pedir<InstanceView>("GET", `/v1/instances/${encodeAnalysisId(instanceId)}`, { workspace_id: scope.workspaceId }, opts),
   };
 }

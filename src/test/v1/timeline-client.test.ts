@@ -386,7 +386,7 @@ describe("M23 · 6. o blocker B1", () => {
     //
     // Trajetória: 3 agora → 1 após a M36 (`create_instance`) → 0 após a M37, quando B1 fecha.
     expect([...SEM_CLIENTE_NO_FRONT].sort(), "a dívida de B1 divergiu do declarado").toEqual(
-      ["GET /v1/instances", "GET /v1/instances/{analysis_id}", "POST /v1/instances"].sort(),
+      ["POST /v1/instances"].sort(),
     );
   });
 

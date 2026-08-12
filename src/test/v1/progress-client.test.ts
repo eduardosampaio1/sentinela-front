@@ -254,7 +254,7 @@ describe("M20 · 6. `/progress` saiu de SEM_CLIENTE_NO_FRONT", () => {
     // qualquer missão futura que publique contrato a derruba. O que a M20 prova é o de baixo:
     // que a operação DELA saiu.
     return import("./divergenciaDeclarada").then(({ SEM_CLIENTE_NO_FRONT }) => {
-      expect([...SEM_CLIENTE_NO_FRONT].sort()).toEqual(["GET /v1/instances", "GET /v1/instances/{analysis_id}", "POST /v1/instances"].sort());
+      expect([...SEM_CLIENTE_NO_FRONT].sort()).toEqual(["POST /v1/instances"].sort());
     });
   });
 });
