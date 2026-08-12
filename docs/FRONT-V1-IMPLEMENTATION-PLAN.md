@@ -939,7 +939,17 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > de acessibilidade — o erro anunciava (`role="alert"`), o carregando anunciava (`role="status"`) e
 > o vazio ficava mudo, então os três só eram distintos para quem enxerga. Passou a usar o
 > `EmptyState` do DS, o mesmo de INST-01/03 e HOME-01, **reusando a copy existente**: nenhuma
-> chave nova. `/ux-heuristics` **9,3**.
+> chave nova.
+>
+> **E uma microcorreção de vocabulário fechou a última divergência contra a autoridade.** A EVO-01
+> renderizava o estado com um chip próprio lendo `canonicalAnalysis.state.*.title`, enquanto
+> INST-03 e HOME-01 liam `estadoPublico.*` pelo `StatusBadge` — **duas palavras para o mesmo
+> estado** (`preparing` era "Preparing" aqui e "Reserved" lá; `needs_mapping`, "Confirmation
+> needed" × "Action required"). O Blueprint marca `StatusBadge` **🔴 vinculante para EVO-01**
+> exatamente como defesa contra isso. A correção foi **local**: a varredura provou que EVO-01 era
+> a única superfície entregue divergente. Nenhuma copy escrita — o rótulo passou a vir da família
+> já publicada — e a lista ganhou **cor + ícone + rótulo**, que é a regra do DS, em vez de chip
+> neutro. `/ux-heuristics` **9,5**.
 >
 > **Dívida intencional criada aqui, com dono.** `RunRow.tsx` e `RunComparePanel.tsx` ficaram
 > **órfãos intencionais** depois que a `HistoryPage` saiu: nenhum consumidor os alcança, e mesmo
@@ -1305,11 +1315,11 @@ Um comando por gate. Variante mais estreita **não é evidência substituta**.
 
 | gate | comando oficial | baseline |
 |---|---|---|
-| suíte | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts npx vitest run` | **1262 passed · 98 arquivos · 0 skips** |
+| suíte | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts npx vitest run` | **1264 passed · 98 arquivos · 0 skips** |
 | typecheck | `npm run typecheck` | ✅ **0 erros · exit 0** · 298 arquivos, cobertura completa — ver `TYPECHECK-GATE.md` |
 | lint | `npm run lint` | 🟡 **9 erros / 14 warnings** |
 | mutação | script por missão, **controle verde nas duas pontas** | por missão |
-| visual / browser | `npx playwright test` — mock local, **zero Railway** | ✅ **exit 0** · 64 casos |
+| visual / browser | `npx playwright test` — mock local, **zero Railway** | ✅ **exit 0** · 64 casos · **gate obrigatório** |
 
 > **`npx playwright test` é GATE OBRIGATÓRIO** desde 2026-08-12, e não uma sugestão da tabela.
 > Vale para: missão Front **visual** · missão que altera **rota** · missão que altera **navegação**

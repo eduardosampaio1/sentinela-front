@@ -185,6 +185,29 @@ describe("M38 · 5. fronteira com M39, M40 e a listagem canônica", () => {
     }
   });
 
+  it("EVO-01 usa o `StatusBadge` canônico — uma linguagem só para o estado público", () => {
+    // O Blueprint marca `StatusBadge` 🔴 VINCULANTE para EVO-01, e a nota diz por quê: "UM só
+    // componente para os dois vocabulários... defesa contra três linguagens". A lista tinha um
+    // chip a mão lendo `canonicalAnalysis.state.*.title`, então `preparing` era "Preparing" aqui
+    // e "Reserved" em INST-03/HOME-01 — a mesma análise com dois nomes.
+    const f = semComentarios(ler(LISTA));
+    expect(f, "a EVO-01 voltou a ter chip de estado próprio").not.toContain("canonicalAnalysis.state.");
+    expect(f).toContain('vocabulario="publico"');
+    expect(f).toContain("estadoPublico.${item.status}");
+    expect(BLUEPRINT).toMatch(/🔴 \*\*`StatusBadge`\*\*[^|]*\|[^|]*EVO-01/);
+  });
+
+  it("as três superfícies entregues leem a MESMA família de copy", () => {
+    // HOME-01, INST-03 e agora EVO-01. Se uma delas divergir, a inconsistência volta sem alarme.
+    for (const arq of [
+      LISTA,
+      "src/features/home/RegioesDaHome.tsx",
+      "src/features/instances/HistoricoDaInstancia.tsx",
+    ]) {
+      expect(semComentarios(ler(arq)), `${arq} não usa a família publicada`).toContain("estadoPublico.");
+    }
+  });
+
   it("o PLAN mantém M39 e M40 fora da M38, por escrito", () => {
     const entrada = PLAN.match(/### M38[\s\S]*?(?=### M39)/)![0];
     const fora = entrada.match(/\*\*Fora:\*\*[\s\S]*?(?=\n- \*\*)/)![0];

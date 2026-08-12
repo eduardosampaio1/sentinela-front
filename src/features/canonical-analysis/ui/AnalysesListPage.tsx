@@ -15,7 +15,8 @@ import type { AnalysisListItem, CanonicalScope } from "@/lib/v1";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/shared/states/LoadingState";
-import { EmptyState } from "@/design/patterns";
+import { EmptyState, StatusBadge } from "@/design/patterns";
+import type { EstadoPublico } from "@/design/patterns/estados";
 import { useAnalysesList } from "../data/list";
 import { classifyListError } from "../data/listView";
 import { useCanonicalScope } from "./scope";
@@ -45,9 +46,16 @@ function ItemLinha({ item }: { item: AnalysisListItem }) {
           <span className="text-sm text-muted-foreground">{registros}</span>
         </div>
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="inline-flex items-center rounded-full border border-border bg-muted px-2.5 py-0.5 font-medium text-foreground">
-            {t(`canonicalAnalysis.state.${item.status}.title`)}
-          </span>
+          {/* M38 · microcorreção final. Era um chip a mão lendo `canonicalAnalysis.state.*.title`,
+              enquanto INST-03 e HOME-01 liam `estadoPublico.*` pelo `StatusBadge` — duas palavras
+              para o MESMO estado (`preparing` era "Preparing" aqui e "Reserved" lá). O Blueprint
+              marca `StatusBadge` 🔴 vinculante para EVO-01 exatamente como defesa contra isso.
+              Nenhuma copy foi escrita: o rótulo passa a vir da família já publicada. */}
+          <StatusBadge
+            vocabulario="publico"
+            estado={item.status as EstadoPublico}
+            rotulo={t(`estadoPublico.${item.status}`)}
+          />
           {item.result_available && (
             <span className="text-muted-foreground">{t("canonicalAnalysis.list.resultReady")}</span>
           )}
