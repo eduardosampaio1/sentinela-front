@@ -200,13 +200,15 @@ Legenda: **verde** = REAL · **âmbar** = APPROVED DELTA · **azul** = parcialme
 
 `/dashboard` → compat · `/dashboard/analysis|diagnostics|guardrails|optimization` → `/dashboard` ·
 `/manage-context`, `/dashboard/workspaces`, `/dashboard/manage-context` → `/workspaces` ·
-`/dashboard/history/:id` → detalhe canônico.
+`/dashboard/history/:id` → detalhe canônico ·
+**`/dashboard/history` → `/analyses`** (decisão de 2026-08-12; o redirect é entregue **pela M38**,
+e a partir dela a rota legada **não pode voltar a ter lista própria**).
 
 ### 3.4 Rotas públicas — **DECISÃO REGISTRADA** (WS-A10, 2026-08-09)
 
 | AS-IS | proposta | motivo |
 |---|---|---|
-| `/canonical/analyses` | `/analyses` | `canonical` é nome de camada interna |
+| `/canonical/analyses` | `/analyses` | `canonical` é nome de camada interna. **Desde 2026-08-12 é também a rota canônica de EVO-01** (§4.7) |
 | `/canonical/analyses/new` | `/analyses/new` | idem |
 | `/canonical/analyses/:id` | `/analyses/:id` | idem |
 | `/canonical/analyses/:id/result` | `/analyses/:id/result` | idem |
@@ -347,11 +349,23 @@ compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browse
 
 ### 4.7 Evolução — 3 superfícies
 
-| id | nome | contrato |
-|---|---|---|
-| **EVO-01** | **Histórico cronológico** — AS-IS `/dashboard/history` | **REAL** (`GET /v1/analyses` por cursor) |
+| id | nome | rota canônica | contrato |
+|---|---|---|---|
+| **EVO-01** | **Histórico cronológico** | **`/analyses`** | **REAL** (`GET /v1/analyses` por cursor) |
 | **EVO-02** | **Comparação A×B** — AS-IS `RunComparePanel` | **REAL** para escolher duas análises; **APPROVED DELTA** para série de Instância |
-| **EVO-03** | **Baseline** | **APPROVED DELTA** (pertence à Instância) |
+| **EVO-02** | — | — | (acima) |
+| **EVO-03** | **Baseline** | — | **APPROVED DELTA** (pertence à Instância) |
+
+> **EVO-01 mora em `/analyses`, e não nasce como terceira tela.** Decisão de owner de 2026-08-12.
+> A lista canônica já existe ali desde a Onda 6 E4 (renomeada pela M24): o que a **M38** faz é
+> *consolidar* — fechar a semântica de EVO-01 nessa rota, provar a paginação por cursor e
+> **encerrar a duplicata** `/dashboard/history`, que passa a ser alias de compatibilidade sem
+> implementação própria. **Uma terceira rota de histórico é proibida.**
+>
+> Isto reconcilia duas leituras que conviviam sem se enxergar: o PLAN dizia "EVO-01 → M38, não
+> iniciada" enquanto o Discovery registrava a superfície existindo — duplicada — desde a Onda 6. As
+> duas estavam certas sobre coisas diferentes: existia **infraestrutura**, não existia **superfície
+> consolidada**.
 
 ### 4.8 Configurações — 4 superfícies (D22)
 
@@ -460,8 +474,8 @@ semântico, formatar número de domínio, ler i18n de produto.
 | `ConfirmDestructive` | EVO/INST (futuro) | digitação exata do nome da Instância | aceitar "EXCLUIR" |
 | `ProvenanceMargin` | §7 | persistente · disclosure | repetir payload cru |
 | `ComparisonRow` | RES-01, EVO-02 | comparável · **quebra de comparabilidade** | atravessar quebra de schema |
-| `DataTable` | EVO-01, HOME-01 | tabela · **stacked** | perder coluna no mobile |
-| `Toolbar` | RES-01, EVO-01 | — | — |
+| `DataTable` | HOME-01 · *(previsto para EVO-01, **não vinculante** — ver nota)* | tabela · **stacked** | perder coluna no mobile |
+| `Toolbar` | RES-01 · *(previsto para EVO-01, **não vinculante** — ver nota)* | — | — |
 
 **PRODUCT COMPONENTS (9)** — e é aqui que mora o risco que a missão quer matar:
 
@@ -473,6 +487,14 @@ semântico, formatar número de domínio, ler i18n de produto.
 | `PrivacyNotice` | RES-01, HOME-01 | `{ applied, output_count, reason_code }` | explicar `partial`/`withheld` |
 | `ExportButton` | RES-01 | eixo `export` | um botão por estado, não um botão que mente |
 | `AnalysisListItem` | HOME-01, EVO-01, INST-03 | `AnalysisListItem` | linha da lista |
+
+> **Esta tabela mapeia patterns PREVISTOS, não estrutura física obrigatória.** Decisão de owner de
+> 2026-08-12: o que vincula uma superfície é a **semântica** — para EVO-01, ordem vinda do
+> produtor, paginação por cursor, `AnalysisListItem` honesto, estado publicado e empty/loading/error
+> distintos. `DataTable` e `Toolbar` foram citados numa versão anterior deste mapa; se a lista viva
+> já representa tudo isso, **trocá-la por `DataTable` seria redesenho sem necessidade**. `Toolbar`
+> só entra quando houver função real autorizada — barra vazia ou com controle inventado é pior que
+> ausência.
 | `WorkspaceSwitcher` | shell | `MeView.workspaces` | trocar escopo |
 | `ProvenancePopover` | RES-01 | procedência | §10 |
 | `ComparisonPanel` | EVO-02, RES-01 | par de resultados | §8 |

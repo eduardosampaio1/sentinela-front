@@ -925,10 +925,33 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 
 # FASE 10 — Evolução
 
-### M38 · EVO-01 — histórico cronológico — PRONTA, NÃO INICIADA
-> **Estado:** não iniciada, e **sem impedimento conhecido**: `Pré: M25` satisfeita em `92bd174` e o
-> scenario `list-pagination` está disponível no catálogo. Auditada em 2026-08-12.
-- **Pré:** M25. **Paraleliza com:** Fase 5. **Scenarios:** 32. É a superfície mais barata do plano.
+### M38 · EVO-01 — histórico cronológico canônico de análises — AUTORIDADE ALINHADA
+> **Estado:** implementação **não iniciada**. O preflight zero-write de 2026-08-12 devolveu
+> `NEEDS AUTHORITY ALIGNMENT` — produtor completo, mas a entrada era esparsa e a rota não estava
+> congelada. O alinhamento fechou no commit desta etapa; a implementação é a missão em si.
+- **Pré:** ✅ **M25** (executada em `92bd174`). **Paraleliza com:** Fase 5.
+- **Superfícies:** **EVO-01**. **Scenarios:** 32 `list-pagination` — nenhum scenario novo.
+- **Rota canônica:** **`/analyses`**. A lista já vive ali desde a Onda 6 E4 (renomeada pela M24):
+  a M38 é **consolidação, não criação**. Existia infraestrutura; não existia superfície fechada.
+- **Escopo:** consolidar EVO-01 em `/analyses` · histórico cronológico **vindo do backend** ·
+  paginação por **cursor real**, provada em mais de uma página · preservar `AnalysisListItem` ·
+  empty/loading/error **distintos e honestos** · encerrar a implementação duplicada de
+  `/dashboard/history` por **compatibilidade/redirect** · manter shell e navegação como estão.
+- **Fora:** comparação A×B · EVO-02 · EVO-03 · Baseline · INST-05 · INST-06 · Evolution por
+  Instância · **terceira rota de histórico** · novos cálculos · filtros sem produtor · trocar a
+  lista viva por `DataTable` sem necessidade semântica · `Toolbar` sem função autorizada.
+- **DoD:** `/analyses` **é** EVO-01 · a lista vem do backend e a **ordem não é recalculada** ·
+  o cursor atravessa mais de uma página · empty/loading/error honestos · `/dashboard/history`
+  **não mantém segunda implementação** · refresh e deep link de `/analyses` funcionam · PT/EN ·
+  responsivo · teclado · axe · `/ux-copy` · `/design-critique` · `/ux-heuristics` **≥ 9,0** ·
+  typecheck `exit 0`, lint com delta **≤ 0**, suíte e mutação verdes · **DOC-CLOSE obrigatório**.
+- **Gates:** impedem **terceira rota de histórico** · `/dashboard/history` voltar a ter lista
+  própria · **sort local** · **OFFSET** · Baseline entrar na EVO-01 · comparação A×B entrar na M38 ·
+  `DataTable` ser exigida sem função semântica · M39/M40 serem antecipadas.
+- **Autoridades:** Blueprint §3.3, §3.4, §4.7 e §9 (patterns **previstos**, não vinculantes) ·
+  Discovery (registro da duplicidade + resolução de 2026-08-12) · Product Freeze · DS Constitution ·
+  contrato público `@ ac81633` (`GET /v1/analyses`, cursor, workspace-scoped) · scenario
+  `list-pagination`.
 ### M39 · EVO-02 — comparação A×B e quebra de comparabilidade
 - **Pré:** M30, M38. **Escopo:** **uma** regra canônica compartilhada com RES-01 (D29).
   **Scenarios:** 20, 21.
@@ -1252,7 +1275,7 @@ depois começa sem ela.
 | B1 | **aberto em 1** — `create_instance`, sem superfície no Blueprint e sem missão no PLAN |
 | missões fechadas | **M36** (INST-01 + INST-03) em `34d65e2` |
 | última missão fechada | **M37** (INST-04 — nova análise a partir da Instância) |
-| próxima possível | **M38 / EVO-01** — `Pré: M25` satisfeita, scenario `list-pagination` disponível. **Não iniciada.** |
+| próxima possível | **M38 / EVO-01** — autoridade alinhada em 2026-08-12; rota canônica `/analyses`. **Implementação não iniciada.** |
 
 Como se chegou aqui: `4c96256` reconciliou a autoridade com o estado entregue; `fdddc27` e
 `2771e6d` fecharam a `TYPECHECK RECOVERY`. Nenhum dos três tocou código de produto.
@@ -1263,7 +1286,7 @@ Um comando por gate. Variante mais estreita **não é evidência substituta**.
 
 | gate | comando oficial | baseline |
 |---|---|---|
-| suíte | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts npx vitest run` | **1250 passed · 98 arquivos · 0 skips** |
+| suíte | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts npx vitest run` | **1267 passed · 99 arquivos · 0 skips** |
 | typecheck | `npm run typecheck` | ✅ **0 erros · exit 0** · 298 arquivos, cobertura completa — ver `TYPECHECK-GATE.md` |
 | lint | `npm run lint` | 🟡 **9 erros / 14 warnings** |
 | mutação | script por missão, **controle verde nas duas pontas** | por missão |

@@ -860,6 +860,12 @@ Das 21 inexistentes:
 | **Exportações** | **a refazer** | botão de CSV local | **D16: export único.** O CSV local **sai**; entra o artefato do backend, com os 5 estados de `/progress` |
 
 **Duplicado:** histórico em `/canonical/analyses` e `/dashboard/history`.
+
+> ✅ **RESOLVIDO em 2026-08-12 — decisão de owner, executada pela M38.** A duplicidade registrada
+> acima **existiu** e não é reescrita: durante toda a Onda 6 e a Fase 3 houve duas telas de
+> histórico lendo o mesmo produtor. A resolução corrente é **consolidar em `/analyses`**, que passa
+> a ser a rota canônica de **EVO-01**; `/dashboard/history` vira alias de compatibilidade e perde
+> implementação própria. Nenhuma terceira tela é criada. Ver `EXPERIENCE-BLUEPRINT-V1.md` §4.7.
 **Só recomposição:** Analytics, Pareto, temporal, distribuições — já são view models prontos;
 reorganizá-los em abas/seções não exige backend nem DS novo.
 
