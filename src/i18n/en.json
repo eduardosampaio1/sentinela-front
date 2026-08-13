@@ -31,6 +31,8 @@
     "redirecting": "Redirecting..."
   },
   "baseline": {
+    "candidateCreated": "Created on {{date}}",
+    "candidateRecords": "{{n}} records",
     "chooseTitle": "Analyses that can be the reference",
     "currentBadge": "Current reference",
     "currentLabel": "Current reference",
@@ -45,9 +47,9 @@
     "replaceTitle": "Switch to another analysis",
     "set": "Set as reference",
     "setAria": "Set analysis {{id}} as the reference for this instance",
-    "setOn": "Reference set on {{date}}",
+    "setOn": "Chosen on {{date}}",
     "setting": "Setting…",
-    "subtitle": "The analysis that serves as the reference for this instance. You choose which one — it never changes on its own.",
+    "subtitle": "You mark one analysis in this instance as the reference. The choice is yours and it never changes on its own.",
     "title": "Reference analysis"
   },
   "canonicalAnalysis": {

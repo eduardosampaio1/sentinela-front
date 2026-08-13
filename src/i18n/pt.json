@@ -31,6 +31,8 @@
     "redirecting": "Redirecionando..."
   },
   "baseline": {
+    "candidateCreated": "Criada em {{date}}",
+    "candidateRecords": "{{n}} registros",
     "chooseTitle": "Análises que podem ser referência",
     "currentBadge": "Referência atual",
     "currentLabel": "Referência atual",
@@ -44,10 +46,10 @@
     "removing": "Removendo…",
     "replaceTitle": "Trocar por outra análise",
     "set": "Usar como referência",
-    "setAria": "Definir a análise {{id}} como referência desta instância",
-    "setOn": "Definida em {{date}}",
-    "setting": "Definindo…",
-    "subtitle": "A análise que serve de referência para esta instância. Você escolhe qual é — ela nunca muda sozinha.",
+    "setAria": "Usar a análise {{id}} como referência desta instância",
+    "setOn": "Escolhida em {{date}}",
+    "setting": "Salvando…",
+    "subtitle": "Você marca uma análise desta instância como referência. A escolha é sua e nunca muda sozinha.",
     "title": "Análise de referência"
   },
   "canonicalAnalysis": {

@@ -44,7 +44,7 @@
 > | superfície | estado | razão literal |
 > |---|---|---|
 > | **INST-02** Estado | 🔴 delta declarado | não há estado corrente publicado — o read model é `instance_id`, `name`, `created_at` |
-> | **INST-05** Baseline | 🟢 **desbloqueada — Front não iniciado** | *(era: "baseline não existe no contrato público; nenhuma BD o cria" — verdade até 2026-08-13)*. A **BD10** publica `GET`/`POST`/`DELETE` `/v1/instances/{id}/baseline` e o filtro de candidatos `baseline_eligible`. A tela pode mostrar/definir/substituir/remover; **não** pode evolução, delta, melhora, piora, tendência nem ranquear candidatos — isso é comparação longitudinal, que segue sem produtor |
+> | **INST-05** Baseline | ✅ **entregue — M40** | *(era: "baseline não existe no contrato público; nenhuma BD o cria" — verdade até 2026-08-13)*. A **BD10** publica `GET`/`POST`/`DELETE` `/v1/instances/{id}/baseline` e o filtro de candidatos `baseline_eligible`. A tela pode mostrar/definir/substituir/remover; **não** pode evolução, delta, melhora, piora, tendência nem ranquear candidatos — isso é comparação longitudinal, que segue sem produtor |
 > | **INST-06** Evolução | 🔴 delta declarado | evolução longitudinal sem produtor; **saiu da M39** em 2026-08-12 |
 > | **INST-07** Configuração | 🔴 delta declarado | não há operação de configuração — nem `update`, `PATCH` ou `delete`; D22 depende de **BD04** |
 >

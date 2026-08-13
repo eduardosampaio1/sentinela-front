@@ -301,6 +301,63 @@ const HISTORICO_E2E_PAGINA_2 = {
 /** Chave que pede a lista de Instâncias VAZIA — o estado de workspace autorizado sem nenhuma. */
 export const CHAVE_INSTANCIAS_VAZIAS = "sentinela:e2e:instancias-vazias";
 
+// ── M40 · INST-05 — a Baseline Reference no browser ─────────────────────────
+//
+// O estado vive em `sessionStorage`, no MESMO mecanismo que o resto desta jornada. `page.route`
+// do Playwright não serviria: o MSW é service worker e intercepta antes — o teste "passaria"
+// contra uma resposta que a tela nunca viu.
+//
+// E o estado é MUTÁVEL de verdade: o `POST` escreve, o `GET` lê. Sem isso não daria para provar
+// em browser a garantia central da BD10 — que a troca A→B **não passa** por `NO_BASELINE`.
+const CHAVE_BASELINE = "__sentinela_baseline__";
+const CHAVE_SEM_CANDIDATOS = "__sentinela_baseline_sem_candidatos__";
+
+/** Os candidatos do browser. `created_at` fora de ordem em relação aos ids, de propósito: uma
+ *  tela que escolhesse "a mais recente" apontaria para `an-cand-e2e-0002`, e a prova veria. */
+const CANDIDATOS_E2E = [
+  analiseE2E("an-cand-e2e-0001", { created_at: "2026-07-31T09:15:00Z", record_count: 1240 }),
+  analiseE2E("an-cand-e2e-0002", { created_at: "2026-08-05T18:40:00Z", record_count: 640 }),
+  analiseE2E("an-cand-e2e-0003", { created_at: "2026-08-02T07:05:00Z", record_count: 2310 }),
+];
+
+function lerBaseline(): { id: string | null; setAt: string | null } {
+  try {
+    const bruto = typeof sessionStorage !== "undefined" ? sessionStorage.getItem(CHAVE_BASELINE) : null;
+    if (!bruto) return { id: null, setAt: null };
+    return JSON.parse(bruto) as { id: string | null; setAt: string | null };
+  } catch {
+    return { id: null, setAt: null };
+  }
+}
+
+function gravarBaseline(id: string | null, setAt: string | null): void {
+  try {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.setItem(CHAVE_BASELINE, JSON.stringify({ id, setAt }));
+    }
+  } catch {
+    /* sem sessionStorage: o handler continua respondendo o default */
+  }
+}
+
+function semCandidatos(): boolean {
+  try {
+    return typeof sessionStorage !== "undefined" && sessionStorage.getItem(CHAVE_SEM_CANDIDATOS) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function vistaDoBaseline() {
+  const { id, setAt } = lerBaseline();
+  // O par nunca vem pela metade — é o `CHECK` do produtor, e a jornada o respeita.
+  return {
+    instance_id: INSTANCIA_E2E.instance_id,
+    baseline_analysis_id: id,
+    baseline_set_at: id ? (setAt ?? "2026-08-06T13:22:00Z") : null,
+  };
+}
+
 function vazioPedido(): boolean {
   try {
     return typeof sessionStorage !== "undefined" && sessionStorage.getItem(CHAVE_INSTANCIAS_VAZIAS) === "1";
@@ -417,6 +474,15 @@ export function makeJourneyHandlers(base: string) {
       // filtro para responder o histórico: sem `instance_id` ele devolve a listagem geral, e é
       // essa diferença que faz a tela falhar caso deixe de enviá-lo.
       const instancia = u.searchParams.get("instance_id");
+      // M40 · INST-05 — os CANDIDATOS. Exige os DOIS filtros, como o produtor: `baseline_eligible`
+      // sem `instance_id` é `invalid_input` lá, e aqui a ausência do primeiro cai no histórico.
+      // Uma tela que esquecesse qualquer um dos dois receberia a lista errada, e a prova veria.
+      if (instancia && u.searchParams.get("baseline_eligible") === "true") {
+        return HttpResponse.json({
+          items: semCandidatos() ? [] : CANDIDATOS_E2E,
+          next_cursor: null,
+        });
+      }
       if (instancia) {
         return HttpResponse.json(
           instancia === INSTANCIA_E2E.instance_id
@@ -462,6 +528,38 @@ export function makeJourneyHandlers(base: string) {
             { status: 404 },
           ),
     ),
+    // M40 · INST-05 — as três operações do ponteiro.
+    http.get(`${b}/v1/instances/:id/baseline`, () => HttpResponse.json(vistaDoBaseline())),
+    http.post(`${b}/v1/instances/:id/baseline`, async ({ request }) => {
+      // A corrida REAL do contrato: o candidato veio elegível na listagem e deixou de estar
+      // entre a leitura e a escrita. O produtor devolve 409 `analysis_not_ready`, e a tela
+      // precisa EXPLICAR — engolir isso deixa o clique sem efeito e sem motivo.
+      try {
+        if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("__sentinela_baseline_409__") === "1") {
+          return HttpResponse.json(
+            { type: "urn:sentinela:error:analysis_not_ready", title: "analysis_not_ready", status: 409, code: "analysis_not_ready", detail: "operation_state_conflict", retryable: false },
+            { status: 409, headers: { "content-type": "application/problem+json" } },
+          );
+        }
+      } catch {
+        /* sem sessionStorage: segue o caminho normal */
+      }
+      const corpo = (await request.json()) as { baseline_analysis_id?: string } | null;
+      const alvo = corpo?.baseline_analysis_id;
+      if (!alvo) {
+        return HttpResponse.json(
+          { type: "urn:sentinela:error:invalid_input", title: "invalid_input", status: 400, code: "invalid_input", detail: "invalid_input" },
+          { status: 400, headers: { "content-type": "application/problem+json" } },
+        );
+      }
+      gravarBaseline(alvo, "2026-08-06T13:45:00Z");
+      return HttpResponse.json(vistaDoBaseline());
+    }),
+    http.delete(`${b}/v1/instances/:id/baseline`, () => {
+      // Idempotente: sem régua, continua NO_BASELINE — e é 200.
+      gravarBaseline(null, null);
+      return HttpResponse.json(vistaDoBaseline());
+    }),
     http.get(`${b}/v1/analyses/:id`, ({ params }) => {
       const id = String(params.id);
       const err = getStatusError(id);

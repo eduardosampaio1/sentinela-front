@@ -332,7 +332,7 @@ INST-07** são delta declarado por falta de produtor. O contrato de Instance pub
 | **INST-02** | Estado | leitura do estado corrente + procedência | 🔴 **DELTA DECLARADO — sem produtor de estado corrente** |
 | **INST-03** | Histórico | execuções em ordem | **APPROVED DELTA** |
 | **INST-04** | Nova análise (a partir da Instância) | pré-preencher o escopo | ✅ **ENTREGUE** — M37 |
-| **INST-05** | Baseline | marcar/substituir/remover a régua (D25) | **APPROVED DELTA** — ✅ **BACKEND READY** (BD10) · ✅ **SCENARIOS MATERIALIZED** (24, 38, 39) · **FRONT NOT STARTED**. Sem evolução/delta/direção/ranking: isso é comparação longitudinal, e a BD10 não a entrega |
+| **INST-05** | Baseline | marcar/substituir/remover a régua (D25) | ✅ **ENTREGUE — M40** (2026-08-13), sobre a BD10. Seção *Análise de referência* na página da Instância. Sem evolução/delta/direção/ranking: isso é comparação longitudinal, e ela não tem produtor |
 | **INST-06** | Evolução | 🔴 **DELTA DECLARADO — evolução longitudinal da Instance sem produtor** |
 | **INST-07** | Configuração da Instância (D22) | | 🔴 **DELTA DECLARADO — sem produtor de configuração; D22 depende de BD04** |
 

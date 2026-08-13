@@ -118,7 +118,11 @@ export function ReferenciaDaInstancia({ scope, instanceId, instanceName }: Props
 
   const atual = baseline.data.baseline_analysis_id;
   const definidaEm = baseline.data.baseline_set_at;
-  const lista = candidatos.data.items;
+  // A régua atual sai da lista quando existe — ela já está no cartão acima, e repeti-la fazia o
+  // olho perguntar se eram duas coisas. Isto é APRESENTAÇÃO, não seleção: nenhum candidato deixa
+  // de ser elegível por não aparecer, e escolher o que já é régua seria um clique sem efeito.
+  // Com isso o título "Trocar por outra análise" passa a descrever o que a lista de fato contém.
+  const lista = candidatos.data.items.filter((c) => c.analysis_id !== atual);
 
   const escolher = (analysisId: string) => {
     if (!scope || !instanceId) return;
@@ -131,7 +135,10 @@ export function ReferenciaDaInstancia({ scope, instanceId, instanceName }: Props
       {/* O estado corrente vem primeiro: quem abre a seção quer saber se há régua antes de
           escolher uma. */}
       {atual ? (
-        <div className="rounded-lg border border-border bg-muted/30 p-4">
+        // `role="status"` porque a mudança de estado É a confirmação: depois de eleger, nada
+        // além deste cartão diz que deu certo. Quem enxerga vê o cartão aparecer; sem a região
+        // viva, quem usa leitor de tela ouvia o botão sair de "Salvando…" e mais nada.
+        <div role="status" className="rounded-lg border border-border bg-muted/30 p-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             {t("baseline.currentLabel")}
           </p>
@@ -161,7 +168,7 @@ export function ReferenciaDaInstancia({ scope, instanceId, instanceName }: Props
       ) : (
         // `NO_BASELINE` é estado LEGÍTIMO, e a copy o trata como tal: nem erro, nem pendência,
         // nem convite a "corrigir".
-        <p role="status" className="text-sm text-muted-foreground">
+        <p role="status" className="text-sm text-foreground">
           {t("baseline.none")}
         </p>
       )}
@@ -244,14 +251,32 @@ function LinhaDeCandidato({
     <li className="flex flex-col gap-2 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <p className="break-all text-sm font-medium text-foreground">{candidato.analysis_id}</p>
-        {/* Data de CRIAÇÃO da análise. Ela é procedência, e não critério: nenhuma ordenação aqui
-            elege coisa alguma, e a mais recente não recebe destaque. */}
-        {data && <p className="text-xs text-muted-foreground">{data}</p>}
+        {/* Procedência, e NÃO critério: nenhuma ordenação aqui elege coisa alguma, e a mais
+            recente não recebe destaque.
+            A captura mostrou o defeito que o JSX escondia: a linha do candidato era mais POBRE
+            que a linha do histórico logo abaixo — id opaco e uma data sem rótulo. Para LISTAR
+            basta o id; para ESCOLHER é preciso reconhecer, e um identificador opaco não permite
+            reconhecer nada. A contagem de registros é o que o histórico já usa, e o rótulo diz
+            de que data se trata. */}
+        <p className="text-xs text-muted-foreground">
+          {[
+            data ? t("baseline.candidateCreated", { date: data }) : null,
+            candidato.record_count !== null && candidato.record_count !== undefined
+              ? t("baseline.candidateRecords", { n: String(candidato.record_count) })
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
       </div>
       {atual ? (
         // A régua atual não ganha botão de "definir de novo": a ação não acrescentaria nada, e
         // oferecê-la convidaria ao clique que não muda estado.
-        <span className="flex-none rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+        // `text-foreground`, e não `text-muted-foreground`: o axe mediu **4,12:1** sobre
+        // `bg-muted` a 12px, abaixo dos 4,5:1 exigidos. E a correção é a certa por conteúdo
+        // também — este selo é a RESPOSTA da seção ("qual é a régua?"), e apagá-lo em cinza
+        // sobre cinza era a hierarquia invertida.
+        <span className="flex-none rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
           {t("baseline.currentBadge")}
         </span>
       ) : (

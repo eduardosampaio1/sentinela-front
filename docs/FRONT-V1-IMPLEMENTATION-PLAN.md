@@ -39,7 +39,7 @@
 | **7** | Jornada de análise | M33–M35 | jornada REAL completa |
 | **8** | Backend delta de Instância | BD02 | freeze próprio |
 | **9** | Instância | M36–M37 | INST-01/03/04 navegáveis · INST-02/07 declaradas sem produtor |
-| **10** | Evolução | M38 ✅ · M39 ✅ · **M40 🟢 realinhada** (INST-05; `EVO-03` saiu como delta declarado) | comparação canônica · baseline explícito |
+| **10** | Evolução | M38 ✅ · M39 ✅ · **M40 ✅** (INST-05; `EVO-03` saiu como delta declarado) | comparação canônica · baseline explícito |
 | **11** | Configurações | M41–M42 | ownership de D22 |
 | **12** | Comunicação / re-entry | M43–M44 | deep links corretos |
 | **13** | Hardening | M45 | 18 gates verdes |
@@ -1103,7 +1103,7 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > (`delta: number`) e decide comparabilidade **por linha**. Por isso ele **deixa de ser AS-IS de
 > regra** e passa a **referência visual/estrutura legada**. A M39 não o "conserta": ela primeiro
 > lhe retira o direito de decidir o que comparação significa.
-### M40 · INST-05 — baseline explícito — SCENARIOS MATERIALIZED · READY FOR IMPLEMENTATION
+### M40 · INST-05 — baseline explícito — EXECUTADA
 
 > 🔧 **REALINHAMENTO DE AUTORIDADE — 2026-08-13.** *(Todo o histórico abaixo fica preservado: esta
 > missão nasceu `EVO-03 + INST-05`, foi declarada bloqueada por falta de produtor, e a BD10 mudou
@@ -1171,6 +1171,50 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 >
 > **Provas:** 29 gates de massa · 71 do catálogo · **mutação 10/10 mortas** · typecheck exit 0 ·
 > lint **delta 0** (9/14, a linha de base declarada).
+
+> ✅ **EXECUTADA — 2026-08-13.** A seção **Análise de referência** vive na página da Instância,
+> entre identidade e histórico. Ela responde uma pergunta e só ela: *qual análise é a referência
+> ativa desta Instância?*
+>
+> **O que ficou pronto:** cliente das três operações + `baselineEligible` na listagem já
+> existente · quatro hooks sem regra · os cinco estados (carregando, erro, `NO_BASELINE`,
+> referência configurada, zero candidatos) · PT/EN · teclado · axe limpo nos três estados.
+>
+> **Três decisões que a captura mudou, e que o JSX escondia:**
+>
+> 1. **A régua saiu da lista de candidatos.** Ela aparecia duas vezes — no cartão e com selo na
+>    lista — e o olho perguntava se eram duas coisas. Agora a lista contém as **alternativas**, o
+>    que também faz o título "Trocar por outra análise" descrever o que ele de fato lista.
+> 2. **O candidato era mais POBRE que a linha do histórico logo abaixo** — id opaco e uma data sem
+>    rótulo, contra id + contagem de registros. Para *listar* basta o id; para **escolher** é
+>    preciso reconhecer, e identificador opaco não permite reconhecer nada.
+> 3. **`NO_BASELINE` estava no mesmo cinza do subtítulo** e parecia mais explicação. É a
+>    **resposta** da seção, e subiu para o primeiro plano.
+>
+> **Dois defeitos reais achados por gate, não por revisão:**
+>
+> - **contraste 4,12:1** no selo "Referência atual" (`bg-muted` + `text-muted-foreground` a 12px),
+>   abaixo dos 4,5:1. O axe pegou; a correção é a certa por conteúdo também, porque o selo é a
+>   resposta da seção e estava apagado em cinza sobre cinza;
+> - **o erro da mutação era engolível sem nada reprovar** — trocar `error={erroDaMutacao}` por
+>   `null` sobreviveu à campanha. O clique ficava sem efeito **e sem motivo**, que é o pior par
+>   possível. Fechado com o caso do `409` da corrida (§19), e o mutante morreu no reteste.
+>
+> **Quality stack:** `/ux-copy` (três achados de consistência: dois verbos para a mesma ação, um
+> terceiro no carimbo, e um subtítulo circular) · `/design-critique` (os três acima) ·
+> `/ux-heuristics` **9,2** — o teto são duas limitações declaradas, não de design: a seção **não
+> responde "para quê?"** porque a comparação não existe, e o **identificador é opaco** porque o
+> contrato não publica nome de análise.
+>
+> **Provas:** vitest **1468 passed · 0 failed** · Playwright **147 passed** (19 da M40, incluindo
+> axe em três estados) · typecheck **exit 0** · lint **9/14, delta 0** · mutação **12/12 mortas** ·
+> **12 capturas** em `docs/inst05/`.
+>
+> **M17 verde:** reconferência refeita por medição — 19 eixos, nenhum mudou — e só então o digest.
+> **B1 de 4 para 1:** as três operações de baseline ganharam cliente; sobra `create_instance`.
+>
+> **`baseline-active` continua BLOQUEADO.** A UI desta missão **não tem exclusão de Analysis**, e
+> portanto não pode provar a segunda metade daquele scenario. B10 → `BD06` segue inexistente.
 >
 > **Playwright não foi executado, e não era exigido:** nenhuma rota, jornada ou seam de browser
 > mudou. A regra do PLAN é literal — *"checkpoint puramente documental ou contratual… não precisa
@@ -1667,12 +1711,13 @@ depois começa sem ela.
 | Orchestrator | `sentinela-orchestrator` · `integracao/bd02-instancia` · **`6c5e71b`** *(era `8996a75`)* |
 | origem contratual **obrigatória** | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts` — sem ela o resolver recusa escolher entre worktrees divergentes, e recusar é o comportamento correto |
 | catálogo de scenarios | **39** · 36 executáveis · 1 parcial · 2 bloqueados *(era 37/33/1/3 antes da M40)* |
-| B1 | **aberto em 4** — `create_instance` (sem superfície nem missão) + as **três** da BD10 (`get`/`set`/`clear_instance_baseline`), que têm superfície (INST-05) e missão (**M40**) e esperam execução. A BD02 já o reabriu de 1 para 3 e a M36 o devolveu a 1; a BD10 repete o padrão |
+| B1 | **aberto em 1** — `create_instance`, sem superfície no Blueprint e sem missão no PLAN. A BD10 o reabriu em 4 e a **M40 o devolveu a 1**, construindo os clientes das três operações de baseline — o mesmo ciclo que BD02 → M36 |
 | missões fechadas | **M36** (INST-01 + INST-03) em `34d65e2` |
 | última missão fechada | **M37** (INST-04 — nova análise a partir da Instância) |
 | última missão fechada | **M38** (EVO-01 — histórico cronológico canônico em `/analyses`) |
 | última missão fechada | **M39** (EVO-02 — comparação ARGOS A×B sobre v3) |
-| próxima possível | **M40 / INST-05** (só ela — `EVO-03` saiu) — autoridade realinhada em 2026-08-13 sobre a **BD10 CLOSED**. **Implementação não iniciada.** |
+| última missão fechada | **M40** (INST-05 — análise de referência, sobre a BD10) |
+| próxima possível | **M41 / CFG-01-02** (Fase 11). `EVO-03` continua **sem missão**: falta o produtor de comparação longitudinal |
 
 Como se chegou aqui: `4c96256` reconciliou a autoridade com o estado entregue; `fdddc27` e
 `2771e6d` fecharam a `TYPECHECK RECOVERY`. Nenhum dos três tocou código de produto.
