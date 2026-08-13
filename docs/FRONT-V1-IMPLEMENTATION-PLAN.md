@@ -1187,16 +1187,33 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > A divergência era **12 × 15** antes da BD10 e passou a ser **12 × 18**. Mudou o número, não o
 > veredicto.
 >
-> **Duas dívidas, e só a segunda é da BD10:**
+> **A decomposição exata.** A suíte fecha em **12 falhas / 1338 passes**. Rodando os 5 arquivos
+> vermelhos com `SENTINELA_CONTRACT_ORIGIN` declarado — a saída que o próprio WS-A1 documenta —
+> sobram **2**. Logo:
 >
-> 1. 🔴 **anterior, e maior** — o worktree `sentinela` numa branch antiga. Enquanto durar, o M17
->    não protege nada: reprova por não conseguir escolher, não por ter comparado. **Dono:** quem
->    administra os worktrees.
-> 2. 🟡 **da BD10** — resolvido (1), o digest selado será o antigo e o M17 exigirá o novo. **A
+> | | quantas | causa | dono |
+> |---|---|---|---|
+> | 🔴 **anteriores à BD10** | **10** | worktree divergente → `ambigua` → `escolhida = null` → 3 arquivos de cliente estouram na coleta e o M17 cai inteiro | quem administra os worktrees |
+> | 🟡 **da BD10** | **2** | os dois gates funcionando | INST-05 |
+>
+> Enquanto (1) durar, o M17 **não protege nada**: ele reprova por não conseguir escolher, não por
+> ter comparado.
+>
+> **As duas que são da BD10, com o conserto exato:**
+>
+> 1. **M17 · o digest selado** (`src/test/fixtures/public-v1/selo.ts`) — o manifesto mudou. **A
 >    reconferência já está feita:** nenhum dos 19 eixos de read-model mudou (a BD10 acrescentou
 >    operações e uma `optional_query`, e não tocou `instance_read_model_fields`, `list_item_fields`,
->    `public_states` nem `problem_codes`). O conserto é uma linha, e não foi feito porque esta
->    missão está proibida de tocar código do Front.
+>    `public_states` nem `problem_codes`). Conserto: o digest novo.
+> 2. **WS-A2 / WS-A7 · o B1 reabriu, de 1 para 4** (`src/test/v1/divergenciaDeclarada.ts`) — três
+>    operações contratadas sem cliente no Front. **É exatamente o que a BD02 fez** (o próprio
+>    arquivo registra: *"REABERTO PELA BD02. Ela publicou três operações de Instance, e o Front
+>    ainda não as consome"*), e pela mesma razão: publicar capacidade cujo consumidor não existe.
+>    Conserto: declarar as três em `missing_in_front` e ajustar a contagem — **declarar a dívida,
+>    não escondê-la**. A M36 levou o B1 de 3 a 1 construindo as telas; a INST-05 o levará de 4 a 1.
+>
+> Nenhum dos dois foi feito: **esta missão está proibida de tocar código do Front**, e os dois
+> vivem em `src/`.
 - **Baseline permanece requisito da V1.** EVO-03 e INST-05 continuam no mapa; o que muda é a razão
   documentada do bloqueio.
 - **Escopo (quando destravar):** marcar/substituir/remover; **nunca muda em silêncio**; baseline
