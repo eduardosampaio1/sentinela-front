@@ -1589,8 +1589,8 @@ depois começa sem ela.
 | **HOME-01** | M32 |
 | AN-01 | M33 · AN-03 → M34 · AN-04 → M35 · **AN-02 → bloqueada por BD01** |
 | **RES-01** | M26–M31 |
-| EVO-01 | M38 · EVO-02 → M39 · EVO-03 → M40 (**bloqueada: Baseline sem produtor**) |
-| INST-01/03 | M36 · **INST-04 ✅ entregue** na M37 · **INST-05** → M40 (bloqueada: Baseline sem produtor) · **INST-06**: delta declarado, evolução longitudinal sem produtor · **INST-02 e INST-07: delta declarado, sem produtor** · **criar Instância: sem superfície nem missão** |
+| EVO-01 | M38 ✅ · EVO-02 → M39 ✅ · **EVO-03: delta declarado SEM missão** — saiu da M40 em 2026-08-13; bloqueado pelo **produtor de comparação longitudinal**, não por baseline |
+| INST-01/03 | M36 · **INST-04 ✅ entregue** na M37 · **INST-05 → M40** (autoridade realinhada 2026-08-13; **BD10 CLOSED**, backend pronto, Front não iniciado) · **INST-06**: delta declarado, evolução longitudinal sem produtor · **INST-02 e INST-07: delta declarado, sem produtor** · **criar Instância: sem superfície nem missão** |
 | CFG-01/02 | M41 · CFG-03/04 → M42 |
 | erros globais | M13 (`ErrorState`) + M25 |
 

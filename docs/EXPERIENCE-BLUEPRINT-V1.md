@@ -634,7 +634,7 @@ cortado é **declarado, não deduzido** · quebra de `result_schema_version` ou
 |---|---|---|
 | **1. Continuidade** | as execuções existem e são listáveis em ordem | ✅ **SIM** — `GET /v1/analyses` por cursor |
 | **2. Identidade** | duas execuções pertencem ao **mesmo sistema observado** | ✅ **SIM** — `instance_id` na Instance e no read model de Analysis (BD02) |
-| **3. Referência** | existe uma régua (baseline) | ❌ **NÃO** — a camada 2 deixou de ser o impedimento; **baseline não existe no contrato público**: nenhuma operação a cria, lê ou compara, e nenhuma BD a produz |
+| **3. Referência** | existe uma régua (baseline) | ✅ **SIM, desde 2026-08-13** — a **BD10** publica `GET`/`POST`/`DELETE` `/v1/instances/{id}/baseline` + candidatos por `baseline_eligible`. *(Era: "baseline não existe no contrato público… e nenhuma BD a produz".)* **A camada 4 — confrontar contra a régua — continua ❌:** ter referência não é comparar, e a BD10 diz isso por escrito |
 | **4. Comportamento** | o sistema **mudou de comportamento** (drift) | ❌ **NÃO** — falta referência + limiar + owner canônico |
 
 **Hoje a camada 1 permite dizer:** *"esta análise vs. a imediatamente anterior desta lista"*.
@@ -724,7 +724,7 @@ Todo scenario é **nome + lista de handlers**. Fixture derivada do schema public
 | 36 | `comparison-v3-compatible` | EVO-02 | dois `/result?result_schema_version=3` | 14 pares de indicador · 4 de dimensão, com valores distintos | — |
 | 37 | `comparison-v3-document-break` | EVO-02 | dois `/result?result_schema_version=3` | `indicator_registry_version` divergente, e **nada mais** | — |
 | 23 | `privacy-omission` | RES-01 | `/analytics` | `withheld.reason_code` | — |
-| 24 | `no-baseline` | INST-05 | — | — | 🔴 **BLOQUEADO** — baseline não existe |
+| 24 | `no-baseline` | INST-05 | `GET /v1/instances/{id}/baseline` | `200` + as duas chaves `null` | 🟢 **MATERIALIZÁVEL** desde a BD10 — `NO_BASELINE` é estado legítimo, não erro. Massa não escrita (é da M40) |
 | 25 | `baseline-active` | INST-05 | — | bloqueia exclusão | 🔴 **BLOQUEADO** |
 | 26 | `session-expired` | AUTH-04 | 401 | preserva destino | — |
 | 27 | `forbidden` | ERR-403/404 | 404 `forbidden_or_not_found` | — | — |
