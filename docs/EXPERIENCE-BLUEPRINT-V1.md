@@ -445,8 +445,8 @@ compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browse
 
 | id | nome | contrato |
 |---|---|---|
-| **CFG-01** | Conta / Usuário — dados de `GET /v1/me`, alteração **delegada** (D19) | **REAL** (leitura) |
-| **CFG-02** | Preferências — **idioma** (D23) | 🔶 **APPROVED DELTA** — não há contrato de preferência. Tema **não entra** (D23 vigente) |
+| **CFG-01** | Conta / Usuário — dados de `GET /v1/me`, alteração **delegada** (D19) | **REAL** (leitura) — produtor existe; **sem scenario** ainda |
+| **CFG-02** | Preferências — **idioma** (D23) | 🔶 **APPROVED DELTA** — **owner decidido, contrato ainda não**: o domínio **Account** foi congelado em 2026-08-13 (`ARQ - Domínio Account`, vault), e nenhuma operação pública existe. Idioma é **global por usuário**; `stored = null` ≠ `"en"`. Tema **não entra** (D23 vigente) |
 | **CFG-03** | Workspace | **APPROVED DELTA** |
 | **CFG-04** | Instância | **APPROVED DELTA** |
 

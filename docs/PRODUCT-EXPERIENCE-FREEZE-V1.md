@@ -310,7 +310,7 @@ Paridade `pt.json` × `en.json` é gate de UI COMPLETE (critério 18).
 | **D18** — **Zod não substitui validação canônica.** `validator.ts`, `validatorV2.ts`, `leitores.ts` ficam como estão. Zod só em formulários de entrada. Trocar fronteira validada exigiria missão de **paridade formal** | regra congelada |
 | **B4** — `recommendation_id` não chega ao documento canônico | bloqueia D27 |
 | **B6** — Supabase Auth vivo e roteado; Supabase está **aposentado** por decisão arquitetural | delta obrigatório de erradicação, frente própria |
-| **B7** — contrato de preferências (idioma) inexistente | bloqueia D22/D23 |
+| **B7** — preferência de idioma **sem owner, sem persistência e sem contrato** (medido na Discovery da M41). Domínio **Account** congelado em 2026-08-13 (`ARQ - Domínio Account`, vault); falta a Backend Authority. Congelado junto: idioma é **global por usuário**, `stored = null` ≠ `stored = "en"`, `effective = "en"` sem escolha, e a escolha **nunca** é persistida sozinha | bloqueia D22/D23 |
 | **M39 · comparação** — ✅ **EXECUTADA**. Escopo reduzido, autoridade realinhada. É **ARGOS A × ARGOS B sobre `analysis-result-v3`** — nunca v1/v2, nunca `/analytics`. A V1 compara **duas** famílias: `indicators` e `dimensions`. As outras nove estão classificadas em `result/familiasDaComparacao.ts`, com catraca executável (`evo02-m39-freeze.test.ts`) provada por 9 mutações | executada em 2026-08-13 |
 | **FULL INGESTION TOPOLOGY E2E** — a jornada completa de upload (`upload → dataset_ready → promotion-worker`) não tem prova local: exige seis processos e há três de pé. Não redefine ARGOS/Analytics e não bloqueia as duas visões | gate de release final |
 

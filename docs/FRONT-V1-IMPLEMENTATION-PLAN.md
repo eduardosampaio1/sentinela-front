@@ -1215,6 +1215,18 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 >
 > **`baseline-active` continua BLOQUEADO.** A UI desta missão **não tem exclusão de Analysis**, e
 > portanto não pode provar a segunda metade daquele scenario. B10 → `BD06` segue inexistente.
+
+> 🔧 **DÍVIDA FACTUAL DA M40 — registrada em 2026-08-13, não corrigida aqui.**
+>
+> A M40 declarou **"12 capturas, PT e EN"**. **As 12 estão em inglês.** O `m40-shots.spec.ts` escreve
+> `localStorage["sentinela.language"]` — com **ponto** — e a chave real é `"sentinela:language"`, com
+> **dois-pontos**. A escrita não teve efeito, e o default do produto é `"en"`.
+>
+> **Não invalida gate nenhum:** nenhum deles depende do idioma da captura, e a paridade PT/EN é
+> conferida sobre as chaves de tradução, não sobre a tela. Invalida a frase que eu escrevi.
+>
+> **Conserto:** uma linha, e regerar as capturas em PT. **Microcorreção própria** — a M40 não
+> reabre por isto.
 >
 > **Playwright não foi executado, e não era exigido:** nenhuma rota, jornada ou seam de browser
 > mudou. A regra do PLAN é literal — *"checkpoint puramente documental ou contratual… não precisa
@@ -1417,11 +1429,49 @@ As duas primeiras vivem em `src/` e são **trabalho da M40**, não pré-requisit
 
 # FASE 11 — Configurações
 
-### M41 · CFG-01/02 — conta e idioma
+### M41 · CFG-01/02 — conta e idioma — ESCOPO REALINHADO
+
+> 🔧 **REALINHAMENTO — 2026-08-13.** *(A entrada original fica abaixo, preservada: ela descrevia a
+> M41 como uma missão só, dependente de `BD04`.)*
+>
+> **A M41 entrega DUAS capacidades independentes, com prontidões opostas** — e forçar uma frase só
+> era o que escondia isso:
+>
+> | | o que é | produtor | estado |
+> |---|---|---|---|
+> | **CFG-01** | apresentar a identidade da conta | ✅ `GET /v1/me` | **construível** — falta só scenario |
+> | **CFG-02** | escolher e **persistir** o idioma da conta | 🔴 **nenhum** | **bloqueada** |
+>
+> **A Discovery mediu que a CFG-02 não tinha owner** — não que faltasse um endpoint. `GET /v1/me` é
+> projeção de claims com **zero banco**; o Gateway declara não ter banco de domínio; o Orchestrator
+> não tem conceito de usuário; a tabela `profiles` existe, ninguém a lê e não tem coluna de idioma;
+> e o Front guarda tudo em `localStorage`, cujo seletor **só existe em Landing e Legal** — não há
+> controle de idioma dentro do app autenticado.
+>
+> **Decisão tomada:** criar o domínio **Account** (`sentinela-account`), congelado em
+> `02 - Arquitetura/ARQ - Domínio Account - Congelamento de Fronteiras.md` (vault). A CFG-02 passa a
+> ter owner **futuro**; ela continua **sem contrato**, e a M41 só fica inteiramente executável
+> depois de a capability pública de idioma existir.
+>
+> **Congelado junto, e vale para a UI:** idioma é **global por usuário** (trocar de Workspace não o
+> altera) · `stored = null` **≠** `stored = "en"` · `effective = "en"` quando não há escolha · a
+> escolha **nunca** é persistida automaticamente · **tema continua fora** (D23) · **senha continua
+> no Keycloak** (D19) · **excluir conta continua fora** (D21).
+>
+> - **Pré (novo):** 🔴 **Backend Authority do Account** → contrato público de preferência.
+>   **`BD04` não cobre isto** e não deve ser implementada no formato descrito.
+
+#### Entrada original — o estado até 2026-08-13
+
 - **Pré:** 🔴 **BD04** (contrato de preferências). **Escopo:** leitura de `/v1/me`; alteração de
   credencial **delegada** ao provedor (D19); idioma. **Tema não entra** (decisão 1).
 ### M42 · CFG-03/04 + WS-02/04 — Workspace e Instância
 - **Pré:** ✅ **BD02** · 🔴 **BD04** · 🔴 **delta de lifecycle/configuração de Workspace, inexistente**.
+> 🔧 **CORREÇÃO — 2026-08-13.** A nota abaixo lista **CFG-02** entre os impedimentos da M42, e o
+> título da M41 também a reivindica. **A CFG-02 é da M41**, e agora tem domínio dono (Account).
+> A M42 fica com **Workspace** e **Instance**, e os dois blockers dela são **independentes de
+> Account**: nada em Account destrava a M42.
+
 - 🔴 **Três impedimentos distintos, e BD04 cobre só um.** (a) **CFG-02** espera o contrato de
   preferências — é BD04. (b) **CFG-04 / INST-07** espera configuração de *Instância*: o contrato
   publica `create`/`list`/`get` e **nenhuma** operação de `update`, `PATCH` ou `delete` — nem
