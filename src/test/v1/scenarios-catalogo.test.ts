@@ -70,18 +70,23 @@ const BLOQUEADOS_DO_PLANO = [
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M18 · 1. o catálogo está completo", () => {
-  it("tem as 35 entradas do Blueprint §11", () => {
+  it("tem as 37 entradas do Blueprint §11", () => {
     // Um catálogo curto passaria em todos os outros casos: o que ele não lista, ele não erra.
-    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(35);
+    // 35 → 37 na materialização das massas v3 da M39. As duas entradas novas são as ÚNICAS
+    // que a missão trouxe, e o Blueprint §11 as lista.
+    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(37);
   });
 
-  it("31 disponíveis · 1 parcial · 3 bloqueados", () => {
+  it("33 disponíveis · 1 parcial · 3 bloqueados", () => {
     // Duas mudanças distintas, e os números as separam. A BD02 moveu `instance-empty` de
     // bloqueado para disponível sem alterar o TOTAL — nada nasceu nem morreu. A M36 acrescentou
     // `instance-present` e `instance-history` e o Checkpoint 0 da M37 acrescentou
     // `instance-new-analysis`, e aí o total SOBE: 32 → 34 → 35, 28 → 30 → 31. Conferir os três
     // juntos é o que distingue "mudou de estado" de "entrou no catálogo".
-    expect(nomesPorEstado("disponivel").length).toBe(31);
+    //
+    // A M39 acrescentou os dois v3 da comparação: 35 → 37, 31 → 33. Também é entrada, não
+    // mudança de estado — e por isso o total e os disponíveis sobem juntos.
+    expect(nomesPorEstado("disponivel").length).toBe(33);
     expect(nomesPorEstado("parcial").length).toBe(1);
     expect(nomesPorEstado("bloqueado").length).toBe(3);
   });
@@ -264,7 +269,7 @@ describe("M18 · 1. o catálogo está completo", () => {
   it("todo cenário do Blueprint está no catálogo", () => {
     // A direção inversa: o que o mapa promete e o catálogo não entrega.
     const doMapa = [...BLUEPRINT.matchAll(/^\|\s*\d+\s*\|\s*`([a-z0-9-]+)`/gm)].map((m) => m[1]);
-    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(35);
+    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(37);
     const faltando = doMapa.filter((n) => !NOMES.includes(n));
     expect(faltando, "cenário do Blueprint ausente do catálogo").toEqual([]);
   });

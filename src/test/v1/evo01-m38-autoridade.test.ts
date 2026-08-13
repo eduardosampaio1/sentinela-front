@@ -152,8 +152,18 @@ describe("M38 · 4. `list-pagination` é o scenario certo", () => {
     }
   });
 
-  it("a M38 não trouxe scenario novo — o catálogo continua em 35", () => {
-    expect(CATALOGO.length).toBe(35);
+  it("a M38 não trouxe scenario novo — os de EVO-01 são os de sempre", () => {
+    // A versão anterior afirmava `CATALOGO.length === 35`. O fato que ela queria proteger é "a
+    // M38 não acrescentou massa"; o TOTAL global é só um proxy — e um proxy que QUALQUER missão
+    // posterior invalida. A M39 materializou dois scenarios v3 legítimos e este caso ficou
+    // vermelho por um fato que não é dele.
+    //
+    // O total agora tem UM dono: `scenarios-catalogo.test.ts`. Aqui fica o que é da M38 e
+    // sobrevive a missões futuras — o conjunto de EVO-01 não cresceu.
+    const daListagem = CATALOGO.filter((c) => c.superficies.includes("EVO-01")).map((c) => c.id);
+    // Um só, medido — `list-empty` e `list-error` pertencem a outra superfície. Se um dia
+    // EVO-01 ganhar massa, este caso fica vermelho e a mudança passa por decisão.
+    expect(daListagem).toEqual(["list-pagination"]);
   });
 });
 

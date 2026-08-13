@@ -983,8 +983,11 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   `list-pagination`.
 ### M39 · EVO-02 — comparação ARGOS A×B — AUTHORITY REALIGNED · ESCOPO REDUZIDO
 
-> **Estado:** `AUTHORITY REALIGNED · IMPLEMENTATION STILL FROZEN`. Implementação **não iniciada**.
-> **Não marcar READY**: faltam os scenarios v3 (abaixo).
+> **Estado:** `AUTHORITY REALIGNED · READY` · **IMPLEMENTATION STILL FROZEN**.
+>
+> **`READY` significa "pré-condições de implementação satisfeitas" — não "missão executada".**
+> As massas v3 existem e são provadas (`m39-massas-v3.test.ts`); a comparação **não foi
+> implementada**, e `comparacao.ts` segue intocado sob a catraca de famílias.
 >
 > **A premissa mudou.** A entrada anterior foi escrita quando EVO-02 consumia o documento legado,
 > e citava como autoridade o contrato `@ ac81633` — anterior à Manifest Sync. Isso deixou de ser
@@ -1057,11 +1060,18 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Scenarios — os atuais NÃO servem.** `comparison-compatible` e `comparison-schema-break` foram
   criados sobre **v1** (ambos servem `RESULT_VIEW`) e não provam a M39 v3. Reclassificados como
   **cobertura histórica de indicators/v1**. Faltam, como pré-requisito da implementação:
-  - **A** — `indicators` + `dimensions` compatíveis, em v3.
-  - **B** — quebra documental (D26) em v3.
-  - **C** — par de `dimension` incompatível por metadado/metodologia, se o contrato permitir
-    reproduzi-lo honestamente. Se não permitir, a pré-condição de par fica provada só por unidade,
-    e isso é dito.
+  - **A** — ✅ `comparison-v3-compatible`. Dois documentos do código analítico REAL, rodado duas
+    vezes com entradas diferentes: **14 pares de indicador** e **4 de dimensão**, com 7 e 3
+    valores efetivamente distintos. Massa em que um comparador não devolve zero linha e passa.
+  - **B** — ✅ `comparison-v3-document-break`. Divergência em `indicator_registry_version` — campo
+    REAL do contrato — e **em nada mais**: a quebra é isolada, e os ids continuam batendo dos dois
+    lados, que é o que torna a descontinuidade interessante.
+  - **C** — **`SCENARIO C — NOT REPRESENTABLE BY PUBLIC CONTRACT`**. O campo `method_version`
+    existe em `PublicMeasurement`, mas é **inalcançável para dimensões**: `_publicar_dimensao`, no
+    assembler, monta a medição sem passá-lo — nenhuma dimensão publicada o traz. Construir uma
+    massa em que ele diverge seria o scenario **inventando produtor**. A pré-condição de par de
+    dimensão fica protegida por unidade/contract logic e por `PRECONDICOES_DE_PAR`, e a
+    impossibilidade é medida em `m39-massas-v3.test.ts`, não confiada à memória.
 - **Autoridades:** Product Freeze D26 · **D27** · D29 · §10.1 · Blueprint §3.4.1, §4.6 · registro
   `result/familiasDaComparacao.ts` · regra `result/comparacao.ts` · contrato público
   `sentinela-facts @ 4078650` · discovery `TWO-VIEW-EXPERIENCE-RECOVERY.md` §M39.

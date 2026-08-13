@@ -50,8 +50,33 @@ import {
   INSTANCIA,
   OUTRA_INSTANCIA,
 } from "@/test/fixtures/public-v1/instances";
+// A massa v3 da comparação. JSON, e não módulo TS, porque ela é SAÍDA de produtor: transcrevê-la
+// para código convidaria a "ajustar um número" numa revisão, e o número deixaria de ser o que o
+// motor produziu.
+import V3_MASSA from "@/test/fixtures/canonical-result/v3-comparacao.json";
 
 export type EstadoDoScenario = "disponivel" | "parcial" | "bloqueado";
+
+/** Os documentos v3 da comparação — produzidos pelo caminho real, não escritos aqui. */
+const V3_COMPARACAO = V3_MASSA as {
+  A: Record<string, unknown>;
+  B: Record<string, unknown>;
+  B_QUEBRA: Record<string, unknown>;
+};
+
+/**
+ * O envelope PÚBLICO do resultado. Só os campos que `public-v1.json` declara — o artefato do
+ * orchestrator traz mais (versão do assembler, do engine, fingerprint), e servi-los aqui faria o
+ * scenario ensinar a tela a ler o que a fronteira pública não entrega.
+ */
+function envelopeV3(analysisId: string, documento: Record<string, unknown>) {
+  return {
+    analysis_id: analysisId,
+    result_schema_version: "analysis-result-v3",
+    indicator_registry_version: String(documento.indicator_registry_version),
+    result: documento,
+  };
+}
 
 export interface Scenario {
   /** Nome estável e único. É por ele que o cenário é invocado. */
@@ -331,6 +356,12 @@ export const CATALOGO: readonly Scenario[] = [
       erro(b, "/v1/analyses/:id/analytics/export/download", 404, "forbidden_or_not_found"),
     ],
   },
+  // ── EVO-02 · cobertura HISTÓRICA (v1) ────────────────────────────────────────────────────
+  //
+  // Os dois abaixo foram criados quando EVO-02 lia o documento legado, e servem `RESULT_VIEW`,
+  // que é **v1**. Continuam válidos como cobertura de `indicators` sobre o documento histórico —
+  // e **não provam a M39**, que compara `analysis-result-v3`. Renomeá-los para parecerem v3
+  // seria maquiagem: a massa continuaria a mesma.
   {
     id: "comparison-compatible",
     superficies: ["EVO-02"],
@@ -346,6 +377,47 @@ export const CATALOGO: readonly Scenario[] = [
     handlers: (b) => [
       http.get(`${b}/v1/analyses/:id/result`, () =>
         json({ ...RESULT_VIEW, indicator_registry_version: "indicator-registry-2.0" })),
+    ],
+  },
+
+  // ── EVO-02 · a M39 de verdade (v3) ───────────────────────────────────────────────────────
+  //
+  // A massa NÃO foi escrita à mão: os dois documentos saíram do código analítico REAL rodado
+  // duas vezes, com entradas diferentes (custo 0,10 × 0,25 · 80 × 60 úteis · saúde própria),
+  // atravessando a ponte de facts e o `assemble_v3`. Provêm-se 14 pares de indicador e 4 de
+  // dimensão, com 7 e 3 valores efetivamente distintos — massa em que o comparador não pode
+  // devolver zero linha e ainda passar.
+  //
+  // Os dois lados respondem pelo `analysis_id` da rota, que é como a comparação os distingue.
+  {
+    id: "comparison-v3-compatible",
+    superficies: ["EVO-02"],
+    estado: "disponivel",
+    handlers: (b) => [
+      http.get(`${b}/v1/analyses/:id/result`, ({ params, request }) => {
+        // A visão ARGOS pede a versão EXPLICITAMENTE. Sem pedido, o scenario devolve o
+        // comportamento histórico — não o v3 — porque é isso que a rota real faz.
+        const pedida = new URL(request.url).searchParams.get("result_schema_version");
+        if (!pedida) return json(RESULT_VIEW);
+        const id = String(params.id);
+        return json(envelopeV3(id, id === "an-cmp-b" ? V3_COMPARACAO.B : V3_COMPARACAO.A));
+      }),
+    ],
+  },
+  {
+    id: "comparison-v3-document-break",
+    superficies: ["EVO-02"],
+    estado: "disponivel",
+    // A quebra é de DOCUMENTO (D26) e mora num campo REAL do contrato: os dois lados divergem
+    // em `indicator_registry_version` e em NADA mais. Nenhum campo paralelo foi inventado para
+    // simular incompatibilidade.
+    handlers: (b) => [
+      http.get(`${b}/v1/analyses/:id/result`, ({ params, request }) => {
+        const pedida = new URL(request.url).searchParams.get("result_schema_version");
+        if (!pedida) return json(RESULT_VIEW);
+        const id = String(params.id);
+        return json(envelopeV3(id, id === "an-cmp-b" ? V3_COMPARACAO.B_QUEBRA : V3_COMPARACAO.A));
+      }),
     ],
   },
   {

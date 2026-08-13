@@ -1,0 +1,1091 @@
+{
+  "A": {
+    "alerts": null,
+    "analysis_id": "an-cmp-a",
+    "argos_catalog_version": "argos-catalog-1.0",
+    "dimensions": [
+      {
+        "availability": "available",
+        "data_coverage": 1.0,
+        "domain": "semantic",
+        "id": "semantic",
+        "method_version": null,
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "unit": null,
+        "value": 0.525
+      },
+      {
+        "availability": "available",
+        "data_coverage": 1.0,
+        "domain": "behavioral",
+        "id": "behavioral",
+        "method_version": null,
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "unit": null,
+        "value": 0.519
+      },
+      {
+        "availability": "available",
+        "data_coverage": 1.0,
+        "domain": "structural",
+        "id": "structural",
+        "method_version": null,
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "unit": null,
+        "value": 0.998
+      },
+      {
+        "availability": "available",
+        "data_coverage": 1.0,
+        "domain": "economic",
+        "id": "economic",
+        "method_version": null,
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "unit": null,
+        "value": 0.535
+      }
+    ],
+    "evidence": null,
+    "executive_summary": null,
+    "indicator_registry_version": "indicator-registry-1.0",
+    "indicators": [
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": {
+          "kind": "analyzed_conversations",
+          "value": 100.0
+        },
+        "display_precision": 4,
+        "domain": null,
+        "id": "useful_outcome_rate",
+        "kind": "ratio",
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "ratio",
+        "value": 0.8
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": {
+          "kind": "analyzed_conversations",
+          "value": 100.0
+        },
+        "display_precision": 4,
+        "domain": null,
+        "id": "outcome_field_coverage_rate",
+        "kind": "ratio",
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "ratio",
+        "value": 0.85
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": {
+          "kind": "analyzed_conversations",
+          "value": 100.0
+        },
+        "display_precision": 4,
+        "domain": null,
+        "id": "conversion_rate",
+        "kind": "ratio",
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "ratio",
+        "value": 0.0
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": {
+          "kind": "intents",
+          "value": 20.0
+        },
+        "display_precision": 4,
+        "domain": null,
+        "id": "intent_coverage_rate",
+        "kind": "ratio",
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "ratio",
+        "value": 0.85
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 0,
+        "domain": null,
+        "id": "analyzed_conversation_count",
+        "kind": "count",
+        "reason": "ok",
+        "scale": {
+          "kind": "count",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "conversations",
+        "value": 100.0
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 0,
+        "domain": null,
+        "id": "useful_outcome_count",
+        "kind": "count",
+        "reason": "ok",
+        "scale": {
+          "kind": "count",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "conversations",
+        "value": 80.0
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 0,
+        "domain": null,
+        "id": "handoff_count",
+        "kind": "count",
+        "reason": "ok",
+        "scale": {
+          "kind": "count",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "conversations",
+        "value": 0.0
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 0,
+        "domain": null,
+        "id": "conversion_count",
+        "kind": "count",
+        "reason": "ok",
+        "scale": {
+          "kind": "count",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "conversations",
+        "value": 0.0
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": null,
+        "display_precision": 6,
+        "domain": null,
+        "id": "total_estimated_cost",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 10.0
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": null,
+        "display_precision": 6,
+        "domain": null,
+        "id": "token_cost_total",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 10.0
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": null,
+        "display_precision": 6,
+        "domain": null,
+        "id": "handoff_cost_total",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 0.0
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": {
+          "kind": "useful_outcomes",
+          "value": 80.0
+        },
+        "display_precision": 6,
+        "domain": null,
+        "id": "cost_per_useful_outcome",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 0.125
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": {
+          "kind": "analyzed_conversations",
+          "value": 100.0
+        },
+        "display_precision": 6,
+        "domain": null,
+        "id": "cost_per_session",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 0.1
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 4,
+        "domain": null,
+        "id": "mean_response_variance_per_intent",
+        "kind": "scalar",
+        "reason": "ok",
+        "scale": {
+          "kind": "raw",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": null,
+        "value": 0.0
+      }
+    ],
+    "intents": null,
+    "issues": null,
+    "measurement_contract_version": "measurement-1.0",
+    "method": {
+      "currency": "USD",
+      "currency_source": null,
+      "min_samples_per_intent": null
+    },
+    "partiality": {
+      "complete": true,
+      "reasons": []
+    },
+    "projections": null,
+    "recommendations": null,
+    "result_schema_version": "analysis-result-v3",
+    "risks": null,
+    "scores": null,
+    "summary": {
+      "analyzed_at": "2026-08-01T00:00:00Z",
+      "record_count": 100
+    }
+  },
+  "B": {
+    "alerts": null,
+    "analysis_id": "an-cmp-b",
+    "argos_catalog_version": "argos-catalog-1.0",
+    "dimensions": [
+      {
+        "availability": "available",
+        "data_coverage": 1.0,
+        "domain": "semantic",
+        "id": "semantic",
+        "method_version": null,
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "unit": null,
+        "value": 0.611
+      },
+      {
+        "availability": "available",
+        "data_coverage": 1.0,
+        "domain": "behavioral",
+        "id": "behavioral",
+        "method_version": null,
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "unit": null,
+        "value": 0.702
+      },
+      {
+        "availability": "available",
+        "data_coverage": 1.0,
+        "domain": "structural",
+        "id": "structural",
+        "method_version": null,
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "unit": null,
+        "value": 0.998
+      },
+      {
+        "availability": "available",
+        "data_coverage": 1.0,
+        "domain": "economic",
+        "id": "economic",
+        "method_version": null,
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "unit": null,
+        "value": 0.488
+      }
+    ],
+    "evidence": null,
+    "executive_summary": null,
+    "indicator_registry_version": "indicator-registry-1.0",
+    "indicators": [
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": {
+          "kind": "analyzed_conversations",
+          "value": 100.0
+        },
+        "display_precision": 4,
+        "domain": null,
+        "id": "useful_outcome_rate",
+        "kind": "ratio",
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "ratio",
+        "value": 0.6
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": {
+          "kind": "analyzed_conversations",
+          "value": 100.0
+        },
+        "display_precision": 4,
+        "domain": null,
+        "id": "outcome_field_coverage_rate",
+        "kind": "ratio",
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "ratio",
+        "value": 0.7
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": {
+          "kind": "analyzed_conversations",
+          "value": 100.0
+        },
+        "display_precision": 4,
+        "domain": null,
+        "id": "conversion_rate",
+        "kind": "ratio",
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "ratio",
+        "value": 0.0
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": {
+          "kind": "intents",
+          "value": 20.0
+        },
+        "display_precision": 4,
+        "domain": null,
+        "id": "intent_coverage_rate",
+        "kind": "ratio",
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "ratio",
+        "value": 0.85
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 0,
+        "domain": null,
+        "id": "analyzed_conversation_count",
+        "kind": "count",
+        "reason": "ok",
+        "scale": {
+          "kind": "count",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "conversations",
+        "value": 100.0
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 0,
+        "domain": null,
+        "id": "useful_outcome_count",
+        "kind": "count",
+        "reason": "ok",
+        "scale": {
+          "kind": "count",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "conversations",
+        "value": 60.0
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 0,
+        "domain": null,
+        "id": "handoff_count",
+        "kind": "count",
+        "reason": "ok",
+        "scale": {
+          "kind": "count",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "conversations",
+        "value": 0.0
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 0,
+        "domain": null,
+        "id": "conversion_count",
+        "kind": "count",
+        "reason": "ok",
+        "scale": {
+          "kind": "count",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "conversations",
+        "value": 0.0
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": null,
+        "display_precision": 6,
+        "domain": null,
+        "id": "total_estimated_cost",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 25.0
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": null,
+        "display_precision": 6,
+        "domain": null,
+        "id": "token_cost_total",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 25.0
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": null,
+        "display_precision": 6,
+        "domain": null,
+        "id": "handoff_cost_total",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 0.0
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": {
+          "kind": "useful_outcomes",
+          "value": 60.0
+        },
+        "display_precision": 6,
+        "domain": null,
+        "id": "cost_per_useful_outcome",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 0.416667
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": {
+          "kind": "analyzed_conversations",
+          "value": 100.0
+        },
+        "display_precision": 6,
+        "domain": null,
+        "id": "cost_per_session",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 0.25
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 4,
+        "domain": null,
+        "id": "mean_response_variance_per_intent",
+        "kind": "scalar",
+        "reason": "ok",
+        "scale": {
+          "kind": "raw",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": null,
+        "value": 0.0
+      }
+    ],
+    "intents": null,
+    "issues": null,
+    "measurement_contract_version": "measurement-1.0",
+    "method": {
+      "currency": "USD",
+      "currency_source": null,
+      "min_samples_per_intent": null
+    },
+    "partiality": {
+      "complete": true,
+      "reasons": []
+    },
+    "projections": null,
+    "recommendations": null,
+    "result_schema_version": "analysis-result-v3",
+    "risks": null,
+    "scores": null,
+    "summary": {
+      "analyzed_at": "2026-08-01T00:00:00Z",
+      "record_count": 100
+    }
+  },
+  "B_QUEBRA": {
+    "alerts": null,
+    "analysis_id": "an-cmp-bq",
+    "argos_catalog_version": "argos-catalog-1.0",
+    "dimensions": [
+      {
+        "availability": "available",
+        "data_coverage": 1.0,
+        "domain": "semantic",
+        "id": "semantic",
+        "method_version": null,
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "unit": null,
+        "value": 0.611
+      },
+      {
+        "availability": "available",
+        "data_coverage": 1.0,
+        "domain": "behavioral",
+        "id": "behavioral",
+        "method_version": null,
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "unit": null,
+        "value": 0.702
+      },
+      {
+        "availability": "available",
+        "data_coverage": 1.0,
+        "domain": "structural",
+        "id": "structural",
+        "method_version": null,
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "unit": null,
+        "value": 0.998
+      },
+      {
+        "availability": "available",
+        "data_coverage": 1.0,
+        "domain": "economic",
+        "id": "economic",
+        "method_version": null,
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "unit": null,
+        "value": 0.488
+      }
+    ],
+    "evidence": null,
+    "executive_summary": null,
+    "indicator_registry_version": "indicator-registry-2.0",
+    "indicators": [
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": {
+          "kind": "analyzed_conversations",
+          "value": 100.0
+        },
+        "display_precision": 4,
+        "domain": null,
+        "id": "useful_outcome_rate",
+        "kind": "ratio",
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "ratio",
+        "value": 0.6
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": {
+          "kind": "analyzed_conversations",
+          "value": 100.0
+        },
+        "display_precision": 4,
+        "domain": null,
+        "id": "outcome_field_coverage_rate",
+        "kind": "ratio",
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "ratio",
+        "value": 0.7
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": {
+          "kind": "analyzed_conversations",
+          "value": 100.0
+        },
+        "display_precision": 4,
+        "domain": null,
+        "id": "conversion_rate",
+        "kind": "ratio",
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "ratio",
+        "value": 0.0
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": {
+          "kind": "intents",
+          "value": 20.0
+        },
+        "display_precision": 4,
+        "domain": null,
+        "id": "intent_coverage_rate",
+        "kind": "ratio",
+        "reason": "ok",
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "ratio",
+        "value": 0.85
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 0,
+        "domain": null,
+        "id": "analyzed_conversation_count",
+        "kind": "count",
+        "reason": "ok",
+        "scale": {
+          "kind": "count",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "conversations",
+        "value": 100.0
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 0,
+        "domain": null,
+        "id": "useful_outcome_count",
+        "kind": "count",
+        "reason": "ok",
+        "scale": {
+          "kind": "count",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "conversations",
+        "value": 60.0
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 0,
+        "domain": null,
+        "id": "handoff_count",
+        "kind": "count",
+        "reason": "ok",
+        "scale": {
+          "kind": "count",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "conversations",
+        "value": 0.0
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 0,
+        "domain": null,
+        "id": "conversion_count",
+        "kind": "count",
+        "reason": "ok",
+        "scale": {
+          "kind": "count",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "conversations",
+        "value": 0.0
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": null,
+        "display_precision": 6,
+        "domain": null,
+        "id": "total_estimated_cost",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 25.0
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": null,
+        "display_precision": 6,
+        "domain": null,
+        "id": "token_cost_total",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 25.0
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": null,
+        "display_precision": 6,
+        "domain": null,
+        "id": "handoff_cost_total",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 0.0
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": {
+          "kind": "useful_outcomes",
+          "value": 60.0
+        },
+        "display_precision": 6,
+        "domain": null,
+        "id": "cost_per_useful_outcome",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 0.416667
+      },
+      {
+        "coverage": null,
+        "currency": "USD",
+        "denominator": {
+          "kind": "analyzed_conversations",
+          "value": 100.0
+        },
+        "display_precision": 6,
+        "domain": null,
+        "id": "cost_per_session",
+        "kind": "currency",
+        "reason": "ok",
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": "currency",
+        "value": 0.25
+      },
+      {
+        "coverage": null,
+        "currency": null,
+        "denominator": null,
+        "display_precision": 4,
+        "domain": null,
+        "id": "mean_response_variance_per_intent",
+        "kind": "scalar",
+        "reason": "ok",
+        "scale": {
+          "kind": "raw",
+          "maximum": null,
+          "minimum": null
+        },
+        "state": "measured",
+        "unit": null,
+        "value": 0.0
+      }
+    ],
+    "intents": null,
+    "issues": null,
+    "measurement_contract_version": "measurement-1.0",
+    "method": {
+      "currency": "USD",
+      "currency_source": null,
+      "min_samples_per_intent": null
+    },
+    "partiality": {
+      "complete": true,
+      "reasons": []
+    },
+    "projections": null,
+    "recommendations": null,
+    "result_schema_version": "analysis-result-v3",
+    "risks": null,
+    "scores": null,
+    "summary": {
+      "analyzed_at": "2026-08-01T00:00:00Z",
+      "record_count": 100
+    }
+  }
+}

@@ -140,8 +140,16 @@ describe("M39 · 4. 20 e 21 bastam; 22 não é requisito", () => {
     expect(BLUEPRINT).toMatch(/não faz parte do\s*>?\s*DoD da M39/);
   });
 
-  it("a M39 não trouxe scenario novo — o catálogo continua em 35", () => {
-    expect(CATALOGO.length).toBe(35);
+  it("a M39 trouxe DOIS scenarios, e só eles — o catálogo foi de 35 a 37", () => {
+    // Este caso dizia "a M39 não trouxe scenario novo", e era verdade enquanto EVO-02 lia o
+    // documento legado. A materialização das massas v3 mudou o fato por DECISÃO: `20` e `21`
+    // provam v1 e não a missão atual, e sem massa v3 a M39 não podia sair de NEEDS SCENARIOS.
+    //
+    // O que o caso continua protegendo é o mesmo: a missão não vira porta de entrada para massa
+    // avulsa. Dois, nomeados, e nenhum a mais.
+    expect(CATALOGO.length).toBe(37);
+    const daM39 = CATALOGO.filter((s) => s.id.startsWith("comparison-v3-")).map((s) => s.id);
+    expect(daM39.sort()).toEqual(["comparison-v3-compatible", "comparison-v3-document-break"]);
   });
 });
 

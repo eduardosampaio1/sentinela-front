@@ -715,7 +715,9 @@ Todo scenario é **nome + lista de handlers**. Fixture derivada do schema public
 | 19 | `export-expired` | RES-01 | export | `expired` ≠ purged | — |
 | 20 | `comparison-compatible` | EVO-02 | dois `/result` | mesmas versões | 🔶 **v1 — não prova a M39 v3** |
 | 21 | `comparison-schema-break` | EVO-02 | dois `/result` | `indicator_registry_version` diferente → **descontinuidade** | 🔶 **v1 — não prova a M39 v3** |
-| 22 | `recommendation-persisted` | RES-01, EVO-02 | `/result` | — | 🔴 **BLOQUEADO** — `recommendation_id` não chega ao documento |
+| 22 | `recommendation-persisted` | RES-01, EVO-02 | `/result` | — | 🔴 **BLOQUEADO** — o v3 traz o campo `id`, mas nenhuma autoridade o declara durável ENTRE análises |
+| 36 | `comparison-v3-compatible` | EVO-02 | dois `/result?result_schema_version=3` | 14 pares de indicador · 4 de dimensão, com valores distintos | — |
+| 37 | `comparison-v3-document-break` | EVO-02 | dois `/result?result_schema_version=3` | `indicator_registry_version` divergente, e **nada mais** | — |
 | 23 | `privacy-omission` | RES-01 | `/analytics` | `withheld.reason_code` | — |
 | 24 | `no-baseline` | INST-05 | — | — | 🔴 **BLOQUEADO** — baseline não existe |
 | 25 | `baseline-active` | INST-05 | — | bloqueia exclusão | 🔴 **BLOQUEADO** |
