@@ -20,6 +20,15 @@ export const workspaceKeys = {
    *  separado da listagem geral, senão uma invalidaria a outra sem relação. */
   instanceHistory: (workspaceId: string, instanceId: string, params?: { cursor?: string | null }) =>
     ["workspace", workspaceId, "analyses", "list", { instanceId, ...(params ?? {}) }] as const,
+  /** BD10 — o ponteiro de baseline da Instance. Chave PRÓPRIA, sob a raiz da Instance: a troca
+   *  de baseline invalida esta e não a identidade, que não mudou. */
+  instanceBaseline: (workspaceId: string, instanceId: string) =>
+    ["workspace", workspaceId, "instances", "detail", instanceId, "baseline"] as const,
+  /** BD10 — os CANDIDATOS a referência. É a listagem de analyses com dois filtros, e a chave diz
+   *  isso: cache separado do histórico da Instance, senão o filtro de elegibilidade contaminaria
+   *  a lista que a INST-03 mostra. */
+  baselineCandidates: (workspaceId: string, instanceId: string) =>
+    ["workspace", workspaceId, "analyses", "list", { instanceId, baselineEligible: true }] as const,
   status: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "status"] as const,
   /** M20 — progresso por eixo. Tenant-scoped como todo o resto: a troca de workspace isola. */

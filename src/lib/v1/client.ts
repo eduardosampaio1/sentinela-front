@@ -17,6 +17,7 @@ import type {
   CanonicalScope,
   PrepareParams,
   InstanceListPage,
+  BaselineView,
   InstanceListParams,
   InstanceView,
   ListParams,
@@ -105,6 +106,32 @@ export interface V1Client {
    * `{"items": [], "next_cursor": null}`.
    */
   listInstances(params: InstanceListParams, opts?: RequestOptions): Promise<InstanceListPage>;
+  /**
+   * BD10 — o ponteiro de baseline da Instance.
+   *
+   * Sem régua, o produtor devolve **200** com as duas chaves `null`. Isso NÃO é 404: o recurso
+   * pedido é *a configuração de baseline desta Instance*, e ela sempre existe — o que varia é o
+   * VALOR. O 404 desta fronteira significa outra coisa (Instance inexistente ou de outro
+   * workspace), e tratá-los igual faria o cliente confundir "não é sua" com "não tem".
+   */
+  getBaseline(instanceId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<BaselineView>;
+  /**
+   * Elege a Analysis como referência. Idempotente; a troca A→B é **atômica** — o cliente NUNCA
+   * chama `clearBaseline` antes, porque isso abriria uma janela sem régua que o contrato não tem.
+   *
+   * Sem `Idempotency-Key`, e de propósito: o cabeçalho existe para tornar segura a repetição de
+   * uma CRIAÇÃO não idempotente, e o `SET` é idempotente por natureza. Exigi-lo aqui sugeriria
+   * que repetir sem ele é perigoso.
+   */
+  setBaseline(
+    instanceId: string,
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<BaselineView>;
+  /** Remove a régua. Idempotente: sem baseline, continua `NO_BASELINE` — e é 200. Nunca escolhe
+   *  substituto e nunca alcança a Analysis. */
+  clearBaseline(instanceId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<BaselineView>;
   /**
    * Uma Instance pela identidade durável.
    *
@@ -311,6 +338,9 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         // BD02: só viaja quando informado. O loop de query descarta vazios, então omitir mantém
         // a requisição byte a byte igual à de antes — consumidor da listagem geral não muda.
         instance_id: params.instanceId,
+        // BD10: idem, e por isso `true` vira a string e `false` some. Mandar `false` sempre
+        // poluiria a query de toda listagem com uma opção que ninguém escolheu.
+        baseline_eligible: params.baselineEligible ? "true" : undefined,
       }, opts),
     retry: (analysisId, scope, opts) =>
       pedir<AnalysisHandle>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/retry`, { workspace_id: scope.workspaceId }, opts, undefined, true),
@@ -321,5 +351,29 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       // quando só havia análise. Reusá-lo é o certo: um segundo encoder divergiria no primeiro
       // caractere especial, e o nome é dívida de harness, não motivo para duplicar.
       pedir<InstanceView>("GET", `/v1/instances/${encodeAnalysisId(instanceId)}`, { workspace_id: scope.workspaceId }, opts),
+    getBaseline: (instanceId, scope, opts) =>
+      pedir<BaselineView>(
+        "GET",
+        `/v1/instances/${encodeAnalysisId(instanceId)}/baseline`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
+    setBaseline: (instanceId, analysisId, scope, opts) =>
+      pedir<BaselineView>(
+        "POST",
+        `/v1/instances/${encodeAnalysisId(instanceId)}/baseline`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        // A identidade viaja no CORPO, que é onde o Gateway real a lê. Mandá-la na query
+        // funcionaria contra um mock permissivo e falharia contra o produtor.
+        { body: JSON.stringify({ baseline_analysis_id: analysisId }), contentType: "application/json" },
+      ),
+    clearBaseline: (instanceId, scope, opts) =>
+      pedir<BaselineView>(
+        "DELETE",
+        `/v1/instances/${encodeAnalysisId(instanceId)}/baseline`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
   };
 }

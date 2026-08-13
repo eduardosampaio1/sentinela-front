@@ -24,7 +24,21 @@
  * `result_negotiation`, e cada operação passou a declarar sua `optional_query` — 12 das 15
  * aceitam alguma, e o manifesto não declarava nenhuma.
  *
- * **A reconferência foi feita, e por medição:** os 19 eixos de que as fixtures dependem
+ * Atualizado pela **M40 · INST-05**, depois da **BD10**. O que mudou no contrato: 15 → 18
+ * operações (`get`/`set`/`clear_instance_baseline`, sub-recurso da Instance), `baseline_eligible`
+ * entrou na `optional_query` de `list_analyses`, e nasceu o bloco declarativo
+ * `baseline_reference`.
+ *
+ * **A reconferência foi refeita, e por medição:** os mesmos **19 eixos** foram comparados entre o
+ * contrato selado e o novo, campo a campo — **nenhum mudou**. Em particular
+ * `instance_read_model_fields` continua sendo exatamente `["instance_id", "name", "created_at"]`,
+ * porque a BD10 recusou embutir o ponteiro na `InstanceView`: baseline é sub-recurso, com leitura
+ * própria. Nenhuma amostra precisou de edição.
+ *
+ * Antes da M40: `005a0874ec1433888ad6cb7dfb1eb6d481208af7b5408270872c0238f7283b96` (Two-View, 15
+ * operacoes).
+ *
+ * **A reconferência anterior (Two-View F0), preservada:** os 19 eixos de que as fixtures dependem
  * (`*_read_model_fields`, `list_item_fields`, `public_states`, `progress_axes`,
  * `problem_codes`, `nunca_publicos`, `timeline_event_*`, `me_*`, `instance_*`) foram comparados
  * entre o contrato selado e o novo, e **nenhum** mudou. A evolução foi de negociação e
@@ -56,7 +70,7 @@
  * digest novo — no mesmo commit.
  */
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "005a0874ec1433888ad6cb7dfb1eb6d481208af7b5408270872c0238f7283b96";
+  "07de1d3c98c27347f5884d80f20fd63adb53db5236c53927f89b40e36d290b62";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.

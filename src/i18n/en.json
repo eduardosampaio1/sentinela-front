@@ -30,6 +30,26 @@
     "passwordPlaceholder": "Enter your password",
     "redirecting": "Redirecting..."
   },
+  "baseline": {
+    "chooseTitle": "Analyses that can be the reference",
+    "currentBadge": "Current reference",
+    "currentLabel": "Current reference",
+    "error": "We couldn't load the reference right now. Try again.",
+    "loading": "Loading reference…",
+    "noCandidates": "Only completed analyses in this instance can be the reference. When the first one completes, it will show up here.",
+    "noCandidatesTitle": "No analysis can be the reference yet",
+    "none": "This instance doesn't have a reference analysis yet.",
+    "remove": "Remove reference",
+    "removeFrom": "Remove the reference analysis from {{name}}",
+    "removing": "Removing…",
+    "replaceTitle": "Switch to another analysis",
+    "set": "Set as reference",
+    "setAria": "Set analysis {{id}} as the reference for this instance",
+    "setOn": "Reference set on {{date}}",
+    "setting": "Setting…",
+    "subtitle": "The analysis that serves as the reference for this instance. You choose which one — it never changes on its own.",
+    "title": "Reference analysis"
+  },
   "canonicalAnalysis": {
     "action": {
       "viewResult": "View result",

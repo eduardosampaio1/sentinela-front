@@ -190,6 +190,18 @@ export interface ListParams extends CanonicalScope {
    * da página.
    */
   instanceId?: string;
+  /**
+   * BD10 — restringe aos CANDIDATOS a referência de baseline. **Exige `instanceId`**:
+   * elegibilidade só existe relativa a uma Instance, e sem ela o produtor devolve
+   * `invalid_input`.
+   *
+   * Ele existe porque a alternativa era pior. A listagem já devolve `status` e `instance_id` por
+   * item, então sem este filtro o Front CONSEGUIRIA recortar a lista sozinho — e conseguir é o
+   * problema: a regra de elegibilidade passaria a existir em dois lugares, e o Front seria o
+   * errado. Aqui ela é TRANSPORTE; quem decide é o Orchestrator, com o mesmo predicado que
+   * autoriza o `SET`.
+   */
+  baselineEligible?: boolean;
 }
 
 // ── /v1/instances — a identidade DURÁVEL entre execuções (BD02) ───────────────
@@ -206,6 +218,30 @@ export interface InstanceView {
   instance_id: string;
   name: string;
   created_at: string | null;
+}
+
+/**
+ * BD10 — o PONTEIRO de baseline da Instance.
+ *
+ * Contrato SEPARADO da `InstanceView` de propósito: aquela é identidade PURA e imutável após a
+ * criação, e embutir nela um ponteiro mutável mudaria a natureza da view. Baseline é sub-recurso,
+ * com leitura própria — e por isso `get_instance`/`list_instances` NÃO ganharam o campo.
+ *
+ * As duas chaves existem SEMPRE. `null` nas duas é `NO_BASELINE`: estado LEGÍTIMO e inicial de
+ * toda Instance, nunca erro. Omitir para significar ausência obrigaria o cliente a distinguir
+ * "não veio" de "não tem", que é a mesma decisão já tomada para `instance_id` no item da listagem.
+ *
+ * O par nunca vem pela metade — o produtor tem `CHECK` no banco (migration 0040). O tipo diz isso
+ * de forma mais fraca do que a realidade (dois `| null` independentes), e é deliberado: apertar
+ * aqui com união discriminada obrigaria todo consumidor a estreitar antes de ler `set_at`, e o
+ * ganho seria contra um estado que o produtor não emite.
+ */
+export interface BaselineView {
+  instance_id: string;
+  baseline_analysis_id: string | null;
+  /** Instante da eleição VIGENTE. NÃO é início de tendência, janela analítica nem data de
+   *  comparação — é o instante de um ato de configuração. */
+  baseline_set_at: string | null;
 }
 
 /** Página de Instances (cursor determinístico, mesma semântica de `AnalysisListPage`). */

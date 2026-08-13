@@ -42,6 +42,7 @@ import { ProblemNotice } from "@/features/canonical-analysis/ui/notices";
 import { AvisoDaJornada } from "@/features/canonical-analysis/ui/AvisoDaJornada";
 import { useInstance, useInstanceHistory } from "./data/instance";
 import { HistoricoDaInstancia } from "./HistoricoDaInstancia";
+import { ReferenciaDaInstancia } from "./ReferenciaDaInstancia";
 
 export default function InstancePage() {
   const { t, language } = useLanguage();
@@ -176,6 +177,15 @@ export default function InstancePage() {
             A Instância não tem indicador nenhum; usá-lo repetia o nome como se fosse medida e
             deixava a margem pairando à direita, longe do que explicava. Reusar componente pela
             forma, e não pela função, é o que produz tela que parece certa e não é. */}
+        {/* M40 · INST-05. A referência vem ANTES do histórico, e a ordem é a da leitura: o que
+            esta Instância É, qual é a régua dela, e o que já rodou. Depois do histórico, a régua
+            viraria rodapé de uma lista que pode ter dezenas de linhas — e ela é configuração da
+            Instância, não consequência das execuções.
+
+            Ela NÃO é uma página própria: baseline não tem identidade fora da Instância, e um
+            `/baseline` de topo afirmaria que tem. */}
+        <ReferenciaDaInstancia scope={scope} instanceId={instanceId} instanceName={inst.name} />
+
         <section aria-labelledby="inst-historico" className="mt-8 space-y-3">
           <h2 id="inst-historico" className="text-lg font-semibold text-foreground">
             {t("instances.historyTitle")}

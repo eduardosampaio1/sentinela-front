@@ -12,10 +12,16 @@
 // `GET /v1/analyses`, mas com filtros diferentes — compartilhar chave faria a lista da Home e o
 // histórico de uma Instância se sobrescreverem no cache.
 
-import { useQuery, type UseQueryResult } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  type UseMutationResult,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 import {
   workspaceKeys,
   type AnalysisListPage,
+  type BaselineView,
   type CanonicalScope,
   type InstanceListPage,
   type InstanceView,
@@ -82,5 +88,91 @@ export function useInstanceHistory(
         },
         { signal },
       ),
+  });
+}
+
+// ── M40 · INST-05 — a Baseline Reference (BD10) ──────────────────────────────
+//
+// Quatro operações e NENHUMA regra, como o resto deste arquivo. Quem decide o que é elegível é o
+// backend, e o que estas funções fazem é buscar e transportar.
+//
+// A ausência mais importante aqui é a de um filtro: `useBaselineCandidates` **não** recorta a
+// listagem por `status === "completed"` nem por `instance_id`. Ele pede a consulta que o produtor
+// já carimba. Recortar aqui faria a regra de elegibilidade existir em dois lugares — e o Front
+// seria o errado.
+
+/** O ponteiro atual. `baseline_analysis_id: null` é `NO_BASELINE`: estado legítimo, nunca erro. */
+export function useBaseline(
+  scope: CanonicalScope | null,
+  instanceId: string | undefined,
+): UseQueryResult<BaselineView> {
+  const client = useV1Client();
+  return useQuery({
+    queryKey:
+      scope && instanceId
+        ? workspaceKeys.instanceBaseline(scope.workspaceId, instanceId)
+        : IDLE_KEY,
+    enabled: Boolean(scope && instanceId),
+    queryFn: ({ signal }) =>
+      client.getBaseline(
+        instanceId as string,
+        { workspaceId: (scope as CanonicalScope).workspaceId },
+        { signal },
+      ),
+  });
+}
+
+/** Os CANDIDATOS — a listagem canônica com os dois filtros que o produtor exige.
+ *
+ * Chave própria, separada do histórico da Instance: as duas leem `GET /v1/analyses`, e
+ * compartilhar chave faria o conjunto filtrado sobrescrever o histórico no cache — a INST-03
+ * passaria a mostrar só as concluídas sem ninguém ter pedido isso.
+ */
+export function useBaselineCandidates(
+  scope: CanonicalScope | null,
+  instanceId: string | undefined,
+): UseQueryResult<AnalysisListPage> {
+  const client = useV1Client();
+  return useQuery({
+    queryKey:
+      scope && instanceId
+        ? workspaceKeys.baselineCandidates(scope.workspaceId, instanceId)
+        : IDLE_KEY,
+    enabled: Boolean(scope && instanceId),
+    queryFn: ({ signal }) =>
+      client.list(
+        {
+          workspaceId: (scope as CanonicalScope).workspaceId,
+          instanceId,
+          baselineEligible: true,
+        },
+        { signal },
+      ),
+  });
+}
+
+/** Elege — ou TROCA. Uma chamada só: a substituição é atômica no produtor, e passar por
+ *  `clearBaseline` antes abriria uma janela sem régua que o contrato não tem. */
+export function useDefinirBaseline(): UseMutationResult<
+  BaselineView,
+  unknown,
+  { scope: CanonicalScope; instanceId: string; analysisId: string }
+> {
+  const client = useV1Client();
+  return useMutation({
+    mutationFn: ({ scope, instanceId, analysisId }) =>
+      client.setBaseline(instanceId, analysisId, scope),
+  });
+}
+
+/** Remove. Idempotente no produtor; a UI não precisa oferecer a ação quando não há régua. */
+export function useRemoverBaseline(): UseMutationResult<
+  BaselineView,
+  unknown,
+  { scope: CanonicalScope; instanceId: string }
+> {
+  const client = useV1Client();
+  return useMutation({
+    mutationFn: ({ scope, instanceId }) => client.clearBaseline(instanceId, scope),
   });
 }

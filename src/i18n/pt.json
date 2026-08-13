@@ -30,6 +30,26 @@
     "passwordPlaceholder": "Digite sua senha",
     "redirecting": "Redirecionando..."
   },
+  "baseline": {
+    "chooseTitle": "Análises que podem ser referência",
+    "currentBadge": "Referência atual",
+    "currentLabel": "Referência atual",
+    "error": "Não foi possível carregar a referência agora. Tente novamente.",
+    "loading": "Carregando referência…",
+    "noCandidates": "Só análises concluídas desta instância podem ser referência. Quando a primeira concluir, ela aparecerá aqui.",
+    "noCandidatesTitle": "Nenhuma análise pode ser referência ainda",
+    "none": "Esta instância ainda não tem uma análise de referência.",
+    "remove": "Remover referência",
+    "removeFrom": "Remover a análise de referência de {{name}}",
+    "removing": "Removendo…",
+    "replaceTitle": "Trocar por outra análise",
+    "set": "Usar como referência",
+    "setAria": "Definir a análise {{id}} como referência desta instância",
+    "setOn": "Definida em {{date}}",
+    "setting": "Definindo…",
+    "subtitle": "A análise que serve de referência para esta instância. Você escolhe qual é — ela nunca muda sozinha.",
+    "title": "Análise de referência"
+  },
   "canonicalAnalysis": {
     "action": {
       "viewResult": "Ver resultado",
