@@ -120,6 +120,12 @@ const CanonicalStartPage = lazy(() =>
 const CanonicalAnalysisPage = lazy(() =>
   import("@/features/canonical-analysis/ui/AnalysisPage").then((m) => ({ default: m.AnalysisPage }))
 );
+// F3: a visão ARGOS em chunk próprio. Ela só é buscada quando alguém pede o ARGOS — e o
+// documento que ela lê (`analysis-result-v3`) é maior que o v1, então carregá-la junto da
+// jornada cobraria o custo de quem nunca abriu a visão.
+const CanonicalArgosView = lazy(() =>
+  import("@/features/canonical-analysis/ui/argos/ArgosView").then((m) => ({ default: m.ArgosView }))
+);
 // E5: página de resultado em chunk próprio (lazy) — só carrega quando há resultado a ver.
 const CanonicalResultPage = lazy(() =>
   import("@/features/canonical-analysis/ui/ResultPage").then((m) => ({ default: m.ResultPage }))
@@ -319,6 +325,10 @@ const routes: RouteObject[] = [
             element: <PageSuspense><CanonicalComparePage /></PageSuspense>,
           },
           { path: "/analyses/:analysisId", element: <PageSuspense><CanonicalAnalysisPage /></PageSuspense> },
+          // ONE ANALYSIS -> TWO VIEWS. Subrotas IRMAS, nunca abas: o produto nao possui o
+          // pattern, e a subrota entrega deep link por visao, refresh na visao certa e
+          // historico do navegador — que a aba perderia.
+          { path: "/analyses/:analysisId/argos", element: <PageSuspense><CanonicalArgosView /></PageSuspense> },
           { path: "/analyses/:analysisId/result", element: <PageSuspense><CanonicalResultPage /></PageSuspense> },
         ],
       },

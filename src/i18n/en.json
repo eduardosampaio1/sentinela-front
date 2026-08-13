@@ -39,6 +39,74 @@
       "newAnalysis": "New analysis",
       "resultPreparing": "The analysis is complete. The result is still being prepared."
     },
+    "argos": {
+      "title": "ARGOS",
+      "loading": "Loading the ARGOS reading…",
+      "unavailableTitle": "The ARGOS document is not available for this analysis",
+      "partialTitle": "The producer declared this result incomplete",
+      "familyEmpty": "This capability ran and found no items.",
+      "executiveSummary": "Executive summary",
+      "scores": "Scores",
+      "dimensions": "Health dimensions",
+      "indicators": "Indicators",
+      "intents": "Intents",
+      "risks": "Risks",
+      "projections": "Projections",
+      "recommendations": "Recommendations",
+      "alerts": "Alerts",
+      "issues": "Issues",
+      "evidence": "Evidence",
+      "provenance": "Provenance",
+      "coverage": "Coverage",
+      "scale": "Scale",
+      "method": "Method",
+      "severity": "Severity",
+      "support": "Sample support",
+      "underrepresented": "underrepresented",
+      "band": "Band",
+      "basis": "Basis",
+      "window": "Window",
+      "compositeOf": "Composed of",
+      "registryVersion": "Indicator registry",
+      "catalogVersion": "ARGOS catalog",
+      "records": "Records analysed",
+      "currency": "Currency",
+      "dimension": {
+        "semantic": "Semantic",
+        "behavioral": "Behavioural",
+        "structural": "Structural",
+        "economic": "Economic"
+      },
+      "state": {
+        "measured": "Measured",
+        "partially_measured": "Partially measured",
+        "not_measured": "Not measured",
+        "not_applicable": "Not applicable",
+        "calculation_failed": "Calculation failed"
+      },
+      "availability": {
+        "available": "Available",
+        "partial": "Partial",
+        "unavailable": "Unavailable",
+        "not_evaluable": "Not evaluable",
+        "failed": "Failed"
+      },
+      "reason": {
+        "ok": "Fully measured",
+        "no_input_data": "No input data",
+        "insufficient_sample": "Insufficient sample",
+        "single_group": "Single group",
+        "missing_dimension": "Missing dimension",
+        "dependency_unavailable": "Dependency unavailable",
+        "not_applicable": "Not applicable to this analysis",
+        "computation_error": "Calculation error"
+      },
+      "refused": {
+        "missing_schema": "The response did not declare the document version.",
+        "unknown_schema": "The response came in another document version, and this view only reads ARGOS.",
+        "malformed_document": "The document arrived without the fields the reader requires."
+      }
+    },
     "compare": {
       "backToList": "View all analyses",
       "cancel": "Cancel",
@@ -294,6 +362,13 @@
       "compareOnlyHere": "Only in this analysis.",
       "compareOnlyThere": "Only in the previous one.",
       "compareBrokenShort": "not the same series"
+    },
+    "shell": {
+      "identity": "Analysis identifier",
+      "viewsNavLabel": "Views of this analysis",
+      "view": {
+        "argos": "ARGOS"
+      }
     },
     "state": {
       "preparing": {

@@ -28,7 +28,7 @@ import {
   FAMILIAS_ARGOS,
   familiaFoiProduzida,
   validarResultadoV3,
-} from "@/features/canonical-analysis/result/canonicalSchemaV3";
+} from "@/features/canonical-analysis/result/contratoV3";
 import type { AnalysisResultView } from "@/lib/v1";
 
 const RAIZ = resolve(__dirname, "../../..");

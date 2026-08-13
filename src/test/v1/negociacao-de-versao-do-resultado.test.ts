@@ -15,7 +15,7 @@ import { RESULT_VIEW } from "@/test/fixtures/public-v1/analyses";
 import {
   CANONICAL_RESULT_V3_SCHEMA,
   PEDIDO_DE_V3,
-} from "@/features/canonical-analysis/result/canonicalSchemaV3";
+} from "@/features/canonical-analysis/result/contratoV3";
 import { resolverResultado } from "@/features/canonical-analysis/result/adaptar";
 import type { AnalysisResultView } from "@/lib/v1";
 

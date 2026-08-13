@@ -223,21 +223,28 @@ describe("prova 10 — o renderizador único cobre loading, erro, resultado e au
       // A declaração do contrato (`lib/v1/`) e as FIXTURES (`test/`) não contam: nenhuma
       // converte documento — uma declara o tipo, as outras declaram massa.
       .filter((r) => !r.startsWith("lib/v1/") && !r.startsWith("test/"));
-    // Quatro, e cada um com um papel distinto — a lista cresceu na MF6.4b sem afrouxar a regra,
-    // porque a regra é "um modelo por CONTRATO", não "um modelo no total":
+    // Seis, e cada um com um papel distinto — a lista cresceu na MF6.4b e de novo na Two-View
+    // Recovery, sem afrouxar a regra, porque a regra é "um modelo por CONTRATO", não "um modelo
+    // no total":
     //
-    //   analysis.ts   o HOOK transporta (tipo de retorno da query)
-    //   adaptar.ts    a FRONTEIRA escolhe o contrato, e não converte nada
+    //   analysis.ts   o HOOK transporta o documento histórico (tipo de retorno da query)
+    //   argos.ts      o HOOK transporta o v3 — chave de cache PRÓPRIA, senão um documento
+    //                 sobrescreveria o outro no cache da mesma rota
+    //   adaptar.ts    a FRONTEIRA do /result escolhe entre v1 e v2, e não converte nada
     //   adapter.ts    converte o `analysis-result-v1`
     //   adapterV2.ts  converte o `analysis-result-v2`
+    //   adapterV3.ts  converte o `analysis-result-v3` (ARGOS-only)
     //
-    // Um QUINTO leitor é um segundo modelo do mesmo contrato nascendo — e aí voltam as duas
-    // regras de evolução que esta prova existe para impedir.
+    // Um SÉTIMO leitor é um segundo modelo do MESMO contrato nascendo — e aí voltam as duas
+    // regras de evolução que esta prova existe para impedir. Note que `adaptar.ts` NÃO ganhou um
+    // ramo v3: a página legada continua fail-closed diante dele, de propósito.
     expect(leemOContrato.sort()).toEqual([
       "features/canonical-analysis/data/analysis.ts",
+      "features/canonical-analysis/data/argos.ts",
       "features/canonical-analysis/result/adaptar.ts",
       "features/canonical-analysis/result/adapter.ts",
       "features/canonical-analysis/result/adapterV2.ts",
+      "features/canonical-analysis/result/adapterV3.ts",
     ]);
   });
 

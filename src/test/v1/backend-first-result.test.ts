@@ -59,6 +59,11 @@ const PODEM_CONHECER_SHAPE = [
   "indicadores.ts",
   "analyticsProjection.ts",
   "adaptar.ts",
+  // Two-View Recovery: o v3 tem contrato e conversor próprios, pelo MESMO critério de sempre —
+  // quem CONVERTE o documento. `contratoV3.ts` declara e valida; `adapterV3.ts` resolve envelope
+  // em documento ou recusa. O hook (`data/argos.ts`) ficou fora de propósito: ele transporta.
+  "contratoV3.ts",
+  "adapterV3.ts",
 ];
 
 // 1-2: aritmética analítica / Math usado para criar score ou percentual não contratado.
@@ -73,8 +78,16 @@ const ARITMETICA_ANALITICA = /\*\s*100\b|\/\s*100\b|Math\.(round|max|min|abs|pow
 // LITERAL (o jeito como uma prioridade inventada de fato aparece no código) e reordenação.
 // O invariante de verdade — a prioridade que SAI é igual à que ENTROU — é provado por
 // COMPORTAMENTO no teste do adapter, e esse não se engana com nome de variável.
+// `severity` seguiu o MESMO caminho de `priority`, e pela mesma razão — um contrato depois.
+// O `analysis-result-v3` PUBLICA severidade em `alerts[]`, `issues[]` e `intents[]`. Enquanto
+// nenhum contrato a publicava, banir a palavra era barato e correto; agora ela é dado de origem,
+// e proibir a palavra passaria a proibir CONSUMIR o contrato. O que segue proibido é
+// FABRICÁ-LA — atribuição a literal —, exatamente como já valia para prioridade.
+//
+// A defesa de verdade continua sendo comportamental: a severidade que SAI é a que ENTROU, e
+// isso é provado na `ArgosView.test.tsx` contra o documento real, não por grep.
 const VEREDITO_OU_PRIORIZACAO =
-  /\bverdict\b|\bseverity\b|\bpriorit(y|ize|ized)\s*[:=]\s*["'`\d]|\bprioritize\s*\(|\.sort\s*\(/i;
+  /\bverdict\b|\b(severity|priorit(y|ize|ized))\s*[:=]\s*["'`\d]|\bprioritize\s*\(|\.sort\s*\(/i;
 // 10: data de análise criada no cliente.
 const DATA_LOCAL = /new Date\(\s*\)|Date\.now\s*\(/;
 // 11: zero como substituto de ausência.

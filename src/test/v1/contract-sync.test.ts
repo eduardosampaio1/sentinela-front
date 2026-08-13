@@ -18,7 +18,7 @@ import { CANONICAL_RESULT_V2_SCHEMA } from "@/features/canonical-analysis/result
 import {
   CANONICAL_RESULT_V3_SCHEMA,
   FAMILIAS_ARGOS,
-} from "@/features/canonical-analysis/result/canonicalSchemaV3";
+} from "@/features/canonical-analysis/result/contratoV3";
 
 const RAIZ = resolve(__dirname, "../../..");
 const COPIA = resolve(RAIZ, "src/lib/v1/contract/public-v1.types.ts");
