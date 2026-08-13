@@ -39,6 +39,28 @@
       "newAnalysis": "Nova análise",
       "resultPreparing": "A análise foi concluída. O resultado ainda está sendo preparado."
     },
+    "analyticsView": {
+      "title": "Analytics",
+      "loading": "Carregando a projeção analítica…",
+      "numeric": "Medidas numéricas",
+      "distributions": "Distribuições",
+      "dimensions": "Distribuições por dimensão do Analytics",
+      "concentrations": "Concentração",
+      "series": "Séries",
+      "disclosure": "Procedência e divulgação",
+      "export": "Exportar",
+      "suppressed": "suprimido",
+      "notPublished": "não publicado",
+      "other": "Demais",
+      "valid": "Válidos",
+      "nulls": "Nulos",
+      "invalid": "Inválidos",
+      "absent": "Ausentes",
+      "records": "Registros",
+      "snapshotVersion": "Versão do snapshot",
+      "disclosureRule": "Regra de divulgação",
+      "notPresented": "Blocos não apresentados"
+    },
     "argos": {
       "title": "ARGOS",
       "loading": "Carregando a leitura do ARGOS…",
@@ -367,7 +389,8 @@
       "identity": "Identificador da análise",
       "viewsNavLabel": "Visões desta análise",
       "view": {
-        "argos": "ARGOS"
+        "argos": "ARGOS",
+        "analytics": "Analytics"
       }
     },
     "state": {

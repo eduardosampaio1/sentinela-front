@@ -13,5 +13,8 @@ export interface VisaoDaAnalise {
   readonly caminho: string;
 }
 
-/** As visões que EXISTEM. Cresce em F4 (Analytics). */
-export const VISOES_DA_ANALISE: readonly VisaoDaAnalise[] = [{ caminho: "argos" }];
+/** As visões que EXISTEM. A ordem é a da leitura: a inteligência antes da exploração. */
+export const VISOES_DA_ANALISE: readonly VisaoDaAnalise[] = [
+  { caminho: "argos" },
+  { caminho: "analytics" },
+];

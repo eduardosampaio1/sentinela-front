@@ -39,6 +39,28 @@
       "newAnalysis": "New analysis",
       "resultPreparing": "The analysis is complete. The result is still being prepared."
     },
+    "analyticsView": {
+      "title": "Analytics",
+      "loading": "Loading the analytical projection…",
+      "numeric": "Numeric measures",
+      "distributions": "Distributions",
+      "dimensions": "Distributions by Analytics dimension",
+      "concentrations": "Concentration",
+      "series": "Time series",
+      "disclosure": "Provenance and disclosure",
+      "export": "Export",
+      "suppressed": "suppressed",
+      "notPublished": "not published",
+      "other": "Other",
+      "valid": "Valid",
+      "nulls": "Nulls",
+      "invalid": "Invalid",
+      "absent": "Absent",
+      "records": "Records",
+      "snapshotVersion": "Snapshot version",
+      "disclosureRule": "Disclosure rule",
+      "notPresented": "Blocks not presented"
+    },
     "argos": {
       "title": "ARGOS",
       "loading": "Loading the ARGOS reading…",
@@ -367,7 +389,8 @@
       "identity": "Analysis identifier",
       "viewsNavLabel": "Views of this analysis",
       "view": {
-        "argos": "ARGOS"
+        "argos": "ARGOS",
+        "analytics": "Analytics"
       }
     },
     "state": {

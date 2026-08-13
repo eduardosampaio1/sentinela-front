@@ -126,6 +126,10 @@ const CanonicalAnalysisPage = lazy(() =>
 const CanonicalArgosView = lazy(() =>
   import("@/features/canonical-analysis/ui/argos/ArgosView").then((m) => ({ default: m.ArgosView }))
 );
+// F4: a visão Analytics em chunk próprio, pelo mesmo motivo — quem abre o ARGOS não paga por ela.
+const CanonicalAnalyticsView = lazy(() =>
+  import("@/features/canonical-analysis/ui/analytics/AnalyticsView").then((m) => ({ default: m.AnalyticsView }))
+);
 // E5: página de resultado em chunk próprio (lazy) — só carrega quando há resultado a ver.
 const CanonicalResultPage = lazy(() =>
   import("@/features/canonical-analysis/ui/ResultPage").then((m) => ({ default: m.ResultPage }))
@@ -329,6 +333,7 @@ const routes: RouteObject[] = [
           // pattern, e a subrota entrega deep link por visao, refresh na visao certa e
           // historico do navegador — que a aba perderia.
           { path: "/analyses/:analysisId/argos", element: <PageSuspense><CanonicalArgosView /></PageSuspense> },
+          { path: "/analyses/:analysisId/analytics", element: <PageSuspense><CanonicalAnalyticsView /></PageSuspense> },
           { path: "/analyses/:analysisId/result", element: <PageSuspense><CanonicalResultPage /></PageSuspense> },
         ],
       },
