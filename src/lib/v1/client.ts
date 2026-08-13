@@ -81,7 +81,22 @@ export interface V1Client {
   uploadData(analysisId: string, scope: CanonicalScope, body: BodyInit, opts?: RequestOptions): Promise<AnalysisStatusView>;
   submit(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
   getStatus(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisStatusView>;
-  getResult(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisResultView>;
+  /**
+   * O resultado canônico. **Quem escolhe a versão é quem pede.**
+   *
+   * `resultSchemaVersion` é OPCIONAL e viaja como `?result_schema_version=`, exatamente como o
+   * manifesto público a declara. Omitir preserva o comportamento histórico byte a byte — o loop
+   * de query descarta vazios, então a requisição de quem não negocia é idêntica à de antes.
+   *
+   * O produtor **não** cai de v3 para v1 em silêncio: pedir uma versão que esta análise não tem
+   * devolve problema explícito. Quem chama trata a ausência; ninguém a disfarça.
+   */
+  getResult(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+    resultSchemaVersion?: string,
+  ): Promise<AnalysisResultView>;
   list(params: ListParams, opts?: RequestOptions): Promise<AnalysisListPage>;
   retry(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
   /**
@@ -275,8 +290,19 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       pedir<AnalysisExportDownloadView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics/export/download`, { workspace_id: scope.workspaceId }, opts),
     getTimeline: (analysisId, scope, opts) =>
       pedir<AnalysisTimelineView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/timeline`, { workspace_id: scope.workspaceId }, opts),
-    getResult: (analysisId, scope, opts) =>
-      pedir<AnalysisResultView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/result`, { workspace_id: scope.workspaceId }, opts),
+    getResult: (analysisId, scope, opts, resultSchemaVersion) =>
+      pedir<AnalysisResultView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/result`,
+        {
+          workspace_id: scope.workspaceId,
+          // Só viaja quando pedido. Mandar sempre — ainda que com o valor histórico — faria o
+          // CLIENTE escolher a versão em nome de quem não escolheu, que é exatamente o que a
+          // decisão de negociação elimina.
+          result_schema_version: resultSchemaVersion,
+        },
+        opts,
+      ),
     list: (params, opts) =>
       pedir<AnalysisListPage>("GET", "/v1/analyses", {
         workspace_id: params.workspaceId,

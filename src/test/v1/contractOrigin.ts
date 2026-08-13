@@ -65,7 +65,17 @@ function lerCandidata(caminho: string): CandidataDeOrigem | null {
   }
   return {
     caminho,
-    digest: createHash("sha256").update(bruto).digest("hex"),
+    // Digest do CONTEÚDO, com a quebra de linha normalizada — e não dos bytes crus do disco.
+    //
+    // O repo do produtor tem `core.autocrlf=true`: um checkout no Windows grava CRLF, um no
+    // Linux grava LF, e o mesmo commit produz dois digests. Como este valor é selado
+    // (`fixtures/public-v1/selo.ts`), o gate ficaria vermelho por plataforma — dizendo "o
+    // contrato mudou" quando nenhuma linha de conteúdo mudou. Pior: o selo verdadeiro passaria
+    // a depender de quem commitou por último.
+    //
+    // Normalizar aqui preserva exatamente o que o selo existe para detectar (conteúdo novo) e
+    // descarta o que ele nunca quis detectar (como o disco escreveu a linha).
+    digest: createHash("sha256").update(bruto.replace(/\r\n/g, "\n")).digest("hex"),
     versao,
     operacoes,
   };

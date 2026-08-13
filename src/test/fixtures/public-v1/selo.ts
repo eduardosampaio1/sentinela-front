@@ -19,7 +19,26 @@
 /**
  * SHA-256 do contrato público do qual estas fixtures foram derivadas e conferidas.
  *
- * Atualizado pela **BD02**, que publicou a Instance: tres operacoes novas
+ * Atualizado pela **Two-View Recovery (F0)**, depois da Manifest Sync do produtor. O que mudou
+ * no contrato: `result_document_schemas` passou a declarar `analysis-result-v3`, entrou o bloco
+ * `result_negotiation`, e cada operação passou a declarar sua `optional_query` — 12 das 15
+ * aceitam alguma, e o manifesto não declarava nenhuma.
+ *
+ * **A reconferência foi feita, e por medição:** os 19 eixos de que as fixtures dependem
+ * (`*_read_model_fields`, `list_item_fields`, `public_states`, `progress_axes`,
+ * `problem_codes`, `nunca_publicos`, `timeline_event_*`, `me_*`, `instance_*`) foram comparados
+ * entre o contrato selado e o novo, e **nenhum** mudou. A evolução foi de negociação e
+ * declaração de documento, não de read-model — por isso nenhuma amostra precisou de edição.
+ *
+ * Um detalhe que custou um vermelho e vale o registro: o digest é dos **bytes do disco**. A
+ * primeira regeneração gravou CRLF no Windows, e o digest deixou de bater com o do git sem que
+ * uma linha de conteúdo tivesse mudado. O produtor agora grava LF explicitamente
+ * (`sentinela-facts/tests/test_5_5_public_contract_congelado.py`); um sentinela por bytes
+ * precisa dos mesmos bytes em toda plataforma.
+ *
+ * Antes da F0: `98506592e3b913f2445134f82cb949df054c8b33c0ad0815ed99677bcd2d117d` (BD02).
+ *
+ * Histórico da BD02, que publicou a Instance: tres operacoes novas
  * (`create_instance`/`list_instances`/`get_instance`, 12 -> 15) e `instance_id` nas projecoes de
  * Analysis. As fixtures foram RECONFERIDAS antes deste selo — as 12 amostras de status e de
  * listagem passaram a declarar `instance_id: null`, tornando explicita a ausencia que ja era
@@ -37,7 +56,7 @@
  * digest novo — no mesmo commit.
  */
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "98506592e3b913f2445134f82cb949df054c8b33c0ad0815ed99677bcd2d117d";
+  "005a0874ec1433888ad6cb7dfb1eb6d481208af7b5408270872c0238f7283b96";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.

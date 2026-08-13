@@ -15,9 +15,14 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CANONICAL_RESULT_SCHEMA } from "@/features/canonical-analysis/result/canonicalSchema";
 import { CANONICAL_RESULT_V2_SCHEMA } from "@/features/canonical-analysis/result/canonicalSchemaV2";
+import {
+  CANONICAL_RESULT_V3_SCHEMA,
+  FAMILIAS_ARGOS,
+} from "@/features/canonical-analysis/result/canonicalSchemaV3";
 
 const RAIZ = resolve(__dirname, "../../..");
 const COPIA = resolve(RAIZ, "src/lib/v1/contract/public-v1.types.ts");
+const COPIA_V3 = resolve(RAIZ, "src/lib/v1/contract/public-v3.types.ts");
 
 /** A origem fica no repo do Gateway, ao lado deste.
  *
@@ -140,10 +145,15 @@ describe("cópia local de public-v1 × origem", () => {
     }
   });
 
-  it.runIf(ORIGEM)("a origem declara os DOIS documentos do resultado", () => {
+  it.runIf(ORIGEM)("a origem declara os TRÊS documentos do resultado", () => {
     // Passou a ser plural na MF6.4b: a rota pública serve o `analysis-result-v2` quando ele
     // existe. O campo singular saiu — dois campos declarando a mesma coisa divergiriam na
     // próxima versão, e o errado seria o que alguém leu.
+    //
+    // Virou TRÊS na Manifest Sync do produtor: o Gateway já servia `analysis-result-v3` por
+    // negociação (`?result_schema_version=`) e o manifesto seguia declarando dois. Este caso
+    // ficou vermelho no dia em que a origem passou a dizer a verdade, e é assim que ele deve
+    // se comportar — o vermelho foi o aviso, não o defeito.
     //
     // Esta prova é o que impede o frontend de suportar uma versão que a origem não declara (e o
     // contrário): os dois lados precisam concordar sobre o vocabulário do discriminador.
@@ -151,6 +161,7 @@ describe("cópia local de public-v1 × origem", () => {
     expect(snapshot.result_document_schemas).toEqual([
       "analysis-result-v1",
       "analysis-result-v2",
+      "analysis-result-v3",
     ]);
     expect(snapshot.result_document_schema).toBeUndefined();
     expect(snapshot.result_document_owner).toBe("sentinela-result-assembler");
@@ -159,12 +170,58 @@ describe("cópia local de public-v1 × origem", () => {
   it.runIf(ORIGEM)("este frontend suporta EXATAMENTE os documentos que a origem declara", () => {
     // A verificação cruzada que importa: duas suítes verdes não provam que os dois repos falam
     // do mesmo vocabulário. Aqui as constantes DESTE frontend são comparadas com a declaração
-    // do repo dono — se a origem publicar uma v3, este teste vira o aviso de que a tela ainda
-    // não a lê (e o estado seguro é o que o usuário veria até lá).
+    // do repo dono — quando a origem publicou a v3, este teste virou o aviso de que a tela ainda
+    // não a lia (e o estado seguro era o que o usuário veria até lá).
+    //
+    // O aviso foi atendido: `CANONICAL_RESULT_V3_SCHEMA` existe, o documento tem tipos e
+    // validador de fronteira. Ele fica verde por RECONHECIMENTO, e não por ter sido afrouxado —
+    // a igualdade continua exata nos dois sentidos, então declarar um documento que a origem
+    // não serve reprova aqui do mesmo jeito.
     const snapshot = JSON.parse(readFileSync(resolve(ORIGEM!, "public-v1.json"), "utf-8"));
-    expect([CANONICAL_RESULT_SCHEMA, CANONICAL_RESULT_V2_SCHEMA].sort()).toEqual(
-      [...snapshot.result_document_schemas].sort(),
-    );
+    expect(
+      [CANONICAL_RESULT_SCHEMA, CANONICAL_RESULT_V2_SCHEMA, CANONICAL_RESULT_V3_SCHEMA].sort(),
+    ).toEqual([...snapshot.result_document_schemas].sort());
+  });
+
+  it.runIf(ORIGEM)("a cópia dos tipos v3 não DERIVOU da origem", () => {
+    // Mesma armadilha da cópia v1, e a v3 é mais nova — logo, mais fácil de esquecer. O
+    // documento tem onze famílias; o `tsc` fica verde se a cópia perder uma, porque perder um
+    // campo opcional não quebra tipo nenhum. Só a comparação com a origem acusa.
+    const origem = readFileSync(resolve(ORIGEM!, "public-v3.types.ts"), "utf-8");
+    const copia = readFileSync(COPIA_V3, "utf-8");
+
+    const daOrigem = camposDaInterface(origem, "AnalysisResultV3Document");
+    const daCopia = camposDaInterface(copia, "AnalysisResultV3Document");
+    expect(daOrigem.length, "a ORIGEM não declara o documento v3").toBeGreaterThan(0);
+    expect(daCopia).toEqual(daOrigem);
+
+    // As medições são o que a tela lê campo a campo; um `reason` ou um `scale` que suma da
+    // cópia vira estado inventado na interface, não erro de compilação.
+    for (const tipo of ["PublicMeasurement", "PublicIndicatorV3", "PublicScore", "PublicRisk"]) {
+      expect(camposDaInterface(copia, tipo), `${tipo} divergiu da origem`).toEqual(
+        camposDaInterface(origem, tipo),
+      );
+    }
+  });
+
+  it.runIf(ORIGEM)("as famílias que o frontend conhece são as do documento da ORIGEM", () => {
+    // `FAMILIAS_ARGOS` é a lista que a View usa para decidir o que pode existir. Se a origem
+    // publicar uma família nova e esta lista ficar, a tela some com ela em silêncio — que é o
+    // mesmo defeito do contrato parado, um nível acima.
+    const origem = readFileSync(resolve(ORIGEM!, "public-v3.types.ts"), "utf-8");
+    const doDocumento = camposDaInterface(origem, "AnalysisResultV3Document");
+    const metadados = new Set([
+      "analysis_id",
+      "result_schema_version",
+      "indicator_registry_version",
+      "measurement_contract_version",
+      "argos_catalog_version",
+      "method",
+      "partiality",
+      "summary",
+    ]);
+    const familiasDaOrigem = doDocumento.filter((c) => !metadados.has(c)).sort();
+    expect([...FAMILIAS_ARGOS].sort()).toEqual(familiasDaOrigem);
   });
 
   it("a cópia declara de onde veio", () => {
