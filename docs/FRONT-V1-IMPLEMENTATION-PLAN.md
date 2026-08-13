@@ -55,8 +55,10 @@
 `BD02` Instância · `BD03` `recommendation_id` · `BD04` preferências · `BD05` `prepared` lifecycle ·
 `BD06` exclusão de análise · `BD07` canonicalização de contrato · `BD08` schema aninhado do
 Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q15) ·
-`BD10` **Baseline Reference** (autoridade congelada em 2026-08-13, **não implementada** —
-`sentinela-orchestrator/docs/BD10-BASELINE-REFERENCE.md`).
+`BD10` **Baseline Reference** — ✅ **IMPLEMENTADA e FECHADA** em 2026-08-13
+(`sentinela-orchestrator/docs/BD10-BASELINE-REFERENCE.md`). Entrega `GET`/`POST`/`DELETE`
+`/v1/instances/{id}/baseline` + `list_analyses?instance_id=&baseline_eligible=true`.
+**Desbloqueia INST-05 (Front não iniciado). NÃO desbloqueia EVO-03.**
 
 **Total: 46 missões de front + 9 de backend = 55.**
 
@@ -1133,6 +1135,49 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 >
 > **Autoridade ≠ capacidade publicada.** Enquanto a BD10 não for implementada, nada muda para o
 > Front: nenhuma operação de baseline é servida, e o `catalogo.ts` continua correto como está.
+
+> ✅ **BD10 IMPLEMENTADA E FECHADA — 2026-08-13.** *(A nota acima descreve o intervalo entre a
+> autoridade e a implementação, e fica preservada.)*
+>
+> **O que existe agora**, no contrato público (`public-v1.json`, 15 → 18 operações):
+>
+> | operação | efeito |
+> |---|---|
+> | `GET /v1/instances/{id}/baseline` | o ponteiro. Sem régua: **200** com as duas chaves `null` |
+> | `POST /v1/instances/{id}/baseline` | elege. Idempotente; troca A→B atômica; LWW |
+> | `DELETE /v1/instances/{id}/baseline` | remove. Idempotente; nunca escolhe substituto |
+> | `GET /v1/analyses?instance_id=&baseline_eligible=true` | os **candidatos**, já filtrados pelo backend |
+>
+> **O estado de cada peça:**
+>
+> - **BD10:** `IMPLEMENTED / CLOSED`.
+> - **INST-05:** `BACKEND READY` · `FRONT NOT STARTED`. A superfície pode ser construída; nada
+>   dela foi construído nesta missão.
+> - **EVO-03:** `BLOCKED BY LONGITUDINAL COMPARISON PRODUCER`. Inalterado.
+> - **M40:** **não** desbloqueada. Ela contém as duas, e só metade destravou.
+>
+> **Os dois scenarios continuam divergindo, e a diferença é o ponto:**
+>
+> - **`no-baseline`** — o bloqueio dele era *"Baseline NÃO existe no contrato público. Nenhuma
+>   operação a cria, lê ou compara."* Isso deixou de ser verdade: `GET .../baseline` devolve
+>   `NO_BASELINE` como estado legítimo. Ele pode sair de `bloqueado` **quando a INST-05 for
+>   autorizada** — a razão dele morreu, mas mexer no `catalogo.ts` é trabalho de Front, e esta
+>   missão está proibida de fazê-lo.
+> - **`baseline-active`** — **continua bloqueado, e não pela mesma razão.** Ele exige que baseline
+>   ativo **BLOQUEIE EXCLUSÃO**, e exclusão de análise é o **B10 → `BD06`**, que não existe. A
+>   BD10 deixou a recusa pronta no banco (FK `on delete no action`, provada em teste), mas
+>   **nenhuma operação pública a exercita** — e um scenario não pode encenar uma recusa que não
+>   tem porta. Declarar este scenario "provado pela BD10" seria afirmar capacidade pública onde há
+>   só constraint.
+>
+> **Uma dívida cruzada, declarada:** o selo do contrato (M17, `src/test/fixtures/public-v1/selo.ts`)
+> lê `public-v1.json` do repositório do Gateway por digest. O manifesto mudou, então o selo está
+> **vermelho** — que é o selo funcionando: ele existe para obrigar alguém a reconferir. **A
+> reconferência foi feita e está registrada:** nenhum dos 19 eixos de read-model de que as
+> fixtures dependem mudou (a BD10 acrescentou operações e uma `optional_query`, e não tocou
+> `instance_read_model_fields`, `list_item_fields`, `public_states` nem `problem_codes`). O
+> conserto é uma linha — o digest novo —, e não foi feito porque a missão da BD10 está proibida de
+> tocar código do Front.
 - **Baseline permanece requisito da V1.** EVO-03 e INST-05 continuam no mapa; o que muda é a razão
   documentada do bloqueio.
 - **Escopo (quando destravar):** marcar/substituir/remover; **nunca muda em silêncio**; baseline

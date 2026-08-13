@@ -136,7 +136,7 @@ tocam desenvolvimento, e quatro deles apenas parcialmente — o caminho
 | **BD05** `prepared` lifecycle | B8 | antes da Fase 16 | `prepared` abandonado acumula para sempre |
 | **BD06** exclusão de análise | B10 | antes da Fase 16 | D28 fica sem operação real |
 | **BD09** resolução de destinatário | B5 | **após M43**, se a prova revelar delta | comunicação externa não pode ser declarada fechada |
-| **BD10** Baseline Reference | C6 | ✅ **autorizada em 2026-08-13** — falta **implementar** | INST-05 fica sem operação; `no-baseline` segue bloqueado |
+| **BD10** Baseline Reference | C6 | ✅ **autorizada e IMPLEMENTADA** em 2026-08-13 | — resolvida. INST-05 tem operação; EVO-03 continua sem produtor |
 
 **Permanece proposta:** **P31** (Light/Dark) — D23 vence.
 
@@ -149,7 +149,7 @@ tocam desenvolvimento, e quatro deles apenas parcialmente — o caminho
 | **C3** | `/canonical/*` na URL pública | **resolvido** como decisão (rotas `/analyses…`); falta **executar** a migração e decidir `/` (B11) | `Product Freeze` §10 |
 | **C4** | D23 × P31 | **resolvido por autoridade**: D23 vence, P31 é proposta | `Product Freeze` §5 |
 | **C5** | superfície aninhada sem publicação canônica | o gate funciona atravessando fronteira de repo; o certo é o Analytics publicar schema | `Architecture` §11 |
-| **C6** | **Baseline sem produtor** — EVO-03 e INST-05 são requisito da V1, e nenhuma operação a cria, lê ou compara. **BD02 não a entregou**: entregou Instância. **Semântica decidida em 2026-08-13 e delta aberto como `BD10`** (autoridade congelada, **não implementada**) — o que **parte o C6 em dois**: `INST-05` espera a BD10 implementar; `EVO-03` continua **sem produtor de comparação longitudinal**, que a BD10 explicitamente não entrega | INST-05: aguarda implementação da **BD10**. EVO-03: exige delta próprio, ainda sem número | `PLAN` M40 · `Blueprint` §4.4 · `BD10-BASELINE-REFERENCE.md` |
+| **C6** | **Baseline sem produtor** — era EVO-03 + INST-05 sem operação nenhuma. **PARTIDO EM DOIS em 2026-08-13.** ✅ **INST-05: resolvido** — a `BD10` foi autorizada e implementada, e o contrato publica `GET`/`POST`/`DELETE` `/v1/instances/{id}/baseline` + `baseline_eligible` na listagem. 🔴 **EVO-03: continua** — falta o **produtor de comparação longitudinal**, que a BD10 explicitamente não entrega. Baseline é a REFERÊNCIA; confrontar duas análises é outra capacidade | INST-05: superfície de Front, não iniciada. EVO-03: delta próprio, ainda **sem número** — e agora com o bloqueio nomeado | `PLAN` M40 · `Blueprint` §4.4 · `BD10-BASELINE-REFERENCE.md` |
 | **C7** | **Lifecycle de Workspace sem produtor** — WS-02 (criar) e WS-04 (configurar) têm nó no Discovery, superfície no Blueprint e missão no PLAN (M42), e **não existe operação**. BD04 é *preferências*, não lifecycle de Workspace | idem — delta próprio, sem número atribuído | `PLAN` M42 · `Blueprint` §3 |
 | **C8** | **`create_instance` publicado sem consumidor** — capacidade pública sem superfície nem missão; é o inverso de C6/C7 | exige decisão de produto antes de qualquer código; mantém **B1 aberto em 1** | `PLAN` (delta declarado na Fase 9) · `divergenciaDeclarada.ts` |
 
