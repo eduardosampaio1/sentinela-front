@@ -39,7 +39,7 @@
 | **7** | Jornada de análise | M33–M35 | jornada REAL completa |
 | **8** | Backend delta de Instância | BD02 | freeze próprio |
 | **9** | Instância | M36–M37 | INST-01/03/04 navegáveis · INST-02/07 declaradas sem produtor |
-| **10** | Evolução | M38 ✅ · M39 (autoridade alinhada) · M40 🔴 | comparação canônica |
+| **10** | Evolução | M38 ✅ · M39 ✅ · **M40 🟢 realinhada** (INST-05; `EVO-03` saiu como delta declarado) | comparação canônica · baseline explícito |
 | **11** | Configurações | M41–M42 | ownership de D22 |
 | **12** | Comunicação / re-entry | M43–M44 | deep links corretos |
 | **13** | Hardening | M45 | 18 gates verdes |
@@ -1103,7 +1103,106 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > (`delta: number`) e decide comparabilidade **por linha**. Por isso ele **deixa de ser AS-IS de
 > regra** e passa a **referência visual/estrutura legada**. A M39 não o "conserta": ela primeiro
 > lhe retira o direito de decidir o que comparação significa.
-### M40 · EVO-03 + INST-05 — baseline explícito — BLOQUEADA POR FALTA DE PRODUTOR
+### M40 · INST-05 — baseline explícito — AUTHORITY REALIGNED · ESCOPO REDUZIDO
+
+> 🔧 **REALINHAMENTO DE AUTORIDADE — 2026-08-13.** *(Todo o histórico abaixo fica preservado: esta
+> missão nasceu `EVO-03 + INST-05`, foi declarada bloqueada por falta de produtor, e a BD10 mudou
+> metade dessa premissa. Nada aqui finge que a M40 sempre foi INST-05.)*
+>
+> **A M40 nasceu dobrando duas capacidades num título só** — *"baseline explícito"* cobria eleger a
+> régua **e** confrontar contra ela. A Discovery 0-C já as descrevia separadas (§3.3, itens 2 e 4
+> versus 3 e 5), e a BD10 provou a separação ao entregar uma sem a outra. Dobradas, elas
+> compartilhavam um único status de prontidão — e foi assim que a BD02 apareceu, por um tempo,
+> como se tivesse destravado a missão inteira.
+>
+> **O escopo da M40 passa a ser INST-05, e só ela.** `EVO-03` **sai** — e sai como delta declarado
+> sem número, exatamente como a INST-06 saiu da M39 em 2026-08-12.
+>
+> **Por que o número fica com a metade executável.** A regra de numeração do PLAN é sequencial e
+> agrupada por fase, alocada de `M01` a `M48`, **sem sufixos** (não existe `M40a` nem `M39.1` em
+> lugar nenhum do programa). Cunhar `M49` colocaria uma superfície de Instância **depois** do
+> pacote pré-Big-Bang, o que a estrutura de fases não comporta. E manter o número na metade
+> **bloqueada** deixaria a M40 🔴 indefinidamente enquanto o trabalho executável não teria casa.
+> O precedente é da missão anterior: a M39 teve o escopo reduzido, ficou com o número, e a
+> superfície removida virou delta declarado.
+>
+> **Nenhum número novo foi cunhado, e nenhum era necessário.**
+>
+> **A M40 NÃO está parcialmente executada.** O PLAN não tem esse conceito, e inventá-lo aqui seria
+> criar um estado que nenhum gate sabe conferir. Ela está **realinhada e não iniciada**.
+
+- **Pré:** ✅ **BD10 · Baseline Reference — CLOSED** (2026-08-13). Backend pronto, Front não
+  iniciado.
+- **Superfície:** **INST-05**, e só ela.
+- **Escopo permitido:** ler o baseline atual · mostrar `NO_BASELINE` como estado legítimo · listar
+  candidatos **carimbados pelo backend** (`?instance_id=&baseline_eligible=true`) · definir ·
+  substituir · remover.
+- **Fora, e cada um por uma razão diferente:** delta, evolução, direção, melhor/pior, tendência,
+  ranking de candidatos (**os seis são comparação longitudinal, que não tem produtor**) ·
+  exigência de v3 (**a BD10 decidiu que v1/v2-only É referência legítima**) ·
+  `REFERENCE_DOES_NOT_SERVE_ARGOS` (**a BD10 tirou de escopo: o Orchestrator possui o fato, mas o
+  único consumidor é a comparação, e fabricar produtor seria o oposto de backend-first**).
+- **Cliente:** as quatro operações estão no contrato e **nenhuma tem cliente no Front** — é o B1,
+  hoje em 4.
+
+##### O contrato de que a M40 dispõe
+
+| operação | o que ela dá à tela |
+|---|---|
+| `GET /v1/instances/{id}/baseline` | o ponteiro. Sem régua: **200** com as duas chaves `null` — `NO_BASELINE` é valor, não erro |
+| `POST /v1/instances/{id}/baseline` | elege. Idempotente; a troca A→B é atômica e **não passa por remoção** |
+| `DELETE /v1/instances/{id}/baseline` | remove. Idempotente; **nunca escolhe substituto** |
+| `GET /v1/analyses?instance_id=&baseline_eligible=true` | os **candidatos**, já filtrados pelo backend |
+
+**A quarta é a que muda o desenho da tela.** O Front **não** monta o seletor recortando a listagem
+por `status === "completed"`: ele pede o conjunto pronto. A regra de elegibilidade tem um dono, e
+não é ele. Sem `instance_id` o filtro é `invalid_input` — elegibilidade só existe relativa a uma
+Instance.
+
+**Recusas que a tela vai encontrar:** `404 forbidden_or_not_found` (a Analysis não é dela, não é
+desta Instance, ou não tem Instance — as quatro colapsam de propósito) e `409 analysis_not_ready`
+(é dela e está na Instance, mas não concluída). Nenhum problem code novo.
+
+##### Scenarios — o que cada um realmente prova
+
+| scenario | antes | agora | por quê |
+|---|---|---|---|
+| `no-baseline` | 🔴 bloqueado | 🟢 **materializável** | a razão dele era *"Baseline NÃO existe no contrato público. Nenhuma operação a cria, lê ou compara"*. **Deixou de ser verdade**: `GET .../baseline` devolve `NO_BASELINE` como estado legítimo |
+| `baseline-active` | 🔴 bloqueado | 🔴 **continua — e o bloqueio TROCOU de identidade** | ver abaixo |
+
+**`baseline-active` carrega duas afirmações, e só uma destravou.** A razão dele no catálogo é
+*"Depende de baseline, que não existe. O cenário exigiria ainda que uma baseline ativa BLOQUEASSE
+exclusão — regra de ciclo de vida que nenhum contrato publica."*
+
+- **(a) mostrar uma régua ativa** — materializável hoje;
+- **(b) régua ativa bloqueia exclusão** — **não**, e não por falta de baseline: por falta de
+  **exclusão pública de Analysis**, que é o **B10 → `BD06`** e não existe.
+
+E há uma consequência mais forte que "não provável": como não existe operação pública de exclusão,
+a INST-05 **não tem onde oferecer o botão** — a recusa é inalcançável pela superfície. A BD10
+deixou a proteção pronta no banco (FK `on delete no action`, provada nos dois sentidos), mas
+constraint não é capacidade publicada, e um scenario não encena recusa que não tem porta.
+
+**Declarar `baseline-active` como "provado pela BD10" seria afirmar capacidade pública onde há só
+constraint.** Ele permanece bloqueado, com a razão reescrita quando a massa for mexida — o que
+**não** é desta missão.
+
+##### Dívidas que a M40 herda, e que não podem ser escondidas dentro da UI
+
+| # | dívida | efeito na M40 |
+|---|---|---|
+| 1 | **selo M17 desatualizado** — o digest de `public-v1.json` mudou com a BD10 | 1 caso vermelho. **A reconferência já foi feita e registrada:** nenhum dos 19 eixos de read-model mudou. É a primeira linha da M40 |
+| 2 | **B1 em 4** | 3 casos vermelhos (WS-A2 / WS-A7 / M23). Fecha ao construir os clientes; **enquanto isso, declarar** |
+| 3 | **`SENTINELA_AUTO_BASELINE` × D25** | nenhum — é dívida de **produto**, no caminho legado. A M40 não a resolve e **não deve mencioná-la na UI** |
+| 4 | **`mk3-baseline-v1` é `PRODUCTION-REACHABLE` e `NON-AUTHORITATIVE`** | nenhum, e é uma **proibição**: a M40 não pode consumir nada que venha dele. Ele calcula direção sem autoridade |
+| 5 | **origem contratual obrigatória** | operacional: rodar a suíte sem `SENTINELA_CONTRACT_ORIGIN` faz o resolvedor recusar escolher — e recusar é o correto. **Não é falha** |
+
+As duas primeiras vivem em `src/` e são **trabalho da M40**, não pré-requisito dela.
+
+---
+
+#### Histórico — o estado até 2026-08-13
+
 - **Pré:** ✅ **BD02** (satisfeita em 2026-08-12) **— e isso NÃO a destrava.**
 - 🔴 **A BD02 entregou Instância, não Baseline.** A `Pré:` desta missão dizia apenas `BD02` e os
   scenarios 24/25 apareciam como *"destravados"* por ela. Era consequência falsa: os dois seguem
@@ -1135,6 +1234,21 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 >
 > **Autoridade ≠ capacidade publicada.** Enquanto a BD10 não for implementada, nada muda para o
 > Front: nenhuma operação de baseline é servida, e o `catalogo.ts` continua correto como está.
+
+> **DELTA DECLARADO — EVO-03 · evolução contra baseline, sem produtor.**
+> **Dono:** Produto/Arquitetura longitudinal. **Sem número**, e pela mesma razão de sempre: não
+> existe delta de backend aberto para isso, e cunhar um antes da decisão de produto seria decidi-la
+> por antecipação. Não é `BD03` (`recommendation_id`) nem `BD04` (preferências); a `BD10` entrega a
+> **referência** e diz por escrito que não entrega a comparação.
+> **Razão:** falta o **produtor de comparação longitudinal** — quem confronta uma Analysis com a
+> régua e publica o resultado num contrato. Isso exige decidir **direção** (existe melhora e
+> piora? quem declara?), e a M39 já recusou decidir isso no Front.
+> **Não confundir com o que existe:** o comparador `mk3-baseline-v1` calcula direção e **roda em
+> produção** no caminho legado — e é justamente por isso que ele é `NON-AUTHORITATIVE` e tem gate
+> (G-18) impedindo que cresça. Ligá-lo seria responder à pergunta de produto com um `import`.
+> **Reentrada, nesta ordem:** 1) Longitudinal Discovery · 2) decidir direção e invalidação (D26) ·
+> 3) abrir o delta de backend com número · 4) publicar contrato · 5) só então autorizar a
+> superfície.
 
 > ✅ **BD10 IMPLEMENTADA E FECHADA — 2026-08-13.** *(A nota acima descreve o intervalo entre a
 > autoridade e a implementação, e fica preservada.)*
@@ -1517,15 +1631,16 @@ depois começa sem ela.
 | eixo | valor |
 |---|---|
 | Front | `sentinela-front-e1` · `develop` · **`2771e6d`** · árvore limpa |
-| Gateway / contrato público | `sentinela-facts` · **`ac81633`** · 15 operações · 9 problem codes |
-| Orchestrator | `sentinela-orchestrator` · `integracao/bd02-instancia` · **`8996a75`** |
+| Gateway / contrato público | `sentinela-facts` · **`16636a2`** · **18 operações** · 9 problem codes *(era `ac81633` · 15 · antes da BD10)* |
+| Orchestrator | `sentinela-orchestrator` · `integracao/bd02-instancia` · **`6c5e71b`** *(era `8996a75`)* |
 | origem contratual **obrigatória** | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts` — sem ela o resolver recusa escolher entre worktrees divergentes, e recusar é o comportamento correto |
 | catálogo de scenarios | **35** · 31 executáveis · 1 parcial · 3 bloqueados |
-| B1 | **aberto em 1** — `create_instance`, sem superfície no Blueprint e sem missão no PLAN |
+| B1 | **aberto em 4** — `create_instance` (sem superfície nem missão) + as **três** da BD10 (`get`/`set`/`clear_instance_baseline`), que têm superfície (INST-05) e missão (**M40**) e esperam execução. A BD02 já o reabriu de 1 para 3 e a M36 o devolveu a 1; a BD10 repete o padrão |
 | missões fechadas | **M36** (INST-01 + INST-03) em `34d65e2` |
 | última missão fechada | **M37** (INST-04 — nova análise a partir da Instância) |
 | última missão fechada | **M38** (EVO-01 — histórico cronológico canônico em `/analyses`) |
-| próxima possível | **M39 / EVO-02** (só ela — INST-06 saiu) — autoridade alinhada em 2026-08-12; rota `/analyses/compare/{a}/{b}` congelada. **Implementação não iniciada.** |
+| última missão fechada | **M39** (EVO-02 — comparação ARGOS A×B sobre v3) |
+| próxima possível | **M40 / INST-05** (só ela — `EVO-03` saiu) — autoridade realinhada em 2026-08-13 sobre a **BD10 CLOSED**. **Implementação não iniciada.** |
 
 Como se chegou aqui: `4c96256` reconciliou a autoridade com o estado entregue; `fdddc27` e
 `2771e6d` fecharam a `TYPECHECK RECOVERY`. Nenhum dos três tocou código de produto.
