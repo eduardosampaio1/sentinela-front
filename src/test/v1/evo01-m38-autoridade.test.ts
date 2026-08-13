@@ -146,9 +146,14 @@ describe("M38 · 4. `list-pagination` é o scenario certo", () => {
     const s = scenario("list-pagination");
     expect(s.superficies).not.toContain("EVO-02");
     expect(s.superficies).not.toContain("EVO-03");
+    // Este é o fato PRÓPRIO: a M38 não entregou EVO-03, e nada no catálogo o serve.
     expect(CATALOGO.filter((c) => c.superficies.includes("EVO-03"))).toEqual([]);
-    for (const bloqueado of ["no-baseline", "baseline-active"]) {
-      expect(scenario(bloqueado).estado, `${bloqueado} deixou de ser bloqueado`).toBe("bloqueado");
+    // A checagem "os dois de baseline seguem bloqueados" saiu na M40. Ela era PROXY do fato
+    // acima, e media o estado de um vizinho: a BD10 publicou o produtor de baseline e
+    // desbloqueou `no-baseline` sem tocar em EVO-01 nem em EVO-03 — e este caso reprovava.
+    // O que importa aqui é que baseline pertence a OUTRA superfície, e continua pertencendo.
+    for (const s of CATALOGO.filter((c) => c.id.includes("baseline"))) {
+      expect(s.superficies, `${s.id} passou a servir EVO-01`).not.toContain("EVO-01");
     }
   });
 

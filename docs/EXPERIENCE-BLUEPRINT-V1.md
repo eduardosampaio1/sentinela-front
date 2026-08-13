@@ -332,7 +332,7 @@ INST-07** são delta declarado por falta de produtor. O contrato de Instance pub
 | **INST-02** | Estado | leitura do estado corrente + procedência | 🔴 **DELTA DECLARADO — sem produtor de estado corrente** |
 | **INST-03** | Histórico | execuções em ordem | **APPROVED DELTA** |
 | **INST-04** | Nova análise (a partir da Instância) | pré-preencher o escopo | ✅ **ENTREGUE** — M37 |
-| **INST-05** | Baseline | marcar/substituir/remover a régua (D25) | **APPROVED DELTA** — ✅ **BACKEND READY** pela **BD10** (implementada 2026-08-13); **FRONT NOT STARTED**. Sem evolução/delta/direção/ranking: isso é comparação longitudinal, e a BD10 não a entrega |
+| **INST-05** | Baseline | marcar/substituir/remover a régua (D25) | **APPROVED DELTA** — ✅ **BACKEND READY** (BD10) · ✅ **SCENARIOS MATERIALIZED** (24, 38, 39) · **FRONT NOT STARTED**. Sem evolução/delta/direção/ranking: isso é comparação longitudinal, e a BD10 não a entrega |
 | **INST-06** | Evolução | 🔴 **DELTA DECLARADO — evolução longitudinal da Instance sem produtor** |
 | **INST-07** | Configuração da Instância (D22) | | 🔴 **DELTA DECLARADO — sem produtor de configuração; D22 depende de BD04** |
 
@@ -693,7 +693,7 @@ Só informação canônica **existente**. Nenhum "trust score" inventado.
 
 ---
 
-## 11. Mock Scenario Catalog — 35 cenários
+## 11. Mock Scenario Catalog — 39 cenários
 
 Todo scenario é **nome + lista de handlers**. Fixture derivada do schema publicado (§17).
 
@@ -724,8 +724,10 @@ Todo scenario é **nome + lista de handlers**. Fixture derivada do schema public
 | 36 | `comparison-v3-compatible` | EVO-02 | dois `/result?result_schema_version=3` | 14 pares de indicador · 4 de dimensão, com valores distintos | — |
 | 37 | `comparison-v3-document-break` | EVO-02 | dois `/result?result_schema_version=3` | `indicator_registry_version` divergente, e **nada mais** | — |
 | 23 | `privacy-omission` | RES-01 | `/analytics` | `withheld.reason_code` | — |
-| 24 | `no-baseline` | INST-05 | `GET /v1/instances/{id}/baseline` | `200` + as duas chaves `null` | 🟢 **MATERIALIZÁVEL** desde a BD10 — `NO_BASELINE` é estado legítimo, não erro. Massa não escrita (é da M40) |
-| 25 | `baseline-active` | INST-05 | — | bloqueia exclusão | 🔴 **BLOQUEADO** |
+| 24 | `no-baseline` | INST-05 | `GET .../baseline` + `GET /v1/analyses?instance_id=&baseline_eligible=true` | `200` + as duas chaves `null` · **3 candidatos elegíveis** · `POST` elege → `DELETE` volta a `NO_BASELINE` | — **DESBLOQUEADO pela BD10** |
+| 25 | `baseline-active` | INST-05 | — | régua ativa **bloqueia exclusão** | 🔴 **BLOQUEADO — scenario COMPOSTO histórico.** A metade "mostrar régua ativa" foi entregue pelo **38**; a outra metade exige **exclusão pública de Analysis** (B10 → `BD06`), que não existe. **Não é prova canônica de INST-05** |
+| 38 | `baseline-set` | INST-05 | `GET/POST/DELETE .../baseline` + candidatos | régua em `an-cand-0001` com `set_at` · **3 candidatos** · `POST` troca para outra **sem passar por `NO_BASELINE`** · `DELETE` limpa, e repetido mantém | — |
+| 39 | `baseline-no-candidates` | INST-05 | idem | `NO_BASELINE` + candidatos `[]` | — **`[]` significa "o backend consultou e achou zero"**, nunca "endpoint ausente". É o primeiro estado de toda Instance nova, e sem ele a INST-05 teria caminho primário não provado |
 | 26 | `session-expired` | AUTH-04 | 401 | preserva destino | — |
 | 27 | `forbidden` | ERR-403/404 | 404 `forbidden_or_not_found` | — | — |
 | 28 | `not-found` | ERR-403/404 | idem | **mesma tela**, por contrato | — |

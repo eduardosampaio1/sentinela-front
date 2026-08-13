@@ -147,7 +147,14 @@ describe("M39 · 4. 20 e 21 bastam; 22 não é requisito", () => {
     //
     // O que o caso continua protegendo é o mesmo: a missão não vira porta de entrada para massa
     // avulsa. Dois, nomeados, e nenhum a mais.
-    expect(CATALOGO.length).toBe(37);
+    //
+    // A contagem GLOBAL (`CATALOGO.length === 37`) saiu daqui na M40. Ela era PROXY: qualquer
+    // missão futura que acrescentasse scenario reprovaria este caso sem ter tocado na M39 — e foi
+    // exatamente o que aconteceu quando a BD10 trouxe os três de baseline. O total tem dono
+    // próprio em `scenarios-catalogo.test.ts`, conferido contra o Blueprint §11.
+    //
+    // O fato PRÓPRIO deste caso é o filtro por prefixo, e ele é mais forte que a contagem: um
+    // `comparison-v3-` a mais reprova aqui mesmo que o total esteja certo.
     const daM39 = CATALOGO.filter((s) => s.id.startsWith("comparison-v3-")).map((s) => s.id);
     expect(daM39.sort()).toEqual(["comparison-v3-compatible", "comparison-v3-document-break"]);
   });
@@ -165,8 +172,21 @@ describe("M39 · 5. Baseline e EVO-01 ficam onde estão", () => {
     }
   });
 
-  it("os scenarios de baseline seguem bloqueados", () => {
-    for (const b of ["no-baseline", "baseline-active"]) expect(scenario(b).estado).toBe("bloqueado");
+  it("nenhum scenario de baseline pertence à M39", () => {
+    // Este caso dizia "os scenarios de baseline seguem bloqueados", e isso era PROXY: ele media o
+    // estado do vizinho para provar um fato sobre a M39. A BD10 desbloqueou `no-baseline` e a M40
+    // acrescentou dois — nada disso é da M39, e o caso reprovava mesmo assim.
+    //
+    // O fato próprio é a FRONTEIRA: baseline é INST-05, comparação é EVO-02, e a M39 não tocou
+    // nenhum dos scenarios do vizinho.
+    const deBaseline = CATALOGO.filter((s) => s.id.includes("baseline"));
+    expect(deBaseline.length, "sumiram os scenarios de baseline").toBeGreaterThan(0);
+    for (const s of deBaseline) {
+      expect(s.superficies, `${s.id} virou scenario de comparação`).not.toContain("EVO-02");
+      expect(s.superficies).toContain("INST-05");
+    }
+    // E a M39 continua sem nenhum: os dela têm prefixo próprio.
+    expect(deBaseline.filter((s) => s.id.startsWith("comparison-"))).toEqual([]);
   });
 
   it("a M39 não transforma EVO-01 em EVO-02", () => {

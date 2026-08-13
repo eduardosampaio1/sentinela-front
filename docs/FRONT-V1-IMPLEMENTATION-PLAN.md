@@ -1103,7 +1103,7 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 > (`delta: number`) e decide comparabilidade **por linha**. Por isso ele **deixa de ser AS-IS de
 > regra** e passa a **referência visual/estrutura legada**. A M39 não o "conserta": ela primeiro
 > lhe retira o direito de decidir o que comparação significa.
-### M40 · INST-05 — baseline explícito — AUTHORITY REALIGNED · ESCOPO REDUZIDO
+### M40 · INST-05 — baseline explícito — SCENARIOS MATERIALIZED · READY FOR IMPLEMENTATION
 
 > 🔧 **REALINHAMENTO DE AUTORIDADE — 2026-08-13.** *(Todo o histórico abaixo fica preservado: esta
 > missão nasceu `EVO-03 + INST-05`, foi declarada bloqueada por falta de produtor, e a BD10 mudou
@@ -1144,6 +1144,38 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   único consumidor é a comparação, e fabricar produtor seria o oposto de backend-first**).
 - **Cliente:** as quatro operações estão no contrato e **nenhuma tem cliente no Front** — é o B1,
   hoje em 4.
+
+> ✅ **SCENARIOS MATERIALIZED — 2026-08-13.** Massa e gates existem; **nenhuma linha de UI, nenhum
+> cliente de produção, nenhuma rota**. O que a implementação encontra pronto:
+>
+> | scenario | estado | o que ele prova |
+> |---|---|---|
+> | `no-baseline` | 🟢 **desbloqueado** | `NO_BASELINE` com as duas chaves nulas **e 3 candidatos** — ausência de régua **não** é ausência de candidatos |
+> | `baseline-set` | 🟢 **novo** | régua em `an-cand-0001`, 3 candidatos, troca A→B **sem passar por `NO_BASELINE`**, `DELETE` idempotente |
+> | `baseline-no-candidates` | 🟢 **novo** | `NO_BASELINE` + `[]` — *"o backend consultou e achou zero"*, que não é endpoint ausente nem falha |
+> | `baseline-active` | 🔴 **continua** | composto histórico; a metade que falta exige exclusão pública (B10 → `BD06`) |
+>
+> **REPLACE e CLEAR foram provados aqui, e não adiados.** A máquina de scenarios já suportava
+> estado por invocação — é o padrão do `instance-new-analysis`, um `let` no escopo de
+> `handlers()`. Nenhum store novo, nenhuma segunda arquitetura. Sem isso não daria para provar a
+> garantia central da BD10: que a troca A→B **não passa** por `NO_BASELINE`.
+>
+> **A massa está montada para denunciar o erro que D25 proíbe.** Os `created_at` dos candidatos
+> estão fora de ordem em relação aos ids, e a régua é deliberadamente a **mais antiga** — uma tela
+> que escolhesse "a última concluída" apontaria para outro candidato, e o gate veria.
+>
+> **O que a massa recusa representar:** filtro por v3 (a BD10 decidiu que v1/v2-only É referência
+> legítima, e o item da listagem sequer publica versão) · `serves_argos`/`comparable`/`legacy_warning`
+> · qualquer saída do `mk3` · escolha automática · exclusão de Analysis · `/analytics` e `/result`
+> nos scenarios de baseline (tentativa estoura, por `onUnhandledRequest: "error"`).
+>
+> **Provas:** 29 gates de massa · 71 do catálogo · **mutação 10/10 mortas** · typecheck exit 0 ·
+> lint **delta 0** (9/14, a linha de base declarada).
+>
+> **Playwright não foi executado, e não era exigido:** nenhuma rota, jornada ou seam de browser
+> mudou. A regra do PLAN é literal — *"checkpoint puramente documental ou contratual… não precisa
+> executá-lo"* —, e a máquina de scenarios foi reusada, não alterada. **A M40 de implementação
+> precisará dele.**
 
 ##### O contrato de que a M40 dispõe
 
@@ -1634,7 +1666,7 @@ depois começa sem ela.
 | Gateway / contrato público | `sentinela-facts` · **`16636a2`** · **18 operações** · 9 problem codes *(era `ac81633` · 15 · antes da BD10)* |
 | Orchestrator | `sentinela-orchestrator` · `integracao/bd02-instancia` · **`6c5e71b`** *(era `8996a75`)* |
 | origem contratual **obrigatória** | `SENTINELA_CONTRACT_ORIGIN=../sentinela-facts/docs/contracts` — sem ela o resolver recusa escolher entre worktrees divergentes, e recusar é o comportamento correto |
-| catálogo de scenarios | **35** · 31 executáveis · 1 parcial · 3 bloqueados |
+| catálogo de scenarios | **39** · 36 executáveis · 1 parcial · 2 bloqueados *(era 37/33/1/3 antes da M40)* |
 | B1 | **aberto em 4** — `create_instance` (sem superfície nem missão) + as **três** da BD10 (`get`/`set`/`clear_instance_baseline`), que têm superfície (INST-05) e missão (**M40**) e esperam execução. A BD02 já o reabriu de 1 para 3 e a M36 o devolveu a 1; a BD10 repete o padrão |
 | missões fechadas | **M36** (INST-01 + INST-03) em `34d65e2` |
 | última missão fechada | **M37** (INST-04 — nova análise a partir da Instância) |

@@ -31,6 +31,7 @@
 import { http, HttpResponse } from "msw";
 import type { HttpHandler } from "msw";
 import type {
+  AnalysisListPage,
   AnalyticsAxisState,
   EngineAxisState,
   ExportAxisState,
@@ -50,6 +51,15 @@ import {
   INSTANCIA,
   OUTRA_INSTANCIA,
 } from "@/test/fixtures/public-v1/instances";
+// M40 — a massa da Baseline Reference (BD10).
+import {
+  BASELINE_ESCOLHIDO,
+  CANDIDATOS,
+  COM_BASELINE,
+  SEM_BASELINE,
+  baselineEm,
+  type BaselineView,
+} from "@/test/fixtures/public-v1/baseline";
 // A massa v3 da comparação. JSON, e não módulo TS, porque ela é SAÍDA de produtor: transcrevê-la
 // para código convidaria a "ajustar um número" numa revisão, e o número deixaria de ser o que o
 // motor produziu.
@@ -94,6 +104,74 @@ export interface Scenario {
 }
 
 const json = (b: unknown, s = 200) => HttpResponse.json(b as Record<string, unknown>, { status: s });
+
+/**
+ * M40 — os quatro seams da Baseline Reference (BD10), com estado por invocação.
+ *
+ * O estado mutável não é arquitetura nova: é o mesmo padrão do `instance-new-analysis`, um `let`
+ * no escopo de `handlers()`. Cada `handlersDoScenario()` nasce sem memória, e um teste não herda o
+ * que o anterior escreveu.
+ *
+ * Ele existe porque o contrato da BD10 **é** observável por transição: `POST` elege, `GET` lê,
+ * `DELETE` limpa, e os dois últimos são idempotentes. Um mock estático não conseguiria dizer que
+ * a troca A→B **não passa por `NO_BASELINE`** — que é justamente a garantia que a BD10 dá.
+ *
+ * ## O que estes handlers deliberadamente NÃO fazem
+ *
+ * - **não filtram candidatos.** A lista chega pronta; a elegibilidade tem dono, e não é o Front
+ *   nem o mock. Recortar aqui por `status === "completed"` ensinaria a tela que a regra é dela;
+ * - **não validam a eleição.** O produtor recusa Analysis inelegível com `409`, e essa recusa é
+ *   gate do backend — não estado da UI de seleção normal;
+ * - **não escolhem sozinhos.** Sem `POST`, o baseline fica `null` para sempre. `SENTINELA_AUTO_BASELINE`
+ *   é o caminho legado que elege "a última concluída", D25 proíbe, e nenhuma massa daqui o imita.
+ *
+ * `baseline_eligible` é EXIGIDO no filtro: sem ele o handler devolve o histórico geral, como o
+ * produtor real faria. Um mock que ignorasse o parâmetro aceitaria um Front que esqueceu de
+ * enviá-lo — e a tela pareceria funcionar montando o seletor com a lista errada.
+ */
+function baselineHandlers(
+  b: string,
+  inicial: string | null,
+  candidatos: AnalysisListPage["items"] = CANDIDATOS,
+): HttpHandler[] {
+  let atual: BaselineView = inicial === null ? SEM_BASELINE : COM_BASELINE;
+  return [
+    http.get(`${b}/v1/instances`, () => json({ items: [INSTANCIA], next_cursor: null })),
+    http.get(`${b}/v1/instances/:id`, () => json(INSTANCIA)),
+
+    http.get(`${b}/v1/instances/:id/baseline`, () => json(atual)),
+
+    http.post(`${b}/v1/instances/:id/baseline`, async ({ request }) => {
+      const corpo = (await request.json()) as { baseline_analysis_id?: string };
+      const alvo = corpo?.baseline_analysis_id;
+      if (!alvo) {
+        // O produtor recusa corpo sem o campo. `null` NÃO é CLEAR disfarçado: remover a régua tem
+        // operação própria, e uma operação faz uma coisa só.
+        return json(problem("invalid_input"), 400);
+      }
+      atual = baselineEm(alvo);
+      return json(atual);
+    }),
+
+    http.delete(`${b}/v1/instances/:id/baseline`, () => {
+      // Idempotente: sem régua, continua `NO_BASELINE` — e é 200. Recusar o no-op obrigaria todo
+      // cliente a "consulta-depois-limpa", que é a corrida de volta.
+      atual = SEM_BASELINE;
+      return json(atual);
+    }),
+
+    http.get(`${b}/v1/analyses`, ({ request }) => {
+      const q = new URL(request.url).searchParams;
+      if (q.get("instance_id") !== INSTANCIA.instance_id) return json({ items: [], next_cursor: null });
+      if (q.get("baseline_eligible") !== "true") {
+        // Sem o filtro, isto é o HISTÓRICO da Instance, não a lista de candidatos. Devolver os
+        // elegíveis aqui seria o mock completando o que o Front esqueceu de pedir.
+        return json(HISTORICO_PAGINA_1);
+      }
+      return json({ items: candidatos, next_cursor: null });
+    }),
+  ];
+}
 
 /** Envelope problem+json, do catálogo canônico do cliente — não redigitado aqui. */
 const erro = (base: string, rota: string, status: number, code: Parameters<typeof problem>[0]) =>
@@ -436,18 +514,60 @@ export const CATALOGO: readonly Scenario[] = [
     handlers: (b) => [analytics(b, { component_status: "withheld", snapshot: null, withheld: { reason_code: "min_group_size", min_group_size: 5 } })],
   },
   {
+    // M40 — DESBLOQUEADO pela BD10. A razão antiga nomeava três ausências: *"Nenhuma operação a
+    // cria, lê ou compara."* Duas acabaram (`GET`/`POST`/`DELETE` do sub-recurso + candidatos por
+    // `baseline_eligible`). A terceira — comparar — continua verdadeira, e é por isso que nada
+    // aqui compara nada.
+    //
+    // O objetivo deste scenario é uma frase: **ausência de baseline NÃO é ausência de
+    // candidatos.** Uma Instance sem régua, com três análises elegíveis esperando escolha.
     id: "no-baseline",
     superficies: ["INST-05"],
-    estado: "bloqueado",
-    razao: "Baseline NÃO existe no contrato público. Nenhuma operação a cria, lê ou compara.",
+    estado: "disponivel",
+    handlers: (b) => baselineHandlers(b, null),
   },
   {
+    // M40 — a régua CONFIGURADA, com troca e remoção dentro do próprio scenario.
+    //
+    // Nome novo, e não reuso do `baseline-active`: aquele carrega também *"régua ativa bloqueia
+    // exclusão"*, que exige exclusão pública de Analysis (B10 → BD06) e não existe. Herdar o nome
+    // herdaria a promessa.
+    id: "baseline-set",
+    superficies: ["INST-05"],
+    estado: "disponivel",
+    handlers: (b) => baselineHandlers(b, BASELINE_ESCOLHIDO),
+  },
+  {
+    // M40 — o PRIMEIRO estado de toda Instance nova: sem régua e sem candidatos.
+    //
+    // `[]` aqui significa **o backend consultou e achou zero**. Não é endpoint ausente, não é
+    // falha, não é "ainda carregando" — e a distinção importa porque as três se parecem na tela
+    // se ninguém as separar. Sem este scenario, o caminho primário da INST-05 ficaria sem prova.
+    id: "baseline-no-candidates",
+    superficies: ["INST-05"],
+    estado: "disponivel",
+    handlers: (b) => baselineHandlers(b, null, []),
+  },
+  {
+    // CONTINUA BLOQUEADO, e a razão foi reescrita para dizer POR QUE — não para fingir entrega.
+    //
+    // Ele é um scenario COMPOSTO herdado: carrega duas afirmações, e só uma destravou. Mostrar
+    // régua ativa é o `baseline-set`. A outra — régua ativa BLOQUEIA EXCLUSÃO — depende de
+    // exclusão pública de Analysis, que é o B10 → BD06 e não existe.
+    //
+    // E há consequência mais forte que "não provável": sem operação de exclusão, a INST-05 não tem
+    // onde oferecer o botão, e a recusa é INALCANÇÁVEL pela superfície. A BD10 deixou a proteção
+    // pronta no banco (FK `on delete no action`, provada nos dois sentidos) — mas constraint não é
+    // capacidade publicada, e um scenario não encena recusa que não tem porta.
     id: "baseline-active",
     superficies: ["INST-05"],
     estado: "bloqueado",
     razao:
-      "Depende de baseline, que não existe. O cenário exigiria ainda que uma baseline ativa " +
-      "BLOQUEASSE exclusão — regra de ciclo de vida que nenhum contrato publica.",
+      "Scenario COMPOSTO histórico, e não prova canônica de INST-05. A metade 'mostrar régua " +
+      "ativa' foi entregue pela BD10 e vive em `baseline-set`. A outra metade exige que baseline " +
+      "ativo BLOQUEIE EXCLUSÃO — e exclusão pública de Analysis não existe (B10 → BD06). Sem " +
+      "ela a recusa é inalcançável pela superfície: a FK está pronta no banco, mas constraint " +
+      "não é capacidade publicada.",
   },
   { id: "session-expired", superficies: ["AUTH-04"], estado: "disponivel", handlers: (b) => [erro(b, "/v1/analyses/:id", 401, "authentication_required")] },
   { id: "forbidden", superficies: ["ERR-403/404"], estado: "disponivel", handlers: (b) => [erro(b, "/v1/analyses/:id", 404, "forbidden_or_not_found")] },

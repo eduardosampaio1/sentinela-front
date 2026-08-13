@@ -61,7 +61,13 @@ const BLUEPRINT = readFileSync(resolve(RAIZ, "docs/EXPERIENCE-BLUEPRINT-V1.md"),
  * é o que faz o cenário deixar de recusar servir. */
 const BLOQUEADOS_DO_PLANO = [
   "recommendation-persisted",
-  "no-baseline",
+  // `no-baseline` saiu na M40, e pela mesma mecânica do `instance-empty`: a razão dele nomeava
+  // ausências no contrato público — *"nenhuma operação a cria, lê ou compara"* — e a BD10 acabou
+  // com as duas primeiras. A terceira (comparar) continua verdadeira, e este scenario não
+  // precisa dela.
+  //
+  // `baseline-active` NÃO saiu: ele carrega também "régua ativa bloqueia exclusão", e exclusão
+  // pública de Analysis é o B10 → BD06, que não existe.
   "baseline-active",
 ] as const;
 
@@ -70,11 +76,12 @@ const BLOQUEADOS_DO_PLANO = [
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M18 · 1. o catálogo está completo", () => {
-  it("tem as 37 entradas do Blueprint §11", () => {
+  it("tem as 39 entradas do Blueprint §11", () => {
     // Um catálogo curto passaria em todos os outros casos: o que ele não lista, ele não erra.
-    // 35 → 37 na materialização das massas v3 da M39. As duas entradas novas são as ÚNICAS
-    // que a missão trouxe, e o Blueprint §11 as lista.
-    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(37);
+    // 35 → 37 na materialização das massas v3 da M39. 37 → 39 na M40: `baseline-set` e
+    // `baseline-no-candidates`. As entradas novas são as ÚNICAS que cada missão trouxe, e o
+    // Blueprint §11 as lista ANTES de o código as receber.
+    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(39);
   });
 
   it("33 disponíveis · 1 parcial · 3 bloqueados", () => {
@@ -86,9 +93,14 @@ describe("M18 · 1. o catálogo está completo", () => {
     //
     // A M39 acrescentou os dois v3 da comparação: 35 → 37, 31 → 33. Também é entrada, não
     // mudança de estado — e por isso o total e os disponíveis sobem juntos.
-    expect(nomesPorEstado("disponivel").length).toBe(33);
+    //
+    // A M40 fez as DUAS coisas ao mesmo tempo, e por isso os números precisam ser lidos juntos:
+    // `no-baseline` mudou de ESTADO (a BD10 publicou o produtor que faltava), e `baseline-set` +
+    // `baseline-no-candidates` ENTRARAM. Total 37 → 39; disponíveis 33 → 36 (+2 novos, +1
+    // desbloqueado); bloqueados 3 → 2. `baseline-active` fica, porque exige exclusão pública.
+    expect(nomesPorEstado("disponivel").length).toBe(36);
     expect(nomesPorEstado("parcial").length).toBe(1);
-    expect(nomesPorEstado("bloqueado").length).toBe(3);
+    expect(nomesPorEstado("bloqueado").length).toBe(2);
   });
 
   it("o desbloqueio da BD02 foi de ESTADO, não de composição do catálogo", () => {
@@ -99,7 +111,8 @@ describe("M18 · 1. o catálogo está completo", () => {
     expect(alvo!.superficies).toEqual(["INST-01"]);
     expect(alvo!.estado).toBe("disponivel");
     expect(new Set(nomesPorEstado("bloqueado"))).toEqual(
-      new Set(["recommendation-persisted", "no-baseline", "baseline-active"]),
+      // `no-baseline` saiu na M40 — mesma mecânica: a BD10 publicou o produtor que faltava.
+      new Set(["recommendation-persisted", "baseline-active"]),
     );
   });
 
@@ -269,7 +282,7 @@ describe("M18 · 1. o catálogo está completo", () => {
   it("todo cenário do Blueprint está no catálogo", () => {
     // A direção inversa: o que o mapa promete e o catálogo não entrega.
     const doMapa = [...BLUEPRINT.matchAll(/^\|\s*\d+\s*\|\s*`([a-z0-9-]+)`/gm)].map((m) => m[1]);
-    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(37);
+    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(39);
     const faltando = doMapa.filter((n) => !NOMES.includes(n));
     expect(faltando, "cenário do Blueprint ausente do catálogo").toEqual([]);
   });
@@ -365,8 +378,10 @@ describe("M18 · 4. os bloqueados falham explicitamente", () => {
   it("cada bloqueado aponta o blocker ou o delta que o destrava", () => {
     const esperado: Record<string, RegExp> = {
       "recommendation-persisted": /recommendation_id|BD03/i,
-      "no-baseline": /baseline/i,
-      "baseline-active": /baseline/i,
+      // A razão do `baseline-active` deixou de poder dizer só "baseline": o baseline existe. Ela
+      // precisa nomear o que AINDA falta — exclusão pública de Analysis (B10 → BD06) —, senão a
+      // recusa vira genérica sobre uma ausência que acabou.
+      "baseline-active": /exclus.*(B10|BD06)|(B10|BD06).*exclus/is,
     };
     for (const [nome, padrao] of Object.entries(esperado)) {
       expect(scenario(nome).razao ?? "", `${nome}: razão não nomeia a causa`).toMatch(padrao);
