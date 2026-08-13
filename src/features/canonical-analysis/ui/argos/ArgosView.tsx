@@ -40,7 +40,7 @@ import { useAnalysisStatus } from "../../data/analysis";
 import { familiaFoiProduzida, type FamiliaArgos } from "../../result/contratoV3";
 import { descriptorDe } from "../../result/descriptors";
 import { AnalysisShell } from "../AnalysisShell";
-import { ProblemFeedback } from "../notices";
+import { ProblemFeedback, problemCodeOf } from "../notices";
 import { useCanonicalScope } from "../scope";
 import { Indicador, Medicao } from "./Medicao";
 
@@ -101,6 +101,21 @@ function Familia<T>({
     <Secao id={id} titulo={titulo}>
       {lista.length === 0 ? <Vazia /> : children(lista)}
     </Secao>
+  );
+}
+
+/** "Esta análise não tem documento ARGOS" — e o que ainda está disponível. */
+function SemDocumentoArgos() {
+  const { t } = useLanguage();
+  return (
+    // `status`, não `alert`: é conclusão sobre disponibilidade, não falha. A casa já usa essa
+    // distinção, e transformá-la em alerta ensinaria a ignorar alertas.
+    <div role="status" className="space-y-2 rounded-md border border-border p-4">
+      <p className="text-sm font-medium">{t("canonicalAnalysis.argos.noDocumentTitle")}</p>
+      <p className="text-sm text-muted-foreground">
+        {t("canonicalAnalysis.argos.noDocumentBody")}
+      </p>
+    </div>
   );
 }
 
@@ -172,8 +187,19 @@ export function ArgosView() {
       return <LoadingState message={t("canonicalAnalysis.argos.loading")} size="md" />;
     }
     if (argos.isError) {
-      // Inclui o caso da análise histórica: pedir v3 onde não há v3 devolve problema explícito,
-      // e o problema é apresentado pelo código — nunca substituído por um v1 parecido.
+      // O caso da análise histórica merece palavra PRÓPRIA.
+      //
+      // `result_not_available` genérico diz "não há resultado para esta análise" — e para uma
+      // análise antiga isso é falso pelo lado que importa: o resultado histórico existe e
+      // continua acessível; o que não existe é o documento ARGOS. A primeira versão desta tela
+      // reusava a mensagem genérica, e a captura do browser é que denunciou o entendimento
+      // errado que ela produzia.
+      //
+      // Isto é explicar disponibilidade — trabalho do Front —, não inventar dado.
+      if (problemCodeOf(argos.error) === "result_not_available") {
+        return <SemDocumentoArgos />;
+      }
+      // Qualquer outro problema é apresentado pelo código, nunca substituído por um v1 parecido.
       return (
         <ProblemFeedback
           error={argos.error}

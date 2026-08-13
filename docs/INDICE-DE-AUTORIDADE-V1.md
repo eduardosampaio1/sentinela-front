@@ -46,6 +46,9 @@ possui `Tabs`. `/analyses/:id/result` permanece **LEGACY COMPATIBILITY**.
 não cria métrica, não calcula escore, não deriva faixa de risco, não calcula Drift nem delta,
 não normaliza escala, não converte moeda, não transforma ausência em zero.
 
+Fechamento narrativo — o que foi provado, o que ficou de fora e por quê:
+**`TWO-VIEW-EXPERIENCE-RECOVERY.md`**.
+
 ### Fronteiras entre os quatro
 
 - O **Blueprint** é autoridade de **mapa** — superfícies, estados, scenarios, componentes,

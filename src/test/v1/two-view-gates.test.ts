@@ -196,6 +196,39 @@ describe("F6 · 13-14 · famílias e export", () => {
   });
 });
 
+describe("F5 · a rota legada esta VIVA e nao e anunciada", () => {
+  it("a pagina legada se declara LEGACY COMPATIBILITY", () => {
+    // Sem a marca, a proxima pessoa acrescenta feature nela achando que e a superficie
+    // canonica — e a rota que existe para nao mudar passa a mudar.
+    const bruto = readFileSync(resolve(SRC, "features/canonical-analysis/ui/ResultPage.tsx"), "utf-8");
+    expect(bruto).toContain("LEGACY COMPATIBILITY");
+    expect(bruto, "a marca precisa dizer onde a capacidade nova pertence").toMatch(
+      /\/analyses\/:id\/argos|\/analyses\/:id\/analytics/,
+    );
+  });
+
+  it("a jornada oferece as DUAS visoes, e nao o legado", () => {
+    // O outro lado de 11: nao basta a rota nova existir; ela precisa ser alcancavel de onde a
+    // pessoa esta. Antes desta fase, o unico caminho a partir da jornada era o `/result`.
+    const jornada = ler("features/canonical-analysis/ui/AnalysisPage.tsx");
+    expect(jornada).toContain("VISOES_DA_ANALISE");
+    expect(jornada, "a jornada ainda anuncia a rota legada").not.toMatch(
+      /analyses\/[^"'`\n]*\/result/,
+    );
+  });
+
+  it("a lista de visoes e UMA — jornada e shell nao mantem copias", () => {
+    // Duas listas independentes divergem no primeiro ajuste, e a jornada passaria a oferecer
+    // uma visao que o shell nao conhece (ou o contrario).
+    for (const arq of [
+      "features/canonical-analysis/ui/AnalysisPage.tsx",
+      "features/canonical-analysis/ui/AnalysisShell.tsx",
+    ]) {
+      expect(ler(arq), `${arq} nao usa a lista canonica`).toContain("VISOES_DA_ANALISE");
+    }
+  });
+});
+
 describe("F6 · 15 · subrota, nunca aba", () => {
   it("nenhum arquivo da feature usa `Tabs` ou `role=\"tab\"`", () => {
     // O produto não possui o pattern. Inventá-lo seria primitivo estrutural novo sem

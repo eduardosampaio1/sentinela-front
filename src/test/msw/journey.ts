@@ -160,6 +160,79 @@ function getResult(analysisId: string): unknown {
   return achado ?? RESULT_VIEW.result;
 }
 
+// ── documento ARGOS (`analysis-result-v3`) — CASA PRÓPRIA ────────────────────────────────
+//
+// Separado do histórico de propósito, espelhando o produtor: são dois documentos servidos pela
+// MESMA rota, distinguidos só pela query. Um mapa compartilhado faria o v3 responder a quem não
+// pediu — que é exatamente a queda silenciosa que o contrato proíbe.
+const v3Mem = new Map<string, unknown>();
+const V3_SESSION_KEY = "__sentinela_result_v3__";
+
+function readV3All(): Record<string, unknown> {
+  if (backend === "memory" || typeof sessionStorage === "undefined") return Object.fromEntries(v3Mem);
+  try {
+    return JSON.parse(sessionStorage.getItem(V3_SESSION_KEY) ?? "{}") as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+export function seedResultV3(analysisId: string, documento: unknown): void {
+  if (backend === "memory") {
+    v3Mem.set(analysisId, documento);
+    return;
+  }
+  const all = readV3All();
+  all[analysisId] = documento;
+  if (typeof sessionStorage !== "undefined") sessionStorage.setItem(V3_SESSION_KEY, JSON.stringify(all));
+}
+
+/** `undefined` = esta análise NÃO tem v3. Não é `{}`, não é o v1: é ausência. */
+function getResultV3(analysisId: string): unknown {
+  return backend === "memory" ? v3Mem.get(analysisId) : readV3All()[analysisId];
+}
+
+/** O vocabulário que o Orchestrator aceita. Fechado, como lá. */
+const VERSOES_V3 = new Set(["3", "v3", "analysis-result-v3"]);
+
+// ── projeção do ANALYTICS — casa própria, outro motor ───────────────────────────────────
+//
+// O endpoint `/analytics` nunca fora mockado: a região analítica ao vivo existia desde a M27 e
+// só era exercitada em teste de unidade. Em browser, ela sempre caía no `forbidden_or_not_found`
+// do handler genérico — e ninguém notava, porque nenhuma tela dependia dela para renderizar.
+// A visão Analytics depende, e foi ela que revelou o buraco.
+const anlMem = new Map<string, unknown>();
+const ANL_SESSION_KEY = "__sentinela_analytics__";
+
+function readAnlAll(): Record<string, unknown> {
+  if (backend === "memory" || typeof sessionStorage === "undefined") return Object.fromEntries(anlMem);
+  try {
+    return JSON.parse(sessionStorage.getItem(ANL_SESSION_KEY) ?? "{}") as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+export function seedAnalytics(analysisId: string, vista: unknown): void {
+  if (backend === "memory") {
+    anlMem.set(analysisId, vista);
+    return;
+  }
+  const all = readAnlAll();
+  all[analysisId] = vista;
+  if (typeof sessionStorage !== "undefined") sessionStorage.setItem(ANL_SESSION_KEY, JSON.stringify(all));
+}
+
+function getAnalytics(analysisId: string): unknown {
+  return backend === "memory" ? anlMem.get(analysisId) : readAnlAll()[analysisId];
+}
+
+/** `problem+json` como o Gateway responde — e não um 500 cru, que faria a tela exercitar um
+ * caminho que produção nunca produz. */
+function problema(code: string, status: number, detail: string) {
+  return { type: `urn:sentinela:error:${code}`, title: code, status, code, detail };
+}
+
 /** Semeia uma análise já num estado/roteiro (p/ testes de deep-link/retry direto). */
 export function seedJourney(analysisId: string, seq: AnalysisStatus[], retryAllowed = false): void {
   putEntry(analysisId, { seq, idx: 0, retryAllowed });
@@ -263,8 +336,57 @@ export function makeJourneyHandlers(base: string) {
       putEntry(id, { seq: ["recovering", "running", "completed"], idx: 0, retryAllowed: false });
       return HttpResponse.json({ analysis_id: id, status: "recovering" });
     }),
-    http.get(`${b}/v1/analyses/:id/result`, ({ params }) => {
+    http.get(`${b}/v1/analyses/:id/analytics`, ({ params }) => {
       const id = String(params.id);
+      const vista = getAnalytics(id);
+      if (vista === undefined) {
+        // Ausência da PROJEÇÃO, não da análise. `pending` é o que o produtor diz quando o
+        // componente ainda não entregou — e é diferente de "esta análise não existe".
+        return HttpResponse.json({
+          analysis_id: id,
+          component_status: "pending",
+          snapshot_contract_version: null,
+          snapshot_digest: null,
+          snapshot: null,
+          disclosure_rule_version: null,
+          projection_digest: null,
+          withheld: null,
+          generated_at: null,
+        });
+      }
+      return HttpResponse.json(vista);
+    }),
+    http.get(`${b}/v1/analyses/:id/result`, ({ params, request }) => {
+      const id = String(params.id);
+
+      // ── negociação de versão, igual à do produtor ──────────────────────────────────────
+      //
+      // Sem o parâmetro, a resposta é a de sempre — byte a byte. Com ele, o v3 ou um problema
+      // EXPLÍCITO: nunca o documento histórico com cara de ARGOS, que faria dez famílias
+      // ausentes parecerem "o ARGOS não produziu nada".
+      const pedida = new URL(request.url).searchParams.get("result_schema_version") ?? "";
+      if (pedida) {
+        if (!VERSOES_V3.has(pedida)) {
+          return HttpResponse.json(
+            problema("invalid_input", 400, `versao desconhecida: ${pedida}`),
+            { status: 400, headers: { "content-type": "application/problem+json" } },
+          );
+        }
+        const doc = getResultV3(id);
+        if (doc === undefined) {
+          return HttpResponse.json(
+            problema("result_not_available", 404, "esta analise nao tem analysis-result-v3"),
+            { status: 404, headers: { "content-type": "application/problem+json" } },
+          );
+        }
+        return HttpResponse.json({
+          ...RESULT_VIEW,
+          analysis_id: id,
+          result_schema_version: "analysis-result-v3",
+          result: doc,
+        });
+      }
+
       const payload = getResult(id);
       // O fake backend DECLARA no envelope a versão do que produziu — é o discriminador contratado.
       // Antes o envelope dizia sempre "analysis-result-v1" enquanto servia outra forma; a fronteira

@@ -362,6 +362,15 @@ passou a ter duas leituras complementares da mesma Analysis.
 | **ANL-01** | Analytics — a exploração | `/analyses/{id}/analytics` | `GET /analytics` |
 | **RES-01** | **LEGACY COMPATIBILITY** | `/analyses/{id}/result` | v1/v2, como sempre foi |
 
+**Entregues** na Two-View Recovery, com captura em `docs/two-view/` (desktop · tablet · mobile):
+ARGOS populado, ARGOS sem documento, Analytics `ready`/`partial`/`withheld`, e a jornada
+oferecendo as duas entradas.
+
+> `evidence_level` foi pedido pela Recovery e **nenhum contrato público o entrega** —
+> apresentá-lo exigiria inventá-lo. `flag_crosses`/`numeric_crosses` seguem contados e não
+> apresentados, decisão anterior a esta fase. O `detail` do alerta não é exibido: o cadeado da
+> jornada proíbe `.detail` na UI e não distingue do campo homônimo do v3.
+
 **Não são abas.** São subrotas irmãs: o produto não possui o pattern `Tabs`, e nenhuma
 autoridade o menciona. A entrada para as duas mora no shell da Analysis (AN-02).
 

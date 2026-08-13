@@ -17,7 +17,16 @@ import { PainelDeEixos } from "@/features/canonical-analysis/ui/PainelDeEixos";
 const RAIZ = resolve(__dirname, "../../..");
 const ler = (rel: string) => readFileSync(resolve(RAIZ, rel), "utf-8");
 const semComentarios = (f: string) =>
-  f.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/.*$/gm, " ").replace(/\{\/\*[\s\S]*?\*\/\}/g, " ");
+  f
+    // CRLF → LF ANTES de qualquer coisa. Este repo tem `core.autocrlf=true`: o mesmo commit
+    // chega LF num checkout e CRLF noutro, e as asserções abaixo procuram literais com `\n`.
+    // Sem normalizar, o gate fica vermelho por plataforma — dizendo "a composição mudou"
+    // quando nenhuma linha de código mudou. Foi o que aconteceu: um `git stash`/`pop` converteu
+    // a árvore e o caso passou a acusar uma regressão que não existia.
+    .replace(/\r\n/g, "\n")
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/\/\/.*$/gm, " ")
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, " ");
 
 const PAINEL = () => semComentarios(ler("src/features/canonical-analysis/ui/PainelDeEixos.tsx"));
 const PAGINA = () => semComentarios(ler("src/features/canonical-analysis/ui/AnalysisPage.tsx"));

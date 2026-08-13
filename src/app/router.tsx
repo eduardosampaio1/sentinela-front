@@ -334,6 +334,12 @@ const routes: RouteObject[] = [
           // historico do navegador — que a aba perderia.
           { path: "/analyses/:analysisId/argos", element: <PageSuspense><CanonicalArgosView /></PageSuspense> },
           { path: "/analyses/:analysisId/analytics", element: <PageSuspense><CanonicalAnalyticsView /></PageSuspense> },
+          // LEGACY COMPATIBILITY. Nasceu quando havia UM documento de resultado com o
+          // analytics embutido; o `analysis-result-v3` desfez a fusao e a experiencia passou
+          // a ter duas visoes. Esta rota continua funcionando para todo link ja salvo e NAO
+          // recebe feature nova. Nao vira ARGOS-only nem ganha redirect: um link que hoje
+          // abre indicadores + bloco analitico passaria a mostrar outra coisa em silencio,
+          // que e o oposto de compatibilidade. A aposentadoria e decisao posterior.
           { path: "/analyses/:analysisId/result", element: <PageSuspense><CanonicalResultPage /></PageSuspense> },
         ],
       },

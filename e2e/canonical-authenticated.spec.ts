@@ -62,9 +62,20 @@ test.describe("Jornada canônica autenticada (browser real + MSW stateful)", () 
     //
     // O href também perdeu o `/canonical` em `f182e4b` (M24). Esta linha ficou anos-luz de ser
     // vista: o `waitForURL` acima matava o caso antes, e uma assertion morta não acusa nada.
-    const verResultado = page.getByRole("link", { name: "View result" });
-    await expect(verResultado).toBeVisible();
-    await expect(verResultado).toHaveAttribute("href", "/analyses/an-e2e/result");
+    // Two-View Recovery: a acao terminal virou DUAS. O `analysis-result-v3` desfez a fusao dos
+    // motores, e a jornada oferece a visao ARGOS e a visao Analytics em vez do documento
+    // fundido. A rota `/result` continua servivel por deep link — o que ela deixou de ser e o
+    // destino ANUNCIADO, agora que existe a visao certa para cada leitura.
+    //
+    // A assercao segue exigindo o href EXATO do analysis_id desta jornada, pelo mesmo motivo de
+    // antes: um link certo para a analise errada passa despercebido em captura.
+    const verArgos = page.getByRole("link", { name: "ARGOS", exact: true });
+    await expect(verArgos).toBeVisible();
+    await expect(verArgos).toHaveAttribute("href", "/analyses/an-e2e/argos");
+
+    const verAnalytics = page.getByRole("link", { name: "Analytics", exact: true });
+    await expect(verAnalytics).toBeVisible();
+    await expect(verAnalytics).toHaveAttribute("href", "/analyses/an-e2e/analytics");
 
     expect(legacy, "nenhuma chamada legada (/api|/rest|/graphql|/auth)").toEqual([]);
     expect(v1Calls, "a jornada fala com o Gateway /v1").toBeGreaterThan(0);

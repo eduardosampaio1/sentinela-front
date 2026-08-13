@@ -27,6 +27,7 @@ import {
   coberturaEscrita,
   escalaEscrita,
   motivoRelevante,
+  unidadeInforma,
   valorEscrito,
   type Apresentacao,
 } from "../../result/medicaoV3";
@@ -165,7 +166,7 @@ export function Medicao({
       }
       cobertura={coberturaEscrita(medicao.data_coverage, language)}
       escala={escalaEscrita(medicao.scale, language)}
-      unidade={medicao.unit}
+      unidade={unidadeInforma(medicao.unit, medicao.scale) ? medicao.unit : null}
       metodo={medicao.method_version}
     />
   );
@@ -194,7 +195,7 @@ export function Indicador({
       }
       cobertura={coberturaEscrita(indicador.coverage, language)}
       escala={escalaEscrita(indicador.scale, language)}
-      unidade={indicador.unit}
+      unidade={unidadeInforma(indicador.unit, indicador.scale) ? indicador.unit : null}
     />
   );
 }

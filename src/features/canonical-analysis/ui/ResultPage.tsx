@@ -1,3 +1,15 @@
+// ══ LEGACY COMPATIBILITY ═══════════════════════════════════════════════════════════════
+//
+// Esta pagina serve o documento HISTORICO (`analysis-result-v1`/`v2`) e continua servindo.
+// A experiencia canonica sao duas visoes irmas — `/analyses/:id/argos` (ARGOS, sobre o
+// `analysis-result-v3`) e `/analyses/:id/analytics` (Analytics, sobre `GET /analytics`).
+//
+// **Nao acrescente feature aqui.** Toda capacidade nova pertence a visao correspondente. O
+// que esta rota faz e honrar deep link antigo, e ela nao pode mudar de significado por baixo
+// de quem o salvou: nada de virar ARGOS-only, nada de redirect silencioso.
+//
+// Autoridade: Product Freeze §10.1 (T7) · Blueprint §4.6.
+// ═══════════════════════════════════════════════════════════════════════════════════════
 // Página canônica de RESULTADO (Onda 6 E5, estendida na MF6.4b). Consome SÓ
 // `GET /v1/analyses/{id}/result` via o cliente canônico; o payload opaco passa pela FRONTEIRA
 // ÚNICA de contrato antes de virar UI.

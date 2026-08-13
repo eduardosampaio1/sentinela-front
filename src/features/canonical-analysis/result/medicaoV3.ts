@@ -121,11 +121,33 @@ export function apresentacaoDoIndicador(i: PublicIndicatorV3): Apresentacao {
  * TEXTO já resolvido.
  */
 
-/** Cobertura escrita, quando o produtor a publicou. `null` é ausência, nunca 100%. */
+/**
+ * A unidade acrescenta informação ao número JÁ ESCRITO?
+ *
+ * A captura de tela do browser mostrou `80% ratio` e `R$ 1,20 currency`: a formatação já carrega
+ * a unidade, e repeti-la ao lado é ruído que ainda por cima parece um segundo dado. `ratio` e
+ * `currency` descrevem a ESCALA — que é contrato e é mostrada à parte —, não a unidade de
+ * negócio. Já `conversations` diz algo que o número sozinho não diz.
+ */
+export function unidadeInforma(unidade: string | null | undefined, escala: Scale): boolean {
+  if (!unidade) return false;
+  if (escala.kind === "ratio_unit" || escala.kind === "percent") return unidade !== "ratio";
+  if (escala.kind === "currency") return unidade !== "currency";
+  return true;
+}
+
+/**
+ * Cobertura escrita, quando o produtor a publicou E ela diz algo.
+ *
+ * `null` é ausência, nunca 100%. E cobertura INTEGRAL também não é escrita: "Cobertura: 100%"
+ * repetido em toda linha vira moldura, e o olho para de ver justamente a linha em que ela é
+ * 60% — que é a única em que ela importa.
+ */
 export function coberturaEscrita(
   cobertura: number | null | undefined,
   locale: string,
 ): string | null {
   if (cobertura === null || cobertura === undefined) return null;
+  if (cobertura >= 1) return null;
   return formatarPercentual(cobertura, locale);
 }

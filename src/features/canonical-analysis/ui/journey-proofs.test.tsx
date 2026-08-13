@@ -108,9 +108,15 @@ describe("E3 item 14 — refresh/deep-link resume por analysis_id", () => {
     );
     // Sem contexto anterior (nenhum File/estado em memória): só o analysis_id da rota (mock useParams).
     render(wrap(<AnalysisPage />));
-    // Espera a query resolver: estado completed + ação futura "ver resultado" (desabilitada nesta etapa).
+    // Espera a query resolver: estado terminal + o caminho adiante.
+    //
     // E5: a ação terminal virou LINK para a página canônica de resultado (deep-linkável).
-    expect(await screen.findByRole("link", { name: /view result|ver resultado/i })).toBeTruthy();
+    // Two-View Recovery: viraram DOIS links — o `analysis-result-v3` desfez a fusão dos motores,
+    // e a jornada passou a oferecer a visão ARGOS e a visão Analytics em vez do documento
+    // fundido. O que este caso prova continua o mesmo: montada do zero, só com o id na rota, a
+    // tela reconstrói o estado terminal e oferece a saída.
+    expect(await screen.findByRole("link", { name: /^ARGOS$/i })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /^Analytics$/i })).toBeTruthy();
   });
 });
 

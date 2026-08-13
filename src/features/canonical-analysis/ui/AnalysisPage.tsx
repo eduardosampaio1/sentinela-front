@@ -21,6 +21,7 @@ import { useIdempotencyIntent } from "../data/intent";
 import { useCanonicalScope } from "./scope";
 import { UploadStep } from "./UploadStep";
 import { PainelDeEixos } from "./PainelDeEixos";
+import { VISOES_DA_ANALISE } from "./visoes";
 import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
 import { analyticsUtilizavel, lerEixos } from "../result/eixos";
 import { ProblemFeedback, StateBanner } from "./notices";
@@ -139,12 +140,27 @@ export function AnalysisPage() {
           <div className="space-y-4">
             <StateBanner view={view} />
             {view.result_available ? (
-              // E5: a ação agora leva à página canônica de resultado (deep-linkável).
-              <Button variant="outline" asChild>
-                <Link to={`/analyses/${encodeURIComponent(analysisId)}/result`}>
-                  {t("canonicalAnalysis.action.viewResult")}
-                </Link>
-              </Button>
+              // Two-View Recovery: a jornada passa a oferecer as DUAS visões, e não mais a rota
+              // legada. `/analyses/:id/result` continua funcionando para todo link já salvo —
+              // o que ela deixa de ser é o destino ANUNCIADO, agora que existe a visão certa
+              // para cada leitura.
+              //
+              // A lista vem de `VISOES_DA_ANALISE`, a mesma que o shell usa: duas listas
+              // independentes divergiriam no primeiro ajuste, e a jornada passaria a oferecer
+              // uma visão que o shell não conhece (ou o contrário).
+              <nav aria-label={t("canonicalAnalysis.shell.viewsNavLabel")}>
+                <ul className="flex flex-wrap gap-2">
+                  {VISOES_DA_ANALISE.map((visao) => (
+                    <li key={visao.caminho}>
+                      <Button variant="outline" asChild>
+                        <Link to={`/analyses/${encodeURIComponent(analysisId)}/${visao.caminho}`}>
+                          {t(`canonicalAnalysis.shell.view.${visao.caminho}`)}
+                        </Link>
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
             ) : (
               // result_not_available: concluída mas resultado em preparação — NÃO é falha analítica,
               // NÃO renderiza dashboard (E5). Apresentação neutra de espera.
