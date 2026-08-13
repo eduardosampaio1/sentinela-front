@@ -112,13 +112,17 @@ describe("a superfície LEGADA continua fail-closed diante do v3", () => {
     }
   });
 
-  it("nenhuma página existente passa a pedir v3 nesta fase", () => {
-    // F0 é intake de contrato. Se `useAnalysisResult` já negociasse, a página legada mudaria de
-    // documento sem que ninguém tivesse desenhado a tela — e o v3 cairia no fail-closed acima,
-    // trocando um resultado que funciona por uma recusa.
+  it("a superfície LEGADA e o transporte histórico não negociam versão", () => {
+    // F0 dizia "nenhuma página existente pede v3", e `CompareAnalysesPage` estava nesta lista.
+    // Era verdade enquanto EVO-02 comparava o documento legado. A **M39** a converteu em
+    // superfície ARGOS por autoridade — ela agora DEVE pedir `result_schema_version=3`, e há
+    // gate próprio exigindo isso (`m39-evo02.test.tsx`).
+    //
+    // O que este caso continua protegendo é o essencial e não mudou: a página `/result` e o
+    // hook do documento histórico seguem sem negociar. Se um deles passasse a pedir v3, um
+    // resultado que funciona viraria uma recusa — o v3 cai no fail-closed de `adaptar.ts`.
     const consumidores = [
       "src/features/canonical-analysis/ui/ResultPage.tsx",
-      "src/features/canonical-analysis/ui/CompareAnalysesPage.tsx",
       "src/features/canonical-analysis/data/analysis.ts",
     ];
     for (const arquivo of consumidores) {

@@ -74,7 +74,19 @@ describe("F6 · 3-5 · a negociação de versão", () => {
     const hook = semComentarios(
       readFileSync(resolve(FEATURE, "data/argos.ts"), "utf-8"),
     );
-    expect(hook, "o hook do ARGOS deixou de pedir a versão").toContain("PEDIDO_DE_V3");
+    // No SITE DA CHAMADA, não em qualquer lugar do arquivo.
+    //
+    // A primeira versão usava `toContain("PEDIDO_DE_V3")`, e uma mutação da M39 sobreviveu a
+    // ela: trocar o ARGUMENTO por `""` deixa o `import` intacto, a string presente e o gate
+    // verde — enquanto a requisição sai sem versão e a tela mostra o documento histórico
+    // achando que mostra o ARGOS. "A string aparece" não é "a string é usada".
+    //
+    // Quem pegava era só o Playwright. Depender do browser para a invariante central desta
+    // superfície deixa a suíte rápida cega justamente no risco que mais importa.
+    expect(
+      hook.replace(/\s+/g, " "),
+      "o hook do ARGOS deixou de PASSAR a versão para `getResult`",
+    ).toMatch(/getResult\([^)]*PEDIDO_DE_V3/);
   });
 
   it("4: remover o pedido de versão QUEBRA o gate (mutação declarada)", () => {

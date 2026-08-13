@@ -422,7 +422,7 @@ compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browse
 | id | nome | rota canônica | contrato |
 |---|---|---|---|
 | **EVO-01** | **Histórico cronológico** | **`/analyses`** | ✅ **ENTREGUE** — M38 · **REAL** (`GET /v1/analyses` por cursor) |
-| **EVO-02** | **Comparação ARGOS A×B** | **`/analyses/compare/{analysisAId}/{analysisBId}`** | **REAL** — duas leituras de `/result` **com `?result_schema_version=3`**, regra canônica em `comparacao.ts`. **V1 = `indicators` + health `dimensions`**; as outras nove famílias estão classificadas em `result/familiasDaComparacao.ts` |
+| **EVO-02** | **Comparação ARGOS A×B** — ✅ **ENTREGUE** | **`/analyses/compare/{analysisAId}/{analysisBId}`** | **REAL** — duas leituras de `/result` **com `?result_schema_version=3`**, regra canônica em `comparacao.ts`. **V1 = `indicators` + health `dimensions`**; as outras nove famílias estão classificadas em `result/familiasDaComparacao.ts`. Quebra documental (D26) tem estado próprio, e um lado sem v3 é dito — nunca comparação parcial com o legado |
 | **EVO-03** | **Baseline** | — | **APPROVED DELTA** (pertence à Instância) |
 
 > **EVO-01 mora em `/analyses`, e não nasce como terceira tela.** Decisão de owner de 2026-08-12.

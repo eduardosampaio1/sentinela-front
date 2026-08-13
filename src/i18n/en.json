@@ -132,17 +132,34 @@
       "window": "Window"
     },
     "compare": {
+      "absentSide": "not published",
       "backToList": "View all analyses",
+      "breakBody": "The measurement vocabulary changed between them. Linking the numbers would create a series that does not exist.",
+      "breakTitle": "These analyses are not comparable",
       "cancel": "Cancel",
       "compareNow": "Compare the two",
       "error": "We couldn't load one of the analyses right now. Try again.",
+      "familyAbsent": "No measurement published in this family.",
       "loading": "Loading both analyses…",
+      "noArgosBody": "The comparison requires the ARGOS document on both sides. The historical result is still available on each analysis.",
+      "noArgosTitle": "One side has no ARGOS document",
       "pair": "A: {{a}} · B: {{b}}",
+      "presence": {
+        "so_em_a": "Published only in analysis A.",
+        "so_em_b": "Published only in analysis B."
+      },
+      "reason": {
+        "escala": "Different scales: the values do not measure the same thing.",
+        "unidade": "Different units.",
+        "moeda": "Different currencies, and there is no conversion here.",
+        "sem_valor": "One side has no measured value."
+      },
       "sectionTitle": "Indicators side by side",
       "select": "Compare",
       "selectHint": "Pick exactly two analyses to compare.",
       "selected": "{{n}} of 2 selected",
-      "sideA": "A",
+      "sideA": "Analysis A",
+      "sideB": "Analysis B",
       "title": "Compare analyses"
     },
     "entry": {

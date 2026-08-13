@@ -983,11 +983,13 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   `list-pagination`.
 ### M39 · EVO-02 — comparação ARGOS A×B — AUTHORITY REALIGNED · ESCOPO REDUZIDO
 
-> **Estado:** `AUTHORITY REALIGNED · READY` · **IMPLEMENTATION STILL FROZEN**.
+> **Estado:** ✅ **EXECUTED**. A comparação ARGOS A×B existe, sobre `analysis-result-v3`, com
+> `indicators` + health `dimensions`. Sem delta, sem Analytics, sem outras famílias.
 >
-> **`READY` significa "pré-condições de implementação satisfeitas" — não "missão executada".**
-> As massas v3 existem e são provadas (`m39-massas-v3.test.ts`); a comparação **não foi
-> implementada**, e `comparacao.ts` segue intocado sob a catraca de famílias.
+> **Histórico preservado, não reescrito.** A missão nasceu comparando o documento legado, foi
+> congelada quando o v3 mudou a premissa, teve a autoridade realinhada, ganhou massas v3 e só
+> então foi executada. Os três estados anteriores estão registrados nesta entrada e nos commits;
+> nada aqui finge que a M39 sempre foi v3.
 >
 > **A premissa mudou.** A entrada anterior foi escrita quando EVO-02 consumia o documento legado,
 > e citava como autoridade o contrato `@ ac81633` — anterior à Manifest Sync. Isso deixou de ser
