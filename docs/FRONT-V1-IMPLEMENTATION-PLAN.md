@@ -1170,14 +1170,33 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 >   tem porta. Declarar este scenario "provado pela BD10" seria afirmar capacidade pública onde há
 >   só constraint.
 >
-> **Uma dívida cruzada, declarada:** o selo do contrato (M17, `src/test/fixtures/public-v1/selo.ts`)
-> lê `public-v1.json` do repositório do Gateway por digest. O manifesto mudou, então o selo está
-> **vermelho** — que é o selo funcionando: ele existe para obrigar alguém a reconferir. **A
-> reconferência foi feita e está registrada:** nenhum dos 19 eixos de read-model de que as
-> fixtures dependem mudou (a BD10 acrescentou operações e uma `optional_query`, e não tocou
-> `instance_read_model_fields`, `list_item_fields`, `public_states` nem `problem_codes`). O
-> conserto é uma linha — o digest novo —, e não foi feito porque a missão da BD10 está proibida de
-> tocar código do Front.
+> 🔴 **O M17 está vermelho, e é anterior à BD10 — corrigindo minha própria atribuição.**
+>
+> `fixtures-presas-ao-schema.test.ts` falha em 11 casos. A primeira leitura foi que a BD10 mudou
+> `public-v1.json` e portanto o digest selado. **Medido: falso.** Restaurando o manifesto ao estado
+> imediatamente anterior à BD10, as **mesmas 11 falhas** aparecem, pela mesma causa.
+>
+> A causa é o `contractOrigin`: ele resolve a autoridade entre duas candidatas —
+> `../sentinela-facts/docs/contracts` (branch `develop`, 18 operações) e `../sentinela/docs/contracts`
+> (branch `fix/argos-analysis-pipeline` em `045e08d`, **12 operações**). São dois **worktrees do
+> mesmo repositório em branches diferentes**. Divergindo, o resolvedor devolve `ambigua` e — de
+> propósito — não escolhe nenhuma; com `escolhida = null`, todas as listas de campo saem vazias e
+> as outras 10 falhas são cascata. O caso do selo nem chega a comparar digest: ele falha com
+> `expected undefined`.
+>
+> A divergência era **12 × 15** antes da BD10 e passou a ser **12 × 18**. Mudou o número, não o
+> veredicto.
+>
+> **Duas dívidas, e só a segunda é da BD10:**
+>
+> 1. 🔴 **anterior, e maior** — o worktree `sentinela` numa branch antiga. Enquanto durar, o M17
+>    não protege nada: reprova por não conseguir escolher, não por ter comparado. **Dono:** quem
+>    administra os worktrees.
+> 2. 🟡 **da BD10** — resolvido (1), o digest selado será o antigo e o M17 exigirá o novo. **A
+>    reconferência já está feita:** nenhum dos 19 eixos de read-model mudou (a BD10 acrescentou
+>    operações e uma `optional_query`, e não tocou `instance_read_model_fields`, `list_item_fields`,
+>    `public_states` nem `problem_codes`). O conserto é uma linha, e não foi feito porque esta
+>    missão está proibida de tocar código do Front.
 - **Baseline permanece requisito da V1.** EVO-03 e INST-05 continuam no mapa; o que muda é a razão
   documentada do bloqueio.
 - **Escopo (quando destravar):** marcar/substituir/remover; **nunca muda em silêncio**; baseline
