@@ -54,7 +54,9 @@
 **Deltas de backend, cada um com contrato/testes/freeze próprios:** `BD01` mapping bridge ·
 `BD02` Instância · `BD03` `recommendation_id` · `BD04` preferências · `BD05` `prepared` lifecycle ·
 `BD06` exclusão de análise · `BD07` canonicalização de contrato · `BD08` schema aninhado do
-Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q15).
+Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q15) ·
+`BD10` **Baseline Reference** (autoridade congelada em 2026-08-13, **não implementada** —
+`sentinela-orchestrator/docs/BD10-BASELINE-REFERENCE.md`).
 
 **Total: 46 missões de front + 9 de backend = 55.**
 
@@ -857,9 +859,12 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
 - **Autoridades:** Product Freeze · Blueprint §11 · Blueprint §§460/465 (`StatusBadge`,
   `AnalysisListItem`) · DS Constitution · Architecture & Mock · scenario 2. Sem Discovery nova.
 > **DELTA DECLARADO — INST-02 · Estado da Instância, sem produtor.**
-> **Dono:** Produto/Arquitetura de Instância. **Sem número de BD**: a convenção do registro abaixo
-> é `BD01`…`BD09`, e cunhar `BD10` aqui seria decidir que existe delta de backend antes de existir
-> a decisão de produto que o define.
+> **Dono:** Produto/Arquitetura de Instância. **Sem número de BD**: cunhar um aqui seria decidir
+> que existe delta de backend antes de existir a decisão de produto que o define.
+> *(Correção de 2026-08-13: esta nota dizia que a convenção era `BD01`…`BD09` e citava `BD10` como
+> o número que não seria cunhado. `BD10` **foi** cunhado — para **Baseline Reference**, que teve a
+> semântica de produto decidida. A INST-02 continua sem número, pela mesma razão de sempre: a dela
+> não foi.)*
 > **Razão:** o contrato não publica estado corrente de Instance, e o Front não pode inferi-lo.
 > **Reentrada, nesta ordem:** 1) definir o que "estado corrente da Instância" significa ·
 > 2) definir o produtor · 3) publicar contrato/read model · 4) só então autorizar a superfície.
@@ -1106,6 +1111,28 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   **nenhuma BD existente o cria**. BD03 é `recommendation_id`; BD04 é preferências. Nenhum número
   novo é atribuído aqui: antes de qualquer backend será preciso **definir a semântica de Baseline**
   e só então abrir um delta próprio.
+> 🔧 **ATUALIZAÇÃO DE AUTORIDADE — 2026-08-13.** *(A nota acima descreve o estado até 2026-08-12 e
+> fica preservada.)* A semântica de Baseline foi decidida e a `BD10 · Baseline Reference` existe,
+> com autoridade congelada e **sem implementação**
+> (`sentinela-orchestrator/docs/BD10-BASELINE-REFERENCE.md`). Três consequências, e a terceira é a
+> que importa para esta missão:
+>
+> 1. **A M40 continua bloqueada.** A BD10 entrega a **referência** — *qual Analysis é a régua*. Ela
+>    **não** entrega comparação longitudinal. `EVO-03` segue **BLOCKED BY LONGITUDINAL COMPARISON
+>    PRODUCER**: falta quem confronte uma Analysis com a régua e publique o resultado num contrato.
+>    Baseline **desbloqueia INST-05**, e só.
+> 2. **A M40 deve ser partida.** `INST-05` e `EVO-03` estão na mesma missão por herança, e agora
+>    têm bloqueios diferentes: a primeira espera a BD10 **implementar**; a segunda espera um
+>    produtor que ninguém abriu. Mantê-las juntas faz a missão inteira parecer destravada quando
+>    metade dela não está.
+> 3. **Os dois scenarios não destravam juntos.** `no-baseline` destrava quando a BD10 for
+>    implementada. `baseline-active` **não**: a razão dele no catálogo exige que baseline ativo
+>    **bloqueie exclusão**, e exclusão de análise é o **B10 → `BD06`**, que não existe. A BD10
+>    deixa a recusa pronta no banco (FK `on delete no action`), mas nenhuma operação pública a
+>    exercita.
+>
+> **Autoridade ≠ capacidade publicada.** Enquanto a BD10 não for implementada, nada muda para o
+> Front: nenhuma operação de baseline é servida, e o `catalogo.ts` continua correto como está.
 - **Baseline permanece requisito da V1.** EVO-03 e INST-05 continuam no mapa; o que muda é a razão
   documentada do bloqueio.
 - **Escopo (quando destravar):** marcar/substituir/remover; **nunca muda em silêncio**; baseline

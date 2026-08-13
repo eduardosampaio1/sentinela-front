@@ -317,7 +317,9 @@ não descarta o escopo, e `instance_id` é campo publicado.
 
 **Construível ≠ entregue, e ≠ tem produtor.** Das sete: **INST-01 e INST-03 entregues** (M36);
 **INST-04 entregue** (M37); **INST-06** é **delta declarado** — evolução longitudinal sem produtor;
-**INST-05** depende de baseline, que **não existe no contrato e nenhuma BD cria**; **INST-02 e
+**INST-05** depende de baseline, que **ainda não existe no contrato** — a `BD10 · Baseline
+Reference` foi autorizada em 2026-08-13 e **não foi implementada**, então nenhuma operação a cria,
+lê ou remove hoje (*autoridade ≠ capacidade publicada*); **INST-02 e
 INST-07** são delta declarado por falta de produtor. O contrato de Instance publica
 `instance_id`, `name`, `created_at` — e `create`/`list`/`get`, sem `update`, `PATCH` nem `delete`.
 
@@ -327,7 +329,7 @@ INST-07** são delta declarado por falta de produtor. O contrato de Instance pub
 | **INST-02** | Estado | leitura do estado corrente + procedência | 🔴 **DELTA DECLARADO — sem produtor de estado corrente** |
 | **INST-03** | Histórico | execuções em ordem | **APPROVED DELTA** |
 | **INST-04** | Nova análise (a partir da Instância) | pré-preencher o escopo | ✅ **ENTREGUE** — M37 |
-| **INST-05** | Baseline | marcar/substituir/remover a régua (D25) | **APPROVED DELTA** |
+| **INST-05** | Baseline | marcar/substituir/remover a régua (D25) | **APPROVED DELTA** — produtor é a **BD10**, autorizada e não implementada. Sem evolução/delta/direção: isso é comparação longitudinal, e a BD10 não a entrega |
 | **INST-06** | Evolução | 🔴 **DELTA DECLARADO — evolução longitudinal da Instance sem produtor** |
 | **INST-07** | Configuração da Instância (D22) | | 🔴 **DELTA DECLARADO — sem produtor de configuração; D22 depende de BD04** |
 
