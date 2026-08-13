@@ -166,6 +166,24 @@ concluir que um problema "é o mesmo".* Ou existe **identidade canônica**, ou a
 | **D27** | **Recomendações longitudinais entram na V1**, como delta próprio. **Nunca parear por título, texto, similaridade ou heurística.** Sem `recommendation_id` no documento canônico, **nenhuma afirmação** de persistiu/apareceu/sumiu | idem §4 |
 | **D29** | **As duas superfícies de comparação existem, com UMA regra canônica.** No Resultado: resumo *"esta análise vs. imediatamente anterior"*. Na Instância: superfície de Evolução/Comparação. **Ausência nunca vira automaticamente "resolveu"** | idem §2, §11 |
 
+### D26 no contrato v3 — dois níveis, não um
+
+O v1 só sabia dizer "o documento inteiro é comparável ou não". O v3 publica `method_version`
+**por medição**, além das versões de documento. A comparabilidade passa a ter dois níveis:
+
+- **documento** — D26 inalterada: quebra de `indicator_registry_version` ou de schema torna
+  **nenhum** par comparável. Continua sendo de documento, nunca por linha.
+- **par** — mesmo com documento compatível, cada família tem pré-condições próprias
+  (`scale`, `unit`, `currency`, `state`, `method_version`). O par que falhar sai
+  **`NOT_COMPARABLE`**, e isso **não contamina** os outros pares.
+
+Nada é convertido: `ratio_unit` × `score_100` e BRL × USD são **incompatíveis**, não
+convertíveis. Não há câmbio no Front.
+
+> **A/B são duas posições, não tempo.** A ordem vem da URL. "Anterior/atual" sugeriria série
+> onde pode não haver — e com comparabilidade por família, pode não haver em algumas e haver
+> em outras.
+
 **As quatro camadas** (`DISCOVERY-0C` §12): **Continuidade** ✅ disponível hoje ·
 **Identidade** ❌ (é a Instância) · **Referência** ❌ · **Comportamento** ❌.
 
@@ -293,7 +311,7 @@ Paridade `pt.json` × `en.json` é gate de UI COMPLETE (critério 18).
 | **B4** — `recommendation_id` não chega ao documento canônico | bloqueia D27 |
 | **B6** — Supabase Auth vivo e roteado; Supabase está **aposentado** por decisão arquitetural | delta obrigatório de erradicação, frente própria |
 | **B7** — contrato de preferências (idioma) inexistente | bloqueia D22/D23 |
-| **M39 · comparação** — permanece **FROZEN**. Continua sendo **ARGOS A × ARGOS B**, mas a semântica está **reaberta**: o pareamento atual é por `indicator.id` sobre uma família só, e o ARGOS publica onze. Não ampliar `comparacao.ts` antes de as duas visões fecharem | congelada, não executada |
+| **M39 · comparação** — **FROZEN**, com **autoridade realinhada e escopo reduzido**. É **ARGOS A × ARGOS B sobre `analysis-result-v3`** — nunca v1/v2, nunca `/analytics`. A V1 compara **duas** famílias: `indicators` e `dimensions`. As outras nove estão classificadas em `result/familiasDaComparacao.ts`, com catraca executável (`evo02-m39-freeze.test.ts`) provada por 9 mutações | congelada, não executada |
 | **FULL INGESTION TOPOLOGY E2E** — a jornada completa de upload (`upload → dataset_ready → promotion-worker`) não tem prova local: exige seis processos e há três de pé. Não redefine ARGOS/Analytics e não bloqueia as duas visões | gate de release final |
 
 ---

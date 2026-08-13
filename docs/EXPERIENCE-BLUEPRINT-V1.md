@@ -195,6 +195,20 @@ Legenda: **verde** = REAL · **âmbar** = APPROVED DELTA · **azul** = parcialme
 `/analyses/{id}` · `/analyses/{id}/result` · `/analyses/{id}/result#comparison` — **registrados**.
 `/instances/{id}` — **entregue pela M36** (`/instances` e `/instances/:instanceId`). `/instances/{id}/evolution` segue **conceitual**: B3 fechou, mas Evolution é outra superfície e nenhuma missão a implementou.
 `/analyses/compare/{analysisAId}/{analysisBId}` — **congelada em 2026-08-12** para **EVO-02**.
+
+> **A fonte mudou, a rota não.** Desde a Two-View Recovery, EVO-02 compara **`analysis-result-v3`**
+> — cada lado pedindo `?result_schema_version=3`, **sem fallback v1/v2 e sem `/analytics`**. Uma
+> Analysis sem v3 **não tem lado ARGOS comparável**, e isso é apresentado, não disfarçado com o
+> documento histórico.
+>
+> **Escopo da V1: duas famílias.** `indicators` (identidade `indicator.id`) e as quatro
+> **health dimensions** (`measurement.id`). As outras nove estão classificadas — com o porquê de
+> cada uma — em `src/features/canonical-analysis/result/familiasDaComparacao.ts`, sob catraca
+> executável (`evo02-m39-freeze.test.ts`).
+>
+> **Os scenarios 20 e 21 foram construídos sobre v1** e são cobertura **histórica** de
+> `indicators`: eles não provam a M39 v3. Faltam três massas v3 — compatível, quebra documental e
+> par de dimensão incompatível por metodologia — e é isso que impede a M39 de ser marcada `READY`.
 Os dois identificadores são **identidade durável na URL**, e a ordem A/B é a da rota: refresh e
 deep link reconstroem a comparação pelos dois ids. **Sem query param, sem storage, sem navigation
 state** como fonte de verdade — a mesma regra que a M37 aplicou ao contexto de Instância.
@@ -408,7 +422,7 @@ compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browse
 | id | nome | rota canônica | contrato |
 |---|---|---|---|
 | **EVO-01** | **Histórico cronológico** | **`/analyses`** | ✅ **ENTREGUE** — M38 · **REAL** (`GET /v1/analyses` por cursor) |
-| **EVO-02** | **Comparação A×B** | **`/analyses/compare/{analysisAId}/{analysisBId}`** | **REAL** — duas leituras de `/result`, regra canônica em `comparacao.ts` |
+| **EVO-02** | **Comparação ARGOS A×B** | **`/analyses/compare/{analysisAId}/{analysisBId}`** | **REAL** — duas leituras de `/result` **com `?result_schema_version=3`**, regra canônica em `comparacao.ts`. **V1 = `indicators` + health `dimensions`**; as outras nove famílias estão classificadas em `result/familiasDaComparacao.ts` |
 | **EVO-03** | **Baseline** | — | **APPROVED DELTA** (pertence à Instância) |
 
 > **EVO-01 mora em `/analyses`, e não nasce como terceira tela.** Decisão de owner de 2026-08-12.
@@ -699,8 +713,8 @@ Todo scenario é **nome + lista de handlers**. Fixture derivada do schema public
 | 17 | `export-preparing` | RES-01 | `/progress` | `export: preparing` | — |
 | 18 | `export-ready` | RES-01 | export | `export: ready` | — |
 | 19 | `export-expired` | RES-01 | export | `expired` ≠ purged | — |
-| 20 | `comparison-compatible` | EVO-02 | dois `/result` | mesmas versões | — |
-| 21 | `comparison-schema-break` | EVO-02 | dois `/result` | `indicator_registry_version` diferente → **descontinuidade** | — |
+| 20 | `comparison-compatible` | EVO-02 | dois `/result` | mesmas versões | 🔶 **v1 — não prova a M39 v3** |
+| 21 | `comparison-schema-break` | EVO-02 | dois `/result` | `indicator_registry_version` diferente → **descontinuidade** | 🔶 **v1 — não prova a M39 v3** |
 | 22 | `recommendation-persisted` | RES-01, EVO-02 | `/result` | — | 🔴 **BLOQUEADO** — `recommendation_id` não chega ao documento |
 | 23 | `privacy-omission` | RES-01 | `/analytics` | `withheld.reason_code` | — |
 | 24 | `no-baseline` | INST-05 | — | — | 🔴 **BLOQUEADO** — baseline não existe |
@@ -736,14 +750,21 @@ congelado pela BD02 — `instance_id`, `name`, `created_at` e nada mais. Nenhum 
 contador ou `updated_at`, porque nada disso existe no contrato; é a mesma razão pela qual
 **INST-02 não recebe scenario**.
 
-> **O core A×B da EVO-02 é executável com 20 e 21.** `comparison-compatible` e
-> `comparison-schema-break` bastam: o primeiro prova o par comparável, o segundo prova que a
-> quebra de `indicator_registry_version` **interrompe a comparabilidade do DOCUMENTO** (D26) — e
-> não que algumas linhas sigam comparando porque o `indicator.id` coincidiu.
+> ⚠️ **Isto valia enquanto EVO-02 lia o documento legado.** `comparison-compatible` e
+> `comparison-schema-break` provaram o que precisavam provar — o par comparável, e que a quebra
+> de `indicator_registry_version` **interrompe a comparabilidade do DOCUMENTO** (D26), não linha
+> a linha. Mas ambos servem `RESULT_VIEW`, que é **v1**.
+>
+> Desde a Two-View Recovery a M39 compara `analysis-result-v3`. Os dois seguem válidos como
+> **cobertura histórica de `indicators`/v1**, e **não** provam a missão atual. As três massas v3
+> que faltam estão listadas na entrada da M39 no PLAN, e são o que impede marcá-la `READY`.
 >
 > O **22** (`recommendation-persisted`) continua **🔴 bloqueado por BD03** e **não faz parte do
-> DoD da M39**: recomendação longitudinal exige `recommendation_id` no documento canônico, que o
-> produtor não entrega. Ele estar mapeado para EVO-02 não o torna requisito de fechamento.
+> DoD da M39**. A razão, porém, foi **qualificada**:
+> o `analysis-result-v3` **traz** um campo `id` em `recommendations[]` — o que faltava no v1.
+> O que continua faltando é uma autoridade declarando esse id **durável entre análises**. D27
+> exige identidade canônica, e campo presente não é identidade declarada. Ele estar mapeado para
+> EVO-02 não o torna requisito de fechamento.
 
 **Bloqueados: 3** (`recommendation-persisted`, `no-baseline`, `baseline-active`)
 **+ 1 parcial** (`needs-mapping`). **Nenhuma fixture será inventada para eles.**

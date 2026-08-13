@@ -981,50 +981,94 @@ Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q1
   Discovery (registro da duplicidade + resolução de 2026-08-12) · Product Freeze · DS Constitution ·
   contrato público `@ ac81633` (`GET /v1/analyses`, cursor, workspace-scoped) · scenario
   `list-pagination`.
-### M39 · EVO-02 — comparação A×B — AUTORIDADE ALINHADA
-> **Estado:** implementação **não iniciada**. O preflight zero-write de 2026-08-12 devolveu
-> `NEEDS AUTHORITY ALIGNMENT`: o backend **não** bloqueava o par avulso — o que bloqueava era a
-> autoridade misturar A×B com evolução longitudinal de Instance, e chamar de "AS-IS" um componente
-> cuja regra contradiz a canônica.
-- **Pré:** ✅ **M30** (`fed4157`) e ✅ **M38** (`9d33c5a`) — ambas satisfeitas.
-- **Superfícies:** **EVO-02**, e só ela. **INST-06 SAIU da M39** em 2026-08-12: evolução
-  longitudinal da Instance é **delta declarado sem produtor**. Ver o delta abaixo.
-- **Rota canônica:** **`/analyses/compare/{analysisAId}/{analysisBId}`** — congelada. Os dois
-  identificadores são **identidade durável na URL** e a ordem A/B é a da rota. Refresh e deep link
-  reconstroem a comparação pelos dois ids; **sem query param, sem storage, sem navigation state**
-  como fonte de verdade.
-- **Entrada:** a superfície canônica **`/analyses`** (EVO-01). A M39 pode acrescentar a capacidade
-  de escolher **exatamente duas** análises e navegar para a rota acima. **Não transforma EVO-01 em
-  EVO-02:** a lista segue sendo histórico. É aqui, e só aqui, que uma `Toolbar` ganha função real —
-  e mesmo assim ela **não** vira obrigatória por decreto: a composição passa pelo quality stack.
+### M39 · EVO-02 — comparação ARGOS A×B — AUTHORITY REALIGNED · ESCOPO REDUZIDO
+
+> **Estado:** `AUTHORITY REALIGNED · IMPLEMENTATION STILL FROZEN`. Implementação **não iniciada**.
+> **Não marcar READY**: faltam os scenarios v3 (abaixo).
+>
+> **A premissa mudou.** A entrada anterior foi escrita quando EVO-02 consumia o documento legado,
+> e citava como autoridade o contrato `@ ac81633` — anterior à Manifest Sync. Isso deixou de ser
+> verdade: o `analysis-result-v3` desfez a fusão dos motores, e a comparação passou a ser sobre a
+> representação ARGOS. Implementar a missão como estava escrita compararia o documento errado.
+
+- **Pré:** ✅ M30 · ✅ M38 · ✅ **Two-View Experience CLOSED** (`1f83241`) — a visão ARGOS precisa
+  existir antes de comparar duas.
+- **Superfícies:** **EVO-02**, e só ela. INST-06 permanece fora (delta declarado sem produtor).
+- **Rota canônica:** `/analyses/compare/{analysisAId}/{analysisBId}` — congelada. Os dois ids são
+  **identidade durável na URL**; a ordem A/B é a da rota. Refresh e deep link reconstroem a
+  comparação pelos dois ids — **sem query param, sem storage, sem navigation state** como fonte
+  de verdade.
+- **Fonte contratual:** **`analysis-result-v3`, e só ele.** Cada lado pede explicitamente
+  `?result_schema_version=3`. **Sem fallback v1/v2. Sem `/analytics`.** Analysis sem v3 **não tem
+  lado ARGOS comparável** — e isso é dito, não disfarçado com o documento histórico.
 - **Escopo:** selecionar ou receber duas Analyses · reconstruir A e B **pelos ids** · ler os dois
-  resultados · usar **somente** `comparacao.ts` · apresentar a comparação compatível · apresentar a
-  **quebra documental** · refresh e deep link.
-- **Fora:** INST-06 · série/evolução longitudinal de Instance · `/instances/{id}/evolution` ·
-  Baseline · referência · régua · "comparar com baseline" · EVO-03 · M40 · **delta calculado no
-  Front** · recommendation longitudinal · `recommendation_id` · scenario 22 · BD03 · backend ·
-  segunda regra de comparação · rota diferente da congelada.
-- **DoD:** a rota canônica funciona · **A e B recuperadas independentemente**, pelos ids ·
-  **exatamente duas** leituras de `/result` · nenhuma leitura **antes** da intenção de comparar ·
-  `comparison-compatible` verde · `comparison-schema-break` verde · **uma** regra canônica ·
-  **nenhum delta inventado** · PT/EN · responsivo · teclado · axe · `/ux-copy` ·
-  `/design-critique` · `/ux-heuristics` **≥ 9,0** · **Playwright obrigatório** (rota nova) ·
-  typecheck `exit 0`, lint delta **≤ 0**, suíte e mutação verdes · **DOC-CLOSE**.
+  documentos ARGOS · usar **somente** `comparacao.ts` · apresentar o par compatível · apresentar
+  a **quebra documental** · apresentar `NOT_COMPARABLE` · refresh e deep link. **DUAS famílias,
+  exatamente:**
+  - **`indicators`** — identidade `indicator.id` (registro canônico).
+  - **`dimensions`** — identidade `measurement.id`, e **somente as quatro** canônicas: `semantic`,
+    `behavioral`, `structural`, `economic`. O `ai_health_score` **não** é uma quinta dimensão: é
+    escore composto, e declara estas quatro em `composite_of`.
+- **Fora:** `scores` · `projections` · `risks` · `intents` · `recommendations` · `alerts` como
+  conjunto · `issues` · `evidence` · `executive_summary` · **Analytics A×B** · Baseline · **INST-06** ·
+  série/evolução longitudinal de Instance · `/instances/{id}/evolution` · EVO-03 · M40 · **delta
+  calculado no Front** · matching heurístico · `recommendation_id` · scenario 22 · BD03 ·
+  backend · segunda regra de comparação · rota diferente da congelada · **referência** · régua ·
+  "comparar com baseline" · **delta calculado no Front**.
+  > `critical_alert_count`, se publicado em `indicators`, segue a semântica normal de indicador.
+  > **Isso não autoriza comparar o conteúdo de `alerts`** — o produtor é explícito: a contagem é
+  > métrica, o alerta é conteúdo, e "só a primeira é comparável entre análises".
+- **Comparabilidade — DOIS níveis:**
+  1. **Documento (D26, obrigatório).** Divergência que a autoridade define como quebra documental
+     → **nenhum** par é comparável. Continua sendo de DOCUMENTO, nunca por linha.
+  2. **Par.** Documento compatível não basta: cada família aplica pré-condições próprias. O v3 é o
+     primeiro contrato capaz de expressá-las — `method_version` viaja **por medição**, não só por
+     documento. Par incompatível produz **`NOT_COMPARABLE`**, nunca um valor derivado.
+     > A quebra DOCUMENTAL continua sendo de documento: **nunca** quebra **por linha**. O que o
+     > v3 acrescenta é uma pré-condição de PAR *além* dela — não no lugar dela.
+     - `indicators`: `scale.kind` · `unit` · `currency` · `state`
+     - `dimensions`: `scale.kind` · `method_version`
+     - **Nada é convertido.** `ratio_unit` × `score_100` e BRL × USD são incompatíveis, não
+       convertíveis. Sem câmbio no Front.
+- **Delta:** proibido em **todas** as famílias. Nada no v3 publica diferença entre análises.
+  Nenhum `A−B`, percentual, seta, tendência ou "subiu/desceu". **A e B são duas posições, não
+  tempo** — e por isso nunca "anterior/atual".
+- **Entrada:** a superfície canônica **`/analyses`** (EVO-01). A M39 pode acrescentar a
+  capacidade de escolher **exatamente duas** análises e navegar para a rota congelada.
+  **Não transforma EVO-01 em EVO-02:** a lista segue sendo histórico.
 - **Herança de cobertura, com dono.** A M38 aposentou o caso browser de comparação junto da
   `HistoryPage`. Ele **renasce aqui**, na superfície certa, provando as três invariantes que
-  protegia: **nenhuma** `/result` antes da ação · **exatamente duas** leituras, para A e B ·
-  **nenhuma** rota ou implementação legada acordada.
-- **`RunRow` é artefato herdado, não requisito.** Se ganhar consumidor real na M39, o
-  `StatusBadge` **local** dele morre em favor do canônico — a decisão fechada em `9d33c5a`. Se
-  continuar órfão no fechamento, é removido ali, depois de provada a ausência de consumidores.
-  **Não se antecipa qual dos dois caminhos ocorre.**
-- **Gates:** recusam INST-06 voltando para a M39 · terceira regra de comparação · o
-  `RunComparePanel` como autoridade de domínio · **delta numérico local** · quebra **por linha**
-  contra D26 · Baseline entrando · scenario 22 virando requisito de fechamento · recommendation
-  longitudinal no core · rota diferente da congelada · M40 antecipada.
-- **Autoridades:** Product Freeze D26, D29 · Blueprint §3.2 (rota), §4.7, §9 e §11 · regra canônica
-  `src/features/canonical-analysis/result/comparacao.ts` · contrato público `@ ac81633`
-  (`GET /v1/analyses/{id}/result`) · scenarios `comparison-compatible` e `comparison-schema-break`.
+  protegia: **nenhuma** leitura de resultado antes da ação · **exatamente duas** leituras, para A
+  e B · **nenhuma** rota ou implementação legada acordada.
+- **`comparacao.ts`** é **coordenador canônico da comparação autorizada**, não função genérica
+  aberta a qualquer família. Expandir exige, nesta ordem: **família autorizada → identidade
+  contratual → pré-condições congeladas → scenario → gates**.
+- **DoD:** rota canônica funciona · A e B recuperadas independentemente pelos ids · **exatamente
+  duas** leituras de `/result`, **ambas com `result_schema_version=3`** · nenhuma leitura antes da
+  intenção de comparar · scenarios v3 verdes (A, B e C abaixo) · **uma** regra canônica · nenhum
+  delta · `NOT_COMPARABLE` apresentado como estado, não como vazio · PT/EN · responsivo · teclado
+  · axe · `/ux-copy` · `/design-critique` · `/ux-heuristics` **≥ 9,0** · Playwright obrigatório ·
+  typecheck `exit 0` · lint delta ≤ 0 · suíte e mutação verdes · DOC-CLOSE.
+- **Gates:** `evo02-m39-freeze.test.ts` (catraca de famílias, **9/9 mutações mortas**) ·
+  `evo02-m39-autoridade.test.ts` (regra única, rota, scenarios) · recusam: consumir v1/v2 ·
+  consumir `/analytics` · `scores` entrando por oportunidade · `intents` com matching heurístico ·
+  conjunto com persistência sem identidade · delta · A/B virando anterior/atual · Drift descrito
+  como drift A→B · `critical_alert_count` confundido com conteúdo de alerta.
+- **Scenarios — os atuais NÃO servem.** `comparison-compatible` e `comparison-schema-break` foram
+  criados sobre **v1** (ambos servem `RESULT_VIEW`) e não provam a M39 v3. Reclassificados como
+  **cobertura histórica de indicators/v1**. Faltam, como pré-requisito da implementação:
+  - **A** — `indicators` + `dimensions` compatíveis, em v3.
+  - **B** — quebra documental (D26) em v3.
+  - **C** — par de `dimension` incompatível por metadado/metodologia, se o contrato permitir
+    reproduzi-lo honestamente. Se não permitir, a pré-condição de par fica provada só por unidade,
+    e isso é dito.
+- **Autoridades:** Product Freeze D26 · **D27** · D29 · §10.1 · Blueprint §3.4.1, §4.6 · registro
+  `result/familiasDaComparacao.ts` · regra `result/comparacao.ts` · contrato público
+  `sentinela-facts @ 4078650` · discovery `TWO-VIEW-EXPERIENCE-RECOVERY.md` §M39.
+
+> **`RunComparePanel` / `RunRow` continuam sem autoridade.** Foram construídos sobre a semântica
+> anterior — um documento, uma família, delta local — e **não servem como prova da M39 v3**.
+> Podem ser inspecionados para achar premissas perigosas; não para justificar produto.
 
 > **DELTA DECLARADO — INST-06 · evolução longitudinal da Instance, sem produtor.**
 > **Dono:** Produto/Arquitetura de Evolution + Instance. **Sem BD cunhada.**
