@@ -218,6 +218,23 @@ e a partir dela a rota legada **não pode voltar a ter lista própria**).
 | `/canonical/analyses/:id/result` | `/analyses/:id/result` | idem |
 | `/home` | 🔶 **NÃO congelado** | primeiro é preciso provar o *ownership* de `/`, hoje da `LandingPage`. Pergunta aberta, não decisão adiada em silêncio |
 
+#### 3.4.1 As duas visões — **CONGELADO** (Two-View Recovery)
+
+| rota | papel | fonte |
+|---|---|---|
+| `/analyses/:id` | lifecycle da Analysis · identidade, estado, progresso, entradas das duas visões | `GET /{id}`, `/progress` |
+| `/analyses/:id/argos` | **visão ARGOS** | `analysis-result-v3`, pedido por `?result_schema_version=3` |
+| `/analyses/:id/analytics` | **visão Analytics** | `GET /{id}/analytics` |
+| `/analyses/:id/result` | **LEGACY COMPATIBILITY** | v1/v2 — inalterada |
+
+Por que **subrotas** e não abas: o produto não tem `Tabs` (nem no Design System, nem em uso, nem
+citado por autoridade nenhuma), e a Recovery proíbe inventar primitivo estrutural sem
+equivalente. Subrota também entrega o que a experiência exige de graça — deep link por visão,
+refresh na visão certa e histórico do navegador.
+
+Por que o lifecycle **não** vira terceira página de dados: o mesmo dado em três lugares diverge
+em dois.
+
 ---
 
 ## 4. Inventário de superfícies V1
@@ -333,11 +350,37 @@ INST-07** são delta declarado por falta de produtor. O contrato de Instance pub
 > identidade** — a lógica de domínio já está construída e testada. Continua sendo delta explícito,
 > e **nenhuma tela de mapping pode ser aprovada antes dele**.
 
-### 4.6 Resultado — 1 superfície, 9 regiões
+### 4.6 Resultado — **ONE ANALYSIS → TWO VIEWS**
+
+A Two-View Recovery cindiu esta seção. RES-01 nasceu quando havia **um** documento de resultado
+com o analytics embutido; o `analysis-result-v3` desfez a fusão no backend, e a experiência
+passou a ter duas leituras complementares da mesma Analysis.
+
+| id | visão | rota | fonte ÚNICA |
+|---|---|---|---|
+| **ARG-01** | ARGOS — a inteligência | `/analyses/{id}/argos` | `analysis-result-v3` (pedido explícito) |
+| **ANL-01** | Analytics — a exploração | `/analyses/{id}/analytics` | `GET /analytics` |
+| **RES-01** | **LEGACY COMPATIBILITY** | `/analyses/{id}/result` | v1/v2, como sempre foi |
+
+**Não são abas.** São subrotas irmãs: o produto não possui o pattern `Tabs`, e nenhuma
+autoridade o menciona. A entrada para as duas mora no shell da Analysis (AN-02).
+
+**Não fundir.** Nenhuma das duas visões lê a fonte da outra. `ARG-01` não chama `/analytics`;
+`ANL-01` não pede o v3. O bloco analítico embutido no v2 **não** é segunda fonte canônica.
+
+**Dimensões são conceitos diferentes nos dois lados.** As quatro dimensões de **saúde** do ARGOS
+(`semantic`, `behavioral`, `structural`, `economic`) não são as dimensões do Analytics. O nome
+coincide; o significado, a fonte e o produtor não.
+
+#### RES-01 · LEGACY COMPATIBILITY — 9 regiões
 
 **RES-01** · objetivo: entregar o resultado canônico com evidência · objeto: Análise ·
 rota `/analyses/{id}/result` (AS-IS `/canonical/analyses/:id/result`) · deep link direto e
 compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browser.
+
+> **Congelada.** Continua funcional e servindo deep link antigo; **não recebe feature nova** e
+> não vira ARGOS-only em silêncio. Nenhuma navegação canônica nova aponta para ela quando a
+> visão correta existe. Aposentadoria é decisão posterior.
 
 | região | fonte de verdade | contrato |
 |---|---|---|

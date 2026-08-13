@@ -1366,6 +1366,35 @@ depois começa sem ela.
 Como se chegou aqui: `4c96256` reconciliou a autoridade com o estado entregue; `fdddc27` e
 `2771e6d` fecharam a `TYPECHECK RECOVERY`. Nenhum dos três tocou código de produto.
 
+#### Rebaseline de 2026-08-13 — TWO-VIEW EXPERIENCE RECOVERY
+
+O backend mudou materialmente entre um rebaseline e outro, e o Front precisou ser realinhado
+**antes** de continuar a fila de missões. Não é continuação da M39: é mudança de premissa.
+
+| eixo | valor |
+|---|---|
+| Front | `sentinela-front-e1` · `develop` · **`f09a482`** (F0 · contract intake) |
+| Gateway / contrato público | `sentinela-facts` · **`4078650`** · 15 operações · **3 documentos de resultado** · negociação por `?result_schema_version=` |
+| Orchestrator | `sentinela-orchestrator` · `integracao/bd02-instancia` · **`ec54045`** |
+| Assembler | `sentinela-result-assembler` · **`5b84936`** · publica v1, v2 e v3 |
+| Ingestion | `sentinela-ingestion-service` · **`6195387`** |
+
+O que mudou de premissa, e por que reordena a fila:
+
+1. **`analysis-result-v3` existe e é servido** — ARGOS-only, onze famílias públicas, `reason` e
+   `scale` por medição. O v1 publicava uma família e retinha o motivo.
+2. **A versão é negociada pelo cliente.** Ausência preserva o histórico; pedido explícito
+   entrega o v3; versão desconhecida e v3 inexistente viram problema — nunca queda silenciosa.
+3. **ONE ANALYSIS → TWO VIEWS** (Product Freeze §10.1): ARGOS e Analytics viram superfícies
+   irmãs, e `/result` vira **LEGACY COMPATIBILITY**.
+
+**M39 permanece FROZEN e NÃO executada.** Continua sendo ARGOS A × ARGOS B, mas a semântica está
+reaberta: hoje `comparacao.ts` pareia por `indicator.id` sobre **uma** família, e o ARGOS publica
+onze — com identidades diferentes por família (`scores` não tem `id` próprio; `projections`
+exigem `horizon`; `intents` não vêm de registro canônico; `alerts`/`issues`/`evidence`/
+`recommendations` são semântica de conjunto, não de par). Ampliar `comparacao.ts` agora seria
+decidir isso no escuro.
+
 #### Comandos oficiais
 
 Um comando por gate. Variante mais estreita **não é evidência substituta**.

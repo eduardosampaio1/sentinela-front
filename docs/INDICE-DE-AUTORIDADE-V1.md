@@ -28,6 +28,24 @@
 **Em conflito, a autoridade superior vence.** Um documento oficial que contradiga o contrato
 público está errado, não o contrato.
 
+> **Isto não é teórico.** O contrato público passou a declarar `analysis-result-v3` e a
+> negociação por `?result_schema_version=`; até a Two-View Recovery o frontend conhecia dois
+> documentos. Quem estava errado era o frontend — e o gate cruzado
+> (`test/v1/contract-sync.test.ts`) existe para tornar esse erro **visível** em vez de
+> silencioso. O caminho de leitura da autoridade é: `analysis-result-v3.schema.json` (repo dono)
+> → `public-v3.types.ts` (contratos publicados) → cópia local. Três degraus, uma direção só.
+
+### ONE ANALYSIS → TWO VIEWS
+
+Regra de produto congelada, com sede no **Product Freeze §10.1** e mapa no **Blueprint §3.4.1 e
+§4.6**. Uma Analysis, duas leituras: ARGOS (`/analyses/:id/argos`, fonte `analysis-result-v3`) e
+Analytics (`/analyses/:id/analytics`, fonte `GET /analytics`). Subrotas irmãs — o produto não
+possui `Tabs`. `/analyses/:id/result` permanece **LEGACY COMPATIBILITY**.
+
+**Backend first.** Sem produtor e contrato público, não existe superfície. O Front apresenta;
+não cria métrica, não calcula escore, não deriva faixa de risco, não calcula Drift nem delta,
+não normaliza escala, não converte moeda, não transforma ausência em zero.
+
 ### Fronteiras entre os quatro
 
 - O **Blueprint** é autoridade de **mapa** — superfícies, estados, scenarios, componentes,

@@ -220,14 +220,16 @@ fronteira de serviço. Timeline **preservada como fato do processo**, conteúdo 
 
 **Hierarquia oficial** (D7): `Workspace → Instâncias → Análises`.
 
-**Rotas públicas aprovadas** (`WS-A` §A10):
+**Rotas públicas aprovadas** (`WS-A` §A10, ampliadas pela Two-View Recovery):
 
 ```
 /analyses
 /analyses/new
-/analyses/:id
-/analyses/:id/result
-/analyses/:id/result#comparison
+/analyses/:id            ← lifecycle da Analysis
+/analyses/:id/argos      ← visão ARGOS      (fonte: analysis-result-v3)
+/analyses/:id/analytics  ← visão Analytics  (fonte: GET /analytics)
+/analyses/:id/result           LEGACY COMPATIBILITY
+/analyses/:id/result#comparison LEGACY COMPATIBILITY
 ```
 
 `/canonical/*` é **interno / compatibilidade**, nunca IA pública.
@@ -236,6 +238,39 @@ fronteira de serviço. Timeline **preservada como fato do processo**, conteúdo 
 Pergunta aberta registrada, não decisão adiada em silêncio.
 
 ✅ **Rotas de Instância entregues pela M36** — `/instances` e `/instances/:instanceId`. B3 fechou com a BD02; `/instances/{id}/evolution` segue conceitual, por ser outra superfície.
+
+---
+
+## 10.1 ONE ANALYSIS → TWO VIEWS — congelado
+
+Uma Analysis oferece **duas leituras complementares**, de dois motores independentes, e elas
+não se fundem na tela.
+
+| # | regra | por quê |
+|---|---|---|
+| **T1** | **Uma Analysis, duas visões canônicas.** ARGOS e Analytics são leituras da MESMA Analysis — nunca duas Analysis | o lifecycle, a identidade e o histórico são um só |
+| **T2** | **Visão ARGOS** = `/analyses/:id/argos`, fonte única `analysis-result-v3` | é o contrato ARGOS-only; o v2 fundido está congelado como legado |
+| **T3** | **Visão Analytics** = `/analyses/:id/analytics`, fonte única `GET /analytics` | o bloco analítico embutido no v2 **não** é segunda fonte canônica |
+| **T4** | **Subrotas irmãs, não abas.** O produto não tem o pattern `Tabs`, e nenhuma autoridade o menciona | inventá-lo seria um terceiro conceito estrutural sem equivalente; subrota dá deep link, refresh e histórico |
+| **T5** | **Não fundir.** Nenhuma superfície nova combina dado ARGOS com dado Analytics num documento lógico | fundir é exatamente o que o v3 desfez, e o custo foi um programa inteiro |
+| **T6** | O lifecycle (`/analyses/:id`) mostra identidade, estado, progresso, disponibilidade dos componentes e as **entradas** das duas visões — e **não** vira terceira página de dados | dado em três lugares diverge em dois |
+| **T7** | **`/result` é LEGACY COMPATIBILITY.** Continua funcional e não recebe feature nova; nenhuma navegação canônica nova aponta para ele quando a visão correta existe | deep link antigo não pode quebrar, e a aposentadoria é decisão posterior |
+
+### Status ≠ status de motor
+
+`StatusBadge` continua representando o **lifecycle da Analysis** (os 8 `public_states`). Não é
+status ARGOS nem status Analytics. Os componentes têm estados próprios, no vocabulário já
+congelado dos eixos (§3) — e **D13 continua valendo**: uma Analysis pode ter Analytics
+`ready|partial` com ARGOS ainda pendente, sem virar duas Analysis.
+
+### Backend first
+
+O Front **apresenta, agrupa, ordena quando o contrato autoriza, navega, formata e explica**
+`availability`/`reason`. O Front **não** cria métrica, não calcula escore, não deriva faixa de
+risco, não calcula Drift nem delta, não normaliza escala em silêncio, não converte moeda, não
+transforma ausência em zero e não fabrica família ausente.
+
+**Sem produtor e contrato público, não existe superfície.**
 
 ---
 
@@ -258,6 +293,8 @@ Paridade `pt.json` × `en.json` é gate de UI COMPLETE (critério 18).
 | **B4** — `recommendation_id` não chega ao documento canônico | bloqueia D27 |
 | **B6** — Supabase Auth vivo e roteado; Supabase está **aposentado** por decisão arquitetural | delta obrigatório de erradicação, frente própria |
 | **B7** — contrato de preferências (idioma) inexistente | bloqueia D22/D23 |
+| **M39 · comparação** — permanece **FROZEN**. Continua sendo **ARGOS A × ARGOS B**, mas a semântica está **reaberta**: o pareamento atual é por `indicator.id` sobre uma família só, e o ARGOS publica onze. Não ampliar `comparacao.ts` antes de as duas visões fecharem | congelada, não executada |
+| **FULL INGESTION TOPOLOGY E2E** — a jornada completa de upload (`upload → dataset_ready → promotion-worker`) não tem prova local: exige seis processos e há três de pé. Não redefine ARGOS/Analytics e não bloqueia as duas visões | gate de release final |
 
 ---
 
