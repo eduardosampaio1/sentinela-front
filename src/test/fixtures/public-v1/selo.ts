@@ -89,8 +89,42 @@
  * o contrato mudou; o trabalho é reconferir as fixtures contra a mudança e só então trazer o
  * digest novo — no mesmo commit.
  */
+/*
+ * Atualizado pela **M42 · CFG-03/CFG-04** (2026-08-14), depois de **BD12**, **BD13** e **BD14**.
+ * O gate estava VERMELHO no `develop` desde então — medido antes de qualquer alteração desta
+ * missão, com `git stash`, e não deduzido. O contrato foi de 23 para 27 operações e o selo ficou
+ * para trás; a suíte seguia acusando, e a acusação estava certa.
+ *
+ * O que mudou no contrato: entraram `get_workspace`/`rename_workspace` (BD12),
+ * `rename_instance` (BD13) e as quatro de Subscription (BD14), mais os blocos declarativos
+ * `workspace`, `instance_rename` e `subscription`.
+ *
+ * **A reconferência foi refeita, e por medição, não por confiança.** Todos os eixos que as
+ * fixtures consomem foram comparados com o contrato vigente:
+ *
+ *     instance_read_model_fields   ["instance_id", "name", "created_at"]        inalterado
+ *     me_read_model_fields         ["user", "workspaces", "capabilities"]        inalterado
+ *     me_user_fields               ["id", "email", "name"]                       inalterado
+ *     me_workspace_fields          ["id", "name", "role"]                        inalterado
+ *     list_item_fields             7 campos                                      inalterado
+ *     status_read_model_fields     8 campos                                      inalterado
+ *     result_read_model_fields     4 campos                                      inalterado
+ *     analytics_read_model_fields  —                                             inalterado
+ *     timeline_event_fields        8 campos · schema `public-events-v1`          inalterado
+ *     public_states · progress_axes · progress_states · problem_codes            inalterados
+ *     result_document_schemas      v1 · v2 · v3                                  inalterado
+ *
+ * A mudança é **puramente aditiva**: nenhuma operação existente foi alterada ou removida, e
+ * nenhum read-model mudou de forma. Nenhuma amostra precisou de edição — e é por isso que este
+ * número pôde ser trazido, em vez de "consertado".
+ *
+ * Nota de instrumento, porque ela quase custou uma acusação errada: o resolvedor hasheia o
+ * conteúdo **normalizado** (`\r\n` → `\n`), e a mensagem do Vitest imprime `expected <atual> to
+ * be <esperado>` — o valor à esquerda é o do CONTRATO, o da direita é o SELO. Ler ao contrário
+ * leva a procurar um terceiro arquivo que não existe.
+ */
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "811172171a4e2f34e52bd226f88de46af0a842ad050c8409385c5c59460e3635";
+  "1f1480c5347bd5839e53e2cb94e214a5507ede623f77332696fa207bb6b1218b";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.

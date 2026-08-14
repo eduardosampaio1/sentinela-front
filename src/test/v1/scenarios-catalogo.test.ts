@@ -76,7 +76,7 @@ const BLOQUEADOS_DO_PLANO = [
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M18 · 1. o catálogo está completo", () => {
-  it("tem as 44 entradas do Blueprint §11", () => {
+  it("tem as 52 entradas do Blueprint §11", () => {
     // Um catálogo curto passaria em todos os outros casos: o que ele não lista, ele não erra.
     // 35 → 37 na materialização das massas v3 da M39. 37 → 39 na M40: `baseline-set` e
     // `baseline-no-candidates`. 39 → 44 na M41: `account-identity` (CFG-01) e os quatro
@@ -99,7 +99,7 @@ describe("M18 · 1. o catálogo está completo", () => {
     // `sentinela-front-e1/docs/EXPERIENCE-BLUEPRINT-V1.md` —, e o gate lê a do repositório, que
     // estava correta e completa. Quem envelheceu foi a do vault, que gate nenhum lê. A do
     // repositório é a autoridade operativa.
-    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(44);
+    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(52);
   });
 
   it("41 disponíveis · 1 parcial · 2 bloqueados", () => {
@@ -118,9 +118,12 @@ describe("M18 · 1. o catálogo está completo", () => {
     // desbloqueado); bloqueados 3 → 2. `baseline-active` fica, porque exige exclusão pública.
     //
     // A M41 acrescentou CINCO, todos disponíveis, e nenhum mudou de estado: 39 → 44, 36 → 41.
+    // A M42 acrescentou OITO, também todos disponíveis — quatro de CFG-03 e quatro de CFG-04:
+    // 44 → 52, 41 → 49. Os bloqueados e o parcial não se mexeram: a M42 materializa massa para
+    // produtor que JÁ existe (BD12 e BD13), e não desbloqueia nada.
     // Total e disponíveis sobem juntos, e os bloqueados não se movem — é a assinatura de
     // "entrou no catálogo", distinta de "mudou de estado".
-    expect(nomesPorEstado("disponivel").length).toBe(41);
+    expect(nomesPorEstado("disponivel").length).toBe(49);
     expect(nomesPorEstado("parcial").length).toBe(1);
     expect(nomesPorEstado("bloqueado").length).toBe(2);
   });
@@ -305,8 +308,8 @@ describe("M18 · 1. o catálogo está completo", () => {
     // A direção inversa: o que o mapa promete e o catálogo não entrega.
     const doMapa = [...BLUEPRINT.matchAll(/^\|\s*\d+\s*\|\s*`([a-z0-9-]+)`/gm)].map((m) => m[1]);
     // Piso do INSTRUMENTO, não do catálogo: se o regex parar de casar a tabela, o filtro
-    // abaixo roda sobre lista vazia e passa sempre. 39 → 44 com as cinco entradas da M41.
-    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(44);
+    // abaixo roda sobre lista vazia e passa sempre. 44 → 52 com as oito entradas da M42.
+    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(52);
     const faltando = doMapa.filter((n) => !NOMES.includes(n));
     expect(faltando, "cenário do Blueprint ausente do catálogo").toEqual([]);
   });

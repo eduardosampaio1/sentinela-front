@@ -74,6 +74,17 @@ import {
   INDISPONIVEL,
   projetar,
 } from "@/test/fixtures/public-v1/account-language";
+// M42 — a massa de configuração: Workspace (CFG-03, BD12) e Instance (CFG-04, BD13).
+import {
+  BASELINE_DA_INSTANCIA,
+  CLAIM_DESATUALIZADA,
+  INSTANCIA_CONFIG,
+  INSTANCIA_VIZINHA,
+  NOME_DUPLICADO,
+  WORKSPACE_CORRENTE,
+  type InstanceView,
+  type WorkspaceView,
+} from "@/test/fixtures/public-v1/workspace-instance-config";
 
 export type EstadoDoScenario = "disponivel" | "parcial" | "bloqueado";
 
@@ -261,6 +272,105 @@ const analytics = (base: string, corpo: Record<string, unknown>) =>
  * - **não normaliza região.** `pt-BR` e `en-US` são recusados como qualquer outro valor fora do
  *   enum — converter no mock ensinaria a tela que a regra é dela.
  */
+// ── M42 · configuração ────────────────────────────────────────────────────────────────────
+//
+// Dois construtores SEPARADOS, e a separação é a decisão. Um `configHandlers(b)` que servisse
+// Workspace e Instance juntos seria o primeiro passo do `settingsStore` que nenhum contrato
+// autoriza: a M42 compõe duas configurações na mesma tela, e compor não é fundir. Os donos são
+// `sentinela-workspace` e o Orchestrator, e nenhum estado atravessa de um para o outro.
+//
+// A mutabilidade vive DENTRO do construtor, como em `contaHandlers`: cada invocação do scenario
+// parte do estado canônico. Estado de módulo faria o segundo teste herdar o rename do primeiro.
+
+/** `GET`/`PATCH` do Workspace, mutável. `name` é o único campo que a escrita aceita e move. */
+function workspaceHandlers(b: string): HttpHandler[] {
+  let atual: WorkspaceView = { ...WORKSPACE_CORRENTE };
+
+  return [
+    // `workspace_id` no CAMINHO, não na query: o recurso É o workspace. E ele não é prova de
+    // autorização — o mock reproduz só o resultado público de quem JÁ está autorizado.
+    http.get(`${b}/v1/workspaces/:workspaceId`, ({ params }) =>
+      params.workspaceId === atual.workspace_id
+        ? json(atual)
+        : json(problem("forbidden_or_not_found"), 404)),
+
+    http.patch(`${b}/v1/workspaces/:workspaceId`, async ({ params, request }) => {
+      if (params.workspaceId !== atual.workspace_id) {
+        return json(problem("forbidden_or_not_found"), 404);
+      }
+      const corpo = (await request.json()) as Record<string, unknown> | null;
+      const chaves = Object.keys(corpo ?? {});
+      // `extra=forbid` é do contrato: um corpo com `slug`/`members`/`settings` é recusado, e não
+      // ignorado. Ignorar ensinaria a tela que o campo passou.
+      if (chaves.length !== 1 || chaves[0] !== "name") {
+        return json(problem("invalid_input"), 400);
+      }
+      const nome = corpo?.name;
+      if (typeof nome !== "string" || nome.length < 1) {
+        return json(problem("invalid_input"), 400);
+      }
+      // Renomear para o MESMO nome é 200 — o contrato não declara conflito, e inventar um aqui
+      // seria a massa criando uma regra de produto que ninguém decidiu.
+      //
+      // **Spread, e não os três campos digitados.** Redigitar `workspace_id`/`created_at` aqui
+      // reconstruiria o read model à mão — e o cadeado M18.5 do repositório acusou exatamente
+      // isso. Além do gate, a razão é boa: um campo novo no contrato passaria a ser SILENCIOSAMENTE
+      // descartado pelo rename, e o sintoma seria "o campo some quando eu renomeio".
+      //
+      // O que sobrevive vem do estado anterior, nunca do caminho nem do corpo: a resposta é a
+      // linha persistida, não o eco da intenção.
+      atual = { ...atual, name: nome };
+      return json(atual);
+    }),
+  ];
+}
+
+/** `GET`/`PATCH` de Instance + o ponteiro de baseline, que o rename NÃO toca. */
+function instanceHandlers(b: string, iniciais: readonly InstanceView[]): HttpHandler[] {
+  const porId = new Map(iniciais.map((i) => [i.instance_id, { ...i }]));
+  // O baseline vive FORA da view da Instance, como no contrato: ele é capacidade própria (BD10),
+  // e não "mais uma configuração". Estar aqui serve a uma prova só — a de que renomear não o move.
+  const baseline = { ...BASELINE_DA_INSTANCIA };
+
+  return [
+    http.get(`${b}/v1/instances`, () =>
+      json({ items: [...porId.values()], next_cursor: null })),
+
+    http.get(`${b}/v1/instances/:instanceId`, ({ params }) => {
+      const i = porId.get(String(params.instanceId));
+      return i ? json(i) : json(problem("forbidden_or_not_found"), 404);
+    }),
+
+    http.get(`${b}/v1/instances/:instanceId/baseline`, ({ params }) =>
+      porId.has(String(params.instanceId))
+        ? json(baseline)
+        : json(problem("forbidden_or_not_found"), 404)),
+
+    http.patch(`${b}/v1/instances/:instanceId`, async ({ params, request }) => {
+      const id = String(params.instanceId);
+      const i = porId.get(id);
+      if (!i) return json(problem("forbidden_or_not_found"), 404);
+      const corpo = (await request.json()) as Record<string, unknown> | null;
+      const chaves = Object.keys(corpo ?? {});
+      if (chaves.length !== 1 || chaves[0] !== "name") {
+        return json(problem("invalid_input"), 400);
+      }
+      const nome = corpo?.name;
+      if (typeof nome !== "string" || nome.length < 1) {
+        return json(problem("invalid_input"), 400);
+      }
+      // Nome duplicado é LEGÍTIMO: o contrato declara a ausência de unicidade, e recusar aqui
+      // ensinaria a tela a validar uma regra que o produtor não tem. Identidade é `instance_id`.
+      //
+      // Spread pelo mesmo motivo do Workspace: redigitar a view faria um campo novo do contrato
+      // sumir no rename, em silêncio.
+      const atualizada: InstanceView = { ...i, name: nome };
+      porId.set(id, atualizada);
+      return json(atualizada);
+    }),
+  ];
+}
+
 function contaHandlers(b: string, inicial: "en" | "pt" | null): HttpHandler[] {
   let stored: "en" | "pt" | null = inicial;
 
@@ -727,6 +837,119 @@ export const CATALOGO: readonly Scenario[] = [
       http.get(`${b}/v1/me`, () => json(IDENTIDADE)),
       http.get(`${b}/v1/me/language`, () => json(INDISPONIVEL, 503)),
       http.put(`${b}/v1/me/language`, () => json(INDISPONIVEL, 503)),
+    ],
+  },
+
+  // ── M42 · CFG-03 · Workspace ────────────────────────────────────────────────────────────
+  //
+  // Serve SÓ o produtor público. A ausência de `/v1/me` aqui é a prova, do mesmo jeito que a
+  // ausência de `/v1/me/language` em `account-identity`: o nome do produto não vem da claim, e um
+  // scenario que servisse as duas coisas alinhadas deixaria passar um Front que lê a errada.
+  {
+    id: "workspace-config-current",
+    superficies: ["CFG-03"],
+    estado: "disponivel",
+    handlers: (b) => workspaceHandlers(b),
+  },
+
+  // A ARMADILHA. A claim diz "Suporte Regional", o produtor diz "Atendimento Norte", e o mesmo
+  // `workspace_id` está nos dois. O contrato é literal: `me_workspace_fields.name` é projeção de
+  // BOOTSTRAP e pode ficar velha após um rename; a leitura autoritativa é `get_workspace`.
+  //
+  // Quem ler o nome da claim não recebe erro nenhum — recebe o nome errado, com `200`.
+  {
+    id: "workspace-config-stale-claim",
+    superficies: ["CFG-03"],
+    estado: "disponivel",
+    handlers: (b) => [
+      http.get(`${b}/v1/me`, () => json(CLAIM_DESATUALIZADA)),
+      ...workspaceHandlers(b),
+    ],
+  },
+
+  // Outage COM claim presente — o caso perigoso. A identidade responde `200` e carrega um nome; o
+  // produtor está fora. Isso NÃO pode virar "nome confirmado = o da claim", e também não pode
+  // virar "o workspace não existe": `temporarily_unavailable` nunca é traduzido em ausência, e o
+  // contrato diz por escrito que não há fallback pela tabela legada.
+  {
+    id: "workspace-config-unavailable",
+    superficies: ["CFG-03"],
+    estado: "disponivel",
+    handlers: (b) => [
+      http.get(`${b}/v1/me`, () => json(CLAIM_DESATUALIZADA)),
+      http.get(`${b}/v1/workspaces/:workspaceId`, () =>
+        json(problem("temporarily_unavailable"), 503)),
+      http.patch(`${b}/v1/workspaces/:workspaceId`, () =>
+        json(problem("temporarily_unavailable"), 503)),
+    ],
+  },
+
+  // Anti-oracle. Fora do contexto autorizado, papel insuficiente e desconhecido pelo owner
+  // colapsam nos TRÊS na mesma resposta. Reproduzir a colapsagem é o ponto: um mock que
+  // distinguisse ensinaria a tela a revelar o que o backend esconde de propósito.
+  {
+    id: "workspace-config-invisible",
+    superficies: ["CFG-03"],
+    estado: "disponivel",
+    handlers: (b) => [
+      http.get(`${b}/v1/workspaces/:workspaceId`, () =>
+        json(problem("forbidden_or_not_found"), 404)),
+      http.patch(`${b}/v1/workspaces/:workspaceId`, () =>
+        json(problem("forbidden_or_not_found"), 404)),
+    ],
+  },
+
+  // ── M42 · CFG-04 · Instance ─────────────────────────────────────────────────────────────
+  //
+  // Duas Instances com nomes DIFERENTES e identidades opacas. O rename acontece dentro dos
+  // handlers: renomear a vizinha para o nome que a primeira já usa é sucesso, e o baseline da
+  // primeira continua onde estava.
+  {
+    id: "instance-config-current",
+    superficies: ["CFG-04"],
+    estado: "disponivel",
+    handlers: (b) => instanceHandlers(b, [INSTANCIA_CONFIG, INSTANCIA_VIZINHA]),
+  },
+
+  // ESTADO do mundo, não transição: duas Instances que JÁ se chamam igual, com `instance_id`
+  // diferentes. Uma tela que infira unicidade por nome — para deduplicar uma lista, para casar
+  // seleção, para rotular — quebra aqui e passa em qualquer massa simétrica.
+  {
+    id: "instance-config-duplicate-name",
+    superficies: ["CFG-04"],
+    estado: "disponivel",
+    handlers: (b) =>
+      instanceHandlers(b, [
+        INSTANCIA_CONFIG,
+        { ...INSTANCIA_VIZINHA, name: NOME_DUPLICADO },
+      ]),
+  },
+
+  // `temporarily_unavailable`, e não `forbidden_or_not_found`. A Instance não some da tela como
+  // se tivesse sido apagada: ela existe e o dono não respondeu, e as duas coisas levam a telas
+  // diferentes.
+  {
+    id: "instance-config-unavailable",
+    superficies: ["CFG-04"],
+    estado: "disponivel",
+    handlers: (b) => [
+      http.get(`${b}/v1/instances/:instanceId`, () =>
+        json(problem("temporarily_unavailable"), 503)),
+      http.patch(`${b}/v1/instances/:instanceId`, () =>
+        json(problem("temporarily_unavailable"), 503)),
+    ],
+  },
+
+  // Anti-oracle da Instance: inexistente e de outro workspace colapsam.
+  {
+    id: "instance-config-invisible",
+    superficies: ["CFG-04"],
+    estado: "disponivel",
+    handlers: (b) => [
+      http.get(`${b}/v1/instances/:instanceId`, () =>
+        json(problem("forbidden_or_not_found"), 404)),
+      http.patch(`${b}/v1/instances/:instanceId`, () =>
+        json(problem("forbidden_or_not_found"), 404)),
     ],
   },
 ] as const;

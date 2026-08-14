@@ -1,0 +1,197 @@
+{
+  "resultados": [
+    {
+      "n": 1,
+      "titulo": "workspace_id muda no rename",
+      "veredito": "MORTA",
+      "gate": "WG2",
+      "matou": [],
+      "porque": "identidade tem de sobreviver ao rename"
+    },
+    {
+      "n": 2,
+      "titulo": "claim name vence o producer",
+      "veredito": "MORTA",
+      "gate": "WG5",
+      "matou": [],
+      "porque": "sem divergencia a armadilha deixa de existir"
+    },
+    {
+      "n": 3,
+      "titulo": "503 vira fallback confirmado pela claim",
+      "veredito": "MORTA",
+      "gate": "WG6",
+      "matou": [],
+      "porque": "outage servido como nome confirmado"
+    },
+    {
+      "n": 4,
+      "titulo": "o mock passa a conhecer o PgContextStore legado",
+      "veredito": "MORTA",
+      "gate": "WG11",
+      "matou": [],
+      "porque": "fronteira publica nao conhece store interno"
+    },
+    {
+      "n": 5,
+      "titulo": "create de Workspace entra",
+      "veredito": "MORTA",
+      "gate": "WG7",
+      "matou": [],
+      "porque": "o CRUD legado nao foi promovido"
+    },
+    {
+      "n": 6,
+      "titulo": "delete de Workspace entra",
+      "veredito": "MORTA",
+      "gate": "WG8",
+      "matou": [],
+      "porque": "delete esta fora da capacidade congelada"
+    },
+    {
+      "n": 7,
+      "titulo": "membership entra",
+      "veredito": "MORTA",
+      "gate": "WG9",
+      "matou": [],
+      "porque": "membership pertence ao provedor de identidade"
+    },
+    {
+      "n": 8,
+      "titulo": "settings genérico entra",
+      "veredito": "MORTA",
+      "gate": "WG10",
+      "matou": [],
+      "porque": "settings generico e a casa esperando o proximo campo"
+    },
+    {
+      "n": 9,
+      "titulo": "GET cria/muda Workspace (leitura com efeito)",
+      "veredito": "MORTA",
+      "gate": "WG1",
+      "matou": [],
+      "porque": "leitura nao pode escrever"
+    },
+    {
+      "n": 10,
+      "titulo": "rename vira recreate (carimbo novo)",
+      "veredito": "MORTA",
+      "gate": "WG3",
+      "matou": [],
+      "porque": "recreate troca o carimbo; rename nao"
+    },
+    {
+      "n": 11,
+      "titulo": "instance_id muda no rename",
+      "veredito": "MORTA",
+      "gate": "IG2",
+      "matou": [],
+      "porque": "identidade da Instance tem de sobreviver"
+    },
+    {
+      "n": 12,
+      "titulo": "name vira unique",
+      "veredito": "MORTA",
+      "gate": "IG5",
+      "matou": [],
+      "porque": "o contrato declara a AUSENCIA de unicidade"
+    },
+    {
+      "n": 13,
+      "titulo": "duplicate rename falha por conflito",
+      "veredito": "MORTA",
+      "gate": "IG5",
+      "matou": [],
+      "porque": "nome ja ocupado continua sendo sucesso"
+    },
+    {
+      "n": 14,
+      "titulo": "baseline muda junto com o rename",
+      "veredito": "MORTA",
+      "gate": "IG6",
+      "matou": [],
+      "porque": "rename nao toca o ponteiro de baseline"
+    },
+    {
+      "n": 15,
+      "titulo": "rename vira delete + create",
+      "veredito": "MORTA",
+      "gate": "IG7",
+      "matou": [],
+      "porque": "o mesmo objeto logico persiste"
+    },
+    {
+      "n": 16,
+      "titulo": "description entra na view",
+      "veredito": "MORTA",
+      "gate": "IG8",
+      "matou": [],
+      "porque": "description nao existe na Instance"
+    },
+    {
+      "n": 17,
+      "titulo": "tags são aceitas na escrita",
+      "veredito": "MORTA",
+      "gate": "IG8",
+      "matou": [],
+      "porque": "extra=forbid: campo a mais e recusado, nao ignorado"
+    },
+    {
+      "n": 18,
+      "titulo": "slug entra na massa",
+      "veredito": "MORTA",
+      "gate": "IG8",
+      "matou": [],
+      "porque": "slug nao existe na Instance"
+    },
+    {
+      "n": 19,
+      "titulo": "503 da Instance vira not-found",
+      "veredito": "MORTA",
+      "gate": "IG9",
+      "matou": [],
+      "porque": "indisponibilidade nao e ausencia"
+    },
+    {
+      "n": 20,
+      "titulo": "o anti-oracle vaza a existência",
+      "veredito": "MORTA",
+      "gate": "IG10",
+      "matou": [],
+      "porque": "distinguir revela o que a fronteira esconde"
+    },
+    {
+      "n": 21,
+      "titulo": "Workspace e Instance compartilham store genérico",
+      "veredito": "MORTA",
+      "gate": "C3",
+      "matou": [],
+      "porque": "um objeto com os dois estados e o configurationEngine nascendo"
+    },
+    {
+      "n": 22,
+      "titulo": "Account entra no scenario de configuração",
+      "veredito": "MORTA",
+      "gate": "C4",
+      "matou": [],
+      "porque": "CFG-03 nao depende do Account"
+    },
+    {
+      "n": 23,
+      "titulo": "Dispatcher entra no scenario de configuração",
+      "veredito": "MORTA",
+      "gate": "C5",
+      "matou": [],
+      "porque": "CFG-04 nao depende do Dispatcher"
+    },
+    {
+      "n": 24,
+      "titulo": "internals do Gateway vazam para o mock público",
+      "veredito": "MORTA",
+      "gate": "WG12",
+      "matou": [],
+      "porque": "o mock e da fronteira PUBLICA"
+    }
+  ],
+  "arvore": " M docs/EXPERIENCE-BLUEPRINT-V1.md\n M src/mocks/scenarios/catalogo.ts\n M src/test/fixtures/public-v1/selo.ts\n M src/test/v1/divergenciaDeclarada.ts\n M src/test/v1/scenarios-catalogo.test.ts\n?? docs/m42/\n?? src/test/fixtures/public-v1/workspace-instance-config.ts\n?? src/test/v1/m42-config-scenarios.test.ts\n"
+}

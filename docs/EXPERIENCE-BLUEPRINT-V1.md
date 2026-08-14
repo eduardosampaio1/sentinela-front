@@ -693,7 +693,7 @@ Só informação canônica **existente**. Nenhum "trust score" inventado.
 
 ---
 
-## 11. Mock Scenario Catalog — 44 cenários
+## 11. Mock Scenario Catalog — 52 cenários
 
 Todo scenario é **nome + lista de handlers**. Fixture derivada do schema publicado (§17).
 
@@ -733,6 +733,25 @@ Todo scenario é **nome + lista de handlers**. Fixture derivada do schema public
 | 42 | `account-language-en` | CFG-02 | idem | `stored: en` · `effective: en` — **escolheu inglês**. Mesma identidade e mesmo `effective` do 41; a diferença é inteira em `stored_language` | — |
 | 43 | `account-language-pt` | CFG-02 | idem | `stored: pt` · `effective: pt`. `PUT en` termina em `stored: "en"`, **nunca em `null`** — não existe CLEAR | — |
 | 44 | `account-language-unavailable` | CFG-02 | `/v1/me` 200 + `/v1/me/language` 503 | contenção de falha: a identidade responde, a preferência não, e a indisponibilidade **não** vira `stored: null` | — |
+| 45 | `workspace-config-current` | CFG-03 | `GET/PATCH /v1/workspaces/{id}` | estado canônico do produtor público · `PATCH` renomeia e o `GET` posterior vê o novo nome, com o **mesmo** `workspace_id`. Renomear para o mesmo nome é `200`. **Não serve `/v1/me`** — a ausência é a prova de que o nome do produto não vem da claim | — |
+| 46 | `workspace-config-stale-claim` | CFG-03 | `/v1/me` + `GET/PATCH /v1/workspaces/{id}` | **armadilha**: a claim diz `"Suporte Regional"`, o produtor diz `"Atendimento Norte"`. O estado canônico é o do **produtor**. Um Front que leia o nome da claim não recebe erro — recebe o nome errado | — |
+| 47 | `workspace-config-unavailable` | CFG-03 | `/v1/me` 200 + Workspace `503` | outage **com claim presente**. `temporarily_unavailable` nunca vira nome confirmado pela claim, e nunca vira "não existe" | — |
+| 48 | `workspace-config-invisible` | CFG-03 | `404 forbidden_or_not_found` | anti-oracle: fora do contexto, papel insuficiente e desconhecido pelo owner **colapsam**. O mock não ensina a tela a distinguir o que o backend esconde | — |
+| 49 | `instance-config-current` | CFG-04 | `GET/PATCH /v1/instances/{id}` + `/baseline` | duas Instances com identidades opacas · `PATCH` renomeia preservando `instance_id`, `created_at` **e o ponteiro de baseline** · renomear para o nome que a vizinha já usa é **sucesso** | — |
+| 50 | `instance-config-duplicate-name` | CFG-04 | `GET /v1/instances` + `{id}` | **estado do mundo**: duas Instances já homônimas, com `instance_id` diferentes. Mata a inferência de unicidade por nome | — |
+| 51 | `instance-config-unavailable` | CFG-04 | Instance `503` | `temporarily_unavailable` **não** vira `forbidden_or_not_found`, e a Instance não some da tela como se tivesse sido apagada | — |
+| 52 | `instance-config-invisible` | CFG-04 | `404 forbidden_or_not_found` | anti-oracle: inexistente e de outro workspace colapsam | — |
+
+**Sobre o que estes oito NÃO contêm.** Não há `create` nem `delete` de Workspace (o contrato diz
+por escrito que o CRUD legado **não foi promovido**), não há listagem de Workspace (isso é
+membership, e membership é do provedor de identidade), não há gestão de membership, e não há
+`description`/`slug`/`tags`/`settings` na Instance. Também **não** existe um objeto que carregue
+os dois estados: Workspace e Instance são donos diferentes, e uma tela só não os torna um
+domínio. Há gate para cada uma dessas ausências.
+
+**Sobre rename como estado.** Seguindo a lição da M41, o catálogo guarda **estados do mundo**; a
+transição `A → B` é provada dentro dos `handlers()` mutáveis. Não existe `workspace-renamed` nem
+`instance-renamed` como entrada — um `PATCH` não cria um mundo novo.
 | 26 | `session-expired` | AUTH-04 | 401 | preserva destino | — |
 | 27 | `forbidden` | ERR-403/404 | 404 `forbidden_or_not_found` | — | — |
 | 28 | `not-found` | ERR-403/404 | idem | **mesma tela**, por contrato | — |

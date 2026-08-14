@@ -66,8 +66,30 @@ export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
   // As duas de idioma SAÍRAM na M41 (2026-08-14), e saíram juntas do jeito que a lista prescreve:
   // com o cliente entregue no mesmo commit. `useAccountLanguage` lê e `useSalvarIdioma` escreve,
   // pela fronteira pública, e o `|| "en"` que colapsava *não escolheu* com *escolheu inglês* saiu
-  // do `LanguageContext` no mesmo movimento. A lista encolhe junto com a dívida — se ficasse,
-  // viraria folclore, que é o que esta declaração existe para impedir.
+  // do `LanguageContext` no mesmo movimento.
+
+  // ── ENTRARAM com a BD12/BD13/BD14, e a lista ficou para trás ────────────────────────────
+  //
+  // Estas SETE já estavam sem cliente quando o contrato foi de 23 para 27 operações, e esta
+  // declaração não acompanhou: o gate ficou VERMELHO no `develop` e assim permaneceu. Ele estava
+  // certo — foi medido antes de qualquer alteração desta missão, e é exatamente o `missing_in_front
+  // = 8` que a BD14 registrou.
+  //
+  // As quatro de Subscription têm dona: **M44**. As três de configuração têm dona: **M42**, e é
+  // esta missão que lhes materializa a MASSA — não o cliente. Materializar scenario não fecha
+  // dívida de cliente, e "resolver" o B1 criando client aqui seria implementar a M42 dentro de um
+  // checkpoint que a proíbe.
+  //
+  // `{analysis_id}` nas rotas de Workspace/Instance/Subscription não é engano: o inventário
+  // normaliza QUALQUER parâmetro de caminho para esse literal, e o faz igual no contrato e nos
+  // clientes. Trocá-lo é missão de harness.
+  "GET /v1/workspaces/{analysis_id}", // get_workspace — BD12; owner: M42 · CFG-03
+  "PATCH /v1/workspaces/{analysis_id}", // rename_workspace — BD12; owner: M42 · CFG-03
+  "PATCH /v1/instances/{analysis_id}", // rename_instance — BD13; owner: M42 · CFG-04
+  "GET /v1/subscriptions", // list_subscriptions — BD14; owner: M44
+  "POST /v1/subscriptions", // create_subscription — BD14; owner: M44
+  "DELETE /v1/subscriptions/{analysis_id}", // disable_subscription — BD14; owner: M44
+  "POST /v1/subscriptions/{analysis_id}/secret", // rotate_secret — BD14; owner: M44
 ] as const;
 
 /**
