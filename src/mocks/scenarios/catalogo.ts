@@ -1,9 +1,12 @@
 // M18 — o CATÁLOGO canônico dos cenários de mock.
 //
-// ## Por que o catálogo tem 35 entradas e não 31
+// ## Por que o catálogo tem 44 entradas e não 41
 //
-// O Blueprint §11 lista **35**. Destes, **31 são executáveis**, **1 é parcial** (`needs-mapping`:
-// exibir sim, resolver não) e **3 estão BLOQUEADOS** por delta de backend que não existe.
+// O Blueprint §11 lista **44**. Destes, **41 são executáveis**, **1 é parcial** (`needs-mapping`:
+// exibir sim, resolver não) e **2 estão BLOQUEADOS** por delta de backend que não existe.
+//
+// (Este bloco dizia 35/31/3 até a M41. Ele tinha ficado para trás em três missões — o número
+// aqui não é gate de ninguém, e por isso envelheceu em silêncio.)
 //
 // Eram 32/27/1/4. A **BD02** desbloqueou `instance-empty` (o delta de Instância deixou de faltar),
 // a **M36** acrescentou `instance-present` e `instance-history`, e o **Checkpoint 0 da M37**
@@ -64,6 +67,13 @@ import {
 // para código convidaria a "ajustar um número" numa revisão, e o número deixaria de ser o que o
 // motor produziu.
 import V3_MASSA from "@/test/fixtures/canonical-result/v3-comparacao.json";
+// M41 — a massa da conta: identidade (CFG-01) e preferência de idioma (CFG-02, BD11).
+import {
+  IDENTIDADE,
+  IDIOMA_INVALIDO,
+  INDISPONIVEL,
+  projetar,
+} from "@/test/fixtures/public-v1/account-language";
 
 export type EstadoDoScenario = "disponivel" | "parcial" | "bloqueado";
 
@@ -217,6 +227,76 @@ const analytics = (base: string, corpo: Record<string, unknown>) =>
  * O catálogo. A ordem é a do Blueprint §11 — mantê-la é o que permite conferir os dois lado a
  * lado sem traduzir numeração.
  */
+/**
+ * M41 — os seams da conta: identidade e preferência de idioma (BD11).
+ *
+ * ## Duas rotas, e elas NÃO se fundem
+ *
+ * `GET /v1/me` é projeção de identidade a partir das claims, **sem I/O**. `GET /v1/me/language`
+ * atravessa o Gateway até o `sentinela-account`. O backend as mantém separadas de propósito —
+ * compor a preferência dentro da identidade faria uma leitura que hoje nunca falha passar a falhar
+ * quando o Account cair, e a identidade é o que decide se a pessoa entra.
+ *
+ * Estes handlers respeitam isso: **duas respostas, nunca um objeto `account` que junte as duas**.
+ * Um mock que as funde ensina a tela a esperar uma fusão que o backend não faz, e o defeito só
+ * aparece contra o servidor real.
+ *
+ * ## Estado por invocação
+ *
+ * Mesmo padrão do baseline (M40) e do `instance-new-analysis` (M37): um `let` no escopo de
+ * `handlers()`. Cada `handlersDoScenario()` nasce sem memória, e um teste não herda o que o
+ * anterior escreveu. **Nenhum store paralelo**, nenhum `PreferenceEngine`.
+ *
+ * ## O que o handler deliberadamente NÃO faz
+ *
+ * - **não escreve na leitura.** `GET` é leitura e nada mais. Um mock que criasse a preferência no
+ *   primeiro acesso fabricaria uma escolha para todo usuário, e a distinção `null` × `"en"` morreria
+ *   no próprio mock;
+ * - **não aceita subject do cliente.** Não há `user_subject` em corpo nem em query: do lado público
+ *   quem determina o usuário é o contexto autenticado. Aceitá-lo aqui ensinaria a tela a mandá-lo;
+ * - **não conhece a API interna.** Sem `x-internal-token`, sem `/internal/v1/accounts`, sem shape de
+ *   banco. Mock é da fronteira PÚBLICA;
+ * - **não oferece `CLEAR`.** Não há `DELETE`. Voltar para inglês é um `PUT` que termina em
+ *   `stored: "en"`, e não em `null`;
+ * - **não normaliza região.** `pt-BR` e `en-US` são recusados como qualquer outro valor fora do
+ *   enum — converter no mock ensinaria a tela que a regra é dela.
+ */
+function contaHandlers(b: string, inicial: "en" | "pt" | null): HttpHandler[] {
+  let stored: "en" | "pt" | null = inicial;
+
+  return [
+    // Identidade: a mesma em todos os scenarios de idioma, porque a preferência é do USUÁRIO e a
+    // identidade não muda quando ele troca de idioma.
+    http.get(`${b}/v1/me`, () => json(IDENTIDADE)),
+
+    http.get(`${b}/v1/me/language`, () => json(projetar(stored))),
+
+    http.put(`${b}/v1/me/language`, async ({ request }) => {
+      const corpo = (await request.json()) as Record<string, unknown> | null;
+      const chaves = Object.keys(corpo ?? {});
+
+      // Campo a mais é RECUSADO, como no produtor (`extra="forbid"`). É isto que impede um corpo
+      // com `user_subject` de escrever a preferência de outra pessoa — e um mock permissivo
+      // aceitaria um Front que manda o subject, com o servidor real recusando só em produção.
+      if (chaves.length !== 1 || chaves[0] !== "language") {
+        return json(IDIOMA_INVALIDO, 400);
+      }
+
+      const pedido = corpo?.language;
+
+      // Enum fechado, e a recusa é do PRODUTOR. Nada de normalizar `pt-BR` → `pt`.
+      if (pedido !== "en" && pedido !== "pt") {
+        return json(IDIOMA_INVALIDO, 400);
+      }
+
+      // Last-write-wins, sem CAS e sem `version`: preferência não é máquina de estados, e dois
+      // dispositivos escolhendo idiomas diferentes produzem duas configurações legítimas.
+      stored = pedido;
+      return json(projetar(stored));
+    }),
+  ];
+}
+
 export const CATALOGO: readonly Scenario[] = [
   {
     id: "workspace-empty",
@@ -594,6 +674,59 @@ export const CATALOGO: readonly Scenario[] = [
     handlers: (b) => [
       http.get(`${b}/v1/analyses`, ({ request }) =>
         json(new URL(request.url).searchParams.get("cursor") ? LIST_PAGE_2 : LIST_PAGE_1)),
+    ],
+  },
+
+  // ── M41 · a conta ────────────────────────────────────────────────────────────────────────
+  //
+  // `account-identity` serve SÓ `/v1/me`, e essa ausência é a prova: a CFG-01 é construível sem o
+  // Account existir. Pedir `/v1/me/language` neste scenario não responde — é o que separa as duas
+  // superfícies.
+  {
+    id: "account-identity",
+    superficies: ["CFG-01"],
+    estado: "disponivel",
+    handlers: (b) => [http.get(`${b}/v1/me`, () => json(IDENTIDADE))],
+  },
+
+  // `stored: null` — nunca escolheu. O produto está em inglês por DEFAULT, não por decisão da
+  // pessoa. É o primeiro estado de toda conta que nunca abriu Configurações.
+  {
+    id: "account-language-default",
+    superficies: ["CFG-02"],
+    estado: "disponivel",
+    handlers: (b) => contaHandlers(b, null),
+  },
+
+  // `stored: "en"` — escolheu inglês. Massa estruturalmente diferente da anterior, com a MESMA
+  // identidade e o MESMO `effective`. A única diferença é o fato que não pode ser perdido.
+  {
+    id: "account-language-en",
+    superficies: ["CFG-02"],
+    estado: "disponivel",
+    handlers: (b) => contaHandlers(b, "en"),
+  },
+
+  // `stored: "pt"`. E daqui sai a prova de que voltar para inglês termina em `"en"`, nunca em
+  // `null`: não existe CLEAR.
+  {
+    id: "account-language-pt",
+    superficies: ["CFG-02"],
+    estado: "disponivel",
+    handlers: (b) => contaHandlers(b, "pt"),
+  },
+
+  // Contenção de falha. `/v1/me` continua 200 — a identidade não depende do Account —, e a
+  // preferência vira `503`. NUNCA `200` com `stored: null`: mascarar indisponibilidade como
+  // ausência faria a tela dizer "você nunca escolheu" para quem escolheu ontem.
+  {
+    id: "account-language-unavailable",
+    superficies: ["CFG-02"],
+    estado: "disponivel",
+    handlers: (b) => [
+      http.get(`${b}/v1/me`, () => json(IDENTIDADE)),
+      http.get(`${b}/v1/me/language`, () => json(INDISPONIVEL, 503)),
+      http.put(`${b}/v1/me/language`, () => json(INDISPONIVEL, 503)),
     ],
   },
 ] as const;

@@ -30,16 +30,25 @@ const NUNCA_NO_FRONT = [
 ] as const;
 
 /**
- * ESTE arquivo sai da varredura, e só ele.
+ * Os arquivos cuja FUNÇÃO é declarar a proibição saem da varredura. Só eles, e nomeados.
  *
- * Ele cita os cinco símbolos proibidos por ofício — é onde eles estão declarados. Na primeira
- * execução o gate acusou a si mesmo, que é o modo clássico de errar ao escrever cadeado textual:
- * quem se comporta bem é denunciado, e a saída fácil vira apagar a declaração.
+ * Eles citam os símbolos proibidos por ofício. Na primeira execução o gate acusou a si mesmo, que
+ * é o modo clássico de errar ao escrever cadeado textual: quem se comporta bem é denunciado, e a
+ * saída fácil vira apagar a declaração.
  *
- * Excluir a pasta de testes inteira seria demais: um teste que vazasse o segredo continuaria
- * vazando, e vale exatamente o mesmo se estiver num `.test.ts`. Só a sede da declaração sai.
+ * **Excluir a pasta de testes inteira seria demais** — um teste que vazasse o segredo continuaria
+ * vazando, e vale exatamente o mesmo se estiver num `.test.ts`. Por isso a lista é de CAMINHOS, e
+ * cresce só quando alguém escreve, de propósito, mais um gate que precisa nomear o proibido.
+ *
+ * Quem entrou aqui, e por quê:
+ *
+ * - este arquivo — é a sede da declaração;
+ * - `m41-massas-conta.test.ts` — o gate G17 dele afirma que o mock público NÃO conhece a API
+ *   interna do Account, e para afirmar isso precisa escrever os nomes.
  */
-const ESTE_ARQUIVO = resolve(__filename);
+const DECLARAM_A_PROIBICAO = new Set(
+  [__filename, join(__dirname, "m41-massas-conta.test.ts")].map((c) => resolve(c)),
+);
 
 function arquivosDeFonte(dir: string, acc: string[] = []): string[] {
   for (const nome of readdirSync(dir)) {
@@ -47,7 +56,7 @@ function arquivosDeFonte(dir: string, acc: string[] = []): string[] {
     if (statSync(caminho).isDirectory()) {
       if (nome === "node_modules" || nome === "__pycache__") continue;
       arquivosDeFonte(caminho, acc);
-    } else if (/\.(ts|tsx|js|jsx)$/.test(nome) && resolve(caminho) !== ESTE_ARQUIVO) {
+    } else if (/\.(ts|tsx|js|jsx)$/.test(nome) && !DECLARAM_A_PROIBICAO.has(resolve(caminho))) {
       acc.push(caminho);
     }
   }

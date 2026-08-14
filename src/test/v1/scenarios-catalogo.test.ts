@@ -76,15 +76,33 @@ const BLOQUEADOS_DO_PLANO = [
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M18 · 1. o catálogo está completo", () => {
-  it("tem as 39 entradas do Blueprint §11", () => {
+  it("tem as 44 entradas do Blueprint §11", () => {
     // Um catálogo curto passaria em todos os outros casos: o que ele não lista, ele não erra.
     // 35 → 37 na materialização das massas v3 da M39. 37 → 39 na M40: `baseline-set` e
-    // `baseline-no-candidates`. As entradas novas são as ÚNICAS que cada missão trouxe, e o
+    // `baseline-no-candidates`. 39 → 44 na M41: `account-identity` (CFG-01) e os quatro
+    // `account-language-*` (CFG-02). As entradas novas são as ÚNICAS que cada missão trouxe, e o
     // Blueprint §11 as lista ANTES de o código as receber.
-    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(39);
+    //
+    // ## Este número quebrar é o gate FUNCIONANDO
+    //
+    // Ele não é proxy frágil: é o invariante do próprio catálogo — a autoridade vem primeiro. Um
+    // crescimento legítimo o derruba de propósito, para que alguém tenha de ir ao Blueprint. Por
+    // isso ele não vira `>= 44` nem sai daqui.
+    //
+    // E ele não anda sozinho: os dois casos do fim deste arquivo cruzam os NOMES contra
+    // `docs/EXPERIENCE-BLUEPRINT-V1.md` nas duas direções. O número aqui é o terceiro dente, não o
+    // único — um catálogo que crescesse com o Blueprint junto ainda teria de passar por ele.
+    //
+    // **Registro da M41, porque a suspeita era outra:** ao mexer neste número eu achei que o
+    // Blueprint estivesse sete entradas atrás e que a frase "as N entradas do Blueprint §11" fosse
+    // falsa. Estava errado. Existem DUAS cópias do documento — a do vault e
+    // `sentinela-front-e1/docs/EXPERIENCE-BLUEPRINT-V1.md` —, e o gate lê a do repositório, que
+    // estava correta e completa. Quem envelheceu foi a do vault, que gate nenhum lê. A do
+    // repositório é a autoridade operativa.
+    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(44);
   });
 
-  it("33 disponíveis · 1 parcial · 3 bloqueados", () => {
+  it("41 disponíveis · 1 parcial · 2 bloqueados", () => {
     // Duas mudanças distintas, e os números as separam. A BD02 moveu `instance-empty` de
     // bloqueado para disponível sem alterar o TOTAL — nada nasceu nem morreu. A M36 acrescentou
     // `instance-present` e `instance-history` e o Checkpoint 0 da M37 acrescentou
@@ -98,7 +116,11 @@ describe("M18 · 1. o catálogo está completo", () => {
     // `no-baseline` mudou de ESTADO (a BD10 publicou o produtor que faltava), e `baseline-set` +
     // `baseline-no-candidates` ENTRARAM. Total 37 → 39; disponíveis 33 → 36 (+2 novos, +1
     // desbloqueado); bloqueados 3 → 2. `baseline-active` fica, porque exige exclusão pública.
-    expect(nomesPorEstado("disponivel").length).toBe(36);
+    //
+    // A M41 acrescentou CINCO, todos disponíveis, e nenhum mudou de estado: 39 → 44, 36 → 41.
+    // Total e disponíveis sobem juntos, e os bloqueados não se movem — é a assinatura de
+    // "entrou no catálogo", distinta de "mudou de estado".
+    expect(nomesPorEstado("disponivel").length).toBe(41);
     expect(nomesPorEstado("parcial").length).toBe(1);
     expect(nomesPorEstado("bloqueado").length).toBe(2);
   });
@@ -282,7 +304,9 @@ describe("M18 · 1. o catálogo está completo", () => {
   it("todo cenário do Blueprint está no catálogo", () => {
     // A direção inversa: o que o mapa promete e o catálogo não entrega.
     const doMapa = [...BLUEPRINT.matchAll(/^\|\s*\d+\s*\|\s*`([a-z0-9-]+)`/gm)].map((m) => m[1]);
-    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(39);
+    // Piso do INSTRUMENTO, não do catálogo: se o regex parar de casar a tabela, o filtro
+    // abaixo roda sobre lista vazia e passa sempre. 39 → 44 com as cinco entradas da M41.
+    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(44);
     const faltando = doMapa.filter((n) => !NOMES.includes(n));
     expect(faltando, "cenário do Blueprint ausente do catálogo").toEqual([]);
   });

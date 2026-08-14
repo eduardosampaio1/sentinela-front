@@ -445,8 +445,8 @@ compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browse
 
 | id | nome | contrato |
 |---|---|---|
-| **CFG-01** | Conta / Usuário — dados de `GET /v1/me`, alteração **delegada** (D19) | **REAL** (leitura) — produtor existe; **sem scenario** ainda |
-| **CFG-02** | Preferências — **idioma** (D23) | 🔶 **APPROVED DELTA** — **owner decidido, contrato ainda não**: o domínio **Account** foi congelado em 2026-08-13 (`ARQ - Domínio Account`, vault), e nenhuma operação pública existe. Idioma é **global por usuário**; `stored = null` ≠ `"en"`. Tema **não entra** (D23 vigente) |
+| **CFG-01** | Conta / Usuário — dados de `GET /v1/me`, alteração **delegada** (D19) | **REAL** (leitura) — produtor existe e **scenario materializado** (`account-identity`, M41). Falta a tela |
+| **CFG-02** | Preferências — **idioma** (D23) | ✅ **BACKEND READY · SCENARIOS READY · FRONT NÃO INICIADO**. A **BD11** publicou `GET`/`PUT /v1/me/language`, servidos pelo `sentinela-account`, e a M41 materializou os quatro scenarios (41–44). Falta o **consumidor**: enquanto ele não existir, a autoridade do idioma no Front é o `localStorage`. Idioma é **global por usuário**; `stored = null` ≠ `"en"`. Tema **não entra** (D23 vigente) |
 | **CFG-03** | Workspace | **APPROVED DELTA** |
 | **CFG-04** | Instância | **APPROVED DELTA** |
 
@@ -693,7 +693,7 @@ Só informação canônica **existente**. Nenhum "trust score" inventado.
 
 ---
 
-## 11. Mock Scenario Catalog — 39 cenários
+## 11. Mock Scenario Catalog — 44 cenários
 
 Todo scenario é **nome + lista de handlers**. Fixture derivada do schema publicado (§17).
 
@@ -728,6 +728,11 @@ Todo scenario é **nome + lista de handlers**. Fixture derivada do schema public
 | 25 | `baseline-active` | INST-05 | — | régua ativa **bloqueia exclusão** | 🔴 **BLOQUEADO — scenario COMPOSTO histórico.** A metade "mostrar régua ativa" foi entregue pelo **38**; a outra metade exige **exclusão pública de Analysis** (B10 → `BD06`), que não existe. **Não é prova canônica de INST-05** |
 | 38 | `baseline-set` | INST-05 | `GET/POST/DELETE .../baseline` + candidatos | régua em `an-cand-0001` com `set_at` · **3 candidatos** · `POST` troca para outra **sem passar por `NO_BASELINE`** · `DELETE` limpa, e repetido mantém | — |
 | 39 | `baseline-no-candidates` | INST-05 | idem | `NO_BASELINE` + candidatos `[]` | — **`[]` significa "o backend consultou e achou zero"**, nunca "endpoint ausente". É o primeiro estado de toda Instance nova, e sem ele a INST-05 teria caminho primário não provado |
+| 40 | `account-identity` | CFG-01 | `/v1/me` | identidade autenticada com dois Workspaces. Serve **só** `/v1/me` — e essa ausência é a prova de que a CFG-01 não depende do Account | — |
+| 41 | `account-language-default` | CFG-02 | `/v1/me` + `GET/PUT /v1/me/language` | `stored: null` · `effective: en` — **nunca escolheu**. `PUT` persiste | — |
+| 42 | `account-language-en` | CFG-02 | idem | `stored: en` · `effective: en` — **escolheu inglês**. Mesma identidade e mesmo `effective` do 41; a diferença é inteira em `stored_language` | — |
+| 43 | `account-language-pt` | CFG-02 | idem | `stored: pt` · `effective: pt`. `PUT en` termina em `stored: "en"`, **nunca em `null`** — não existe CLEAR | — |
+| 44 | `account-language-unavailable` | CFG-02 | `/v1/me` 200 + `/v1/me/language` 503 | contenção de falha: a identidade responde, a preferência não, e a indisponibilidade **não** vira `stored: null` | — |
 | 26 | `session-expired` | AUTH-04 | 401 | preserva destino | — |
 | 27 | `forbidden` | ERR-403/404 | 404 `forbidden_or_not_found` | — | — |
 | 28 | `not-found` | ERR-403/404 | idem | **mesma tela**, por contrato | — |
@@ -747,6 +752,21 @@ não o Gateway, que valida existência e tenant. A associação **não volta na 
 Por isso o scenario é o único do catálogo que **lembra o que o write recebeu** — um mock que
 devolvesse 201 e esquecesse deixaria passar um Front que perdeu o contexto pelo caminho, e a tela
 pareceria funcionar criando análise solta.
+
+Os cenários **40 a 44 nasceram com a M41**, depois da **BD11**, e o par 41/42 é a razão de eles
+existirem: as duas massas têm a **mesma identidade** e o **mesmo `effective_language`**, e diferem
+apenas em `stored_language`. Isso é deliberado. Um adapter que faça `stored ?? effective` funde as
+duas sem quebrar nada — a tela monta, o seletor mostra "English", e o produto passa a afirmar uma
+escolha que a pessoa nunca fez. A massa existe para que esse colapso tenha onde morrer.
+
+**As transições não viraram entradas.** `en→pt` e `pt→en` são provadas DENTRO de 42 e 43, que são
+mutáveis por invocação — o mesmo `let` no escopo de `handlers()` do baseline (M40) e do
+`instance-new-analysis` (M37). O catálogo guarda estados do mundo, não jornadas, e um scenario cujo
+estado inicial duplica outro não traz informação nova. O mesmo vale para escrever o valor repetido.
+
+**CFG-02 tem massa e não tem tela.** Enquanto a M41 de implementação não existir, a autoridade do
+idioma no Front continua sendo o `localStorage` — e há gate afirmando que esta materialização
+**não** o converteu em preferência de backend, para que a conversão seja uma decisão visível.
 
 **INST-07 não recebe scenario, e INST-02 continua sem.** As duas são falta de PRODUTOR, não de
 massa: não há operação de configuração — nem `update`, `PATCH` ou `delete` —, não há estado
@@ -775,7 +795,7 @@ contador ou `updated_at`, porque nada disso existe no contrato; é a mesma razã
 > exige identidade canônica, e campo presente não é identidade declarada. Ele estar mapeado para
 > EVO-02 não o torna requisito de fechamento.
 
-**Bloqueados: 3** (`recommendation-persisted`, `no-baseline`, `baseline-active`)
+**Bloqueados: 2** (`recommendation-persisted`, `baseline-active`) — `no-baseline` saiu com a **BD10**, e esta linha tinha ficado para trás desde a M40
 **+ 1 parcial** (`needs-mapping`). **Nenhuma fixture será inventada para eles.**
 
 `instance-empty` saiu desta lista pela BD02: o produtor real existe e devolve
