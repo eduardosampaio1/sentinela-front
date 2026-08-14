@@ -150,7 +150,10 @@ describe("M37 · 4. INST-07, criação de Instância e B1", () => {
   });
 
   it("B1 permanece em 1", async () => {
-    const { SEM_CLIENTE_NO_FRONT } = await import("./divergenciaDeclarada");
-    expect([...SEM_CLIENTE_NO_FRONT]).toEqual(["POST /v1/instances"]);
+    const { SEM_CLIENTE_E_SEM_MISSAO_DONA } = await import("./divergenciaDeclarada");
+    // B1 = sem cliente E SEM MISSÃO DONA. A lista inteira é comparada com a divergência
+    // REAL em `contract-operations.test.ts`, e num lugar só — repetir o literal aqui
+    // fazia esta face cair junto com as outras quatro a cada operação nova.
+    expect([...SEM_CLIENTE_E_SEM_MISSAO_DONA]).toEqual(["POST /v1/instances"]);
   });
 });

@@ -29,7 +29,7 @@ import { createV1Client, ProblemError } from "@/lib/v1";
 import { MSW_BASE } from "@/test/msw/handlers";
 import { server, setupMsw } from "@/test/msw/server";
 import { resolverOrigemDoContrato } from "./contractOrigin";
-import { SEM_CLIENTE_NO_FRONT } from "./divergenciaDeclarada";
+import { SEM_CLIENTE_E_SEM_MISSAO_DONA, SEM_CLIENTE_NO_FRONT } from "./divergenciaDeclarada";
 import {
   compararOperacoes,
   operacoesDoCliente,
@@ -387,8 +387,13 @@ describe("M23 · 6. o blocker B1", () => {
     // Estado: 3 com a BD02 → 1 após a M36. NÃO há "0 após a M37": o preflight da M37 mediu que
     // o escopo dela é INST-04 (nova análise a partir da Instância), e criar Instância não tem
     // superfície nem missão. `create_instance` fica publicado sem dono até o produto definir uma.
-    expect([...SEM_CLIENTE_NO_FRONT].sort(), "a dívida de B1 divergiu do declarado").toEqual(
-      ["POST /v1/instances"].sort(),
+    //
+    // E "o conjunto vigente" tinha o mesmo defeito de "vazia", só que mais devagar: a BD11
+    // publicou duas operações e derrubou este caso junto com outros quatro. B1 é o que está
+    // sem cliente E SEM MISSÃO DONA; a lista inteira é conferida contra a divergência REAL
+    // em `contract-operations.test.ts`, num lugar só.
+    expect([...SEM_CLIENTE_E_SEM_MISSAO_DONA].sort(), "a dívida de B1 divergiu do declarado").toEqual(
+      ["POST /v1/instances"],
     );
   });
 

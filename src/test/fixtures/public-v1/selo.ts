@@ -35,6 +35,26 @@
  * porque a BD10 recusou embutir o ponteiro na `InstanceView`: baseline é sub-recurso, com leitura
  * própria. Nenhuma amostra precisou de edição.
  *
+ * Atualizado pela **BD11 · Account language preference** (2026-08-13). O que mudou no contrato:
+ * 18 → 20 operações (`get_me_language`/`set_me_language`, sub-recurso de `/v1/me`) e nasceu o
+ * bloco declarativo `account_language_preference`.
+ *
+ * **A reconferência foi refeita, e desta vez sobre o contrato INTEIRO, não só sobre as famílias
+ * de eixos.** Das **30 chaves de topo em comum**, uma única mudou de valor — `operations` —, e a
+ * mudança é **puramente aditiva**: nenhuma operação existente foi alterada, nenhuma foi removida.
+ * Nenhum `*_read_model_fields`, `list_item_fields`, `public_states`, `progress_axes`,
+ * `problem_codes`, `nunca_publicos`, `timeline_event_*`, `me_*` nem `instance_*` mudou. Nenhuma
+ * amostra precisou de edição.
+ *
+ * (Registro de instrumento: as notas anteriores falam em "19 eixos". Filtrando o contrato por
+ * essas famílias hoje encontram-se **17** chaves. Não achei o critério que produzia 19, então
+ * troquei a contagem pela comparação total — 30 de 30 — que é mais forte e não depende de acertar
+ * a lista. Repetir "19" sem conseguir reproduzi-lo seria citar folclore como medição.)
+ *
+ * Antes da BD11: `07de1d3c98c27347f5884d80f20fd63adb53db5236c53927f89b40e36d290b62` (M40/BD10,
+ * 18 operacoes) — conferido: o contrato em `9e252f0^` do `sentinela-facts` produz exatamente esse
+ * digest, o que prova o instrumento antes de mover o selo.
+ *
  * Antes da M40: `005a0874ec1433888ad6cb7dfb1eb6d481208af7b5408270872c0238f7283b96` (Two-View, 15
  * operacoes).
  *
@@ -70,7 +90,7 @@
  * digest novo — no mesmo commit.
  */
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "07de1d3c98c27347f5884d80f20fd63adb53db5236c53927f89b40e36d290b62";
+  "811172171a4e2f34e52bd226f88de46af0a842ad050c8409385c5c59460e3635";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.

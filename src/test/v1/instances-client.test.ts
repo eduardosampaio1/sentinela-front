@@ -211,8 +211,11 @@ describe("M36 · 5. B1 vai de 3 para 1", () => {
   it("`create_instance` CONTINUA — e não fecha na M37 também", async () => {
     // Criar Instance é `Fora` do escopo desta missão. Tirar daqui sem ter o cliente seria
     // declarar fechado o que ninguém entregou — `create_instance` não tem missão dona.
-    const { SEM_CLIENTE_NO_FRONT } = await import("./divergenciaDeclarada");
-    expect([...SEM_CLIENTE_NO_FRONT]).toEqual(["POST /v1/instances"]);
+    const { SEM_CLIENTE_E_SEM_MISSAO_DONA } = await import("./divergenciaDeclarada");
+    // B1 = sem cliente E SEM MISSÃO DONA. A lista inteira é comparada com a divergência
+    // REAL em `contract-operations.test.ts`, e num lugar só — repetir o literal aqui
+    // fazia esta face cair junto com as outras quatro a cada operação nova.
+    expect([...SEM_CLIENTE_E_SEM_MISSAO_DONA]).toEqual(["POST /v1/instances"]);
   });
 
   it("os dois métodos existem de verdade no client canônico", async () => {

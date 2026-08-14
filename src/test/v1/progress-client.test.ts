@@ -253,8 +253,11 @@ describe("M20 · 6. `/progress` saiu de SEM_CLIENTE_NO_FRONT", () => {
     // de afirmar "vazia" porque essa era uma afirmação GLOBAL que a M20 não tem como sustentar:
     // qualquer missão futura que publique contrato a derruba. O que a M20 prova é o de baixo:
     // que a operação DELA saiu.
-    return import("./divergenciaDeclarada").then(({ SEM_CLIENTE_NO_FRONT }) => {
-      expect([...SEM_CLIENTE_NO_FRONT].sort()).toEqual(["POST /v1/instances"].sort());
+    return import("./divergenciaDeclarada").then(({ SEM_CLIENTE_E_SEM_MISSAO_DONA }) => {
+      // B1 = sem cliente E SEM MISSÃO DONA. A lista inteira é comparada com a divergência
+      // REAL em `contract-operations.test.ts`, e num lugar só — repetir o literal aqui
+      // fazia esta face cair junto com as outras quatro a cada operação nova.
+      expect([...SEM_CLIENTE_E_SEM_MISSAO_DONA].sort()).toEqual(["POST /v1/instances"]);
     });
   });
 });

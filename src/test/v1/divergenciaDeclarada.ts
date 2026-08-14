@@ -46,6 +46,11 @@
  *     BD02       3 divergências   B1 reaberto
  *     M36        1 (`create_instance`)
  *     após M37   1                B1 CONTINUA aberto — a M37 é INST-04, não criação
+ *     BD11       3                +2 de idioma, ESTAS com missão dona (M41 · CFG-02)
+ *
+ * As duas da BD11 não são da mesma espécie que `create_instance`: ali falta superfície, produto e
+ * missão; aqui falta só o cliente. Misturá-las numa contagem só faria "B1 aberto" parecer um
+ * problema único quando são dois, com donos e reentradas diferentes.
  *
  * Sobre `{analysis_id}` numa rota de Instance: não é engano. `operationInventory` normaliza
  * QUALQUER parâmetro de caminho para esse literal — token escolhido quando toda rota
@@ -57,6 +62,43 @@ export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
   // junto com a dívida — se ficasse, viraria folclore, que é o que esta declaração existe para
   // impedir.
   "POST /v1/instances", // create_instance — SEM missão dona; owner: Produto/Arquitetura de Instância
+
+  // BD11 (2026-08-13) — preferência de idioma. **Tem missão dona: M41 · CFG-02.**
+  //
+  // Diferente de `create_instance`: aqui não falta superfície nem decisão. O Blueprint tem
+  // CFG-02, o PLAN tem a M41, e o backend está de pé (`sentinela-account`). Falta só o cliente.
+  //
+  // Enquanto ele não existe, a autoridade do idioma no Front continua sendo o `localStorage`:
+  // `LanguageContext.tsx` faz `getItem(STORAGE_KEY) || "en"`, e esse `|| "en"` COLAPSA *não
+  // escolheu* com *escolheu inglês* — exatamente a distinção que a BD11 fez o backend preservar
+  // ("ausência de preferência é ausência de LINHA"). Ou seja: a preferência é guardada e ninguém
+  // a lê, e a tela afirma uma escolha que a pessoa pode nunca ter feito.
+  //
+  // Saem daqui quando a M41 ligar a tela — e o `|| "en"` do contexto sai junto.
+  "GET /v1/me/language", // get_me_language — owner: M41 · CFG-02
+  "PUT /v1/me/language", // set_me_language — owner: M41 · CFG-02
+] as const;
+
+/**
+ * O subconjunto de `SEM_CLIENTE_NO_FRONT` que **não tem missão dona** — o B1 propriamente dito.
+ *
+ * Existe porque cinco casos de missão (M20, M22, M23, M36, M37) afirmavam "B1 permanece em 1"
+ * comparando a lista INTEIRA contra um literal. A `BD11` publicou duas operações e derrubou os
+ * cinco de uma vez — cada um numa face diferente, todos pelo mesmo motivo.
+ *
+ * E o diagnóstico já estava escrito no próprio caso da M20: *"essa era uma afirmação GLOBAL que a
+ * M20 não tem como sustentar: qualquer missão futura que publique contrato a derruba"*. A
+ * observação estava certa e a correção repetiu o erro, só que com outro literal.
+ *
+ * A distinção que interessa não é *quantas* operações estão sem cliente — é **quantas estão sem
+ * cliente E sem ninguém encarregado de dar um**. Contrato que cresce com missão dona é trabalho
+ * agendado; contrato que cresce sem dono é dívida órfã, e é isso que o B1 mede.
+ *
+ * A comparação da lista inteira contra a divergência REAL continua existindo, e num lugar só:
+ * `contract-operations.test.ts`. Ela é que impede o contrato de crescer em silêncio.
+ */
+export const SEM_CLIENTE_E_SEM_MISSAO_DONA: readonly string[] = [
+  "POST /v1/instances", // owner semântico: Produto/Arquitetura de Instância — sem missão no PLAN
 ] as const;
 
 /**

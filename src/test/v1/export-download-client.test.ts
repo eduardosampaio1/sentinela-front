@@ -30,7 +30,7 @@ import { createV1Client, PROBLEM_CODES, ProblemError } from "@/lib/v1";
 import { MSW_BASE } from "@/test/msw/handlers";
 import { server, setupMsw } from "@/test/msw/server";
 import { resolverOrigemDoContrato } from "./contractOrigin";
-import { SEM_CLIENTE_NO_FRONT } from "./divergenciaDeclarada";
+import { SEM_CLIENTE_E_SEM_MISSAO_DONA, SEM_CLIENTE_NO_FRONT } from "./divergenciaDeclarada";
 
 setupMsw();
 
@@ -351,6 +351,9 @@ describe("M22 · 6. `SEM_CLIENTE_NO_FRONT`", () => {
     // fechado o que a M23 ainda devia. A M23 fechou e a catraca subiu para o vazio. A **BD02**
     // publicou três operações de Instance sem cliente, e a catraca desceu de novo — de
     // propósito. Ela continua sendo catraca: operação nova NÃO declarada reprova aqui.
-    expect([...SEM_CLIENTE_NO_FRONT].sort()).toEqual(["POST /v1/instances"].sort());
+    // B1 = sem cliente E SEM MISSÃO DONA. A lista inteira é comparada com a divergência
+    // REAL em `contract-operations.test.ts`, e num lugar só — repetir o literal aqui
+    // fazia esta face cair junto com as outras quatro a cada operação nova.
+    expect([...SEM_CLIENTE_E_SEM_MISSAO_DONA].sort()).toEqual(["POST /v1/instances"]);
   });
 });
