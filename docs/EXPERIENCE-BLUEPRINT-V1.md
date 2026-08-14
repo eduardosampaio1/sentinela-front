@@ -447,8 +447,8 @@ compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browse
 |---|---|---|
 | **CFG-01** | Conta / Usuário — dados de `GET /v1/me`, alteração **delegada** (D19) | ✅ **ENTREGUE** (M41) — a tela lê `/v1/me` e delega credencial ao provedor. O formulário de senha MORTO saiu da superfície canônica |
 | **CFG-02** | Preferências — **idioma** (D23) | ✅ **BACKEND READY · SCENARIOS READY · FRONT NÃO INICIADO**. A **BD11** publicou `GET`/`PUT /v1/me/language`, servidos pelo `sentinela-account`, e a M41 materializou os quatro scenarios (41–44). Falta o **consumidor**: enquanto ele não existir, a autoridade do idioma no Front é o `localStorage`. Idioma é **global por usuário**; `stored = null` ≠ `"en"`. Tema **não entra** (D23 vigente) |
-| **CFG-03** | Workspace | **APPROVED DELTA** |
-| **CFG-04** | Instância | **APPROVED DELTA** |
+| **CFG-03** | Workspace | 🔴 **BD12** — o produtor EXISTE, na casa errada: CRUD legado no Gateway, fora do `/v1`. A BD12 cria o owner (`sentinela-workspace`) e corta o legado. V1 = ler + renomear |
+| **CFG-04** | Instância | 🔴 **BD13** — configuração da Instance na V1 é **renomear**, e só. `name` é o único atributo de produto que ela tem |
 
 > **Excluir conta:** D21 — **FUTURE / DO NOT BUILD**. Nenhum CTA pode permanecer.
 
