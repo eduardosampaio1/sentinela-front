@@ -29,12 +29,19 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { CanonicalQueryProvider } from "@/lib/v1";
 import { CanonicalClientProvider } from "@/features/canonical-analysis/data/client";
+import { ReconciliadorDeIdioma } from "@/features/account/ReconciliadorDeIdioma";
 
 export function FundacaoV1() {
   const navigate = useNavigate();
   return (
     <CanonicalQueryProvider onAuthRequired={() => navigate("/session-expired")}>
       <CanonicalClientProvider>
+        {/* M41 — daqui para dentro, quem manda no idioma é a CONTA, não o `localStorage`.
+            Ele fica AQUI, e não no `LanguageProvider`, porque o provider monta acima do portão de
+            autenticação para servir Landing e páginas legais: ali não há sessão nem QueryClient,
+            e um provider que tentasse ler `/v1/me/language` quebraria a experiência anônima.
+            Não renderiza nada, e nunca escreve. */}
+        <ReconciliadorDeIdioma />
         <Outlet />
       </CanonicalClientProvider>
     </CanonicalQueryProvider>

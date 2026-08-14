@@ -279,6 +279,36 @@ export interface MeView {
   capabilities: { canonical_analysis_enabled: boolean };
 }
 
+// ── Preferencia de idioma da CONTA (BD11 / CFG-02) ──────────────────────────────────────────
+//
+// Duas chaves, e elas NAO sao a mesma informacao:
+//
+//     stored_language = null   ->  "ainda nao escolheu; o produto usa o default"
+//     stored_language = "en"   ->  "escolheu ingles"
+//
+// O tipo separa as duas de proposito. `language: string` aceitaria `es`, `pt-BR` e `""`, e
+// `stored: EffectiveLanguage` apagaria o `null` que carrega a distincao inteira — que e o unico
+// defeito desta capacidade capaz de passar despercebido, porque nao produz erro: a resposta
+// continua plausivel e a tela passa a afirmar uma escolha que a pessoa nunca fez.
+
+/** O que o usuario persistiu EXPLICITAMENTE. `null` = ainda nao escolheu. */
+export type StoredLanguage = "en" | "pt" | null;
+
+/** O idioma que o produto usa agora. Sempre um dos dois — nunca `null`. */
+export type EffectiveLanguage = "en" | "pt";
+
+/**
+ * Resposta de `GET`/`PUT /v1/me/language`.
+ *
+ * As DUAS chaves existem sempre; `null` nunca e omitido. E o Front nao resolve
+ * `stored -> effective`: quem possui essa semantica e o Account, e recalcula-la aqui faria a tela
+ * decidir produto.
+ */
+export interface LanguagePreferenceView {
+  stored_language: StoredLanguage;
+  effective_language: EffectiveLanguage;
+}
+
 // ── Progresso por eixo (M20) ────────────────────────────────────────────────────────────────
 //
 // `progress_axes` do contrato: quatro eixos, e cada um com VOCABULÁRIO PRÓPRIO. Eles não são o

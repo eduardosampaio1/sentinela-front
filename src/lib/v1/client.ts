@@ -22,6 +22,8 @@ import type {
   InstanceView,
   ListParams,
   MeView,
+  EffectiveLanguage,
+  LanguagePreferenceView,
 } from "./contract/public-v1.types";
 import { normalizeProblem, PROBLEM_MEDIA_TYPE, ProblemError, TransportError } from "./problem";
 
@@ -46,6 +48,18 @@ export interface RequestOptions {
 export interface V1Client {
   /** Sessão e workspaces permitidos. Única operação SEM escopo de tenant, por definição. */
   me(opts?: RequestOptions): Promise<MeView>;
+  /**
+   * A preferência de idioma da CONTA (BD11). Sub-recurso de `/v1/me`, e **não** parte dela: a
+   * identidade é projeção de claims e não faz I/O, enquanto esta atravessa até o `sentinela-account`.
+   * Compor as duas faria a identidade passar a falhar quando o Account cair.
+   *
+   * Sem escopo de tenant, e isso é decisão de produto congelada: a preferência é **global por
+   * usuário**, e mandar `workspace_id` sugeriria uma partição que trocaria o idioma ao trocar de
+   * Workspace.
+   */
+  meLanguage(opts?: RequestOptions): Promise<LanguagePreferenceView>;
+  /** Persiste a escolha. Aceita exclusivamente `en` e `pt`; não existe operação de limpar. */
+  setMeLanguage(language: EffectiveLanguage, opts?: RequestOptions): Promise<LanguagePreferenceView>;
   /**
    * Reserva a análise. `params.instanceId` viaja como query OPCIONAL — nunca no corpo, que é onde
    * o Gateway real NÃO lê. `CanonicalScope` continua satisfazendo `PrepareParams` por estrutura,
@@ -290,6 +304,14 @@ export function createV1Client(config: V1ClientConfig): V1Client {
      * o frontend não mantém lista autoritativa de membership nem a deriva de dado local antigo.
      */
     me: (opts) => enviar<MeView>("GET", "/v1/me", {}, opts),
+    meLanguage: (opts) => enviar<LanguagePreferenceView>("GET", "/v1/me/language", {}, opts),
+    setMeLanguage: (language, opts) =>
+      // Corpo com UM campo. `user_subject` não viaja: quem determina o usuário é o contexto
+      // autenticado, e o Gateway recusa corpo com campo a mais.
+      enviar<LanguagePreferenceView>("PUT", "/v1/me/language", {}, opts, {
+        body: JSON.stringify({ language }),
+        contentType: "application/json",
+      }),
     prepare: (params, opts) =>
       pedir<AnalysisHandle>("POST", "/v1/analyses", {
         workspace_id: params.workspaceId,

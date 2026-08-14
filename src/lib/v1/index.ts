@@ -22,7 +22,7 @@ export type { CanonicalQueryProviderProps } from "./CanonicalQueryProvider";
 // (efeito colateral + env guard). Re-exportá-lo faria QUALQUER `import from "@/lib/v1"` — mesmo
 // só p/ `problem`/`queryKeys` — carregar auth/Supabase (ruim p/ keycloak/testes isolados). Quem
 // precisa do singleton fiado importa direto de "@/lib/v1/defaultClient". (Codex E1 R1, achado 2.)
-export { workspaceKeys } from "./queryKeys";
+export { accountKeys, workspaceKeys } from "./queryKeys";
 export {
   clearCanonicalCache,
   createCanonicalQueryClient,

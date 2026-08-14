@@ -31,7 +31,6 @@ export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
   "src/features/landing/LandingPage.tsx": 78,
   "src/features/aion/AionPage.tsx": 33,
   "src/features/profile/ProfilePage.tsx": 23,
-  "src/features/settings/SettingsPage.tsx": 21,
   "src/features/history/RunRow.tsx": 19,
   "src/features/history/RunComparePanel.tsx": 17,
   "src/shell/AuthShell.tsx": 15,
@@ -53,4 +52,7 @@ export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
 } as const;
 
 /** Total declarado — só para a mensagem de falha dizer de quanto para quanto. */
+// M41 — `SettingsPage.tsx` SAIU da lista: ela tinha 21 literais e passou a zero quando a
+// superfície canônica da conta foi reescrita. A entrada não fica com `0` porque arquivo sem
+// dívida não é dívida declarada — e a lista existe para encolher.
 export const HARDCODE_TOTAL = Object.values(HARDCODE_DECLARADO).reduce((a, b) => a + b, 0);

@@ -46,3 +46,22 @@ export const workspaceKeys = {
   timeline: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "timeline"] as const,
 } as const;
+
+/**
+ * A conta — e ela NÃO é tenant-scoped, ao contrário de todo o resto deste arquivo.
+ *
+ * `workspaceKeys` prefixa tudo por `["workspace", id]` porque trocar de workspace precisa isolar o
+ * cache. A preferência de idioma é **global por usuário**: pô-la sob a raiz do workspace faria a
+ * troca de workspace descartá-la e refetchá-la — e, pior, ensinaria que ela pode diferir entre
+ * workspaces, que é exatamente a partição que a BD11 recusou.
+ *
+ * Raiz própria, então, e curta: quem sou eu não depende de onde estou.
+ */
+export const accountKeys = {
+  root: () => ["account"] as const,
+  /** Identidade (`GET /v1/me`). Projeção de claims, sem I/O de domínio. */
+  me: () => ["account", "me"] as const,
+  /** Preferência de idioma (`GET /v1/me/language`). Chave IRMÃ da identidade, não filha: as duas
+   *  falham de formas diferentes, e invalidar uma não pode invalidar a outra. */
+  language: () => ["account", "language"] as const,
+};

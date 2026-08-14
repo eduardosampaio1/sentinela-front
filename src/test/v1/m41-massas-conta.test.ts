@@ -404,30 +404,142 @@ describe("M41 · 7. o mock não conhece o serviço interno", () => {
 // 8. G20 — a dívida, declarada e NÃO consertada aqui
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
-describe("M41 · 8. o localStorage ainda é a autoridade de fato", () => {
+describe("M41 · 8. quem manda no idioma é a CONTA", () => {
   const CONTEXTO = fonte("src/contexts/LanguageContext.tsx");
+  const RECONCILIADOR = fonte("src/features/account/ReconciliadorDeIdioma.tsx");
+  const HOOKS = fonte("src/features/account/data/language.ts");
+  const SECAO = fonte("src/features/account/SecaoDeIdioma.tsx");
 
-  it("G20 · este checkpoint NÃO transformou o localStorage em preferência de backend", () => {
-    // A afirmação é sobre o que NÃO aconteceu. A massa existe; o consumidor não — e enquanto ele
-    // não existir, `LanguageContext` continua sendo a fonte da verdade do idioma no Front, com um
-    // `|| "en"` que colapsa exatamente a distinção que o backend passou a preservar.
-    expect(CONTEXTO).toContain("localStorage");
-    expect(
-      CONTEXTO,
-      "o contexto passou a falar com o backend — isso é trabalho de IMPLEMENTAÇÃO, não desta materialização",
-    ).not.toContain("/v1/me/language");
+  it("G20 · o `|| \"en\"` que colapsava a distinção SAIU do contexto", () => {
+    // A versão anterior deste bloco afirmava o contrário — que a materialização NÃO tinha mexido
+    // no contexto. Ela existia para que a conversão fosse uma decisão visível, e não algo que
+    // aparece junto de outra coisa. A decisão foi tomada na implementação, e o gate virou o
+    // inverso: o colapso não pode voltar.
+    const codigo = soCodigo(CONTEXTO);
+    expect(codigo, "o contexto voltou a concluir preferência do cache").not.toMatch(
+      /getItem\([^)]*\)\s*(\|\||\?\?)\s*["']en["']/,
+    );
+    expect(codigo, "`as Language` sobre o cache volta a inventar domínio fechado").not.toContain(
+      "as Language",
+    );
   });
 
-  it("G20 · nenhum código de PRODUÇÃO consome a rota de idioma ainda", () => {
-    // O gate morre no dia em que a M41 criar o cliente — e é para morrer. Ele existe para que a
-    // criação seja uma DECISÃO visível, e não algo que aparece junto de outra coisa.
-    const producao = [
-      "src/lib/v1/client.ts",
-      "src/contexts/LanguageContext.tsx",
-      "src/features/settings/SettingsPage.tsx",
-    ];
-    for (const arquivo of producao) {
-      expect(fonte(arquivo), `${arquivo} já consome a rota`).not.toContain("/v1/me/language");
+  it("G20 · o cache continua existindo, e continua NÃO sendo autoridade", () => {
+    // Remover o `localStorage` não era o objetivo: sem ele a interface pisca em inglês a cada
+    // carregamento. O que ele não pode é decidir — e é por isso que existe um caminho separado
+    // para o backend aplicar o idioma.
+    const codigo = soCodigo(CONTEXTO);
+    expect(codigo).toContain("localStorage");
+    expect(codigo, "sumiu o caminho pelo qual o backend vence o cache").toContain(
+      "aplicarPreferenciaDaConta",
+    );
+  });
+
+  it("G20 · o consumidor de produção existe, e fala com o GATEWAY", () => {
+    expect(soCodigo(HOOKS)).toContain("meLanguage");
+    expect(soCodigo(SECAO)).toContain("useSalvarIdioma");
+    for (const interno of ["/internal/v1/accounts", "x-internal-token", "user_subject"]) {
+      expect(soCodigo(HOOKS) + soCodigo(SECAO), `o Front alcançou \`${interno}\``).not.toContain(
+        interno,
+      );
+    }
+  });
+
+  it("G20 · o reconciliador aplica `effective`, e NUNCA escreve", () => {
+    const codigo = soCodigo(RECONCILIADOR);
+    expect(codigo).toContain("effective_language");
+    // Um `PUT` aqui migraria a escolha anônima do navegador para a conta no login — silenciosamente.
+    for (const escrita of ["setMeLanguage", "useSalvarIdioma", "mutate"]) {
+      expect(codigo, `o reconciliador escreve (\`${escrita}\`)`).not.toContain(escrita);
+    }
+  });
+
+  it("G20 · nada no Front resolve `stored -> effective` por conta própria", () => {
+    // O colapso pode voltar por outra porta: derivar `stored` de `effective` em qualquer camada.
+    for (const [nome, codigo] of [
+      ["hooks", soCodigo(HOOKS)],
+      ["seção", soCodigo(SECAO)],
+      ["reconciliador", soCodigo(RECONCILIADOR)],
+    ] as const) {
+      expect(codigo, `${nome} deriva stored de effective`).not.toMatch(
+        /stored_language\s*(\?\?|\|\|)\s*/,
+      );
+    }
+  });
+
+  it("G20 · a decisão de salvar compara com o que está SALVO, não com o que está em uso", () => {
+    // O caso que separa os dois é o único que importa: quem está em `stored: null` /
+    // `effective: "en"` e escolhe inglês ESTÁ mudando algo. Comparar por `effective` concluiria
+    // "é o mesmo valor" e deixaria essa pessoa sem como registrar a própria preferência.
+    expect(soCodigo(HOOKS)).toContain("p.stored_language !== alvo");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// 9. O view-model e a superfície canônica — as lacunas que a campanha de mutação encontrou
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("M41 · 9. o view-model preserva os três estados", () => {
+  it("os três estados são NOMEADOS, não derivados", async () => {
+    const { estadoDaPreferencia } = await import("@/features/account/data/language");
+    expect(estadoDaPreferencia(SEM_ESCOLHA)).toEqual({ tipo: "padrao", emUso: "en" });
+    expect(estadoDaPreferencia(ESCOLHEU_EN)).toEqual({ tipo: "salva", escolhido: "en", emUso: "en" });
+    expect(estadoDaPreferencia(ESCOLHEU_PT)).toEqual({ tipo: "salva", escolhido: "pt", emUso: "pt" });
+    expect(estadoDaPreferencia(SEM_ESCOLHA).tipo).not.toBe(estadoDaPreferencia(ESCOLHEU_EN).tipo);
+  });
+
+  it("quem está no PADRÃO pode salvar inglês — a comparação é contra o que está salvo", async () => {
+    const { mudaAPreferencia } = await import("@/features/account/data/language");
+    expect(mudaAPreferencia(SEM_ESCOLHA, "en")).toBe(true);
+    expect(mudaAPreferencia(ESCOLHEU_EN, "en")).toBe(false);
+    expect(mudaAPreferencia(ESCOLHEU_PT, "en")).toBe(true);
+    expect(mudaAPreferencia(ESCOLHEU_PT, "pt")).toBe(false);
+  });
+
+  it("o backend continua tendo como vencer o cache", () => {
+    const ctx = fonte("src/contexts/LanguageContext.tsx");
+    expect(soCodigo(ctx)).toContain("aplicarPreferenciaDaConta: (language: Language) => void;");
+    expect(soCodigo(fonte("src/features/account/ReconciliadorDeIdioma.tsx"))).toContain(
+      "aplicarPreferenciaDaConta(data.effective_language)",
+    );
+  });
+});
+
+describe("M41 · 9b. a superfície canônica: dois idiomas, e nada além do escopo", () => {
+  const SECAO = fonte("src/features/account/SecaoDeIdioma.tsx");
+  const PAGINA = fonte("src/features/settings/SettingsPage.tsx");
+
+  it("G10 · a UI oferece exatamente `en` e `pt`", () => {
+    expect(soCodigo(SECAO)).toContain('const IDIOMAS: readonly EffectiveLanguage[] = ["en", "pt"];');
+    expect(soCodigo(SECAO)).not.toMatch(/"es"|"pt-BR"|"en-US"/);
+  });
+
+  it("G15 · D19 — a superfície canônica NÃO tem formulário de senha", () => {
+    const codigo = soCodigo(PAGINA);
+    expect(codigo, "voltou input de senha à tela canônica").not.toMatch(/type="password"/);
+    for (const morto of ["newPassword", "confirmNewPassword", "handleChangePassword"]) {
+      expect(codigo, `${morto} voltou`).not.toContain(morto);
+    }
+  });
+
+  it("G16 · D21 — nenhuma exclusão de conta", () => {
+    const codigo = soCodigo(PAGINA).toLowerCase();
+    for (const p2 of ["delete account", "deleteaccount", "excluir conta", "showdeleteconfirm"]) {
+      expect(codigo, `${p2} na superfície canônica`).not.toContain(p2);
+    }
+  });
+
+  it("G14 · D23 — nenhum controle de tema", () => {
+    const codigo = (soCodigo(PAGINA) + soCodigo(SECAO)).toLowerCase();
+    for (const p2 of ["theme", "appearance", "dark mode", "modo escuro"]) {
+      expect(codigo, `${p2} entrou na conta`).not.toContain(p2);
+    }
+  });
+
+  it("G20 · CFG-03/CFG-04 não entraram por carona", () => {
+    const codigo = soCodigo(PAGINA).toLowerCase();
+    for (const p2 of ["workspacesettings", "instancesettings", "workspace_id", "instance_id"]) {
+      expect(codigo, `${p2} — isso é M42`).not.toContain(p2);
     }
   });
 });

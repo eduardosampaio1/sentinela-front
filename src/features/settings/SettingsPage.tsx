@@ -1,187 +1,146 @@
-import { useState } from "react";
+// M41 — a superfície CANÔNICA da conta: CFG-01 (identidade) e CFG-02 (idioma).
+//
+// ## O que saiu, e por quê
+//
+// **O formulário de senha.** Ele renderizava campos e um botão que não trocavam senha nenhuma: a
+// chamada ao provedor antigo tinha sido removida, e o que sobrou foi uma tela oferecendo uma ação
+// que não acontece. D19 delega credencial ao provedor de identidade — então o lugar certo é um
+// link para o console dele, não um formulário aqui.
+//
+// **Excluir conta.** D21 está `FUTURE / DO NOT BUILD`. O botão existia e abria um diálogo que
+// terminava num `alert()` pedindo e-mail para o suporte. Uma ação destrutiva que não executa é
+// pior que ausente: ela promete um controle que o produto não tem.
+//
+// ## O que NÃO entrou
+//
+// Tema (D23), configuração de Workspace e de Instância (CFG-03/CFG-04, M42). A identidade vem de
+// `GET /v1/me` — o Account **não** é fonte de nome nem de e-mail, e esta tela não mostra claim
+// bruta, token nem papel inventado.
+
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { PageHeader } from "@/shared/layout/PageHeader";
-import { ConfirmDialog } from "@/shared/feedback/ConfirmDialog";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { getAuthClient } from "@/lib/auth/index";
-import { cn } from "@/lib/utils";
+import { SecaoDeIdioma } from "@/features/account/SecaoDeIdioma";
+import { useContaDoUsuario } from "@/features/account/data/language";
 
-function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+function Section({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="card-base p-6">
-      <div className="mb-5 pb-5 border-b border-[rgba(255,255,255,0.05)]">
-        <h2 className="text-base font-semibold text-[#F1F5F9]">{title}</h2>
-        {description && <p className="text-sm text-[#94A3B8] mt-1">{description}</p>}
+    <section className="card-base p-6">
+      <div className="mb-5 border-b border-border pb-5">
+        <h2 className="text-base font-semibold text-foreground">{title}</h2>
+        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       </div>
       {children}
+    </section>
+  );
+}
+
+function Campo({ rotulo, valor }: { rotulo: string; valor: string }) {
+  return (
+    <div>
+      <dt className="text-sm text-muted-foreground">{rotulo}</dt>
+      <dd className="mt-1 text-sm text-foreground">{valor}</dd>
     </div>
   );
 }
 
 export function SettingsPage() {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const conta = useContaDoUsuario();
 
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [passwordLoading, setPasswordLoading] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  // A identidade tem carregamento PRÓPRIO. Um spinner global esconderia que ela já chegou e que
+  // só a preferência está pendente — e são duas dependências diferentes, com falhas diferentes.
+  const urlDoProvedor = getAuthClient().accountManagementUrl();
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  const displayName =
-    (user?.user_metadata?.full_name as string | undefined) ??
-    (user?.user_metadata?.name as string | undefined) ??
-    "—";
-
-  async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault();
-    // Modo keycloak: credenciais são geridas no Account Console do Keycloak.
-    const authClient = getAuthClient();
-    if (!authClient.supportsPasswordForms()) {
-      const url = authClient.accountManagementUrl();
-      if (url) window.location.href = url;
-      return;
-    }
-    if (!newPassword) { setPasswordError("New password is required."); return; }
-    if (newPassword.length < 8) { setPasswordError("Password must be at least 8 characters."); return; }
-    if (newPassword !== confirmNewPassword) { setPasswordError("Passwords do not match."); return; }
-
-    setPasswordLoading(true);
-    setPasswordError(null);
-    setPasswordSuccess(false);
-
-    try {
-      // Aqui ficava `supabase.auth.updateUser({ password })`. Trecho MORTO desde que o Keycloak
-      // assumiu: o guarda acima já desvia para o Account Console (D19), e a SPA não troca
-      // credencial. Removido na M02 sem tocar na aparência desta tela.
-      const error = new Error("unreachable: credential change is delegated to the provider");
-      if (error) throw error;
-      setPasswordSuccess(true);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmNewPassword("");
-    } catch (err) {
-      setPasswordError(err instanceof Error ? err.message : "Failed to update password.");
-    } finally {
-      setPasswordLoading(false);
-    }
-  }
-
-  async function handleSignOut() {
+  async function sair() {
     await signOut();
     navigate("/login");
   }
 
   return (
-    <AppShell topBarTitle="Settings">
+    <AppShell topBarTitle={t("account.title")}>
       <PageFrame maxWidth="lg">
-        <PageHeader title="Settings" description="Manage your account and preferences." />
+        <PageHeader title={t("account.title")} description={t("account.subtitle")} />
 
         <div className="space-y-6">
-          {/* Profile */}
-          <Section title="Profile" description="Your account information.">
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm text-[#94A3B8]">Full name</Label>
-                <p className="text-sm text-[#F1F5F9] mt-1">{displayName}</p>
-              </div>
-              <div>
-                <Label className="text-sm text-[#94A3B8]">Email</Label>
-                <p className="text-sm text-[#F1F5F9] mt-1">{user?.email ?? "—"}</p>
-              </div>
-              <div>
-                <Label className="text-sm text-[#94A3B8]">User ID</Label>
-                <p className="text-xs font-mono text-[#475569] mt-1">{user?.id ?? "—"}</p>
-              </div>
-            </div>
+          <Section title={t("account.identityTitle")} description={t("account.identityBody")}>
+            {conta.isPending ? (
+              <p className="text-sm text-muted-foreground" role="status">
+                {t("common.loading")}
+              </p>
+            ) : conta.data ? (
+              <dl className="space-y-4">
+                <Campo rotulo={t("account.name")} valor={conta.data.user.name} />
+                <Campo rotulo={t("account.email")} valor={conta.data.user.email} />
+                {/* Lista, e não texto unido por separador: um nome de workspace pode CONTER o
+                    separador — a massa tem "Acme · Laboratório" —, e aí "Acme · Acme · Laboratório"
+                    não deixa ver onde um termina e o outro começa. Achado da revisão da captura. */}
+                <div>
+                  <dt className="text-sm text-muted-foreground">{t("account.workspaces")}</dt>
+                  <dd className="mt-1 text-sm text-foreground">
+                    {conta.data.workspaces.length ? (
+                      <ul className="space-y-1">
+                        {conta.data.workspaces.map((w) => (
+                          <li key={w.id}>{w.name}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      t("account.noWorkspaces")
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="text-sm text-destructive" role="alert">
+                {t("account.identityFailed")}
+              </p>
+            )}
           </Section>
 
-          {/* Security */}
-          <Section title="Security" description="Change your password or manage sessions.">
-            <form onSubmit={handleChangePassword} className="space-y-4 max-w-sm">
-              <div className="space-y-1.5">
-                <Label htmlFor="newPassword" className="text-sm text-[#94A3B8]">New password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Min. 8 characters"
-                  className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] rounded-xl"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="confirmNewPassword" className="text-sm text-[#94A3B8]">Confirm new password</Label>
-                <Input
-                  id="confirmNewPassword"
-                  type="password"
-                  value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  placeholder="Repeat your password"
-                  className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] rounded-xl"
-                />
-              </div>
-
-              {passwordError && <p className="text-xs text-[#F87171]">{passwordError}</p>}
-              {passwordSuccess && <p className="text-xs text-[#34D399]">Password updated successfully.</p>}
-
-              <Button type="submit" disabled={passwordLoading} size="sm" className="rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4]">
-                {passwordLoading ? "Updating..." : "Update password"}
-              </Button>
-            </form>
-
-            <div className="mt-6 pt-5 border-t border-[rgba(255,255,255,0.05)]">
-              <Button onClick={handleSignOut} variant="ghost" size="sm" className="rounded-xl text-[#94A3B8] hover:text-[#94A3B8] hover:bg-[rgba(255,255,255,0.04)]">
-                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25" />
-                </svg>
-                Sign out
-              </Button>
-            </div>
+          <Section title={t("account.languageTitle")} description={t("account.languageBody")}>
+            <SecaoDeIdioma />
           </Section>
 
-          {/* Danger zone */}
-          <Section title="Danger zone">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-[#F87171]">Delete account</p>
-                <p className="text-xs text-[#94A3B8] mt-1">
-                  Permanently delete your account and all associated data. This action cannot be undone.
-                </p>
-              </div>
+          <Section title={t("account.signInTitle")} description={t("account.signInBody")}>
+            <div className="flex flex-wrap items-center gap-3">
+              {urlDoProvedor && (
+                <Button
+                  asChild
+                  size="sm"
+                  variant="ghost"
+                  className="min-h-11 rounded-xl border border-border text-foreground"
+                >
+                  <a href={urlDoProvedor} rel="noopener noreferrer">
+                    {t("account.signInAction")}
+                  </a>
+                </Button>
+              )}
               <Button
+                onClick={sair}
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="rounded-xl border border-[rgba(248,113,113,0.2)] text-[#F87171] hover:bg-[rgba(248,113,113,0.08)] flex-shrink-0"
+                className="min-h-11 rounded-xl text-muted-foreground hover:bg-muted"
               >
-                Delete account
+                {t("account.signOut")}
               </Button>
             </div>
           </Section>
         </div>
-
-        <ConfirmDialog
-          open={showDeleteConfirm}
-          onOpenChange={setShowDeleteConfirm}
-          title="Delete your account?"
-          description="This is permanent and irreversible. All your workspaces, analyses, and data will be deleted immediately. You cannot undo this action."
-          confirmLabel="Delete my account permanently"
-          variant="destructive"
-          onConfirm={async () => {
-            // Account deletion requires backend support
-            window.alert("Account deletion requires contacting support. Please email support@sentinela.ai");
-            setShowDeleteConfirm(false);
-          }}
-        />
       </PageFrame>
     </AppShell>
   );

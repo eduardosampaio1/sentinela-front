@@ -63,20 +63,11 @@ export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
   // impedir.
   "POST /v1/instances", // create_instance — SEM missão dona; owner: Produto/Arquitetura de Instância
 
-  // BD11 (2026-08-13) — preferência de idioma. **Tem missão dona: M41 · CFG-02.**
-  //
-  // Diferente de `create_instance`: aqui não falta superfície nem decisão. O Blueprint tem
-  // CFG-02, o PLAN tem a M41, e o backend está de pé (`sentinela-account`). Falta só o cliente.
-  //
-  // Enquanto ele não existe, a autoridade do idioma no Front continua sendo o `localStorage`:
-  // `LanguageContext.tsx` faz `getItem(STORAGE_KEY) || "en"`, e esse `|| "en"` COLAPSA *não
-  // escolheu* com *escolheu inglês* — exatamente a distinção que a BD11 fez o backend preservar
-  // ("ausência de preferência é ausência de LINHA"). Ou seja: a preferência é guardada e ninguém
-  // a lê, e a tela afirma uma escolha que a pessoa pode nunca ter feito.
-  //
-  // Saem daqui quando a M41 ligar a tela — e o `|| "en"` do contexto sai junto.
-  "GET /v1/me/language", // get_me_language — owner: M41 · CFG-02
-  "PUT /v1/me/language", // set_me_language — owner: M41 · CFG-02
+  // As duas de idioma SAÍRAM na M41 (2026-08-14), e saíram juntas do jeito que a lista prescreve:
+  // com o cliente entregue no mesmo commit. `useAccountLanguage` lê e `useSalvarIdioma` escreve,
+  // pela fronteira pública, e o `|| "en"` que colapsava *não escolheu* com *escolheu inglês* saiu
+  // do `LanguageContext` no mesmo movimento. A lista encolhe junto com a dívida — se ficasse,
+  // viraria folclore, que é o que esta declaração existe para impedir.
 ] as const;
 
 /**

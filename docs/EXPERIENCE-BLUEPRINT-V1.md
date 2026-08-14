@@ -445,7 +445,7 @@ compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browse
 
 | id | nome | contrato |
 |---|---|---|
-| **CFG-01** | Conta / Usuário — dados de `GET /v1/me`, alteração **delegada** (D19) | **REAL** (leitura) — produtor existe e **scenario materializado** (`account-identity`, M41). Falta a tela |
+| **CFG-01** | Conta / Usuário — dados de `GET /v1/me`, alteração **delegada** (D19) | ✅ **ENTREGUE** (M41) — a tela lê `/v1/me` e delega credencial ao provedor. O formulário de senha MORTO saiu da superfície canônica |
 | **CFG-02** | Preferências — **idioma** (D23) | ✅ **BACKEND READY · SCENARIOS READY · FRONT NÃO INICIADO**. A **BD11** publicou `GET`/`PUT /v1/me/language`, servidos pelo `sentinela-account`, e a M41 materializou os quatro scenarios (41–44). Falta o **consumidor**: enquanto ele não existir, a autoridade do idioma no Front é o `localStorage`. Idioma é **global por usuário**; `stored = null` ≠ `"en"`. Tema **não entra** (D23 vigente) |
 | **CFG-03** | Workspace | **APPROVED DELTA** |
 | **CFG-04** | Instância | **APPROVED DELTA** |
