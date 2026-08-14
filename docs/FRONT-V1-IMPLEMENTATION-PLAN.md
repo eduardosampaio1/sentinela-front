@@ -55,6 +55,10 @@
 `BD02` Instância · `BD03` `recommendation_id` · `BD04` preferências · `BD05` `prepared` lifecycle ·
 `BD06` exclusão de análise · `BD07` canonicalização de contrato · `BD08` schema aninhado do
 Analytics · `BD09` resolução de destinatário (**condicional** à prova de Q15) ·
+`BD11` **Account Language Preference** — 🧊 **autoridade congelada em 2026-08-13, não implementada**
+(`02 - Arquitetura/ARQ - BD11 - Account Language Preference`, vault; migra para
+`sentinela-account/docs/` no bootstrap). Owner: **`sentinela-account`** — repo **existe e está
+VAZIO**, `EXISTS / NO RUNTIME AUTHORIZED`. Desbloqueia **CFG-02**; **não** desbloqueia a M42 ·
 `BD10` **Baseline Reference** — ✅ **IMPLEMENTADA e FECHADA** em 2026-08-13
 (`sentinela-orchestrator/docs/BD10-BASELINE-REFERENCE.md`). Entrega `GET`/`POST`/`DELETE`
 `/v1/instances/{id}/baseline` + `list_analyses?instance_id=&baseline_eligible=true`.
@@ -1458,8 +1462,18 @@ As duas primeiras vivem em `src/` e são **trabalho da M40**, não pré-requisit
 > escolha **nunca** é persistida automaticamente · **tema continua fora** (D23) · **senha continua
 > no Keycloak** (D19) · **excluir conta continua fora** (D21).
 >
-> - **Pré (novo):** 🔴 **Backend Authority do Account** → contrato público de preferência.
->   **`BD04` não cobre isto** e não deve ser implementada no formato descrito.
+> - **Pré (novo):** 🔴 **`BD11` · Account Language Preference** — autoridade **congelada** em
+>   2026-08-13, **implementação não iniciada**. **`BD04` não cobre isto** e não deve ser
+>   implementada no formato descrito.
+>
+> **O que a `BD11` entrega à CFG-02, literalmente:** `GET`/`PUT` `/v1/me/language`, devolvendo
+> `{stored_language, effective_language}` — as duas chaves sempre presentes, `stored` podendo ser
+> `null`. A tela lê, oferece os dois idiomas, escreve e reflete a resposta. **Ela não recalcula
+> `effective`** (quem resolve é o Account) e **`localStorage` deixa de ser autoridade** — pode
+> permanecer como cache de bootstrap visual, nunca como fonte da verdade.
+>
+> **E o que ela NÃO entrega:** `CLEAR`. Voltar a `stored = null` não foi autorizado — nada no
+> produto pede "desescolher meu idioma".
 
 #### Entrada original — o estado até 2026-08-13
 
