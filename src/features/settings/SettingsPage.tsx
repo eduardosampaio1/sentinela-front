@@ -39,7 +39,7 @@ function Section({
 }) {
   return (
     <section className="card-base p-6">
-      <div className="mb-5 border-b border-border pb-5">
+      <div className="mb-4 border-b border-border pb-4">
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
         {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       </div>
@@ -50,10 +50,10 @@ function Section({
 
 function Campo({ rotulo, valor }: { rotulo: string; valor: string }) {
   return (
-    <div>
+    <>
       <dt className="text-sm text-muted-foreground">{rotulo}</dt>
-      <dd className="mt-1 text-sm text-foreground">{valor}</dd>
-    </div>
+      <dd className="text-sm text-foreground sm:mt-0">{valor}</dd>
+    </>
   );
 }
 
@@ -84,15 +84,15 @@ export function SettingsPage() {
                 {t("common.loading")}
               </p>
             ) : conta.data ? (
-              <dl className="space-y-4">
+              <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-[10rem_1fr]">
                 <Campo rotulo={t("account.name")} valor={conta.data.user.name} />
                 <Campo rotulo={t("account.email")} valor={conta.data.user.email} />
                 {/* Lista, e não texto unido por separador: um nome de workspace pode CONTER o
                     separador — a massa tem "Acme · Laboratório" —, e aí "Acme · Acme · Laboratório"
                     não deixa ver onde um termina e o outro começa. Achado da revisão da captura. */}
-                <div>
+                <>
                   <dt className="text-sm text-muted-foreground">{t("account.workspaces")}</dt>
-                  <dd className="mt-1 text-sm text-foreground">
+                  <dd className="text-sm text-foreground">
                     {conta.data.workspaces.length ? (
                       <ul className="space-y-1">
                         {conta.data.workspaces.map((w) => (
@@ -103,7 +103,7 @@ export function SettingsPage() {
                       t("account.noWorkspaces")
                     )}
                   </dd>
-                </div>
+                </>
               </dl>
             ) : (
               <p className="text-sm text-destructive" role="alert">

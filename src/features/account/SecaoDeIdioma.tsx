@@ -133,7 +133,20 @@ export function SecaoDeIdioma() {
                 aria-describedby={descricaoId}
                 className="h-4 w-4 accent-[hsl(var(--primary))]"
               />
-              <span>{idioma === "pt" ? t("account.portuguese") : t("account.english")}</span>
+              <span className="flex-1">
+                {idioma === "pt" ? t("account.portuguese") : t("account.english")}
+              </span>
+              {/* A marca da escolha PERSISTIDA, na própria opção.
+                  Achado da revisão da captura: sem ela, o estado "usando o padrão" e o estado
+                  "escolhi inglês" produziam telas pixel-idênticas exceto por uma linha de texto
+                  secundário — o elemento de MENOR ênfase carregando a distinção que a capacidade
+                  inteira existe para preservar. Aqui ela aparece no controle, e some por completo
+                  quando não há escolha salva. */}
+              {estado.tipo === "salva" && estado.escolhido === idioma && (
+                <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                  {t("account.savedTag")}
+                </span>
+              )}
             </label>
           ))}
         </div>
