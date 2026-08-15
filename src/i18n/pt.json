@@ -687,6 +687,17 @@
     "truncated": "Esta é a primeira página. Há mais análises no histórico.",
     "seeAll": "Ver histórico"
   },
+  "instanceConfig": {
+    "body": "O nome que você vê. O histórico, as análises e a referência não mudam.",
+    "identity": "ID",
+    "nameLabel": "Nome",
+    "nameRequired": "Digite um nome antes de salvar.",
+    "save": "Salvar nome",
+    "saveFailed": "Não conseguimos salvar o nome. Nada mudou — tente novamente.",
+    "saved": "Nome da instância salvo.",
+    "saving": "Salvando…",
+    "title": "Instância"
+  },
   "instances": {
     "backToList": "Ver todas as instâncias",
     "createdOn": "Criada em",
@@ -1017,5 +1028,20 @@
       "accountHint": "Abre o provedor de identidade",
       "signOut": "Sair"
     }
+  },
+  "workspaceConfig": {
+    "body": "O nome que sua equipe vê. Alterá-lo não muda acessos nem análises.",
+    "identity": "ID",
+    "loadFailed": "Não conseguimos carregar as configurações do espaço.",
+    "loadRetry": "Tentar novamente",
+    "loading": "Carregando espaço",
+    "nameLabel": "Nome",
+    "nameRequired": "Digite um nome antes de salvar.",
+    "noContext": "Abra um espaço para ver as configurações dele.",
+    "save": "Salvar nome",
+    "saveFailed": "Não conseguimos salvar o nome. Nada mudou — tente novamente.",
+    "saved": "Nome do espaço salvo.",
+    "saving": "Salvando…",
+    "title": "Espaço de trabalho"
   }
 }

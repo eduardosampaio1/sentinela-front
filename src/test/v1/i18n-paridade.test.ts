@@ -396,6 +396,14 @@ describe("M14 · 6. nenhuma superfície nasce com texto hardcoded", () => {
  * Estas 45 não são defeito — são a MATÉRIA que testa os patterns. A catraca existe para que o
  * número não cresça sem alguém olhar, e para que quem encurtar uma frase o veja descer.
  */
+// PERMANECE 45 na M42, e a tentativa de mexer nele foi um erro meu: eu media a razão por
+// CARACTERES e este gate mede outra coisa. Subi para 47 achando que duas frases novas tinham
+// estourado; o gate respondeu que o número continuava 45 — ou seja, nenhuma estourou pela régua
+// que vale. A régua do gate é a autoridade, não a minha aritmética.
+//
+// As quatro frases que eu havia encurtado ficaram encurtadas de qualquer forma, porque a redação
+// melhorou: dentro de uma seção intitulada "Instância", o rótulo não precisa repetir "da
+// instância" — virou "Nome"/"Name", "Salvar nome"/"Save name" e "ID".
 const ACIMA_DO_ORCAMENTO = 45;
 const ORCAMENTO = 1.3;
 

@@ -43,6 +43,7 @@ import { AvisoDaJornada } from "@/features/canonical-analysis/ui/AvisoDaJornada"
 import { useInstance, useInstanceHistory } from "./data/instance";
 import { HistoricoDaInstancia } from "./HistoricoDaInstancia";
 import { ReferenciaDaInstancia } from "./ReferenciaDaInstancia";
+import { SecaoDaInstancia } from "./SecaoDaInstancia";
 
 export default function InstancePage() {
   const { t, language } = useLanguage();
@@ -185,6 +186,12 @@ export default function InstancePage() {
             Ela NÃO é uma página própria: baseline não tem identidade fora da Instância, e um
             `/baseline` de topo afirmaria que tem. */}
         <ReferenciaDaInstancia scope={scope} instanceId={instanceId} instanceName={inst.name} />
+
+        {/* M42 · CFG-04. Depois da régua e ANTES do histórico: configurar o nome é ação sobre
+            esta Instância, e ficaria estranha embaixo de uma lista paginada de análises.
+            `inst.name` é o valor CONFIRMADO pela leitura desta página — a seção não busca de
+            novo, para não criar duas verdades sobre a mesma linha. */}
+        <SecaoDaInstancia scope={scope} instanceId={instanceId} instanceName={inst.name} />
 
         <section aria-labelledby="inst-historico" className="mt-8 space-y-3">
           <h2 id="inst-historico" className="text-lg font-semibold text-foreground">

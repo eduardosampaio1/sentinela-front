@@ -687,6 +687,17 @@
     "truncated": "This is the first page. There are more analyses in the history.",
     "seeAll": "See history"
   },
+  "instanceConfig": {
+    "body": "The name you see. History, analyses and reference stay the same.",
+    "identity": "ID",
+    "nameLabel": "Name",
+    "nameRequired": "Type a name before saving.",
+    "save": "Save name",
+    "saveFailed": "We could not save the name. Nothing changed — try again.",
+    "saved": "Instance name saved.",
+    "saving": "Saving…",
+    "title": "Instance"
+  },
   "instances": {
     "backToList": "View all instances",
     "createdOn": "Created on",
@@ -1017,5 +1028,20 @@
       "accountHint": "Opens your identity provider",
       "signOut": "Sign out"
     }
+  },
+  "workspaceConfig": {
+    "body": "The name your team sees. Changing it does not affect access or analyses.",
+    "identity": "ID",
+    "loadFailed": "We could not load the workspace settings.",
+    "loadRetry": "Try again",
+    "loading": "Loading workspace",
+    "nameLabel": "Name",
+    "nameRequired": "Type a name before saving.",
+    "noContext": "Open a workspace to see its settings.",
+    "save": "Save name",
+    "saveFailed": "We could not save the name. Nothing changed — try again.",
+    "saved": "Workspace name saved.",
+    "saving": "Saving…",
+    "title": "Workspace"
   }
 }

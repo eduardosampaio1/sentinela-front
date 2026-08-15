@@ -27,6 +27,8 @@ import { Button } from "@/components/ui/button";
 import { getAuthClient } from "@/lib/auth/index";
 import { SecaoDeIdioma } from "@/features/account/SecaoDeIdioma";
 import { useContaDoUsuario } from "@/features/account/data/language";
+import { SecaoDeWorkspace } from "@/features/workspace/SecaoDeWorkspace";
+import { useCanonicalScope } from "@/features/canonical-analysis/ui/scope";
 
 function Section({
   title,
@@ -60,6 +62,9 @@ function Campo({ rotulo, valor }: { rotulo: string; valor: string }) {
 export function SettingsPage() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  // M42 · CFG-03 — o escopo canônico já existe; a seção do espaço usa o MESMO, e não um
+  // `workspace_id` lido de outro lugar.
+  const escopo = useCanonicalScope();
   const { t } = useLanguage();
   const conta = useContaDoUsuario();
 
@@ -114,6 +119,14 @@ export function SettingsPage() {
 
           <Section title={t("account.languageTitle")} description={t("account.languageBody")}>
             <SecaoDeIdioma />
+          </Section>
+
+          {/* M42 · CFG-03. Seção PRÓPRIA, com carregamento e falha próprios: o espaço e a conta
+              têm donos diferentes, e um `503` do espaço não pode apagar a identidade acima nem o
+              idioma abaixo. A configuração da Instância não está aqui — ela mora onde o contexto
+              de Instância existe, e inventar um seletor seria criar superfície sem authority. */}
+          <Section title={t("workspaceConfig.title")} description={t("workspaceConfig.body")}>
+            <SecaoDeWorkspace workspaceId={escopo?.workspaceId ?? null} />
           </Section>
 
           <Section title={t("account.signInTitle")} description={t("account.signInBody")}>
