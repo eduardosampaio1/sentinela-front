@@ -169,11 +169,27 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
                 <span className="tabular-nums text-muted-foreground">
                   {/* Três formas, impostas pela ORIGEM: exata, limitada por faixa, ou não
                       publicada com motivo. Nenhuma é derivada da outra aqui. */}
-                  {s.value !== null
-                    ? s.value
-                    : s.lower_bound !== null && s.upper_bound !== null
-                      ? `${s.lower_bound}–${s.upper_bound}`
-                      : (s.reason_code ?? t("canonicalAnalysis.analyticsView.notPublished"))}
+                  {s.value !== null ? (
+                    s.value
+                  ) : s.lower_bound !== null && s.upper_bound !== null ? (
+                    `${s.lower_bound}–${s.upper_bound}`
+                  ) : (
+                    // M45.4 — ESTAVA INVERTIDO. O `reason_code` cru era impresso justamente
+                    // quando havia motivo a explicar, e a frase humana só aparecia quando não
+                    // havia motivo nenhum: a tela mostrava `below_min_group` e guardava
+                    // "não publicado" para o caso mudo.
+                    //
+                    // Agora a palavra vem sempre, e o código fica ao lado como detalhe
+                    // correlacionável. Traduzir o código não é opção: `reason_code` é `string`
+                    // aberta no contrato, e inventar rótulo para um código novo do backend é o
+                    // que `rotuloDe` do ARGOS existe para não fazer. Feio e honesto vence.
+                    <>
+                      {t("canonicalAnalysis.analyticsView.notPublished")}
+                      {s.reason_code ? (
+                        <span className="ml-2 font-mono opacity-70">{s.reason_code}</span>
+                      ) : null}
+                    </>
+                  )}
                 </span>
               </li>
             ))}

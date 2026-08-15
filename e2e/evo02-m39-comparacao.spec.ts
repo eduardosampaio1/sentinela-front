@@ -109,9 +109,18 @@ test("deep link e refresh reconstroem A e B pelos ids, sem passar pela lista", a
 test("a ordem A/B é a da URL", async ({ page }) => {
   await preparar(page);
   await page.goto(`/analyses/compare/${B}/${A}`);
-  // A copy nomeia os lados: "A: <id> · B: <id>". Nomear é o que impede a tela de afirmar ordem
-  // cronológica — a rota publica posição, não tempo.
-  await expect(page.getByText(`A: ${B} · B: ${A}`)).toBeVisible();
+  // A copy nomeia os lados. Nomear é o que impede a tela de afirmar ordem cronológica — a rota
+  // publica posição, não tempo.
+  //
+  // Desde a M45.4 cada lado é um LINK para a sua análise: o estado sem-ARGOS prometia que *o
+  // resultado histórico segue disponível em cada análise* e não havia caminho para nenhuma das
+  // duas. Afirmar o `href`, e não só o texto, prende as duas garantias de uma vez.
+  await expect(
+    page.getByRole("link", { name: new RegExp(`^(Analysis A|Análise A): ${B}$`) }),
+  ).toHaveAttribute("href", `/analyses/${B}`);
+  await expect(
+    page.getByRole("link", { name: new RegExp(`^(Analysis B|Análise B): ${A}$`) }),
+  ).toHaveAttribute("href", `/analyses/${A}`);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────

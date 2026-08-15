@@ -186,19 +186,25 @@ export function ComparacaoArgos({ comparacao }: { readonly comparacao: Comparaca
     descriptorDe(p.id) ? t(`canonicalAnalysis.result.indicator.${p.id}.label`) : p.id;
 
   return (
+    // A ORDEM É A MESMA DA VISÃO ARGOS: dimensões primeiro, indicadores depois.
+    //
+    // Estava invertida — a comparação abria por indicadores. São as duas MESMAS seções que a
+    // `ArgosView` mostra na ordem oposta, e quem aprende "dimensões, depois indicadores" olhando
+    // uma análise reencontra o inverso ao comparar duas. As quatro dimensões são o resumo; os 39
+    // indicadores são o detalhe, e resumo antes de detalhe é a leitura que a visão já ensina.
     <div className="space-y-8">
-      <Familia
-        id="cmp-indicadores"
-        titulo={t("canonicalAnalysis.argos.indicators")}
-        pares={comparacao.indicadores}
-        rotuloDe={rotuloDoIndicador}
-      />
       <Familia
         id="cmp-dimensoes"
         titulo={t("canonicalAnalysis.argos.dimensions")}
         pares={comparacao.dimensoes}
         // As quatro são conjunto fechado do contrato — rótulo próprio é legítimo.
         rotuloDe={(p) => t(`canonicalAnalysis.argos.dimension.${p.id}`)}
+      />
+      <Familia
+        id="cmp-indicadores"
+        titulo={t("canonicalAnalysis.argos.indicators")}
+        pares={comparacao.indicadores}
+        rotuloDe={rotuloDoIndicador}
       />
     </div>
   );

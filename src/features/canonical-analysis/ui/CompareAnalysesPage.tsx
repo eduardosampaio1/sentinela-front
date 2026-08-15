@@ -173,9 +173,32 @@ export function CompareAnalysesPage() {
           </Link>
           <h1 className="text-2xl font-semibold text-foreground">{t("canonicalAnalysis.compare.title")}</h1>
           {/* Os dois lados são nomeados pelo identificador, que é o que a rota carrega. Nenhuma
-              afirmação de ordem cronológica: a URL não a publica, e inferi-la seria inventar. */}
+              afirmação de ordem cronológica: a URL não a publica, e inferi-la seria inventar.
+
+              M45.4 — E OS DOIS SÃO ALCANÇÁVEIS DAQUI.
+              Eram texto morto. O estado "um lado não tem documento ARGOS" termina dizendo que *o
+              resultado histórico segue disponível em cada análise* — e não havia rota para
+              nenhuma das duas: a única saída era voltar à lista e procurar de novo. Prometer
+              alcance sem oferecer o caminho é a mesma dívida do "tente novamente" sem botão,
+              corrigida nesta missão três telas antes. O identificador É o endereço; ligá-lo não
+              inventa nada. */}
+          {/* `sideA`/`sideB` em vez de um "A:" cravado no JSX: são as MESMAS palavras que o
+              estado sem-ARGOS usa para nomear os lados, e vêm do dicionário. Cravar a letra aqui
+              tiraria a linha do i18n e deixaria `compare.pair` órfã — a chave saiu junto. */}
           <p className="text-sm text-muted-foreground">
-            {t("canonicalAnalysis.compare.pair", { a: analysisAId ?? "", b: analysisBId ?? "" })}
+            <Link
+              to={`/analyses/${encodeURIComponent(analysisAId ?? "")}`}
+              className="underline underline-offset-4"
+            >
+              {t("canonicalAnalysis.compare.sideA")}: {analysisAId ?? ""}
+            </Link>
+            {" · "}
+            <Link
+              to={`/analyses/${encodeURIComponent(analysisBId ?? "")}`}
+              className="underline underline-offset-4"
+            >
+              {t("canonicalAnalysis.compare.sideB")}: {analysisBId ?? ""}
+            </Link>
           </p>
         </header>
         <div className="mt-6">{corpo()}</div>

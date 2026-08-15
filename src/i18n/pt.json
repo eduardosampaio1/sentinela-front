@@ -198,7 +198,6 @@
       "loading": "Carregando as duas análises…",
       "noArgosBody": "A comparação exige o documento ARGOS nos dois lados. O resultado histórico segue disponível em cada análise.",
       "noArgosTitle": "Um dos lados não tem documento ARGOS",
-      "pair": "A: {{a}} · B: {{b}}",
       "presence": {
         "so_em_a": "Publicada apenas na análise A.",
         "so_em_b": "Publicada apenas na análise B."
