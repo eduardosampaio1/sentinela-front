@@ -85,6 +85,76 @@ async function montarProduto(page: Page, idioma: "pt" | "en" = "en") {
       }),
     ),
   );
+
+  // O progresso entra na montagem BASE desde a M45.2. Sem ele, os estados vivos da jornada
+  // renderizam o aviso de leitura indisponível — que é o comportamento certo depois da correção
+  // desta tranche, e transformaria J9–J12 em medições do aviso em vez das telas.
+  // Fica por último de propósito: os casos do G11 registram a própria rota depois desta e vencem.
+  await page.route("**/v1/analyses/*/progress**", (r) =>
+    r.fulfill(
+      json({
+        analysis_id: ANALISE,
+        axes: [
+          { axis: "engine", state: "running" },
+          { axis: "analytics", state: "pending" },
+          { axis: "export", state: "unavailable" },
+          { axis: "final_result", state: "pending" },
+        ],
+      }),
+    ),
+  );
+}
+
+const json = (corpo: unknown, status = 200) => ({
+  status,
+  contentType: "application/json",
+  body: JSON.stringify(corpo),
+});
+
+/** A análise servida num estado da jornada — sobrepõe o `completed` da montagem base. */
+async function emEstado(
+  page: Page,
+  status: string,
+  opts: { retry?: boolean } = {},
+): Promise<void> {
+  await page.route("**/v1/analyses/*", (r) =>
+    r.fulfill(
+      json({
+        analysis_id: ANALISE,
+        status,
+        record_count: 1240,
+        result_available: false,
+        retry_allowed: opts.retry ?? false,
+        created_at: "2026-08-03T17:12:44Z",
+        updated_at: "2026-08-03T17:13:02Z",
+        instance_id: null,
+      }),
+    ),
+  );
+}
+
+/** Três análises em estados diferentes e uma Instância — o produto com CONTEÚDO. */
+async function povoar(page: Page): Promise<void> {
+  await page.route("**/v1/analyses**", (r) =>
+    r.fulfill(
+      json({
+        items: [
+          { analysis_id: ANALISE, status: "completed", record_count: 1240, result_available: true, created_at: "2026-08-03T17:12:44Z", updated_at: "2026-08-03T17:13:02Z", instance_id: INSTANCIA },
+          { analysis_id: "an-em-curso", status: "running", record_count: 900, result_available: false, created_at: "2026-08-04T09:00:00Z", updated_at: "2026-08-04T09:02:00Z", instance_id: INSTANCIA },
+          { analysis_id: "an-precisa", status: "needs_mapping", record_count: 300, result_available: false, created_at: "2026-08-05T08:00:00Z", updated_at: "2026-08-05T08:01:00Z", instance_id: null },
+        ],
+        next_cursor: null,
+      }),
+    ),
+  );
+  await page.route("**/v1/instances**", (r) =>
+    r.fulfill(
+      json({
+        items: [{ instance_id: INSTANCIA, name: "Suporte", created_at: "2026-05-02T11:15:00Z" }],
+        next_cursor: null,
+      }),
+    ),
+  );
 }
 
 /**
@@ -93,7 +163,16 @@ async function montarProduto(page: Page, idioma: "pt" | "en" = "en") {
  * A âncora não é "a página respondeu": é uma frase que só existe quando a superfície terminou de
  * decidir o que mostrar. É o que separa navegável de montado.
  */
-const JOURNEYS = [
+interface Journey {
+  readonly id: string;
+  readonly nome: string;
+  readonly rota: string;
+  readonly terminal: RegExp;
+  /** Sobreposicao de montagem desta journey, alem do produto base. */
+  readonly montar?: (page: Page) => Promise<void>;
+}
+
+const JOURNEYS: readonly Journey[] = [
   { id: "J1", nome: "análises", rota: "/analyses", terminal: /No analyses yet|Nenhuma análise ainda/ },
   { id: "J2", nome: "análise", rota: `/analyses/${ANALISE}`, terminal: /Analysis completed|Análise concluída/ },
   { id: "J3", nome: "instâncias", rota: "/instances", terminal: /instance|Instância/i },
@@ -103,6 +182,34 @@ const JOURNEYS = [
   // `/./` casava qualquer coisa — um gate que mede a existência de um caractere. Trocado por uma
   // âncora REAL: a frase que a Home só imprime depois de decidir o que mostrar.
   { id: "J7", nome: "home", rota: "/home", terminal: /What needs you in this workspace|O que precisa de você/ },
+
+  // ── M45.2 · os estados VIVOS e as telas POVOADAS ────────────────────────────────────────
+  //
+  // As sete acima pousam TODAS em estado terminal, e J1/J7 montam a lista e a Home VAZIAS. Era o
+  // buraco desta tranche: axe, geometria e idioma nunca tinham sido medidos onde a jornada anda —
+  // nem onde há conteúdo. Uma tela vazia não estoura largura, não tem contraste para errar e não
+  // tem quase nada para o leitor de tela anunciar; ela passa em tudo por não ter o que reprovar.
+  //
+  // Cada uma traz a própria sobreposição de montagem. O produto base continua o mesmo.
+  { id: "J8", nome: "nova análise", rota: "/analyses/new",
+    terminal: /Reserve the analysis|Reserve a análise/ },
+  { id: "J9", nome: "aguardando a base", rota: `/analyses/${ANALISE}`,
+    terminal: /Add your dataset|Adicione sua base/, montar: (p: Page) => emEstado(p, "preparing") },
+  { id: "J10", nome: "processando", rota: `/analyses/${ANALISE}`,
+    terminal: /Your analysis is being processed|Sua análise está sendo processada/,
+    montar: (p: Page) => emEstado(p, "running") },
+  { id: "J11", nome: "confirmação necessária", rota: `/analyses/${ANALISE}`,
+    terminal: /Confirmation needed|Confirmação necessária/,
+    montar: (p: Page) => emEstado(p, "needs_mapping") },
+  { id: "J12", nome: "falha terminal", rota: `/analyses/${ANALISE}`,
+    terminal: /Couldn't complete|Não concluída/,
+    montar: (p: Page) => emEstado(p, "failed", { retry: true }) },
+  { id: "J13", nome: "home povoada", rota: "/home",
+    // `In progress` só existe com análise em curso — "Actions needed" aparece VAZIA também, e
+    // ancorar nela mediria a Home vazia outra vez, com outro nome.
+    terminal: /In progress|Em andamento/, montar: povoar },
+  { id: "J14", nome: "lista povoada", rota: "/analyses",
+    terminal: /records|registros/, montar: povoar },
 ] as const;
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
@@ -113,6 +220,7 @@ test.describe("M45 · G1 · superfícies navegáveis", () => {
   for (const j of JOURNEYS) {
     test(`${j.id} · ${j.nome} alcança estado terminal`, async ({ page }) => {
       await montarProduto(page);
+      await j.montar?.(page);
       await page.goto(j.rota);
 
       // Terminal, e não "montou": `main` com conteúdo real, e a âncora da superfície.
@@ -279,6 +387,7 @@ test.describe("M45 · G7 · acessibilidade transversal", () => {
   for (const j of JOURNEYS) {
     test(`${j.id} · axe sem violação aplicável`, async ({ page }) => {
       await montarProduto(page);
+      await j.montar?.(page);
       await page.goto(j.rota);
       await expect(page.locator("main")).toContainText(j.terminal, { timeout: 15_000 });
 
@@ -335,6 +444,7 @@ test.describe("M45 · G5 · responsive", () => {
 
       const estouram: string[] = [];
       for (const j of JOURNEYS) {
+        await j.montar?.(page);
         await page.goto(j.rota);
         await expect(page.locator("main")).toContainText(j.terminal, { timeout: 15_000 });
         // Medido pela GEOMETRIA dos elementos, e não por `scrollWidth` do documento.
