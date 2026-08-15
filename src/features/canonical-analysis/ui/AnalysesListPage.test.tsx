@@ -68,6 +68,48 @@ describe("AnalysesListPage — estados distintos", () => {
     expect(screen.getByRole("link", { name: /Open analysis an-1/i })).toBeTruthy();
   });
 
+  // M45.4 — comparar só é OFERECIDO quando comparar é possível.
+  //
+  // Com UMA análise, o botão abria um modo que nunca terminava: marcava-se a única caixa e o
+  // "Comparar as duas" ficava desabilitado para sempre, com a regra explicada só DEPOIS do
+  // convite. Prevenção de erro é não oferecer.
+  //
+  // Os DOIS lados são medidos no mesmo bloco, e isso não é zelo: um teste que só exigisse a
+  // ausência passaria com o botão apagado da lista inteira, e a correção teria removido a
+  // funcionalidade em vez de protegê-la. É a massa vazia que sempre passa.
+  describe("M45.4 · comparar não é oferecido quando é impossível", () => {
+    it("uma única análise: sem convite para comparar", async () => {
+      server.use(http.get(`${MSW_BASE}/v1/analyses`, () => HttpResponse.json(page([item("an-só")]))));
+      renderList();
+      expect(await screen.findByText("an-só")).toBeTruthy();
+      expect(screen.queryByRole("button", { name: /^Compare$/ })).toBeNull();
+    });
+
+    it("duas análises: o convite existe, e leva ao modo de seleção", async () => {
+      server.use(
+        http.get(`${MSW_BASE}/v1/analyses`, () =>
+          HttpResponse.json(page([item("an-1"), item("an-2")]))),
+      );
+      renderList();
+      const convite = await screen.findByRole("button", { name: /^Compare$/ });
+      await userEvent.click(convite);
+      // A dica de seleção é o estado, e as caixas são o meio: sem elas o convite era decorativo.
+      expect(await screen.findByText(/Pick exactly two analyses/i)).toBeTruthy();
+      expect(screen.getAllByRole("checkbox")).toHaveLength(2);
+    });
+
+    it("uma análise NESTA página, mas há outra página: o convite fica", async () => {
+      // A seleção sobrevive à paginação, então uma última página curta não prova ausência de par.
+      server.use(
+        http.get(`${MSW_BASE}/v1/analyses`, () =>
+          HttpResponse.json(page([item("an-1")], "cur-2"))),
+      );
+      renderList();
+      expect(await screen.findByText("an-1")).toBeTruthy();
+      expect(screen.getByRole("button", { name: /^Compare$/ })).toBeTruthy();
+    });
+  });
+
   it("vazio REAL: mostra estado vazio (não após falha)", async () => {
     server.use(http.get(`${MSW_BASE}/v1/analyses`, () => HttpResponse.json(page([]))));
     renderList();

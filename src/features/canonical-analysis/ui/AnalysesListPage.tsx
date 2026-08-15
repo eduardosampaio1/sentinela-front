@@ -163,11 +163,31 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
 
   const podeVoltar = prevStack.length > 0;
   const podeAvancar = Boolean(list.data?.next_cursor);
+
+  /**
+   * M45.4 — comparar só é OFERECIDO quando comparar é possível.
+   *
+   * Com uma única análise na lista, o botão abria um modo que nunca podia terminar: a pessoa
+   * entrava, marcava a única caixa e ficava em "1 de 2 selecionadas" com o botão de comparar
+   * desabilitado para sempre. O produto só explicava a regra (`selectHint`) DEPOIS de convidar
+   * para o beco. Prevenção de erro é não oferecer, não avisar depois.
+   *
+   * A paginação entra na conta de propósito: a seleção sobrevive à troca de página (`escolhidas`
+   * é estado do componente, não da página), então uma última página com um item só continua
+   * podendo comparar com algo escolhido antes. Esconder por `items.length` puro quebraria esse
+   * caminho. Só se esconde quando está PROVADO que existe uma análise e nada mais.
+   */
+  const podeComparar = items.length >= 2 || podeAvancar || podeVoltar;
+
   return (
     <div className="space-y-6">
       {/* A `Toolbar` do DS entra aqui porque agora existe função REAL — a decisão da M38 dizia
           que ela não nasce vazia nem por decreto. Fora do modo de seleção há uma ação; dentro,
-          três, e o contador diz onde a pessoa está. */}
+          três, e o contador diz onde a pessoa está.
+
+          E quando não há o que comparar ela não aparece, pela MESMA decisão: passar `primaria`
+          vazia deixaria a barra existindo sem função, que é exatamente o que a M38 proibiu. */}
+      {(selecionando || podeComparar) && (
       <Toolbar
         primaria={
           selecionando ? (
@@ -203,6 +223,7 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
           ) : undefined
         }
       />
+      )}
       {selecionando && (
         <p className="text-sm text-muted-foreground">{t("canonicalAnalysis.compare.selectHint")}</p>
       )}
