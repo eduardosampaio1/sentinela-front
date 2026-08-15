@@ -259,6 +259,17 @@ describe("F4 · privacidade é conclusão do produtor, não interpretação da t
     const secao = await screen.findByRole("region", {
       name: pt.canonicalAnalysis.analyticsView.concentrations,
     });
+    // A PALAVRA vem sempre, e o código fica ao lado.
+    //
+    // Este caso só afirmava o `below_min_group`, e por isso não media nada do que o seu nome
+    // promete: a tela imprimia o código CRU quando havia motivo e guardava "não publicado" para
+    // o caso mudo — invertido —, e a asserção passava igual. Exigir as duas coisas é o que torna
+    // a inversão detectável. Traduzir o código não é opção: `reason_code` é string aberta no
+    // contrato.
+    expect(
+      within(secao).getByText(pt.canonicalAnalysis.analyticsView.notPublished),
+      "sem a palavra, sobra só um código para quem lê",
+    ).toBeInTheDocument();
     expect(within(secao).getByText("below_min_group")).toBeInTheDocument();
   });
 });

@@ -14,6 +14,24 @@ import { expect, test, type Page } from "@playwright/test";
 // `{ summary }` — sem indicador, a regra canônica não tem o que parear, e a tela mostraria
 // "sem comparação" com razão. Provar a apresentação exige o documento completo.
 import { MASSA_A, MASSA_B } from "@/test/fixtures/canonical-result/massas";
+// A massa v3 da comparação — a MESMA que `m39-shots` usa. É ela que a tela realmente lê.
+//
+// Lida do disco, e não por `import`: sob o loader ESM do Playwright um import de JSON exige
+// `with { type: "json" }`, e sem ele a spec inteira não carrega — "No tests found", que é falha
+// de instrumento parecendo suíte vazia.
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const V3 = JSON.parse(
+  readFileSync(
+    resolve(
+      dirname(fileURLToPath(import.meta.url)),
+      "../src/test/fixtures/canonical-result/v3-comparacao.json",
+    ),
+    "utf-8",
+  ),
+) as { A: unknown; B: unknown };
 
 const WS = "e2e-workspace-0000";
 const A = "an-cmp-antiga";
@@ -43,14 +61,40 @@ const ITENS: Linha[] = [
 // sobrescrevia o seam inteiro com `{ [regB]: true }` — teria destruído MASSA_A/MASSA_B se
 // alguém o tivesse chamado. Código morto que promete capacidade é pior que ausência: ele
 // responde "coberto" a quem procurar pelo nome.
+// M45.4 — ESTA MONTAGEM NÃO PRODUZIA COMPARAÇÃO NENHUMA.
+//
+// Ela semeava `MASSA_A`/`MASSA_B` — documentos `analysis-result-v1` — no seam `__sentinela_result__`.
+// Desde a M39 a comparação lê o documento **v3**, por `useAnalysisArgos`, e o seam dele é outro:
+// `__sentinela_result_v3__`. O produtor recusava com razão, e a tela mostrava "um dos lados não tem
+// documento ARGOS" — que é o comportamento CERTO para o que estava sendo servido.
+//
+// O efeito foi uma spec verde sobre uma tela que não comparava. As asserções de ausência ("nenhuma
+// seta, nenhum delta, nenhum 'previous'") rodavam sobre um aviso de indisponibilidade, onde nada
+// disso poderia aparecer de qualquer jeito — massa vazia sempre passa. E a espera era
+// `getByRole("heading", { level: 2 })` SEM escopo, que casava o "Compare analyses" do shell, fora
+// do `main`: por isso nada denunciava.
+//
+// Os dois seams continuam semeados. O v1 não é resto: os testes de custo contam leituras de
+// `/result` e um deles vigia que a rota legada não é acordada.
 async function preparar(page: Page) {
   await page.addInitScript(
-    ([ws, itens, ids, docs]) => {
+    ([ws, itens, ids, docs, docsV3]) => {
       (window as unknown as Record<string, unknown>).__SENTINELA_E2E_AUTH__ = true;
       sessionStorage.setItem("__sentinela_list__", JSON.stringify({ [`${ws}|`]: { items: itens, next_cursor: null } }));
       sessionStorage.setItem("__sentinela_result__", JSON.stringify({ [ids[0]]: docs[0], [ids[1]]: docs[1] }));
+      sessionStorage.setItem(
+        "__sentinela_journey__",
+        JSON.stringify({
+          [ids[0]]: { seq: ["completed"], idx: 0, retryAllowed: false },
+          [ids[1]]: { seq: ["completed"], idx: 0, retryAllowed: false },
+        }),
+      );
+      sessionStorage.setItem(
+        "__sentinela_result_v3__",
+        JSON.stringify({ [ids[0]]: docsV3[0], [ids[1]]: docsV3[1] }),
+      );
     },
-    [WS, ITENS, [A, B], [MASSA_A, MASSA_B]] as const,
+    [WS, ITENS, [A, B], [MASSA_A, MASSA_B], [V3.A, V3.B]] as const,
   );
 }
 
@@ -123,6 +167,38 @@ test("a ordem A/B é a da URL", async ({ page }) => {
   ).toHaveAttribute("href", `/analyses/${A}`);
 });
 
+// M45.4 — a comparação lê na MESMA ordem que a visão ARGOS.
+//
+// As duas telas mostram as duas mesmas seções, e estavam em ordem oposta: a visão abre por
+// dimensões, a comparação abria por indicadores. Quem aprende a leitura numa reencontra o inverso
+// na outra. As quatro dimensões são o resumo, os 39 indicadores o detalhe.
+//
+// A asserção é sobre POSIÇÃO no documento, não sobre presença: exigir que as duas existam
+// passaria com qualquer ordem, que é como isto atravessou desde a M39.
+test("a ordem de leitura é a mesma da visão ARGOS: dimensões, depois indicadores", async ({
+  page,
+}) => {
+  await preparar(page);
+  await page.goto(`/analyses/compare/${A}/${B}`);
+  // Estado terminal ANTES de ler a ordem: uma leitura antecipada devolve `[]`, e `[]` não tem
+  // ordem errada — o gate passaria a acusar o relógio. Foi o que aconteceu na primeira execução.
+  await expect(page.locator("main").getByRole("heading", { level: 2 }).first()).toBeVisible({
+    timeout: 15_000,
+  });
+
+  const titulos = await page
+    .locator("main")
+    .getByRole("heading", { level: 2 })
+    .allTextContents();
+  const iDim = titulos.findIndex((s) => /Health dimensions|Dimensões de saúde/i.test(s));
+  const iInd = titulos.findIndex((s) => /^Indicators$|^Indicadores$/i.test(s));
+  expect(iDim, `não achei a seção de dimensões em ${JSON.stringify(titulos)}`).toBeGreaterThan(-1);
+  expect(iInd, `não achei a seção de indicadores em ${JSON.stringify(titulos)}`).toBeGreaterThan(-1);
+  expect(iDim, "a comparação abriu por indicadores; a visão ARGOS abre por dimensões").toBeLessThan(
+    iInd,
+  );
+});
+
 // ─────────────────────────────────────────────────────────────────────────────────────────────
 // 3. Honestidade — a regra decide, a tela apresenta
 // ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -130,7 +206,15 @@ test("a ordem A/B é a da URL", async ({ page }) => {
 test("comparação compatível: dois valores lado a lado, e NENHUM delta", async ({ page }, info) => {
   await preparar(page);
   await page.goto(`/analyses/compare/${A}/${B}`);
-  await expect(page.getByRole("heading", { level: 2 })).toBeVisible();
+  // A espera é por uma SEÇÃO da comparação dentro do `main`, e não por um `h2` qualquer: o shell
+  // tem o seu próprio "Compare analyses" em `h2`, fora do `main`, e era nele que esta espera
+  // casava — deixando as negativas abaixo rodarem sobre um aviso de indisponibilidade.
+  await expect(
+    page.locator("main").getByRole("heading", { level: 2, name: /Health dimensions|Dimensões de saúde/i }),
+    "a comparação não renderizou: as negativas abaixo mediriam uma tela sem números",
+  ).toBeVisible({ timeout: 15_000 });
+  // E há números dos DOIS lados — ausência de delta sobre tela sem valor é sempre verdadeira.
+  await expect(page.locator("main").getByText("80%").first()).toBeVisible();
 
   const corpo = (await page.locator("main, body").first().innerText()).toLowerCase();
   // Nada que afirme movimento entre os dois: o contrato não publica variação.

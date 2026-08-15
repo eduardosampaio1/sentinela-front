@@ -141,6 +141,23 @@ describe("F3 · sem v3 não há queda para o v1", () => {
     expect(aviso.closest('[role="alert"]'), "a recusa não pode interromper").toBeNull();
   });
 
+  // M45.4 — a recusa diz o que RESTA acessível.
+  //
+  // O estado irmão (`noDocumentBody`) sempre terminou dizendo que o resultado histórico segue
+  // disponível. A recusa não dizia nada, e quem lia saía achando que a análise inteira se perdeu.
+  it("a recusa aponta o que continua acessível", async () => {
+    renderizar({
+      analysis_id: "an-abc",
+      result_schema_version: "analysis-result-v1",
+      indicator_registry_version: "1.0",
+      result: { analysis_id: "an-abc", indicators: [] },
+    });
+    expect(
+      await screen.findByText(pt.canonicalAnalysis.argos.stillAvailable),
+      "recusa sem saída deixa a pessoa achando que perdeu a análise",
+    ).toBeInTheDocument();
+  });
+
   it("erro do produtor é apresentado, não substituído por outro documento", async () => {
     renderizar(null, 404);
     await waitFor(() => expect(chamadas).toContain("getResult:3"));
