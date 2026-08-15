@@ -99,7 +99,9 @@ describe("M18 · 1. o catálogo está completo", () => {
     // `sentinela-front-e1/docs/EXPERIENCE-BLUEPRINT-V1.md` —, e o gate lê a do repositório, que
     // estava correta e completa. Quem envelheceu foi a do vault, que gate nenhum lê. A do
     // repositório é a autoridade operativa.
-    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(52);
+    // 52 → 62 com as DEZ da M44 (oito de Subscription + duas de reentrada). O Blueprint §11 as
+    // lista antes, e é ele que este número persegue.
+    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(62);
   });
 
   it("41 disponíveis · 1 parcial · 2 bloqueados", () => {
@@ -123,8 +125,14 @@ describe("M18 · 1. o catálogo está completo", () => {
     // produtor que JÁ existe (BD12 e BD13), e não desbloqueia nada.
     // Total e disponíveis sobem juntos, e os bloqueados não se movem — é a assinatura de
     // "entrou no catálogo", distinta de "mudou de estado".
-    expect(nomesPorEstado("disponivel").length).toBe(49);
-    expect(nomesPorEstado("parcial").length).toBe(1);
+    //
+    // A M44 acrescentou DEZ e é a primeira em que os PARCIAIS se movem: 52 → 62, 49 → 57,
+    // parciais 1 → 3. As oito de Subscription são disponíveis; as duas de reentrada nascem
+    // PARCIAIS, e por um motivo que não é falta de massa — não existe operação pública que
+    // devolva evento ao Front, então o cenário serve a Analysis de destino e o evento fica
+    // como fixture. Marcá-las `disponivel` prometeria um seam que não existe.
+    expect(nomesPorEstado("disponivel").length).toBe(57);
+    expect(nomesPorEstado("parcial").length).toBe(3);
     expect(nomesPorEstado("bloqueado").length).toBe(2);
   });
 
@@ -308,8 +316,9 @@ describe("M18 · 1. o catálogo está completo", () => {
     // A direção inversa: o que o mapa promete e o catálogo não entrega.
     const doMapa = [...BLUEPRINT.matchAll(/^\|\s*\d+\s*\|\s*`([a-z0-9-]+)`/gm)].map((m) => m[1]);
     // Piso do INSTRUMENTO, não do catálogo: se o regex parar de casar a tabela, o filtro
-    // abaixo roda sobre lista vazia e passa sempre. 44 → 52 com as oito entradas da M42.
-    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(52);
+    // abaixo roda sobre lista vazia e passa sempre. 44 → 52 com as oito entradas da M42, e
+    // 52 → 62 com as dez da M44.
+    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(62);
     const faltando = doMapa.filter((n) => !NOMES.includes(n));
     expect(faltando, "cenário do Blueprint ausente do catálogo").toEqual([]);
   });

@@ -85,6 +85,10 @@ import {
   type InstanceView,
   type WorkspaceView,
 } from "@/test/fixtures/public-v1/workspace-instance-config";
+// M44 — os cenários de Subscription e reentrada vivem em módulo próprio: com eles aqui dentro
+// este arquivo passou de 1000 linhas (M07 · anti-monólito). O catálogo continua sendo o índice
+// único — é ele que garante id sem duplicata e é por ele que todo mundo pede.
+import { CENARIOS_DE_COMUNICACAO } from "./assinaturas";
 
 export type EstadoDoScenario = "disponivel" | "parcial" | "bloqueado";
 
@@ -952,4 +956,6 @@ export const CATALOGO: readonly Scenario[] = [
         json(problem("forbidden_or_not_found"), 404)),
     ],
   },
+
+  ...CENARIOS_DE_COMUNICACAO,
 ] as const;

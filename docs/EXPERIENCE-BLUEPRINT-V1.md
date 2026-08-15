@@ -741,6 +741,16 @@ Todo scenario é **nome + lista de handlers**. Fixture derivada do schema public
 | 50 | `instance-config-duplicate-name` | CFG-04 | `GET /v1/instances` + `{id}` | **estado do mundo**: duas Instances já homônimas, com `instance_id` diferentes. Mata a inferência de unicidade por nome | — |
 | 51 | `instance-config-unavailable` | CFG-04 | Instance `503` | `temporarily_unavailable` **não** vira `forbidden_or_not_found`, e a Instance não some da tela como se tivesse sido apagada | — |
 | 52 | `instance-config-invisible` | CFG-04 | `404 forbidden_or_not_found` | anti-oracle: inexistente e de outro workspace colapsam | — |
+| 53 | `subscription-absent` | COM-01 | `GET /v1/subscriptions?workspace_id=` | `items: []` com `200` — **zero destinatário configurado**. Não é erro, não é `null`, e a leitura **não cria**: dez `GET` seguidos continuam vazios | — |
+| 54 | `subscription-current` | COM-01 | as 4 operações | uma assinatura **verificada** e uma **não** (`verified_at: null`). Não-verificada não é "pendente de confirmação": não existe operação de verificar, e `verified_at` é estado observado de uma entrega real | — |
+| 55 | `subscription-destination-diverges` | COM-01 | `/v1/me` + `GET /v1/subscriptions` | **armadilha**: a conta é `ana.ribeiro@cliente.test` e o destino é `alertas@operacoes.exemplo.test`. Quem resolver destinatário por identidade não recebe erro — manda o alerta para a caixa errada, com `200` | — |
+| 56 | `subscription-language-diverges` | COM-01 | `/v1/me/language` + `GET /v1/subscriptions` | **armadilha**: a conta escolheu `pt` e a entrega é `en`. Estados legítimos e independentes — um diz em que língua o produto fala, o outro em que língua a mensagem sai | — |
+| 57 | `subscription-disabled` | COM-01 | `GET /v1/subscriptions` | `active: false` **continua na lista**. Disable não é delete: sumir faria "desativei" virar "nunca configurei", e a pessoa reconfiguraria por cima | — |
+| 58 | `subscription-unavailable` | COM-01 | as 4 operações em `503` | outage. `temporarily_unavailable` **nunca** vira lista vazia — é o eixo da M44, e colapsar os dois faria a tela dizer "você ainda não configurou" no dia em que o Dispatcher caísse | — |
+| 59 | `subscription-invisible` | COM-01 | `404 forbidden_or_not_found` | anti-oracle: inexistente, de outro workspace e **já inativa** colapsam nas três na mesma resposta | — |
+| 60 | `subscription-other-workspace` | COM-01 | `GET/DELETE` com `workspace_id` divergente | dois workspaces, cada um com a sua lista. O escopo é a **query**, em toda operação: B não vê nem desativa a assinatura de A | — |
+| 61 | `communication-completed-reentry` | COM-02, AN-04 | `GET /v1/analyses/{id}` | reentrada por `analysis.completed`. **Parcial**: o evento não tem operação pública de leitura, então a massa dele é fixture — o que o Front serve aqui é a própria Analysis | 🟡 sem produtor de evento no Front |
+| 62 | `communication-failed-reentry` | COM-02, AN-04 | `GET /v1/analyses/{id}` | idem, por `analysis.failed`. `failure_stage` é público e vive no envelope; nenhuma operação de Analysis o republica | 🟡 idem |
 
 **Sobre o que estes oito NÃO contêm.** Não há `create` nem `delete` de Workspace (o contrato diz
 por escrito que o CRUD legado **não foi promovido**), não há listagem de Workspace (isso é
@@ -829,19 +839,95 @@ real, não fixture inventada. É a única saída de bloqueio autorizada até aqu
 
 ## 12. Communication / re-entry map
 
-| evento | canal | CTA | deep link | destino | existe? |
-|---|---|---|---|---|---|
-| `analysis.completed` | e-mail + webhook | "Ver resultado" | `/analyses/{id}/result` | RES-01 | ✅ evento existe |
-| `analysis.failed` | e-mail + webhook | "Ver o que houve" | `/analyses/{id}` | AN-04 | ✅ |
-| `result.available` | e-mail + webhook | "Abrir resultado" | `/analyses/{id}/result` | RES-01 | ✅ |
-| **ação necessária** | — | "Confirmar interpretação" | `/analyses/{id}` | AN-02 | 🔴 **evento não confirmado** |
-| **conclusão com restrição** (`partial`/`withheld`) | — | "Ver o que foi omitido" | `/analyses/{id}/result` | RES-01 | 🔴 **evento não confirmado** |
-| **export pronto** | — | "Baixar" | `/analyses/{id}/result` | RES-01 | 🔴 **evento não confirmado** |
+| evento | canal | deep link **REAL** | destino | existe? |
+|---|---|---|---|---|
+| `analysis.completed` | e-mail + webhook | `/analyses/{id}` | AN-04 | ✅ evento existe · `data.result_available` |
+| `analysis.failed` | e-mail + webhook | `/analyses/{id}` | AN-04 | ✅ · `data.failure_stage` |
+| `result.available` | e-mail + webhook | `/analyses/{id}` | AN-04 | ✅ · sem `data_keys` |
+| **ação necessária** | — | — | AN-02 | 🔴 **evento não confirmado** |
+| **conclusão com restrição** (`partial`/`withheld`) | — | — | RES-01 | 🔴 **evento não confirmado** |
+| **export pronto** | — | — | RES-01 | 🔴 **evento não confirmado** |
 
-> 🔴 **Q15 permanece prova técnica.** A cadeia `Workspace owner → identidade → e-mail →
-> `Mensagem.destino`` **não está comprovada** (`Mensagem.destino` nasce vazio e é preenchido fora do
-> compositor). **Comunicação externa não pode ser declarada operacionalmente fechada.** E o deep
-> link do e-mail aponta hoje para rota inexistente.
+> **Corrigido na M44 (2026-08-15), contra o produtor e não contra a intenção.** Esta tabela dizia
+> `/analyses/{id}/result` para `analysis.completed` e `result.available`, e trazia a ressalva de
+> que *"o deep link do e-mail aponta hoje para rota inexistente"*. As duas coisas envelheceram: o
+> compositor real (`event_dispatcher/adapters/email.py`) monta **um único formato, para os três
+> eventos**:
+>
+> ```python
+> link = f"{url_base.rstrip('/')}/analyses/{analysis_id}"
+> ```
+>
+> Não há ramo por tipo de evento, e a `url_base` é **configurada** — nunca vem do payload, porque
+> URL vinda de evento é como um e-mail nosso passa a apontar para o site de outra pessoa. A rota
+> `/analyses/{id}` está registrada como canônica em §3.2 e é servida pela aplicação.
+>
+> A coluna **CTA saiu**: o texto do e-mail é do compositor (`"Abrir no Sentinela"`/`"Open in
+> Sentinela"`), não do Front, e mantê-la aqui convidava a M44 a inventar cópia para um botão que
+> ela não desenha.
+>
+> **Q15 continua prova técnica** no que ela realmente afirma — a cadeia de resolução do
+> destinatário —, e essa parte foi respondida pela BD14 por outro caminho: `destination` é
+> **intenção explícita** da assinatura, não derivação de identidade. Ver §12.1.
+
+### 12.1 Subscription — a superfície pública, medida no contrato vivo (M44)
+
+**Quatro operações**, todas com `workspace_id` **obrigatório na query**. Medido em
+`sentinela-facts/docs/contracts/public-v1.json` (27 operações, digest `1f1480c5…`), que é o tip de
+`develop` e o mesmo digest selado em `src/test/fixtures/public-v1/selo.ts`.
+
+| operationId | método | path | papel | sucesso |
+|---|---|---|---|---|
+| `list_subscriptions` | GET | `/v1/subscriptions` | viewer | 200 |
+| `create_subscription` | POST | `/v1/subscriptions` | member | 201 |
+| `disable_subscription` | DELETE | `/v1/subscriptions/{subscription_id}` | member | 200 |
+| `rotate_subscription_secret` | POST | `/v1/subscriptions/{subscription_id}/secret` | member | 200 |
+
+**Projeção pública da assinatura** (`_publica`, em `api/routes/subscriptions_v1.py`):
+`subscription_id · channel · destination · event_types · language · active · secret_version ·
+verified_at · created_at`. **Nunca o segredo.**
+
+`create` e `rotate` devolvem `{ subscription_id, secret_version, secret }` — o material sai **uma
+vez**, e `secret` é `null` para canal `email`, que não tem segredo. A chave existe sempre: omiti-la
+obrigaria o cliente a distinguir *"não veio"* de *"não tem"*.
+
+`disable` devolve `{ subscription_id, active: false }` — estado produzido, não `204` vazio.
+
+**O que NÃO existe na superfície pública, e por isso não vira cenário:**
+
+- **verificação como ação.** `verified_at` é campo **observado**, produzido por uma entrega real —
+  não há operação de verificar, e portanto não há OTP, expiração nem tentativas a materializar;
+- **atualizar.** Não há `PATCH`/`PUT` de assinatura;
+- **ler uma assinatura.** Não há `GET /v1/subscriptions/{id}` — só a lista do workspace;
+- **reativar.** O owner recusa `active: true` com `reativacao_nao_suportada`;
+- **apagar.** `DELETE` é *disable* no nome da operação (`disable_subscription`) e no efeito
+  (`active = false`); a linha permanece porque o histórico de entregas a referencia.
+
+**Ausência é lista vazia com `200`** — nunca erro, nunca `null`. Indisponibilidade do owner é
+`temporarily_unavailable` (`503`). As duas **não colapsam**, e essa distinção é o eixo da M44.
+
+### 12.2 Scenarios da M44 — registrados ANTES do código
+
+| scenario | superfícies | o que representa |
+|---|---|---|
+| `subscription-absent` | COM-01 | workspace sem assinatura: `items: []`, `200` |
+| `subscription-current` | COM-01 | uma assinatura ativa e **verificada** e uma **não verificada** |
+| `subscription-destination-diverges` | COM-01 | `destination` ≠ e-mail da conta, com a conta servida ao lado |
+| `subscription-language-diverges` | COM-01 | `language` da assinatura ≠ preferência da conta |
+| `subscription-disabled` | COM-01 | `active: false` — existe e não recebe eventos |
+| `subscription-unavailable` | COM-01 | owner fora: `503` em leitura e escrita |
+| `subscription-invisible` | COM-01 | `forbidden_or_not_found` — anti-oracle preservado |
+| `subscription-other-workspace` | COM-01 | dois workspaces, cada um com a sua lista |
+| `communication-completed-reentry` | COM-02, AN-04 | `analysis.completed` + o deep link que o compositor monta |
+| `communication-failed-reentry` | COM-02, AN-04 | `analysis.failed` + deep link |
+
+**COM-01** — configuração da comunicação autorizada do Workspace. **COM-02** — reentrada por link
+recebido. As duas são **superfícies declaradas, não implementadas**: a M44 materializa massa e
+cenário; o cliente e a UI são da missão seguinte, e o B1 continua acusando as quatro operações.
+
+`communication-*` **não tem handler MSW**, e a ausência é a decisão: não existe operação pública
+que devolva evento ao Front. Um handler ali seria inventar fronteira. A massa do evento é
+**fixture** — ela representa o que a mensagem carrega, e serve aos gates de deep-link.
 
 ---
 
