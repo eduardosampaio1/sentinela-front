@@ -75,8 +75,59 @@ const BLOQUEADOS_DO_PLANO = [
 // 1. Anti-vacuidade — DoD 7: catálogo vazio ou incompleto não passa
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// M45 · GATE 2 — o invariante que substituiu a contagem
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// O gate era *"os **27** scenarios não bloqueados reproduzíveis por nome"*, e `27` é um SNAPSHOT
+// de 2026-08-10. O catálogo passou por 44, 52 e hoje tem 62. Um número datado como proxy de
+// completude mede a data em que foi escrito.
+//
+// O invariante congelado na M45 é o que a frase sempre quis dizer, sem o número: **todo** scenario
+// não bloqueado é reproduzível por nome, e **todo** bloqueado recusa com razão. Os casos abaixo
+// varrem o catálogo inteiro — se ele crescer durante a M45, eles crescem junto e nada precisa ser
+// atualizado à mão.
+
+describe("M45 · G2 · todo scenario não bloqueado é reproduzível POR NOME", () => {
+  it("todos os disponíveis e parciais servem handlers, sem exceção", () => {
+    const invocaveis = [...nomesPorEstado("disponivel"), ...nomesPorEstado("parcial")];
+    // Piso do INSTRUMENTO: um catálogo vazio faria o laço abaixo passar sem medir nada.
+    expect(invocaveis.length, "nenhum scenario invocável — o laço seria vazio").toBeGreaterThan(50);
+
+    const quebrados: string[] = [];
+    for (const nome of invocaveis) {
+      try {
+        const hs = handlersDoScenario(nome, BASE);
+        // Handlers vazios seriam pior que lançar: a tela montaria e o vazio pareceria legítimo.
+        if (!Array.isArray(hs) || hs.length === 0) quebrados.push(`${nome}: zero handlers`);
+      } catch (e) {
+        quebrados.push(`${nome}: ${(e as Error).message.slice(0, 80)}`);
+      }
+    }
+    expect(quebrados, "scenario declarado e não reproduzível").toEqual([]);
+  });
+
+  it("todo bloqueado RECUSA, com a razão — nunca devolve vazio", () => {
+    const bloqueados = nomesPorEstado("bloqueado");
+    expect(bloqueados.length, "sem bloqueados, a recusa não é medida").toBeGreaterThan(0);
+    for (const nome of bloqueados) {
+      expect(() => handlersDoScenario(nome, BASE)).toThrow(ScenarioIndisponivel);
+      expect(scenario(nome).razao, `${nome} bloqueado sem razão declarada`).toBeTruthy();
+    }
+  });
+
+  it("nenhum nome órfão: catálogo e Blueprint casam nas DUAS direções", () => {
+    const blueprint = readFileSync(resolve(RAIZ, "docs/EXPERIENCE-BLUEPRINT-V1.md"), "utf-8");
+    const doMapa = [...blueprint.matchAll(/^\|\s*\d+\s*\|\s*`([a-z0-9-]+)`/gm)].map((m) => m[1]);
+    expect(doMapa.length, "o regex parou de casar a tabela §11").toBeGreaterThan(50);
+
+    expect(doMapa.filter((n) => !NOMES.includes(n)), "no Blueprint e fora do catálogo").toEqual([]);
+    expect(NOMES.filter((n) => !doMapa.includes(n)), "no catálogo e fora do Blueprint").toEqual([]);
+  });
+});
+
 describe("M18 · 1. o catálogo está completo", () => {
-  it("tem as 52 entradas do Blueprint §11", () => {
+  it("tem as 62 entradas do Blueprint §11", () => {
     // Um catálogo curto passaria em todos os outros casos: o que ele não lista, ele não erra.
     // 35 → 37 na materialização das massas v3 da M39. 37 → 39 na M40: `baseline-set` e
     // `baseline-no-candidates`. 39 → 44 na M41: `account-identity` (CFG-01) e os quatro
@@ -104,7 +155,7 @@ describe("M18 · 1. o catálogo está completo", () => {
     expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(62);
   });
 
-  it("41 disponíveis · 1 parcial · 2 bloqueados", () => {
+  it("57 disponíveis · 3 parciais · 2 bloqueados", () => {
     // Duas mudanças distintas, e os números as separam. A BD02 moveu `instance-empty` de
     // bloqueado para disponível sem alterar o TOTAL — nada nasceu nem morreu. A M36 acrescentou
     // `instance-present` e `instance-history` e o Checkpoint 0 da M37 acrescentou

@@ -3,19 +3,19 @@
     "email": "Email",
     "english": "English",
     "identityBody": "These come from the account you sign in with.",
-    "identityFailed": "Couldn't load your details right now.",
+    "identityFailed": "We couldn't load your details right now.",
     "identityTitle": "Your details",
     "languageBody": "Applies wherever you sign in, on any device.",
     "languageLabel": "Interface language",
     "languageTitle": "Language",
-    "loadFailed": "Couldn't load your language right now. Nothing changed — try again.",
+    "loadFailed": "We couldn't load your language right now. Nothing changed — try again.",
     "loadRetry": "Try again",
     "loading": "Loading your language",
     "name": "Name",
     "noWorkspaces": "No workspaces yet",
     "portuguese": "Portuguese",
     "save": "Save language",
-    "saveFailed": "Couldn't save your language. Nothing changed — try again.",
+    "saveFailed": "We couldn't save your language. Nothing changed — try again.",
     "saved": "Language saved.",
     "savedEnglish": "English is your chosen language.",
     "savedPortuguese": "Portuguese is your chosen language.",
@@ -230,7 +230,7 @@
       "subtitle": "Analyses in this workspace.",
       "loading": "Loading analyses…",
       "empty": "No analyses yet. Start one to see it here.",
-      "errorRecoverable": "Couldn't load your analyses right now. Please try again.",
+      "errorRecoverable": "We couldn't load your analyses right now. Try again.",
       "errorGeneric": "We couldn't load your analyses.",
       "sessionExpired": "Your session is no longer valid. Please sign in again.",
       "retry": "Try again",
@@ -681,7 +681,7 @@
       "explain": "This workspace has not received any analysis yet. The first one starts by uploading conversations."
     },
     "error": {
-      "title": "We could not load the analyses",
+      "title": "We couldn't load the analyses",
       "explain": "This workspace's listing did not respond. Nothing was lost — only this read failed."
     },
     "truncated": "This is the first page. There are more analyses in the history.",
@@ -693,7 +693,7 @@
     "nameLabel": "Name",
     "nameRequired": "Type a name before saving.",
     "save": "Save name",
-    "saveFailed": "We could not save the instance name. Nothing changed — try again.",
+    "saveFailed": "We couldn't save the instance name. Nothing changed — try again.",
     "saved": "Instance name saved.",
     "saving": "Saving…",
     "title": "Instance"
@@ -1015,6 +1015,7 @@
       "primary": "Primary navigation",
       "home": "Home",
       "analyses": "Analyses",
+      "instances": "Instances",
       "workspaces": "Workspaces"
     },
     "workspace": {
@@ -1030,6 +1031,22 @@
       "accountHint": "Opens your identity provider",
       "signOut": "Sign out"
     }
+  },
+  "workspacesPage": {
+    "title": "Workspaces",
+    "subtitle": "The workspaces your account is a member of. Access comes from your identity provider.",
+    "loading": "Loading your workspaces…",
+    "listLabel": "Your workspaces",
+    "errorTitle": "We couldn't load your workspaces",
+    "errorBody": "We couldn't reach the service that lists them. This is not a statement about your access.",
+    "emptyTitle": "No workspace access",
+    "emptyBody": "Your account is not a member of any workspace yet. Access is granted by an administrator in your identity provider.",
+    "active": "Active",
+    "switch": "Switch",
+    "roleOwner": "Owner",
+    "roleAdmin": "Admin",
+    "roleMember": "Member",
+    "roleViewer": "Viewer"
   },
   "notifications": {
     "title": "Notifications",
@@ -1057,7 +1074,7 @@
     "addAction": "Add",
     "adding": "Adding…",
     "added": "Added.",
-    "addFailed": "We could not add it. Nothing changed — try again.",
+    "addFailed": "We couldn't add it. Nothing changed — try again.",
     "howLabel": "How",
     "whereEmail": "Email address",
     "whereWebhook": "URL",
@@ -1067,12 +1084,12 @@
     "disableAction": "Turn off",
     "disabling": "Turning off…",
     "disabled": "Turned off. It stays here and stops receiving messages. To receive again, add it below.",
-    "disableFailed": "We could not turn it off. Nothing changed — try again.",
+    "disableFailed": "We couldn't turn it off. Nothing changed — try again.",
     "rotateAction": "New signing key",
     "rotating": "Generating…",
     "rotated": "New signing key generated.",
     "rotateOnce": "New messages will be signed with this key. It's shown once.",
-    "rotateFailed": "We could not generate a new key. Nothing changed — try again."
+    "rotateFailed": "We couldn't generate a new key. Nothing changed — try again."
   },
   "workspaceConfig": {
     "body": "The name your team sees. Changing it does not affect access or analyses.",
@@ -1084,7 +1101,7 @@
     "nameRequired": "Type a name before saving.",
     "noContext": "Open a workspace to see its settings.",
     "save": "Save name",
-    "saveFailed": "We could not save the workspace name. Nothing changed — try again.",
+    "saveFailed": "We couldn't save the workspace name. Nothing changed — try again.",
     "saved": "Workspace name saved.",
     "saving": "Saving…",
     "title": "Workspace"

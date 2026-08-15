@@ -32,7 +32,7 @@ interface NavItem {
    * consegue decidir orfandade a partir dela e congela a contagem. `t(`shell.nav.${x}`)` declara a
    * família, então a busca por chave órfã continua possível.
    */
-  labelSuffix: "home" | "analyses" | "workspaces";
+  labelSuffix: "home" | "analyses" | "instances" | "workspaces";
   icon: string;
   exact?: boolean;
 }
@@ -61,6 +61,24 @@ const PRIMARY_NAV: NavItem[] = [
     to: "/analyses",
     labelSuffix: "analyses",
     icon: "M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z",
+  },
+  // M45 · T1 — Instâncias ENTRA na navegação.
+  //
+  // `/instances` é superfície REAL do Blueprint, com três sub-superfícies (lista, histórico,
+  // régua de baseline) e três missões entregues — M36, M37 e M40 —, e não tinha entrada nenhuma
+  // no shell. Só se chegava a uma Instância por dentro de uma análise ou colando a URL.
+  //
+  // A consequência já tinha aparecido como remendo local: a página de erro da Instância precisou
+  // ganhar um link "View all instances" próprio na M42, porque a lateral não oferecia volta. O
+  // remendo existia porque faltava a entrada global — e nenhuma missão de superfície ia enxergar
+  // isso, porque cada uma media a si mesma.
+  //
+  // Fica ENTRE análises e workspaces: a Instância agrupa análises e vive dentro de um espaço, e a
+  // ordem da navegação conta essa contenção.
+  {
+    to: "/instances",
+    labelSuffix: "instances",
+    icon: "M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75",
   },
   {
     to: "/workspaces",

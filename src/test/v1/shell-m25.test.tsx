@@ -121,13 +121,27 @@ afterEach(() => window.localStorage.clear());
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M25 · 1. a IA do shell", () => {
-  it("navega para `/home`, `/analyses` e `/workspaces` — e só", () => {
+  it("navega para `/home`, `/analyses`, `/instances` e `/workspaces` — e só", () => {
+    // **`/instances` ENTROU na M45, e o gate estava certo em acusar.**
+    //
+    // A IA do Blueprint §3.1 sempre listou `Instancias` no menu principal — marcada `:::delta`,
+    // porque na M25 o delta de Instância (BD02) não existia e o item teria destino vazio. A BD02
+    // fechou, M36/M37/M40 entregaram lista, histórico e régua, e o shell nunca acompanhou: dava
+    // para chegar numa Instância por dentro de uma análise ou colando a URL, e mais nada.
+    //
+    // Este número congelado é o gate FUNCIONANDO: ele obriga quem mexe na IA a passar por aqui.
+    // O que mudou não foi a decisão de produto — foi o delta que a bloqueava.
+    //
+    // **`Configuracoes` continua FORA, e isso não é esquecimento.** O Blueprint também a lista no
+    // menu principal, e a M25 a removeu por decisão registrada ("não tem destino congelado").
+    // Hoje `/dashboard/settings` é destino congelado e alcançável pelo menu do usuário — mas
+    // reverter uma decisão explícita de owner é produto, não hardening. Fica registrado na M45.
     montar(<SidebarContent />);
     const nav = screen.getByRole("navigation");
     const destinos = within(nav)
       .getAllByRole("link")
       .map((a) => a.getAttribute("href"));
-    expect(destinos).toEqual(["/home", "/analyses", "/workspaces"]);
+    expect(destinos).toEqual(["/home", "/analyses", "/instances", "/workspaces"]);
   });
 
   it("NENHUM link do shell aponta para `/dashboard*` — compatibilidade não é IA canônica", () => {
@@ -379,6 +393,9 @@ describe("M25 · 7. teclado", () => {
     expect(document.activeElement?.getAttribute("href")).toBe("/home");
     await u.tab();
     expect(document.activeElement?.getAttribute("href")).toBe("/analyses");
+    await u.tab();
+    // `/instances` entrou na M45 — e o teclado atravessa a IA na MESMA ordem em que ela é vista.
+    expect(document.activeElement?.getAttribute("href")).toBe("/instances");
     await u.tab();
     expect(document.activeElement?.getAttribute("href")).toBe("/workspaces");
     await u.tab(); // menu do usuário

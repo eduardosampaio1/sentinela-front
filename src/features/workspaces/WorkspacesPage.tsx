@@ -12,6 +12,7 @@
 // caminho de análise legado, que saiu com ele.
 
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { PageHeader } from "@/shared/layout/PageHeader";
@@ -20,28 +21,44 @@ import { ErrorState } from "@/shared/states/ErrorState";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const ROTULO_PAPEL: Record<string, string> = {
-  owner: "Owner",
-  admin: "Admin",
-  member: "Member",
-  viewer: "Viewer",
-};
+/**
+ * O papel, em chave de texto LITERAL.
+ *
+ * `switch` e não mapa `papel → chave`: `t(MAPA[p])` é chave opaca e cega o rastreador de i18n,
+ * que deixa de saber se `workspacesPage.roleOwner` ainda tem consumidor. Papel desconhecido cai
+ * no próprio identificador — inventar rótulo para um papel novo seria pior.
+ */
+function rotuloDoPapel(papel: string, t: (k: string) => string): string {
+  switch (papel) {
+    case "owner":
+      return t("workspacesPage.roleOwner");
+    case "admin":
+      return t("workspacesPage.roleAdmin");
+    case "member":
+      return t("workspacesPage.roleMember");
+    case "viewer":
+      return t("workspacesPage.roleViewer");
+    default:
+      return papel;
+  }
+}
 
 export function WorkspacesPage() {
   const { memberships, membershipsLoading, membershipsError, workspace, switchWorkspace } =
     useAuth();
+  const { t } = useLanguage();
 
   return (
-    <AppShell topBarTitle="Workspaces">
+    <AppShell topBarTitle={t("workspacesPage.title")}>
       <PageFrame maxWidth="lg">
         <PageHeader
-          title="Workspaces"
-          description="The workspaces your account is a member of. Access comes from your identity provider."
+          title={t("workspacesPage.title")}
+          description={t("workspacesPage.subtitle")}
         />
 
         {membershipsLoading && (
           <p role="status" className="text-sm text-muted-foreground">
-            Loading your workspaces…
+            {t("workspacesPage.loading")}
           </p>
         )}
 
@@ -50,20 +67,20 @@ export function WorkspacesPage() {
             conta do usuário. */}
         {!membershipsLoading && membershipsError && (
           <ErrorState
-            title="Workspaces could not be loaded"
-            message="We could not reach the service that lists your workspaces. This is not a statement about your access."
+            title={t("workspacesPage.errorTitle")}
+            message={t("workspacesPage.errorBody")}
           />
         )}
 
         {!membershipsLoading && !membershipsError && memberships.length === 0 && (
           <EmptyState
-            title="No workspace access"
-            description="Your account is not a member of any workspace yet. Workspace access is granted by an administrator in your identity provider."
+            title={t("workspacesPage.emptyTitle")}
+            description={t("workspacesPage.emptyBody")}
           />
         )}
 
         {!membershipsLoading && !membershipsError && memberships.length > 0 && (
-          <ul className="space-y-2" aria-label="Your workspaces">
+          <ul className="space-y-2" aria-label={t("workspacesPage.listLabel")}>
             {memberships.map((m) => {
               const ativo = workspace?.id === m.id;
               return (
@@ -79,14 +96,20 @@ export function WorkspacesPage() {
                   <div className="min-w-0">
                     <p className="truncate font-medium text-foreground">{m.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {ROTULO_PAPEL[m.role] ?? m.role}
+                      {rotuloDoPapel(m.role, t)}
                     </p>
                   </div>
+                  {/* `text-foreground`, e não `text-primary`: a cor da marca sobre o fundo da
+                      página dava 3.56:1 a 12px, abaixo do 4.5:1 de AA. Achado da matriz
+                      transversal da M45 — nenhuma suíte rodava axe NESTA superfície, e ela é
+                      REAL no Blueprint. */}
                   {ativo ? (
-                    <span className="text-xs font-medium text-primary">Active</span>
+                    <span className="text-xs font-medium text-foreground">
+                      {t("workspacesPage.active")}
+                    </span>
                   ) : (
                     <Button size="sm" variant="ghost" onClick={() => switchWorkspace(m.id)}>
-                      Switch
+                      {t("workspacesPage.switch")}
                     </Button>
                   )}
                 </li>

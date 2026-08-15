@@ -155,7 +155,7 @@ test("9 · a escrita falhou — a tela NÃO diz que salvou", async ({ page }) =>
   await page.goto(ROTA);
   await page.getByRole("radio", { name: /Portuguese/ }).click();
   await salvar(page).click();
-  await expect(page.getByText(/Couldn't save your language/)).toBeVisible();
+  await expect(page.getByText(/We couldn't save your language/)).toBeVisible();
   await capturar(page, "09-desktop-erro-ao-salvar", "en");
 });
 
@@ -163,7 +163,7 @@ test("10 · a preferência não carregou — e isso não é 'sem preferência'",
   await montar(page, { indisponivel: true });
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(ROTA);
-  await expect(page.getByText(/Couldn't load your language/)).toBeVisible();
+  await expect(page.getByText(/We couldn't load your language/)).toBeVisible();
   await capturar(page, "10-desktop-preferencia-indisponivel", "en");
 });
 

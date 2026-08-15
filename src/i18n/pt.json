@@ -1015,6 +1015,7 @@
       "primary": "Navegação principal",
       "home": "Início",
       "analyses": "Análises",
+      "instances": "Instâncias",
       "workspaces": "Workspaces"
     },
     "workspace": {
@@ -1030,6 +1031,22 @@
       "accountHint": "Abre o provedor de identidade",
       "signOut": "Sair"
     }
+  },
+  "workspacesPage": {
+    "title": "Workspaces",
+    "subtitle": "Os espaços de que sua conta participa. O acesso vem do seu provedor de identidade.",
+    "loading": "Carregando seus espaços…",
+    "listLabel": "Seus espaços",
+    "errorTitle": "Não conseguimos carregar seus espaços",
+    "errorBody": "Não alcançamos o serviço que os lista. Isso não diz nada sobre o seu acesso.",
+    "emptyTitle": "Sem acesso a espaços",
+    "emptyBody": "Sua conta ainda não participa de nenhum espaço. O acesso é concedido por um administrador no seu provedor de identidade.",
+    "active": "Ativo",
+    "switch": "Trocar",
+    "roleOwner": "Dono",
+    "roleAdmin": "Admin",
+    "roleMember": "Membro",
+    "roleViewer": "Leitor"
   },
   "notifications": {
     "title": "Notificações",

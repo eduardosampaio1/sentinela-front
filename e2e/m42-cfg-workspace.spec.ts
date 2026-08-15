@@ -233,7 +233,7 @@ test.describe("M42 · CFG-03 no browser", () => {
     await campo(page).fill("Nome Que Falha");
     await salvar(page).click();
 
-    await expect(page.getByText(/could not save the workspace name|salvar o nome do espaço/i)).toBeVisible();
+    await expect(page.getByText(/couldn't save the workspace name|salvar o nome do espaço/i)).toBeVisible();
     await expect(page.getByText(/Workspace name saved|Nome do espaço salvo/)).toHaveCount(0);
     await expect(campo(page)).toHaveValue("Nome Que Falha");
   });

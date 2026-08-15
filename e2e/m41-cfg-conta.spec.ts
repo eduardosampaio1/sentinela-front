@@ -253,7 +253,7 @@ test("I · Account fora do ar: a tela vive, a identidade aparece, e nada vira 's
   await page.goto(ROTA);
 
   await expect(page.getByText("Ana Ribeiro")).toBeVisible();
-  await expect(page.getByText(/Couldn't load your language/)).toBeVisible();
+  await expect(page.getByText(/We couldn't load your language/)).toBeVisible();
   await expect(page.getByText(/Using English, the default/)).toHaveCount(0);
   await expect(page.getByText(/is your chosen language/)).toHaveCount(0);
 });
@@ -265,7 +265,7 @@ test("J · o PUT falha: a tela NÃO afirma que salvou", async ({ page }) => {
   await radio(page, /Portuguese/).click();
   await salvar(page).click();
 
-  await expect(page.getByText(/Couldn't save your language/)).toBeVisible();
+  await expect(page.getByText(/We couldn't save your language/)).toBeVisible();
   await expect(page.getByText(/Language saved/)).toHaveCount(0);
   // O estado confirmado não mudou: inglês continua sendo o que está salvo.
   await expect(page.getByText(/English is your chosen language/)).toBeVisible();

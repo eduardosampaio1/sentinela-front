@@ -338,7 +338,7 @@ test.describe("M44 · COM-01 no browser", () => {
     await secao(page).getByLabel(/^Email address$/).fill("nao@vai.test");
     await botao(page, /^Add$/).click();
 
-    await expect(secao(page).getByText(/We could not add it/)).toBeVisible();
+    await expect(secao(page).getByText(/We couldn't add it/)).toBeVisible();
     // Nada foi afirmado como criado, e o que a pessoa digitou continua ali.
     await expect(secao(page).getByText(/^Added\.$/)).toHaveCount(0);
     await expect(secao(page).getByLabel(/^Email address$/)).toHaveValue("nao@vai.test");
@@ -369,7 +369,7 @@ test.describe("M44 · COM-01 no browser", () => {
     const linha = secao(page).locator("li").filter({ hasText: DESTINO });
     await linha.getByRole("button", { name: /^Turn off$/ }).click();
 
-    await expect(linha.getByText(/We could not turn it off/)).toBeVisible();
+    await expect(linha.getByText(/We couldn't turn it off/)).toBeVisible();
     // Continua ATIVA — sem remoção otimista.
     await expect(linha.getByText(/^Active$/)).toBeVisible();
     await expect(linha.getByText(/^Off$/)).toHaveCount(0);
@@ -402,7 +402,7 @@ test.describe("M44 · COM-01 no browser", () => {
     const linha = secao(page).locator("li").filter({ hasText: "hooks.operacoes.exemplo.test" });
     await linha.getByRole("button", { name: /^New signing key$/ }).click();
 
-    await expect(linha.getByText(/We could not generate a new key/)).toBeVisible();
+    await expect(linha.getByText(/We couldn't generate a new key/)).toBeVisible();
     await expect(linha.getByText(/whsec_/)).toHaveCount(0);
     // A versão confirmada não se move.
     await expect(linha.getByText(/Key v2/)).toBeVisible();
