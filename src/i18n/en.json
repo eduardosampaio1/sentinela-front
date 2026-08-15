@@ -258,7 +258,8 @@
       "non_retryable_failure": "The request couldn't be completed. Retrying won't help — contact support if it persists."
     },
     "progress": {
-      "title": "What is happening"
+      "title": "What is happening",
+      "loading": "Reading what each part is doing…"
     },
     "result": {
       "title": "Analysis result",

@@ -165,6 +165,94 @@ test.describe("M45 · G11 · os três estados não colapsam", () => {
     expect(texto, "outage virou ausência").not.toMatch(/No analyses yet/);
   });
 
+  // M45.2 — o painel de progresso dizia a MESMA frase por três causas diferentes.
+  //
+  // `lerEixos(undefined)` devolve os quatro eixos com `entrada: null`, e `entrada: null` significa
+  // *"o produtor não publicou este eixo"*. Só que `data` também é `undefined` quando a leitura
+  // FALHOU, quando foi RECUSADA e enquanto NÃO VOLTOU — e as três situações imprimiam "Não medido"
+  // quatro vezes, idêntico ao caso em que o produtor de fato não mediu. A pessoa lia uma afirmação
+  // sobre os DADOS dela durante uma indisponibilidade do sistema.
+  //
+  // Os dois casos abaixo medem as duas causas de sistema. A terceira — o produtor respondendo com
+  // eixo ausente — continua sendo "não medido", e é isso que os separa.
+  /** O painel só existe enquanto a jornada ANDA: com `completed` a tela mostra o resultado. */
+  async function emProcessamento(page: Page) {
+    await page.route("**/v1/analyses/*", (r) =>
+      r.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          analysis_id: ANALISE,
+          status: "running",
+          record_count: 1240,
+          result_available: false,
+          retry_allowed: false,
+          created_at: "2026-08-03T17:12:44Z",
+          updated_at: "2026-08-03T17:13:02Z",
+          instance_id: null,
+        }),
+      }),
+    );
+  }
+
+  test("indisponível ≠ não medido no painel de progresso", async ({ page }) => {
+    await montarProduto(page);
+    await emProcessamento(page);
+    await page.route("**/v1/analyses/*/progress**", (r) =>
+      r.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ code: "temporarily_unavailable", retryable: true }),
+      }),
+    );
+    await page.goto(`/analyses/${ANALISE}`);
+
+    // ÂNCORA POSITIVA, e fora da janela de retry: `503` é retentável, e medir antes de o estado
+    // terminal chegar leria a tela ainda em silêncio — massa vazia por TEMPO.
+    await expect(page.locator("main")).toContainText(/temporarily unavailable/i, { timeout: 30_000 });
+    const texto = await page.locator("main").innerText();
+    expect(texto.length).toBeGreaterThan(20);
+    expect(texto, "indisponibilidade virou afirmação sobre os dados").not.toMatch(/Not measured/i);
+  });
+
+  test("recusado ≠ não medido no painel de progresso", async ({ page }) => {
+    await montarProduto(page);
+    await emProcessamento(page);
+    await page.route("**/v1/analyses/*/progress**", (r) =>
+      r.fulfill({
+        status: 404,
+        contentType: "application/json",
+        body: JSON.stringify({ code: "forbidden_or_not_found" }),
+      }),
+    );
+    await page.goto(`/analyses/${ANALISE}`);
+
+    await expect(page.locator("main")).toContainText(/doesn't exist or isn't available/i, {
+      timeout: 20_000,
+    });
+    const texto = await page.locator("main").innerText();
+    expect(texto, "recusa virou afirmação sobre os dados").not.toMatch(/Not measured/i);
+  });
+
+  // O CONTRAPROVA: com o produtor respondendo e um eixo sem entrada, "não medido" É a frase certa.
+  // Sem este caso, esconder a grade sempre passaria nos dois acima.
+  test("o produtor sem publicar um eixo CONTINUA sendo 'não medido'", async ({ page }) => {
+    await montarProduto(page);
+    await emProcessamento(page);
+    await page.route("**/v1/analyses/*/progress**", (r) =>
+      r.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ analysis_id: ANALISE, axes: [{ axis: "engine", state: "running" }] }),
+      }),
+    );
+    await page.goto(`/analyses/${ANALISE}`);
+
+    await expect(page.locator("main")).toContainText(/Not measured/i, { timeout: 20_000 });
+    // E o eixo que o produtor PUBLICOU aparece com o estado dele, não engolido pela ausência.
+    await expect(page.locator("main")).toContainText(/Running/i);
+  });
+
   test("indisponível ≠ inexistente na Instância", async ({ page }) => {
     await montarProduto(page);
     await page.route("**/v1/instances/*", (r) =>

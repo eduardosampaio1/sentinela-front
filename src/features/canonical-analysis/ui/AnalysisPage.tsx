@@ -92,7 +92,7 @@ export function AnalysisPage() {
         return (
           <div className="space-y-6">
             <ProblemFeedback error={status.error} onRetry={() => void status.refetch()} retryDisabled={status.isFetching} />
-            <PainelDeEixos eixos={eixos} />
+            <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
           </div>
         );
       }
@@ -182,7 +182,7 @@ export function AnalysisPage() {
                 afirmação que o produtor não fez.
                 O eixo `failed` também NÃO autoriza retry: quem autoriza é `retry_allowed`, e são
                 dimensões diferentes. */}
-            <PainelDeEixos eixos={eixos} />
+            <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
             {/* O que já estava disponível continua disponível. Uma falha em outro eixo não
                 desfaz o que o componente analítico entregou. */}
             {analyticsPronto && analytics.data && <RegiaoDeAnalyticsAoVivo vista={analytics.data} />}
@@ -216,7 +216,7 @@ export function AnalysisPage() {
                 empurrá-lo para dentro faria "recuperando" parecer um quinto componente. O
                 `StateBanner` já o distingue por palavra e forma, nunca só por cor. */}
             <StateBanner view={view} />
-            <PainelDeEixos eixos={eixos} />
+            <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
             {/* Disponibilidade progressiva: o que já está pronto NÃO espera o resultado final.
                 Reusa o portador canônico da M27 — nenhuma segunda interpretação de
                 `ready`/`partial`/`withheld`. E isto não é "resultado parcial": `partial` pertence

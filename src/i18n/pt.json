@@ -258,7 +258,8 @@
       "non_retryable_failure": "A requisição não pôde ser concluída. Repetir não ajuda — contate o suporte se persistir."
     },
     "progress": {
-      "title": "O que está acontecendo"
+      "title": "O que está acontecendo",
+      "loading": "Lendo o que cada parte está fazendo…"
     },
     "result": {
       "title": "Resultado da análise",
