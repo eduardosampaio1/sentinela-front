@@ -53,6 +53,40 @@ describe("needs_mapping — a parada honesta", () => {
   });
 });
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// M45.2 — carregando não é estado, e ausência não é indisponibilidade
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("M45.2 · o vocabulário da jornada não colapsa três coisas em uma", () => {
+  it("o rótulo de CARREGANDO não é o nome de nenhum estado", () => {
+    // A página usava `state.preparing.title` — "Preparando" — como rótulo de carregando. Enquanto
+    // o status era buscado, a tela afirmava que a análise estava naquele estado; e se ela
+    // estivesse mesmo, a pessoa veria a mesma palavra pelos dois motivos. Carregando e estado são
+    // duas telas distintas, e essa é a regra que o programa inteiro repete.
+    for (const [nome, dicionario] of [["pt", pt], ["en", en]] as const) {
+      const ca = (dicionario as Record<string, any>).canonicalAnalysis;
+      const carregando = String(ca.loading ?? "").trim();
+      expect(carregando.length, `${nome} sem rótulo de carregando`).toBeGreaterThan(0);
+      const titulos = PUBLIC_STATES.map((s) => String(ca.state[s].title));
+      expect(titulos, `${nome}: o carregando usa o nome de um estado`).not.toContain(carregando);
+    }
+  });
+
+  it("contagem não publicada NÃO é dita como indisponibilidade", () => {
+    // `record_count: null` é o produtor não tendo publicado a contagem — não é o sistema fora do
+    // ar. A copy dizia "Registros indisponíveis" / "Records not available", que é exatamente a
+    // palavra da queda. A casa já tem o termo certo para isto: "não publicado".
+    const proibidos = [/indispon/i, /unavailable/i, /couldn't|não foi possível/i];
+    for (const [nome, dicionario] of [["pt", pt], ["en", en]] as const) {
+      const texto = String((dicionario as Record<string, any>).canonicalAnalysis.list.recordsUnknown);
+      expect(texto.trim().length, `${nome} sem texto`).toBeGreaterThan(0);
+      for (const p of proibidos) {
+        expect(texto, `${nome}: ausência dita como indisponibilidade — "${texto}"`).not.toMatch(p);
+      }
+    }
+  });
+});
+
 describe("nenhum estado público fica sem texto", () => {
   // Cadeado de exaustividade: um estado novo sem i18n apareceria como a CHAVE crua na tela
   // ("canonicalAnalysis.state.needs_mapping.title"), que é a forma de a interface mentir sem

@@ -92,6 +92,7 @@
       "newAnalysis": "New analysis",
       "resultPreparing": "The analysis is complete. The result is still being prepared."
     },
+    "loading": "Loading the analysis…",
     "needsMapping": {
       "explain": "The data arrived, but how some fields should be interpreted still needs confirming.",
       "blocked": "The operation that resolves this is not exposed in the public contract yet."
@@ -248,7 +249,7 @@
       "resultReady": "Result ready",
       "open": "Open analysis {{id}}",
       "records": "{{count}} records",
-      "recordsUnknown": "Records not available"
+      "recordsUnknown": "Record count not published"
     },
     "problem": {
       "authentication_required": "Your session is no longer valid. Please sign in again.",

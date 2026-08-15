@@ -92,6 +92,7 @@
       "newAnalysis": "Nova análise",
       "resultPreparing": "A análise foi concluída. O resultado ainda está sendo preparado."
     },
+    "loading": "Carregando a análise…",
     "needsMapping": {
       "explain": "O dado chegou, mas falta confirmar como alguns campos devem ser interpretados.",
       "blocked": "A operação que resolve isto ainda não está exposta no contrato público."
@@ -248,7 +249,7 @@
       "resultReady": "Resultado pronto",
       "open": "Abrir análise {{id}}",
       "records": "{{count}} registros",
-      "recordsUnknown": "Registros indisponíveis"
+      "recordsUnknown": "Contagem não publicada"
     },
     "problem": {
       "authentication_required": "Sua sessão não é mais válida. Entre novamente.",

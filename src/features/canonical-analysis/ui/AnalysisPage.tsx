@@ -75,7 +75,13 @@ export function AnalysisPage() {
       return <p role="alert" className="text-sm text-muted-foreground">{t("canonicalAnalysis.entry.workspaceMissing")}</p>;
     }
     if (status.isLoading) {
-      return <LoadingState message={t("canonicalAnalysis.state.preparing.title")} size="md" />;
+      // M45.2 — o rótulo de CARREGANDO não pode ser o nome de um ESTADO.
+      //
+      // Aqui estava `state.preparing.title` — "Preparando" —, que é o nome de um estado real da
+      // jornada. Enquanto o status era buscado, a tela afirmava que a análise estava naquele
+      // estado; e se ela estivesse mesmo, a pessoa veria a mesma palavra pelos dois motivos. É o
+      // colapso carregando × estado, irmão do que esta tranche corrigiu no painel de eixos.
+      return <LoadingState message={t("canonicalAnalysis.loading")} size="md" />;
     }
     if (status.isError) {
       // M34 — a espera numa parte do lifecycle NÃO apaga o que outra parte já disse.
