@@ -382,6 +382,33 @@ test.describe("M45 · G11 · os três estados não colapsam", () => {
     expect(texto, "recusa virou afirmação sobre os dados").not.toMatch(/Not measured/i);
   });
 
+  // A TERCEIRA causa: enquanto a leitura NÃO VOLTOU.
+  //
+  // Antes da primeira resposta `data` também é `undefined`, e a tela afirmaria quatro "não medido"
+  // ANTES de saber qualquer coisa. Com um produtor lento a afirmação falsa fica na tela o tempo
+  // todo da espera — e é justamente quando ninguém está olhando um teste.
+  test("carregando ≠ não medido no painel de progresso", async ({ page }) => {
+    await montarProduto(page);
+    await emProcessamento(page);
+    await page.route("**/v1/analyses/*/progress**", async (r) => {
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+      await r.fulfill(json({ analysis_id: ANALISE, axes: eixosDe("running") }));
+    });
+    await page.goto(`/analyses/${ANALISE}`);
+
+    // Enquanto a resposta não chega, o painel diz que está LENDO — e não afirma medida nenhuma.
+    await expect(page.locator("main")).toContainText(/Reading what each part is doing/i, {
+      timeout: 15_000,
+    });
+    expect(
+      await page.locator("main").innerText(),
+      "a espera virou afirmação sobre os dados",
+    ).not.toMatch(/Not measured/i);
+
+    // E quando ela chega, a grade aparece: sem isto, esconder para sempre passaria.
+    await expect(page.locator("main")).toContainText(/Running/i, { timeout: 20_000 });
+  });
+
   // O CONTRAPROVA: com o produtor respondendo e um eixo sem entrada, "não medido" É a frase certa.
   // Sem este caso, esconder a grade sempre passaria nos dois acima.
   test("o produtor sem publicar um eixo CONTINUA sendo 'não medido'", async ({ page }) => {
