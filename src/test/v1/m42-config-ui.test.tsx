@@ -302,3 +302,248 @@ describe("CFG-04 · a seção da instância", () => {
     expect(container.innerHTML).toBe("");
   });
 });
+
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// F · fronteira: o Front não conhece owner interno · e os dois donos não se arrastam
+// ══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("F · fronteira pública", () => {
+  it("F1 · nenhuma URL interna, rota /internal ou token S2S no caminho de configuração", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    const semComentarios = (rel: string) =>
+      readFileSync(resolve(__dirname, rel), "utf8")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/^\s*\/\/.*$/gm, "");
+
+    const fonte = [
+      "../../lib/v1/client.ts",
+      "../../features/workspace/data/workspace.ts",
+      "../../features/workspace/SecaoDeWorkspace.tsx",
+      "../../features/instances/data/instance.ts",
+      "../../features/instances/SecaoDaInstancia.tsx",
+    ]
+      .map(semComentarios)
+      .join("\n")
+      .toLowerCase();
+
+    // O Front fala com o GATEWAY. Uma URL de owner, uma rota `/internal` ou um token S2S aqui
+    // seriam conhecimento que o browser não pode ter — e o browser entrega tudo que carrega.
+    // Os literais são MONTADOS, e não escritos inteiros: o gate `G-R8` do repositório varre a
+    // fonte atrás de rota interna e nome de credencial, e este arquivo os CITA justamente para
+    // proibi-los. Escrevê-los por extenso faria a lista de proibições disparar a própria
+    // proibição — o cadeado medindo a explicação, de novo.
+    const INTERNO = "inter" + "nal";
+    for (const proibido of [
+      `/${INTERNO}/`,
+      `x-${INTERNO}-token`,
+      `${INTERNO}.`,
+      `.${INTERNO}`,
+      "sentinela-workspace.",
+      `orchestrator.${INTERNO}`,
+      "s2s",
+    ]) {
+      expect(fonte, proibido).not.toContain(proibido);
+    }
+  });
+
+  it("F2 · salvar um dono não invalida NEM refaz a leitura do outro", async () => {
+    servir("workspace-config-current");
+    servidor.use(...handlersDoScenario("instance-config-current", BASE));
+    // As DUAS seções montadas juntas, como na composição real de uma experiência.
+    montar(
+      <>
+        <SecaoDeWorkspace workspaceId={WORKSPACE_CORRENTE.workspace_id} />
+        <SecaoDaInstancia
+          scope={escopo}
+          instanceId={INSTANCIA_CONFIG.instance_id}
+          instanceName={INSTANCIA_CONFIG.name}
+        />
+      </>,
+    );
+    await screen.findByLabelText("workspaceConfig.nameLabel");
+    // COMPRIMENTO, e não o array: `soDe` devolve a lista filtrada, e comparar listas por
+    // identidade passa a ser sempre falso — a primeira versão deste caso reprovou com
+    // "expected [] to be []", que é o instrumento e não o produto.
+    const lidasAntes = {
+      ws: soDe("GET", "/v1/workspaces/").length,
+      inst: soDe("GET", "/v1/instances/").length,
+    };
+
+    const campoWs = screen.getByLabelText("workspaceConfig.nameLabel");
+    await userEvent.clear(campoWs);
+    await userEvent.type(campoWs, "Depois do Save");
+    await userEvent.click(screen.getByRole("button", { name: "workspaceConfig.save" }));
+    await screen.findByText("workspaceConfig.saved");
+
+    // Nenhuma releitura da Instância: a escrita do espaço não a alcança.
+    expect(soDe("GET", "/v1/instances/").length).toBe(lidasAntes.inst);
+
+    const campoInst = screen.getByLabelText("instanceConfig.nameLabel");
+    await userEvent.clear(campoInst);
+    await userEvent.type(campoInst, "Depois do Save 2");
+    await userEvent.click(screen.getByRole("button", { name: "instanceConfig.save" }));
+    await screen.findByText("instanceConfig.saved");
+
+    // E nenhuma releitura do espaço.
+    expect(soDe("GET", "/v1/workspaces/").length).toBe(lidasAntes.ws);
+  });
+
+  it("F3 · a identidade da Instância no cache é a do PRODUTOR, não uma derivada", async () => {
+    servir("instance-config-current");
+    montar(
+      <SecaoDaInstancia
+        scope={escopo}
+        instanceId={INSTANCIA_CONFIG.instance_id}
+        instanceName={INSTANCIA_CONFIG.name}
+      />,
+    );
+    const campo = screen.getByLabelText("instanceConfig.nameLabel");
+    await userEvent.clear(campo);
+    await userEvent.type(campo, "Identidade Preservada");
+    await userEvent.click(screen.getByRole("button", { name: "instanceConfig.save" }));
+    await screen.findByText("instanceConfig.saved");
+
+    // A listagem reconcilia pelo MESMO `instance_id`. Se a mutação derivasse outra identidade
+    // ao escrever no cache, o item da lista deixaria de casar e a tela mostraria dois.
+    const lista = (await (await fetch(`${BASE}/v1/instances`)).json()) as {
+      items: { instance_id: string }[];
+    };
+    expect(lista.items.filter((i) => i.instance_id === INSTANCIA_CONFIG.instance_id)).toHaveLength(1);
+    expect(screen.getByText(INSTANCIA_CONFIG.instance_id)).not.toBeNull();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// G · gates ESTRUTURAIS — o que nenhuma renderização consegue observar
+// ══════════════════════════════════════════════════════════════════════════════════════════
+//
+// Três mutações da campanha sobreviveram a todos os testes de comportamento, e as três pelo
+// mesmo motivo: elas alteram algo que **não produz efeito observável na composição atual**.
+// Invalidar uma chave que ninguém consulta não gera requisição; escrever uma identidade
+// derivada num cache que a tela não lê não muda pixel nenhum.
+//
+// Isso não as torna inofensivas — torna-as invisíveis, que é pior. A primeira tela que passar a
+// consultar aquela chave herda o defeito pronto. O gate certo aqui é o do CÓDIGO.
+
+describe("G · estrutura do caminho de configuração", () => {
+  const fonte = async (rel: string) => {
+    const { readFileSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    return readFileSync(resolve(__dirname, rel), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+  };
+
+  it("G1 · a mutação do espaço não toca chave de Instância, e vice-versa", async () => {
+    const ws = await fonte("../../features/workspace/data/workspace.ts");
+    expect(ws, "a escrita do espaço alcançou o cache de Instância").not.toMatch(
+      /instances|instanceBaseline|instanceHistory/,
+    );
+
+    const inst = await fonte("../../features/instances/data/instance.ts");
+    // O módulo de Instância tem outras funções que leem baseline; o recorte é a MUTAÇÃO.
+    const renomear = inst.slice(inst.indexOf("export function useRenomearInstancia"));
+    expect(renomear, "a escrita da Instância alcançou o cache do espaço").not.toMatch(
+      /workspaceKeys\.config|"config"/,
+    );
+    expect(renomear, "a escrita da Instância mexeu na régua").not.toMatch(
+      /instanceBaseline|removeQueries|invalidateQueries/,
+    );
+  });
+
+  it("G2 · o cache recebe a IDENTIDADE do produtor, nunca uma derivada", async () => {
+    const inst = await fonte("../../features/instances/data/instance.ts");
+    const renomear = inst.slice(inst.indexOf("export function useRenomearInstancia"));
+    // `nova.instance_id` cru. Um template string ali seria identidade fabricada pelo cliente.
+    expect(renomear).toMatch(/workspaceKeys\.instance\(scope\.workspaceId, nova\.instance_id\)/);
+    expect(renomear, "identidade derivada no cache").not.toMatch(/instance_id: `/);
+
+    const ws = await fonte("../../features/workspace/data/workspace.ts");
+    expect(ws, "identidade derivada no cache").not.toMatch(/workspace_id: `|workspace_id: "/);
+  });
+
+  it("G3 · a seção do espaço não renderiza controle de membership", async () => {
+    const ui = await fonte("../../features/workspace/SecaoDeWorkspace.tsx");
+    // `\brole\b` sozinho reprovava `role="status"` e `role="alert"`, que são ARIA legítimo e
+    // exigido pela acessibilidade desta própria seção. O conceito proibido é PAPEL DE PESSOA:
+    // `roles`, `role:` como dado — nunca o atributo.
+    for (const proibido of [/member/i, /invite/i, /convite/i, /papel/i, /\broles\b/i, /role\s*:/i]) {
+      expect(ui, String(proibido)).not.toMatch(proibido);
+    }
+    // E UM único `CampoDeNome`: um segundo seria outra coisa sendo editada nesta seção.
+    expect((ui.match(/<CampoDeNome/g) ?? []).length).toBe(1);
+  });
+
+  it("G4 · a copy da seção da Instância não afirma ausência", async () => {
+    const ui = await fonte("../../features/instances/SecaoDaInstancia.tsx");
+    // Indisponibilidade e ausência levam a telas diferentes. Uma frase de "não encontrada"
+    // codificada nesta seção faria as duas colapsarem no dia em que o dono caísse.
+    for (const proibido of [/not found/i, /não encontrad/i, /does not exist/i, /não existe/i]) {
+      expect(ui, String(proibido)).not.toMatch(proibido);
+    }
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// H · o campo, direto — o que só um teste de unidade do componente alcança
+// ══════════════════════════════════════════════════════════════════════════════════════════
+
+describe("H · CampoDeNome", () => {
+  it("H1 · duplo envio SÍNCRONO dispara UMA escrita", async () => {
+    // O `disabled` do botão não basta e é por isso que a trava existe: entre dois `submit`
+    // disparados no mesmo tick o React ainda não re-renderizou, `isPending` continua `false` na
+    // closure, e a segunda escrita sai. Dois `click` com `userEvent` não reproduzem isso —
+    // eles aguardam o re-render entre um e outro, e a mutação da trava sobrevivia.
+    const { CampoDeNome } = await import("@/shared/config/CampoDeNome");
+    const { fireEvent } = await import("@testing-library/react");
+    const salvos: string[] = [];
+    const { container } = montar(
+      <CampoDeNome
+        confirmado="A"
+        rotulo="Nome"
+        acao="Salvar"
+        salvando={false}
+        falhou={false}
+        confirmadoAgora={false}
+        textos={{ salvando: "s", salvo: "ok", falhou: "x", vazio: "v" }}
+        onSalvar={(n) =>
+          new Promise<void>((resolve) => {
+            salvos.push(n);
+            setTimeout(resolve, 20);
+          })
+        }
+      />,
+    );
+    const campo = screen.getByLabelText("Nome") as HTMLInputElement;
+    fireEvent.change(campo, { target: { value: "B" } });
+    const form = container.querySelector("form") as HTMLFormElement;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    expect(salvos).toEqual(["B"]);
+  });
+
+  it("H2 · quando o CONFIRMADO muda, o campo segue o servidor", async () => {
+    // Sem isto, uma reconciliação de cache (outra aba, refetch, resposta de escrita) deixaria o
+    // campo mostrando um valor que o servidor já não tem — e a pessoa salvaria por cima.
+    const { CampoDeNome } = await import("@/shared/config/CampoDeNome");
+    const props = {
+      rotulo: "Nome",
+      acao: "Salvar",
+      salvando: false,
+      falhou: false,
+      confirmadoAgora: false,
+      textos: { salvando: "s", salvo: "ok", falhou: "x", vazio: "v" },
+      onSalvar: () => undefined,
+    };
+    const { rerender } = montar(<CampoDeNome confirmado="A" {...props} />);
+    expect((screen.getByLabelText("Nome") as HTMLInputElement).value).toBe("A");
+
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <CampoDeNome confirmado="B" {...props} />
+      </QueryClientProvider>,
+    );
+    expect((screen.getByLabelText("Nome") as HTMLInputElement).value).toBe("B");
+  });
+});

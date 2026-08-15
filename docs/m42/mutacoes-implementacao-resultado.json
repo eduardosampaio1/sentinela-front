@@ -1,0 +1,21 @@
+{
+  "resultados": [
+    {
+      "n": 21,
+      "titulo": "URL interna do owner entra no Front",
+      "veredito": "MORTA",
+      "gate": "F1",
+      "porque": "o Front não conhece owner interno",
+      "browser": false
+    },
+    {
+      "n": 22,
+      "titulo": "token interno entra no Front",
+      "veredito": "MORTA",
+      "gate": "F1",
+      "porque": "o token S2S é do Gateway, não do browser",
+      "browser": false
+    }
+  ],
+  "arvore": " M docs/inst05/mobile-troca-em-voo.png\n M docs/m41/09-desktop-erro-ao-salvar.png\n M docs/m42/08-desktop-instance-unavailable-en.png\n M src/test/v1/m42-config-ui.test.tsx\n?? docs/m42/__pycache__/mutacoes_implementacao.cpython-310.pyc\n?? docs/m42/mutacoes-implementacao-resultado.json\n?? docs/m42/mutacoes_implementacao.py\n"
+}

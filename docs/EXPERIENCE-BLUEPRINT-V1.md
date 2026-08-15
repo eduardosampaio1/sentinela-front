@@ -749,6 +749,10 @@ membership, e membership é do provedor de identidade), não há gestão de memb
 os dois estados: Workspace e Instance são donos diferentes, e uma tela só não os torna um
 domínio. Há gate para cada uma dessas ausências.
 
+**M42 · CLOSED (implementação).** Os oito scenarios de CFG-03/CFG-04 passaram a ter
+consumidor real: `SecaoDeWorkspace` em `/dashboard/settings` e `SecaoDaInstancia` em
+`/instances/{id}`. B1 foi de **8 para 5**. Ver `docs/m42/DOC-CLOSE-IMPLEMENTACAO.md`.
+
 **Sobre rename como estado.** Seguindo a lição da M41, o catálogo guarda **estados do mundo**; a
 transição `A → B` é provada dentro dos `handlers()` mutáveis. Não existe `workspace-renamed` nem
 `instance-renamed` como entrada — um `PATCH` não cria um mundo novo.
