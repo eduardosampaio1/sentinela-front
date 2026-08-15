@@ -92,6 +92,10 @@
       "newAnalysis": "Nova análise",
       "resultPreparing": "A análise foi concluída. O resultado ainda está sendo preparado."
     },
+    "needsMapping": {
+      "explain": "O dado chegou, mas falta confirmar como alguns campos devem ser interpretados.",
+      "blocked": "A operação que resolve isto ainda não está exposta no contrato público."
+    },
     "analyticsView": {
       "title": "Analytics",
       "loading": "Carregando a projeção analítica…",
@@ -663,9 +667,7 @@
     "unknownState": "Estado não reconhecido nesta versão da interface",
     "actions": {
       "title": "Ações necessárias",
-      "none": "Nada neste workspace espera por você agora.",
-      "needsMappingExplain": "O dado chegou, mas falta confirmar como alguns campos devem ser interpretados.",
-      "needsMappingBlocked": "A operação que resolve isto ainda não está exposta no contrato público."
+      "none": "Nada neste workspace espera por você agora."
     },
     "running": {
       "title": "Em andamento"

@@ -94,6 +94,17 @@ describe("a parada de mapping chega na tela", () => {
     expect(screen.getByRole("button", { name: "Check again" })).toBeTruthy();
     // E NÃO oferece retry: reenviar o mesmo arquivo daria o mesmo resultado.
     expect(screen.queryByRole("button", { name: /try again|retry|tentar/i })).toBeNull();
+
+    // M45.2 — E DIZ POR QUE NÃO ADIANTA INSISTIR.
+    //
+    // Esta frase existia só na Home. Quem clica no chip "Ação necessária" da lista aterrissa
+    // AQUI, encontrava um botão de reconsultar e concluía que a confirmação dependia dela —
+    // ficando a insistir num botão que nunca resolveria. O produto sabia o motivo e não o dizia
+    // na tela onde a pessoa está.
+    expect(
+      screen.getByText("The operation that resolves this is not exposed in the public contract yet."),
+      "a parada não diz que a operação que a resolve não existe",
+    ).toBeTruthy();
     unmount();
   });
 

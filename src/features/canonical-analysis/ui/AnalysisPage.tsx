@@ -127,9 +127,27 @@ export function AnalysisPage() {
         // O editor humano de mapping ainda não existe. A saída honesta NÃO é um botão que
         // finge abrir algo: é dizer o que falta (o banner traz o texto) e oferecer a única
         // ação que de fato faz sentido hoje — reconsultar, já que o polling automático parou.
+        // M45.2 — a página passa a dizer o que SÓ a Home dizia.
+        //
+        // Três superfícies falavam deste mesmo estado: a lista mostra o chip "Ação necessária"
+        // (rótulo congelado no §15 do Blueprint), esta página mostrava "Confirmação necessária" e
+        // um botão "Verificar novamente", e a Home era a ÚNICA que dizia a frase decisiva — *a
+        // operação que resolve isto ainda não está exposta no contrato público*.
+        //
+        // Quem clica no chip aterrissa AQUI. Sem essa frase, a pessoa lê "aja" na lista, encontra
+        // um botão que reconsulta e conclui que a confirmação depende dela — e fica insistindo num
+        // botão que nunca vai resolver. É o mesmo defeito que a M45.4 corrigiu na comparação, por
+        // outro caminho: o produto sabe por que não dá, e não conta na tela onde a pessoa está.
+        //
+        // A copy não foi reescrita nem duplicada: as duas frases saíram de `home.actions.*` para
+        // `canonicalAnalysis.needsMapping.*`, porque descrevem o ESTADO e não a Home, e as duas
+        // superfícies passaram a ler da mesma chave.
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
+            <p className="text-sm text-muted-foreground">
+              {t("canonicalAnalysis.needsMapping.blocked")}
+            </p>
             <Button variant="outline" onClick={() => void status.refetch()} disabled={status.isFetching}>
               {t("canonicalAnalysis.action.checkAgain")}
             </Button>

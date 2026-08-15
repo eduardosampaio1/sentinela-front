@@ -159,9 +159,9 @@ export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] })
               // pelo `StatusBadge`, que e o componente do DS para isso.
               item.status === "needs_mapping" ? (
                 <p className="mt-1 text-xs text-muted-foreground sm:w-full">
-                  {t("home.actions.needsMappingExplain")}{" "}
+                  {t("canonicalAnalysis.needsMapping.explain")}{" "}
                   <span className="text-muted-foreground">
-                    {t("home.actions.needsMappingBlocked")}
+                    {t("canonicalAnalysis.needsMapping.blocked")}
                   </span>
                 </p>
               ) : undefined
