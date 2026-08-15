@@ -70,7 +70,20 @@ export function useRenomearWorkspace(
   return useMutation({
     mutationFn: (name: string) => client.renameWorkspace(workspaceId as string, name),
     onSuccess: (novo) => {
-      cache.setQueryData(workspaceKeys.config(novo.workspace_id), novo);
+      // A chave é a do `workspaceId` que ESTA instância do hook recebeu — a MESMA que
+      // `useWorkspaceConfig` usa para ler. Escrever em `config(novo.workspace_id)` parecia mais
+      // correto ("use a identidade que o servidor devolveu") e estava errado: quando o escopo
+      // canônico e o `workspace_id` da resposta não são a mesma string, a escrita cai numa chave
+      // que ninguém lê, e a seção fica para sempre no valor anterior.
+      //
+      // O browser encontrou isto; o vitest não podia, porque lá os dois valores são o mesmo por
+      // construção do teste. É a diferença entre provar o componente e provar a composição.
+      cache.setQueryData(workspaceKeys.config(workspaceId ?? "idle"), novo);
+      // E, se o produtor devolveu outra identidade, a chave dela também recebe o estado — sem
+      // isso, uma leitura por aquele id ficaria com dado velho.
+      if (novo.workspace_id !== workspaceId) {
+        cache.setQueryData(workspaceKeys.config(novo.workspace_id), novo);
+      }
     },
   });
 }
