@@ -22,6 +22,63 @@ individualmente verdes formaram experiência transversal defeituosa, e o mesmo r
 
 ---
 
+---
+
+## ⚠️ ERRATA — esta Discovery está INCOMPLETA, e a lacuna é minha
+
+**Escrita em 2026-08-15, logo após o commit `d7c636b`.**
+
+O Passo 0 desta missão mandava começar por **Vault INDEX**, **Golden Rules**, **Architecture
+INDEX** e **Blueprint vault**. **Eu não abri o vault.** Pior: listei *"Blueprint vault"* na seção
+"Autoridades lidas" abaixo — uma afirmação falsa, no mesmo documento que existe para separar o que
+foi medido do que foi presumido.
+
+**O que a leitura tardia do vault (`Documents\Obsidian\Sentinela OS`, 352 notas) mostrou:**
+
+1. **O `INDEX.md` me absolve numa parte:** *"para os documentos mutáveis do Front que também
+   existem no repositório, a cópia viva e autoritativa é a do repo. O vault não concorre com ela."*
+   Usar Blueprint e PLAN do repo estava **certo**.
+
+2. **E me condena na outra:** o vault é o **router**, e carrega o que o repo não tem —
+   `REGRA DE OURO ZERO` (que se declara *"primeira leitura obrigatória de QUALQUER sessão"*),
+   `02 - Arquitetura/Owners e Fronteiras`, `04 - Decisões` (35 notas) e **`07 - Validações`**
+   (mais de 150 notas).
+
+3. **Existem registros de fechamento do Front**, organizados por **Onda/Fase** e não por número de
+   missão — que é exatamente por que minha busca por `DOC-CLOSE*.md` no repo não achou nada:
+   `VAL - Onda 6 E1 Fundação canônica` · `E2-E3 jornada prepare-upload-submit-track` ·
+   `E4-E6 listagem, retomada, retry` · **`E5-E7 Resultado canônico e consolidação visual`** ·
+   `ENCERRAMENTO OFICIAL` · `Front V1 Fase 2 e 3 (M18-M21, BD07, BD08)`.
+
+4. **E `docs/onda6/` existe DENTRO do repo** — `E1-baseline-quarantine`, `E5-microdiscovery-
+   resultado`, `E5-massa-sintetica-proveniencia`, `E7-consolidacao-visual`. Eu listei a pasta no
+   início da missão e não abri um arquivo sequer.
+
+### O que isso invalida
+
+| seção | afirmação | estado |
+|---|---|---|
+| **§2** | *"não existe DOC-CLOSE para M01–M41; o fechamento está inline no PLAN"* | **FALSA como conclusão.** O artefato existe, com outro nome (`VAL -`), noutro lugar (vault) e noutro eixo (Onda/Fase). O que é verdade é só a parte literal: não há `DOC-CLOSE*.md` no repo para elas |
+| **§6** | Resultado · ARGOS · Analytics · Comparação = **NO CREDIT** | **NÃO SUSTENTADA.** `VAL - Onda 6 E5/E7` registra, para a superfície de Resultado: contraste medido no DOM vivo (5 reprovações achadas e corrigidas), tokens fantasma + gate permanente, responsividade em 3 viewports, i18n 94/94 EN↔PT e axe sem violações |
+| **§9** | prioridade P0 de M45.3 e M45.4 | **SUSPEITA** — foi derivada do crédito acima |
+| **§8** | riscos históricos de a11y/i18n/responsive | **provavelmente superestimados** para as superfícies da Onda 6 |
+
+### O que continua de pé
+
+O ledger das 40 (§3), o mapa de rotas e alcançabilidade (§4), o mapa de invariantes (§5) e a
+medição de **17 superfícies sem scenario** (§7) — inclusive `ARG-01` e `ANL-01` como rotas vivas
+sem massa. Nada disso dependia do vault.
+
+### Reentrada exata
+
+**M45.1 precisa de uma segunda passada** que: leia `REGRA DE OURO ZERO`, `Owners e Fronteiras` e o
+`INDEX - Arquitetura`; cruze as **VAL notes de Onda 6 e Fase 2/3** contra as missões M16–M40;
+releia `docs/onda6/*`; e **re-derive o crédito e a prioridade das tranches** a partir disso.
+
+Até lá, o **TRANCHE PLAN abaixo não deve ser executado** — a ordem das P0 pode mudar.
+
+---
+
 ## 1. Autoridades lidas
 
 PLAN vivo (`FRONT-V1-IMPLEMENTATION-PLAN.md`) · Blueprint vivo (`EXPERIENCE-BLUEPRINT-V1.md`, §3.1
@@ -267,7 +324,13 @@ capturas EN-only da M40 (absorvidas: a evidência PT/EN atual sai na **M45.5**).
 
 ---
 
-### **M45.1 · HISTORICAL EXPERIENCE DISCOVERY — PASS · TRANCHE PLAN READY**
+### ~~M45.1 · HISTORICAL EXPERIENCE DISCOVERY — PASS · TRANCHE PLAN READY~~
 
-**Próximo checkpoint:** `M45.4 · TWO-VIEW HARDENING` — recomendado sobre M45.2 por ser a única
-tranche P0 cujas superfícies vivas não têm scenario nenhum.
+### **M45.1 · HISTORICAL EXPERIENCE DISCOVERY — INCOMPLETE · VAULT NOT READ**
+
+O veredito original está riscado, não apagado: ele foi emitido sem o vault, que o Passo 0 exigia
+primeiro. Ver a **ERRATA** no topo.
+
+**Próximo checkpoint:** `M45.1b · SEGUNDA PASSADA COM O VAULT` — reler o router e as VAL notes, e
+**re-derivar crédito e prioridade**. `M45.4` continua sendo a candidata mais provável a P0 (as duas
+superfícies sem scenario), mas isso agora é hipótese, não conclusão medida.
