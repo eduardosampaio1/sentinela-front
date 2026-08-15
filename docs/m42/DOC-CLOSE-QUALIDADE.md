@@ -98,7 +98,7 @@ tempo, e inventar uma tela que os juntasse seria inventar produto.
 
 **12 capturas, 12 hashes distintos.**
 
-### H5 · 🟡 severidade 2 — PERMANECE, e está fora do escopo congelado
+### H5 · 🟡 severidade 2 — CORRIGIDA DEPOIS DO CLOSEOUT (ver §9)
 
 Depois de um rename, a lateral e a lista "You can open" continuam exibindo o nome **velho**: as
 duas leem a projeção da claim (`workspace?.name` do `WorkspaceSwitcher`), e a claim é projeção de
@@ -195,4 +195,85 @@ por esta missão.**
 | Escopo congelado | respeitado — só CFG-03 e CFG-04 |
 | Release | **não promovido**; sem push, sem deploy, sem Railway |
 
+---
+
+## 9. Microcorreção posterior — o rótulo do espaço no shell
+
+**O Quality Closeout permanece PASS, score 9,2.** Ele não é reaberto nem recalculado: a
+composição não mudou, nenhuma string mudou, e a mudança é de **proveniência do rótulo**.
+
+O que a microcorreção fecha é o **H5** registrado acima como "permanece". O achado estava certo no
+diagnóstico e errado numa premissa: eu concluí que não havia correção do lado do front porque
+tentei consertar a **claim** — e a claim é mesmo irreparável aqui, o token não é reescrito. A
+correção não era consertar a claim: era **parar de perguntar a ela** o que o produtor já respondeu.
+
+### O que mudou
+
+`useNomeDoWorkspace(workspaceId, nomeDeBootstrap)` — uma leitura derivada sobre a **mesma
+`queryKey`** que a CFG-03 já materializou. Sem store novo, sem `localStorage`, sem sincronização
+com o provedor de identidade, sem uma segunda requisição: o `PATCH` já escreve nessa chave, então a
+lateral acompanha o rename sem ir à rede de novo.
+
+Três superfícies passaram a lê-la: o rótulo do escopo na lateral, o item **ativo** do seletor de
+workspace, e a linha `You can open` da seção de identidade. As demais entradas da lista continuam
+com a projeção da claim — para elas nenhum produtor foi consultado, e identificar é exatamente o
+papel que a claim tem.
+
+### A precedência, e o que cada ramo protege
+
+| situação | nome exibido |
+|---|---|
+| produtor resolvido | **do produtor** |
+| produtor ainda não resolvido | bootstrap, que é identificação e não configuração |
+| produtor cai **depois** de resolver, na mesma sessão | continua o **do produtor** — não regride |
+| recarga com o produtor fora | bootstrap: é uma resolução nova, não uma degradação |
+
+### O limite desta prova, registrado para ninguém lê-la como mais forte
+
+A primeira versão do gate `W6` derrubava o produtor e dava `page.reload()`. Falhou — e o **teste**
+é que estava errado: um reload descarta o cache em memória, então ele não é "caiu depois de
+resolver", é uma resolução do zero, que a regra permite servir com bootstrap. Um gate que
+confundisse as duas coisas só passaria se o nome fosse persistido fora da memória — ou seja,
+exigiria justamente o `localStorage` como autoridade que o `W4` proíbe.
+
+### Gates de browser (`W1`–`W7`)
+
+`W1` bootstrap A + produtor B → lateral B · `W2` rename com token velho → Configurações e lateral
+juntas, **um** `GET`, identidade intacta · `W3` reentrada resolve o produtor · `W4` zero
+`POST/PATCH/PUT` em `/v1/me`, zero Keycloak, e nem `localStorage` nem `sessionStorage` contêm o
+nome · `W5` produtor fora antes de resolver: bootstrap identifica e **não** vira valor confirmado ·
+`W6` queda depois de resolver: não regride · `W7` a claim segue dando identidade e acesso, e o nome
+velho **não sobrevive em pixel nenhum**.
+
+**Contraprova de instrumento:** revertida a linha do switcher para `workspace?.name`, `W1`, `W2`,
+`W3` e `W6` falharam — os gates matam a regressão, não decoram.
+
+### Efeito nas capturas
+
+Todas as 12 foram refeitas: a lateral agora diz o nome canônico. A captura `03` mudou de sentido —
+existia para mostrar a divergência **na tela**, que é o que esta correção elimina, e passou a ser
+`03-desktop-workspace-reconciled-en.png`: a tela inteira sob um nome só, com a claim ainda velha no
+fio. A `04` saiu **byte a byte idêntica**, e isso é a checagem certa: com o produtor fora não há
+nome canônico, então a lateral fica em bootstrap exatamente como antes.
+
+### Provas
+
+Typecheck **APROVADO** · Playwright **228/228** · axe **0 violações** · Lint **23 problems —
+delta ZERO** · Vitest **109 passed / 5 failed / 1 skipped**, as mesmas 5 suítes externas da §7,
+inalteradas · **12 capturas, 12 hashes distintos**.
+
+`shell-m25` passou a montar `<CanonicalClientProvider>` com um cliente que **recusa**: o shell
+agora depende do cliente canônico, e recusar mantém aqueles casos medindo o que sempre mediram (o
+nome de bootstrap) em vez de mascarar a mudança.
+
+### O que NÃO foi feito
+
+Nada de token, Keycloak, `/v1/me`, Workspace API, membership, `workspace_id` ou semântica de
+Settings. **H6** (o rename não é alcançável pela lista de Workspaces) continua aberto e fora de
+escopo.
+
+---
+
 ### **M42 · CFG-03/CFG-04 — CLOSED · QUALITY GATE PASS · 9,2**
+
+**Próximo checkpoint:** M44 · COMMUNICATION + REENTRY — SCENARIO MATERIALIZATION.

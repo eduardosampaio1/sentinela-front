@@ -20,9 +20,14 @@ const I2 = "inst-b7e5a316-8c02-4d99-a1f7-63e4c05b8d2a";
 const NOME_DO_PRODUTOR = "Atendimento Norte";
 const NOME_NA_CLAIM = "Suporte Regional";
 
+/** O espaço ATIVO da sessão, semeado pelo bypass de E2E. A claim tem de apontar para ELE — em
+ *  produção claim e escopo falam do mesmo espaço, e divergi-los aqui faria a reconciliação nunca
+ *  casar, deixando a captura verde sem mostrar o fato. */
+const ESCOPO_ATIVO = "e2e-workspace-0000";
+
 const IDENTIDADE = {
   user: { id: "u-kc-9051", email: "marcos.tavares@cliente.test", name: "Marcos Tavares" },
-  workspaces: [{ id: WS_ID, name: NOME_NA_CLAIM, role: "owner" }],
+  workspaces: [{ id: ESCOPO_ATIVO, name: NOME_NA_CLAIM, role: "owner" }],
   capabilities: { canonical_analysis_enabled: true },
 };
 
@@ -176,25 +181,33 @@ test.describe("M42 · capturas", () => {
     await capturar(page, "02-desktop-workspace-renamed-en", "en", info);
   });
 
-  // 03 — a claim velha e o nome canônico no MESMO quadro.
+  // 03 — a página INTEIRA com um nome só, sendo que a claim traz outro.
   //
-  // Esta captura era uma segunda chamada de `capturar` sobre o estado de 01, sem nada entre as
-  // duas: saía byte a byte idêntica, e a divergência que o nome do arquivo promete ficava fora
-  // do quadro, porque a lista da claim vive no topo da página e o `scrollIntoViewIfNeeded` da
-  // seção de Workspace a empurra para fora. Uma captura que não contém o que afirma é pior que
-  // captura nenhuma: ela é contada como prova. A viewport alta existe só para caber os dois
-  // nomes de uma vez — é render real, não montagem.
-  test("03 · a claim desatualizada convive com o nome do produtor", async ({ page }) => {
+  // Esta captura já mudou de sentido duas vezes, e as duas por defeito:
+  //
+  //  1. nasceu como uma segunda chamada de `capturar` sobre o estado de 01, sem nada entre as
+  //     duas — saía byte a byte idêntica, e a divergência que o nome prometia ficava fora do
+  //     quadro porque a lista da claim vive no topo e o scroll da seção a empurrava para fora;
+  //  2. virou um quadro alto que mostrava os dois nomes convivendo. Isso era verdade e era o
+  //     defeito: o mesmo espaço aparecia com dois nomes na mesma tela.
+  //
+  // Depois da reconciliação, o que precisa ser fotografado é o oposto — a claim continua velha
+  // no `/v1/me`, e a tela inteira fala UM nome. A viewport alta é render real, e existe para que
+  // "a tela inteira" seja literalmente a tela inteira.
+  test("03 · a tela inteira sob UM nome, com a claim ainda velha", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 1400 });
     await montar(page, { idioma: "en" });
     await page.goto("/dashboard/settings");
 
     await expect(campoWs(page)).toHaveValue(NOME_DO_PRODUTOR);
-    // As DUAS afirmações, antes de disparar: o nome velho listado pela identidade e o nome
-    // canônico no campo de configuração. Sem elas a imagem volta a ser decorativa.
-    await expect(page.locator("main").getByText(NOME_NA_CLAIM)).toBeVisible();
     await expect(page.locator("main").getByRole("button", { name: MARCA.en })).toBeVisible();
-    await page.screenshot({ path: "docs/m42/03-desktop-workspace-stale-claim-en.png" });
+    // O nome velho foi servido pela claim e não sobrevive em lugar nenhum — nem no `main`, nem
+    // na lateral. Asserido ANTES de disparar, senão a imagem é decorativa.
+    await expect(page.getByText(NOME_NA_CLAIM)).toHaveCount(0);
+    await expect(page.getByText(/^Active workspace$/i).locator("..")).toContainText(
+      NOME_DO_PRODUTOR,
+    );
+    await page.screenshot({ path: "docs/m42/03-desktop-workspace-reconciled-en.png" });
   });
 
   test("04 · Workspace indisponível", async ({ page }, info) => {

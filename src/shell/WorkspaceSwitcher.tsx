@@ -28,6 +28,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { onWorkspaceSwitch } from "@/lib/v1";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useNomeDoWorkspace } from "@/features/workspace/data/workspace";
 import { cn } from "@/lib/utils";
 
 export function WorkspaceSwitcher({ onNavigate }: { onNavigate?: () => void }) {
@@ -50,9 +51,14 @@ export function WorkspaceSwitcher({ onNavigate }: { onNavigate?: () => void }) {
     await onWorkspaceSwitch(queryClient, anterior);
   }
 
+  // O nome vem do PRODUTOR quando ele já respondeu, e da claim só enquanto ele não respondeu.
+  // Antes desta linha o shell imprimia `workspace.name` — a claim — e ela é projeção de bootstrap
+  // que envelhece após um rename: a CFG-03 mostrava o nome novo e a lateral, o velho, na mesma
+  // tela. Não há store novo aqui; é a mesma query da CFG-03, pela mesma chave.
+  const nome = useNomeDoWorkspace(workspace?.id ?? null, workspace?.name);
   // Sem workspace ativo o escopo continua visível — dizer "nenhum" é informação, e some-lo faria
   // a ausência parecer um estado de carregamento que nunca termina.
-  const rotulo = workspace?.name ?? t("shell.workspace.none");
+  const rotulo = nome ?? t("shell.workspace.none");
   // WS-02/WS-04 não têm operação pública: com um único workspace não há troca a oferecer, e um
   // botão que abre uma lista de um item é um CTA que não leva a lugar nenhum.
   const podeTrocar = memberships.length > 1;
@@ -98,8 +104,13 @@ export function WorkspaceSwitcher({ onNavigate }: { onNavigate?: () => void }) {
                           : "text-muted-foreground hover:bg-muted/60",
                       )}
                     >
-                      {/* Só o NOME. O papel governa, não rotula (D3). */}
-                      {m.name}
+                      {/* Só o NOME. O papel governa, não rotula (D3).
+                          O item ATIVO usa o nome reconciliado: sem isso o mesmo espaço
+                          apareceria com o nome novo no botão acima e o velho aqui na lista,
+                          dentro do MESMO componente. Os demais seguem com a projeção de
+                          bootstrap — para eles nenhum produtor foi consultado, e identificar
+                          é exatamente o papel que a claim tem. */}
+                      {ativo ? rotulo : m.name}
                     </button>
                   </li>
                 );

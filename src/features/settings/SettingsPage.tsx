@@ -28,6 +28,7 @@ import { getAuthClient } from "@/lib/auth/index";
 import { SecaoDeIdioma } from "@/features/account/SecaoDeIdioma";
 import { useContaDoUsuario } from "@/features/account/data/language";
 import { SecaoDeWorkspace } from "@/features/workspace/SecaoDeWorkspace";
+import { useNomeDoWorkspace } from "@/features/workspace/data/workspace";
 import { useCanonicalScope } from "@/features/canonical-analysis/ui/scope";
 
 function Section({
@@ -67,6 +68,12 @@ export function SettingsPage() {
   const escopo = useCanonicalScope();
   const { t } = useLanguage();
   const conta = useContaDoUsuario();
+  // Mesma query da seção de Workspace abaixo (mesma chave), então esta reconciliação não custa
+  // requisição nenhuma — ela só deixa de imprimir o nome de bootstrap para o espaço que já tem
+  // resposta do produtor nesta mesma tela. O fallback fica na LINHA, e não aqui: cada item tem o
+  // seu próprio nome de claim, e um fallback único apagaria a linha enquanto o produtor não
+  // respondesse.
+  const nomeDoEscopo = useNomeDoWorkspace(escopo.workspaceId, null);
 
   // A identidade tem carregamento PRÓPRIO. Um spinner global esconderia que ela já chegou e que
   // só a preferência está pendente — e são duas dependências diferentes, com falhas diferentes.
@@ -100,8 +107,15 @@ export function SettingsPage() {
                   <dd className="text-sm text-foreground">
                     {conta.data.workspaces.length ? (
                       <ul className="space-y-1">
+                        {/* O espaço ATIVO usa o nome reconciliado pelo produtor. Sem isto, esta
+                            lista continuava exibindo o nome de bootstrap logo acima da seção que
+                            mostra o nome novo — o mesmo espaço, dois nomes, uma tela. Os demais
+                            seguem com a projeção da claim: para eles nenhum produtor foi
+                            consultado, e identificar é o papel que ela tem. */}
                         {conta.data.workspaces.map((w) => (
-                          <li key={w.id}>{w.name}</li>
+                          <li key={w.id}>
+                            {w.id === escopo.workspaceId ? (nomeDoEscopo ?? w.name) : w.name}
+                          </li>
                         ))}
                       </ul>
                     ) : (

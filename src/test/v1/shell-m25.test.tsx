@@ -30,6 +30,7 @@ import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { workspaceKeys } from "@/lib/v1";
+import { CanonicalClientProvider } from "@/features/canonical-analysis/data/client";
 import { LanguageProvider, type Language } from "@/contexts/LanguageContext";
 import pt from "@/i18n/pt.json";
 import en from "@/i18n/en.json";
@@ -77,6 +78,17 @@ function auth(over: Record<string, unknown> = {}) {
   };
 }
 
+/**
+ * Cliente que RECUSA. Desde a microcorreção da M42 o `WorkspaceSwitcher` lê o nome do produtor
+ * (`useNomeDoWorkspace`) e só cai na claim enquanto ele não resolveu — então o shell agora exige
+ * `<CanonicalClientProvider>`, que este arquivo não montava. Recusar mantém os casos deste arquivo
+ * medindo o que eles sempre mediram (o nome de BOOTSTRAP, "Alfa"), e de quebra exercita o ramo de
+ * fallback. Quem prova o ramo do produtor é o browser, onde a composição real existe.
+ */
+const clienteQueRecusa = {
+  getWorkspace: () => Promise.reject(new Error("sem produtor neste teste")),
+} as unknown as Parameters<typeof CanonicalClientProvider>[0]["client"];
+
 function montar(
   ui: React.ReactElement,
   { lang = "en" as Language, qc = new QueryClient() } = {},
@@ -86,9 +98,11 @@ function montar(
     qc,
     ...render(
       <QueryClientProvider client={qc}>
-        <LanguageProvider>
-          <MemoryRouter initialEntries={["/home"]}>{ui}</MemoryRouter>
-        </LanguageProvider>
+        <CanonicalClientProvider client={clienteQueRecusa}>
+          <LanguageProvider>
+            <MemoryRouter initialEntries={["/home"]}>{ui}</MemoryRouter>
+          </LanguageProvider>
+        </CanonicalClientProvider>
       </QueryClientProvider>,
     ),
   };

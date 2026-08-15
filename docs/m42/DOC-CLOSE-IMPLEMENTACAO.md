@@ -162,4 +162,8 @@ Workspace **pendente**. **Não promovido** a produção.
 `/ux-heuristics` rodadas, 15 achados, 13 corrigidos, score final **9,2** contra gate `>= 9.0`.
 Registro completo em [`DOC-CLOSE-QUALIDADE.md`](./DOC-CLOSE-QUALIDADE.md).
 
+**Microcorreção posterior ao closeout:** o rótulo do espaço no shell exibia `claim.name` e ficava
+velho após um rename — o mesmo espaço com dois nomes na mesma tela. Corrigido pela query canônica
+que a M42 já materializava. O score **9,2 permanece**: composição e copy não mudaram.
+
 **Próximo checkpoint:** M44 · COMMUNICATION + REENTRY — SCENARIO MATERIALIZATION.

@@ -26,9 +26,18 @@ const NOME_NA_CLAIM = "Suporte Regional";
 /** O nome que o PRODUTOR carrega. É o canônico. */
 const NOME_DO_PRODUTOR = "Atendimento Norte";
 
+/**
+ * O id do espaço ATIVO da sessão, semeado pelo bypass de E2E (`src/e2e/bypass.ts`).
+ *
+ * A claim precisa apontar para ESTE id, e não para o `workspace_id` que o produtor devolve. Em
+ * produção claim e escopo falam do mesmo espaço; deixá-los divergentes aqui faria a reconciliação
+ * da lista "You can open" nunca casar — e o gate passaria de verde sem medir nada.
+ */
+const ESCOPO_ATIVO = "e2e-workspace-0000";
+
 const IDENTIDADE = {
   user: { id: "u-kc-9051", email: "marcos.tavares@cliente.test", name: "Marcos Tavares" },
-  workspaces: [{ id: WS_ID, name: NOME_NA_CLAIM, role: "owner" }],
+  workspaces: [{ id: ESCOPO_ATIVO, name: NOME_NA_CLAIM, role: "owner" }],
   capabilities: { canonical_analysis_enabled: true },
 };
 
@@ -116,6 +125,21 @@ async function montar(
 const campo = (page: Page) => page.getByLabel(/^Name$|^Nome$/);
 const salvar = (page: Page) => page.getByRole("button", { name: /^Save name$|^Salvar nome$/ });
 
+/**
+ * O bloco de escopo da lateral — o rótulo "Active workspace" e o nome logo abaixo.
+ *
+ * Ancorado no RÓTULO e subindo um nível, e não numa classe: classe utilitária muda com o desenho
+ * e o gate viraria falso-verde por seletor que não casa mais.
+ */
+const lateral = (page: Page) => page.getByText(/^Active workspace$|^Espaço ativo$/i).locator("..");
+
+/**
+ * O nome que o BYPASS de E2E semeia na sessão (`src/e2e/bypass.ts`). Ele é a projeção de
+ * bootstrap deste ambiente: chega antes de qualquer rede, exatamente como a claim faz em
+ * produção. É o "A" dos cenários — o nome que NÃO pode vencer o produtor.
+ */
+const NOME_DE_BOOTSTRAP = "E2E Workspace";
+
 // ══════════════════════════════════════════════════════════════════════════════════════════
 
 test.describe("M42 · CFG-03 no browser", () => {
@@ -124,9 +148,12 @@ test.describe("M42 · CFG-03 no browser", () => {
     await page.goto(ROTA);
 
     await expect(campo(page)).toHaveValue(NOME_DO_PRODUTOR);
-    // A claim está na página (é ela que lista o espaço na identidade), e mesmo assim o campo de
-    // configuração não a usa. É a prova de que a divergência não colapsa.
-    expect(await page.getByText(NOME_NA_CLAIM).count()).toBeGreaterThan(0);
+
+    // A claim FOI servida, e com o nome velho — a divergência existe de verdade nesta sessão.
+    // Até a microcorreção, a prova era que o nome velho aparecia em algum lugar da página; agora
+    // a prova é a inversa, e é mais forte: ele foi entregue pela rede e não está em pixel nenhum.
+    expect(rede.de("GET", "/v1/me")).toBeGreaterThan(0);
+    expect(await page.getByText(NOME_NA_CLAIM).count()).toBe(0);
     expect(rede.de("GET", "/v1/workspaces/")).toBe(1);
   });
 
@@ -225,6 +252,210 @@ test.describe("M42 · CFG-03 no browser", () => {
 
     await expect(page.getByText(/Workspace name saved|Nome do espaço salvo/)).toBeVisible();
     expect(rede.de("PATCH", "/v1/workspaces/")).toBe(1);
+  });
+
+  // ════════════════════════════════════════════════════════════════════════════════════════
+  // RECONCILIAÇÃO DO NOME NO SHELL — a microcorreção.
+  //
+  // Até aqui a CFG-03 lia o produtor e o shell continuava imprimindo a projeção de bootstrap.
+  // Depois de um rename o MESMO espaço aparecia com dois nomes na mesma tela. Estes casos
+  // provam que a precedência é a congelada, e que ela não custou nem token nem storage.
+  // ════════════════════════════════════════════════════════════════════════════════════════
+
+  test("W1 · bootstrap A e produtor B: a lateral mostra B", async ({ page }) => {
+    await montar(page);
+    await page.goto(ROTA);
+
+    // ÂNCORA POSITIVA primeiro: o produtor tem de ter resolvido antes de qualquer negativa.
+    await expect(lateral(page)).toContainText(NOME_DO_PRODUTOR);
+    await expect(lateral(page)).not.toContainText(NOME_DE_BOOTSTRAP);
+  });
+
+  test("W2 · rename com token velho: Configurações e lateral vão juntas para o nome novo", async ({
+    page,
+  }) => {
+    const rede = await montar(page);
+    await page.goto(ROTA);
+    await expect(campo(page)).toHaveValue(NOME_DO_PRODUTOR);
+    await expect(lateral(page)).toContainText(NOME_DO_PRODUTOR);
+
+    await campo(page).fill("Atendimento Nacional");
+    await salvar(page).click();
+    await expect(page.getByText(/Workspace name saved|Nome do espaço salvo/)).toBeVisible();
+
+    // As DUAS superfícies, no mesmo nome — que é a violação que esta correção fecha.
+    await expect(campo(page)).toHaveValue("Atendimento Nacional");
+    await expect(lateral(page)).toContainText("Atendimento Nacional");
+    // E sem uma segunda ida à rede: o `PATCH` devolve a linha persistida e ela entra na MESMA
+    // chave que o shell lê. Um `GET` extra aqui seria sincronização artificial entre as duas.
+    expect(rede.de("GET", "/v1/workspaces/")).toBe(1);
+    // A identidade não se move num rename.
+    await expect(page.getByText(WS_ID)).toBeVisible();
+  });
+
+  test("W3 · reentrada: o reload volta a resolver o produtor, e não a claim", async ({ page }) => {
+    await montar(page);
+    await page.goto(ROTA);
+    await campo(page).fill("Nome Depois Do Reload");
+    await salvar(page).click();
+    await expect(page.getByText(/Workspace name saved|Nome do espaço salvo/)).toBeVisible();
+
+    await page.reload();
+
+    // Depois do reload o bootstrap chega ANTES da rede — e perde assim que o produtor responde.
+    await expect(lateral(page)).toContainText("Nome Depois Do Reload");
+    await expect(lateral(page)).not.toContainText(NOME_DE_BOOTSTRAP);
+    await expect(campo(page)).toHaveValue("Nome Depois Do Reload");
+  });
+
+  test("W4 · a reconciliação não toca token, storage nem identidade", async ({ page }) => {
+    const rede = await montar(page);
+    await page.goto(ROTA);
+    await expect(lateral(page)).toContainText(NOME_DO_PRODUTOR);
+
+    await campo(page).fill("Nome Sem Efeito Colateral");
+    await salvar(page).click();
+    await expect(page.getByText(/Workspace name saved|Nome do espaço salvo/)).toBeVisible();
+    await expect(lateral(page)).toContainText("Nome Sem Efeito Colateral");
+
+    // Nenhuma tentativa de reescrever a sessão: sem `/v1/me`, sem Keycloak, sem refresh de token.
+    expect(rede.de("POST", "/v1/me")).toBe(0);
+    expect(rede.de("PATCH", "/v1/me")).toBe(0);
+    expect(rede.de("PUT", "/v1/me")).toBe(0);
+    expect(rede.pedidos.filter((p) => /keycloak|realms|protocol\/openid/i.test(p.url))).toHaveLength(0);
+
+    // E nenhum storage virou autoridade de nome: o nome novo não pode estar persistido em
+    // lugar nenhum do browser, senão a próxima sessão o leria de lá em vez do produtor.
+    const persistido = await page.evaluate(() => {
+      const tudo: string[] = [];
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const k = localStorage.key(i) as string;
+        tudo.push(`${k}=${localStorage.getItem(k) ?? ""}`);
+      }
+      for (let i = 0; i < sessionStorage.length; i += 1) {
+        const k = sessionStorage.key(i) as string;
+        tudo.push(`${k}=${sessionStorage.getItem(k) ?? ""}`);
+      }
+      return tudo.join("\n");
+    });
+    expect(persistido).not.toContain("Nome Sem Efeito Colateral");
+    expect(persistido).not.toContain(NOME_DO_PRODUTOR);
+  });
+
+  test("W5 · produtor fora ANTES de resolver: bootstrap identifica, e não vira confirmado", async ({
+    page,
+  }) => {
+    await montar(page, { indisponivel: true });
+    await page.goto(ROTA);
+
+    // A seção de configuração diz que está indisponível — âncora positiva antes das negativas.
+    await expect(
+      page.getByText(/Workspace settings are unavailable|configurações do espaço estão indisponíveis/),
+    ).toBeVisible();
+
+    // O escopo continua IDENTIFICADO pelo bootstrap: um shell anônimo seria pior, e a claim
+    // nunca deixou de ser boa para dizer "onde você está".
+    await expect(lateral(page)).toContainText(NOME_DE_BOOTSTRAP);
+    // Mas ela não virou configuração confirmada: não há campo, e nenhum campo a carrega.
+    await expect(campo(page)).toHaveCount(0);
+    expect(await page.locator(`input[value="${NOME_DE_BOOTSTRAP}"]`).count()).toBe(0);
+  });
+
+  test("W6 · produtor cai DEPOIS de resolver: a lateral não regride para o nome velho", async ({
+    page,
+  }) => {
+    // Este é o caso que a regra congelada nomeia, e o único que exige uma segunda janela: o
+    // produtor responde, o shell reconcilia, e SÓ ENTÃO o dono cai. Degradar aqui seria voltar a
+    // exibir um nome que já se sabe superado — pior que nunca ter reconciliado, porque a tela
+    // andaria para trás na frente da pessoa.
+    let fora = false;
+    await page.addInitScript(() => {
+      (window as unknown as Record<string, unknown>).__SENTINELA_E2E_AUTH__ = true;
+    });
+    await page.route("**/v1/me", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(IDENTIDADE) }),
+    );
+    await page.route("**/v1/me/language", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ stored_language: null, effective_language: "en" }),
+      }),
+    );
+    await page.route("**/v1/workspaces/**", (route) => {
+      if (fora) {
+        return route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({ code: "temporarily_unavailable", retryable: true }),
+        });
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          workspace_id: WS_ID,
+          name: NOME_DO_PRODUTOR,
+          created_at: "2026-03-11T08:42:00Z",
+        }),
+      });
+    });
+
+    await page.route("**/v1/analyses**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: [], next_cursor: null }),
+      }),
+    );
+
+    await page.goto(ROTA);
+    await expect(lateral(page)).toContainText(NOME_DO_PRODUTOR);
+
+    // O dono cai — e a pessoa continua usando o produto, que é o que ela faz de verdade.
+    fora = true;
+    await page.getByRole("link", { name: /^Analyses$/ }).first().click();
+    await expect(page).toHaveURL(/\/analyses/);
+
+    // O nome resolvido sobrevive à queda DENTRO da sessão, e o bootstrap velho não volta.
+    await expect(lateral(page)).toContainText(NOME_DO_PRODUTOR);
+    await expect(lateral(page)).not.toContainText(NOME_DE_BOOTSTRAP);
+  });
+
+  // Nota sobre o limite desta prova, para ninguém a ler como mais forte do que é.
+  //
+  // A primeira versão de W6 derrubava o produtor e dava `page.reload()`. Ela falhou, e o teste
+  // é que estava errado: um reload descarta o cache em memória, então ele NÃO é "o dono caiu
+  // depois de resolver" — ele é uma resolução nova, do zero, que a regra congelada permite
+  // servir com o bootstrap enquanto o produtor não responde (é exatamente o W5).
+  //
+  // "Não degradar depois de conhecer o estado canônico" só tem sentido dentro de um documento,
+  // e é isso que W6 mede agora. Registrar a diferença importa mais que ter um caso a mais: um
+  // gate que confunde as duas coisas exigiria persistir o nome fora da memória para passar — ou
+  // seja, exigiria justamente o `localStorage` como autoridade que o W4 proíbe.
+
+  test("W7 · a claim segue servindo identidade — e some como NOME do espaço ativo", async ({
+    page,
+  }) => {
+    await montar(page);
+    await page.goto(ROTA);
+    await expect(lateral(page)).toContainText(NOME_DO_PRODUTOR);
+
+    // O que a claim continua fazendo, e deve continuar: dizer QUEM é a pessoa e a que espaços ela
+    // tem acesso. Nada disso regrediu — a correção mira o NOME do espaço, não o papel da claim.
+    await expect(page.getByText("Marcos Tavares")).toBeVisible();
+    await expect(page.getByText("marcos.tavares@cliente.test")).toBeVisible();
+    await expect(page.getByText(/^You can open$|^Você pode abrir$/)).toBeVisible();
+
+    // E o que ela deixou de fazer: nomear o espaço ativo. A lista de acesso mostra o nome do
+    // PRODUTOR, porque para este espaço ele já respondeu nesta mesma tela.
+    const conteudo = await page.locator("main").innerText();
+    expect(conteudo.length, "página vazia tornaria a negativa seguinte trivial").toBeGreaterThan(50);
+    expect(conteudo).toContain(NOME_DO_PRODUTOR);
+    expect(
+      conteudo,
+      "o nome de bootstrap não pode sobreviver em NENHUMA superfície do espaço ativo",
+    ).not.toContain(NOME_NA_CLAIM);
   });
 
   for (const vp of [

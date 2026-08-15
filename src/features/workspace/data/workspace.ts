@@ -89,6 +89,43 @@ export function useRenomearWorkspace(
 }
 
 /**
+ * O nome do Workspace para SUPERFÍCIES DE IDENTIFICAÇÃO (o shell), reconciliado.
+ *
+ * ## Por que existe
+ *
+ * A CFG-03 já lia o produtor, mas só ela. O shell continuava imprimindo `claim.name`, e depois de
+ * um rename o mesmo espaço aparecia com **dois nomes ao mesmo tempo** na mesma tela: o novo no
+ * campo de configuração, o velho na lateral. Duas verdades visíveis para uma coisa só — e a claim
+ * é justamente a que não é autoridade de nome.
+ *
+ * ## Não é um segundo estado
+ *
+ * Isto é uma LEITURA derivada, não um store. Usa a MESMA `queryKey` de `useWorkspaceConfig`, então
+ * o shell e a tela de Configurações compartilham uma resposta (e o `staleTime` de 60 s), o rename
+ * já escreve nessa chave pelo `onSuccess`, e a lateral se atualiza sem uma segunda ida à rede e
+ * sem sincronização nenhuma entre as duas superfícies.
+ *
+ * ## A ordem de precedência, e o que ela protege
+ *
+ * 1. produtor resolvido → **nome do produtor**;
+ * 2. produtor ainda não resolvido → o nome de bootstrap continua servindo de identificação, que é
+ *    o papel que a claim tem. Some-lo deixaria o escopo anônimo enquanto a rede responde;
+ * 3. produtor **indisponível depois** de já ter resolvido → o TanStack preserva o `data` da última
+ *    resposta boa, então a lateral **não regride** para a claim velha. É o caso que a regra
+ *    congelada nomeia: não degradar em silêncio para um nome que já se sabe superado.
+ *
+ * O que ele nunca faz é tornar a claim um valor **confirmado**: aqui ela é rótulo de contexto, e
+ * a única superfície que fala em nome confirmado é a CFG-03, que não a aceita.
+ */
+export function useNomeDoWorkspace(
+  workspaceId: string | null,
+  nomeDeBootstrap: string | null | undefined,
+): string | null {
+  const config = useWorkspaceConfig(workspaceId);
+  return config.data?.name ?? nomeDeBootstrap ?? null;
+}
+
+/**
  * Existe mudança a PERSISTIR?
  *
  * Comparação contra o nome CONFIRMADO, e com `trim` — espaço no fim não é uma escolha, e mandar
