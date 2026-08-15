@@ -25,6 +25,10 @@ import type {
   MeView,
   EffectiveLanguage,
   LanguagePreferenceView,
+  CreateSubscriptionInput,
+  SubscriptionDisabledView,
+  SubscriptionListPage,
+  SubscriptionSecretView,
 } from "./contract/public-v1.types";
 import { normalizeProblem, PROBLEM_MEDIA_TYPE, ProblemError, TransportError } from "./problem";
 
@@ -188,6 +192,42 @@ export interface V1Client {
 
   /** M42 · CFG-03 — renomear. Corpo com UM campo; o Gateway recusa campo a mais. */
   renameWorkspace(workspaceId: string, name: string, opts?: RequestOptions): Promise<WorkspaceView>;
+
+  // ── M44 · BD14 — a comunicação autorizada do Workspace ──────────────────────
+  //
+  // QUATRO operações, e só elas. O contrato vivo não publica `get_subscription`,
+  // `update_subscription`, `verify_subscription` nem `enable_subscription`, e declarar aqui um
+  // método que a fronteira não tem faria a tela nascer sabendo pedir o que ninguém atende.
+  //
+  // Todas levam `workspace_id` na QUERY — diferente de Workspace, onde ele é o caminho.
+
+  /** As assinaturas DESTE workspace. Lista vazia é ausência legítima, nunca erro. */
+  listSubscriptions(scope: CanonicalScope, opts?: RequestOptions): Promise<SubscriptionListPage>;
+
+  /** Cria. Ação EXPLÍCITA — nada aqui nasce de login nem de primeiro acesso. */
+  createSubscription(
+    scope: CanonicalScope,
+    input: CreateSubscriptionInput,
+    opts?: RequestOptions,
+  ): Promise<SubscriptionSecretView>;
+
+  /**
+   * **Desativa.** O verbo HTTP é `DELETE` e a operação chama-se `disable_subscription`: o dono
+   * marca `active = false` e a linha PERMANECE, porque o histórico de entregas a referencia.
+   * Quem chamar isto esperando remoção vai encontrar a assinatura na próxima listagem.
+   */
+  disableSubscription(
+    subscriptionId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<SubscriptionDisabledView>;
+
+  /** Novo segredo, versão +1, **mesma identidade**. Não é apagar e recriar. */
+  rotateSubscriptionSecret(
+    subscriptionId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<SubscriptionSecretView>;
 }
 
 /**
@@ -424,6 +464,43 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         body: JSON.stringify({ name }),
         contentType: "application/json",
       }),
+    // M44 · BD14. `pedir` porque as quatro exigem `workspace_id` na QUERY — e é ele que o dono
+    // usa no `where`, então omiti-lo não é economia: é pedir a assinatura de outro escopo.
+    listSubscriptions: (scope, opts) =>
+      pedir<SubscriptionListPage>("GET", "/v1/subscriptions", { workspace_id: scope.workspaceId }, opts),
+    createSubscription: (scope, input, opts) =>
+      pedir<SubscriptionSecretView>(
+        "POST",
+        "/v1/subscriptions",
+        { workspace_id: scope.workspaceId },
+        opts,
+        {
+          // O corpo carrega SÓ os quatro campos publicados. `workspace_id` fica de fora de
+          // propósito: o Gateway o recusa (`extra="forbid"`), e mandá-lo abriria a porta para o
+          // corpo discordar do escopo que já foi autorizado.
+          body: JSON.stringify({
+            channel: input.channel,
+            destination: input.destination,
+            event_types: input.event_types,
+            language: input.language,
+          }),
+          contentType: "application/json",
+        },
+      ),
+    disableSubscription: (subscriptionId, scope, opts) =>
+      pedir<SubscriptionDisabledView>(
+        "DELETE",
+        `/v1/subscriptions/${encodeAnalysisId(subscriptionId)}`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
+    rotateSubscriptionSecret: (subscriptionId, scope, opts) =>
+      pedir<SubscriptionSecretView>(
+        "POST",
+        `/v1/subscriptions/${encodeAnalysisId(subscriptionId)}/secret`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
     getBaseline: (instanceId, scope, opts) =>
       pedir<BaselineView>(
         "GET",

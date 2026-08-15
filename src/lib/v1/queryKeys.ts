@@ -20,6 +20,18 @@ export const workspaceKeys = {
    * configuração do espaço não pode arrastar o cache das Instances.
    */
   config: (workspaceId: string) => ["workspace", workspaceId, "config"] as const,
+  /**
+   * BD14/M44 — a comunicação autorizada DESTE workspace.
+   *
+   * Sob a raiz do workspace, e não numa raiz própria como `accountKeys`: a assinatura **é**
+   * tenant-scoped — o produtor exige `workspace_id` nas quatro operações e o usa no `where`.
+   * Pô-la fora da raiz faria a lista do espaço A sobreviver à troca para o B e aparecer como se
+   * fosse dele.
+   *
+   * Chave IRMÃ de `config`, e não filha: renomear o espaço não muda quem recebe aviso, e
+   * invalidar uma não pode arrastar a outra.
+   */
+  subscriptions: (workspaceId: string) => ["workspace", workspaceId, "subscriptions"] as const,
   /** BD02 — Instances do workspace. Mesma raiz: trocar de workspace invalida tudo junto. */
   instances: (workspaceId: string) => ["workspace", workspaceId, "instances"] as const,
   instance: (workspaceId: string, instanceId: string) =>

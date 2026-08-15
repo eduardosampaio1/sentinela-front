@@ -282,10 +282,26 @@ test("K · o Front fala só com o Gateway, e o corpo tem um campo só", async ({
   await salvar(page).click();
   await expect(page.getByText(/Português é o idioma/)).toBeVisible();
 
+  // Estas duas valem para TODA requisição da página: nenhuma tela pública fala com API interna.
   for (const p of rede.pedidos) {
     expect(p.url, "o Front chamou a API interna do Account").not.toContain("/internal/");
     expect(Object.keys(p.cabecalhos), "token interno no browser").not.toContain("x-internal-token");
-    expect(p.url).not.toContain("workspace_id=");
+  }
+
+  // Estas três valem para as requisições de IDENTIDADE E IDIOMA — e o recorte é a correção de um
+  // gate que envelheceu. Ele varria a página inteira afirmando que nenhuma requisição carrega
+  // `workspace_id=`, e isso descrevia a página de 2026-08-14, quando o único dono ali era a
+  // conta. A M44 pôs a comunicação do Workspace na mesma tela, e ela carrega `workspace_id` na
+  // query por exigência do contrato — as quatro operações a exigem.
+  //
+  // O invariante da M41 nunca foi "ninguém nesta página usa escopo": era "a preferência de
+  // idioma NÃO é particionada por workspace", e é isso que o recorte volta a medir. Um gate cujo
+  // alcance é maior que sua afirmação vira falso positivo no dia em que a vizinhança muda.
+  const daConta = rede.pedidos.filter((p) => new URL(p.url).pathname.startsWith("/v1/me"));
+  expect(daConta.length, "nenhuma requisição de conta — o laço abaixo seria vazio")
+    .toBeGreaterThan(0);
+  for (const p of daConta) {
+    expect(p.url, "a preferência de idioma foi particionada por workspace").not.toContain("workspace_id=");
     expect(p.url).not.toContain("instance_id=");
     expect(p.url).not.toContain("user_subject");
   }

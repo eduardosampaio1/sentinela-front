@@ -29,6 +29,7 @@ import { SecaoDeIdioma } from "@/features/account/SecaoDeIdioma";
 import { useContaDoUsuario } from "@/features/account/data/language";
 import { SecaoDeWorkspace } from "@/features/workspace/SecaoDeWorkspace";
 import { useNomeDoWorkspace } from "@/features/workspace/data/workspace";
+import { SecaoDeNotificacoes } from "@/features/communication/SecaoDeNotificacoes";
 import { useCanonicalScope } from "@/features/canonical-analysis/ui/scope";
 
 function Section({
@@ -172,6 +173,20 @@ export function SettingsPage() {
 
           <Section title={t("workspaceConfig.title")} description={t("workspaceConfig.body")}>
             <SecaoDeWorkspace workspaceId={escopo?.workspaceId ?? null} />
+          </Section>
+
+          {/* M44 · COM-01 — DEPOIS do Workspace, e na MESMA página.
+              Depois porque a ordem conta uma história: primeiro quem você é e como o produto
+              fala com você (conta), depois qual é este espaço, e por fim para onde ele avisa.
+              Notificação é configuração DO ESPAÇO — o produtor exige `workspace_id` nas quatro
+              operações —, então ela pertence a esta vizinhança e não à da conta.
+
+              Na mesma página porque criar uma segunda Settings faria a pessoa procurar em dois
+              lugares o que é a mesma pergunta: "como este espaço está configurado". Seção
+              própria, com carregamento e falha próprios: um `503` do dono da comunicação não
+              pode derrubar o nome do espaço nem o idioma da conta. */}
+          <Section title={t("notifications.title")} description={t("notifications.body")}>
+            <SecaoDeNotificacoes workspaceId={escopo?.workspaceId ?? null} />
           </Section>
         </div>
       </PageFrame>

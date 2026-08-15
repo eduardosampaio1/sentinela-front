@@ -143,7 +143,11 @@ export function SecaoDeIdioma() {
                   inteira existe para preservar. Aqui ela aparece no controle, e some por completo
                   quando não há escolha salva. */}
               {estado.tipo === "salva" && estado.escolhido === idioma && (
-                <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                // `text-foreground`, e não `text-muted-foreground`: o chip nasceu discreto e
+                // ficava em 4.12:1 sobre `bg-muted` — abaixo do 4.5:1 de AA, a 12px. Ninguém
+                // tinha visto porque nenhuma suíte rodava axe NESTA página: a da M42 roda na
+                // página da Instância, e a de Settings só passou a existir com a M44.
+                <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
                   {t("account.savedTag")}
                 </span>
               )}

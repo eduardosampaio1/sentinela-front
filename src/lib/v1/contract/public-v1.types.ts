@@ -225,6 +225,77 @@ export interface WorkspaceView {
   created_at: string | null;
 }
 
+// ── /v1/subscriptions — a comunicação autorizada do Workspace (BD14) ──────────
+
+/** Os canais que o dono aceita. Enum FECHADO — `Canal` em `domain/entrega.py`. */
+export type SubscriptionChannel = "webhook" | "email";
+
+/**
+ * A assinatura, como a fronteira pública a projeta (`_publica`, em `subscriptions_v1.py`).
+ *
+ * **O segredo não está aqui, nem cifrado.** Ele sai UMA vez, na criação e na rotação, e uma
+ * leitura nunca o devolve. `secret_version` fica porque o cliente precisa saber qual chave está
+ * em uso — a versão é informação de operação, o material é credencial.
+ */
+export interface SubscriptionView {
+  subscription_id: string;
+  channel: SubscriptionChannel;
+  /**
+   * Para onde avisar. É a **intenção explícita** de quem assinou, e não deriva de identidade:
+   * o Gateway tem gate provando que não lê `/v1/me`, claim de e-mail, Account nem Workspace para
+   * preenchê-lo. A diferença é entre *mandar para quem a pessoa pediu* e *mandar para o que o
+   * provedor achar hoje*.
+   */
+  destination: string;
+  event_types: string[];
+  /**
+   * O idioma da ENTREGA. Independente da preferência de idioma da conta (BD11): um diz em que
+   * língua o produto fala com a pessoa, o outro em que língua a mensagem sai. Divergir é legítimo.
+   */
+  language: "pt" | "en";
+  active: boolean;
+  secret_version: number;
+  /**
+   * Quando uma entrega foi aceita pelo destino. Estado **OBSERVADO**, não fluxo: não existe
+   * operação de verificar, e portanto não há código, expiração nem tentativas. `null` significa
+   * "ainda não houve entrega aceita" — nunca "pendente de confirmação sua".
+   */
+  verified_at: string | null;
+  created_at: string | null;
+}
+
+/** `GET /v1/subscriptions`. Lista vazia é estado legítimo — nunca erro, nunca `null`. */
+export interface SubscriptionListPage {
+  items: SubscriptionView[];
+}
+
+/**
+ * A resposta de `create` e de `rotate`. O material sai **uma vez**, e só aqui.
+ *
+ * `secret` é `null` para `email`, que não tem segredo — e a CHAVE existe sempre, de propósito:
+ * omiti-la obrigaria o cliente a distinguir "não veio" de "não tem".
+ */
+export interface SubscriptionSecretView {
+  subscription_id: string;
+  secret_version: number;
+  secret: string | null;
+}
+
+/** A resposta de `disable`. O estado que a operação produziu, e não um `204` a interpretar. */
+export interface SubscriptionDisabledView {
+  subscription_id: string;
+  active: boolean;
+}
+
+/** O corpo de `create`. O Gateway recusa campo a mais (`extra="forbid"`) — inclusive
+ *  `workspace_id`, que já veio autorizado na query. */
+export interface CreateSubscriptionInput {
+  channel: SubscriptionChannel;
+  destination: string;
+  event_types: string[];
+  language: "pt" | "en";
+}
+
 // ── /v1/instances — a identidade DURÁVEL entre execuções (BD02) ───────────────
 
 /**
