@@ -119,6 +119,28 @@ describe("F3 · sem v3 não há queda para o v1", () => {
     ).toBeInTheDocument();
   });
 
+  // M45.4 — os DOIS caminhos de indisponibilidade anunciam com a mesma polidez.
+  //
+  // Este caso nasceu de um defeito real: a recusa por esquema saía em `role="alert"` e a ausência
+  // por `result_not_available` saía em `role="status"`, com o mesmo recado para quem lê. Nada
+  // media isso — os testes daqui afirmavam o TEXTO, e texto não carrega polidez de anúncio.
+  //
+  // A asserção é dupla de propósito. Só exigir `status` deixaria passar uma tela que emite os
+  // dois papéis ao mesmo tempo; exigir a ausência de `alert` é o que fecha.
+  it("indisponibilidade é anunciada como estado, nunca como alerta", async () => {
+    renderizar({
+      analysis_id: "an-abc",
+      result_schema_version: "analysis-result-v1",
+      indicator_registry_version: "1.0",
+      result: { analysis_id: "an-abc", indicators: [] },
+    });
+    const aviso = await screen.findByText(pt.canonicalAnalysis.argos.unavailableTitle);
+    // O papel vive no CONTÊINER, não no parágrafo do título — subir por `closest` é o que mede
+    // o elemento que o leitor de tela anuncia.
+    expect(aviso.closest('[role="status"]'), "a recusa deveria anunciar como status").not.toBeNull();
+    expect(aviso.closest('[role="alert"]'), "a recusa não pode interromper").toBeNull();
+  });
+
   it("erro do produtor é apresentado, não substituído por outro documento", async () => {
     renderizar(null, 404);
     await waitFor(() => expect(chamadas).toContain("getResult:3"));

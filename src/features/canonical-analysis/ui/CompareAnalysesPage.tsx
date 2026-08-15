@@ -39,7 +39,27 @@ import { useAnalysisArgos } from "../data/argos";
 import { resolverLeituraArgos } from "../result/adapterV3";
 import { compararArgos } from "../result/comparacao";
 import { ComparacaoArgos } from "./ComparacaoArgos";
+import { problemCodeOf } from "./notices";
 import { useCanonicalScope } from "./scope";
+
+/**
+ * O lado sem documento ARGOS — um único bloco para as duas causas.
+ *
+ * `status` e não `alert`: é conclusão sobre disponibilidade, não falha. `data-lado-sem-v3` fica
+ * porque é por ele que o teste distingue A de B sem depender do texto traduzido.
+ */
+function SemArgos({ lado }: { readonly lado: "A" | "B" }) {
+  const { t } = useLanguage();
+  return (
+    <div role="status" className="space-y-2 rounded-md border border-border p-4">
+      <p className="text-sm font-medium">{t("canonicalAnalysis.compare.noArgosTitle")}</p>
+      <p className="text-sm text-muted-foreground">{t("canonicalAnalysis.compare.noArgosBody")}</p>
+      <p className="text-xs text-muted-foreground" data-lado-sem-v3={lado}>
+        {lado === "A" ? t("canonicalAnalysis.compare.sideA") : t("canonicalAnalysis.compare.sideB")}
+      </p>
+    </div>
+  );
+}
 
 export function CompareAnalysesPage() {
   const { t } = useLanguage();
@@ -55,19 +75,43 @@ export function CompareAnalysesPage() {
     if (a.isPending || b.isPending) {
       return <LoadingState rotulo={t("canonicalAnalysis.compare.loading")} />;
     }
+    // AUSÊNCIA DE DOCUMENTO CHEGA POR DUAS PORTAS, E AS DUAS DIZEM O MESMO A QUEM LÊ.
+    //
+    // O produtor responde `404 result_not_available` quando a análise é anterior ao ARGOS, e
+    // responde `200` com um documento que não é v3 quando o vocabulário mudou. Até a M45.4 só a
+    // segunda porta tinha palavra própria aqui: a primeira caía no erro genérico — *"não
+    // conseguimos carregar uma das análises agora. Tente de novo."* — que diagnostica errado E
+    // oferece uma ação que nunca vai funcionar, porque a condição é permanente. A pessoa tentaria
+    // de novo para sempre, e o motivo verdadeiro (uma delas é antiga) nunca seria dito, embora a
+    // tela tivesse as palavras exatas três linhas abaixo.
+    //
+    // A `ArgosView` separava as duas desde sempre. Era ESTA tela que estava fora de passo — e o
+    // que deixou passar foi a captura `m39-sem-v3`, publicada como evidência do estado "sem v3"
+    // enquanto exibia o erro genérico, por uma spec de captura sem uma única asserção.
+    //
+    // O guarda continua sendo UM só — `if (a.isError || b.isError)` — e isso não é estilo: é o
+    // que mantém a narrowing de `a.data`/`b.data` para o resto da função. Uma primeira versão
+    // desta correção quebrou o bloco em dois e `resolverLeituraArgos` passou a receber
+    // `AnalysisResultView | undefined`. O `tsc` acusou; a triagem acontece DENTRO do guarda.
     if (a.isError || b.isError) {
-      return (
-        <ErrorState
-          titulo={t("canonicalAnalysis.compare.title")}
-          explicacao={t("canonicalAnalysis.compare.error")}
-          acao="voltar"
-          botao={
-            <Link to="/analyses" className="text-sm font-medium underline underline-offset-4">
-              {t("canonicalAnalysis.compare.backToList")}
-            </Link>
-          }
-        />
-      );
+      const semA = a.isError && problemCodeOf(a.error) === "result_not_available";
+      const semB = b.isError && problemCodeOf(b.error) === "result_not_available";
+      // Erro que NÃO é ausência continua sendo erro, e continua oferecendo a saída.
+      if ((a.isError && !semA) || (b.isError && !semB)) {
+        return (
+          <ErrorState
+            titulo={t("canonicalAnalysis.compare.title")}
+            explicacao={t("canonicalAnalysis.compare.error")}
+            acao="voltar"
+            botao={
+              <Link to="/analyses" className="text-sm font-medium underline underline-offset-4">
+                {t("canonicalAnalysis.compare.backToList")}
+              </Link>
+            }
+          />
+        );
+      }
+      return <SemArgos lado={semA ? "A" : "B"} />;
     }
 
     // Só compara documento com documento RESOLVIDO: um payload que a fronteira recusou não vira
@@ -76,22 +120,7 @@ export function CompareAnalysesPage() {
     const rA = resolverLeituraArgos(a.data);
     const rB = resolverLeituraArgos(b.data);
     if (rA.estado === "recusado" || rB.estado === "recusado") {
-      const lado = rA.estado === "recusado" ? "A" : "B";
-      return (
-        <div role="status" className="space-y-2 rounded-md border border-border p-4">
-          <p className="text-sm font-medium">
-            {t("canonicalAnalysis.compare.noArgosTitle")}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t("canonicalAnalysis.compare.noArgosBody")}
-          </p>
-          <p className="text-xs text-muted-foreground" data-lado-sem-v3={lado}>
-            {lado === "A"
-              ? t("canonicalAnalysis.compare.sideA")
-              : t("canonicalAnalysis.compare.sideB")}
-          </p>
-        </div>
-      );
+      return <SemArgos lado={rA.estado === "recusado" ? "A" : "B"} />;
     }
 
     return <ComparacaoArgos comparacao={compararArgos(rA.documento, rB.documento)} />;

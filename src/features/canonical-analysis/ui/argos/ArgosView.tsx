@@ -214,8 +214,20 @@ export function ArgosView() {
     if (leitura.estado === "recusado") {
       // O produtor respondeu, mas não com um v3. Dizer isso é a única saída honesta: adaptar o
       // que veio seria a queda silenciosa que o contrato inteiro existe para impedir.
+      //
+      // `status`, e não `alert` — corrigido na M45.4. Este bloco era o irmão desalinhado de
+      // `SemDocumentoArgos`: as duas telas entregam ao usuário a MESMA conclusão ("o documento
+      // ARGOS não está disponível para esta análise", que é literalmente o título aqui), e uma
+      // anunciava com interrupção e a outra não. A justificativa escrita doze linhas acima vale
+      // igual para os dois: é conclusão sobre disponibilidade, não falha, e alertar por ausência
+      // ensina a ignorar alertas.
+      //
+      // A diferença entre os dois casos é de ENGENHARIA (404 do produtor vs. 200 com esquema
+      // que não é v3 — o segundo cheira a drift), e `role` não mede gravidade de engenharia:
+      // mede se a pessoa precisa ser interrompida. Ela não precisa, e não pode agir diferente
+      // num caso ou no outro. O drift é problema de quem opera, e tem outro canal.
       return (
-        <div role="alert" className="space-y-2 rounded-md border border-border p-4">
+        <div role="status" className="space-y-2 rounded-md border border-border p-4">
           <p className="text-sm font-medium">{t("canonicalAnalysis.argos.unavailableTitle")}</p>
           <p className="text-sm text-muted-foreground">
             {t(`canonicalAnalysis.argos.refused.${leitura.reason}`)}

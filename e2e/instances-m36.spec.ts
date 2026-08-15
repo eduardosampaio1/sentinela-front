@@ -229,16 +229,41 @@ test("a entrada pela Home funciona por TECLADO", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Produção" })).toBeVisible();
 });
 
-test("nenhum item de Instâncias foi criado na sidebar, e nenhum CTA de criação existe", async ({ page }) => {
-  // A alcançabilidade veio da seam que o produto já tinha, e não de navegação global nova —
-  // isso era decisão de IA e ficou fora da M36. E criar Instância continua sem superfície autorizada.
+// M45.4 — este caso afirmava DUAS coisas, e só uma delas ainda é verdade.
+//
+// ## A metade que saiu: "nenhum item de Instâncias na sidebar"
+//
+// Era decisão legítima da M36 — a alcançabilidade veio da seam que o produto já tinha, e navegação
+// global era decisão de IA fora daquele escopo. A **M45.0 reverteu com motivo**: `/instances` é
+// superfície REAL do Blueprint, com três missões entregues, e não tinha entrada no shell; só se
+// chegava lá por dentro de uma análise ou colando URL. O item entrou em `c95a4eb`.
+//
+// A asserção ficou aqui contradizendo a decisão nova por três missões. **E ninguém viu porque ela
+// era flaky**: `toHaveCount(0)` aprova no instante em que o locator não casa — inclusive ANTES de
+// a nav renderizar. Verde quando ganhava a corrida, vermelho quando perdia; 1 em 3 nesta máquina.
+// Uma negativa sem estado terminal mede o relógio, não o produto.
+//
+// O contrato da sidebar tem dono, e é `src/test/v1/shell-m25.test.tsx` — *"navega para `/home`,
+// `/analyses`, `/instances` e `/workspaces` — e só"*. Dois gates sobre a mesma coisa, um deles
+// desatualizado, é como a contradição sobreviveu. Fica um.
+//
+// ## A metade que ficou: criar Instância continua sem superfície autorizada
+//
+// Essa segue valendo, e agora com âncora positiva antes da negativa — sem ela, uma página que
+// ainda não montou passa por corpo vazio, que é o mesmo defeito da metade que saiu.
+test("nenhum CTA de criação de Instância existe", async ({ page }) => {
   await comAuth(page);
-  await page.goto("/home");
-  const nav = page.getByRole("navigation").first();
-  await expect(nav.getByRole("link", { name: /^Inst[âa]ncias$|^Instances$/ })).toHaveCount(0);
 
   for (const rota of ["/home", "/instances", "/instances/inst-e2e-0000-4000-8000-000000000001"]) {
     await page.goto(rota);
+    // Massa não vazia ANTES da negativa: é o que impede o caso de passar sobre uma tela em branco.
+    await expect
+      .poll(async () => (await page.locator("main").innerText()).trim().length, {
+        message: `${rota} não renderizou conteúdo — a negativa mediria uma tela vazia`,
+        timeout: 15_000,
+      })
+      .toBeGreaterThan(40);
+
     const corpo = (await page.locator("body").innerText()).toLowerCase();
     for (const proibido of ["criar instância", "nova instância", "create instance", "new instance"]) {
       expect(corpo, `${rota} oferece criação, que não tem missão dona: ${proibido}`).not.toContain(proibido);
