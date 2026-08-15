@@ -75,7 +75,70 @@ sem massa. Nada disso dependia do vault.
 `INDEX - Arquitetura`; cruze as **VAL notes de Onda 6 e Fase 2/3** contra as missões M16–M40;
 releia `docs/onda6/*`; e **re-derive o crédito e a prioridade das tranches** a partir disso.
 
-Até lá, o **TRANCHE PLAN abaixo não deve ser executado** — a ordem das P0 pode mudar.
+---
+
+## ✅ M45.1b — a segunda passada, e o que ela mediu
+
+**Executada em 2026-08-15.** Ela corrige a Discovery original **e a errata acima**.
+
+### O roteador respondeu três perguntas que eu tinha resolvido por conta própria
+
+**1. Quem manda.** `INDEX.md` do vault, congelado em 2026-08-12: para PLAN, Blueprint, Product
+Freeze, DS Constitution e o índice de autoridade do Front, **a cópia viva é a do repo**; as cópias
+no vault são *"snapshot histórico pré-BD02"*. Usar o repo estava certo.
+
+**2. O que as VAL notes são.** Literal: *"Validações de Front em `07 - Validações` são
+**checkpoints de ciclo**, não estado corrente: **a mais recente cobre M18–M23**."* Elas não são o
+DOC-CLOSE das 40 — cobrem até M23 e param.
+
+**3. Onde se lê o estado corrente.** `FRONT-V1-IMPLEMENTATION-PLAN.md` § **BASELINE OFICIAL** —
+*"não no vault, não em validação de ciclo, não no histórico de commits"*.
+
+### O registro de fechamento existia, e eu não o li — nem na primeira passada, nem na errata
+
+Medido: **31 das 40 missões têm bloco `> **Estado:**` inline no PLAN**, e **15 carregam hash de
+commit** (M20 `bc9e625` · M21 `f86218d` · M22 `ca11b89` · M25 `92bd174` · M26 `95b9956` ·
+M27 `f6280eb` · M28 `7e247cb` · M29 `41df5ab` · M30 `fed4157` · M31 `29d534d` · M32 `6e2f017` ·
+M33 `b148977` · M34 `10c444d` · M35 `9883a73` · M36 `34d65e2`).
+
+**Nove sem bloco próprio:** M01, M02, M03, M04, M08, M10, M11, M13 — e **M40**, cujo fechamento
+está registrado no BASELINE OFICIAL, não na entrada dela.
+
+> **A afirmação original (§2) era literalmente certa e substancialmente pobre.** Não há
+> `DOC-CLOSE*.md` para M01–M41 — verdade. Mas eu disse *"o fechamento está inline no PLAN"* **sem
+> ter lido um único desses blocos**, e eles trazem escopo entregue, gates, mutações mortas e hash.
+
+### A errata over-corrigiu, e isto é a correção da correção
+
+`VAL - Onda 6 E5/E7` (2026-07-31) **não é** o fechamento de M26–M31 (2026-08-10). São linhagens
+diferentes: a Onda 6 construiu `/canonical/analyses/:id/result` com massa sintética e schema
+provisório — a **fundação** —, e a Fase 5 do Front V1 veio depois, sobre ela.
+
+Então:
+
+| afirmação | veredito final |
+|---|---|
+| *"Resultado/ARGOS/Analytics/Comparação = NO CREDIT"* | **CORRETA como escrita** — ela fala do crédito **da matriz M45.0**, e a matriz de fato nunca visitou aquelas rotas |
+| a errata dizendo que isso era *"NÃO SUSTENTADA"* | **ERRADA** — confundiu *"a M45.0 não cobriu"* com *"a superfície nunca foi endurecida"*. São coisas diferentes, e a segunda é falsa |
+
+**As quatro superfícies FORAM endurecidas** — em M26–M31, com hash cada, e sobre a fundação da
+Onda 6, que mediu contraste no DOM vivo, tokens fantasma, três viewports, i18n 94/94 e axe limpo.
+
+### O eixo de prioridade correto
+
+Não é *"foi medido?"* — foi. É **sob quais regras de instrumento**. As missões de 2026-07/08
+fecharam antes de: `GATE_VAZIO`, âncora positiva antes da negativa, estado terminal antes da
+captura, provador de captura compartilhado, mutação com match obrigatório, `axe` 0 aplicáveis e
+heurísticas ≥ 9,0.
+
+**A prioridade das tranches passa a ser derivada da distância de instrumento**, e não de ausência
+de cobertura. O §9 é reescrito abaixo com essa régua.
+
+### Um achado novo: o BASELINE OFICIAL está cinco missões atrasado
+
+O bloco que se declara *"o registro de ESTADO CORRENTE"* dizia Front `2771e6d`, **18 operações**,
+catálogo **39**, *"última missão fechada M40"*, *"próxima possível M41"*. Isso era 2026-08-12.
+Desde então fecharam M41, M42, M43, M44, M45.0 e M45.1. **Corrigido nesta passada.**
 
 ---
 
@@ -324,13 +387,33 @@ capturas EN-only da M40 (absorvidas: a evidência PT/EN atual sai na **M45.5**).
 
 ---
 
+## 11. Prioridade re-derivada (M45.1b) — pela distância de instrumento
+
+A régua deixou de ser *"foi coberto?"* e passou a ser *"sob quais regras foi medido?"*.
+
+| tranche | último fechamento | régua da época | distância | prioridade |
+|---|---|---|---|---|
+| **M45.4 · Two-View** | M39 (EVO-02, realinhada) + M21/M27 | 2026-08 | **`ARG-01` e `ANL-01` não têm scenario nenhum** — sem massa não há como exercitar | **P0** |
+| **M45.3 · Resultado** | M26–M31, cinco hashes, 2026-08-10 | 2026-08 | fechou **antes** de `GATE_VAZIO`, âncora positiva, provador de captura e mutação com match | **P0** |
+| **M45.2 · Jornada da análise** | M32–M35, quatro hashes, 2026-08-10/11 | 2026-08 | idem | **P0** |
+| **M45.5 · Instância e baseline** | M36 `34d65e2`, M37, M40 | 2026-08-12 | mais recente; M42 já reabriu parte | P1 |
+| **M45.7 · Público, auth e shell** | M01, M02, M24, M25 `92bd174` | 2026-08-10 | M45.0 já corrigiu a IA; resta o público/auth | P1 |
+| **M45.6 · Fundação e fronteiras** | M03–M19 | 2026-07/08 | invariantes com **gate vivo e verde** — o risco é o menor | P2 |
+
+**A ordem entre as três P0 muda**: `M45.4` continua primeira, mas agora por um motivo **medido** —
+é a única sem massa — e não por "não teve crédito". `M45.3` e `M45.2` seguem P0 por distância de
+instrumento, não por ausência de prova.
+
+---
+
 ### ~~M45.1 · HISTORICAL EXPERIENCE DISCOVERY — PASS · TRANCHE PLAN READY~~
+### ~~M45.1 · HISTORICAL EXPERIENCE DISCOVERY — INCOMPLETE · VAULT NOT READ~~
 
-### **M45.1 · HISTORICAL EXPERIENCE DISCOVERY — INCOMPLETE · VAULT NOT READ**
+### **M45.1 · HISTORICAL EXPERIENCE DISCOVERY — PASS (após M45.1b) · TRANCHE PLAN READY**
 
-O veredito original está riscado, não apagado: ele foi emitido sem o vault, que o Passo 0 exigia
-primeiro. Ver a **ERRATA** no topo.
+Os dois vereditos anteriores ficam riscados, não apagados: o primeiro foi emitido sem o vault, e o
+segundo over-corrigiu ao confundir *"a M45.0 não cobriu"* com *"a superfície nunca foi endurecida"*.
 
-**Próximo checkpoint:** `M45.1b · SEGUNDA PASSADA COM O VAULT` — reler o router e as VAL notes, e
-**re-derivar crédito e prioridade**. `M45.4` continua sendo a candidata mais provável a P0 (as duas
-superfícies sem scenario), mas isso agora é hipótese, não conclusão medida.
+**Próximo checkpoint:** `M45.4 · TWO-VIEW HARDENING` — `ARG-01` e `ANL-01` são as únicas
+superfícies vivas **sem scenario nenhum**, e scenario ausente significa que nem massa existe para
+exercitar a experiência.

@@ -1811,6 +1811,28 @@ depois começa sem ela.
 
 | eixo | valor |
 |---|---|
+> 🔄 **Rebaseline de 2026-08-15 (M45.1b).** O bloco abaixo tinha ficado em 2026-08-12 e descrevia
+> um estado cinco missões atrás — e ele é justamente o que se declara *"o registro de ESTADO
+> CORRENTE"*. Achado da segunda passada da Discovery histórica. Os valores de 2026-08-12 ficam
+> entre parênteses, como registro de época.
+
+| eixo | valor |
+|---|---|
+| Front | `sentinela-front-e1` · `develop` · **`72371b8`** · árvore limpa *(era `2771e6d`)* |
+| Gateway / contrato público | `sentinela-facts` · **`fcb9e5b`** · **27 operações** *(era `16636a2` · 18)* |
+| Dispatcher | `sentinela-event-dispatcher` · **`2ce1f89`** *(novo — BD14)* |
+| Workspace | `sentinela-workspace` · **`57be9d9`** *(novo — BD12)* |
+| Orchestrator | `sentinela-orchestrator` · **`8dec314`** *(era `6c5e71b`)* |
+| catálogo de scenarios | **62** · 57 disponíveis · 3 parciais · 2 bloqueados *(era 39/36/1/2)* |
+| B1 | **aberto em 1** — `create_instance`. A BD14 o levou a 5 e a **M44 o devolveu a 1**, entregando os clientes das quatro operações de Subscription |
+| missões fechadas desde então | **M41** (CFG-01/02) · **M42** (CFG-03/04, quality 9,2) · **M43** (Q15, as proof) · **M44** (COM-01/02) · **M45.0** (17 gates PASS · G12 N/A) · **M45.1** (discovery histórica) |
+| missão corrente | **M45 · umbrella ABERTA** — sete tranches (M45.2–M45.8) |
+| M46 | **NOT READY** |
+
+<details><summary>Valores de 2026-08-12 (registro de época)</summary>
+
+| eixo | valor (2026-08-12) |
+|---|---|
 | Front | `sentinela-front-e1` · `develop` · **`2771e6d`** · árvore limpa |
 | Gateway / contrato público | `sentinela-facts` · **`16636a2`** · **18 operações** · 9 problem codes *(era `ac81633` · 15 · antes da BD10)* |
 | Orchestrator | `sentinela-orchestrator` · `integracao/bd02-instancia` · **`6c5e71b`** *(era `8996a75`)* |
@@ -1822,10 +1844,12 @@ depois começa sem ela.
 | última missão fechada | **M38** (EVO-01 — histórico cronológico canônico em `/analyses`) |
 | última missão fechada | **M39** (EVO-02 — comparação ARGOS A×B sobre v3) |
 | última missão fechada | **M40** (INST-05 — análise de referência, sobre a BD10) |
-| próxima possível | **M41 / CFG-01-02** (Fase 11). `EVO-03` continua **sem missão**: falta o produtor de comparação longitudinal |
+| próxima possível ~~(hoje: M45 umbrella)~~ | **M41 / CFG-01-02** (Fase 11). `EVO-03` continua **sem missão**: falta o produtor de comparação longitudinal |
 
 Como se chegou aqui: `4c96256` reconciliou a autoridade com o estado entregue; `fdddc27` e
 `2771e6d` fecharam a `TYPECHECK RECOVERY`. Nenhum dos três tocou código de produto.
+
+</details>
 
 #### Rebaseline de 2026-08-13 — TWO-VIEW EXPERIENCE RECOVERY
 
