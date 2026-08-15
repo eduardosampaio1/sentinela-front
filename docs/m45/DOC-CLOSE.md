@@ -1,7 +1,21 @@
-# M45 · OS 18 GATES DE UI COMPLETE — DOC-CLOSE
+# M45.0 · RECENT / CROSS-FEATURE HARDENING — DOC-CLOSE
 
 Fechamento local. **Sem push, sem deploy, sem Railway.** **M45 não é o Experience Freeze** — o
-marco é da M46, ao fim desta.
+marco é da M46.
+
+> **Realinhamento posterior (M45.1, 2026-08-15).** Este documento foi escrito como
+> **"M45 · OS 18 GATES DE UI COMPLETE"** e declarava **"M45 — CLOSED"**. Isso **fica**, e descrevia
+> corretamente o que foi medido: os 18 gates sobre as superfícies que a matriz transversal
+> alcançou.
+>
+> O que ele **não** era é fechamento da umbrella. A própria campanha provou o motivo — features
+> individualmente verdes formaram experiência transversal defeituosa —, e esse raciocínio se aplica
+> igualmente às 40 missões que fecharam **antes** de os gates atuais existirem. A Discovery
+> histórica mediu o crédito real: **E5 (Resultado), E6 (ARGOS), E7 (Analytics) e E8 (Comparação)
+> receberam NO CREDIT — a matriz nunca visitou essas rotas.**
+>
+> Passa a ser **M45.0**, com a umbrella **OPEN**. Ver
+> [`M45-HISTORICAL-EXPERIENCE-DISCOVERY.md`](./M45-HISTORICAL-EXPERIENCE-DISCOVERY.md).
 
 ---
 
@@ -148,11 +162,15 @@ integração real (M47), contract parity e as três dívidas de topologia.
 | M42 | **CLOSED** · quality gate 9,2 |
 | M43 | **CLOSED AS PROOF** |
 | M44 | **CLOSED** |
-| **M45** | **CLOSED — 18 GATES RESOLVED · 17 PASS · 1 N/A · CONDITION FALSE** |
-| M46 | **READY FOR OWNER ACCEPTANCE** |
+| **M45.0** | **CLOSED — 17 PASS · 1 N/A · CONDITION FALSE** |
+| **M45 · umbrella** | **OPEN** — sete tranches, ver a Discovery histórica |
+| M46 | **NOT READY** |
 
-### **M45 · 18 UI GATES — CLOSED · 17 PASS · G12 N/A CONDITION FALSE · READY FOR M46**
+### **M45.0 · RECENT / CROSS-FEATURE HARDENING — CLOSED · 17 PASS · G12 N/A CONDITION FALSE**
 
-**Próximo checkpoint:** `M46 · OWNER EXPERIENCE ACCEPTANCE`. Ela **não começa corrigindo**: Eduardo
-usa a versão congelada como produto inteiro, os achados são registrados, e só depois há `APPROVED`
-ou `RETURN WITH FINDINGS`.
+> A linha original dizia **"READY FOR M46"**. Ela valia para o recorte medido, e não para a
+> umbrella: a M45.1 mediu que quatro experiências centrais — Resultado, ARGOS, Analytics e
+> Comparação — não receberam crédito nenhum desta campanha.
+
+**Próximo checkpoint:** `M45.4 · TWO-VIEW HARDENING`, recomendado por ser a única tranche P0 cujas
+superfícies vivas (`ARG-01`, `ANL-01`) **não têm scenario nenhum**.

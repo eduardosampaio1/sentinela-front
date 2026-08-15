@@ -1540,6 +1540,27 @@ zero `#hex` · token único · **semântica única de estado** · paridade i18n.
 > atingível é escolha de produto, não de execução.
 >
 > **A M45 NÃO é o Experience Freeze.** Ela roda os gates; o marco é da **M46**, ao fim dela.
+>
+> 🔀 **A M45 virou UMBRELLA (M45.1, 2026-08-15), e isso não anula o que já fechou.**
+>
+> | sub-missão | estado |
+> |---|---|
+> | **M45.0** · recent / cross-feature hardening | **CLOSED** — 17 PASS · G12 N/A · heurísticas 9,3 |
+> | **M45.1** · historical experience discovery (M01–M40) | **CLOSED** — ledger, mapas e plano de tranches |
+> | **M45.2** · jornada da análise · **P0** | aberta |
+> | **M45.3** · resultado (RES-01) · **P0** | aberta |
+> | **M45.4** · Two-View (ARGOS · Analytics · comparação) · **P0** | aberta — **próxima** |
+> | **M45.5** · Instância e baseline · P1 | aberta |
+> | **M45.6** · fundação e fronteiras · P2 | aberta |
+> | **M45.7** · público, auth e shell · P1 | aberta |
+> | **M45.8** · consolidação transversal | fecha a umbrella |
+>
+> **Por que.** A M45.0 provou que features individualmente verdes formam experiência transversal
+> defeituosa — cinco defeitos, todos em superfícies verdes. O mesmo vale para as 40 missões que
+> fecharam **antes** de os gates atuais existirem, e a M45.1 mediu o crédito real: **Resultado,
+> ARGOS, Analytics e Comparação receberam NO CREDIT — a matriz nunca visitou essas rotas.**
+>
+> Ver [`docs/m45/M45-HISTORICAL-EXPERIENCE-DISCOVERY.md`](m45/M45-HISTORICAL-EXPERIENCE-DISCOVERY.md).
 
 ---
 
