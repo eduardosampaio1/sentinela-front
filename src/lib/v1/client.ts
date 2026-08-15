@@ -20,6 +20,7 @@ import type {
   BaselineView,
   InstanceListParams,
   InstanceView,
+  WorkspaceView,
   ListParams,
   MeView,
   EffectiveLanguage,
@@ -155,6 +156,38 @@ export interface V1Client {
    * Front não distingue o que o contrato deliberadamente não distingue.
    */
   getInstance(instanceId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<InstanceView>;
+
+  /**
+   * M42 · CFG-04 — renomear a Instance. `name` é o ÚNICO atributo configurável dela na V1.
+   *
+   * `PATCH` e não `PUT`: a atualização é PARCIAL. O recurso tem identidade, carimbo e ponteiro de
+   * baseline que esta operação não toca, e um `PUT` prometeria substituir o recurso inteiro.
+   *
+   * Não há sub-recurso `/rename` nem `/settings`: ele seria a casa esperando o próximo campo
+   * entrar sem decisão. E **não existe unicidade** — renomear para um nome que já convive no
+   * mesmo workspace é sucesso.
+   */
+  renameInstance(
+    instanceId: string,
+    scope: CanonicalScope,
+    name: string,
+    opts?: RequestOptions,
+  ): Promise<InstanceView>;
+
+  /**
+   * M42 · CFG-03 — o Workspace, pela fronteira pública. **A autoridade do nome do espaço.**
+   *
+   * `workspace_id` viaja no CAMINHO e **não** na query: o recurso É o workspace, e pedi-lo duas
+   * vezes abriria a porta para o caminho discordar do parâmetro. Ele também não é prova de
+   * autorização — quem autoriza são as claims, antes de qualquer transporte.
+   *
+   * Esta é a leitura que vence a claim. `MeView.workspaces[].name` continua existindo como
+   * projeção de bootstrap e pode ficar velho após um rename.
+   */
+  getWorkspace(workspaceId: string, opts?: RequestOptions): Promise<WorkspaceView>;
+
+  /** M42 · CFG-03 — renomear. Corpo com UM campo; o Gateway recusa campo a mais. */
+  renameWorkspace(workspaceId: string, name: string, opts?: RequestOptions): Promise<WorkspaceView>;
 }
 
 /**
@@ -373,6 +406,24 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       // quando só havia análise. Reusá-lo é o certo: um segundo encoder divergiria no primeiro
       // caractere especial, e o nome é dívida de harness, não motivo para duplicar.
       pedir<InstanceView>("GET", `/v1/instances/${encodeAnalysisId(instanceId)}`, { workspace_id: scope.workspaceId }, opts),
+    renameInstance: (instanceId, scope, name, opts) =>
+      pedir<InstanceView>(
+        "PATCH",
+        `/v1/instances/${encodeAnalysisId(instanceId)}`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify({ name }), contentType: "application/json" },
+      ),
+    // `enviar` e não `pedir`: `get_workspace`/`rename_workspace` são as ÚNICAS operações de
+    // recurso sem `workspace_id` na query — ele já é o caminho. `pedir` exige o escopo e
+    // recusaria a chamada localmente, que é o comportamento certo dele e o errado para estas duas.
+    getWorkspace: (workspaceId, opts) =>
+      enviar<WorkspaceView>("GET", `/v1/workspaces/${encodeAnalysisId(workspaceId)}`, {}, opts),
+    renameWorkspace: (workspaceId, name, opts) =>
+      enviar<WorkspaceView>("PATCH", `/v1/workspaces/${encodeAnalysisId(workspaceId)}`, {}, opts, {
+        body: JSON.stringify({ name }),
+        contentType: "application/json",
+      }),
     getBaseline: (instanceId, scope, opts) =>
       pedir<BaselineView>(
         "GET",

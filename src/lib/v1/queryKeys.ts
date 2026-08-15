@@ -12,6 +12,14 @@ export const workspaceKeys = {
     ["workspace", workspaceId, "analyses", "list", params ?? {}] as const,
   detail: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId] as const,
+  /**
+   * M42 · CFG-03 — a CONFIGURAÇÃO do workspace (nome autoritativo), sob a MESMA raiz.
+   *
+   * Sob `["workspace", id]` porque trocar de workspace tem de invalidá-la junto com o resto. E
+   * chave PRÓPRIA, separada de `instances`: são donos diferentes, e um `invalidate` da
+   * configuração do espaço não pode arrastar o cache das Instances.
+   */
+  config: (workspaceId: string) => ["workspace", workspaceId, "config"] as const,
   /** BD02 — Instances do workspace. Mesma raiz: trocar de workspace invalida tudo junto. */
   instances: (workspaceId: string) => ["workspace", workspaceId, "instances"] as const,
   instance: (workspaceId: string, instanceId: string) =>

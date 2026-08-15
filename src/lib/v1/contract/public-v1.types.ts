@@ -204,6 +204,27 @@ export interface ListParams extends CanonicalScope {
   baselineEligible?: boolean;
 }
 
+// ── /v1/workspaces — identidade de produto e nome do espaço (BD12) ────────────
+
+/**
+ * O Workspace, como o contrato o publica: `workspace.read_model_fields` é exatamente estes três.
+ *
+ * **Tipo PRÓPRIO, e não um `RenamableEntity` compartilhado com `InstanceView`.** As duas têm um
+ * campo `name` e param aí: donos diferentes (`sentinela-workspace` e o Orchestrator), operações
+ * diferentes, escopos diferentes — `get_workspace` não leva `workspace_id` na query, e
+ * `get_instance` leva. Um tipo genérico faria a primeira mudança de um deles quebrar o outro, e o
+ * ganho seria três linhas.
+ *
+ * **Este é o nome AUTORITATIVO do espaço.** A claim do provedor carrega um `name` que é projeção
+ * de bootstrap e envelhece após um rename — ver `MeView.workspaces[].name`. Quem manda aqui é
+ * este produtor.
+ */
+export interface WorkspaceView {
+  workspace_id: string;
+  name: string;
+  created_at: string | null;
+}
+
 // ── /v1/instances — a identidade DURÁVEL entre execuções (BD02) ───────────────
 
 /**

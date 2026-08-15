@@ -83,9 +83,10 @@ export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
   // `{analysis_id}` nas rotas de Workspace/Instance/Subscription não é engano: o inventário
   // normaliza QUALQUER parâmetro de caminho para esse literal, e o faz igual no contrato e nos
   // clientes. Trocá-lo é missão de harness.
-  "GET /v1/workspaces/{analysis_id}", // get_workspace — BD12; owner: M42 · CFG-03
-  "PATCH /v1/workspaces/{analysis_id}", // rename_workspace — BD12; owner: M42 · CFG-03
-  "PATCH /v1/instances/{analysis_id}", // rename_instance — BD13; owner: M42 · CFG-04
+  // As TRÊS de configuração SAÍRAM na M42 (2026-08-14), e saíram do jeito que a lista prescreve:
+  // com o cliente entregue no mesmo commit. `getWorkspace`/`renameWorkspace` e `renameInstance`
+  // existem em `@/lib/v1`, pela fronteira pública, e os hooks que os consomem estão em
+  // `features/workspace/data` e `features/instances/data`. A lista encolhe junto com a dívida.
   "GET /v1/subscriptions", // list_subscriptions — BD14; owner: M44
   "POST /v1/subscriptions", // create_subscription — BD14; owner: M44
   "DELETE /v1/subscriptions/{analysis_id}", // disable_subscription — BD14; owner: M44

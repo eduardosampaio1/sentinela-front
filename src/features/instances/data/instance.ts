@@ -15,6 +15,7 @@
 import {
   useMutation,
   useQuery,
+  useQueryClient,
   type UseMutationResult,
   type UseQueryResult,
 } from "@tanstack/react-query";
@@ -174,5 +175,50 @@ export function useRemoverBaseline(): UseMutationResult<
   const client = useV1Client();
   return useMutation({
     mutationFn: ({ scope, instanceId }) => client.clearBaseline(instanceId, scope),
+  });
+}
+
+/**
+ * M42 · CFG-04 — renomear a Instância. `name` é o ÚNICO atributo configurável dela na V1.
+ *
+ * ## O que esta mutação deliberadamente NÃO invalida
+ *
+ * **O baseline.** `instance_rename.nao_toca` lista `baseline_analysis_id` e `baseline_set_at`, e o
+ * cache reflete isso: só a chave da própria Instance e a listagem que a exibe são atualizadas. Um
+ * `invalidateQueries({ queryKey: workspaceKeys.instance(...) })` seco arrastaria a régua junto —
+ * e a tela mostraria o seletor de baseline recarregando, ou vazio por um instante, como se
+ * renomear tivesse mexido nela.
+ *
+ * **Nada de recreate.** A resposta é a linha persistida, com o MESMO `instance_id`. O cache é
+ * atualizado no lugar; não há remoção seguida de inserção, e nenhuma navegação muda de identidade.
+ *
+ * Nome duplicado é sucesso: o contrato declara a ausência de unicidade, e a mutação não filtra.
+ */
+export function useRenomearInstancia(): UseMutationResult<
+  InstanceView,
+  unknown,
+  { scope: CanonicalScope; instanceId: string; name: string }
+> {
+  const client = useV1Client();
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: ({ scope, instanceId, name }) => client.renameInstance(instanceId, scope, name),
+    onSuccess: (nova, { scope }) => {
+      cache.setQueryData(workspaceKeys.instance(scope.workspaceId, nova.instance_id), nova);
+      // A LISTAGEM exibe o nome, então ela reconcilia — mas por reescrita do item, não por
+      // refetch: o produtor já devolveu a linha, e uma segunda ida à rede só adiaria a verdade.
+      cache.setQueryData<InstanceListPage>(
+        workspaceKeys.instances(scope.workspaceId),
+        (pagina) =>
+          pagina
+            ? {
+                ...pagina,
+                items: pagina.items.map((i) =>
+                  i.instance_id === nova.instance_id ? nova : i,
+                ),
+              }
+            : pagina,
+      );
+    },
   });
 }
