@@ -63,10 +63,10 @@ import {
   baselineEm,
   type BaselineView,
 } from "@/test/fixtures/public-v1/baseline";
-// A massa v3 da comparação. JSON, e não módulo TS, porque ela é SAÍDA de produtor: transcrevê-la
-// para código convidaria a "ajustar um número" numa revisão, e o número deixaria de ser o que o
-// motor produziu.
-import V3_MASSA from "@/test/fixtures/canonical-result/v3-comparacao.json";
+// Os documentos das duas visões — o v3 da comparação e o snapshot do Analytics. Saíram daqui na
+// M45.4: ganharam um segundo consumidor (`two-view.ts`), e mantê-los aqui obrigaria aquele módulo
+// a importar VALOR de quem já o importa de volta.
+import { V3_COMPARACAO, analytics, envelopeV3 } from "./documentos";
 // M41 — a massa da conta: identidade (CFG-01) e preferência de idioma (CFG-02, BD11).
 import {
   IDENTIDADE,
@@ -89,29 +89,10 @@ import {
 // este arquivo passou de 1000 linhas (M07 · anti-monólito). O catálogo continua sendo o índice
 // único — é ele que garante id sem duplicata e é por ele que todo mundo pede.
 import { CENARIOS_DE_COMUNICACAO } from "./assinaturas";
+// M45.4 — as duas visões, pela mesma razão e no mesmo formato.
+import { CENARIOS_DA_DUPLA_VISAO } from "./two-view";
 
 export type EstadoDoScenario = "disponivel" | "parcial" | "bloqueado";
-
-/** Os documentos v3 da comparação — produzidos pelo caminho real, não escritos aqui. */
-const V3_COMPARACAO = V3_MASSA as {
-  A: Record<string, unknown>;
-  B: Record<string, unknown>;
-  B_QUEBRA: Record<string, unknown>;
-};
-
-/**
- * O envelope PÚBLICO do resultado. Só os campos que `public-v1.json` declara — o artefato do
- * orchestrator traz mais (versão do assembler, do engine, fingerprint), e servi-los aqui faria o
- * scenario ensinar a tela a ler o que a fronteira pública não entrega.
- */
-function envelopeV3(analysisId: string, documento: Record<string, unknown>) {
-  return {
-    analysis_id: analysisId,
-    result_schema_version: "analysis-result-v3",
-    indicator_registry_version: String(documento.indicator_registry_version),
-    result: documento,
-  };
-}
 
 export interface Scenario {
   /** Nome estável e único. É por ele que o cenário é invocado. */
@@ -234,9 +215,6 @@ const progresso = (
       axes: Object.entries(eixos).map(([axis, state]) => ({ axis, state })),
     }),
   );
-
-const analytics = (base: string, corpo: Record<string, unknown>) =>
-  http.get(`${base}/v1/analyses/:id/analytics`, () => json({ analysis_id: "an-abc", ...corpo }));
 
 /**
  * O catálogo. A ordem é a do Blueprint §11 — mantê-la é o que permite conferir os dois lado a
@@ -957,5 +935,6 @@ export const CATALOGO: readonly Scenario[] = [
     ],
   },
 
+  ...CENARIOS_DA_DUPLA_VISAO,
   ...CENARIOS_DE_COMUNICACAO,
 ] as const;

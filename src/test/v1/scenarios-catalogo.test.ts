@@ -127,7 +127,7 @@ describe("M45 · G2 · todo scenario não bloqueado é reproduzível POR NOME", 
 });
 
 describe("M18 · 1. o catálogo está completo", () => {
-  it("tem as 62 entradas do Blueprint §11", () => {
+  it("tem as 65 entradas do Blueprint §11", () => {
     // Um catálogo curto passaria em todos os outros casos: o que ele não lista, ele não erra.
     // 35 → 37 na materialização das massas v3 da M39. 37 → 39 na M40: `baseline-set` e
     // `baseline-no-candidates`. 39 → 44 na M41: `account-identity` (CFG-01) e os quatro
@@ -152,10 +152,12 @@ describe("M18 · 1. o catálogo está completo", () => {
     // repositório é a autoridade operativa.
     // 52 → 62 com as DEZ da M44 (oito de Subscription + duas de reentrada). O Blueprint §11 as
     // lista antes, e é ele que este número persegue.
-    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(62);
+    // 62 → 65 com as TRÊS da M45.4: `ARG-01` e `ANL-01` eram as únicas superfícies REAL sem
+    // nome invocável, e o gate 2 mede nome, não cobertura.
+    expect(CATALOGO.length, "o catálogo divergiu do Blueprint").toBe(65);
   });
 
-  it("57 disponíveis · 3 parciais · 2 bloqueados", () => {
+  it("60 disponíveis · 3 parciais · 2 bloqueados", () => {
     // Duas mudanças distintas, e os números as separam. A BD02 moveu `instance-empty` de
     // bloqueado para disponível sem alterar o TOTAL — nada nasceu nem morreu. A M36 acrescentou
     // `instance-present` e `instance-history` e o Checkpoint 0 da M37 acrescentou
@@ -182,7 +184,7 @@ describe("M18 · 1. o catálogo está completo", () => {
     // PARCIAIS, e por um motivo que não é falta de massa — não existe operação pública que
     // devolva evento ao Front, então o cenário serve a Analysis de destino e o evento fica
     // como fixture. Marcá-las `disponivel` prometeria um seam que não existe.
-    expect(nomesPorEstado("disponivel").length).toBe(57);
+    expect(nomesPorEstado("disponivel").length).toBe(60);
     expect(nomesPorEstado("parcial").length).toBe(3);
     expect(nomesPorEstado("bloqueado").length).toBe(2);
   });
@@ -369,7 +371,7 @@ describe("M18 · 1. o catálogo está completo", () => {
     // Piso do INSTRUMENTO, não do catálogo: se o regex parar de casar a tabela, o filtro
     // abaixo roda sobre lista vazia e passa sempre. 44 → 52 com as oito entradas da M42, e
     // 52 → 62 com as dez da M44.
-    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(62);
+    expect(doMapa.length, "não consegui ler a tabela §11 do Blueprint").toBe(65);
     const faltando = doMapa.filter((n) => !NOMES.includes(n));
     expect(faltando, "cenário do Blueprint ausente do catálogo").toEqual([]);
   });

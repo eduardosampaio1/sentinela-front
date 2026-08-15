@@ -751,6 +751,14 @@ Todo scenario é **nome + lista de handlers**. Fixture derivada do schema public
 | 60 | `subscription-other-workspace` | COM-01 | `GET/DELETE` com `workspace_id` divergente | dois workspaces, cada um com a sua lista. O escopo é a **query**, em toda operação: B não vê nem desativa a assinatura de A | — |
 | 61 | `communication-completed-reentry` | COM-02, AN-04 | `GET /v1/analyses/{id}` | reentrada por `analysis.completed`. **Parcial**: o evento não tem operação pública de leitura, então a massa dele é fixture — o que o Front serve aqui é a própria Analysis | 🟡 sem produtor de evento no Front |
 | 62 | `communication-failed-reentry` | COM-02, AN-04 | `GET /v1/analyses/{id}` | idem, por `analysis.failed`. `failure_stage` é público e vive no envelope; nenhuma operação de Analysis o republica | 🟡 idem |
+| 63 | `argos-document-present` | ARG-01 | `GET /{id}/result?result_schema_version=3` | a visão ARGOS com o documento v3. **Sem a query, devolve o histórico** — é o que a rota real faz, e é o que impede o scenario de ensinar a tela a receber v3 sem pedir | — |
+| 64 | `argos-document-absent` | ARG-01 | idem, **sem v3** | a análise ANTIGA: o produtor recusa a versão pedida. A tela diz indisponibilidade e **não** cai para o v1 — dez famílias ausentes seriam lidas como "o ARGOS não achou nada" | — |
+| 65 | `analytics-view-present` | ANL-01 | `GET /{id}/analytics` | a visão Analytics com a projeção. **Não serve `/result`** — a ausência é a prova de que esta visão não lê o documento do resultado | — |
+
+> **As três nasceram na M45.4**, e a razão de não terem nascido antes está registrada: a F6
+> entregou as duas visões com massa montada **dentro da própria spec**, o que provou a experiência
+> e deixou o catálogo sem entrada. `ARG-01` e `ANL-01` eram, até aqui, as únicas superfícies REAL
+> sem nome invocável — não sem cobertura.
 
 **Sobre o que estes oito NÃO contêm.** Não há `create` nem `delete` de Workspace (o contrato diz
 por escrito que o CRUD legado **não foi promovido**), não há listagem de Workspace (isso é
