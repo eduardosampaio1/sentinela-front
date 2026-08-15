@@ -118,7 +118,13 @@
       "records": "Records",
       "snapshotVersion": "Snapshot version",
       "disclosureRule": "Disclosure rule",
-      "notPresented": "Blocks not presented"
+      "notPresented": "Blocks not presented",
+      "statistic": {
+        "gini": "Gini",
+        "top_10_share": "Top 10 share of volume",
+        "top_20_percent_volume_share": "Share held by the top 20%",
+        "population_share_required_for_80_percent_volume": "Share of entities that make up 80% of volume"
+      }
     },
     "argos": {
       "alerts": "Alerts",
@@ -250,7 +256,11 @@
       "resultReady": "Result ready",
       "open": "Open analysis {{id}}",
       "records": "{{count}} records",
-      "recordsUnknown": "Record count not published"
+      "recordsUnknown": "Record count not published",
+      "instanceFilter": "Instance",
+      "allInstances": "All instances",
+      "emptyInstance": "No analyses in this instance yet.",
+      "showAll": "Show every analysis"
     },
     "problem": {
       "authentication_required": "Your session is no longer valid. Please sign in again.",
@@ -475,8 +485,8 @@
     },
     "state": {
       "preparing": {
-        "title": "Preparing",
-        "message": "Preparing the analysis."
+        "title": "Reserved",
+        "message": "Waiting for the dataset."
       },
       "receiving": {
         "title": "Receiving",

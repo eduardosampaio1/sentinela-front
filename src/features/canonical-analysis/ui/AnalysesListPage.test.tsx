@@ -110,6 +110,91 @@ describe("AnalysesListPage — estados distintos", () => {
     });
   });
 
+  // Decisão de owner (2026-08-15): filtro por Instance no lugar da busca por texto.
+  //
+  // O contrato não tem parâmetro de busca — `GET /v1/analyses` aceita `workspace_id`, `cursor`,
+  // `limit`, `instance_id`, `project_id`, `environment_id` e `baseline_eligible`. Um campo de texto
+  // só filtraria a PÁGINA carregada e diria "nada encontrado" para uma análise que está na página
+  // 3. `instance_id` filtra no SERVIDOR, sobre tudo.
+  describe("M45.2 · filtro por Instância", () => {
+    const comInstancias = () =>
+      server.use(
+        http.get(`${MSW_BASE}/v1/instances`, () =>
+          HttpResponse.json({
+            items: [{ instance_id: "i-1", name: "Suporte", created_at: null }],
+            next_cursor: null,
+          }),
+        ),
+      );
+
+    it("o filtro vai para o SERVIDOR, e o recorte não acontece aqui", async () => {
+      comInstancias();
+      const pedidos: string[] = [];
+      server.use(
+        http.get(`${MSW_BASE}/v1/analyses`, ({ request }) => {
+          pedidos.push(new URL(request.url).search);
+          return HttpResponse.json(page([item("an-1"), item("an-2")]));
+        }),
+      );
+      renderList();
+      expect(await screen.findByText("an-1")).toBeTruthy();
+
+      await userEvent.selectOptions(await screen.findByRole("combobox"), "i-1");
+      // A prova é a REDE: recortar no cliente quebraria o cursor e a contagem da página, e o
+      // Front passaria a ter uma segunda opinião sobre o que pertence à Instância.
+      await waitFor(() => expect(pedidos.some((q) => q.includes("instance_id=i-1"))).toBe(true));
+    });
+
+    it("trocar o filtro ZERA o cursor — token opaco não atravessa consultas", async () => {
+      comInstancias();
+      const pedidos: string[] = [];
+      server.use(
+        http.get(`${MSW_BASE}/v1/analyses`, ({ request }) => {
+          const q = new URL(request.url).search;
+          pedidos.push(q);
+          return HttpResponse.json(page([item("an-1")], q.includes("cursor=") ? null : "cur-2"));
+        }),
+      );
+      renderList();
+      expect(await screen.findByText("an-1")).toBeTruthy();
+
+      await userEvent.click(await screen.findByRole("button", { name: /^Next$/ }));
+      await waitFor(() => expect(pedidos.some((q) => q.includes("cursor=cur-2"))).toBe(true));
+
+      await userEvent.selectOptions(screen.getByRole("combobox"), "i-1");
+      // O cursor da listagem GERAL não pode ser enviado à listagem da Instância: ele é opaco e
+      // pertence à consulta que o emitiu, e o backend não tem como recusar o próprio token.
+      await waitFor(() => {
+        const ultimo = pedidos[pedidos.length - 1];
+        expect(ultimo, "o cursor atravessou a troca de filtro").not.toContain("cursor=");
+        expect(ultimo).toContain("instance_id=i-1");
+      });
+    });
+
+    it("filtrado e sem resultado NÃO é 'nenhuma análise ainda', e tem saída", async () => {
+      comInstancias();
+      server.use(
+        http.get(`${MSW_BASE}/v1/analyses`, ({ request }) =>
+          HttpResponse.json(
+            new URL(request.url).searchParams.get("instance_id")
+              ? page([])
+              : page([item("an-1")]),
+          ),
+        ),
+      );
+      renderList();
+      expect(await screen.findByText("an-1")).toBeTruthy();
+      await userEvent.selectOptions(await screen.findByRole("combobox"), "i-1");
+
+      // Há análises — só não nesta Instância. Dizer "nenhuma análise ainda" seria falso.
+      expect(await screen.findByText(/No analyses in this instance yet/i)).toBeTruthy();
+      expect(screen.queryByText(/No analyses yet\. Start one/i)).toBeNull();
+      // E o vazio devolve cedo, antes do seletor: sem uma saída própria isto seria um beco.
+      await userEvent.click(screen.getByRole("button", { name: /Show every analysis/i }));
+      expect(await screen.findByText("an-1")).toBeTruthy();
+    });
+  });
+
   it("vazio REAL: mostra estado vazio (não após falha)", async () => {
     server.use(http.get(`${MSW_BASE}/v1/analyses`, () => HttpResponse.json(page([]))));
     renderList();

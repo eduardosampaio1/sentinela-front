@@ -227,10 +227,26 @@ test.describe("EVO-01 · cursor, ordem e estados", () => {
     await page.goto("/analyses");
     await expect(page.getByTestId("canonical-analyses-list")).toBeVisible();
 
-    const ids = await page.locator("li a[href^='/analyses/an-hist-']").evaluateAll((as) =>
-      as.map((a) => (a.getAttribute("href") ?? "").replace("/analyses/", "")),
-    );
-    expect(ids, "a tela reordenou o que o backend entregou").toEqual(["an-hist-sem-contagem", "an-hist-zero"]);
+    // Leitura por POLL, e não uma vez só.
+    //
+    // A versão anterior lia o DOM no instante seguinte ao `toBeVisible()`. Isso sempre foi uma
+    // corrida — bastava um re-render para o `evaluateAll` pegar a árvore no meio —, e a M45.2 a
+    // tornou visível: o filtro por Instância acrescentou uma segunda consulta a esta página, e a
+    // tela passou a assentar mais tarde. Falhou 1 vez em 4 execuções da suíte inteira.
+    //
+    // O `poll` repete até a lista estabilizar; o invariante medido é o MESMO, e continua sendo a
+    // ordem entregue pelo backend — a massa vem de propósito fora de ordem cronológica.
+    await expect
+      .poll(
+        async () =>
+          page
+            .locator("li a[href^='/analyses/an-hist-']")
+            .evaluateAll((as) =>
+              as.map((a) => (a.getAttribute("href") ?? "").replace("/analyses/", "")),
+            ),
+        { message: "a tela reordenou o que o backend entregou", timeout: 15_000 },
+      )
+      .toEqual(["an-hist-sem-contagem", "an-hist-zero"]);
   });
 
   test("vazio é vazio — não erro, não zero fabricado", async ({ page }) => {

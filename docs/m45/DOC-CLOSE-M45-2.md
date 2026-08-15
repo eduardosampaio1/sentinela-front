@@ -158,7 +158,7 @@ que é exatamente como o buraco desta tranche existiu por sete missões.
 | Prova | Resultado |
 |---|---|
 | `npm run typecheck` | 6 projetos · **367 arquivos** · cobertura completa · raiz inerte |
-| `eslint .` | sem erro |
+| `eslint .` | **9 erros PRÉ-EXISTENTES**, nenhum desta tranche — ver 9.1 |
 | Vitest | **117/117** arquivos · **1655/1655** testes |
 | Playwright | **322/322** |
 | Mutação M45.2 | **7/7** mortas pelo gate nomeado |
@@ -166,6 +166,23 @@ que é exatamente como o buraco desta tranche existiu por sete missões.
 | axe | 0 violações aplicáveis nas 14 journeys |
 | Responsivo | 0 estouro em 1280 / 768 / 375, por **geometria** |
 | Capturas | **12** em `docs/m45-2`, todas por provador |
+
+### 9.1. ERRATA — `eslint .` nunca esteve limpo, e eu afirmei que estava
+
+Este documento e o [DOC-CLOSE da M45.4](./DOC-CLOSE-M45-4.md) diziam **"`eslint .` — sem erro"**. É
+falso, e a causa foi minha: eu filtrei a saída por `error|warning|problems` e li os primeiros
+avisos, sem chegar aos erros no fim.
+
+`npm run lint` reporta **9 erros**, todos em código anterior a esta sessão —
+`src/features/aion/AionPage.tsx` (tocado pela última vez em `3e20b98`, que não é meu),
+`tailwind.config.ts`, e três arquivos de teste com `Record<string, any>` e `require()`. Nenhum foi
+introduzido pela M45.2 nem pela M45.4.
+
+Quatro erros **eram** meus, introduzidos ao escrever os gates desta rodada (`as any` em dois
+arquivos de teste). Foram removidos com tipos próprios antes deste commit.
+
+Fica registrado como dívida separada: o repositório não tem `lint` verde, e nenhuma missão o
+declarou até agora.
 
 ## 9. Dívidas — enumeradas, nenhuma mascarada
 

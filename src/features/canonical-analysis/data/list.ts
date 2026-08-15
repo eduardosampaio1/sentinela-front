@@ -12,12 +12,17 @@ const IDLE_KEY = ["canonical-analysis", "idle"] as const;
 export function useAnalysesList(
   scope: CanonicalScope | null,
   cursor?: string | null,
+  /** BD02 — filtra pela Instance NO SERVIDOR. Recortar aqui quebraria o cursor e a contagem. */
+  instanceId?: string,
 ): UseQueryResult<AnalysisListPage> {
   const client = useV1Client();
   return useQuery({
-    queryKey: scope ? workspaceKeys.list(scope.workspaceId, { cursor: cursor ?? null }) : IDLE_KEY,
+    queryKey: scope ? workspaceKeys.list(scope.workspaceId, { cursor: cursor ?? null, instanceId }) : IDLE_KEY,
     enabled: Boolean(scope),
     queryFn: ({ signal }) =>
-      client.list({ workspaceId: (scope as CanonicalScope).workspaceId, cursor: cursor ?? undefined }, { signal }),
+      client.list(
+        { workspaceId: (scope as CanonicalScope).workspaceId, cursor: cursor ?? undefined, instanceId },
+        { signal },
+      ),
   });
 }

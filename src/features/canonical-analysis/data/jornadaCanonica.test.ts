@@ -57,6 +57,16 @@ describe("needs_mapping — a parada honesta", () => {
 // M45.2 — carregando não é estado, e ausência não é indisponibilidade
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
+/** O recorte do dicionário que estes casos leem. Tipado para não precisar de `any`. */
+interface Dicionario {
+  readonly estadoPublico: Record<string, string>;
+  readonly canonicalAnalysis: {
+    readonly loading?: string;
+    readonly list: { readonly recordsUnknown: string };
+    readonly state: Record<string, { readonly title: string; readonly message: string }>;
+  };
+}
+
 describe("M45.2 · o vocabulário da jornada não colapsa três coisas em uma", () => {
   it("o rótulo de CARREGANDO não é o nome de nenhum estado", () => {
     // A página usava `state.preparing.title` — "Preparando" — como rótulo de carregando. Enquanto
@@ -64,11 +74,48 @@ describe("M45.2 · o vocabulário da jornada não colapsa três coisas em uma", 
     // estivesse mesmo, a pessoa veria a mesma palavra pelos dois motivos. Carregando e estado são
     // duas telas distintas, e essa é a regra que o programa inteiro repete.
     for (const [nome, dicionario] of [["pt", pt], ["en", en]] as const) {
-      const ca = (dicionario as Record<string, any>).canonicalAnalysis;
+      const ca = (dicionario as unknown as Dicionario).canonicalAnalysis;
       const carregando = String(ca.loading ?? "").trim();
       expect(carregando.length, `${nome} sem rótulo de carregando`).toBeGreaterThan(0);
       const titulos = PUBLIC_STATES.map((s) => String(ca.state[s].title));
       expect(titulos, `${nome}: o carregando usa o nome de um estado`).not.toContain(carregando);
+    }
+  });
+
+  // Decisão de owner (2026-08-15), respondendo à dívida registrada no DOC-CLOSE da M45.2.
+  //
+  // Três estados tinham dois nomes conforme a superfície. Dois deles são a MESMA ideia dita curta
+  // (etiqueta) ou longa (título de página) — "Falha"/"Não concluída" e "Ação necessária"/
+  // "Confirmação necessária" —, e o owner os manteve: são registros diferentes, e os rótulos da
+  // etiqueta estão congelados no §15 do Blueprint.
+  //
+  // `preparing` era outra coisa: "Reservada" diz que o lugar está guardado esperando VOCÊ, e
+  // "Preparando" diz que o sistema está trabalhando. Só uma é verdade — o estado renderiza o passo
+  // de upload, que pede o arquivo. O título alinhou com a etiqueta, que já estava certa.
+  //
+  // O caso mede a concordância E nomeia as duas exceções: sem nomeá-las, alinhar tudo passaria, e
+  // isso contradiria o §15.
+  it("`preparing` diz a mesma coisa na etiqueta e no título; os outros dois seguem separados", () => {
+    for (const [nome, dicionario] of [["pt", pt], ["en", en]] as const) {
+      const d = dicionario as unknown as Dicionario;
+      expect(
+        d.canonicalAnalysis.state.preparing.title,
+        `${nome}: a página e a lista voltaram a discordar sobre \`preparing\``,
+      ).toBe(d.estadoPublico.preparing);
+
+      // E o título não pode voltar a afirmar trabalho em curso: o estado ESPERA o arquivo.
+      expect(
+        String(d.canonicalAnalysis.state.preparing.message),
+        `${nome}: o texto voltou a dizer que o sistema está preparando`,
+      ).not.toMatch(/preparing the|preparando a/i);
+
+      // As duas divergências que o §15 mantém DE PROPÓSITO.
+      for (const estado of ["failed", "needs_mapping"] as const) {
+        expect(
+          d.canonicalAnalysis.state[estado].title,
+          `${nome}: \`${estado}\` foi alinhado, e o §15 do Blueprint não autoriza isso`,
+        ).not.toBe(d.estadoPublico[estado]);
+      }
     }
   });
 
@@ -78,7 +125,7 @@ describe("M45.2 · o vocabulário da jornada não colapsa três coisas em uma", 
     // palavra da queda. A casa já tem o termo certo para isto: "não publicado".
     const proibidos = [/indispon/i, /unavailable/i, /couldn't|não foi possível/i];
     for (const [nome, dicionario] of [["pt", pt], ["en", en]] as const) {
-      const texto = String((dicionario as Record<string, any>).canonicalAnalysis.list.recordsUnknown);
+      const texto = String((dicionario as unknown as Dicionario).canonicalAnalysis.list.recordsUnknown);
       expect(texto.trim().length, `${nome} sem texto`).toBeGreaterThan(0);
       for (const p of proibidos) {
         expect(texto, `${nome}: ausência dita como indisponibilidade — "${texto}"`).not.toMatch(p);

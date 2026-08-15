@@ -382,6 +382,44 @@ test.describe("M45 · G11 · os três estados não colapsam", () => {
     expect(texto, "recusa virou afirmação sobre os dados").not.toMatch(/Not measured/i);
   });
 
+  // Decisão de owner (2026-08-15): o erro de um PEDAÇO da tela sai em tom neutro.
+  //
+  // A caixa vermelha com `role="alert"` aparecia enquanto o cabeçalho dizia "Em execução · sua
+  // análise está sendo processada". Ela interrompe o leitor de tela e faz quem passa o olho
+  // concluir que perdeu a análise — que está inteira. O painel declara `escopo="detalhe"`.
+  //
+  // O caso mede as DUAS direções. Só exigir o neutro aqui deixaria passar um afrouxamento geral da
+  // regra da casa — que continua sendo "o tom vem do código" para quem não declara nada.
+  test("o erro de um detalhe da tela não vira alarme, e a regra geral não afrouxa", async ({
+    page,
+  }) => {
+    await montarProduto(page);
+    await emProcessamento(page);
+    await page.route("**/v1/analyses/*/progress**", (r) =>
+      r.fulfill(json({ code: "temporarily_unavailable", retryable: true }, 503)),
+    );
+    await page.goto(`/analyses/${ANALISE}`);
+    await expect(page.locator("main")).toContainText(/temporarily unavailable/i, { timeout: 30_000 });
+
+    // O aviso do painel existe e NÃO é um alarme.
+    const aviso = page.locator("main").getByText(/temporarily unavailable/i).first();
+    expect(
+      await aviso.evaluate((el) => Boolean(el.closest('[role="alert"]'))),
+      "o detalhe do painel voltou a interromper como alarme",
+    ).toBe(false);
+
+    // A DIREÇÃO OPOSTA, na mesma montagem: a listagem inteira fora do ar continua sendo alarme.
+    await page.route("**/v1/analyses**", (r) =>
+      r.fulfill(json({ code: "temporarily_unavailable", retryable: true }, 503)),
+    );
+    await page.goto("/analyses");
+    await expect(page.locator("main")).toContainText(/couldn't load|Try again/i, { timeout: 30_000 });
+    expect(
+      await page.locator('main [role="alert"]').count(),
+      "a tela inteira fora do ar deixou de alarmar — a regra da casa foi afrouxada para todos",
+    ).toBeGreaterThan(0);
+  });
+
   // A TERCEIRA causa: enquanto a leitura NÃO VOLTOU.
   //
   // Antes da primeira resposta `data` também é `undefined`, e a tela afirmaria quatro "não medido"

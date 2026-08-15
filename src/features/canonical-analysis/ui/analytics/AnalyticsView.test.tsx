@@ -254,6 +254,44 @@ describe("F4 · privacidade é conclusão do produtor, não interpretação da t
     expect(suprimida).not.toMatch(/2026-08-02\s*0$/);
   });
 
+  // Decisão de owner (2026-08-15): o padrão do ARGOS para os ids de estatística.
+  //
+  // `statistic_id` é vocabulário ABERTO no contrato, como o `reason_code`. Traduzir tudo obrigaria
+  // a adivinhar nomes que o backend ainda pode criar — o defeito que `descriptors.ts` existe para
+  // impedir. Quem o registro conhece ganha rótulo; quem não conhece continua aparecendo como o id.
+  //
+  // As DUAS direções no mesmo caso. Só exigir o rótulo deixaria passar uma tradução geral, que é a
+  // opção que o owner recusou; só exigir o id cru deixaria passar a correção desfeita. Este caso
+  // nasceu de uma mutação SOBREVIVENTE: trocar o registro por `false` devolvia o id cru e nenhum
+  // teste reclamava.
+  it("id conhecido ganha rótulo; id desconhecido continua aparecendo cru", async () => {
+    // CLONE. `vistaAnalytics()` devolve a mesma massa a todo mundo: mexer nela aqui apagava o
+    // `gini` com `reason_code` que o caso seguinte afirma, e o vizinho reprovava por poluição —
+    // um defeito de teste que parece defeito de produto.
+    const vista = structuredClone(vistaAnalytics());
+    const conc = (vista as { snapshot: { concentrations: { statistics: unknown[] }[] } }).snapshot
+      .concentrations[0];
+    conc.statistics = [
+      { statistic_id: "top_10_share", state: "published", calculation_precision: "exact", value: 0.42, lower_bound: null, upper_bound: null, reason_code: null },
+      { statistic_id: "estatistica_que_o_backend_inventou", state: "published", calculation_precision: "exact", value: 0.7, lower_bound: null, upper_bound: null, reason_code: null },
+    ];
+    renderizar(vista);
+    const secao = await screen.findByRole("region", {
+      name: pt.canonicalAnalysis.analyticsView.concentrations,
+    });
+
+    expect(
+      within(secao).getByText(pt.canonicalAnalysis.analyticsView.statistic.top_10_share),
+      "o id conhecido não recebeu rótulo",
+    ).toBeInTheDocument();
+    expect(within(secao).queryByText("top_10_share"), "o id cru sobrou ao lado do rótulo").toBeNull();
+
+    expect(
+      within(secao).getByText("estatistica_que_o_backend_inventou"),
+      "um id novo do backend apareceu com rótulo adivinhado, ou sumiu",
+    ).toBeInTheDocument();
+  });
+
   it("estatística não publicada mostra o motivo, não um número", async () => {
     renderizar();
     const secao = await screen.findByRole("region", {

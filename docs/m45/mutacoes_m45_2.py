@@ -78,9 +78,15 @@ MUTACOES: list[Mut] = [
       "so a Home dizia; quem clica no chip aterrissa AQUI e fica insistindo num botao que nunca "
       "resolveria"),
 
+    # A troca é "Reserved", e não "Preparing" — e o motivo importa.
+    #
+    # A primeira versão desta mutação usava "Preparing", que era o título de `preparing` quando ela
+    # foi escrita. A decisão de owner (8) trocou aquele título por "Reserved", e a mutação
+    # SOBREVIVEU na rodada seguinte: "Preparing" deixou de ser nome de estado, então pô-la no
+    # carregando não colide com nada. A mutação envelheceu; o gate continuou certo.
     M(4, "o carregando volta a ser o nome de um estado", EN,
       '"loading": "Loading the analysis…"',
-      '"loading": "Preparing"',
+      '"loading": "Reserved"',
       "o rótulo de CARREGANDO não é o nome de nenhum estado", JORNADA_T,
       "carregando e estado sao duas telas distintas; a mesma palavra pelos dois motivos apaga a "
       "diferenca"),
@@ -103,6 +109,38 @@ MUTACOES: list[Mut] = [
       "alcança estado terminal", MATRIZ,
       "sem a sobreposicao as sete journeys novas pousam no `completed` da montagem base, e os "
       "estados VIVOS deixam de ser medidos sem ninguem notar"),
+
+    # ── Decisoes de owner de 2026-08-15, respondendo as dividas do DOC-CLOSE ──────────────
+    #
+    # Elas entram na MESMA campanha, e nao numa nova: sao correcoes desta tranche como as outras,
+    # e a unica diferenca e quem decidiu. A quarta nasceu de uma mutacao SOBREVIVENTE -- o rotulo
+    # da estatistica estava corrigido e sem gate nenhum.
+
+    M(8, "preparing volta a divergir da etiqueta", PT,
+      '"title": "Reservada"',
+      '"title": "Preparando"',
+      "diz a mesma coisa na etiqueta e no título", JORNADA_T,
+      "'Reservada' diz que o lugar espera VOCE; 'Preparando' diz que o sistema trabalha. Uma so "
+      "e verdade -- o estado renderiza o passo de upload"),
+
+    M(9, "o erro de um detalhe volta a alarmar a tela inteira", PAINEL,
+      '<ProblemFeedback error={leitura} escopo="detalhe" />',
+      "<ProblemFeedback error={leitura} />",
+      "não vira alarme", MATRIZ,
+      "caixa vermelha com role=alert enquanto o cabecalho diz que a analise esta sendo processada"),
+
+    M(10, "o filtro por Instancia para de ir ao servidor", "src/features/canonical-analysis/data/list.ts",
+      "cursor: cursor ?? undefined, instanceId }",
+      "cursor: cursor ?? undefined }",
+      "filtro por Instância", "src/features/canonical-analysis/ui/AnalysesListPage.test.tsx",
+      "recortar no cliente quebraria o cursor e a contagem da pagina, e o Front passaria a ter uma "
+      "segunda opiniao sobre o que pertence a Instancia"),
+
+    M(11, "a estatistica volta a sair como codigo", "src/features/canonical-analysis/ui/analytics/AnalyticsView.tsx",
+      "estatisticaConhecida(s.statistic_id)",
+      "false",
+      "id conhecido ganha rótulo", "src/features/canonical-analysis/ui/analytics/AnalyticsView.test.tsx",
+      "esta mutacao SOBREVIVEU na primeira rodada: a correcao existia e nenhum teste a media"),
 ]
 
 

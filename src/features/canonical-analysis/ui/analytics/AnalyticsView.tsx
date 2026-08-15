@@ -28,6 +28,7 @@ import { useParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
+import { estatisticaConhecida } from "../../result/estatisticas";
 import { LoadingState } from "@/shared/states/LoadingState";
 import type { EstadoPublico } from "@/design/patterns/estados";
 import { useAnalysisAnalytics, useAnalysisProgress, useAnalysisStatus } from "../../data/analysis";
@@ -165,7 +166,15 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
           <ul className="mt-1 space-y-0.5">
             {c.statistics.map((s) => (
               <li key={s.statistic_id} className="flex justify-between gap-3 text-xs">
-                <span>{s.statistic_id}</span>
+                {/* Decisão de owner (2026-08-15): o padrão do ARGOS, e não uma tradução geral.
+                    `statistic_id` é vocabulário ABERTO no contrato; traduzir tudo obrigaria a
+                    adivinhar nomes que o backend ainda pode criar. Quem o registro conhece ganha
+                    rótulo; quem não conhece continua aparecendo como o id. */}
+                <span>
+                  {estatisticaConhecida(s.statistic_id)
+                    ? t(`canonicalAnalysis.analyticsView.statistic.${s.statistic_id}`)
+                    : s.statistic_id}
+                </span>
                 <span className="tabular-nums text-muted-foreground">
                   {/* Três formas, impostas pela ORIGEM: exata, limitada por faixa, ou não
                       publicada com motivo. Nenhuma é derivada da outra aqui. */}

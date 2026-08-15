@@ -18,6 +18,7 @@ import { LoadingState } from "@/shared/states/LoadingState";
 import { EmptyState, StatusBadge, Toolbar } from "@/design/patterns";
 import type { EstadoPublico } from "@/design/patterns/estados";
 import { useAnalysesList } from "../data/list";
+import { useInstancesList } from "@/features/instances/data/instance";
 import { classifyListError } from "../data/listView";
 import { useCanonicalScope } from "./scope";
 import { problemCodeOf } from "./notices";
@@ -103,7 +104,36 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
   // Cursor OPACO corrente + pilha de cursores anteriores (para "voltar" sem offset local).
   const [cursor, setCursor] = useState<string | null>(null);
   const [prevStack, setPrevStack] = useState<(string | null)[]>([]);
-  const list = useAnalysesList(scope, cursor);
+
+  /**
+   * Filtro por Instance — decisão de owner (2026-08-15), no lugar da busca por texto.
+   *
+   * A busca livre foi pedida e NÃO foi feita: `GET /v1/analyses` aceita `workspace_id`, `cursor`,
+   * `limit`, `instance_id`, `project_id`, `environment_id` e `baseline_eligible`, e mais nada. Um
+   * campo de texto só poderia filtrar a PÁGINA carregada — e diria "nada encontrado" para uma
+   * análise que está na página 3. Afirmação falsa sobre os dados de quem procura.
+   *
+   * `instance_id` é filtro de verdade, no servidor, e resolve o caso concreto: achar duas análises
+   * da mesma Instância para comparar. Fica registrado que a busca por texto exige contrato novo.
+   */
+  const [instancia, setInstancia] = useState<string>("");
+  const instancias = useInstancesList(scope);
+
+  /**
+   * Trocar o filtro ZERA o cursor e a pilha.
+   *
+   * O cursor é OPACO e pertence à consulta que o emitiu. Levar um cursor da listagem geral para a
+   * listagem de uma Instância é pedir a página seguinte de outra pergunta — e o backend não tem
+   * como recusar, porque o token é dele. É o mesmo motivo pelo qual a troca de workspace remonta
+   * este componente inteiro.
+   */
+  function trocarInstancia(id: string) {
+    setInstancia(id);
+    setCursor(null);
+    setPrevStack([]);
+  }
+
+  const list = useAnalysesList(scope, cursor, instancia || undefined);
 
   function irProxima() {
     const next = list.data?.next_cursor ?? null;
@@ -142,7 +172,49 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
   }
 
   const items = list.data?.items ?? [];
+
+  /** O seletor. Só existe quando há Instância — sem elas, filtrar por Instância não é escolha. */
+  const seletorDeInstancia =
+    (instancias.data?.items.length ?? 0) > 0 ? (
+      <label className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span>{t("canonicalAnalysis.list.instanceFilter")}</span>
+        <select
+          value={instancia}
+          onChange={(e) => trocarInstancia(e.target.value)}
+          className="rounded-md border border-border bg-card px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <option value="">{t("canonicalAnalysis.list.allInstances")}</option>
+          {(instancias.data?.items ?? []).map((i) => (
+            <option key={i.instance_id} value={i.instance_id}>
+              {i.name}
+            </option>
+          ))}
+        </select>
+      </label>
+    ) : null;
+
   if (items.length === 0) {
+    // VAZIO FILTRADO ≠ VAZIO.
+    //
+    // Com filtro ativo, "Nenhuma análise ainda. Inicie uma para vê-la aqui." seria FALSO: há
+    // análises, só não nesta Instância. E o estado vazio devolve cedo, antes da barra — sem uma
+    // saída própria, quem filtrasse e não achasse nada ficaria preso, sem nem o seletor na tela
+    // para desfazer. É o mesmo beco que a M45.4 corrigiu na comparação.
+    if (instancia) {
+      return (
+        <EmptyState
+          titulo={t("canonicalAnalysis.list.title")}
+          explicacao={t("canonicalAnalysis.list.emptyInstance")}
+          acao={
+            // Chave PRÓPRIA para a ação. `allInstances` é a opção do seletor, onde o rótulo já
+            // diz "Instância" e "Todas" basta; como BOTÃO isolado, "Todas" não diz o que faz.
+            <Button variant="outline" onClick={() => trocarInstancia("")}>
+              {t("canonicalAnalysis.list.showAll")}
+            </Button>
+          }
+        />
+      );
+    }
     // M38 · EVO-01. Era um `div` a mão, sem papel de acessibilidade: o erro anunciava
     // (`role="alert"`) e o carregando anunciava (`role="status"`), mas o vazio ficava mudo para
     // quem usa leitor de tela — os três estados só eram distintos para quem enxerga. O
@@ -224,6 +296,7 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
         }
       />
       )}
+      {seletorDeInstancia}
       {selecionando && (
         <p className="text-sm text-muted-foreground">{t("canonicalAnalysis.compare.selectHint")}</p>
       )}

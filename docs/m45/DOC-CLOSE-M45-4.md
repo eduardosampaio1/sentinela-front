@@ -167,7 +167,7 @@ restauração por snapshot e verificação de árvore limpa ao fim.
 | Prova | Resultado |
 |---|---|
 | `npm run typecheck` | 6 projetos · 366 arquivos · cobertura completa · raiz inerte |
-| `eslint .` | sem erro |
+| `eslint .` | ~~sem erro~~ — **afirmação FALSA, corrigida na M45.2**: o repo tem 9 erros pré-existentes. Ver a [errata](./DOC-CLOSE-M45-2.md) §9.1 |
 | Vitest | **117/117** arquivos · **1652/1652** testes |
 | Playwright | **292/292** |
 | Mutação M45.4 | **9/9** mortas pelo gate nomeado |

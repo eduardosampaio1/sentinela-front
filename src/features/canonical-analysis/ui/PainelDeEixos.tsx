@@ -117,7 +117,7 @@ export function PainelDeEixos({
           O progresso é relido pelo polling enquanto a jornada não termina; o que faltava aqui era
           dizer a verdade sobre a leitura, e isso a mensagem já faz. */}
       {leitura != null ? (
-        <ProblemFeedback error={leitura} />
+        <ProblemFeedback error={leitura} escopo="detalhe" />
       ) : carregando ? (
         <LoadingState rotulo={t("canonicalAnalysis.progress.loading")} linhas={2} />
       ) : (

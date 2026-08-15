@@ -118,7 +118,13 @@
       "records": "Registros",
       "snapshotVersion": "Versão do snapshot",
       "disclosureRule": "Regra de divulgação",
-      "notPresented": "Blocos não apresentados"
+      "notPresented": "Blocos não apresentados",
+      "statistic": {
+        "gini": "Gini",
+        "top_10_share": "Volume dos 10 maiores",
+        "top_20_percent_volume_share": "Volume dos 20% maiores",
+        "population_share_required_for_80_percent_volume": "Entidades que somam 80% do volume"
+      }
     },
     "argos": {
       "alerts": "Alertas",
@@ -250,7 +256,11 @@
       "resultReady": "Resultado pronto",
       "open": "Abrir análise {{id}}",
       "records": "{{count}} registros",
-      "recordsUnknown": "Contagem não publicada"
+      "recordsUnknown": "Contagem não publicada",
+      "instanceFilter": "Instância",
+      "allInstances": "Todas",
+      "emptyInstance": "Nenhuma análise nesta instância ainda.",
+      "showAll": "Ver todas as análises"
     },
     "problem": {
       "authentication_required": "Sua sessão não é mais válida. Entre novamente.",
@@ -475,8 +485,8 @@
     },
     "state": {
       "preparing": {
-        "title": "Preparando",
-        "message": "Preparando a análise."
+        "title": "Reservada",
+        "message": "Esperando a base."
       },
       "receiving": {
         "title": "Recebendo",

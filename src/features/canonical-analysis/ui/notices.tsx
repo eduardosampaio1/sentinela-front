@@ -60,21 +60,40 @@ export function ProblemFeedback({
   onRetry,
   onNewAnalysis,
   retryDisabled,
+  escopo = "tela",
 }: {
   error: unknown;
   onRetry?: () => void;
   onNewAnalysis?: () => void;
   retryDisabled?: boolean;
+  /**
+   * De QUEM é o problema — decisão de owner de 2026-08-15.
+   *
+   * `tela` (padrão) é o comportamento de sempre: o tom vem do CÓDIGO, e essa regra continua
+   * valendo em toda superfície que não declara nada.
+   *
+   * `detalhe` diz que o erro é de um pedaço da tela, e não da coisa que a tela mostra. O caso que
+   * pediu isto: o painel de progresso não pôde ser lido enquanto o cabeçalho dizia *"Em execução ·
+   * sua análise está sendo processada"*. Uma caixa vermelha com `role="alert"` ali interrompe o
+   * leitor de tela e faz quem passa o olho concluir que perdeu a análise — que está inteira.
+   *
+   * A exceção é DECLARADA no ponto de uso, e não adivinhada aqui: quem sabe se o erro é da tela ou
+   * de um pedaço dela é quem monta a tela. E ela não inventa tom novo — reusa o neutro que já
+   * existe, sem o spinner, porque não há espera em curso a anunciar.
+   */
+  escopo?: "tela" | "detalhe";
 }) {
   const { t } = useLanguage();
   if (error == null) return null;
   const p = describeProblem(problemCodeOf(error));
-  const erro = p.tone === "error";
+  const detalhe = escopo === "detalhe";
+  const erro = p.tone === "error" && !detalhe;
+  const esperando = p.tone !== "error" && !detalhe;
   return (
     <div
       role={erro ? "alert" : "status"}
       aria-live="polite"
-      aria-busy={!erro}
+      aria-busy={esperando}
       className={
         erro
           ? "space-y-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-foreground"
@@ -82,7 +101,7 @@ export function ProblemFeedback({
       }
     >
       <div className="flex items-start gap-2">
-        {!erro && <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />}
+        {esperando && <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />}
         <span className="text-foreground">{t(p.messageKey)}</span>
       </div>
       {p.action === "retry" && onRetry && (

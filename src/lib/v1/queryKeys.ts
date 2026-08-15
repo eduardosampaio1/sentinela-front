@@ -8,7 +8,12 @@ export const workspaceKeys = {
   /** Raiz de tudo de um workspace — usada para cancelar/remover em bloco na troca. */
   root: (workspaceId: string) => ["workspace", workspaceId] as const,
   analyses: (workspaceId: string) => ["workspace", workspaceId, "analyses"] as const,
-  list: (workspaceId: string, params?: { limit?: number; cursor?: string | null }) =>
+  list: (
+    workspaceId: string,
+    // `instanceId` entra na CHAVE, e nao so na query: sem ele a lista filtrada leria do cache da
+    // lista geral e mostraria analises de outra Instancia sem nenhuma requisicao acontecer.
+    params?: { limit?: number; cursor?: string | null; instanceId?: string },
+  ) =>
     ["workspace", workspaceId, "analyses", "list", params ?? {}] as const,
   detail: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId] as const,
