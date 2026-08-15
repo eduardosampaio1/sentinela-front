@@ -162,15 +162,16 @@
       "recommendations": "Recomendações",
       "records": "Registros analisados",
       "refused": {
-        "missing_schema": "A resposta não declarou a versão do documento.",
-        "unknown_schema": "A resposta veio em outra versão de documento, e esta visão só lê o ARGOS.",
-        "malformed_document": "O documento chegou sem os campos que a leitura exige."
+        "missing_schema": "O que voltou não disse que tipo de leitura ele traz.",
+        "unknown_schema": "O que voltou é outro tipo de leitura, e esta visão só mostra o ARGOS.",
+        "malformed_document": "O que voltou está sem as informações de que esta visão precisa."
       },
       "registryVersion": "Registro de indicadores",
       "risks": "Riscos",
       "scale": "Escala",
       "scores": "Escores",
       "severity": "Severidade",
+      "stillAvailable": "O resultado histórico segue disponível.",
       "state": {
         "measured": "Medido",
         "partially_measured": "Medido em parte",
@@ -191,7 +192,8 @@
       "breakTitle": "Estas análises não são comparáveis",
       "cancel": "Cancelar",
       "compareNow": "Comparar as duas",
-      "error": "Não foi possível carregar uma das análises agora. Tente novamente.",
+      "error": "Não foi possível carregar uma das análises agora.",
+      "notFound": "Não foi possível abrir uma destas análises.",
       "familyAbsent": "Nenhuma medição publicada nesta família.",
       "loading": "Carregando as duas análises…",
       "noArgosBody": "A comparação exige o documento ARGOS nos dois lados. O resultado histórico segue disponível em cada análise.",
@@ -202,7 +204,7 @@
         "so_em_b": "Publicada apenas na análise B."
       },
       "reason": {
-        "escala": "Réguas diferentes: os valores não medem a mesma coisa.",
+        "escala": "Escalas diferentes: os valores não medem a mesma coisa.",
         "unidade": "Unidades diferentes.",
         "moeda": "Moedas diferentes, e não há conversão aqui.",
         "sem_valor": "Um dos lados não tem valor medido."

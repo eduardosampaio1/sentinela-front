@@ -34,6 +34,8 @@ import { Link, useParams } from "react-router-dom";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { ErrorState, LoadingState } from "@/design/patterns";
+import { Button } from "@/components/ui/button";
+import { ProblemError } from "@/lib/v1/problem";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAnalysisArgos } from "../data/argos";
 import { resolverLeituraArgos } from "../result/adapterV3";
@@ -97,16 +99,49 @@ export function CompareAnalysesPage() {
       const semA = a.isError && problemCodeOf(a.error) === "result_not_available";
       const semB = b.isError && problemCodeOf(b.error) === "result_not_available";
       // Erro que NÃO é ausência continua sendo erro, e continua oferecendo a saída.
+      //
+      // A COPY PROMETIA UMA AÇÃO QUE ESTA TELA NÃO OFERECIA. O texto terminava em *"Tente
+      // novamente"* e o único controle era um link "Ver todas as análises" — `acao="voltar"`. É a
+      // mesma armadilha do D21 pelo avesso: não é ação sem operação, é ação sem BOTÃO.
+      //
+      // Agora quem decide é o catálogo (`retryable`), como na Instância: transitório ganha as duas
+      // saídas — tentar primeiro, desistir depois —, e o que não é transitório não convida a
+      // repetir. Ler o `code` na mão daria a esta tela uma segunda opinião sobre o que é
+      // transitório.
+      const falha = a.isError ? a.error : b.error;
+      const transitorio = falha instanceof ProblemError && falha.problem.retryable;
+      const tentar = () => {
+        if (a.isError) void a.refetch();
+        if (b.isError) void b.refetch();
+      };
       if ((a.isError && !semA) || (b.isError && !semB)) {
         return (
           <ErrorState
             titulo={t("canonicalAnalysis.compare.title")}
-            explicacao={t("canonicalAnalysis.compare.error")}
-            acao="voltar"
+            // DUAS chamadas literais, e não uma `t()` com chave calculada: o gate da M14 conta
+            // chamadas opacas porque uma chave montada em tempo de execução não pode ser cruzada
+            // contra o dicionário, e é assim que chave órfã atravessa sem ninguém ver.
+            explicacao={
+              transitorio
+                ? t("canonicalAnalysis.compare.error")
+                : t("canonicalAnalysis.compare.notFound")
+            }
+            acao={transitorio ? "tentar" : "voltar"}
             botao={
-              <Link to="/analyses" className="text-sm font-medium underline underline-offset-4">
-                {t("canonicalAnalysis.compare.backToList")}
-              </Link>
+              transitorio ? (
+                <div className="flex flex-wrap items-center gap-4">
+                  <Button variant="outline" size="sm" onClick={tentar}>
+                    {t("canonicalAnalysis.action.retry")}
+                  </Button>
+                  <Link to="/analyses" className="text-sm font-medium underline underline-offset-4">
+                    {t("canonicalAnalysis.compare.backToList")}
+                  </Link>
+                </div>
+              ) : (
+                <Link to="/analyses" className="text-sm font-medium underline underline-offset-4">
+                  {t("canonicalAnalysis.compare.backToList")}
+                </Link>
+              )
             }
           />
         );

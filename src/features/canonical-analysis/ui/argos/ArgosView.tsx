@@ -232,6 +232,14 @@ export function ArgosView() {
           <p className="text-sm text-muted-foreground">
             {t(`canonicalAnalysis.argos.refused.${leitura.reason}`)}
           </p>
+          {/* O que RESTA acessível — a frase que só o estado irmão tinha.
+              `noDocumentBody` termina dizendo que o resultado histórico segue disponível, e a
+              recusa não dizia nada: a pessoa saía achando que a análise inteira se perdeu. É o
+              mesmo alívio, e é verdade nos dois casos — o documento histórico continua na rota
+              sem versão. */}
+          <p className="text-sm text-muted-foreground">
+            {t("canonicalAnalysis.argos.stillAvailable")}
+          </p>
         </div>
       );
     }
