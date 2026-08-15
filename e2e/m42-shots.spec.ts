@@ -72,6 +72,19 @@ async function montar(
       body: JSON.stringify({ stored_language: idioma, effective_language: idioma }),
     }),
   );
+  // M45.4 — a seção de Notificações (M44) vive NESTA página, e esta spec não a servia.
+  //
+  // O sintoma só apareceu quando a suíte completa reescreveu as capturas: a imagem
+  // `11-mobile-workspace-en.png`, que documenta a configuração do ESPAÇO, passou a mostrar
+  // "Notifications are unavailable right now" — porque `/v1/subscriptions` caía na rede real.
+  // Uma captura que documenta uma coisa e exibe outra em estado de erro é pior que captura
+  // faltando: ela é lida como evidência de que a página está assim.
+  //
+  // Ausência (`items: []`) e não indisponibilidade: o recorte destas capturas é CFG-03, e a
+  // vizinha precisa aparecer no seu estado normal, não num erro que não é o assunto.
+  await page.route("**/v1/subscriptions**", (r) =>
+    r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }) }),
+  );
   await page.route("**/v1/analyses**", (r) =>
     r.fulfill({
       status: 200,

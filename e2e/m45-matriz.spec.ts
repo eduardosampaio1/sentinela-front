@@ -292,5 +292,30 @@ test.describe("M45 · G6 · idioma provado pelo conteúdo", () => {
       expect(await page.locator("main").getByText(oposta).count(), "os dois idiomas na mesma tela")
         .toBe(0);
     });
+
+    test(`${idioma}: a visão ARGOS também fala o idioma da conta`, async ({ page }) => {
+      // M45.4 — `ARG-01` é superfície REAL e nunca teve prova de idioma. A `two-view.spec` não
+      // consegue dá-la: a montagem dela (sessionStorage + bypass) não faz o reconciliador
+      // resolver, e eu tentei duas vezes antes de aceitar isso. Aqui a montagem é a do produto
+      // inteiro, que já comprova troca de idioma nas outras seis journeys.
+      //
+      // A âncora é o estado de INDISPONIBILIDADE do documento ARGOS — ele é i18n, é o que esta
+      // montagem produz (não semeia v3), e é terminal. Provar idioma pelo caminho feliz exigiria
+      // semear o documento, que é justamente o que quebrou a outra tentativa.
+      await montarProduto(page, idioma);
+      await page.goto(`/analyses/${ANALISE}/argos`);
+
+      const esperado =
+        idioma === "en"
+          ? /ARGOS document is not available|no ARGOS document/i
+          : /documento ARGOS|não tem documento/i;
+      const oposto =
+        idioma === "en" ? /documento ARGOS/i : /ARGOS document is not available/i;
+
+      await expect(page.locator("main")).toContainText(esperado, { timeout: 15_000 });
+      const texto = await page.locator("main").innerText();
+      expect(texto.length, "tela vazia tornaria a negativa trivial").toBeGreaterThan(40);
+      expect(texto, "os dois idiomas na mesma tela").not.toMatch(oposto);
+    });
   }
 });

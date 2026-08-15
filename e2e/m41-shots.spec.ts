@@ -44,6 +44,26 @@ async function montar(
   await page.route("**/v1/me", (r) =>
     r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(IDENTIDADE) }),
   );
+  // M45.4 — as seções VIZINHAS de Settings precisam existir no estado normal.
+  //
+  // Estas capturas documentam CFG-01/CFG-02 (conta e idioma). Desde a M42 e a M44, a mesma página
+  // ganhou Workspace e Notificações — e esta spec não as servia, então elas apareciam em erro
+  // dentro de uma captura que documenta outra coisa. Achado da M45.4, quando a suíte completa
+  // reescreveu as imagens e a divergência ficou visível.
+  await page.route("**/v1/subscriptions**", (r) =>
+    r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ items: [] }) }),
+  );
+  await page.route("**/v1/workspaces/**", (r) =>
+    r.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        workspace_id: "e2e-workspace-0000",
+        name: "Acme",
+        created_at: "2026-03-11T08:42:00Z",
+      }),
+    }),
+  );
   await page.route("**/v1/me/language", async (r) => {
     if (opts.indisponivel) {
       return r.fulfill({

@@ -193,7 +193,14 @@ test.describe("M45.4 — acessibilidade e idioma das duas visões", () => {
     });
   }
 
-  // PT/EN das duas visões: NÃO MEDIDO nesta passada, e registrado como tal.
+  // PT/EN das duas visões: medido na MATRIZ da M45, não aqui.
+  //
+  // Tentei duas vezes nesta spec e as duas falharam por INSTRUMENTO: a montagem por `semear`
+  // (sessionStorage + bypass) não faz o reconciliador de idioma resolver, e acrescentar a cadeia
+  // completa aqui quebrou o carregamento do documento v3. A medição foi para `m45-matriz`, cuja
+  // montagem já comprova troca de idioma — e lá a âncora é o estado de INDISPONIBILIDADE do
+  // ARGOS, que é i18n e não depende de semear documento nenhum.
+  // Nota histórica desta medição, preservada porque ela custou uma tentativa:
   //
   // Escrevi um caso que mockava `/v1/me` e `/v1/me/language` em `pt` e afirmava o conteúdo. Ele
   // reprovou — e a causa era MINHA: o shell renderizou `Home | Analyses | Instances | Workspaces`,
