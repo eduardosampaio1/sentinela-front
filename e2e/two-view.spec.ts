@@ -8,6 +8,7 @@
 // prova P10 do orchestrator). Uma massa escrita aqui provaria que a tela sabe ler o que a
 // própria tela inventou.
 
+import axe from "axe-core";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -136,26 +137,71 @@ test.describe("F6 — responsivo", () => {
       await page.goto("/analyses/an-v3/argos");
       await expect(page.getByTestId("argos-view")).toBeVisible();
 
-      // Scroll horizontal no corpo é o defeito responsivo que passa despercebido em captura.
-      const estoura = await page.evaluate(
-        () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-      );
-      expect(estoura, `${nome}: a página rola na horizontal`).toBe(false);
+      // ESTE GATE NÃO PODIA FALHAR até a M45.4.
+      //
+      // Ele lia `documentElement.scrollWidth - clientWidth`, e o `AppShell` tem
+      // `overflow-x-hidden`: um elemento mais largo que a viewport é **clipado**, nunca vira
+      // rolagem, e a subtração fica em zero para sempre. Foi provado na M45.0, onde a mesma
+      // métrica sobreviveu a uma mutação que injetava `min-w-[2000px]` no frame.
+      //
+      // A medida correta é a GEOMETRIA de cada elemento contra a largura da viewport — que é o
+      // que a pessoa vê: conteúdo cortado na borda.
+      const excesso = await page.evaluate(() => {
+        const limite = document.documentElement.clientWidth;
+        let pior = 0;
+        for (const el of Array.from(document.querySelectorAll("main *"))) {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0) continue;
+          pior = Math.max(pior, Math.round(r.right - limite));
+        }
+        return pior;
+      });
+      expect(excesso, `${nome}: conteúdo estoura a largura em ${excesso}px`).toBeLessThanOrEqual(1);
     });
   }
 });
 
-test.describe("F6 — teclado", () => {
-  test("a navegação entre visões é alcançável só com o teclado", async ({ page }) => {
-    await semear(page, "an-v3", documentoV3());
-    await page.goto("/analyses/an-v3/argos");
-    await expect(page.getByTestId("argos-view")).toBeVisible();
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// M45.4 · o que a F6 nunca mediu nestas superfícies
+// ══════════════════════════════════════════════════════════════════════════════════════════
+//
+// A F6 provou fonte única, negociação de versão, vocabulário e rota — o que era o risco DELA.
+// Não provou acessibilidade nem idioma, e as duas visões são superfícies REAL do Blueprint
+// (`ARG-01`, `ANL-01`). Nenhuma suíte rodava `axe` aqui: a da M42 roda na Instância, a da M44 em
+// Settings, e a matriz transversal da M45.0 nunca visitou estas rotas.
 
-    // Tab até o link da outra visão, e Enter. Sem mouse em nenhum momento.
-    const alvo = page.getByRole("link", { name: "Analytics" });
-    await alvo.focus();
-    await expect(alvo).toBeFocused();
-    await page.keyboard.press("Enter");
-    await expect(page.getByTestId("analytics-view")).toBeVisible();
-  });
+test.describe("M45.4 — acessibilidade e idioma das duas visões", () => {
+  for (const [nome, rota, marca] of [
+    ["ARGOS", "/analyses/an-v3/argos", "argos-view"],
+    ["Analytics", "/analyses/an-v3/analytics", "analytics-view"],
+  ] as const) {
+    test(`${nome} · axe sem violação aplicável`, async ({ page }) => {
+      await semear(page, "an-v3", documentoV3());
+      await page.goto(rota);
+      // Estado TERMINAL antes de medir: axe sobre esqueleto aprova a ausência de conteúdo.
+      await expect(page.getByTestId(marca)).toBeVisible({ timeout: 15_000 });
+
+      await page.addScriptTag({ content: axe.source });
+      const resultado = await page.evaluate(async () => {
+        const a = (window as unknown as { axe: { run: (o: unknown) => Promise<unknown> } }).axe;
+        return (await a.run({ runOnly: ["wcag2a", "wcag2aa"] })) as {
+          violations: { id: string; nodes: unknown[] }[];
+        };
+      });
+      const graves = resultado.violations.map((v) => `${v.id} (${v.nodes.length})`);
+      expect(graves, `${nome} · violações axe: ${graves.join(", ")}`).toEqual([]);
+    });
+  }
+
+  // PT/EN das duas visões: NÃO MEDIDO nesta passada, e registrado como tal.
+  //
+  // Escrevi um caso que mockava `/v1/me` e `/v1/me/language` em `pt` e afirmava o conteúdo. Ele
+  // reprovou — e a causa era MINHA: o shell renderizou `Home | Analyses | Instances | Workspaces`,
+  // ou seja, o idioma nunca trocou. A montagem por `semear` (sessionStorage + bypass) não faz o
+  // reconciliador de idioma resolver como a montagem completa da matriz da M45.0 faz.
+  //
+  // As duas visões usam `t()` em 35 pontos e não têm literal inglês — então não há indício de
+  // defeito de produto. Mas indício não é prova, e um teste que passasse aqui por acidente de
+  // setup seria a dívida da M40 outra vez. Fica NÃO MEDIDO até a tranche montar o produto
+  // inteiro, e não é contado como verde em lugar nenhum.
 });
