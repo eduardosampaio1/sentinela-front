@@ -111,12 +111,52 @@ const json = (corpo: unknown, status = 200) => ({
   body: JSON.stringify(corpo),
 });
 
+/**
+ * Os quatro eixos COERENTES com o estado da análise.
+ *
+ * A primeira versão servia um payload fixo (`engine: running`) para todo estado, e a tela de falha
+ * saía dizendo "Não concluída" no cabeçalho e "PROCESSAMENTO: Em execução · RESULTADO FINAL:
+ * Pendente" logo abaixo — a mesma tela afirmando que a análise morreu e que ela ainda está
+ * andando. A captura 05 desta tranche documentou isso antes de alguém notar.
+ *
+ * Era a MASSA, não o produto: os eixos são independentes do estado por contrato, e a tela
+ * apresenta o que o produtor diz sem interpretar. Mas uma combinação que o produtor nunca
+ * publicaria não prova nada, e vira evidência de uma tela que não existe.
+ */
+function eixosDe(status: string) {
+  if (status === "failed") {
+    return [
+      { axis: "engine", state: "failed" },
+      { axis: "analytics", state: "failed" },
+      { axis: "export", state: "unavailable" },
+      { axis: "final_result", state: "failed" },
+    ];
+  }
+  if (status === "completed") {
+    return [
+      { axis: "engine", state: "ready" },
+      { axis: "analytics", state: "ready" },
+      { axis: "export", state: "ready" },
+      { axis: "final_result", state: "ready" },
+    ];
+  }
+  return [
+    { axis: "engine", state: "running" },
+    { axis: "analytics", state: "pending" },
+    { axis: "export", state: "unavailable" },
+    { axis: "final_result", state: "pending" },
+  ];
+}
+
 /** A análise servida num estado da jornada — sobrepõe o `completed` da montagem base. */
 async function emEstado(
   page: Page,
   status: string,
   opts: { retry?: boolean } = {},
 ): Promise<void> {
+  await page.route("**/v1/analyses/*/progress**", (r) =>
+    r.fulfill(json({ analysis_id: ANALISE, axes: eixosDe(status) })),
+  );
   await page.route("**/v1/analyses/*", (r) =>
     r.fulfill(
       json({

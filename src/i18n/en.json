@@ -93,6 +93,7 @@
       "resultPreparing": "The analysis is complete. The result is still being prepared."
     },
     "loading": "Loading the analysis…",
+    "topBar": "Analysis",
     "needsMapping": {
       "explain": "The data arrived, but how some fields should be interpreted still needs confirming.",
       "blocked": "The operation that resolves this is not exposed in the public contract yet."

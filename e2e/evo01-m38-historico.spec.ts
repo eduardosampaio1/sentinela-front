@@ -119,13 +119,20 @@ test.describe("EVO-01 · invariantes migrados de /dashboard/history", () => {
   test("ausência continua diferente de zero", async ({ page }) => {
     // Herdado da `RunRow`, que media `observed_conversations`. A superfície canônica apresenta
     // `record_count`, então o invariante migra para o campo que ELA mostra — e é observável na
-    // copy, sem test hook: `null` vira "Records not available", `0` vira "0 records".
+    // copy, sem test hook: `null` vira "contagem não publicada", `0` vira "0 records".
+    //
+    // M45.2 — a copy mudou, o invariante não. Ela dizia "Records not available" / "Registros
+    // indisponíveis", que é a palavra da QUEDA para o que é ausência de publicação. A casa já usa
+    // "não publicado" para isso. O que este caso protege — ausência ≠ zero — segue idêntico.
+    const naoPublicada = /Record count not published|Contagem não publicada/;
     await semear(page, UMA_PAGINA);
     await page.goto("/analyses");
 
-    await expect(linha(page, "an-hist-sem-contagem")).toContainText(/Records not available|Registros indispon/);
+    await expect(linha(page, "an-hist-sem-contagem")).toContainText(naoPublicada);
+    // E a ausência não pode aparecer como zero — a direção que o caso sempre existiu para provar.
+    await expect(linha(page, "an-hist-sem-contagem")).not.toContainText(/0 (records|registros)/);
     await expect(linha(page, "an-hist-zero")).toContainText(/0 (records|registros)/);
-    await expect(linha(page, "an-hist-zero")).not.toContainText(/Records not available|Registros indispon/);
+    await expect(linha(page, "an-hist-zero")).not.toContainText(naoPublicada);
   });
 
   test("a Home também monta e lê pelo /v1, sem acordar o legado", async ({ page, baseURL }) => {

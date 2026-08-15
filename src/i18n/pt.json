@@ -93,6 +93,7 @@
       "resultPreparing": "A análise foi concluída. O resultado ainda está sendo preparado."
     },
     "loading": "Carregando a análise…",
+    "topBar": "Análise",
     "needsMapping": {
       "explain": "O dado chegou, mas falta confirmar como alguns campos devem ser interpretados.",
       "blocked": "A operação que resolve isto ainda não está exposta no contrato público."

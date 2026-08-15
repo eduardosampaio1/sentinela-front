@@ -92,21 +92,48 @@ async function montar(page: Page, o: Opcoes = {}) {
   await page.route("**/v1/analyses/*/progress**", (r) =>
     o.progressoIndisponivel
       ? r.fulfill(json({ code: "temporarily_unavailable", retryable: true }, 503))
-      : r.fulfill(
-          json({
-            analysis_id: ANALISE,
-            axes: [
-              { axis: "engine", state: "running" },
-              { axis: "analytics", state: "pending" },
-              { axis: "export", state: "unavailable" },
-              { axis: "final_result", state: "pending" },
-            ],
-          }),
-        ),
+      : r.fulfill(json({ analysis_id: ANALISE, axes: eixosDe(o.status ?? "completed") })),
   );
 }
 
-/** Frases que existem em UM idioma só. É por elas que a captura prova o que declara ser. */
+/**
+ * Os quatro eixos COERENTES com o estado — ver a mesma função em `m45-matriz.spec.ts`.
+ *
+ * A primeira versão desta spec serviu `engine: running` para TODO estado, e as capturas de falha
+ * saíram com "Não concluída" no cabeçalho e "PROCESSAMENTO: Em execução" logo abaixo: a mesma
+ * imagem afirmando que a análise morreu e que ela ainda está andando. Evidência de uma tela que
+ * não existe é pior que evidência faltando.
+ */
+function eixosDe(status: string) {
+  if (status === "failed") {
+    return [
+      { axis: "engine", state: "failed" },
+      { axis: "analytics", state: "failed" },
+      { axis: "export", state: "unavailable" },
+      { axis: "final_result", state: "failed" },
+    ];
+  }
+  if (status === "completed") {
+    return [
+      { axis: "engine", state: "ready" },
+      { axis: "analytics", state: "ready" },
+      { axis: "export", state: "ready" },
+      { axis: "final_result", state: "ready" },
+    ];
+  }
+  return [
+    { axis: "engine", state: "running" },
+    { axis: "analytics", state: "pending" },
+    { axis: "export", state: "unavailable" },
+    { axis: "final_result", state: "pending" },
+  ];
+}
+
+/** Frases que existem em UM idioma só. É por elas que a captura prova o que declara ser.
+ *
+ * A M45.2 tirou "Nova análise" da barra de topo das telas de uma análise existente, e seis
+ * capturas ficaram vermelhas aqui — corretamente: a marca padrão deixou de existir naquelas telas.
+ * Cada estado vivo passou a declarar a sua. */
 const MARCA = { en: /New analysis/, pt: /Nova análise/ } as const;
 
 async function capturar(
@@ -148,17 +175,17 @@ interface Tela {
 const TELAS: readonly Tela[] = [
   { nome: "01-desktop-entrada-en", w: 1280, h: 900, rota: "/analyses/new", opts: {}, ancora: /Reserve the analysis/ },
   { nome: "02-desktop-aguardando-base-en", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "preparing" }, ancora: /Add your dataset/, marca: /Send dataset/ },
-  { nome: "03-desktop-processando-en", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "running" }, ancora: /Your analysis is being processed/ },
-  { nome: "04-desktop-confirmacao-en", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "needs_mapping" }, ancora: /not exposed in the public contract/ },
-  { nome: "05-desktop-falha-com-retry-en", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "failed", retry: true }, ancora: /Couldn't complete/ },
-  { nome: "06-desktop-falha-sem-retry-en", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "failed", retry: false }, ancora: /Couldn't complete/ },
+  { nome: "03-desktop-processando-en", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "running" }, ancora: /Your analysis is being processed/, marca: /What is happening/ },
+  { nome: "04-desktop-confirmacao-en", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "needs_mapping" }, ancora: /not exposed in the public contract/, marca: /Check again/ },
+  { nome: "05-desktop-falha-com-retry-en", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "failed", retry: true }, ancora: /Couldn't complete/, marca: /What is happening/ },
+  { nome: "06-desktop-falha-sem-retry-en", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "failed", retry: false }, ancora: /Couldn't complete/, marca: /What is happening/ },
   // O estado que a correção (1) desta tranche criou: leitura indisponível ≠ "não medido".
-  { nome: "07-desktop-progresso-indisponivel-en", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "running", progressoIndisponivel: true }, ancora: /temporarily unavailable/ },
+  { nome: "07-desktop-progresso-indisponivel-en", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "running", progressoIndisponivel: true }, ancora: /temporarily unavailable/, marca: /What is happening/ },
   { nome: "08-desktop-home-povoada-en", w: 1280, h: 1100, rota: "/home", opts: { povoado: true }, ancora: /In progress/ },
   { nome: "09-desktop-lista-povoada-en", w: 1280, h: 900, rota: "/analyses", opts: { povoado: true }, ancora: /1240 records/ },
-  { nome: "10-mobile-processando-en", w: 375, h: 812, rota: `/analyses/${ANALISE}`, opts: { status: "running" }, ancora: /Your analysis is being processed/ },
+  { nome: "10-mobile-processando-en", w: 375, h: 812, rota: `/analyses/${ANALISE}`, opts: { status: "running" }, ancora: /Your analysis is being processed/, marca: /What is happening/ },
   { nome: "11-mobile-home-povoada-en", w: 375, h: 812, rota: "/home", opts: { povoado: true }, ancora: /In progress/ },
-  { nome: "12-desktop-confirmacao-pt", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "needs_mapping", idioma: "pt" }, ancora: /não está exposta no contrato público/ },
+  { nome: "12-desktop-confirmacao-pt", w: 1280, h: 900, rota: `/analyses/${ANALISE}`, opts: { status: "needs_mapping", idioma: "pt" }, ancora: /não está exposta no contrato público/, marca: /Verificar novamente/ },
 ];
 
 for (const tela of TELAS) {

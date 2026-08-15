@@ -263,11 +263,24 @@ export function AnalysisPage() {
     // estados de AN-03/AN-04, que são de M34/M35. Nenhum outro estado muda, não há tabela de
     // títulos por estado esperando uso futuro, e há teste varrendo `PUBLIC_STATES` para provar que
     // os demais seguem exatamente como antes.
+    // M45.2 — E O PRINCÍPIO PASSOU A VALER PARA OS OUTROS SETE ESTADOS.
+    //
+    // A M33 escreveu a regra ao corrigir `preparing`: *a barra não diz "Nova análise" numa análise
+    // que já existe*. Ela aplicou a regra a um estado só, de propósito, porque os demais eram de
+    // M34/M35 — e deixou um guarda dizendo que quem os mexesse teria de passar por aquelas
+    // missões. Esta tranche é a delas.
+    //
+    // O efeito visível estava nas capturas 05 e 07: uma análise que FALHOU, e uma que está
+    // rodando, com "Nova análise" na barra. A pergunta "em que página estou?" respondida com o
+    // nome de outra página. A rota `/analyses/:id` nunca é uma análise nova — a entrada é
+    // `/analyses/new`, e lá `entry.title` continua certo.
+    //
+    // A ramificação segue sendo a MENOR possível: um ternário sobre `preparing`, e nada além.
     <AppShell
       topBarTitle={
         status.data?.status === "preparing"
           ? t("canonicalAnalysis.upload.topBar")
-          : t("canonicalAnalysis.entry.title")
+          : t("canonicalAnalysis.topBar")
       }
     >
       <PageFrame maxWidth="md">

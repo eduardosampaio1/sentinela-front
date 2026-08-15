@@ -77,14 +77,35 @@ describe("M33 · a barra superior em `preparing`", () => {
     expect(titulo()).not.toBe(pt.canonicalAnalysis.entry.title);
   });
 
-  it("TODOS os outros estados públicos mantêm exatamente o título anterior", async () => {
-    // A prova de não regressão da página compartilhada: se um dia alguém acrescentar um ramo para
-    // `receiving` ou `running` sem passar por M34/M35, este caso reprova.
+  it("NENHUM estado desta rota diz 'Nova análise' — ela nunca é uma análise nova", async () => {
+    // M45.2 — o guarda anterior exigia que os outros sete estados MANTIVESSEM `entry.title`.
+    //
+    // Ele foi escrito assim de propósito: a M33 corrigiu só `preparing` e disse, aqui mesmo, que
+    // quem mexesse nos demais teria de passar por M34/M35. Esta tranche é a delas, e o princípio
+    // que a própria M33 escreveu — *a barra não diz "Nova análise" numa análise que já existe* —
+    // vale igual para os sete. As capturas 05 e 07 mostravam uma análise FALHADA e uma rodando
+    // com "Nova análise" na barra.
+    //
+    // O guarda não sumiu: virou o invariante correto, e é mais forte. Ele varre `PUBLIC_STATES`
+    // inteiro e recusa `entry.title` em qualquer um — inclusive num estado novo do contrato.
+    for (const estado of PUBLIC_STATES) {
+      const { unmount } = montarEm(estado);
+      await waitFor(() => expect(titulo()).toBeTruthy());
+      expect(titulo(), `o estado ${estado} anuncia a rota de criação`).not.toBe(
+        pt.canonicalAnalysis.entry.title,
+      );
+      unmount();
+    }
+  });
+
+  it("fora de `preparing`, a barra nomeia o LUGAR, e é sempre o mesmo nome", async () => {
+    // Contraprova do caso acima: sem ela, apagar o `topBarTitle` inteiro passaria — vazio também
+    // não é "Nova análise".
     for (const estado of PUBLIC_STATES.filter((e) => e !== "preparing")) {
       const { unmount } = montarEm(estado);
       await waitFor(() =>
-        expect(titulo(), `o estado ${estado} mudou de título fora da M33`).toBe(
-          pt.canonicalAnalysis.entry.title,
+        expect(titulo(), `o estado ${estado} não nomeia o lugar`).toBe(
+          pt.canonicalAnalysis.topBar,
         ),
       );
       unmount();
