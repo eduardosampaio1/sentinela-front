@@ -1521,6 +1521,26 @@ a11y · critique · heuristics ≥ 8 · copy · erro/vazio/carregando · visual 
 gate depois de uma mutação de token a fazer falhar**) · fronteiras · vocabulário interno ·
 zero `#hex` · token único · **semântica única de estado** · paridade i18n.
 
+> **Pré:** M13, M14, M32, M33, M36, M39, M40, M42, M44 — **satisfeita** em 2026-08-15 (`34c7c79`).
+>
+> Esta linha não existia. A M45 era a única missão desta fase sem `Pré:` textual: a dependência
+> vivia **só** no grafo (`M32 & M33 & M36 & M39 & M40 & M42 & M44 --> M45`, e `M13 --> M14 -->
+> M45`). Não era ambiguidade — era pré-condição declarada noutra notação, e reconstruí-la do
+> diagrama a cada leitura é como se perde uma.
+>
+> 🕰️ **Três valores acima estão datados, e o realinhamento vive em
+> [`docs/m45/M45-IMPLEMENTATION-AUTHORITY.md`](m45/M45-IMPLEMENTATION-AUTHORITY.md):**
+> `27 scenarios` → **invariante** de reprodutibilidade por nome (o catálogo tem 62);
+> `heuristics ≥ 8` → **≥ 9,0 sem waiver** (M42 fechou em 9,2; M44 em 9,3);
+> `axe sem violação crítica` → **0 aplicáveis**. O texto original fica como está: ele é a régua que
+> valeu de M26 a M40.
+>
+> ⚠️ **Uma decisão de owner bloqueia o início:** o gate 12 (visual regression) é condicional por
+> escrito — *"quando a infraestrutura existir"* — e ela **não existe**. Construir ou declarar não
+> atingível é escolha de produto, não de execução.
+>
+> **A M45 NÃO é o Experience Freeze.** Ela roda os gates; o marco é da **M46**, ao fim dela.
+
 ---
 
 # FASE 14 — 🏁 UI EXPERIENCE FREEZE

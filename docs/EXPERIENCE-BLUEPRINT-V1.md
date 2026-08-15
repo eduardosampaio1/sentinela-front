@@ -693,7 +693,7 @@ Só informação canônica **existente**. Nenhum "trust score" inventado.
 
 ---
 
-## 11. Mock Scenario Catalog — 52 cenários
+## 11. Mock Scenario Catalog — 62 cenários
 
 Todo scenario é **nome + lista de handlers**. Fixture derivada do schema publicado (§17).
 
@@ -1111,14 +1111,25 @@ Todos os critérios, sem exceção:
 
 1. **todas as superfícies REAL** de §4 navegáveis em modo mock (as APPROVED DELTA ficam
    explicitamente **fora** e **inalcançáveis**, não meio-construídas);
-2. **os 27 scenarios não bloqueados** de §11 reproduzíveis por nome;
+2. **todo scenario não bloqueado** de §11 reproduzível **por nome**, e todo id do catálogo presente
+   no §11 — nas duas direções;
+   > **Era "os 27 scenarios", e `27` era um SNAPSHOT de 2026-08-10.** O catálogo passou por 44, 52
+   > e hoje tem **62**. Um número datado como proxy de completude envelhece em silêncio e vira
+   > folclore: o gate passaria a medir a data em que foi escrito. A contagem pode ser **reportada**;
+   > o invariante é a reprodutibilidade por nome, nas duas direções. (M45 · authority, 2026-08-15.)
 3. **nenhum dado exclusivo do mock** — toda fixture valida contra o schema publicado;
 4. **todo CTA tem operação real ou está explicitamente bloqueado** com motivo visível;
 5. **responsive aceito** nos três tamanhos (D32), com §14 respeitado;
 6. **PT-BR e EN** completos, sem texto hardcoded, com o orçamento de +30 %;
-7. **a11y**: §16 satisfeito; `axe` sem violação crítica; teclado ponta a ponta;
+7. **a11y**: §16 satisfeito; `axe` **sem violação aplicável** (`wcag2a`+`wcag2aa`); teclado ponta a
+   ponta;
+   > Era *"sem violação crítica"*, e "crítica" não tem definição neste documento. M42 e M44 já
+   > fecharam em **zero aplicáveis**. (M45 · authority, 2026-08-15.)
 8. **`/design-critique`** aplicado a cada superfície, achados resolvidos ou registrados;
-9. **`/ux-heuristics`** ≥ 8/10 por superfície;
+9. **`/ux-heuristics`** **≥ 9,0**/10 por superfície, **sem waiver automático**;
+   > **A régua histórica era `≥ 8`, e ela vale como história de M26–M40.** A M42 fechou em 9,2 e a
+   > M44 em 9,3 sob o limiar novo. Fechar a fase de HARDENING abaixo do que duas missões já
+   > entregaram seria a régua andando para trás. (M45 · authority, 2026-08-15.)
 10. **`/ux-copy`** — nenhum sinônimo de conceito congelado (§15);
 11. **erro, vazio e carregando** distintos e presentes em toda superfície;
 12. **visual regression** quando a infraestrutura existir — e só entra em gate depois de uma
@@ -1149,7 +1160,24 @@ Todos os critérios, sem exceção:
 | 🔴 **contrato sem consumidor** | `/progress`, `/analytics`, `/analytics/export/download`, `/timeline` — **4 operações contratadas e não consumidas**; o gate de contrato não pega porque compara campos, não operações |
 | 🔴 **delta não autorizado bloqueando UI** | Instância → 7 superfícies + EVO-03 + CFG-03/04 |
 
+> 🕰️ **A tabela acima descreve 2026-08-10, e não foi mantida.** Medido em 2026-08-15 (`34c7c79`):
+> **CFG-02** ganhou scenario e operação na M41; **CFG-03/04** na M42; **COM-01/02** na M44 — a linha
+> *"superfície sem scenario"* cai de 8 para **5** (INST-02/06/07, WS-02/04) e *"CTA sem operação"*
+> de 4 para **3** (AN-02, WS-02, EVO-03). A linha *"contrato sem consumidor"* descreve as quatro
+> operações da Fase 3, **fechadas em M20–M23**. Corrigir a tabela inteira exigiria reescrever
+> autoridade; o que esta nota faz é impedir que ela seja lida como estado corrente.
+
 ### Blockers do UI Experience Freeze
+
+> ⚠️ **Esta tabela é um REGISTRO DE DÍVIDAS, e nunca ganhou a coluna *"ainda bloqueia?"*.** Metade
+> das linhas já fechou e continua listada — **B5** (Q15) foi respondida pela BD14/M43 e **B7**
+> (contrato de preferências) pela BD11. A condição do marco é o **PLAN §6**: *"Front V1 navegável e
+> aprovado em modo mock; **18 critérios** em todas as superfícies REAL"*. **B1 não é um dos 18** — o
+> gate 4 é sobre *CTA sem operação*, e a órfã é a inversa (*operação sem CTA*).
+>
+> **Se o owner ler diferente, a M45 está bloqueada**, porque a órfã não tem missão dona e nenhuma
+> missão de hardening pode inventar superfície para zerar placar. Registrado, não decidido em
+> silêncio. (M45 · authority, 2026-08-15.)
 
 | # | blocker | classe |
 |---|---|---|
