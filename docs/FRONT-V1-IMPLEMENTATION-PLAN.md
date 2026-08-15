@@ -1547,9 +1547,9 @@ zero `#hex` · token único · **semântica única de estado** · paridade i18n.
 > |---|---|
 > | **M45.0** · recent / cross-feature hardening | **CLOSED** — 17 PASS · G12 N/A · heurísticas 9,3 |
 > | **M45.1** · historical experience discovery (M01–M40) | **CLOSED** — ledger, mapas e plano de tranches |
-> | **M45.2** · jornada da análise · **P0** | aberta |
-> | **M45.3** · resultado (RES-01) · **P0** | aberta |
-> | **M45.4** · Two-View (ARGOS · Analytics · comparação) · **P0** | aberta — **próxima** |
+> | **M45.2** · jornada da análise · **P0** | aberta — **próxima** |
+> | **M45.3** · resultado (RES-01) · **P0** | aberta — herda 3 nomes divergentes achados na M45.4 |
+> | **M45.4** · Two-View (ARGOS · Analytics · comparação) · **P0** | **CLOSED** — 10 defeitos de produto · 9 de instrumento · mutação 9/9 · qualidade 9,3 / 9,2 / 9,1 · [DOC-CLOSE](m45/DOC-CLOSE-M45-4.md) |
 > | **M45.5** · Instância e baseline · P1 | aberta |
 > | **M45.6** · fundação e fronteiras · P2 | aberta |
 > | **M45.7** · público, auth e shell · P1 | aberta |
