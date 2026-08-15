@@ -165,7 +165,7 @@ test.describe("M42 · CFG-03 no browser", () => {
     await page.goto(ROTA);
 
     await expect(
-      page.getByText(/could not load the workspace settings|carregar as configurações do espaço/),
+      page.getByText(/Workspace settings are unavailable|configurações do espaço estão indisponíveis/),
     ).toBeVisible();
     // Nenhum campo editável: não há valor confirmado para editar. E o nome da claim não aparece
     // como valor de campo em lugar nenhum.
@@ -180,7 +180,7 @@ test.describe("M42 · CFG-03 no browser", () => {
     await montar(page, { invisivel: true });
     await page.goto(ROTA);
 
-    const secao = page.getByText(/could not load the workspace settings|carregar as configurações/);
+    const secao = page.getByText(/Workspace settings are unavailable|configurações do espaço estão indisponíveis/);
     await expect(secao).toBeVisible();
     // A copy NÃO afirma "você não tem permissão" nem "não existe": o produtor colapsa os três
     // motivos de propósito, e revelá-los seria a tela virando oráculo de existência.
@@ -206,7 +206,7 @@ test.describe("M42 · CFG-03 no browser", () => {
     await campo(page).fill("Nome Que Falha");
     await salvar(page).click();
 
-    await expect(page.getByText(/could not save the name|não conseguimos salvar o nome/i)).toBeVisible();
+    await expect(page.getByText(/could not save the workspace name|salvar o nome do espaço/i)).toBeVisible();
     await expect(page.getByText(/Workspace name saved|Nome do espaço salvo/)).toHaveCount(0);
     await expect(campo(page)).toHaveValue("Nome Que Falha");
   });

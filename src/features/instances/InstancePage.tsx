@@ -22,12 +22,19 @@
 // cache da lista daria uma tela que funciona clicando e quebra colando a URL — e o defeito só
 // apareceria em produção, na primeira vez que alguém compartilhasse um link.
 //
-// ## O erro não desfaz a decisão do contrato
+// ## O erro não desfaz a decisão do contrato — mas indisponível NÃO é inexistente
 //
 // Instância de outro workspace e inexistente colapsam no MESMO código público, de propósito.
 // A copy diz "não encontramos esta instância neste workspace" — verdadeira nos dois casos, e sem
 // revelar qual. Dizer "não existe" ou "sem permissão" reintroduziria o oráculo que o backend
 // fecha.
+//
+// Esse raciocínio estava certo para as DUAS causas de `forbidden_or_not_found` e foi aplicado a
+// **todo** `isError` — inclusive a `503 temporarily_unavailable`. Resultado: quando o produtor
+// apenas não respondia, a tela afirmava que a Instância não existe neste workspace. É a mesma
+// falha que a CFG-03 já evitava do outro lado, e a asserção que deveria pegá-la media a página
+// **durante a janela de retry**, quando `main` ainda está vazio — negativa sobre string vazia
+// passa sempre. Agora a causa transitória tem estado próprio, com caminho de volta.
 
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -40,6 +47,7 @@ import { Button } from "@/components/ui/button";
 import { useIniciarAnalise } from "@/features/canonical-analysis/ui/useIniciarAnalise";
 import { ProblemNotice } from "@/features/canonical-analysis/ui/notices";
 import { AvisoDaJornada } from "@/features/canonical-analysis/ui/AvisoDaJornada";
+import { ProblemError } from "@/lib/v1/problem";
 import { useInstance, useInstanceHistory } from "./data/instance";
 import { HistoricoDaInstancia } from "./HistoricoDaInstancia";
 import { ReferenciaDaInstancia } from "./ReferenciaDaInstancia";
@@ -74,17 +82,38 @@ export default function InstancePage() {
   }
 
   if (instancia.isError) {
+    // Quem decide é o CATÁLOGO (`retryable`), não uma comparação de string com o código: o
+    // catálogo é o espelho do Gateway e já sabe que `capacity_wait` também é transitório. Ler o
+    // `code` na mão faria esta tela ter uma segunda opinião sobre o que é transitório.
+    const transitorio =
+      instancia.error instanceof ProblemError && instancia.error.problem.retryable;
     return (
       <AppShell>
         <PageFrame>
           <ErrorState
             titulo={t("instances.label")}
-            explicacao={t("instances.notFound")}
-            acao="voltar"
+            explicacao={transitorio ? t("instances.unavailable") : t("instances.notFound")}
+            acao={transitorio ? "tentar" : "voltar"}
             botao={
-              <Link to="/instances" className="text-sm font-medium underline underline-offset-4">
-                {t("instances.backToList")}
-              </Link>
+              transitorio ? (
+                // DUAS saídas, e não uma. "Tentar novamente" resolve a causa provável; a volta
+                // para a lista é a saída de emergência de quem tentou e não quer ficar preso —
+                // esta rota não tem item próprio na navegação lateral, então sem este link o
+                // estado de erro é um beco. A ordem importa: a ação que costuma funcionar
+                // primeiro, a desistência depois.
+                <div className="flex flex-wrap items-center gap-4">
+                  <Button variant="outline" size="sm" onClick={() => void instancia.refetch()}>
+                    {t("instances.retry")}
+                  </Button>
+                  <Link to="/instances" className="text-sm font-medium underline underline-offset-4">
+                    {t("instances.backToList")}
+                  </Link>
+                </div>
+              ) : (
+                <Link to="/instances" className="text-sm font-medium underline underline-offset-4">
+                  {t("instances.backToList")}
+                </Link>
+              )
             }
           />
         </PageFrame>

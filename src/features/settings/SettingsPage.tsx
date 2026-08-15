@@ -121,14 +121,16 @@ export function SettingsPage() {
             <SecaoDeIdioma />
           </Section>
 
-          {/* M42 · CFG-03. Seção PRÓPRIA, com carregamento e falha próprios: o espaço e a conta
-              têm donos diferentes, e um `503` do espaço não pode apagar a identidade acima nem o
-              idioma abaixo. A configuração da Instância não está aqui — ela mora onde o contexto
-              de Instância existe, e inventar um seletor seria criar superfície sem authority. */}
-          <Section title={t("workspaceConfig.title")} description={t("workspaceConfig.body")}>
-            <SecaoDeWorkspace workspaceId={escopo?.workspaceId ?? null} />
-          </Section>
+          {/* M42 · CFG-03, POR ÚLTIMO e de propósito.
+              Ela estava entre `Language` e `Password`, cercada por duas seções de CONTA — e numa
+              página intitulada "Account" a vizinhança ensinava que o espaço é mais uma
+              configuração de conta. Ele não é: tem outro dono, outra identidade e outro ciclo de
+              vida. No fim, as três primeiras são da conta e a última é do espaço.
 
+              Seção PRÓPRIA, com carregamento e falha próprios: um `503` do espaço não pode apagar
+              a identidade nem o idioma. A configuração da Instância não está aqui — ela mora onde
+              o contexto de Instância existe, e inventar um seletor seria superfície sem
+              authority. */}
           <Section title={t("account.signInTitle")} description={t("account.signInBody")}>
             <div className="flex flex-wrap items-center gap-3">
               {urlDoProvedor && (
@@ -152,6 +154,10 @@ export function SettingsPage() {
                 {t("account.signOut")}
               </Button>
             </div>
+          </Section>
+
+          <Section title={t("workspaceConfig.title")} description={t("workspaceConfig.body")}>
+            <SecaoDeWorkspace workspaceId={escopo?.workspaceId ?? null} />
           </Section>
         </div>
       </PageFrame>

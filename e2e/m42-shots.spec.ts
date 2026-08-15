@@ -149,6 +149,13 @@ async function capturar(
     page.locator("main").getByRole("button", { name: marca ?? MARCA[idioma] }).first(),
     `a captura ${nome} diz ser ${idioma} — o conteúdo tem de provar`,
   ).toBeVisible();
+  // `fullPage: true` NAO basta: o scroll desta aplicacao e de um container interno do
+  // `AppShell`, nao do documento. A captura saia 1280x800 com a secao do Workspace cortada no
+  // titulo — treze imagens que nao mostravam o que diziam mostrar. Rolar o alvo para a vista
+  // ANTES de disparar e o que torna a captura uma prova.
+  await page.locator("main").getByRole("button", { name: marca ?? MARCA[idioma] }).first()
+    .scrollIntoViewIfNeeded();
+  await page.waitForTimeout(150);
   await page.screenshot({ path: `docs/m42/${nome}.png`, fullPage: true });
   void info;
 }
@@ -156,14 +163,12 @@ async function capturar(
 const campoWs = (page: Page) => page.getByLabel(/^Name$|^Nome$/);
 
 test.describe("M42 · capturas", () => {
-  test("01–04 · Workspace: corrente, renomeado, claim velha e indisponível", async ({ page }, info) => {
+  test("01–02 · Workspace: corrente e renomeado", async ({ page }, info) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await montar(page, { idioma: "en" });
     await page.goto("/dashboard/settings");
     await expect(campoWs(page)).toHaveValue(NOME_DO_PRODUTOR);
-    // 03 — a claim velha convive na mesma tela: a identidade a mostra, e a configuração não.
     await capturar(page, "01-desktop-workspace-current-en", "en", info);
-    await capturar(page, "03-desktop-workspace-stale-claim-en", "en", info);
 
     await campoWs(page).fill("Atendimento Nacional");
     await page.getByRole("button", { name: /^Save name$/ }).click();
@@ -171,11 +176,32 @@ test.describe("M42 · capturas", () => {
     await capturar(page, "02-desktop-workspace-renamed-en", "en", info);
   });
 
+  // 03 — a claim velha e o nome canônico no MESMO quadro.
+  //
+  // Esta captura era uma segunda chamada de `capturar` sobre o estado de 01, sem nada entre as
+  // duas: saía byte a byte idêntica, e a divergência que o nome do arquivo promete ficava fora
+  // do quadro, porque a lista da claim vive no topo da página e o `scrollIntoViewIfNeeded` da
+  // seção de Workspace a empurra para fora. Uma captura que não contém o que afirma é pior que
+  // captura nenhuma: ela é contada como prova. A viewport alta existe só para caber os dois
+  // nomes de uma vez — é render real, não montagem.
+  test("03 · a claim desatualizada convive com o nome do produtor", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 1400 });
+    await montar(page, { idioma: "en" });
+    await page.goto("/dashboard/settings");
+
+    await expect(campoWs(page)).toHaveValue(NOME_DO_PRODUTOR);
+    // As DUAS afirmações, antes de disparar: o nome velho listado pela identidade e o nome
+    // canônico no campo de configuração. Sem elas a imagem volta a ser decorativa.
+    await expect(page.locator("main").getByText(NOME_NA_CLAIM)).toBeVisible();
+    await expect(page.locator("main").getByRole("button", { name: MARCA.en })).toBeVisible();
+    await page.screenshot({ path: "docs/m42/03-desktop-workspace-stale-claim-en.png" });
+  });
+
   test("04 · Workspace indisponível", async ({ page }, info) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await montar(page, { idioma: "en", wsIndisponivel: true });
     await page.goto("/dashboard/settings");
-    await expect(page.getByText(/could not load the workspace settings/)).toBeVisible();
+    await expect(page.getByText(/Workspace settings are unavailable/)).toBeVisible();
     await capturar(page, "04-desktop-workspace-unavailable-en", "en", info, /^Try again$/);
   });
 
@@ -200,18 +226,39 @@ test.describe("M42 · capturas", () => {
     await capturar(page, "06-desktop-instance-duplicate-name-en", "en", info);
   });
 
-  test("08–09 · Instância indisponível e disponibilidade mista", async ({ page }, info) => {
+  // 08 — a Instância INDISPONÍVEL.
+  //
+  // Esta captura era um `screenshot` cru depois de `waitForTimeout(400)`. A política de retry
+  // transitório são 2 tentativas com backoff de 1 s e 2 s: aos 400 ms a tela ainda é esqueleto.
+  // A imagem publicada como "instance unavailable" mostrava três barras cinza e mais nada — e
+  // era a ÚNICA das treze que não passava por `capturar`, justamente porque não tinha conteúdo
+  // que provasse idioma. Esse desvio era o sintoma, e eu o tratei como exceção aceitável.
+  //
+  // Agora ela usa a mesma âncora do caminho triste da CFG-03 (`Try again`), que só existe quando
+  // o estado terminal renderizou.
+  test("08 · Instância indisponível", async ({ page }, info) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await montar(page, { idioma: "en", instIndisponivel: true });
     await page.goto(`/instances/${I1}`);
-    await page.waitForTimeout(400);
-    await page.screenshot({ path: "docs/m42/08-desktop-instance-unavailable-en.png", fullPage: true });
-
-    // 09 — o espaço FUNCIONA com a Instância fora: donos diferentes, falhas contidas.
-    await page.goto("/dashboard/settings");
-    await expect(campoWs(page)).toHaveValue(NOME_DO_PRODUTOR);
-    await capturar(page, "09-desktop-mixed-availability-en", "en", info);
+    await expect(page.getByText(/This instance is unavailable right now/)).toBeVisible({
+      timeout: 15_000,
+    });
+    await capturar(page, "08-desktop-instance-unavailable-en", "en", info, /^Try again$/);
   });
+
+  // 09 · disponibilidade mista — REMOVIDA, e não substituída.
+  //
+  // Ela fotografava `/dashboard/settings` com a Instância montada em `503`. Só que essa rota não
+  // emite requisição nenhuma de Instância: o quadro sai byte a byte idêntico ao de 01, e saía
+  // mesmo. Um arquivo chamado "mixed availability" que é o pixel exato de "current" não prova
+  // contenção de falha — ele empresta credibilidade do nome do arquivo para uma imagem que não
+  // contém o fato. Os dois donos vivem em ROTAS diferentes, então nenhum quadro único os mostra
+  // ao mesmo tempo, e inventar uma tela que os juntasse seria inventar produto.
+  //
+  // A contenção continua provada, por teste e não por pixel: `m42-cfg-workspace.spec.ts` "F"
+  // mostra o espaço indisponível com a seção de idioma viva ao lado, e `m42-cfg-instancia.spec`
+  // "N" mostra a Instância indisponível sem derrubar a página. A captura 08 é a face visível
+  // dessa segunda metade.
 
   for (const vp of [
     { nome: "10-tablet", width: 768, height: 1024 },

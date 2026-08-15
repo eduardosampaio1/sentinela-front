@@ -2,6 +2,19 @@
 
 Fechamento local. **Sem push, sem deploy, sem Railway.**
 
+> **Correção posterior, e ela fica registrada.** Este documento declarou `M42 · CLOSED` **sem ter
+> executado** os três gates visuais obrigatórios — `/ux-copy`, `/design-critique` e
+> `/ux-heuristics`. Eles não foram medidos, e o documento nem sequer os listava como pendentes, o
+> que faz qualquer leitor concluir que a qualidade visual havia sido avaliada.
+>
+> Foram executados depois, em `DOC-CLOSE-QUALIDADE.md`, e acharam um defeito de **severidade 4**
+> que as quatro suítes verdes e as treze capturas deste fechamento não acharam: sob `503`, a tela
+> da Instância afirmava que ela **não existe neste workspace** — e o teste que devia pegar isso
+> era verde porque media a página durante a janela de retry, quando ela ainda está vazia.
+>
+> Os números das tabelas abaixo são os que valiam **naquele** momento. Os números vigentes estão
+> no fechamento de qualidade.
+
 ---
 
 ## 1. A frase de produto, entregue
@@ -144,5 +157,9 @@ Workspace **pendente**. **Não promovido** a produção.
 | M45 | FRONT / QUALITY |
 
 ### **M42 · CFG-03/CFG-04 — CLOSED**
+
+**Quality closeout: skills executadas e gate satisfeito** — `/ux-copy`, `/design-critique` e
+`/ux-heuristics` rodadas, 15 achados, 13 corrigidos, score final **9,2** contra gate `>= 9.0`.
+Registro completo em [`DOC-CLOSE-QUALIDADE.md`](./DOC-CLOSE-QUALIDADE.md).
 
 **Próximo checkpoint:** M44 · COMMUNICATION + REENTRY — SCENARIO MATERIALIZATION.

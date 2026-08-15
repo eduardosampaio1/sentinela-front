@@ -72,6 +72,13 @@ export function SecaoDeWorkspace({ workspaceId }: { workspaceId: string | null }
 
   return (
     <div className="space-y-3">
+      {/* A identidade vem ANTES do campo. Depois do botão, a leitura era "Nome → campo →
+          Salvar → ID", e o ID parecia RESULTADO da ação — quando ele é o contexto que não muda.
+          Ela é a mesma que circula nas análises e nas Instâncias; renomear não a move, e
+          mostrá-la é o que torna isso verificável. */}
+      <p className="text-xs text-muted-foreground">
+        {t("workspaceConfig.identity")}: <code>{workspace.data.workspace_id}</code>
+      </p>
       <CampoDeNome
         confirmado={workspace.data.name}
         rotulo={t("workspaceConfig.nameLabel")}
@@ -95,11 +102,6 @@ export function SecaoDeWorkspace({ workspaceId }: { workspaceId: string | null }
           );
         }}
       />
-      {/* A identidade fica visível e NÃO é editável. Ela é a mesma que circula nas análises e nas
-          Instâncias; renomear não a move, e mostrá-la aqui é o que torna isso verificável. */}
-      <p className="text-xs text-muted-foreground">
-        {t("workspaceConfig.identity")}: <code>{workspace.data.workspace_id}</code>
-      </p>
     </div>
   );
 }

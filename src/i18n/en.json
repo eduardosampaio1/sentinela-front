@@ -25,10 +25,10 @@
     "signInBody": "Handled by your identity provider, not here.",
     "signInTitle": "Password and sign-in",
     "signOut": "Sign out",
-    "subtitle": "Your details, and the language the product speaks to you in.",
+    "subtitle": "Your details, the language the product speaks to you in, and this workspace.",
     "title": "Account",
     "usingDefault": "Using English, the default. You haven't chosen a language yet.",
-    "workspaces": "Workspaces"
+    "workspaces": "You can open"
   },
   "alertsPage": {
     "title": "Alerts",
@@ -688,12 +688,12 @@
     "seeAll": "See history"
   },
   "instanceConfig": {
-    "body": "The name you see. History, analyses and reference stay the same.",
+    "body": "The name your team sees. History, analyses and reference stay the same.",
     "identity": "ID",
     "nameLabel": "Name",
     "nameRequired": "Type a name before saving.",
     "save": "Save name",
-    "saveFailed": "We could not save the name. Nothing changed — try again.",
+    "saveFailed": "We could not save the instance name. Nothing changed — try again.",
     "saved": "Instance name saved.",
     "saving": "Saving…",
     "title": "Instance"
@@ -713,9 +713,11 @@
     "loading": "Loading instance…",
     "loadingHistory": "Loading analyses…",
     "notFound": "We couldn't find this instance in this workspace.",
+    "retry": "Try again",
     "startAnalysis": "Start analysis",
     "startAnalysisIn": "Start analysis in {{name}}",
-    "startingAnalysis": "Starting…"
+    "startingAnalysis": "Starting…",
+    "unavailable": "This instance is unavailable right now."
   },
   "intentsPage": {
     "title": "Intents",
@@ -1032,14 +1034,14 @@
   "workspaceConfig": {
     "body": "The name your team sees. Changing it does not affect access or analyses.",
     "identity": "ID",
-    "loadFailed": "We could not load the workspace settings.",
+    "loadFailed": "Workspace settings are unavailable right now.",
     "loadRetry": "Try again",
-    "loading": "Loading workspace",
+    "loading": "Loading workspace settings",
     "nameLabel": "Name",
     "nameRequired": "Type a name before saving.",
     "noContext": "Open a workspace to see its settings.",
     "save": "Save name",
-    "saveFailed": "We could not save the name. Nothing changed — try again.",
+    "saveFailed": "We could not save the workspace name. Nothing changed — try again.",
     "saved": "Workspace name saved.",
     "saving": "Saving…",
     "title": "Workspace"

@@ -178,16 +178,52 @@ test.describe("M42 · CFG-04 no browser", () => {
     await expect(campo(page)).toHaveValue("Persistido");
   });
 
-  test("N · 503 da Instância NÃO vira 'não encontrada'", async ({ page }) => {
+  test("N · 503 da Instância é INDISPONÍVEL, e não 'não encontrada'", async ({ page }) => {
     await montar(page, { indisponivel: true });
     await page.goto(`/instances/${I1}`);
 
+    // ÂNCORA POSITIVA PRIMEIRO — e é aqui que a versão anterior deste teste mentia. Ela lia
+    // `main.innerText()` no instante seguinte ao `goto` e afirmava a AUSÊNCIA de "not found";
+    // só que a política de retry transitório (2 tentativas, ~3 s) mantém a página em esqueleto
+    // nesse instante, `innerText` volta VAZIO, e negativa sobre string vazia passa sempre. O
+    // gate ficou verde sobre uma página que ainda não existia — enquanto o estado terminal
+    // dizia, literalmente, "não encontramos esta instância neste workspace" para um `503`.
+    const aviso = page.locator("main").getByRole("alert");
+    await expect(aviso).toBeVisible({ timeout: 15_000 });
+    await expect(aviso).toContainText(/unavailable right now|indisponível agora/);
+
     const texto = (await page.locator("main").innerText()).toLowerCase();
-    // A copy de indisponibilidade não pode afirmar ausência: a Instância existe e o dono não
-    // respondeu, e as duas coisas levam a telas diferentes.
-    expect(texto).not.toMatch(/não encontrada|not found|não existe|does not exist/);
+    // A massa precisa EXISTIR para a negativa abaixo significar alguma coisa.
+    expect(texto.length, "página vazia tornaria a negativa seguinte trivial").toBeGreaterThan(20);
+    expect(texto).not.toMatch(/não encontr|not found|couldn't find|não existe|does not exist/);
+    // Transitório tem caminho de VOLTA para a mesma Instância — e não um "ver todas" que desiste
+    // da que a pessoa pediu.
+    await expect(
+      page.getByRole("button", { name: /^Try again$|^Tentar novamente$/ }),
+    ).toBeVisible();
+    // E uma saída de emergência: esta rota não tem item na navegação lateral, então um erro sem
+    // link de volta é um beco para quem tentou e desistiu.
+    await expect(
+      page.locator("main").getByRole("link", { name: /View all instances|Ver todas as instâncias/ }),
+    ).toBeVisible();
     // E não há campo de edição: não há valor confirmado para editar.
     await expect(campo(page)).toHaveCount(0);
+  });
+
+  test("N2 · contraprova: o 404 do contrato CONTINUA dizendo 'não encontramos'", async ({ page }) => {
+    // Sem esta contraprova, trocar o ramo inteiro por "indisponível" passaria no teste N e
+    // apagaria o anti-oráculo: `forbidden_or_not_found` colapsa "de outro workspace" e
+    // "inexistente" de propósito, e essa frase precisa sobreviver.
+    await montar(page);
+    await page.goto("/instances/inst-00000000-0000-4000-8000-000000000000");
+
+    const aviso = page.locator("main").getByRole("alert");
+    await expect(aviso).toBeVisible({ timeout: 15_000 });
+    await expect(aviso).toContainText(/couldn't find this instance|Não encontramos esta instância/);
+    // E o 404 NÃO oferece "tentar de novo": repetir não muda o resultado.
+    await expect(
+      page.getByRole("button", { name: /^Try again$|^Tentar novamente$/ }),
+    ).toHaveCount(0);
   });
 
   test("R · axe: zero violações na página com a seção montada", async ({ page }) => {

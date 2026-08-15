@@ -25,10 +25,10 @@
     "signInBody": "Ficam com seu provedor de identidade, não aqui.",
     "signInTitle": "Senha e acesso",
     "signOut": "Sair",
-    "subtitle": "Seus dados e o idioma em que o produto fala com você.",
+    "subtitle": "Seus dados, o idioma em que o produto fala com você e este espaço.",
     "title": "Conta",
     "usingDefault": "Usando inglês, o padrão. Você ainda não escolheu um idioma.",
-    "workspaces": "Workspaces"
+    "workspaces": "Você pode abrir"
   },
   "alertsPage": {
     "title": "Alertas",
@@ -688,12 +688,12 @@
     "seeAll": "Ver histórico"
   },
   "instanceConfig": {
-    "body": "O nome que você vê. O histórico, as análises e a referência não mudam.",
+    "body": "O nome que sua equipe vê. O histórico, as análises e a referência não mudam.",
     "identity": "ID",
     "nameLabel": "Nome",
     "nameRequired": "Digite um nome antes de salvar.",
     "save": "Salvar nome",
-    "saveFailed": "Não conseguimos salvar o nome. Nada mudou — tente novamente.",
+    "saveFailed": "Não conseguimos salvar o nome da instância. Nada mudou — tente novamente.",
     "saved": "Nome da instância salvo.",
     "saving": "Salvando…",
     "title": "Instância"
@@ -713,9 +713,11 @@
     "loading": "Carregando instância…",
     "loadingHistory": "Carregando análises…",
     "notFound": "Não encontramos esta instância neste workspace.",
+    "retry": "Tentar novamente",
     "startAnalysis": "Iniciar análise",
     "startAnalysisIn": "Iniciar análise em {{name}}",
-    "startingAnalysis": "Iniciando…"
+    "startingAnalysis": "Iniciando…",
+    "unavailable": "Esta instância está indisponível agora."
   },
   "intentsPage": {
     "title": "Intents",
@@ -1032,14 +1034,14 @@
   "workspaceConfig": {
     "body": "O nome que sua equipe vê. Alterá-lo não muda acessos nem análises.",
     "identity": "ID",
-    "loadFailed": "Não conseguimos carregar as configurações do espaço.",
+    "loadFailed": "As configurações do espaço estão indisponíveis agora.",
     "loadRetry": "Tentar novamente",
-    "loading": "Carregando espaço",
+    "loading": "Carregando configurações",
     "nameLabel": "Nome",
     "nameRequired": "Digite um nome antes de salvar.",
     "noContext": "Abra um espaço para ver as configurações dele.",
     "save": "Salvar nome",
-    "saveFailed": "Não conseguimos salvar o nome. Nada mudou — tente novamente.",
+    "saveFailed": "Não conseguimos salvar o nome do espaço. Nada mudou — tente novamente.",
     "saved": "Nome do espaço salvo.",
     "saving": "Salvando…",
     "title": "Espaço de trabalho"

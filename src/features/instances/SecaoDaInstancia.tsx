@@ -60,6 +60,10 @@ export function SecaoDaInstancia({
       </h2>
       <p className="text-sm text-muted-foreground">{t("instanceConfig.body")}</p>
 
+      {/* Identidade antes do campo, pela mesma razão da seção do espaço. */}
+      <p className="text-xs text-muted-foreground">
+        {t("instanceConfig.identity")}: <code>{instanceId}</code>
+      </p>
       <CampoDeNome
         confirmado={confirmado}
         rotulo={t("instanceConfig.nameLabel")}
@@ -82,11 +86,6 @@ export function SecaoDaInstancia({
         }}
       />
 
-      {/* A identidade durável, visível e não editável — é ela que as análises, o histórico e a
-          régua referenciam. Renomear não a move, e mostrá-la é o que torna isso verificável. */}
-      <p className="text-xs text-muted-foreground">
-        {t("instanceConfig.identity")}: <code>{instanceId}</code>
-      </p>
     </section>
   );
 }
