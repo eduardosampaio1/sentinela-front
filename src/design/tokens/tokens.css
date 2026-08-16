@@ -84,6 +84,20 @@
   --ds-border-default: 220 30% 14%;
   /** Divisor interno, menos presente que a borda padrão. No escuro, menos luz = menos presença. */
   --ds-border-subtle: 220 30% 12%;
+  /**
+   * Borda que precisa ser LIDA como forma, não percebida como separação.
+   *
+   * O papel já estava declarado pela Constituição §4 e estava aqui sem valor de propósito — a
+   * regra do rodapé deste arquivo é que o valor nasce junto com o componente que o consome, e
+   * não antes. O consumidor chegou: o léxico de valor de medida (`Medida.tsx`) precisa de duas
+   * formas que são desenho, não moldura — o contorno tracejado de NÃO MEDIDO e a hachura de
+   * AUSENTE. Ambas param de existir com `border-default`, que foi calibrada para desaparecer.
+   *
+   * 220 30% 26% dá 2,1:1 contra `surface-raised` — abaixo do mínimo de texto, e correto: isto
+   * não é texto. É a mesma folga que separa `surface-selected` do fundo, um degrau acima da
+   * borda padrão, e o bastante para a hachura sobreviver à escala de cinza.
+   */
+  --ds-border-strong: 220 30% 26%;
 
   /* ── Ação ────────────────────────────────────────────────────────────────────────────────
      V5: cor de ação é reservada. Um acento só. */
@@ -160,9 +174,13 @@
    PAPÉIS DECLARADOS PELA CONSTITUIÇÃO QUE AINDA NÃO TÊM VALOR
    ═══════════════════════════════════════════════════════════════════════════════════════════
 
-   `--ds-border-strong`, `--ds-info`, `--ds-state-running|partial|withheld` e `--ds-chart-*`
-   fazem parte do vocabulário declarado em FRONT-DESIGN-SYSTEM-CONSTITUTION §4 e **não estão
-   aqui de propósito**.
+   `--ds-info`, `--ds-state-running|partial|withheld` e `--ds-chart-*` fazem parte do vocabulário
+   declarado em FRONT-DESIGN-SYSTEM-CONSTITUTION §4 e **não estão aqui de propósito**.
+
+   `--ds-border-strong` saiu desta lista e ganhou valor acima, pela regra que esta própria seção
+   enuncia: o valor nasce com o componente que o consome. O consumidor é o léxico de valor de
+   medida, e a prova exigida — sobreviver à escala de cinza — é a que a hachura de ausência
+   precisa para não virar uma barra sem cor.
 
    Nenhum deles tem valor no sistema atual, e inventar um agora seria escolher cor sem a prova
    que a própria Constituição exige: contraste ≥ 3:1 entre séries adjacentes, distinção em escala

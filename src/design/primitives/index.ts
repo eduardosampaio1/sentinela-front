@@ -17,7 +17,17 @@ export { Chip, type EnfaseDoChip } from "./Chip";
 export { DefinitionGrid } from "./DefinitionGrid";
 export { Disclosure } from "./Disclosure";
 export { IconeDecorativo, IconeInformativo } from "./Icon";
+export {
+  Medida,
+  TrilhoDeMedida,
+  leituraDaMedida,
+  tomPelaFaixa,
+  type FaixaEsperada,
+  type TomDaMedida,
+  type ValorDaMedida,
+} from "./Medida";
 export { Note } from "./Note";
 export { Panel } from "./Panel";
 export { Stack, type EspacoDaPilha } from "./Stack";
+export { Tendencia } from "./Tendencia";
 export { Text } from "./Text";

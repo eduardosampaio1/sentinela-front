@@ -190,6 +190,44 @@
 }
 
 @layer components {
+  /* ── LÉXICO DE VALOR DE MEDIDA ────────────────────────────────────────────────────────────
+     Quatro formas para quatro fatos que NÃO são a mesma coisa: medido, zero, ausente e não
+     medido. A tradução vive em `src/design/primitives/Medida.tsx`; aqui ficam só as duas
+     formas que precisam de pintura que utilitário do Tailwind não expressa.
+
+     Nenhuma custom property é declarada neste bloco de propósito: fora do vocabulário canônico
+     um token só pode ser apelido (`var(--ds-…)`), e `calc()` não é apelido. O cálculo de atraso
+     do escalonamento acontece no componente, em `style`, onde ele não vira um segundo
+     vocabulário. */
+
+  /**
+   * AUSENTE — a medida existe no contrato e não veio nesta leitura.
+   *
+   * Hachura, e hachura em QUALQUER contexto. A primeira versão desta regra nasceu escopada
+   * dentro de um componente de barra empilhada e por isso não pintava na árvore de composição
+   * nem na legenda: uma barra de custo ficou literalmente sem cor nenhuma, indistinguível de um
+   * defeito de CSS. Ausência tem textura em todo lugar, ou não é léxico — é enfeite local.
+   */
+  .medida-ausente {
+    background-color: hsl(var(--ds-surface-muted));
+    background-image: repeating-linear-gradient(
+      45deg,
+      hsl(var(--ds-border-strong)) 0 2px,
+      transparent 2px 6px
+    );
+  }
+
+  /**
+   * NÃO MEDIDO — ninguém tentou medir. Não é falha, não é zero, não é ausência.
+   *
+   * Contorno tracejado e vazio. O tracejado é o segundo canal (V6): ele sobrevive à escala de
+   * cinza e ao daltonismo, e é o que separa "não perguntamos" de "perguntamos e não veio".
+   */
+  .medida-nao-medida {
+    background-color: transparent;
+    border: 1px dashed hsl(var(--ds-border-strong));
+  }
+
   /* Card base */
   .card-base {
     background: #0D1525;
