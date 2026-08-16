@@ -12,10 +12,15 @@ interface AuthShellProps {
 
 export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
   return (
+    // M46 — a estrutura de landmarks das superfícies de entrada.
+    //
+    // Login, criação de conta e recuperação de senha compartilham esta casca, e nenhuma das três
+    // tinha `<main>`: quem usa leitor de tela não tinha "pular para o conteúdo" em NENHUMA porta do
+    // produto. A coluna da esquerda é material de apoio (`aside`); o conteúdo é o formulário.
     <div className="min-h-screen flex bg-[#070C18]">
       {/* Left: Value Prop */}
       {showValueProp && (
-        <div className="hidden lg:flex lg:w-[45%] xl:w-[40%] flex-col justify-between p-12 bg-[#0D1525] border-r border-[rgba(255,255,255,0.06)] relative overflow-hidden">
+        <aside className="hidden lg:flex lg:w-[45%] xl:w-[40%] flex-col justify-between p-12 bg-[#0D1525] border-r border-[rgba(255,255,255,0.06)] relative overflow-hidden">
           {/* Background decoration */}
           <div
             className="absolute top-0 right-0 w-96 h-96 opacity-5 rounded-full blur-3xl"
@@ -80,14 +85,15 @@ export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
           </div>
 
           {/* Footer */}
-          <p className="text-xs text-[#475569] relative z-10">
+          {/* #475569 dava 2.57:1 sobre este fundo — abaixo de qualquer piso legível. */}
+          <p className="text-xs text-[#71809A] relative z-10">
             AI observability · Built for production teams
           </p>
-        </div>
+        </aside>
       )}
 
       {/* Right: Form */}
-      <div
+      <main
         className={cn(
           "flex-1 flex items-center justify-center p-6 sm:p-12",
           !showValueProp && "w-full"
@@ -102,7 +108,7 @@ export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
 
           {children}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

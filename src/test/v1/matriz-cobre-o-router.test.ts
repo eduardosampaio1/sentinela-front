@@ -55,12 +55,11 @@ const FORA_DA_MATRIZ: Readonly<Record<string, string>> = {
   // a rota em si é um adaptador.
   "/dashboard": "adaptador de compatibilidade → detalhe de análise",
 
-  // DÍVIDA DECLARADA, e não decisão.
+  // A dívida que estava aqui — `/analyses/compare/:a/:b` — foi PAGA na M46 (journey J35).
   //
-  // A comparação é superfície REAL, com suíte própria desde a M39/EVO-02 — mas suíte própria é
-  // exatamente o que as 24 journeys da M45 também tinham, e não impediu o buraco que esta tranche
-  // achou. Ela fica de fora da matriz por orçamento desta tranche, não por mérito.
-  "/analyses/compare/:analysisAId/:analysisBId": "DÍVIDA — superfície real, ainda fora da matriz",
+  // Ela tinha ficado de fora com o motivo "tem suíte própria", que é exatamente o argumento que a
+  // M45.8 refutou: suíte própria é o que `/argos` e `/analytics` também tinham quando sumiram da
+  // matriz. Manter a exceção seria repetir o erro que a tranche anterior encontrou.
 };
 
 /** `path: "/x"` no router. */
@@ -147,10 +146,9 @@ describe("M45.8 · a matriz cobre o router", () => {
       .filter(([, motivo]) => motivo.startsWith("DÍVIDA"))
       .map(([rota]) => rota);
 
-    // Uma entrada nova marcada DÍVIDA reprova até alguém decidir conscientemente aumentá-la. O
-    // caminho fácil tem de doer mais que o caminho certo.
-    expect(divida, "a dívida de cobertura mudou").toEqual([
-      "/analyses/compare/:analysisAId/:analysisBId",
-    ]);
+    // VAZIO desde a M46 — as 39 rotas do router têm journey ou motivo estrutural, e nenhuma fica
+    // de fora "por orçamento". Uma entrada nova marcada DÍVIDA reprova até alguém decidir
+    // conscientemente reabri-la: o caminho fácil tem de doer mais que o caminho certo.
+    expect(divida, "a dívida de cobertura mudou").toEqual([]);
   });
 });

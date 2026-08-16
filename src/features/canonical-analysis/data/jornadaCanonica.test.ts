@@ -20,6 +20,20 @@ import { PUBLIC_STATES } from "@/lib/v1/contract/public-v1.types";
 import en from "@/i18n/en.json";
 import pt from "@/i18n/pt.json";
 
+/**
+ * O recorte do bundle que este arquivo indexa por `status` — M46.
+ *
+ * Aqui havia `Record<string, any>`. `any` não era necessário: a indexação é dinâmica (o `status`
+ * vem de um laço), mas o VALOR tem forma conhecida, e é dela que os `expect` abaixo dependem.
+ * Com `any`, renomear `canonicalAnalysis.state` compilaria e o teste morreria em runtime com
+ * "cannot read property of undefined" — um erro que não diz o que aconteceu.
+ */
+interface DicionarioDeEstados {
+  canonicalAnalysis?: {
+    state?: Record<string, { title?: unknown; message?: unknown } | undefined>;
+  };
+}
+
 describe("needs_mapping — a parada honesta", () => {
   const view = describeAnalysisState({ status: "needs_mapping", retry_allowed: false });
 
@@ -141,8 +155,13 @@ describe("nenhum estado público fica sem texto", () => {
   for (const status of PUBLIC_STATES) {
     it(`${status} tem título e mensagem em pt e en`, () => {
       for (const [nome, dicionario] of [["pt", pt], ["en", en]] as const) {
-        const estado = (dicionario as Record<string, any>).canonicalAnalysis?.state?.[status];
-        expect(estado, `${status} sem entrada em ${nome}`).toBeTruthy();
+        const estado = (dicionario as DicionarioDeEstados).canonicalAnalysis?.state?.[status];
+        // `throw`, e não `expect(...).toBeTruthy()` — M46.
+        //
+        // O `expect` reprovaria, mas não ESTREITA o tipo: as duas linhas seguintes continuariam
+        // lendo de um valor possivelmente ausente. Antes isso passava porque o cast era `any`.
+        // O `throw` faz as duas coisas, e a mensagem é a mesma.
+        if (!estado) throw new Error(`${status} sem entrada em ${nome}`);
         expect(String(estado.title).trim().length, `${status}.title vazio em ${nome}`)
           .toBeGreaterThan(0);
         expect(String(estado.message).trim().length, `${status}.message vazio em ${nome}`)
@@ -252,7 +271,7 @@ function semPropriedadesPublicadas(fonte: string): string {
 
   it("os textos da jornada não mencionam infraestrutura", () => {
     for (const dicionario of [pt, en]) {
-      const estados = (dicionario as Record<string, any>).canonicalAnalysis?.state ?? {};
+      const estados = (dicionario as DicionarioDeEstados).canonicalAnalysis?.state ?? {};
       const texto = JSON.stringify(estados).toLowerCase();
       for (const proibido of PROIBIDOS) {
         expect(texto, `texto de estado menciona "${proibido}"`).not.toContain(proibido);

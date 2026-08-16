@@ -23,7 +23,21 @@ const RAIZ = resolve(__dirname, "../../..");
 const BASE = "http://gw.test";
 
 /** Executa o handler MSW que casa com a URL e devolve o corpo — a prova é o que ele SERVE. */
-async function servir(hs: ReturnType<typeof handlersDoScenario>, url: string): Promise<any> {
+/**
+ * O corpo JSON que o handler devolve — M46.
+ *
+ * Este `any` é a ÚNICA exceção que a M46 deixou de pé no lint, e é deliberada: os 19 chamadores
+ * pedem formas diferentes (listas paginadas, envelopes de status, detalhes de Instance), e a prova
+ * de cada teste é o `expect` logo abaixo da chamada, não a anotação. A forma realmente servida já
+ * é verificada contra o schema pelo gate de contrato, que roda com `SENTINELA_CONTRACT_ORIGIN`.
+ *
+ * Tipar as 19 chamadas acrescentaria ruído sem acrescentar garantia. O que NÃO é aceitável é um
+ * `any` mudo — por isso ele está isolado num alias com nome e com este motivo escrito.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- ver o bloco acima
+type CorpoServido = any;
+
+async function servir(hs: ReturnType<typeof handlersDoScenario>, url: string): Promise<CorpoServido> {
   const pedido = new Request(url);
   for (const h of hs) {
     const r = await h.run({ request: pedido, requestId: "t", cookies: {} } as never);

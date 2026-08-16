@@ -370,7 +370,7 @@
         "distributionsTitle": "Distribuições de rótulo",
         "dimensionsTitle": "Dimensões",
         "concentrationsTitle": "Concentração de volume",
-        "seriesTitle": "Ao longo do tempo",
+        "seriesTitle": "Séries",
         "withValue": "Com valor",
         "empty": "Vazio",
         "unreadable": "Ilegível",
@@ -381,7 +381,7 @@
         "mean": "Média",
         "suppressedStats": "As estatísticas foram retidas: registros de menos para publicá-las sem identificar alguém.",
         "distinctObserved": "Rótulos distintos observados",
-        "otherCount": "Outros rótulos",
+        "otherCount": "Demais",
         "otherWithheld": "Os rótulos abaixo do piso também não foram agrupados — a soma deles é pequena demais para publicar.",
         "minGroupSize": "Rótulos só são publicados a partir de {{n}} registros.",
         "highCardinality": "Rótulos distintos demais para publicar: é uma decisão, não falta de dado.",
@@ -416,7 +416,7 @@
           "unknown": "Estado desconhecido. Nada está sendo afirmado sobre o componente analítico."
         },
         "stateGroup": "Estado",
-        "exportTitle": "Pacote de export",
+        "exportTitle": "Exportar",
         "exportDownload": "Baixar pacote",
         "exportReadyHint": "Gerado pela análise, não por esta tela.",
         "exportState": {

@@ -143,7 +143,7 @@ test.describe("MF6.4c — Gateway real → Frontend → tela", () => {
     await expect(page.getByRole("heading", { name: "Measures" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Dimensions" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Volume concentration" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Over time" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Time series" })).toBeVisible();
   });
 
   test("declared_turns e Pareto vêm do documento, não de conta no cliente", async ({ page }) => {
@@ -178,7 +178,7 @@ test.describe("MF6.4c — Gateway real → Frontend → tela", () => {
     const serie = snapshotDe(publico).time_series[0];
     expect(serie.effective_granularity).toBe("month");
 
-    const area = page.getByRole("heading", { name: "Over time" }).locator("xpath=..");
+    const area = page.getByRole("heading", { name: "Time series" }).locator("xpath=..");
     await expect(area).toContainText("month");
     for (const janela of serie.windows) {
       await expect(area).toContainText(String(janela.count));

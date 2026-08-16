@@ -33,6 +33,8 @@ test.use({ serviceWorkers: "block" });
 
 const ESCOPO = "e2e-workspace-0000";
 const ANALISE = "an-5c2f8e13-7a04-4b69-9d81-3e0a6c47fb02";
+/** O outro lado da comparação (J35) — precisa ser um id DIFERENTE, ou a tela compara uma consigo. */
+const ANALISE_B = "an-7b41d9a2-6c58-4e17-b30f-2a95c81de743";
 const INSTANCIA = "inst-4d92e0b8-1f34-4c7a-8e56-90ab3d7f2c15";
 
 const IDENTIDADE = {
@@ -500,15 +502,15 @@ const JOURNEYS: readonly Journey[] = [
   // Os três números abaixo são o ACHADO da M45.7, não um relaxamento dela: nenhuma das três tem
   // `<main>`, e o contraste está reprovado. Estavam assim ANTES desta tranche — a diferença é que
   // agora estão contados, e a catraca reprova se piorarem.
-  { id: "J21", nome: "landing pública", rota: "/", regiao: "body", axeConhecido: 43,
+  { id: "J21", nome: "landing pública", rota: "/", axeConhecido: 6,
     terminal: /Do you know if it's working|Você sabe se ela está funcionando/ },
-  { id: "J22", nome: "termos de uso", rota: "/terms", axeConhecido: 8,
+  { id: "J22", nome: "termos de uso", rota: "/terms",
     terminal: /Acceptance of terms|Aceitação dos termos/ },
   // 2 de contraste + 1 `link-in-text-block`: "Create one" tem 2.06:1 contra o texto ao redor, e a
   // regra existe porque link que só se distingue por cor some para quem não distingue essa cor.
-  { id: "J23", nome: "entrada", rota: "/login", regiao: "body", axeConhecido: 3, montar: semSessao,
-    terminal: /decision layer for your AI|camada de decisão/ },
-  { id: "J24", nome: "sessão expirada", rota: "/session-expired", regiao: "body", montar: semSessao,
+  { id: "J23", nome: "entrada", rota: "/login", montar: semSessao,
+    terminal: /Enter your analysis workspace|Entre no seu espaço/ },
+  { id: "J24", nome: "sessão expirada", rota: "/session-expired", montar: semSessao,
     // O estado que a M14 entregou e que nenhuma passada transversal viu: a sessão caiu, e a tela
     // diz que os dados continuam salvos — a diferença entre perder a sessão e perder o trabalho.
     terminal: /Session expired|Sessão expirada/ },
@@ -525,26 +527,26 @@ const JOURNEYS: readonly Journey[] = [
   // ─────────────────────────────────────────────────────────────────────────────────────────
 
   // 76 nós num só lugar — o maior bolsão de dívida de a11y do produto inteiro.
-  { id: "J25", nome: "AION (produto irmão)", rota: "/aion", regiao: "body", axeConhecido: 76,
+  { id: "J25", nome: "AION (produto irmão)", rota: "/aion",
     montar: semSessao, terminal: /The proxy that thinks/ },
   // Os três documentos legais somam 27 (8 + 10 + 9): é UM template com um defeito, contado três
   // vezes. Corrigir o token do template baixa os três de uma vez.
-  { id: "J26", nome: "política de privacidade", rota: "/privacy", axeConhecido: 10,
+  { id: "J26", nome: "política de privacidade", rota: "/privacy",
     terminal: /How we collect, use, and protect|Who we are/ },
-  { id: "J27", nome: "segurança", rota: "/security", axeConhecido: 9,
+  { id: "J27", nome: "segurança", rota: "/security",
     terminal: /How we protect your data/ },
-  { id: "J28", nome: "criar conta", rota: "/register", regiao: "body", montar: semSessao,
+  { id: "J28", nome: "criar conta", rota: "/register", montar: semSessao,
     terminal: /Redirecting to account creation/ },
-  { id: "J29", nome: "recuperar senha", rota: "/forgot-password", regiao: "body", montar: semSessao,
+  { id: "J29", nome: "recuperar senha", rota: "/forgot-password", montar: semSessao,
     terminal: /Redirecting to password reset/ },
   // A única DENTRO do produto, e por isso a mais séria das oito.
-  { id: "J30", nome: "perfil", rota: "/profile", axeConhecido: 6,
+  { id: "J30", nome: "perfil", rota: "/profile",
     terminal: /Your account identity and security settings/ },
-  { id: "J31", nome: "erro do servidor", rota: "/error", regiao: "body", axeConhecido: 1,
+  { id: "J31", nome: "erro do servidor", rota: "/error",
     terminal: /An unexpected server error occurred/ },
   // 404 é superfície: é onde cai todo link quebrado, e o texto promete que as análises seguem
   // intactas — a mesma distinção entre perder o caminho e perder o trabalho que J24 faz.
-  { id: "J32", nome: "página inexistente", rota: "/rota-que-nao-existe", regiao: "body", axeConhecido: 3,
+  { id: "J32", nome: "página inexistente", rota: "/rota-que-nao-existe",
     terminal: /This page doesn't exist/ },
 
   // AS DUAS VISÕES QUE DÃO NOME À UMBRELLA — e que a umbrella nunca pôs na própria matriz.
@@ -560,6 +562,18 @@ const JOURNEYS: readonly Journey[] = [
     terminal: /The ARGOS document is not available for this analysis/ },
   { id: "J34", nome: "visão Analytics", rota: `/analyses/${ANALISE}/analytics`,
     terminal: /Numeric measures/ },
+
+  // A DÍVIDA DE COBERTURA que a M45.8 declarou, paga na M46.
+  //
+  // Ela ficou de fora com o motivo "tem suíte própria" — e a M45.8 existe justamente porque suíte
+  // própria não substitui a passada transversal: foi assim que `/argos` e `/analytics` sumiram.
+  // Deixá-la fora seria repetir o argumento que a tranche anterior refutou.
+  //
+  // Como em J33, a montagem base serve **v2** e a comparação exige ARGOS dos dois lados: o
+  // terminal é a recusa nomeada, que diz o que falta e para onde ir.
+  { id: "J35", nome: "comparação (v2 → recusa nomeada)",
+    rota: `/analyses/compare/${ANALISE}/${ANALISE_B}`,
+    terminal: /One side has no ARGOS document|Um dos lados não tem documento ARGOS/ },
 ] as const;
 
 /**
@@ -585,28 +599,81 @@ test.describe("M45 · G1-bis · a dívida declarada é nominal e não cresce", (
     expect(
       JOURNEYS.filter((j) => j.regiao === "body").map((j) => j.id),
       "uma journey NOVA sem `<main>`: adicione o landmark em vez de declarar `regiao: \"body\"`",
-    ).toEqual(["J21", "J23", "J24", "J25", "J28", "J29", "J31", "J32"]);
+    // VAZIO — M46.
+    //
+    // As oito superfícies que declaravam `regiao: "body"` ganharam `<main>`. A lista chegou a ter
+    // oito nomes; hoje ela é a prova de que a catraca serviu para o que foi feita: baixar, não
+    // acomodar. Uma entrada nova aqui reprova.
+    ).toEqual([]);
 
     expect(
       JOURNEYS.filter((j) => (j.axeConhecido ?? 0) > 0).map((j) => j.id),
       "uma journey NOVA com violação de a11y declarada: corrija a tela, não o gate",
-    ).toEqual(["J21", "J22", "J23", "J25", "J26", "J27", "J30", "J31", "J32"]);
+    ).toEqual(["J21"]);
 
-    // O TETO ABSOLUTO da dívida de a11y do produto inteiro.
+    // O TETO ABSOLUTO da dívida de a11y do produto inteiro — 159 na M45.8, **6** desde a M46.
     //
-    //   43 landing · 8 termos · 3 entrada ......................... 54  (medido na M45.7)
-    //   76 AION · 10 privacidade · 9 segurança · 6 perfil
-    //    · 1 erro · 3 não-encontrada ............................. 105  (medido na M45.8)
-    //                                                             ────
-    //                                                              159
+    // Como os 153 caíram, e por que foi barato: quase tudo era TOKEN, não tela.
     //
-    // A M45.7 fechou anunciando 54 e acreditando que era o total. Era o total do que ela tinha
-    // olhado — e o que ela não olhou tinha o dobro. Este número só tem um caminho permitido:
-    // para baixo.
+    //   `A.muted` no AION .................. 76 → 0   (uma linha; 3.32:1 → 5.22:1)
+    //   `L.*` no template legal ............ 27 → 0   (um template servindo três documentos)
+    //   `C.ghost` + `C.subtle` na landing .. 26 → 0
+    //   `#475569` em perfil/erro/404 ....... 10 → 0   (o mesmo cinza em três arquivos)
+    //   `C.red`/`C.amber`/`C.accentBr` ..... 11 → 0   (cores de status usadas como texto de 9px)
+    //   entrada, "Step N", separador ........ 3 → 0
+    //
+    // OS 6 QUE FICAM, e por que ficam:
+    //
+    //   3 · o numeral-fantasma dos cards de passo (`rgba(255,255,255,0.025)`, 72px). É TEXTURA:
+    //       a 1.04:1 ninguém o lê, e é esse o efeito. O número aparece legível logo abaixo, em
+    //       "Step N". Corrigi-lo seria desenhar outra coisa, não corrigir esta.
+    //   3 · os monogramas de marca dos fornecedores de LLM (`#1877F2` Meta, `#4E6EF2` DeepSeek,
+    //       `#8B6CF7` Qwen). A WCAG 1.4.3 isenta logotipo de piso de contraste, e o nome do modelo
+    //       está escrito ao lado, legível.
+    //
+    // Os dois grupos são `aria-hidden` — o leitor de tela não os anuncia. Mas continuam CONTADOS:
+    // isenção da norma não é motivo para parar de medir, e um dia alguém vai querer saber por que
+    // este número não é zero. A resposta está escrita aqui, e não numa decisão esquecida.
     expect(
       JOURNEYS.reduce((soma, j) => soma + (j.axeConhecido ?? 0), 0),
       "o total de dívida de a11y declarada mudou",
-    ).toBe(159);
+    ).toBe(6);
+  });
+
+  // A catraca do MARCADOR de estouro — M46.
+  //
+  // `data-overflow-ok` desliga o gate de responsive num subárvore inteira. Isso é poderoso demais
+  // para ficar sem contagem: bastaria salpicá-lo para o G5 parar de medir o produto.
+  //
+  // O teste conta os marcadores no CÓDIGO-FONTE, e não no DOM: no DOM eles seriam contados apenas
+  // nas páginas visitadas, e o furo estaria justamente em quem não é visitado.
+  test("o marcador de estouro intencional é nominal e não se espalha", async () => {
+    const { readdirSync, readFileSync, statSync } = await import("node:fs");
+    const { join, resolve } = await import("node:path");
+
+    // `process.cwd()`, e não `__dirname`: esta suíte roda como ESM, onde `__dirname` não existe.
+    // O Playwright executa a partir da raiz do projeto (onde vive o config).
+    const raiz = resolve(process.cwd(), "src");
+    const achados: string[] = [];
+    const varrer = (dir: string) => {
+      for (const nome of readdirSync(dir)) {
+        const caminho = join(dir, nome);
+        if (statSync(caminho).isDirectory()) varrer(caminho);
+        else if (/\.tsx?$/.test(nome)) {
+          for (const m of readFileSync(caminho, "utf-8").matchAll(/data-overflow-ok="([^"]+)"/g)) {
+            achados.push(`${nome}:${m[1]}`);
+          }
+        }
+      }
+    };
+    varrer(raiz);
+
+    expect(achados.length, "o extrator não achou nenhum marcador — regex quebrada?").toBeGreaterThan(0);
+    expect(
+      achados.sort(),
+      "um `data-overflow-ok` NOVO: prove que a largura é intencional (a página não pode rolar na " +
+        "horizontal) e adicione aqui, ou conserte o layout",
+    ).toEqual(["LandingPage.tsx:marquee", "LandingPage.tsx:orbe-decorativo"]);
   });
 });
 
@@ -995,12 +1062,53 @@ test.describe("M45 · G5 · responsive", () => {
         // assim não podia falhar — a mutação 7 da campanha o provou, injetando `min-w-[2000px]` no
         // frame e passando verde. Medir a caixa de cada elemento pega o estouro real, que é o que
         // a pessoa vê: conteúdo cortado na borda.
+        // M46 — DOIS achados aqui, e o segundo é sobre este gate.
+        //
+        // 1. Ele varre `main *`. Oito superfícies NÃO TINHAM `<main>` até esta tranche, então para
+        //    elas o laço percorria ZERO elementos e o gate passava por vacuidade. A landing entrou
+        //    em responsive pela primeira vez agora — e acusou 2947px.
+        //
+        // 2. Os 2947px NÃO eram defeito. `document.scrollWidth - clientWidth` é **0** nas três
+        //    larguras: a página não rola. São a esteira de modelos (largura `max-content`, animada
+        //    dentro de um contêiner que recorta) e orbes de blur posicionados de propósito para
+        //    fora do card. Fora da esteira, o estouro real é 0px no desktop.
+        //
+        // A saída NÃO foi "ignorar quem tem ancestral que recorta": isso reabriria exatamente o
+        // buraco que motivou medir geometria — no AppShell, um `min-w-[2000px]` TAMBÉM tem um
+        // ancestral que recorta, e a mutação que injetou isso passaria verde de novo.
+        //
+        // A saída é um marcador EXPLÍCITO, como `FORA_DA_MATRIZ`: quem sabe que a largura é
+        // intencional escreve isso no elemento, e o gate continua estrito para todo o resto.
         const excesso = await page.evaluate(() => {
           const largura = document.documentElement.clientWidth;
           let pior = 0;
+          /**
+           * O elemento está dentro de algo que a PESSOA consegue rolar, e que cabe na tela?
+           *
+           * `overflow-x: auto|scroll` e `overflow-x: hidden` parecem iguais no cálculo e são
+           * opostos na experiência: com `auto` o conteúdo continua ALCANÇÁVEL (é o padrão certo
+           * para bloco de código, que não deve quebrar linha); com `hidden` ele é cortado em
+           * silêncio, e foi assim que o `AppShell` escondeu quebras reais.
+           *
+           * Por isso só `auto|scroll` isenta — e `hidden` continua reprovando.
+           */
+          const alcancavel = (el: Element) => {
+            let p = el.parentElement;
+            while (p) {
+              const ox = getComputedStyle(p).overflowX;
+              if (ox === "auto" || ox === "scroll") {
+                if (p.getBoundingClientRect().right - largura <= 1) return true;
+              }
+              p = p.parentElement;
+            }
+            return false;
+          };
+
           for (const el of Array.from(document.querySelectorAll("main *"))) {
+            if (el.closest("[data-overflow-ok]")) continue;
             const r = el.getBoundingClientRect();
             if (r.width === 0) continue;
+            if (alcancavel(el)) continue;
             pior = Math.max(pior, Math.round(r.right - largura));
           }
           return pior;

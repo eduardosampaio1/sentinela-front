@@ -80,7 +80,7 @@ const BASELINE: ReadonlyMap<string, Divida> = new Map([
   [
     "src/features/landing/LandingPage.tsx",
     {
-      teto: 1215,
+      teto: 1182, // M46: era 1215; os tokens saíram para `tokens.ts`.
       motivo:
         "monólito de página nomeado pelo plano; decompor é missão própria (D17), fora do escopo da M07",
     },
@@ -88,7 +88,7 @@ const BASELINE: ReadonlyMap<string, Divida> = new Map([
   [
     "src/features/aion/AionPage.tsx",
     {
-      teto: 1180,
+      teto: 1167, // M46: era 1180; os tokens saíram para `tokens.ts`.
       motivo:
         "monólito de página nomeado pelo plano; decompor é missão própria (D17), fora do escopo da M07",
     },
@@ -129,8 +129,14 @@ describe("M07 · 1. a régua mede o que diz medir", () => {
     // mudou (e a baseline inteira virou incomparável). Os dois exigem alguém olhar.
     const landing = MEDIDOS.find((x) => x.rel === "src/features/landing/LandingPage.tsx");
     const aion = MEDIDOS.find((x) => x.rel === "src/features/aion/AionPage.tsx");
-    expect(landing?.linhas, "LandingPage divergiu do número do plano").toBe(1215);
-    expect(aion?.linhas, "AionPage divergiu do número do plano").toBe(1180);
+    // M46 — os dois encolheram, e o plano acompanha.
+    //
+    // 1215 → 1182 e 1180 → 1167: os blocos de tokens saíram para `tokens.ts` ao lado de cada um.
+    // A extração foi FORÇADA por esta catraca: as correções de a11y e o `<main>` que faltava
+    // somavam ~44 linhas aos dois arquivos, e o teto recusou. Encolher em vez de subir o teto é
+    // exatamente o que ela existe para provocar.
+    expect(landing?.linhas, "LandingPage divergiu do número do plano").toBe(1182);
+    expect(aion?.linhas, "AionPage divergiu do número do plano").toBe(1167);
   });
 });
 

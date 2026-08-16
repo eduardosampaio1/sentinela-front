@@ -12,7 +12,7 @@ export function ServerErrorPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-[#070C18] flex flex-col items-center justify-center text-center px-6">
+    <main className="min-h-screen bg-[#070C18] flex flex-col items-center justify-center text-center px-6">
       <div className="max-w-lg mx-auto">
 
         {/* Icon */}
@@ -46,13 +46,13 @@ export function ServerErrorPage() {
           issue, not a data loss event.
         </p>
 
-        <p className="text-xs text-[#475569] mb-8">
+        <p className="text-xs text-[#71809A] mb-8">
           If this error repeats after reloading, it may indicate a temporary service
           disruption. Try again in a few minutes or navigate back to the Launchpad.
         </p>
 
         {technicalDetail && (
-          <p className="text-xs text-[#475569] font-mono bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-xl px-4 py-3 mb-8 text-left break-words">
+          <p className="text-xs text-[#71809A] font-mono bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-xl px-4 py-3 mb-8 text-left break-words">
             {technicalDetail}
           </p>
         )}
@@ -76,6 +76,6 @@ export function ServerErrorPage() {
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

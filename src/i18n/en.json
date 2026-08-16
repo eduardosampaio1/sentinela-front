@@ -370,7 +370,7 @@
         "distributionsTitle": "Label distributions",
         "dimensionsTitle": "Dimensions",
         "concentrationsTitle": "Volume concentration",
-        "seriesTitle": "Over time",
+        "seriesTitle": "Time series",
         "withValue": "With value",
         "empty": "Empty",
         "unreadable": "Unreadable",
@@ -381,7 +381,7 @@
         "mean": "Mean",
         "suppressedStats": "Statistics were withheld: too few records for them to be published without identifying someone.",
         "distinctObserved": "Distinct labels observed",
-        "otherCount": "Other labels",
+        "otherCount": "Other",
         "otherWithheld": "Labels below the floor were not grouped either — their total is also too small to publish.",
         "minGroupSize": "Labels are published only from {{n}} records upwards.",
         "highCardinality": "Too many distinct labels to publish them: this is a decision, not missing data.",
@@ -416,7 +416,7 @@
           "unknown": "State unknown. Nothing is being asserted about the analytics component."
         },
         "stateGroup": "State",
-        "exportTitle": "Export package",
+        "exportTitle": "Export",
         "exportDownload": "Download package",
         "exportReadyHint": "Produced by the analysis, not by this screen.",
         "exportState": {

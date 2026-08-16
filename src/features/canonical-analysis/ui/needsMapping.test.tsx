@@ -26,6 +26,22 @@ import { CanonicalClientProvider } from "../data/client";
 import { intervaloDePolling, proximoPolling } from "../data/analysis";
 import { AnalysisPage } from "./AnalysisPage";
 import pt from "@/i18n/pt.json";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+/**
+ * O recorte do bundle PT que este arquivo lê — M46.
+ *
+ * Aqui havia `Record<string, any>`, e `any` desliga a checagem justamente onde ela pagaria: se
+ * `state.needs_mapping` for renomeado, `any` deixa o acesso compilar e o teste quebra em runtime
+ * com "cannot read property of undefined". Com este tipo, o compilador acusa antes.
+ */
+interface BundlePt {
+  canonicalAnalysis: {
+    state: { needs_mapping: { message: string } };
+    action: { checkAgain: string };
+  };
+}
 
 vi.mock("@/shell/AppShell", () => ({ AppShell: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ workspace: { id: "ws-1" } }) }));
@@ -109,10 +125,10 @@ describe("a parada de mapping chega na tela", () => {
   });
 
   it("o texto exato da parada existe e é o que o produto pediu", () => {
-    const estado = (pt as Record<string, any>).canonicalAnalysis.state.needs_mapping;
+    const estado = (pt as unknown as BundlePt).canonicalAnalysis.state.needs_mapping;
     expect(estado.message).toBe("Precisamos confirmar como alguns campos devem ser interpretados.");
     // A ação existe em i18n: sem ela o botão renderizaria a chave crua na tela.
-    expect(String((pt as Record<string, any>).canonicalAnalysis.action.checkAgain).trim().length)
+    expect(String((pt as unknown as BundlePt).canonicalAnalysis.action.checkAgain).trim().length)
       .toBeGreaterThan(0);
   });
 
@@ -120,10 +136,7 @@ describe("a parada de mapping chega na tela", () => {
     // Cadeado estrutural, e o motivo dele é concreto: caindo no `default`, a parada renderiza
     // o mesmo banner de "na fila / executando" e nenhuma ação. O teste de render acima nao
     // discrimina isso sozinho porque os dois caminhos montam a pagina.
-    const fonte = require("node:fs").readFileSync(
-      require("node:path").resolve(__dirname, "AnalysisPage.tsx"),
-      "utf-8",
-    );
+    const fonte = readFileSync(resolve(__dirname, "AnalysisPage.tsx"), "utf-8");
     expect(fonte).toContain('case "needs_mapping":');
     const trecho = fonte.slice(fonte.indexOf('case "needs_mapping":'), fonte.indexOf('case "completed":'));
     expect(trecho, "o case existe mas não oferece ação nenhuma").toContain("canonicalAnalysis.action.checkAgain");

@@ -1,27 +1,7 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-
-// ─── Design tokens ────────────────────────────────────────────────────────────
-
-const A = {
-  bg:         "#0B1120",
-  surface:    "#141B2D",
-  surfaceAlt: "#1A2236",
-  border:     "#1E293B",
-  primary:    "#14B8A6",
-  cta:        "#0EA5E9",
-  text:       "#E2E8F0",
-  muted:      "#64748B",
-  amber:      "#EAB308",
-  nomos:      "#38BDF8",
-  estixe:     "#2DD4BF",
-  metis:      "#A78BFA",
-  nemos:      "#EAB308",
-};
-
-const display = { fontFamily: "'Inter', system-ui, sans-serif", letterSpacing: "-0.022em" } as const;
-const mono    = { fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace" } as const;
+import { A, display, mono } from "./tokens";
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 
@@ -846,7 +826,9 @@ function AgnosticSection() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
               </svg>
             </div>
-            <div>
+            {/* M46 `min-w-0`: sem ele a página ROLA 226px no celular (flex não encolhe abaixo da
+                palavra mais longa — aqui, `/v1/chat/completions`). */}
+            <div className="min-w-0">
               <p className="text-sm font-semibold mb-1" style={{ color: A.amber }}>Your enterprise has its own AI?</p>
               <p className="text-sm leading-relaxed mb-4" style={{ color: A.muted }}>
                 Does it expose a <code style={{ ...mono, color: A.primary }}>/v1/chat/completions</code> endpoint?
@@ -943,7 +925,9 @@ function ContactSection() {
         }),
       });
       const json = await res.json();
-      json.success ? setState("success") : (setErrorMsg(json.message ?? "Try again."), setState("error"));
+      // M46: era ternário usado como comando, com vírgula-operador no ramo do erro.
+      if (json.success) setState("success");
+      else { setErrorMsg(json.message ?? "Try again."); setState("error"); }
     } catch {
       setErrorMsg("Network error. Please try again.");
       setState("error");
@@ -1165,15 +1149,18 @@ export function AionPage() {
   return (
     <div className="min-h-screen" style={{ background: A.bg, color: A.text }}>
       <Navbar />
-      <Hero />
-      <ProblemSection />
-      <MetricsSection />
-      <ModulesSection />
-      <NemosSection />
-      <IntegrationSection />
-      <AgnosticSection />
-      <ObservabilitySection />
-      <ContactSection />
+      {/* M46: faltava o landmark de conteúdo — sem ele não há "pular para o conteúdo". */}
+      <main>
+        <Hero />
+        <ProblemSection />
+        <MetricsSection />
+        <ModulesSection />
+        <NemosSection />
+        <IntegrationSection />
+        <AgnosticSection />
+        <ObservabilitySection />
+        <ContactSection />
+      </main>
       <Footer />
     </div>
   );

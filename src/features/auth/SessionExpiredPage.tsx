@@ -5,7 +5,7 @@ export function SessionExpiredPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#070C18] px-6">
+    <main className="min-h-screen flex items-center justify-center bg-[#070C18] px-6">
       <div className="max-w-md w-full text-center space-y-6">
         {/* Icon */}
         <div className="w-16 h-16 rounded-2xl bg-[rgba(252,211,77,0.08)] border border-[rgba(252,211,77,0.15)] flex items-center justify-center mx-auto">
@@ -38,6 +38,6 @@ export function SessionExpiredPage() {
           </Button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

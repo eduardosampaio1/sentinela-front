@@ -5,7 +5,7 @@ export function NotFoundPage() {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-[#070C18] flex flex-col items-center justify-center text-center px-6">
+    <main className="min-h-screen bg-[#070C18] flex flex-col items-center justify-center text-center px-6">
       <div className="max-w-md mx-auto">
 
         {/* Icon */}
@@ -25,7 +25,7 @@ export function NotFoundPage() {
           </svg>
         </div>
 
-        <p className="text-xs font-mono text-[#4F5AE8] mb-3 tracking-widest uppercase">
+        <p className="text-xs font-mono text-[#7C86E0] mb-3 tracking-widest uppercase">
           404 — Not found
         </p>
 
@@ -35,12 +35,12 @@ export function NotFoundPage() {
 
         <p className="text-sm text-[#94A3B8] leading-relaxed mb-3">
           The URL{" "}
-          <span className="font-mono text-[#475569] text-xs">{location.pathname}</span>{" "}
+          <span className="font-mono text-[#71809A] text-xs">{location.pathname}</span>{" "}
           could not be matched to any page in Sentinela. It may have been moved,
           renamed, or the link may be broken.
         </p>
 
-        <p className="text-xs text-[#475569] mb-8">
+        <p className="text-xs text-[#71809A] mb-8">
           Your analyses, workspace, and account data are unaffected.
         </p>
 
@@ -64,6 +64,6 @@ export function NotFoundPage() {
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -3,54 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-// ─── Design tokens — Linear dark canvas + Vercel shadow-as-border ─────────────
-
-const C = {
-  // Surfaces — Linear's luminance stacking
-  bg:         "#09090b",
-  bgAlt:      "#0f1011",
-  bgCard:     "rgba(255,255,255,0.025)",
-  bgCardStr:  "rgba(255,255,255,0.04)",
-
-  // Borders
-  border:     "rgba(255,255,255,0.06)",
-  borderStr:  "rgba(255,255,255,0.1)",
-
-  // Text — Linear's cool near-white palette
-  text:       "#f7f8f8",
-  muted:      "#a1a1aa",
-  ghost:      "#71717a",
-  subtle:     "#52525b",
-
-  // Single brand accent: Linear indigo-violet
-  accent:     "#5e6ad2",
-  accentBr:   "#7170ff",
-  accentHov:  "#828fff",
-  accentBg:   "rgba(94,106,210,0.08)",
-  accentBord: "rgba(94,106,210,0.22)",
-
-  // Status colors — data visualizations only
-  green:      "#27a644",
-  amber:      "#d97706",
-  red:        "#dc2626",
-  greenBg:    "rgba(39,166,68,0.08)",
-  greenBord:  "rgba(39,166,68,0.2)",
-  amberBg:    "rgba(217,119,6,0.08)",
-  amberBord:  "rgba(217,119,6,0.22)",
-  redBg:      "rgba(220,38,38,0.07)",
-  redBord:    "rgba(220,38,38,0.2)",
-};
-
-// Inter Variable with Linear's OpenType features
-const display: React.CSSProperties = {
-  fontFamily: "'Inter', -apple-system, system-ui, sans-serif",
-  fontFeatureSettings: '"cv01", "ss03"',
-};
-// JetBrains Mono for technical labels
-const mono: React.CSSProperties = {
-  fontFamily: "'JetBrains Mono', 'Berkeley Mono', ui-monospace, monospace",
-};
+import { C, display, mono } from "./tokens";
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
@@ -489,7 +442,13 @@ function ModelBadge({ m }: { m: typeof MODELS[number] }) {
         background: "rgba(255,255,255,0.025)",
       }}
     >
+      {/* M46 — o monograma é a MARCA do fornecedor (`#1877F2` é da Meta, `#4E6EF2` da DeepSeek,
+          `#8B6CF7` da Qwen), e a WCAG 1.4.3 isenta logotipo de piso de contraste. Ele é
+          `aria-hidden` porque o nome do modelo está escrito ao lado, legível: quem usa leitor de
+          tela ouve "Llama 3.3", não "Me Llama 3.3".
+          Os três continuam contados no gate — isenção da norma não é motivo para parar de medir. */}
       <span
+        aria-hidden="true"
         className="flex items-center justify-center rounded flex-shrink-0"
         style={{
           width: 22, height: 22,
@@ -527,7 +486,7 @@ function ContextStrip() {
         WebkitMaskImage: "linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent)",
         maskImage: "linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent)",
       }}>
-        <div className="flex gap-2 marquee-track" style={{ width: "max-content" }}>
+        <div data-overflow-ok="marquee" className="flex gap-2 marquee-track" style={{ width: "max-content" }}>
           {track.map((m, i) => <ModelBadge key={i} m={m} />)}
         </div>
       </div>
@@ -608,7 +567,7 @@ function ProblemSection() {
                 boxShadow: `${p.border} 0px 0px 0px 1px`,
               }}
             >
-              <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full pointer-events-none"
+              <div data-overflow-ok="orbe-decorativo" aria-hidden="true" className="absolute -top-10 -right-10 w-36 h-36 rounded-full pointer-events-none"
                 style={{ background: `radial-gradient(circle, ${p.color}12, transparent 70%)`, filter: "blur(20px)" }} />
 
               <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5"
@@ -826,8 +785,13 @@ function HowItWorksSection() {
                 boxShadow: "rgba(255,255,255,0.07) 0px 0px 0px 1px, rgba(0,0,0,0.15) 0px 2px 8px -2px",
               }}
             >
-              {/* Watermark */}
-              <div className="absolute top-2 right-3 select-none pointer-events-none"
+              {/* Watermark — M46: é textura, e agora está declarada como tal.
+                  A 1.04:1 este numeral é invisível para TODO MUNDO, que é o efeito pretendido
+                  (`rgba(255,255,255,0.025)`, `select-none`, `pointer-events-none`). E o mesmo
+                  número aparece legível logo abaixo, em "Step {n}". `aria-hidden` aqui não esconde
+                  informação: evita que um leitor de tela anuncie duas vezes o que já está escrito,
+                  e tira do gate um nó que nunca foi conteúdo. */}
+              <div aria-hidden="true" className="absolute top-2 right-3 select-none pointer-events-none"
                 style={{ ...mono, fontSize: "72px", fontWeight: 800, color: "rgba(255,255,255,0.025)", lineHeight: 1 }}>
                 {s.num}
               </div>
@@ -839,7 +803,7 @@ function HowItWorksSection() {
                 </svg>
               </div>
 
-              <div style={{ ...mono, fontSize: "9px", letterSpacing: "0.22em", textTransform: "uppercase", color: `${C.accentBr}70`, marginBottom: "0.5rem" }}>
+              <div style={{ ...mono, fontSize: "9px", letterSpacing: "0.22em", textTransform: "uppercase", color: C.accentBr, marginBottom: "0.5rem" }}>
                 Step {s.num}
               </div>
               <h3 style={{ ...display, fontSize: "16px", fontWeight: 590, color: C.text, marginBottom: "0.5rem" }}>{s.title}</h3>
@@ -1201,14 +1165,17 @@ export function LandingPage() {
   return (
     <div style={{ background: C.bg, color: C.text, minHeight: "100vh" }}>
       <Navbar />
-      <Hero />
-      <ContextStrip />
-      <ProblemSection />
-      <PlatformSection />
-      <HowItWorksSection />
-      <OutcomesSection />
-      <PricingSection />
-      <FinalCTA />
+      {/* M46 — a primeira tela do produto era a única sem landmark de conteúdo. */}
+      <main>
+        <Hero />
+        <ContextStrip />
+        <ProblemSection />
+        <PlatformSection />
+        <HowItWorksSection />
+        <OutcomesSection />
+        <PricingSection />
+        <FinalCTA />
+      </main>
       <Footer />
     </div>
   );

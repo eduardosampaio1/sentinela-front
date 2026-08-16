@@ -127,26 +127,26 @@ export function ProfilePage() {
                 <p className="text-base font-semibold text-[#F1F5F9]">{displayName}</p>
                 <p className="text-sm text-[#94A3B8]">{user?.email ?? "—"}</p>
                 {memberSince && (
-                  <p className="text-xs text-[#475569] mt-1">Member since {memberSince}</p>
+                  <p className="text-xs text-[#71809A] mt-1">Member since {memberSince}</p>
                 )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-widest font-semibold text-[#475569]">Full name</p>
+                <p className="text-xs uppercase tracking-widest font-semibold text-[#71809A]">Full name</p>
                 <p className="text-sm text-[#94A3B8]">{displayName}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-widest font-semibold text-[#475569]">Email address</p>
+                <p className="text-xs uppercase tracking-widest font-semibold text-[#71809A]">Email address</p>
                 <p className="text-sm text-[#94A3B8]">{user?.email ?? "—"}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-widest font-semibold text-[#475569]">User ID</p>
-                <p className="text-xs font-mono text-[#475569] break-all">{user?.id ?? "—"}</p>
+                <p className="text-xs uppercase tracking-widest font-semibold text-[#71809A]">User ID</p>
+                <p className="text-xs font-mono text-[#71809A] break-all">{user?.id ?? "—"}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-widest font-semibold text-[#475569]">Auth provider</p>
+                <p className="text-xs uppercase tracking-widest font-semibold text-[#71809A]">Auth provider</p>
                 <p className="text-sm text-[#94A3B8]">
                   {(user?.app_metadata?.provider as string | undefined) ?? "email"}
                 </p>
@@ -173,7 +173,7 @@ export function ProfilePage() {
                     setPasswordError(null);
                   }}
                   placeholder="Minimum 8 characters"
-                  className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] rounded-xl h-11"
+                  className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#71809A] rounded-xl h-11"
                 />
               </div>
               <div className="space-y-1.5">
@@ -189,7 +189,7 @@ export function ProfilePage() {
                     setPasswordError(null);
                   }}
                   placeholder="Repeat the new password"
-                  className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#475569] rounded-xl h-11"
+                  className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#71809A] rounded-xl h-11"
                 />
               </div>
 

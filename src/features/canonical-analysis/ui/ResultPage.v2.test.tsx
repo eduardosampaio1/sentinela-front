@@ -94,7 +94,7 @@ describe("v2 ready — a tela mostra a Engine E o bloco analítico", () => {
     expect(await screen.findByRole("heading", { name: "Measures" })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Dimensions" })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Volume concentration" })).toBeInTheDocument();
-    expect(await screen.findByRole("heading", { name: "Over time" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Time series" })).toBeInTheDocument();
   });
 
   it("Pareto: a participação sai como percentual, e as faixas com a contagem escrita", async () => {
@@ -113,7 +113,7 @@ describe("v2 ready — a tela mostra a Engine E o bloco analítico", () => {
     servirV2(V2_READY);
     montar();
 
-    const serie = await screen.findByRole("heading", { name: "Over time" });
+    const serie = await screen.findByRole("heading", { name: "Time series" });
     const secao = serie.closest("section");
     expect(secao?.textContent).toContain("Jul 2026");
     expect(secao?.textContent).toContain("Dec 2026");

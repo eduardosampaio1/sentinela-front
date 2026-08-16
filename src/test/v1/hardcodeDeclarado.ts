@@ -28,8 +28,21 @@
  * gate exige.
  */
 export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
-  "src/features/landing/LandingPage.tsx": 78,
-  "src/features/aion/AionPage.tsx": 33,
+  // M46 — a dívida dos dois monólitos foi PARTIDA, não aumentada.
+  //
+  // Os blocos de tokens saíram para `tokens.ts` ao lado de cada página, porque a catraca
+  // anti-monólito recusou o crescimento que as correções de a11y exigiam. As somas conservam
+  // exatamente os números anteriores:
+  //
+  //   landing: 54 + 24 = 78  (era 78 num arquivo só)
+  //   aion:    20 + 13 = 33  (era 33 num arquivo só)
+  //
+  // Nenhum literal novo nasceu. E agora eles moram num arquivo de 60 linhas, onde dá para revisar,
+  // em vez de no meio de 1200 — que é como `#64748B` reprovou 76 nós sem ninguém notar.
+  "src/features/landing/LandingPage.tsx": 54,
+  "src/features/landing/tokens.ts": 24,
+  "src/features/aion/tokens.ts": 13,
+  "src/features/aion/AionPage.tsx": 20,
   "src/features/profile/ProfilePage.tsx": 23,
   "src/features/history/RunRow.tsx": 19,
   "src/features/history/RunComparePanel.tsx": 17,

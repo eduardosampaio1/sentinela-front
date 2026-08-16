@@ -118,7 +118,7 @@ export function LoginPage() {
         </h1>
         <p className="text-sm text-[#94A3B8]">
           Don't have an account?{" "}
-          <Link to="/register" className="text-[#4F5AE8] hover:text-[#3E48C4] transition-colors">
+          <Link to="/register" className="text-[#7C86E0] underline underline-offset-2 hover:text-[#A6ADEE] transition-colors">
             Create one for free
           </Link>
         </p>
@@ -154,7 +154,7 @@ export function LoginPage() {
 
       <div className="my-6 flex items-center gap-3">
         <div className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
-        <span className="text-xs text-[#475569]">or</span>
+        <span className="text-xs text-[#71809A]">or</span>
         <div className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
       </div>
 
