@@ -69,10 +69,16 @@ export function UploadStep({
         {/* M33 — ONDE a pessoa está, e QUAL análise ela está preenchendo.
             Medido: vindo de `/analyses/new` nada confirmava que a análise fora criada, e por deep
             link ou refresh a tela não dizia a que ela pertencia. Não é stepper nem wizard: é o
-            estado público `preparing` dito em palavras, e a identidade que já existe na rota. */}
-        <p className="mt-2 flex flex-wrap items-baseline gap-x-2 text-sm">
-          <span className="text-muted-foreground">{t("canonicalAnalysis.upload.journeyReserved")}</span>
-          <span className="font-mono text-xs text-foreground">{analysisId}</span>
+            estado público `preparing` dito em palavras.
+
+            O IDENTIFICADOR SAIU DAQUI e subiu para o cabeçalho da página. Ele estava neste ramo
+            porque `preparing` era o único estado que o mostrava — os outros sete não diziam qual
+            análise era. Agora a identidade existe uma vez, para os oito, e repeti-la aqui daria
+            duas respostas para a mesma pergunta na mesma tela.
+
+            A frase fica: ela é sobre o ESTADO (a análise foi reservada), não sobre a identidade. */}
+        <p className="mt-2 text-sm text-muted-foreground">
+          {t("canonicalAnalysis.upload.journeyReserved")}
         </p>
       </div>
 

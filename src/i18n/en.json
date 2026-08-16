@@ -284,6 +284,8 @@
       "open": "Open analysis {{id}}",
       "records": "{{count}} records",
       "recordsUnknown": "Record count not published",
+    "lastChange": "Last change",
+    "belongsTo": "Instance",
     "conversations": "conversations",
     "conversationsAbsent": "not published",
     "legacyAnalysis": "No instance",

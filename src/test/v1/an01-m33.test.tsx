@@ -373,12 +373,28 @@ describe("M33 · 7. a queda de rede atravessa o cliente canônico", () => {
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M33 · 8. onde a pessoa está", () => {
-  it("a tela de upload diz que a análise foi reservada e QUAL é ela", () => {
-    // Medido em 8,46: vindo de `/analyses/new` nada confirmava a criação, e por deep link a tela
-    // não dizia a que análise pertencia. Não é stepper: é o estado público dito em palavras.
+  it("a tela de upload diz que a análise foi RESERVADA", () => {
+    // Medido em 8,46: vindo de `/analyses/new` nada confirmava a criação. Não é stepper: é o
+    // estado público dito em palavras.
+    //
+    // 🔎 **A segunda metade deste caso subiu de nível, e não sumiu.**
+    //
+    // Ele também afirmava "e QUAL é ela", montando `UploadStep` isolado e procurando o
+    // identificador dentro dele. O identificador estava ali porque `preparing` era o ÚNICO dos
+    // oito estados que o mostrava — os outros sete não diziam qual análise era.
+    //
+    // A identidade passou a viver no cabeçalho da página, uma vez, para os oito. Repeti-la aqui
+    // daria duas respostas para a mesma pergunta na mesma tela, e foi assim que este caso
+    // reprovou: `getByText` achou o identificador DUAS vezes.
+    //
+    // Quem prova a identidade agora é `an01-m33-barra.test.tsx`, que monta a PÁGINA em
+    // `preparing` e exige `an-abc` no corpo — o nível certo, porque o fato sempre foi sobre a
+    // tela e nunca sobre este componente. Aqui fica o que `UploadStep` de fato possui.
     montar(<UploadStep analysisId="an-xyz" scope={{ workspaceId: "ws-1" }} onUploaded={vi.fn()} />);
     expect(screen.getByText(pt.canonicalAnalysis.upload.journeyReserved)).toBeTruthy();
-    expect(screen.getByText("an-xyz")).toBeTruthy();
+    // E o componente NÃO reintroduz a identidade por conta própria: se alguém a trouxer de volta
+    // para cá, a tela volta a responder duas vezes e este caso reprova.
+    expect(screen.queryByText("an-xyz")).toBeNull();
   });
 
   it("o subtítulo do prepare descreve o que AQUELA tela faz", () => {

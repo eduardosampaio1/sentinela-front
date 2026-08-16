@@ -284,6 +284,8 @@
       "open": "Abrir análise {{id}}",
       "records": "{{count}} registros",
       "recordsUnknown": "Contagem não publicada",
+    "lastChange": "Última mudança",
+    "belongsTo": "Instância",
     "conversations": "conversas",
     "conversationsAbsent": "não publicado",
     "legacyAnalysis": "Sem instância",

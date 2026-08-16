@@ -21,6 +21,9 @@ import { useIdempotencyIntent } from "../data/intent";
 import { useCanonicalScope } from "./scope";
 import { UploadStep } from "./UploadStep";
 import { PainelDeEixos } from "./PainelDeEixos";
+import { IdentidadeDaAnalise } from "./IdentidadeDaAnalise";
+import type { EstadoPublico } from "@/design/patterns/estados";
+import { useRevelacao } from "@/design/motion";
 import { VISOES_DA_ANALISE } from "./visoes";
 import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
 import { analyticsUtilizavel, lerEixos } from "../result/eixos";
@@ -49,6 +52,12 @@ export function AnalysisPage() {
   // reset no sucesso — o backend nunca vê a mesma intenção como submits distintos (Codex E2 R1).
   const submitIntent = useIdempotencyIntent();
   const retryIntent = useIdempotencyIntent();
+  // A chave junta status e progresso: os dois chegam por caminhos diferentes, e o painel de eixos
+  // que resolver depois precisa entrar com movimento em vez de aparecer pronto no meio de uma
+  // tela que já se moveu.
+  const raiz = useRevelacao<HTMLDivElement>(
+    `${status.dataUpdatedAt}|${progresso.dataUpdatedAt}|${status.isPending}`,
+  );
 
   function revalidar() {
     if (scope && analysisId) {
@@ -163,6 +172,15 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
+            {/* OS EIXOS ENTRAM AQUI TAMBÉM, pela mesma simetria que a M35 usou em `failed`.
+                Lá o argumento foi: apagar os eixos transformaria "um componente falhou" em "tudo
+                falhou", que é afirmação que o produtor não fez. O reverso vale igual — sem eles,
+                `completed` afirma "tudo pronto", e uma análise concluída com `export: failed` ou
+                `analytics: withheld` diria o contrário se alguém perguntasse.
+                O estado da ANÁLISE e o estado de cada COMPONENTE são vocabulários diferentes, e é
+                justamente no estado terminal que a diferença fica cara: é dali que a pessoa sai
+                para ler o resultado. */}
+            <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
             {view.result_available ? (
               // Two-View Recovery: a jornada passa a oferecer as DUAS visões, e não mais a rota
               // legada. `/analyses/:id/result` continua funcionando para todo link já salvo —
@@ -284,7 +302,19 @@ export function AnalysisPage() {
       }
     >
       <PageFrame maxWidth="md">
-        <div className="space-y-6" data-testid="canonical-analysis-page">
+        <div ref={raiz} className="space-y-6" data-testid="canonical-analysis-page">
+          {/* A identidade fica FORA do `switch`, e é essa a mudança de composição.
+              Os oito ramos decidem o que se pode FAZER com a análise; nenhum deles precisava
+              decidir de novo qual análise é. Antes, nenhum decidia — e a tela abria dizendo "Em
+              execução" sem nunca dizer de quê. */}
+          {analysisId && (
+            <IdentidadeDaAnalise
+              analysisId={analysisId}
+              estado={status.data?.status as EstadoPublico | undefined}
+              instanceId={status.data?.instance_id ?? null}
+              atualizadaEm={status.data?.updated_at ?? null}
+            />
+          )}
           {corpo()}
         </div>
       </PageFrame>
