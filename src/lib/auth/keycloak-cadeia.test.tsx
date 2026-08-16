@@ -24,6 +24,10 @@ import { extname, relative, resolve } from "node:path";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
+// As três superfícies de entrada passaram a ler o idioma do dicionário em vez de carregar a
+// frase cravada. No app o provider monta acima do router, então nenhuma delas pode ficar sem
+// ele; aqui o harness precisa dizer o mesmo, ou o teste mede uma árvore que não existe.
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuthClient, AuthSession } from "./types";
 
@@ -94,9 +98,11 @@ describe("M01 · LOGIN — a SPA nunca coleta senha; o provedor assume no clique
   it("sob Keycloak, NENHUM campo de senha existe na SPA", async () => {
     const { LoginPage } = await import("@/features/auth/LoginPage");
     render(
-      <MemoryRouter initialEntries={["/login"]}>
-        <LoginPage />
-      </MemoryRouter>,
+      <LanguageProvider>
+        <MemoryRouter initialEntries={["/login"]}>
+          <LoginPage />
+        </MemoryRouter>
+      </LanguageProvider>,
     );
     expect(document.querySelector('input[type="password"]')).toBeNull();
   });
@@ -105,9 +111,11 @@ describe("M01 · LOGIN — a SPA nunca coleta senha; o provedor assume no clique
     const user = userEvent.setup();
     const { LoginPage } = await import("@/features/auth/LoginPage");
     render(
-      <MemoryRouter initialEntries={["/login"]}>
-        <LoginPage />
-      </MemoryRouter>,
+      <LanguageProvider>
+        <MemoryRouter initialEntries={["/login"]}>
+          <LoginPage />
+        </MemoryRouter>
+      </LanguageProvider>,
     );
     await user.click(screen.getByRole("button", { name: /continue with email/i }));
     // `/home` é o destino padrão: entrar não pode perder para onde a pessoa ia.
@@ -123,9 +131,11 @@ describe("M01 · LOGIN — a SPA nunca coleta senha; o provedor assume no clique
     });
     const { LoginPage } = await import("@/features/auth/LoginPage");
     render(
-      <MemoryRouter initialEntries={["/login"]}>
-        <LoginPage />
-      </MemoryRouter>,
+      <LanguageProvider>
+        <MemoryRouter initialEntries={["/login"]}>
+          <LoginPage />
+        </MemoryRouter>
+      </LanguageProvider>,
     );
     await user.click(screen.getByRole("button", { name: /google/i }));
     await waitFor(() => expect(chamadas).toContain("startLogin:/home:google"));
@@ -135,9 +145,11 @@ describe("M01 · LOGIN — a SPA nunca coleta senha; o provedor assume no clique
     const user = userEvent.setup();
     const { LoginPage } = await import("@/features/auth/LoginPage");
     render(
-      <MemoryRouter initialEntries={["/login"]}>
-        <LoginPage />
-      </MemoryRouter>,
+      <LanguageProvider>
+        <MemoryRouter initialEntries={["/login"]}>
+          <LoginPage />
+        </MemoryRouter>
+      </LanguageProvider>,
     );
     await user.click(screen.getByRole("button", { name: /continue with email/i }));
     await waitFor(() => expect(chamadas.length).toBeGreaterThan(0));
@@ -148,9 +160,11 @@ describe("M01 · RECUPERAÇÃO — delegada ao provedor (D19)", () => {
   it("sob Keycloak, a página de recuperação redireciona em vez de pedir e-mail", async () => {
     const { ForgotPasswordPage } = await import("@/features/auth/ForgotPasswordPage");
     render(
-      <MemoryRouter initialEntries={["/forgot-password"]}>
-        <ForgotPasswordPage />
-      </MemoryRouter>,
+      <LanguageProvider>
+        <MemoryRouter initialEntries={["/forgot-password"]}>
+          <ForgotPasswordPage />
+        </MemoryRouter>
+      </LanguageProvider>,
     );
     await waitFor(() => expect(chamadas).toContain("startPasswordReset"));
     // A SPA não reproduz formulário de identidade — D19 manda delegar ao provedor canônico.
@@ -179,9 +193,11 @@ describe("M01/M02 · a SPA não tem mais formulário de senha para reaparecer", 
     clienteAtual = clienteKeycloak({ supportsPasswordForms: () => true });
     const { LoginPage } = await import("@/features/auth/LoginPage");
     render(
-      <MemoryRouter initialEntries={["/login"]}>
-        <LoginPage />
-      </MemoryRouter>,
+      <LanguageProvider>
+        <MemoryRouter initialEntries={["/login"]}>
+          <LoginPage />
+        </MemoryRouter>
+      </LanguageProvider>,
     );
     expect(document.querySelector('input[type="password"]')).toBeNull();
   });

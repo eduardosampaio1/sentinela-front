@@ -59,7 +59,17 @@
     "signInLink": "Entrar",
     "emailPlaceholder": "voce@empresa.com",
     "passwordPlaceholder": "Digite sua senha",
-    "redirecting": "Redirecionando..."
+    "redirecting": "Redirecionando...",
+    "continueEmail": "Continuar com e-mail",
+    "enterWorkspaceTitle": "Entre no seu espaço de análise",
+    "signInNotice": "Você continua na página do provedor de identidade e volta para cá.",
+    "redirectNotice": "Você está sendo levado ao provedor de identidade do Sentinela e volta para cá.",
+    "redirectFallback": "Se nada acontecer, use o botão abaixo.",
+    "providerUnreachable": "Não conseguimos falar com o provedor de identidade. Verifique a conexão e tente novamente.",
+    "sessionExpiredTitle": "Sessão expirada",
+    "sessionExpiredBody": "Sua sessão expirou por inatividade. Entre novamente para continuar — seus dados de análise seguem salvos.",
+    "sessionExpiredSignIn": "Entrar novamente",
+    "sessionExpiredReload": "Recarregar a página"
   },
   "baseline": {
     "candidateCreated": "Criada em {{date}}",

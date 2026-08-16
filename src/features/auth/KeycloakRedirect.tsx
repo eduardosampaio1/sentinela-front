@@ -1,7 +1,30 @@
+// PORTAL · a travessia para o provedor de identidade.
+//
+// Serve `/register`, `/forgot-password` e `/auth/reset-password`: as três são a mesma moldura
+// com título e ação trocados. A SPA nunca coleta senha — o formulário vive no Keycloak.
+//
+// ## A mensagem de falha deixou de ecoar a exceção
+//
+// `setError(e.message)` punha na tela o texto que a biblioteca de autenticação produziu para
+// quem escreveu o código. Numa falha de rede isso vira "Failed to fetch"; numa de configuração,
+// o nome de um endpoint interno. Nenhum dos dois diz à pessoa o que fazer, e o segundo revela
+// topologia que o contrato não publica.
+//
+// A frase agora é nossa e é a mesma para toda falha de alcance, porque para quem está diante da
+// porta o fato é um só: não deu para chegar ao provedor. A distinção entre os motivos existe
+// para o log, não para esta tela.
+//
+// ## O aviso continua vindo ANTES
+//
+// Esta tela já fazia certo o que a de entrada não fazia: dizer que haverá uma saída e um
+// retorno. Sumir da tela sem avisar é o momento em que as pessoas acham que o produto quebrou.
+
 import { useEffect, useRef, useState } from "react";
 import { AuthShell } from "@/shell/AuthShell";
 import { Button } from "@/components/ui/button";
 import { getAuthClient } from "@/lib/auth/index";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useRevelacao } from "@/design/motion";
 
 type Mode = "login" | "register" | "reset";
 
@@ -11,23 +34,21 @@ const COPY: Record<Mode, { title: string; action: string }> = {
   reset: { title: "Redirecting to password reset", action: "Continue to reset password" },
 };
 
-/**
- * Painel de redirect OIDC (modo keycloak): dispara o fluxo do provider ao montar e
- * oferece um botão de fallback. A SPA nunca coleta senha — o login é hospedado no Keycloak.
- */
 export function KeycloakRedirect({ mode, nextPath }: { mode: Mode; nextPath?: string }) {
-  const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
+  const [falhou, setFalhou] = useState(false);
   const started = useRef(false);
+  const raiz = useRevelacao<HTMLDivElement>();
   const client = getAuthClient();
 
   const start = async () => {
-    setError(null);
+    setFalhou(false);
     try {
       if (mode === "register") await client.startRegister(nextPath);
       else if (mode === "reset") await client.startPasswordReset();
       else await client.startLogin(nextPath);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not reach the identity provider.");
+    } catch {
+      setFalhou(true);
     }
   };
 
@@ -39,20 +60,27 @@ export function KeycloakRedirect({ mode, nextPath }: { mode: Mode; nextPath?: st
   }, []);
 
   const copy = COPY[mode];
+
   return (
     <AuthShell>
-      <div className="space-y-4">
-        <h1 className="text-2xl font-semibold tracking-tight text-[#F1F5F9]">{copy.title}</h1>
-        <p className="text-sm text-[#94A3B8]">
-          You are being redirected to the Sentinela identity provider. If nothing happens, use the
-          button below.
+      <div ref={raiz} className="space-y-4">
+        <h1 data-revelar className="text-2xl font-semibold tracking-tight text-foreground">
+          {copy.title}
+        </h1>
+
+        <p data-revelar className="text-sm text-muted-foreground">
+          {t("auth.redirectNotice")} {t("auth.redirectFallback")}
         </p>
-        {error && <p className="text-sm text-[#F87171]">{error}</p>}
-        <Button
-          type="button"
-          onClick={() => void start()}
-          className="w-full h-11 rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4] transition-colors"
-        >
+
+        {falhou && (
+          // `role="alert"` porque a falha aparece DEPOIS da tela montar: sem ele, quem usa
+          // leitor de tela fica esperando um redirecionamento que já desistiu.
+          <p role="alert" className="text-sm text-destructive">
+            {t("auth.providerUnreachable")}
+          </p>
+        )}
+
+        <Button type="button" onClick={() => void start()} className="h-11 w-full">
           {copy.action}
         </Button>
       </div>

@@ -62,7 +62,11 @@ export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
   "src/features/history/RunRow.tsx": 19,
   "src/features/history/RunComparePanel.tsx": 17,
   "src/shell/AuthShell.tsx": 15,
-  "src/features/auth/LoginPage.tsx": 13,
+  // 13 → 4. Os quatro que ficam são as cores da MARCA do Google dentro do ícone dele. Não são
+  // escolha de design nossa e não podem virar token: um `--ds-` para o amarelo do Google seria o
+  // vocabulário do sistema aprendendo a identidade de terceiro. O ícone do GitHub usa
+  // `currentColor` e já não custa nenhum.
+  "src/features/auth/LoginPage.tsx": 4,
   "src/shared/states/ErrorState.tsx": 12,
   // As duas páginas de estado terminal SAÍRAM da lista: 10 + 10 → 0.
   //
@@ -71,7 +75,9 @@ export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
   // que o carregava — o ícone decorativo de 16×16, o bloco monoespaçado de detalhe técnico e as
   // seis tintas literais que pintavam texto centrado. O que sobrou não tem cor própria.
   "src/core/errors/ErrorBoundary.tsx": 9,
-  "src/features/auth/SessionExpiredPage.tsx": 7,
+  // `SessionExpiredPage` (7 → 0) e `KeycloakRedirect` (4 → 0) SAÍRAM. As duas viraram o
+  // arquétipo PORTAL, e o hardcode morreu junto com o que o carregava: o ícone decorativo de
+  // 16×16 que gastava a maior área da tela para dizer "relógio", e as tintas literais de botão.
   // `LegalPage.tsx` SAIU: 7 → 0. Um arquivo, três rotas — a mesma aritmética que fez a M46
   // descobrir que 27 nós de contraste eram UM template contado três vezes.
   //
@@ -82,7 +88,6 @@ export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
   "src/shared/feedback/ConfirmDialog.tsx": 6,
   "src/shared/states/EmptyState.tsx": 6,
   "src/components/auth/AuthExperienceShell.tsx": 4,
-  "src/features/auth/KeycloakRedirect.tsx": 4,
   "src/shared/layout/PageHeader.tsx": 4,
   "src/shared/states/SkeletonState.tsx": 3,
   "src/shell/MobileNav.tsx": 2,

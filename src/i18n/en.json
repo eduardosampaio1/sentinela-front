@@ -59,7 +59,17 @@
     "signInLink": "Sign in",
     "emailPlaceholder": "you@company.com",
     "passwordPlaceholder": "Enter your password",
-    "redirecting": "Redirecting..."
+    "redirecting": "Redirecting...",
+    "continueEmail": "Continue with email",
+    "enterWorkspaceTitle": "Enter your analysis workspace",
+    "signInNotice": "You continue on the Sentinela identity provider page, then return here.",
+    "redirectNotice": "You are being taken to the Sentinela identity provider and brought back here.",
+    "redirectFallback": "If nothing happens, use the button below.",
+    "providerUnreachable": "We couldn't reach the identity provider. Check your connection and try again.",
+    "sessionExpiredTitle": "Session expired",
+    "sessionExpiredBody": "Your session expired due to inactivity. Sign in again to continue your work — your analysis data is still saved.",
+    "sessionExpiredSignIn": "Sign in again",
+    "sessionExpiredReload": "Reload the page"
   },
   "baseline": {
     "candidateCreated": "Created on {{date}}",
