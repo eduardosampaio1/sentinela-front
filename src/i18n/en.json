@@ -512,7 +512,7 @@
       "identity": "Analysis identifier",
       "viewsNavLabel": "Views of this analysis",
       "view": {
-        "argos": "ARGOS",
+        "argos": "Assessment",
         "analytics": "Analytics"
       }
     },

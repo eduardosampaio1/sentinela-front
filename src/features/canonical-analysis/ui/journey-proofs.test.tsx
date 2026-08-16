@@ -6,6 +6,7 @@ import { MemoryRouter } from "react-router-dom";
 import { http, HttpResponse } from "msw";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import en from "@/i18n/en.json";
 import { createV1Client, type V1Client } from "@/lib/v1";
 import { HANDLE, statusView, problem } from "@/test/fixtures/public-v1/analyses";
 import { MSW_BASE } from "@/test/msw/handlers";
@@ -115,8 +116,20 @@ describe("E3 item 14 — refresh/deep-link resume por analysis_id", () => {
     // e a jornada passou a oferecer a visão ARGOS e a visão Analytics em vez do documento
     // fundido. O que este caso prova continua o mesmo: montada do zero, só com o id na rota, a
     // tela reconstrói o estado terminal e oferece a saída.
-    expect(await screen.findByRole("link", { name: /^ARGOS$/i })).toBeTruthy();
-    expect(screen.getByRole("link", { name: /^Analytics$/i })).toBeTruthy();
+    // Os nomes vêm do DICIONÁRIO, não cravados.
+    //
+    // Este caso reprovou no dia em que a visão ARGOS ganhou nome de produto ("Assessment"):
+    // ele procurava `/^ARGOS$/i`, que era o rótulo interno do motor. O que o caso prova não é
+    // COMO as visões se chamam — é que, montada do zero e só com o id na rota, a tela reconstrói
+    // o estado terminal e oferece as duas saídas.
+    //
+    // Ancorado na chave, o próximo rename não volta a quebrar uma prova que não é sobre nome.
+    expect(
+      await screen.findByRole("link", { name: en.canonicalAnalysis.shell.view.argos }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: en.canonicalAnalysis.shell.view.analytics }),
+    ).toBeTruthy();
   });
 });
 
