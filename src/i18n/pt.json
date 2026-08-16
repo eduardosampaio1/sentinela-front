@@ -473,7 +473,8 @@
       "compareNone": "Não há análise anterior para comparar.",
       "compareOnlyHere": "Só nesta análise.",
       "compareOnlyThere": "Só na anterior.",
-      "compareBrokenShort": "série diferente"
+      "compareBrokenShort": "série diferente",
+      "newerViews": "Esta análise também tem leituras mais novas:"
     },
     "shell": {
       "identity": "Identificador da análise",

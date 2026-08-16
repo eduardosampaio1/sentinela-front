@@ -132,6 +132,49 @@ fachada.
 | Estado `completed` + `result_available: false` não medido | Descoberto ao desfazer o julgamento da §5. É real e distinto; não entrou nesta rodada |
 | A lista não tem busca | Product-wide, já registrado na M45.4 e na M45.2 |
 
+## 9-bis. ADENDO — as decisões do owner (2026-08-15), depois do fechamento
+
+O owner leu as dívidas da §9 e decidiu. O caminho até a decisão importa, e fica registrado:
+
+> **Primeira resposta:** *"mata esse link antigo, deixa só o atual, não tem ninguém usando ainda"* —
+> ou seja, **aposentar RES-01**, que era exatamente a decisão que o Blueprint §4.6 e o T7 deixavam
+> em aberto.
+>
+> Ao medir o alcance, apareceu uma consequência não precificada: **RES-01 é o único lugar do
+> produto que lê os documentos `v1` e `v2`**. As visões vivas leem outra coisa — ARGOS lê o `v3`,
+> Analytics lê `/analytics`. Removê-la deixaria análises anteriores ao v3 **sem leitura nenhuma**, e
+> tornaria falsas duas frases que o produto já diz: *"o resultado histórico segue disponível"*, na
+> visão ARGOS, aponta justamente para a tela que sairia.
+>
+> **Segunda resposta, com a consequência na mesa:** *"então mantém o deep link da melhor forma, sem
+> excluir alguma coisa"*.
+
+### O que foi feito
+
+| decisão | o que mudou |
+|---|---|
+| **Manter RES-01 e fazer o deep link funcionar melhor** | A tela passa a oferecer as entradas de **ARG-01** e **ANL-01 da mesma Analysis**, a partir de `VISOES_DA_ANALISE` — a mesma lista do shell e da jornada. **Atravessa a primeira metade do T7**, com emenda registrada em [`PRODUCT-EXPERIENCE-FREEZE-V1.md`](../PRODUCT-EXPERIENCE-FREEZE-V1.md). A segunda metade segue intacta: nenhuma navegação aponta **para** `/result` |
+| **Tirar o spinner quando nada mais vem** | `ProblemFeedback` ganhou `aguardando`, com padrão `true` — quem não sabe responder não muda nada. RES-01 passa `false`, e o motivo é estrutural: a página **só** busca o documento quando a análise já terminou |
+| **Medir `completed` + `result_available: false`** | **J17** na matriz. É distinto de J16: ali o status anuncia o documento e a retenção o levou; aqui o próprio status diz que não há |
+| **Os três nomes divergentes** | **Não alinhados.** A justificativa mudou de base — "vai morrer" caiu quando a remoção foi descartada —, e a recomendação se mantém pelo outro motivo: são motores diferentes com produtos diferentes. Registrado como nota, aberto a revisão |
+
+### Uma contraprova que eu escrevi no lugar errado
+
+Escrevi, em e2e sobre RES-01, um caso afirmando que *com a análise em curso o aviso continua
+anunciando espera*. Ele reprovou — e a causa ensinou algo sobre a página: ela só busca o documento
+quando `pronto` (concluída **e** com resultado anunciado). **Naquela rota o aviso nunca significa
+"ainda vem".** A conta que eu tinha escrito em `aguardando` era inalcançável; virou `false` literal,
+com o motivo. A contraprova foi para onde é alcançável — unidade, sobre o componente —, e prova o
+que importa: **o padrão não mudou** para o resto do produto.
+
+### Mutação do adendo — 5/5
+
+a ponte some · a ponte aponta para a rota errada · o spinner volta na retenção · a espera some do
+padrão do componente · J17 deixa de servir o estado próprio. Todas mortas.
+
+**Provas do adendo:** typecheck 6 projetos · **369 arquivos** · Vitest **1663/1663** · Playwright
+**338/338**.
+
 ## 10. Commits
 
 `3bd8971` · `d79bea5` · `1811abe`

@@ -249,6 +249,29 @@ async function semResultado(page: Page): Promise<void> {
   );
 }
 
+/**
+ * Concluída e SEM resultado — o próprio status diz que não há.
+ *
+ * Não confundir com `semResultado`: lá o status anuncia `result_available: true` e o documento foi
+ * levado pela retenção. Aqui nunca houve o que anunciar, e a tela diz outra coisa.
+ */
+async function concluidaSemResultado(page: Page): Promise<void> {
+  await page.route("**/v1/analyses/*", (r) =>
+    r.fulfill(
+      json({
+        analysis_id: ANALISE,
+        status: "completed",
+        record_count: 1240,
+        result_available: false,
+        retry_allowed: false,
+        created_at: "2026-08-03T17:12:44Z",
+        updated_at: "2026-08-03T17:13:02Z",
+        instance_id: null,
+      }),
+    ),
+  );
+}
+
 /** Três análises em estados diferentes e uma Instância — o produto com CONTEÚDO. */
 async function povoar(page: Page): Promise<void> {
   await page.route(
@@ -338,6 +361,14 @@ const JOURNEYS: readonly Journey[] = [
     terminal: /Why trust this result|Por que confiar/ },
   { id: "J16", nome: "resultado indisponível", rota: `/analyses/${ANALISE}/result`,
     terminal: /No result is available|Nenhum resultado/, montar: semResultado },
+
+  // O estado que a M45.3 descobriu ao desfazer um julgamento errado, e que ficou de fora daquela
+  // rodada. Decisão de owner (2026-08-15): medir agora.
+  //
+  // É DIFERENTE de J16. Ali o status anuncia `result_available: true` e o documento foi levado
+  // pela retenção; aqui o próprio status diz que não há resultado. Duas telas, duas frases.
+  { id: "J17", nome: "concluída sem resultado", rota: `/analyses/${ANALISE}/result`,
+    terminal: /still being prepared|ainda está sendo preparado/, montar: concluidaSemResultado },
 ] as const;
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
@@ -506,6 +537,40 @@ test.describe("M45 · G11 · os três estados não colapsam", () => {
       await page.locator('main [role="alert"]').count(),
       "a tela inteira fora do ar deixou de alarmar — a regra da casa foi afrouxada para todos",
     ).toBeGreaterThan(0);
+  });
+
+  // M45.3 · decisões de owner (2026-08-15) sobre a superfície CONGELADA.
+  //
+  // A primeira ATRAVESSA o T7 do Product Freeze, com emenda registrada lá: quem chega por deep
+  // link antigo passa a ver as entradas das duas leituras atuais da mesma Analysis. Sem isto, o
+  // link servia indefinidamente alguém que nunca conheceria a substituta.
+  test("o resultado legado oferece as duas leituras atuais da MESMA análise", async ({ page }) => {
+    await montarProduto(page);
+    await page.goto(`/analyses/${ANALISE}/result`);
+    await expect(page.locator("main")).toContainText(/Why trust this result/, { timeout: 20_000 });
+
+    // Os HREFS, e não só os rótulos: um link com o texto certo e o destino errado passaria.
+    for (const visao of ["argos", "analytics"]) {
+      await expect(
+        page.locator("main").locator(`a[href="/analyses/${ANALISE}/${visao}"]`),
+        `o resultado legado não oferece a visão ${visao} desta análise`,
+      ).toHaveCount(1);
+    }
+  });
+
+  // A segunda: o aviso de documento levado pela retenção não gira mais uma rodinha.
+  test("resultado purgado NÃO anuncia progresso — nada mais vem", async ({ page }) => {
+    await montarProduto(page);
+    await semResultado(page);
+    await page.goto(`/analyses/${ANALISE}/result`);
+    await expect(page.locator("main")).toContainText(/No result is available/, { timeout: 20_000 });
+
+    // `aria-busy` é o que um leitor de tela ouve como "esta região está atualizando".
+    const aviso = page.locator("main").getByText(/No result is available/).first();
+    expect(
+      await aviso.evaluate((el) => el.closest('[aria-busy="true"]') !== null),
+      "a tela anuncia que algo está em curso, e a análise já terminou",
+    ).toBe(false);
   });
 
   // A TERCEIRA causa: enquanto a leitura NÃO VOLTOU.

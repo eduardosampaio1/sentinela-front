@@ -48,6 +48,7 @@ import { SecaoDeAtencao } from "./analytics/SecaoDeAtencao";
 import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
 import { PainelDeProcedencia } from "./analytics/PainelDeProcedencia";
 import { LinhaDoTempo } from "./analytics/LinhaDoTempo";
+import { VISOES_DA_ANALISE } from "./visoes";
 import { ComparacaoComAnterior } from "./analytics/ComparacaoComAnterior";
 import { AcaoDeExport } from "./analytics/AcaoDeExport";
 import { IndiceDeRegioes, type RegiaoIndexada } from "./analytics/IndiceDeRegioes";
@@ -213,7 +214,28 @@ export function ResultPage() {
       );
     }
     if (resultado.isError) {
-      return <ProblemFeedback error={resultado.error} onRetry={() => void resultado.refetch()} retryDisabled={resultado.isFetching} />;
+      // `aguardando` sai do ESTADO da análise — decisão de owner, 2026-08-15.
+      //
+      // `result_not_available` é espera neutra, e com a análise em curso isso é verdade: o
+      // documento ainda vem. Com ela concluída e o documento levado pela retenção, nada vem — e o
+      // spinner prometia progresso que não existe, com `aria-busy` dizendo a um leitor de tela que
+      // a região está atualizando.
+      //
+      // Quem sabe responder é esta página, que já leu o status. O padrão do componente continua
+      // sendo `true`, para toda superfície que não sabe.
+      return (
+        <ProblemFeedback
+          error={resultado.error}
+          onRetry={() => void resultado.refetch()}
+          retryDisabled={resultado.isFetching}
+          // SEMPRE `false` aqui, e não uma conta sobre o status: esta página só busca o
+          // documento quando `pronto` (concluída E com resultado anunciado). O aviso nunca
+          // significa "ainda vem" nesta rota — significa que o documento foi levado pela
+          // retenção. Uma conta daria a impressão de que existe caso em curso, e não existe:
+          // eu escrevi essa conta primeiro, e a contraprova a reprovou por ser inalcançável.
+          aguardando={false}
+        />
+      );
     }
     if (!resultado.data) return null;
 
@@ -250,6 +272,45 @@ export function ResultPage() {
               <Link to="/analyses">{t("canonicalAnalysis.result.backToHistory")}</Link>
             </Button>
           </div>
+
+          {/* A PONTE PARA AS DUAS LEITURAS ATUAIS — decisão de owner, 2026-08-15.
+              ATRAVESSA O T7 DO PRODUCT FREEZE, e isso está registrado lá também.
+              T7 diz duas coisas: *"não recebe feature nova"* e *"nenhuma navegação canônica nova
+              aponta PARA ele"*. A segunda não é tocada — esta navegação sai daqui, não chega aqui.
+              A primeira é: um bloco de navegação é capacidade que a página não tinha.
+              O owner decidiu isto sabendo do congelamento, e o motivo do próprio T7 sustenta a
+              decisão: ele existe porque *"deep link antigo não pode quebrar"*. A ponte não quebra
+              o link — faz o link levar a algum lugar.
+              Esta é a superfície CONGELADA. Quem chega aqui veio de um link salvo, e a tela
+              mostrava tudo direito com uma saída só: voltar ao histórico. Nada dizia que existem
+              duas leituras mais novas da MESMA análise, então o link antigo servia para sempre
+              alguém que nunca conheceria a substituta. O owner decidiu manter o deep link e
+              fazê-lo funcionar "da melhor forma" — é isto.
+              A lista vem de `VISOES_DA_ANALISE`, a mesma que o shell e a jornada usam: uma segunda
+              lista divergiria no primeiro ajuste e esta tela passaria a oferecer visão que o
+              router não conhece. */}
+          {analysisId && (
+            <nav
+              aria-label={t("canonicalAnalysis.shell.viewsNavLabel")}
+              className="rounded-lg border border-border bg-card p-4"
+            >
+              <p className="text-sm text-muted-foreground">
+                {t("canonicalAnalysis.result.newerViews")}
+              </p>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {VISOES_DA_ANALISE.map((visao) => (
+                  <li key={visao.caminho}>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/analyses/${encodeURIComponent(analysisId)}/${visao.caminho}`}>
+                        {t(`canonicalAnalysis.shell.view.${visao.caminho}`)}
+                      </Link>
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
+
           {corpo()}
         </div>
       </PageFrame>

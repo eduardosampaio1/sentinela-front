@@ -473,7 +473,8 @@
       "compareNone": "No previous analysis to compare with.",
       "compareOnlyHere": "Only in this analysis.",
       "compareOnlyThere": "Only in the previous one.",
-      "compareBrokenShort": "not the same series"
+      "compareBrokenShort": "not the same series",
+      "newerViews": "This analysis also has newer readings:"
     },
     "shell": {
       "identity": "Analysis identifier",

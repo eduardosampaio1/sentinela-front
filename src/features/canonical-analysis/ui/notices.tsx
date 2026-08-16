@@ -61,6 +61,7 @@ export function ProblemFeedback({
   onNewAnalysis,
   retryDisabled,
   escopo = "tela",
+  aguardando = true,
 }: {
   error: unknown;
   onRetry?: () => void;
@@ -82,13 +83,25 @@ export function ProblemFeedback({
    * existe, sem o spinner, porque não há espera em curso a anunciar.
    */
   escopo?: "tela" | "detalhe";
+  /**
+   * Ainda vem alguma coisa? — decisão de owner de 2026-08-15.
+   *
+   * O tom neutro desenha um spinner, e para uma análise EM CURSO isso é verdade: o documento
+   * ainda está a caminho, e `result_not_available` significa "ainda não". Quando a análise já
+   * terminou e o documento foi levado pela retenção, nada vem — e a rodinha promete um progresso
+   * que não existe, com `aria-busy` dizendo a um leitor de tela que a região está atualizando.
+   *
+   * O padrão é `true` porque é o comportamento de sempre: quem não sabe responder não muda nada.
+   * Só quem CONHECE o estado terminal da análise passa `false`.
+   */
+  aguardando?: boolean;
 }) {
   const { t } = useLanguage();
   if (error == null) return null;
   const p = describeProblem(problemCodeOf(error));
   const detalhe = escopo === "detalhe";
   const erro = p.tone === "error" && !detalhe;
-  const esperando = p.tone !== "error" && !detalhe;
+  const esperando = p.tone !== "error" && !detalhe && aguardando;
   return (
     <div
       role={erro ? "alert" : "status"}

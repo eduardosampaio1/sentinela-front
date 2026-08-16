@@ -274,6 +274,27 @@ não se fundem na tela.
 | **T6** | O lifecycle (`/analyses/:id`) mostra identidade, estado, progresso, disponibilidade dos componentes e as **entradas** das duas visões — e **não** vira terceira página de dados | dado em três lugares diverge em dois |
 | **T7** | **`/result` é LEGACY COMPATIBILITY.** Continua funcional e não recebe feature nova; nenhuma navegação canônica nova aponta para ele quando a visão correta existe | deep link antigo não pode quebrar, e a aposentadoria é decisão posterior |
 
+> **Emenda ao T7 — decisão de owner, 2026-08-15 (M45.3).**
+>
+> A M45.3 mediu a consequência do congelamento sem aposentadoria: quem chega a `/result` por um
+> link salvo vê a tela inteira e correta, com **uma saída só** — voltar ao histórico. Nada ali diz
+> que existem **duas leituras mais novas da mesma análise**. O link antigo servia, indefinidamente,
+> alguém que nunca conheceria a substituta.
+>
+> O owner considerou remover a superfície e **decidiu mantê-la**, com a instrução de fazer o deep
+> link funcionar *"da melhor forma"*. Em consequência, `/result` passa a oferecer as entradas de
+> `ARG-01` e `ANL-01` da mesma Analysis, a partir de `VISOES_DA_ANALISE` — a mesma lista do shell e
+> da jornada, para que não exista uma segunda lista divergindo no primeiro ajuste.
+>
+> **Isto atravessa a primeira metade do T7** (*"não recebe feature nova"*), e a travessia é
+> deliberada e registrada. A segunda metade continua valendo integralmente: **nenhuma navegação
+> canônica aponta PARA `/result`** — esta navegação sai dele. E o motivo declarado do próprio T7
+> (*"deep link antigo não pode quebrar"*) é o que sustenta a decisão: a ponte não quebra o link,
+> faz o link levar a algum lugar.
+>
+> **A aposentadoria segue sendo decisão posterior, e segue não tomada.** Ver
+> [`docs/m45/DOC-CLOSE-M45-3.md`](m45/DOC-CLOSE-M45-3.md).
+
 ### Status ≠ status de motor
 
 `StatusBadge` continua representando o **lifecycle da Analysis** (os 8 `public_states`). Não é
