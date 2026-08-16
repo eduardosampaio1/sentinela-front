@@ -29,28 +29,9 @@
 // diferença entre "99% está dentro do esperado" e "99% parece alto para mim", e a segunda não é
 // coisa que uma superfície deva dizer no lugar de quem publicou a métrica.
 
-/** Onde o valor caiu em relação à faixa publicada. `neutro` é o que vale sem faixa. */
-export type TomDaMedida = "neutro" | "dentro" | "borda" | "fora";
-
-/**
- * O valor de uma medida, nas quatro formas que ele pode ter.
- *
- * `fracao` é 0…1 e chega PRONTA. Nenhuma conta acontece nesta camada — normalizar exigiria
- * conhecer o denominador, que é justamente o que o Design System não pode saber.
- */
-export type ValorDaMedida =
-  | { tipo: "medido"; texto: string; fracao: number }
-  | { tipo: "zero"; texto: string }
-  | { tipo: "ausente"; motivo: string }
-  | { tipo: "naoMedida"; motivo: string };
-
-/** A régua publicada. Sem ela não há julgamento — ver o cabeçalho. */
-export interface FaixaEsperada {
-  de: number;
-  ate: number;
-  /** Como escrever a faixa. Vem do produto: esta camada não traduz. */
-  rotulo: string;
-}
+// Os tipos e as regras puras moram em `valorDaMedida.ts`, ao lado. Aqui ficam só as formas.
+import { leituraDaMedida, tomPelaFaixa } from "./valorDaMedida";
+import type { FaixaEsperada, TomDaMedida, ValorDaMedida } from "./valorDaMedida";
 
 const PINTURA: Readonly<Record<TomDaMedida, string>> = {
   neutro: "bg-primary",
@@ -66,40 +47,7 @@ const TINTA: Readonly<Record<TomDaMedida, string>> = {
   fora: "text-destructive",
 };
 
-/**
- * Deriva o tom a partir da faixa.
- *
- * Sem faixa devolve `neutro` — e é por isso que a função existe em vez de o tom ser prop: como
- * prop, um chamador distraído passaria `dentro` sem ter régua nenhuma, e o gate não veria.
- * Aqui a ausência de faixa TORNA o julgamento impossível por construção.
- */
-export function tomPelaFaixa(fracao: number, faixa?: FaixaEsperada): TomDaMedida {
-  if (!faixa) return "neutro";
-  if (fracao >= faixa.de && fracao <= faixa.ate) return "dentro";
-  const folga = (faixa.ate - faixa.de) / 10;
-  if (fracao >= faixa.de - folga && fracao <= faixa.ate + folga) return "borda";
-  return "fora";
-}
-
 const pct = (n: number) => `${Math.max(0, Math.min(1, n)) * 100}%`;
-
-/**
- * O que escrever no lugar do número, e se ainda existe número.
- *
- * Existe para o estreitamento do union acontecer UMA vez. Sem isto cada consumidor escreve
- * `valor.tipo === "ausente" || valor.tipo === "naoMedida"` duas vezes na mesma linha — o
- * compilador não estreita através de um booleano intermediário — e a terceira superfície a
- * copiar isso vai errar a ordem dos ramos sem nada reclamar.
- */
-export function leituraDaMedida(valor: ValorDaMedida): { semNumero: boolean; texto: string } {
-  switch (valor.tipo) {
-    case "medido":
-    case "zero":
-      return { semNumero: false, texto: valor.texto };
-    default:
-      return { semNumero: true, texto: valor.motivo };
-  }
-}
 
 /**
  * O trilho: faixa esperada ao fundo, valor à frente.

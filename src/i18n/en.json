@@ -645,6 +645,19 @@
     "description": "Upload or paste a JSONL dataset in the Overview to run your first analysis.",
     "primary": "Go to Overview"
   },
+  "errorsPage": {
+    "serverCode": "Service failure",
+    "serverTitle": "An unexpected server error occurred",
+    "serverConsequence": "Your data and analysis history are unaffected — this is an infrastructure issue, not a data loss event. Nothing you submitted was discarded.",
+    "serverGuidance": "If this repeats after reloading, the service may be temporarily disrupted.",
+    "serverReload": "Reload page",
+    "serverHome": "Back to Launchpad",
+    "notFoundTitle": "This page doesn't exist",
+    "notFoundConsequence": "The link may have been moved, renamed, or broken. Your analyses, workspace, and account data are unaffected.",
+    "notFoundAddress": "Address",
+    "notFoundHome": "Back to Launchpad",
+    "notFoundList": "Browse analyses"
+  },
   "estadoEixo": {
     "pending": "Pending",
     "running": "Running",

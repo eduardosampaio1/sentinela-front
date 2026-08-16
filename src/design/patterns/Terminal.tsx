@@ -28,6 +28,7 @@ export function Terminal({
   gravidade = "falha",
   titulo,
   consequencia,
+  orientacao,
   diagnostico,
   saidas,
 }: {
@@ -38,6 +39,14 @@ export function Terminal({
   titulo: string;
   /** O que isto custou a quem está lendo. A pergunta real, respondida antes dos botões. */
   consequencia: string;
+  /**
+   * O que fazer, quando há algo a dizer além dos botões.
+   *
+   * Separado da consequência de propósito: juntar "não perdeu nada" com "tente de novo em
+   * alguns minutos" num parágrafo só faz a segunda frase diluir a primeira, que é a que
+   * responde à pergunta real.
+   */
+  orientacao?: string;
   /** Pares curtos de diagnóstico, já formatados. Selecionáveis de propósito. */
   diagnostico?: readonly { rotulo: string; valor: string }[];
   saidas: ReactNode;
@@ -62,6 +71,12 @@ export function Terminal({
       <p data-revelar className="text-base text-muted-foreground">
         {consequencia}
       </p>
+
+      {orientacao && (
+        <p data-revelar className="text-sm text-muted-foreground">
+          {orientacao}
+        </p>
+      )}
 
       {diagnostico && diagnostico.length > 0 && (
         <dl data-revelar className="grid gap-2 rounded-lg border border-border bg-card p-4 text-xs">

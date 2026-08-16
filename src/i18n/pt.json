@@ -645,6 +645,19 @@
     "description": "Faça upload ou cole um dataset JSONL na Visão Geral para rodar sua primeira análise.",
     "primary": "Ir para Visão Geral"
   },
+  "errorsPage": {
+    "serverCode": "Falha do serviço",
+    "serverTitle": "Ocorreu um erro inesperado no servidor",
+    "serverConsequence": "Seus dados e seu histórico de análises não foram afetados — isto é um problema de infraestrutura, não uma perda de dados. Nada do que você enviou foi descartado.",
+    "serverGuidance": "Se repetir depois de recarregar, o serviço pode estar temporariamente indisponível.",
+    "serverReload": "Recarregar",
+    "serverHome": "Voltar para o início",
+    "notFoundTitle": "Esta página não existe",
+    "notFoundConsequence": "O link pode ter mudado, sido renomeado ou quebrado. Suas análises, seu espaço e os dados da conta não foram afetados.",
+    "notFoundAddress": "Endereço",
+    "notFoundHome": "Voltar para o início",
+    "notFoundList": "Ver as análises"
+  },
   "estadoEixo": {
     "pending": "Pendente",
     "running": "Em execução",

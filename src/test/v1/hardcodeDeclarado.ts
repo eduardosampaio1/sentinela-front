@@ -64,8 +64,12 @@ export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
   "src/shell/AuthShell.tsx": 15,
   "src/features/auth/LoginPage.tsx": 13,
   "src/shared/states/ErrorState.tsx": 12,
-  "src/features/errors/NotFoundPage.tsx": 10,
-  "src/features/errors/ServerErrorPage.tsx": 10,
+  // As duas páginas de estado terminal SAÍRAM da lista: 10 + 10 → 0.
+  //
+  // Não foi substituição cega de hex por token, que é o que esta lista existe para desencorajar.
+  // Elas foram reescritas sobre o arquétipo TERMINAL, e o hardcode morreu junto com a composição
+  // que o carregava — o ícone decorativo de 16×16, o bloco monoespaçado de detalhe técnico e as
+  // seis tintas literais que pintavam texto centrado. O que sobrou não tem cor própria.
   "src/core/errors/ErrorBoundary.tsx": 9,
   "src/features/auth/SessionExpiredPage.tsx": 7,
   "src/features/legal/LegalPage.tsx": 7,

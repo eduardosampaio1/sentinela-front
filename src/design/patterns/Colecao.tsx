@@ -27,7 +27,7 @@
 
 import type { ReactNode } from "react";
 import { Tendencia } from "@/design/primitives/Tendencia";
-import { leituraDaMedida, type ValorDaMedida } from "@/design/primitives/Medida";
+import { leituraDaMedida, type ValorDaMedida } from "@/design/primitives/valorDaMedida";
 
 /** Cabeçalho de uma superfície de trabalho: título, contexto e as ações do escopo inteiro. */
 export function CabecalhoDeTrabalho({

@@ -19,8 +19,9 @@
 // é falha; ela não é calculável, e dizer isso é mais honesto que desenhar um traço.
 
 import type { ReactNode } from "react";
-import { TrilhoDeMedida, leituraDaMedida, tomPelaFaixa } from "@/design/primitives/Medida";
-import type { FaixaEsperada, ValorDaMedida } from "@/design/primitives/Medida";
+import { TrilhoDeMedida } from "@/design/primitives/Medida";
+import { leituraDaMedida, tomPelaFaixa } from "@/design/primitives/valorDaMedida";
+import type { FaixaEsperada, ValorDaMedida } from "@/design/primitives/valorDaMedida";
 
 /** Cabeçalho de identidade: quem é este objeto, e as ações que valem sobre ele inteiro. */
 export function IdentidadeDoObjeto({
