@@ -374,7 +374,40 @@ interface Journey {
   readonly terminal: RegExp;
   /** Sobreposicao de montagem desta journey, alem do produto base. */
   readonly montar?: (page: Page) => Promise<void>;
+  /**
+   * A região que esta journey mede — M45.7.
+   *
+   * O padrão é `main`, e ele é uma exigência: uma superfície do produto sem landmark principal
+   * deixa quem usa leitor de tela sem "pular para o conteúdo". As públicas de hoje NÃO têm `main`,
+   * e isso está contado abaixo em vez de escondido: medir pelo `body` aqui é a diferença entre
+   * *"não medimos"* e *"medimos, e falta o landmark"*.
+   */
+  readonly regiao?: "main" | "body";
+  /**
+   * Violações de axe PRÉ-EXISTENTES nesta superfície — M45.7.
+   *
+   * `toBe`, e não `toBeLessThan`: o número não pode crescer **nem encolher em silêncio**. Se
+   * alguém corrigir contraste, o gate reprova até o número descer no mesmo commit — que é a mesma
+   * catraca do anti-monólito, e é o que impede a dívida de virar paisagem.
+   *
+   * Sem ele eu teria duas opções ruins: deixar a matriz vermelha para sempre, ou tirar as públicas
+   * dela — voltando ao NO CREDIT que esta tranche existe para acabar.
+   */
+  readonly axeConhecido?: number;
 }
+
+/**
+ * Desfaz a sessão que `montarProduto` instala — M45.7.
+ *
+ * Os `addInitScript` rodam na ORDEM de registro a cada navegação, então este apaga a bandeira que
+ * o anterior põe. Não é "montar diferente": é a única forma de alcançar as superfícies de entrada,
+ * que o produto esconde de quem já entrou.
+ */
+const semSessao = async (page: Page) => {
+  await page.addInitScript(() => {
+    delete (window as unknown as Record<string, unknown>).__SENTINELA_E2E_AUTH__;
+  });
+};
 
 const JOURNEYS: readonly Journey[] = [
   { id: "J1", nome: "análises", rota: "/analyses", terminal: /No analyses yet|Nenhuma análise ainda/ },
@@ -446,7 +479,79 @@ const JOURNEYS: readonly Journey[] = [
   { id: "J20", nome: "instância sem candidatos", rota: `/instances/${INSTANCIA}`,
     terminal: /No analysis can be the reference yet|Nenhuma análise pode ser referência/,
     montar: instanciaSemCandidatos },
+
+  // ── M45.7 · público e auth — E13 e E14, as duas com NO CREDIT ────────────────────────────
+  //
+  // A discovery foi literal: *"fora da matriz"*. São as primeiras telas que qualquer pessoa vê, e
+  // as únicas que alguém alcança sem sessão — e nenhuma passada transversal as tinha visitado.
+  //
+  // A montagem do produto não atrapalha: o bypass de auth é `addInitScript`, e estas rotas não
+  // dependem dele. O que muda é que elas não têm o shell autenticado, então o gate mede o que
+  // elas TÊM.
+  // J23 e J24 são as duas superfícies que SÓ existem sem sessão — achado desta tranche.
+  //
+  // Montadas como as outras, as duas renderizavam a HOME: quem está autenticado e pede `/login` ou
+  // `/session-expired` é mandado para dentro do produto. Isso está CERTO — mostrar a porta a quem
+  // já entrou seria o defeito —, e significa que medi-las exige desfazer a sessão.
+  //
+  // Sem isto, as duas passariam medindo a Home: dois nomes, uma tela. É a mesma classe de defeito
+  // que o gate de evidência da M45.6 pegou em `docs/`, aqui na matriz.
+
+  // Os três números abaixo são o ACHADO da M45.7, não um relaxamento dela: nenhuma das três tem
+  // `<main>`, e o contraste está reprovado. Estavam assim ANTES desta tranche — a diferença é que
+  // agora estão contados, e a catraca reprova se piorarem.
+  { id: "J21", nome: "landing pública", rota: "/", regiao: "body", axeConhecido: 43,
+    terminal: /Do you know if it's working|Você sabe se ela está funcionando/ },
+  { id: "J22", nome: "termos de uso", rota: "/terms", axeConhecido: 8,
+    terminal: /Acceptance of terms|Aceitação dos termos/ },
+  // 2 de contraste + 1 `link-in-text-block`: "Create one" tem 2.06:1 contra o texto ao redor, e a
+  // regra existe porque link que só se distingue por cor some para quem não distingue essa cor.
+  { id: "J23", nome: "entrada", rota: "/login", regiao: "body", axeConhecido: 3, montar: semSessao,
+    terminal: /decision layer for your AI|camada de decisão/ },
+  { id: "J24", nome: "sessão expirada", rota: "/session-expired", regiao: "body", montar: semSessao,
+    // O estado que a M14 entregou e que nenhuma passada transversal viu: a sessão caiu, e a tela
+    // diz que os dados continuam salvos — a diferença entre perder a sessão e perder o trabalho.
+    terminal: /Session expired|Sessão expirada/ },
 ] as const;
+
+/**
+ * A região que os gates transversais medem nesta journey.
+ *
+ * `main` é o padrão E a exigência. Cair para `body` é uma DECLARAÇÃO de que aquela superfície não
+ * tem landmark principal — e o gate G1-bis, logo abaixo, garante que a declaração seja rara e
+ * nomeada, em vez de virar o caminho fácil para calar o gate.
+ */
+const regiaoDe = (j: Journey) => j.regiao ?? "main";
+
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// G1-bis · a exceção não pode virar o caminho fácil — M45.7
+// ══════════════════════════════════════════════════════════════════════════════════════════
+//
+// `regiao: "body"` e `axeConhecido` são escapes: quem adicionar uma journey nova pode usá-los para
+// calar o gate em vez de corrigir a tela. Este teste nomeia quem hoje os usa e trava o total.
+//
+// É a catraca da catraca. Sem ele, a M45.7 teria entregado uma matriz que aceita qualquer
+// superfície nova quebrada, desde que a pessoa escreva o número da própria quebra.
+test.describe("M45 · G1-bis · a dívida declarada é nominal e não cresce", () => {
+  test("só as superfícies públicas conhecidas declaram dívida", () => {
+    expect(
+      JOURNEYS.filter((j) => j.regiao === "body").map((j) => j.id),
+      "uma journey NOVA sem `<main>`: adicione o landmark em vez de declarar `regiao: \"body\"`",
+    ).toEqual(["J21", "J23", "J24"]);
+
+    expect(
+      JOURNEYS.filter((j) => (j.axeConhecido ?? 0) > 0).map((j) => j.id),
+      "uma journey NOVA com violação de a11y declarada: corrija a tela, não o gate",
+    ).toEqual(["J21", "J22", "J23"]);
+
+    // O teto absoluto. 43 (landing) + 8 (termos) + 3 (entrada) = 54 nós reprovados no produto
+    // público de hoje. Este número só tem um caminho permitido: para baixo.
+    expect(
+      JOURNEYS.reduce((soma, j) => soma + (j.axeConhecido ?? 0), 0),
+      "o total de dívida de a11y declarada mudou",
+    ).toBe(54);
+  });
+});
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // G1 · navegabilidade — toda superfície alcança estado TERMINAL
@@ -460,10 +565,10 @@ test.describe("M45 · G1 · superfícies navegáveis", () => {
       await page.goto(j.rota);
 
       // Terminal, e não "montou": `main` com conteúdo real, e a âncora da superfície.
-      await expect(page.locator("main")).toBeVisible({ timeout: 15_000 });
-      await expect(page.locator("main")).toContainText(j.terminal, { timeout: 15_000 });
+      await expect(page.locator(regiaoDe(j))).toBeVisible({ timeout: 15_000 });
+      await expect(page.locator(regiaoDe(j))).toContainText(j.terminal, { timeout: 15_000 });
 
-      const texto = await page.locator("main").innerText();
+      const texto = await page.locator(regiaoDe(j)).innerText();
       expect(texto.trim().length, `${j.id} ficou em esqueleto`).toBeGreaterThan(10);
 
       // Nenhuma superfície pode terminar mostrando vocabulário interno.
@@ -747,7 +852,7 @@ test.describe("M45 · G7 · acessibilidade transversal", () => {
       await montarProduto(page);
       await j.montar?.(page);
       await page.goto(j.rota);
-      await expect(page.locator("main")).toContainText(j.terminal, { timeout: 15_000 });
+      await expect(page.locator(regiaoDe(j))).toContainText(j.terminal, { timeout: 15_000 });
 
       await page.addScriptTag({ content: axe.source });
       const resultado = await page.evaluate(async () => {
@@ -757,7 +862,21 @@ test.describe("M45 · G7 · acessibilidade transversal", () => {
         };
       });
       const graves = resultado.violations.map((v) => `${v.id} (${v.nodes.length})`);
-      expect(graves, `${j.id} · violações axe: ${graves.join(", ")}`).toEqual([]);
+      const nos = resultado.violations.reduce((soma, v) => soma + v.nodes.length, 0);
+
+      // `toBe`, e não `toBeLessThanOrEqual` — M45.7.
+      //
+      // O número tem de bater EXATO nos dois sentidos. Crescer reprova, que é o óbvio; encolher
+      // também reprova, e é isso que impede a dívida de virar paisagem: quem corrigir contraste é
+      // obrigado a baixar o número no mesmo commit, e o diff passa a exibir a correção.
+      //
+      // Com `toBeLessThanOrEqual` eu teria escrito um gate que NÃO PODE FALHAR por melhora, e o
+      // programa já pagou por um desses.
+      expect(
+        nos,
+        `${j.id} · axe mudou: ${graves.join(", ") || "nenhuma"} — esperado ${j.axeConhecido ?? 0} nó(s). ` +
+          `Se você CORRIGIU, baixe o número em \`axeConhecido\`. Se subiu, a superfície regrediu.`,
+      ).toBe(j.axeConhecido ?? 0);
     });
   }
 
@@ -811,7 +930,7 @@ test.describe("M45 · G5 · responsive", () => {
         await montarProduto(page);
         await j.montar?.(page);
         await page.goto(j.rota);
-        await expect(page.locator("main")).toContainText(j.terminal, { timeout: 15_000 });
+        await expect(page.locator(regiaoDe(j))).toContainText(j.terminal, { timeout: 15_000 });
         // Medido pela GEOMETRIA dos elementos, e não por `scrollWidth` do documento.
         //
         // O `AppShell` tem `overflow-x-hidden`: um elemento mais largo que a viewport é CLIPADO,
