@@ -31,6 +31,7 @@ import { PageFrame } from "@/shell/PageFrame";
 import { estatisticaConhecida } from "../../result/estatisticas";
 import { LoadingState } from "@/shared/states/LoadingState";
 import type { EstadoPublico } from "@/design/patterns/estados";
+import { useRevelacao } from "@/design/motion";
 import { useAnalysisAnalytics, useAnalysisProgress, useAnalysisStatus } from "../../data/analysis";
 import { lerSnapshot, type SnapshotAnalitico } from "../../result/analyticsProjection";
 import { AnalysisShell } from "../AnalysisShell";
@@ -49,7 +50,7 @@ function Secao({
   readonly children: React.ReactNode;
 }) {
   return (
-    <section aria-labelledby={id} className="space-y-1">
+    <section data-revelar aria-labelledby={id} className="space-y-1">
       <h2 id={id} className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
         {titulo}
       </h2>
@@ -255,6 +256,13 @@ export function AnalyticsView() {
   // O eixo `export` de `/progress`, e ele apenas — mesma leitura que a rota legada faz. Tentar
   // o download para descobrir o estado usaria a ação como sonda.
   const eixoExport = progresso.data?.axes.find((a) => a.axis === "export")?.state ?? null;
+  // A chave junta a projeção e o progresso: as duas chegam por caminhos diferentes, e a seção que
+  // resolver depois precisa entrar com movimento em vez de aparecer pronta numa tela que já se
+  // moveu. O movimento é deslocamento puro — entrada com opacidade derruba o contraste do texto
+  // enquanto roda, e foi isso que a matriz transversal reprovou em vinte jornadas.
+  const raiz = useRevelacao<HTMLDivElement>(
+    `${analytics.dataUpdatedAt}|${progresso.dataUpdatedAt}|${analytics.isPending}`,
+  );
 
   const titulo = t("canonicalAnalysis.analyticsView.title");
 
@@ -374,7 +382,7 @@ export function AnalyticsView() {
   return (
     <AppShell topBarTitle={titulo}>
       <PageFrame maxWidth="lg">
-        <div className="space-y-6" data-testid="analytics-view">
+        <div ref={raiz} className="space-y-6" data-testid="analytics-view">
           <AnalysisShell
             analysisId={analysisId ?? ""}
             estado={status.data?.status as EstadoPublico | undefined}

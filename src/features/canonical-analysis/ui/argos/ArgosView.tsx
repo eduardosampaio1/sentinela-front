@@ -29,6 +29,7 @@ import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/shared/states/LoadingState";
 import type { EstadoPublico } from "@/design/patterns/estados";
+import { useRevelacao } from "@/design/motion";
 import type {
   AnalysisResultV3Document,
   PublicAlert,
@@ -54,8 +55,12 @@ function Secao({
   readonly titulo: string;
   readonly children: React.ReactNode;
 }) {
+  // `data-revelar` aqui cobre TODAS as seções desta visão de uma vez, e elas entram na ordem do
+  // documento — que aqui é a ordem de leitura do laudo. O movimento é deslocamento puro: a regra
+  // que a matriz transversal impôs depois de reprovar contraste em vinte jornadas é que entrada
+  // com opacidade deixa texto abaixo de 4,5:1 enquanto roda.
   return (
-    <section aria-labelledby={id} className="space-y-1">
+    <section data-revelar aria-labelledby={id} className="space-y-1">
       <h2 id={id} className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
         {titulo}
       </h2>
@@ -158,6 +163,9 @@ export function ArgosView() {
   // O status alimenta o shell — a leitura é a mesma da jornada, deduplicada pela `queryKey`.
   const status = useAnalysisStatus(scope, analysisId);
   const argos = useAnalysisArgos(scope, analysisId);
+  // A chave junta as duas leituras: o documento chega depois do status, e um observador montado
+  // sobre a árvore de carregamento não observa seção nenhuma — o laudo apareceria parado.
+  const raiz = useRevelacao<HTMLDivElement>(`${argos.dataUpdatedAt}|${argos.isPending}`);
 
   const titulo = t("canonicalAnalysis.argos.title");
 
@@ -529,7 +537,7 @@ export function ArgosView() {
   return (
     <AppShell topBarTitle={titulo}>
       <PageFrame maxWidth="lg">
-        <div className="space-y-6" data-testid="argos-view">
+        <div ref={raiz} className="space-y-6" data-testid="argos-view">
           <AnalysisShell
             analysisId={analysisId ?? ""}
             estado={status.data?.status as EstadoPublico | undefined}
