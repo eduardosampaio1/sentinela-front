@@ -1,218 +1,144 @@
-import { useState } from "react";
+// OBJETO · a conta de quem está usando.
+//
+// ## O formulário que prometia o que a SPA não faz
+//
+// Esta tela renderizava dois campos de senha, um `placeholder` dizendo "Minimum 8 characters",
+// três mensagens de validação e um botão "Update password". Nada disso funcionava.
+//
+// `handleChangePassword` começava por `supportsPasswordForms()`, que é **false** desde que o
+// Keycloak assumiu — então a primeira coisa que o submit fazia era redirecionar para o Account
+// Console do provedor. Tudo depois daquele `if` era inalcançável, inclusive as regras de senha,
+// inclusive a mensagem de sucesso, inclusive um `throw` de "unreachable" deixado no lugar da
+// chamada removida na M02.
+//
+// O defeito não é o código morto: é a tela AFIRMANDO um poder que ela não tem. Quem digitava
+// uma senha nova ali e via a página trocar de domínio não tinha como saber se a troca aconteceu.
+//
+// ## A verdade já estava escrita — em outra tela
+//
+// `account.signInTitle` ("Senha e acesso"), `account.signInBody` ("Ficam com seu provedor de
+// identidade, não aqui") e `account.signInAction` ("Gerenciar acesso") já existem no dicionário
+// e já são usados pela superfície de Conta. Duas telas do mesmo produto diziam coisas opostas
+// sobre o mesmo fato, e a que mentia era a que tinha formulário.
+//
+// Nenhuma copy nova foi escrita para esta seção: ela passa a usar as chaves que já são a
+// resposta certa. Um mesmo ato, um mesmo nome.
+//
+// ## Arquétipo
+//
+// Identidade primeiro, depois os atributos, depois acesso. Sem sinais vitais: não existe medida
+// sobre uma conta — inventar uma barra aqui seria decorar. É a mesma regra que fez a linha de
+// Instâncias ter dois campos.
+
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
-import { PageHeader } from "@/shared/layout/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { getAuthClient } from "@/lib/auth/index";
+import { IdentidadeDoObjeto, SecaoDoObjeto } from "@/design/patterns";
+import { useRevelacao } from "@/design/motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-// ─── Section wrapper ──────────────────────────────────────────────────────────
-
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="card-base p-6">
-      <div className="mb-5 pb-5 border-b border-[rgba(255,255,255,0.05)]">
-        <h2 className="text-base font-semibold text-[#F1F5F9]">{title}</h2>
-        {description && <p className="text-sm text-[#94A3B8] mt-1">{description}</p>}
-      </div>
-      {children}
-    </div>
-  );
+/** Duas letras de reconhecimento. Não é foto e não representa a pessoa — é uma marca de lugar. */
+function iniciais(texto: string): string {
+  const partes = texto.split(/\s+/).filter(Boolean);
+  if (partes.length >= 2) return `${partes[0][0]}${partes[1][0]}`.toUpperCase();
+  return texto.slice(0, 2).toUpperCase();
 }
-
-// ─── Avatar ───────────────────────────────────────────────────────────────────
-
-function Avatar({ name, email }: { name?: string; email?: string }) {
-  const text = name ?? email ?? "?";
-  const parts = text.split(/\s+/).filter(Boolean);
-  const initials =
-    parts.length >= 2
-      ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-      : text.slice(0, 2).toUpperCase();
-
-  return (
-    <div className="w-16 h-16 rounded-2xl bg-[rgba(79,90,232,0.10)] border border-[rgba(79,90,232,0.18)] flex items-center justify-center flex-shrink-0">
-      <span className="text-xl font-bold text-[#4F5AE8]">{initials}</span>
-    </div>
-  );
-}
-
-// ─── ProfilePage ──────────────────────────────────────────────────────────────
 
 export function ProfilePage() {
+  const { t, language } = useLanguage();
   const { user } = useAuth();
+  const raiz = useRevelacao<HTMLDivElement>(user?.id);
 
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordLoading, setPasswordLoading] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
-
-  const displayName =
+  const nome =
     (user?.user_metadata?.full_name as string | undefined) ??
     (user?.user_metadata?.name as string | undefined) ??
-    "—";
+    null;
 
-  const memberSince = user?.created_at
-    ? new Date(user.created_at).toLocaleDateString("en-US", {
+  const membroDesde = user?.created_at
+    ? new Intl.DateTimeFormat(language === "pt" ? "pt-BR" : "en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
-      })
+      }).format(new Date(user.created_at))
     : null;
 
-  async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault();
-    // Modo keycloak: credenciais são geridas no Account Console do Keycloak.
-    const authClient = getAuthClient();
-    if (!authClient.supportsPasswordForms()) {
-      const url = authClient.accountManagementUrl();
-      if (url) window.location.href = url;
-      return;
-    }
-    if (!newPassword) { setPasswordError("New password is required."); return; }
-    if (newPassword.length < 8) { setPasswordError("Password must be at least 8 characters."); return; }
-    if (newPassword !== confirmPassword) { setPasswordError("Passwords do not match."); return; }
+  const atributos = [
+    user?.email,
+    membroDesde ? `${t("account.memberSince")} ${membroDesde}` : null,
+  ].filter((x): x is string => Boolean(x));
 
-    setPasswordLoading(true);
-    setPasswordError(null);
-    setPasswordSuccess(false);
+  const campos = [
+    { chave: "nome", rotulo: t("account.name"), valor: nome, mono: false },
+    { chave: "email", rotulo: t("account.email"), valor: user?.email ?? null, mono: false },
+    { chave: "id", rotulo: t("account.userIdentifier"), valor: user?.id ?? null, mono: true },
+    {
+      chave: "provedor",
+      rotulo: t("account.signInProvider"),
+      valor: (user?.app_metadata?.provider as string | undefined) ?? null,
+      mono: false,
+    },
+  ];
 
-    try {
-      // Aqui ficava `supabase.auth.updateUser({ password })`. Trecho MORTO desde que o Keycloak
-      // assumiu: o guarda acima já desvia para o Account Console (D19), e a SPA não troca
-      // credencial. Removido na M02 sem tocar na aparência desta tela.
-      const error = new Error("unreachable: credential change is delegated to the provider");
-      if (error) throw error;
-      setPasswordSuccess(true);
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (err) {
-      setPasswordError(
-        err instanceof Error ? err.message : "Password update failed. Try again."
-      );
-    } finally {
-      setPasswordLoading(false);
-    }
+  function irParaOProvedor() {
+    const url = getAuthClient().accountManagementUrl();
+    if (url) window.location.href = url;
   }
 
   return (
-    <AppShell topBarTitle="Profile">
+    <AppShell topBarTitle={t("account.profileTitle")}>
       <PageFrame maxWidth="lg">
-        <PageHeader
-          title="Profile"
-          description="Your account identity and security settings."
-        />
+        <div ref={raiz}>
+          <IdentidadeDoObjeto
+            sigla={iniciais(nome ?? user?.email ?? "?")}
+            titulo={nome ?? user?.email ?? t("account.profileTitle")}
+            atributos={atributos}
+          />
 
-        <div className="space-y-6">
+          <p data-revelar className="mt-4 text-sm text-muted-foreground">
+            {t("account.profileSubtitle")}
+          </p>
 
-          {/* Identity card */}
-          <Section
-            title="Account identity"
-            description="Your profile as it appears across Sentinela."
-          >
-            <div className="flex items-center gap-5 mb-6">
-              <Avatar name={displayName !== "—" ? displayName : undefined} email={user?.email} />
-              <div>
-                <p className="text-base font-semibold text-[#F1F5F9]">{displayName}</p>
-                <p className="text-sm text-[#94A3B8]">{user?.email ?? "—"}</p>
-                {memberSince && (
-                  <p className="text-xs text-[#71809A] mt-1">Member since {memberSince}</p>
-                )}
-              </div>
-            </div>
+          <SecaoDoObjeto titulo={t("account.identityTitle")} detalhe={t("account.identityBody")}>
+            <dl className="grid gap-0">
+              {campos.map((c) => (
+                <div
+                  key={c.chave}
+                  data-revelar
+                  className="grid gap-1 border-b border-border py-3 last:border-b-0 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] sm:gap-6"
+                >
+                  <dt className="text-xs uppercase tracking-wider text-muted-foreground">
+                    {c.rotulo}
+                  </dt>
+                  {/* Campo sem valor NÃO vira travessão silencioso: o rótulo do vazio diz que a
+                      origem não publicou, que é diferente de "está em branco". */}
+                  <dd
+                    className={
+                      c.valor
+                        ? c.mono
+                          ? "break-all font-mono text-xs text-foreground"
+                          : "text-sm text-foreground"
+                        : "text-sm text-muted-foreground"
+                    }
+                  >
+                    {c.valor ?? t("account.identityFailed")}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </SecaoDoObjeto>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-widest font-semibold text-[#71809A]">Full name</p>
-                <p className="text-sm text-[#94A3B8]">{displayName}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-widest font-semibold text-[#71809A]">Email address</p>
-                <p className="text-sm text-[#94A3B8]">{user?.email ?? "—"}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-widest font-semibold text-[#71809A]">User ID</p>
-                <p className="text-xs font-mono text-[#71809A] break-all">{user?.id ?? "—"}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-widest font-semibold text-[#71809A]">Auth provider</p>
-                <p className="text-sm text-[#94A3B8]">
-                  {(user?.app_metadata?.provider as string | undefined) ?? "email"}
-                </p>
-              </div>
-            </div>
-          </Section>
-
-          {/* Security */}
-          <Section
-            title="Password"
-            description="Change your login password. Your current session will remain active."
-          >
-            <form onSubmit={handleChangePassword} className="space-y-4 max-w-sm">
-              <div className="space-y-1.5">
-                <Label htmlFor="newPassword" className="text-sm text-[#94A3B8]">
-                  New password
-                </Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => {
-                    setNewPassword(e.target.value);
-                    setPasswordError(null);
-                  }}
-                  placeholder="Minimum 8 characters"
-                  className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#71809A] rounded-xl h-11"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword" className="text-sm text-[#94A3B8]">
-                  Confirm new password
-                </Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    setPasswordError(null);
-                  }}
-                  placeholder="Repeat the new password"
-                  className="bg-[#111D30] border-[rgba(255,255,255,0.08)] text-[#F1F5F9] placeholder:text-[#71809A] rounded-xl h-11"
-                />
-              </div>
-
-              {passwordError && (
-                <p className="text-xs text-[#F87171]" role="alert">{passwordError}</p>
-              )}
-              {passwordSuccess && (
-                <p className="text-xs text-[#34D399]" role="status">
-                  Password updated. Use your new password on your next login.
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                disabled={passwordLoading}
-                size="sm"
-                className="rounded-xl bg-[#4F5AE8] text-white font-semibold hover:bg-[#3E48C4]"
-              >
-                {passwordLoading ? "Updating password…" : "Update password"}
+          <SecaoDoObjeto titulo={t("account.signInTitle")}>
+            <div data-revelar className="grid gap-3 rounded-lg border border-border bg-card p-4">
+              <p className="text-sm text-muted-foreground">{t("account.signInBody")}</p>
+              {/* O aviso da travessia é o próprio texto acima: ele diz que o assunto fica com o
+                  provedor ANTES do botão que leva até lá. Mesma regra do PORTAL. */}
+              <Button size="sm" variant="outline" className="justify-self-start" onClick={irParaOProvedor}>
+                {t("account.signInAction")}
               </Button>
-            </form>
-          </Section>
-
+            </div>
+          </SecaoDoObjeto>
         </div>
       </PageFrame>
     </AppShell>

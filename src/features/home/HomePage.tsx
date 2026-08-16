@@ -31,6 +31,7 @@ import { PageFrame } from "@/shell/PageFrame";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { EmptyState, ErrorState, LoadingState } from "@/design/patterns";
+import { useRevelacao } from "@/design/motion";
 import { useAnalysesList } from "@/features/canonical-analysis/data/list";
 import { useInstancesList } from "@/features/instances/data/instance";
 import { useCanonicalScope } from "@/features/canonical-analysis/ui/scope";
@@ -56,6 +57,22 @@ export function HomePage() {
   const { t } = useLanguage();
   const scope = useCanonicalScope();
   const lista = useAnalysesList(scope);
+  /**
+   * O que esta tela recebeu do sistema único, e o que ela deliberadamente NÃO recebeu.
+   *
+   * Recebeu o ritmo: as regiões entram na ordem de leitura, que aqui é a ordem da hierarquia —
+   * primeiro quem espera por alguém, depois o que está em curso, depois o que já pode ser lido.
+   * O escalonamento diz isso sem precisar numerar as seções.
+   *
+   * Não recebeu o "número que decide" da linha de COLEÇÃO, e não é omissão: D9 e a decisão de
+   * owner de 2026-08-10 dizem com todas as letras que esta tela não é dashboard de KPIs, e que
+   * não há contador, score, saúde, percentual, sparkline nem ranking nela — *nem como resumo
+   * para preencher espaço*. Um arquétipo que se impõe sobre uma decisão registrada não é sistema
+   * de design; é gosto com autoridade emprestada.
+   */
+  const raiz = useRevelacao<HTMLDivElement>(
+    lista.isPending ? "carregando" : `${lista.dataUpdatedAt}|${lista.isError}`,
+  );
   // BD02 — a região 3 de D9 pergunta "possui Instância?" (Discovery §9.1), então ela LÊ. É a
   // segunda origem desta tela, e não muda a primeira: a classificação nas outras três regiões
   // continua vindo inteira de `GET /v1/analyses`.
@@ -101,6 +118,9 @@ export function HomePage() {
     // paginação aqui — navegar o histórico é da superfície de análises; é a Home declarando o
     // próprio recorte.
     const truncada = lista.data?.next_cursor !== null && lista.data?.next_cursor !== undefined;
+    // Sem `data-revelar` no contêiner: cada região carrega o seu. Marcar o pai faria o bloco
+    // inteiro entrar de uma vez POR CIMA do escalonamento das quatro — perdendo justamente a
+    // ordem que o comentário abaixo diz ser a hierarquia.
     return (
       <div className="space-y-8">
         {/* A ordem É a hierarquia: primeiro quem espera por alguém, depois o que está em curso,
@@ -134,8 +154,8 @@ export function HomePage() {
   return (
     <AppShell topBarTitle={t("shell.nav.home")}>
       <PageFrame maxWidth="lg">
-        <div className="space-y-6" data-testid="home-page">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+        <div ref={raiz} className="space-y-6" data-testid="home-page">
+          <div data-revelar className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <h1 className="text-2xl font-semibold text-foreground">{t("shell.nav.home")}</h1>
               {/* A subida de subtítulo diz o que a tela É, não o que o produto promete. */}

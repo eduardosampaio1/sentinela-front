@@ -114,7 +114,14 @@ export function SinaisVitais({ sinais }: { sinais: readonly SinalVital[] }) {
   );
 }
 
-/** Título de seção dentro de um objeto. O `detalhe` fica à direita e conta o que a seção tem. */
+/**
+ * Título de seção dentro de um objeto. O `detalhe` fica à direita e conta o que a seção tem.
+ *
+ * O detalhe é IRMÃO do `h2`, não filho. Dentro do cabeçalho ele passava a fazer parte do nome
+ * acessível da seção, e o leitor de tela anunciava "Seus dados Vêm da conta com que você entra"
+ * como um título só — colando descrição em rótulo. Medido na tela, não deduzido: foi o
+ * `innerText` do `h2` que entregou as duas frases grudadas.
+ */
 export function SecaoDoObjeto({
   titulo,
   detalhe,
@@ -126,13 +133,13 @@ export function SecaoDoObjeto({
 }) {
   return (
     <section className="mt-10">
-      <h2
+      <div
         data-revelar
-        className="flex items-baseline justify-between gap-4 border-b border-border pb-3 text-xs uppercase tracking-wider text-muted-foreground"
+        className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-border pb-3"
       >
-        {titulo}
-        {detalhe && <span className="normal-case tracking-normal">{detalhe}</span>}
-      </h2>
+        <h2 className="text-xs uppercase tracking-wider text-muted-foreground">{titulo}</h2>
+        {detalhe && <p className="text-xs text-muted-foreground">{detalhe}</p>}
+      </div>
       <div className="mt-4">{children}</div>
     </section>
   );

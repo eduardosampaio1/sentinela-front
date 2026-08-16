@@ -58,7 +58,12 @@ export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
   "src/features/landing/tokens.ts": 24,
   "src/features/aion/tokens.ts": 13,
   "src/features/aion/AionPage.tsx": 0,
-  "src/features/profile/ProfilePage.tsx": 23,
+  // `ProfilePage.tsx` SAIU: 23 → 0, a maior dívida individual da lista.
+  //
+  // Como nas outras, o hardcode morreu junto com o que o carregava — e aqui o que o carregava
+  // era um formulário de senha INALCANÇÁVEL. `supportsPasswordForms()` é false desde o Keycloak,
+  // então o submit redirecionava antes de qualquer validação: os dois campos, as três mensagens
+  // e o botão "Update password" pintavam uma promessa que a SPA não cumpre.
   "src/features/history/RunRow.tsx": 19,
   "src/features/history/RunComparePanel.tsx": 17,
   "src/shell/AuthShell.tsx": 15,

@@ -121,7 +121,7 @@ export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] })
     // Fila vazia é boa notícia, e a região permanece: sumir faria "nada precisa de você" e "esta
     // tela não sabe checar" parecerem a mesma coisa.
     return (
-      <section aria-labelledby="home-acoes" className="space-y-3">
+      <section data-revelar aria-labelledby="home-acoes" className="space-y-3">
         <TituloDaRegiao id="home-acoes" texto={t("home.actions.title")} />
         <p className="rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
           {t("home.actions.none")}
@@ -130,7 +130,7 @@ export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] })
     );
   }
   return (
-    <section aria-labelledby="home-acoes" className="space-y-3">
+    <section data-revelar aria-labelledby="home-acoes" className="space-y-3">
       <TituloDaRegiao id="home-acoes" texto={t("home.actions.title")} />
       {/* A ÚNICA região com moldura. O peso é a mensagem: é aqui que alguém é esperado. */}
       <ul className="rounded-lg border border-border bg-card px-4">
@@ -178,7 +178,7 @@ export function RegiaoEmAndamento({ itens }: { itens: readonly AnalysisListItem[
   const { t } = useLanguage();
   if (itens.length === 0) return null;
   return (
-    <section aria-labelledby="home-andamento" className="space-y-2">
+    <section data-revelar aria-labelledby="home-andamento" className="space-y-2">
       <TituloDaRegiao id="home-andamento" texto={t("home.running.title")} />
       {/* Sem moldura: peso menor que a fila, de propósito. Nenhuma barra de progresso agregada —
           o detalhe por eixo é de AN-03, e um "%" somado aqui seria número inventado. */}
@@ -214,7 +214,7 @@ export function RegiaoDeResultados({
   const { t } = useLanguage();
   if (itens.length === 0 && semResultado.length === 0) return null;
   return (
-    <section aria-labelledby="home-resultados" className="space-y-2">
+    <section data-revelar aria-labelledby="home-resultados" className="space-y-2">
       <TituloDaRegiao id="home-resultados" texto={t("home.recent.title")} />
       <ul>
         {itens.map((item) => (
@@ -277,7 +277,7 @@ export function RegiaoDeResultados({
 export function RegiaoDeInstancias({ itens }: { itens: readonly InstanceView[] }) {
   const { t } = useLanguage();
   return (
-    <section aria-labelledby="home-instancias" className="space-y-2">
+    <section data-revelar aria-labelledby="home-instancias" className="space-y-2">
       <TituloDaRegiao id="home-instancias" texto={t("home.instances.title")} />
       {itens.length === 0 ? (
         <p role="note" className="text-sm text-muted-foreground">
