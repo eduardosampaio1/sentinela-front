@@ -24,25 +24,36 @@
 //
 // ## Como se usa
 //
-//   ?e2e=1   entra (grava a marca na sessão da aba e recarrega a decisão a cada navegação)
+//   ?e2e=1   entra (grava a marca e a mantém em todas as abas, até você sair)
 //   ?e2e=0   sai   (apaga a marca — `/login` volta a ser o caminho, no MESMO servidor)
 //
-// A marca vive em `sessionStorage`: morre ao fechar a aba, e não atravessa para outra. Fosse
-// `localStorage`, uma sessão de validação de ontem decidiria o que você vê hoje.
+// ## Por que `localStorage`, e não `sessionStorage`
+//
+// A primeira versão usava `sessionStorage`, com o argumento de que morrer ao fechar a aba é mais
+// seguro. O argumento estava certo e a escolha estava errada: `sessionStorage` é **por aba**, e
+// quem valida design abre muitas. Abrir `/login` numa aba nova subia o app deslogado, o botão
+// disparava o fluxo REAL, e a pessoa caía num erro do Keycloak de homologação — que não tem
+// `localhost` registrado como callback.
+//
+// O erro não estava no produto: o botão fez exatamente o que deve fazer. Estava nesta porta, que
+// obrigava a repetir `?e2e=1` em cada aba e não avisava quando você esquecia.
+//
+// `localStorage` atravessa abas e sobrevive ao fechar o navegador. A saída explícita (`?e2e=0`)
+// continua existindo, e as duas condições que garantem produção não mudaram.
 
 const CHAVE = "sentinela:navegacao-manual";
 
 if (import.meta.env.DEV && import.meta.env.VITE_E2E === "true") {
   try {
     const parametro = new URLSearchParams(window.location.search).get("e2e");
-    if (parametro === "1") sessionStorage.setItem(CHAVE, "1");
-    if (parametro === "0") sessionStorage.removeItem(CHAVE);
+    if (parametro === "1") localStorage.setItem(CHAVE, "1");
+    if (parametro === "0") localStorage.removeItem(CHAVE);
 
-    if (sessionStorage.getItem(CHAVE) === "1") {
+    if (localStorage.getItem(CHAVE) === "1") {
       (window as unknown as Record<string, unknown>).__SENTINELA_E2E_AUTH__ = true;
     }
   } catch {
-    // `sessionStorage` pode lançar (modo privado, storage desabilitado). Falhar aqui significa
+    // `localStorage` pode lançar (modo privado, storage desabilitado). Falhar aqui significa
     // "não autenticado", que é o padrão correto: a porta é fail-closed como o cadeado que ela usa.
   }
 }
