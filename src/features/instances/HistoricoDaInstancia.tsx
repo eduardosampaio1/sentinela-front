@@ -22,7 +22,7 @@
 
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { StatusBadge } from "@/design/patterns";
+import { LinhaDeColecao, StatusBadge } from "@/design/patterns";
 import type { EstadoPublico } from "@/design/patterns/estados";
 import type { AnalysisListItem } from "@/lib/v1";
 
@@ -43,35 +43,59 @@ export function HistoricoDaInstancia({
 
   return (
     <div className="space-y-3">
-      <ul className="grid gap-px overflow-hidden rounded-lg border border-border bg-border">
+      {/* A LINHA É A MESMA DA LISTAGEM CANÔNICA, e essa é a mudança.
+          Este histórico é a listagem filtrada por Instância — o mesmo recurso, os mesmos campos —
+          e desenhava uma linha própria, com outra geometria. A pessoa que vem de `/analyses` para
+          cá via a mesma informação em duas formas, e tinha de reaprender onde olhar.
+          Nada foi acrescentado: as conversas observadas entram pelo léxico, como lá, porque o
+          contrato diz que `null` naquele campo é ausente e nunca zero. */}
+      <ul className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border">
         {itens.map((item) => (
-          <li key={item.analysis_id} className="bg-card">
-            <Link
-              to={`/analyses/${encodeURIComponent(item.analysis_id)}`}
-              aria-label={t("canonicalAnalysis.list.open", { id: item.analysis_id })}
-              className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {/* O id sozinho obriga a lembrar o que ele é. A contagem de registros é campo
-                  PUBLICADO (`list_item_fields`) e a mesma que a listagem canônica mostra —
-                  reconhecimento em vez de memória, sem inventar dado. `null` vira a copy de
-                  desconhecido, nunca `0`. */}
-              <span className="flex min-w-0 flex-col">
-                <span className="truncate text-sm font-medium text-foreground">
-                  {item.analysis_id}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {item.record_count === null
-                    ? t("canonicalAnalysis.list.recordsUnknown")
-                    : t("canonicalAnalysis.list.records", { count: item.record_count })}
-                </span>
-              </span>
-              <StatusBadge
-                vocabulario="publico"
-                estado={item.status as EstadoPublico}
-                rotulo={t(`estadoPublico.${item.status}`)}
-              />
-            </Link>
-          </li>
+          <LinhaDeColecao
+            key={item.analysis_id}
+            item={{
+              chave: item.analysis_id,
+              titulo: item.analysis_id,
+              // A contagem de registros é campo PUBLICADO (`list_item_fields`) e a mesma que a
+              // listagem canônica mostra — reconhecimento em vez de memória, sem inventar dado.
+              // `null` vira a copy de desconhecido, nunca `0`.
+              subtitulo:
+                item.record_count === null
+                  ? t("canonicalAnalysis.list.recordsUnknown")
+                  : t("canonicalAnalysis.list.records", { count: item.record_count }),
+              destino: `/analyses/${encodeURIComponent(item.analysis_id)}`,
+              numero: {
+                valor:
+                  item.observed_conversations === null || item.observed_conversations === undefined
+                    ? { tipo: "ausente", motivo: t("canonicalAnalysis.list.conversationsAbsent") }
+                    : {
+                        tipo: "medido",
+                        texto: item.observed_conversations.toLocaleString(),
+                        fracao: 1,
+                      },
+                rotulo: t("canonicalAnalysis.list.conversations"),
+              },
+              estado: {
+                rotulo: "",
+                sinal: (
+                  <StatusBadge
+                    vocabulario="publico"
+                    estado={item.status as EstadoPublico}
+                    rotulo={t(`estadoPublico.${item.status}`)}
+                  />
+                ),
+              },
+            }}
+            Envoltorio={({ destino, children, className }) => (
+              <Link
+                to={destino ?? "#"}
+                aria-label={t("canonicalAnalysis.list.open", { id: item.analysis_id })}
+                className={className}
+              >
+                {children}
+              </Link>
+            )}
+          />
         ))}
       </ul>
 

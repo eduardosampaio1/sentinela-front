@@ -72,6 +72,14 @@ export interface ItemDeColecao {
   acao?: ReactNode;
   /** O item corrente de uma coleção de seleção. Marca "é este", nunca "é o melhor". */
   ativo?: boolean;
+  /**
+   * Explicação ABAIXO da linha, quando o estado exige uma.
+   *
+   * Não é subtítulo: o subtítulo identifica o item e vale sempre; a nota justifica uma situação e
+   * só aparece onde há situação a justificar. Um estado que pede ação humana precisa dizer que a
+   * operação não está exposta no contrato público, e essa frase não cabe numa célula.
+   */
+  nota?: ReactNode;
   /** Atributos `data-*` de teste que a superfície já publicava. Repassados sem interpretação. */
   dados?: Readonly<Record<string, string>>;
 }
@@ -237,6 +245,9 @@ export function LinhaDeColecao({
           </>
         ),
       })}
+      {/* A nota fica FORA do envoltório: dentro de um `Link`, ela viraria parte do nome acessível
+          da linha, e o leitor de tela anunciaria o motivo do bloqueio como se fosse o destino. */}
+      {item.nota && <div className="px-4 pb-3 text-xs text-muted-foreground">{item.nota}</div>}
     </li>
   );
 }
