@@ -250,6 +250,69 @@ async function semResultado(page: Page): Promise<void> {
 }
 
 /**
+ * M45.5 — a Instância com CONTEÚDO: histórico e régua de baseline.
+ *
+ * J3 e J4 montam a lista e a Instância VAZIAS, e a discovery já dizia o que faltava: *"não
+ * cobriram baseline, histórico paginado, nem `/analyses/new` a partir dela"*. Tela vazia não tem
+ * régua para desenhar, nem histórico para paginar, nem candidato para escolher.
+ */
+async function instanciaComConteudo(page: Page): Promise<void> {
+  await page.route(
+    (url) => url.pathname === "/v1/instances",
+    (r) =>
+      r.fulfill(
+        json({
+          items: [
+            { instance_id: INSTANCIA, name: "Suporte", created_at: "2026-05-02T11:15:00Z" },
+            { instance_id: "inst-2", name: "Vendas", created_at: "2026-06-10T09:00:00Z" },
+          ],
+          next_cursor: null,
+        }),
+      ),
+  );
+  // O histórico da Instância É a listagem canônica filtrada — não há subrecurso `/instances/{id}/
+  // analyses`, e a BD02 recusou criá-lo de propósito.
+  await page.route(
+    (url) => url.pathname === "/v1/analyses",
+    (r) =>
+      r.fulfill(
+        json({
+          items: [
+            { analysis_id: ANALISE, status: "completed", record_count: 1240, result_available: true, created_at: "2026-08-03T17:12:44Z", updated_at: "2026-08-03T17:13:02Z", instance_id: INSTANCIA },
+            { analysis_id: "an-anterior", status: "completed", record_count: 900, result_available: true, created_at: "2026-07-20T10:00:00Z", updated_at: "2026-07-20T10:06:00Z", instance_id: INSTANCIA },
+          ],
+          next_cursor: null,
+        }),
+      ),
+  );
+  await page.route("**/v1/instances/*/baseline**", (r) =>
+    r.fulfill(
+      json({
+        instance_id: INSTANCIA,
+        baseline_analysis_id: ANALISE,
+        baseline_set_at: "2026-08-04T08:00:00Z",
+      }),
+    ),
+  );
+}
+
+/**
+ * A Instância sem NENHUM candidato a referência.
+ *
+ * Distinto de "sem referência escolhida": aqui não há o que escolher. Só análises concluídas desta
+ * Instância podem ser régua, e a elegibilidade tem dono — o produtor, pelo `baseline_eligible`.
+ */
+async function instanciaSemCandidatos(page: Page): Promise<void> {
+  await page.route(
+    (url) => url.pathname === "/v1/analyses",
+    (r) => r.fulfill(json({ items: [], next_cursor: null })),
+  );
+  await page.route("**/v1/instances/*/baseline**", (r) =>
+    r.fulfill(json({ instance_id: INSTANCIA, baseline_analysis_id: null, baseline_set_at: null })),
+  );
+}
+
+/**
  * Concluída e SEM resultado — o próprio status diz que não há.
  *
  * Não confundir com `semResultado`: lá o status anuncia `result_available: true` e o documento foi
@@ -369,6 +432,20 @@ const JOURNEYS: readonly Journey[] = [
   // pela retenção; aqui o próprio status diz que não há resultado. Duas telas, duas frases.
   { id: "J17", nome: "concluída sem resultado", rota: `/analyses/${ANALISE}/result`,
     terminal: /still being prepared|ainda está sendo preparado/, montar: concluidaSemResultado },
+
+  // ── M45.5 · Instância e baseline, POVOADAS ───────────────────────────────────────────────
+  //
+  // J3 e J4 pousam nas mesmas rotas VAZIAS. A discovery nomeou o que faltava: baseline, histórico
+  // paginado e a entrada de nova análise a partir da Instância.
+  { id: "J18", nome: "instâncias povoadas", rota: "/instances",
+    terminal: /Suporte/, montar: instanciaComConteudo },
+  { id: "J19", nome: "instância com régua", rota: `/instances/${INSTANCIA}`,
+    // "Referência atual" só existe com uma análise ELEITA — é o estado que a M40 entregou e que
+    // nenhuma passada transversal tinha visto.
+    terminal: /Current reference|Referência atual/, montar: instanciaComConteudo },
+  { id: "J20", nome: "instância sem candidatos", rota: `/instances/${INSTANCIA}`,
+    terminal: /No analysis can be the reference yet|Nenhuma análise pode ser referência/,
+    montar: instanciaSemCandidatos },
 ] as const;
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
@@ -537,6 +614,29 @@ test.describe("M45 · G11 · os três estados não colapsam", () => {
       await page.locator('main [role="alert"]').count(),
       "a tela inteira fora do ar deixou de alarmar — a regra da casa foi afrouxada para todos",
     ).toBeGreaterThan(0);
+  });
+
+  // M45.5 — o histórico VAZIO não repete o título da seção.
+  //
+  // A seção já tem `<h2>Análises desta instância</h2>`, e o estado vazio usava o MESMO texto como
+  // título: dois títulos idênticos empilhados na tela, e dois cabeçalhos iguais na árvore de
+  // acessibilidade. Quem navega por cabeçalho ouvia a mesma coisa duas vezes sem saber que a
+  // segunda era o vazio. O mesmo valia para o estado de erro.
+  //
+  // O gate CONTA — sem contar, "o título existe" passaria com ele duplicado.
+  test("o histórico vazio não empilha dois títulos iguais", async ({ page }) => {
+    await montarProduto(page);
+    await instanciaSemCandidatos(page);
+    await page.goto(`/instances/${INSTANCIA}`);
+    await expect(page.locator("main")).toContainText(/No analyses in this instance yet/, {
+      timeout: 20_000,
+    });
+
+    const titulos = await page
+      .locator("main")
+      .getByText("Analyses in this instance", { exact: true })
+      .count();
+    expect(titulos, "o título da seção aparece mais de uma vez").toBe(1);
   });
 
   // M45.3 · decisões de owner (2026-08-15) sobre a superfície CONGELADA.

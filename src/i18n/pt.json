@@ -734,7 +734,9 @@
     "startAnalysis": "Iniciar análise",
     "startAnalysisIn": "Iniciar análise em {{name}}",
     "startingAnalysis": "Iniciando…",
-    "unavailable": "Esta instância está indisponível agora."
+    "unavailable": "Esta instância está indisponível agora.",
+    "emptyHistoryHint": "Inicie a primeira e ela aparecerá aqui.",
+    "errorHistoryTitle": "Não foi possível carregar estas análises"
   },
   "intentsPage": {
     "title": "Intents",

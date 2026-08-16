@@ -230,8 +230,9 @@ export default function InstancePage() {
           {historico.isPending ? (
             <LoadingState rotulo={t("instances.loadingHistory")} />
           ) : historico.isError ? (
+            // Mesmo motivo do vazio, logo abaixo: título próprio, e não o da seção repetido.
             <ErrorState
-              titulo={t("instances.historyTitle")}
+              titulo={t("instances.errorHistoryTitle")}
               explicacao={t("instances.errorHistory")}
               acao="tentar"
               botao={
@@ -248,9 +249,18 @@ export default function InstancePage() {
             // M37 fechou a lacuna que a M36 registrou aqui: o vazio agora aponta a ação útil, e
             // ela é a MESMA do cabeçalho — mesmo hook, mesma intenção, mesmo contexto. Um segundo
             // botão que levasse à criação genérica perderia justamente o contexto desta tela.
+            // M45.5 — TÍTULO PRÓPRIO, e não o da seção outra vez.
+            //
+            // A seção já tem `<h2>Análises desta instância</h2>` doze linhas acima. Repetir o
+            // mesmo texto aqui empilhava dois títulos idênticos na tela e dois cabeçalhos iguais
+            // na árvore de acessibilidade — quem navega por cabeçalho ouvia a mesma coisa duas
+            // vezes e não sabia que a segunda era o estado vazio.
+            //
+            // `instances.emptyHistory` já existia no dicionário e não tinha nenhum chamador. Era
+            // exatamente a frase que faltava aqui.
             <EmptyState
-              titulo={t("instances.historyTitle")}
-              explicacao={t("instances.emptyHistoryAction")}
+              titulo={t("instances.emptyHistory")}
+              explicacao={t("instances.emptyHistoryHint")}
               acao={
                 <Button
                   variant="outline"

@@ -734,7 +734,9 @@
     "startAnalysis": "Start analysis",
     "startAnalysisIn": "Start analysis in {{name}}",
     "startingAnalysis": "Starting…",
-    "unavailable": "This instance is unavailable right now."
+    "unavailable": "This instance is unavailable right now.",
+    "emptyHistoryHint": "Start the first one and it will show up here.",
+    "errorHistoryTitle": "We couldn't load these analyses"
   },
   "intentsPage": {
     "title": "Intents",
