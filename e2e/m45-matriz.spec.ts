@@ -26,6 +26,8 @@
 
 import axe from "axe-core";
 import { expect, test, type Page } from "@playwright/test";
+// A massa v2 REAL — a mesma do adapter. Escrever uma aqui provaria que a tela lê o que eu inventei.
+import { V2_READY } from "@/test/fixtures/canonical-result/massasV2";
 
 test.use({ serviceWorkers: "block" });
 
@@ -63,7 +65,17 @@ async function montarProduto(page: Page, idioma: "pt" | "en" = "en") {
   // A ORDEM importa: o Playwright casa a ÚLTIMA rota registrada primeiro, então as gerais entram
   // antes das específicas. Invertendo, a listagem engole o detalhe e a tela fica em "Preparing"
   // para sempre — o sintoma chega como "a rota não abre".
-  await page.route("**/v1/analyses**", (r) => r.fulfill(json({ items: [], next_cursor: null })));
+  // PREDICADO de caminho, e nao glob de prefixo.
+  //
+  // `**/v1/analyses**` casa TAMBEM `/v1/analyses/{id}/result`, `/timeline`, `/progress` e
+  // `/analytics` -- e a ultima rota registrada vence. Foi assim que a linha do tempo recebeu
+  // `{items: [], next_cursor: null}` e a pagina inteira caiu no ErrorBoundary, e foi assim que o
+  // laco de responsive (que reusa UMA pagina entre journeys) fez o `povoar` de J13/J14 envenenar
+  // o `/result` de J15. Um predicado so casa a listagem, e nada mais.
+  await page.route(
+    (url) => url.pathname === "/v1/analyses",
+    (r) => r.fulfill(json({ items: [], next_cursor: null })),
+  );
   await page.route("**/v1/instances**", (r) => r.fulfill(json({ items: [], next_cursor: null })));
   await page.route("**/v1/instances/*/baseline**", (r) =>
     r.fulfill(json({ baseline_analysis_id: null, baseline_set_at: null })),
@@ -82,6 +94,60 @@ async function montarProduto(page: Page, idioma: "pt" | "en" = "en") {
         created_at: "2026-08-03T17:12:44Z",
         updated_at: "2026-08-03T17:13:02Z",
         instance_id: null,
+      }),
+    ),
+  );
+
+  // M45.3 — o documento do resultado e a linha do tempo entram na montagem BASE.
+  //
+  // RES-01 é **LEGACY COMPATIBILITY** e está congelada no Blueprint §4.6: continua servindo deep
+  // link antigo, não recebe feature nova, e nenhuma navegação canônica aponta para ela. Congelada
+  // não é aposentada — quem tem o link cai nela hoje, e a matriz nunca a visitou. Era o único
+  // motivo de E5 estar como NO CREDIT na discovery.
+  //
+  // A massa é a MESMA que o adapter usa (`V2_READY`), embrulhada no envelope público. As duas
+  // coisas são distintas e confundi-las custou quatro tentativas na sondagem desta tranche: as
+  // massas de `fixtures/canonical-result` são o DOCUMENTO; o envelope é `{analysis_id,
+  // result_schema_version, indicator_registry_version, result}`.
+  await page.route("**/v1/analyses/*/result**", (r) =>
+    r.fulfill(
+      json({
+        analysis_id: ANALISE,
+        result_schema_version: String(V2_READY.result_schema_version),
+        indicator_registry_version: "indicator-registry-1.0",
+        result: V2_READY,
+      }),
+    ),
+  );
+  // `/timeline` é rota própria, e precisa vir DEPOIS da geral `**/v1/analyses**` — que a casa
+  // também, por ser um glob de prefixo. Sem esta linha a linha do tempo recebia
+  // `{items: [], next_cursor: null}`: corpo verdadeiro, sem `events`, e a página inteira caía no
+  // ErrorBoundary. Era a montagem, não o produto — o guarda do produto (`timeline.data &&`) está
+  // certo, e `event_id` é contratado.
+  await page.route("**/v1/analyses/*/timeline**", (r) =>
+    r.fulfill(
+      json({
+        analysis_id: ANALISE,
+        events: [
+          { event_id: "ev-1", event_schema_version: "v1", analysis_id: ANALISE, workspace_id: ESCOPO, sequence: 1, event_type: "analysis.started", occurred_at: "2026-08-03T17:12:44Z" },
+          { event_id: "ev-2", event_schema_version: "v1", analysis_id: ANALISE, workspace_id: ESCOPO, sequence: 2, event_type: "analysis.completed", occurred_at: "2026-08-03T17:13:02Z" },
+          { event_id: "ev-3", event_schema_version: "v1", analysis_id: ANALISE, workspace_id: ESCOPO, sequence: 3, event_type: "result.available", occurred_at: "2026-08-03T17:13:05Z" },
+        ],
+      }),
+    ),
+  );
+  await page.route("**/v1/analyses/*/analytics**", (r) =>
+    r.fulfill(
+      json({
+        analysis_id: ANALISE,
+        component_status: "ready",
+        snapshot_contract_version: "analytics-snapshot-v9",
+        snapshot_digest: "sd",
+        snapshot: { snapshot_contract_version: "analytics-snapshot-v9", record_count: 1240, numeric: [], distributions: [], dimensions: [], concentrations: [], time_series: [] },
+        disclosure_rule_version: "dr-1",
+        projection_digest: "pd",
+        withheld: null,
+        generated_at: "2026-08-01T00:00:00Z",
       }),
     ),
   );
@@ -173,9 +239,18 @@ async function emEstado(
   );
 }
 
+/** O produtor recusa o documento: `404 result_not_available`. Ausência, não queda. */
+async function semResultado(page: Page): Promise<void> {
+  await page.route("**/v1/analyses/*/result**", (r) =>
+    r.fulfill(json({ code: "result_not_available" }, 404)),
+  );
+}
+
 /** Três análises em estados diferentes e uma Instância — o produto com CONTEÚDO. */
 async function povoar(page: Page): Promise<void> {
-  await page.route("**/v1/analyses**", (r) =>
+  await page.route(
+    (url) => url.pathname === "/v1/analyses",
+    (r) =>
     r.fulfill(
       json({
         items: [
@@ -250,6 +325,16 @@ const JOURNEYS: readonly Journey[] = [
     terminal: /In progress|Em andamento/, montar: povoar },
   { id: "J14", nome: "lista povoada", rota: "/analyses",
     terminal: /records|registros/, montar: povoar },
+
+  // ── M45.3 · RES-01, a superfície CONGELADA que a matriz nunca visitou ────────────────────
+  //
+  // Congelada não é aposentada. O Blueprint §4.6 diz que ela *"continua funcional e servindo deep
+  // link antigo"* — quem tem o link cai nela hoje. Era o único motivo de E5 aparecer como
+  // NO CREDIT na discovery histórica: nenhuma feature nova, e nenhuma medição transversal também.
+  { id: "J15", nome: "resultado (legado)", rota: `/analyses/${ANALISE}/result`,
+    terminal: /Why trust this result|Por que confiar/ },
+  { id: "J16", nome: "resultado indisponível", rota: `/analyses/${ANALISE}/result`,
+    terminal: /No result is available|Nenhum resultado/, montar: semResultado },
 ] as const;
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
@@ -549,6 +634,13 @@ test.describe("M45 · G5 · responsive", () => {
 
       const estouram: string[] = [];
       for (const j of JOURNEYS) {
+        // A montagem base é REINSTALADA a cada journey.
+        //
+        // Este laço reusa UMA página, e `page.route` acumula: a última registrada vence e nunca é
+        // desfeita. Sem isto, o `emEstado` de J12 (falha terminal) continuava valendo em J13–J16, e
+        // J15 media RES-01 de uma análise que falhou — não a tela que o nome diz. G1 e G7 não têm
+        // o problema porque cada caso abre uma página nova.
+        await montarProduto(page);
         await j.montar?.(page);
         await page.goto(j.rota);
         await expect(page.locator("main")).toContainText(j.terminal, { timeout: 15_000 });
