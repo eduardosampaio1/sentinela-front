@@ -1,6 +1,9 @@
 // A porta de navegação manual precisa correr ANTES de tudo: ela decide o valor que o cadeado
 // abaixo vai ler. Import estático de efeito colateral roda antes do corpo deste módulo.
 import "./dev/navegacaoManual";
+// A massa vem DEPOIS da porta e ANTES do MSW: ela só semeia se a marca da porta já estiver
+// gravada, e o handler da listagem lê `sessionStorage` na hora do pedido.
+import "./dev/massaDeNavegacao";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Providers } from "./app/providers";
