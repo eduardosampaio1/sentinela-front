@@ -105,6 +105,30 @@ describe("M10 · primitives nas 4 combinações de D37", () => {
 });
 
 describe("M10 · o que cada primitive precisa garantir por si", () => {
+  // M45.3 — o gatilho do `Disclosure` PARECE um gatilho.
+  //
+  // Ele renderizava só o texto. No mobile de RES-01 isso é a palavra "Procedência" sozinha, entre
+  // o número do indicador e a descrição: lê-se como título de seção, e nada diz que abre. A
+  // procedência é o argumento de confiança daquela tela, e ficava invisível para quem não
+  // adivinhasse tocar. Era o único uso do primitive no produto inteiro.
+  //
+  // As DUAS direções, e a segunda é o que impede a correção de virar outro defeito: a seta não
+  // pode roubar o nome acessível. Um ícone que vira o nome do botão é o defeito que o docstring do
+  // `gatilho` já proibia — "texto, não ícone sozinho".
+  it("Disclosure: o gatilho tem marca visual E continua se chamando pelo texto", () => {
+    const { container } = render(<Disclosure gatilho="Procedência">conteúdo</Disclosure>);
+    const botao = screen.getByRole("button", { name: "Procedência" });
+
+    expect(
+      botao.querySelector("svg"),
+      "o gatilho não tem marca visual — parece um título, não um botão",
+    ).not.toBeNull();
+    // E a marca é decorativa: quem usa leitor de tela ouve o texto, não o ícone.
+    expect(botao.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+    expect(botao).toHaveAttribute("aria-expanded", "false");
+    expect(container.textContent).not.toContain("conteúdo");
+  });
+
   it("Bar SUPRIMIDA não desenha barra — vazio e zero afirmam coisas opostas", () => {
     const { container } = render(
       <ul>

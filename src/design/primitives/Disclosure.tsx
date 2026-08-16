@@ -12,6 +12,7 @@
 // O conteúdo é montado só quando aberto — mas o `id` da região existe sempre, senão `aria-controls`
 // apontaria para o vazio enquanto fechado.
 
+import { ChevronDown } from "lucide-react";
 import { useId, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +44,18 @@ export function Disclosure({
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         )}
       >
+        {/* M45.3 — a SETA, e por que ela faltava.
+            O gatilho renderizava só o texto. No mobile de RES-01 ele é a palavra "Procedência"
+            sozinha, entre o número e a descrição do indicador: lê-se como título de seção, e nada
+            diz que abre. A procedência é o argumento de confiança daquela tela, e ficava invisível
+            para quem não adivinhasse tocar.
+            O docstring do `gatilho` diz "texto, não ícone sozinho" — a regra é contra o ícone SEM
+            nome acessível, e não contra texto acompanhado. O nome continua sendo o texto; a seta é
+            `aria-hidden` e só desenha o estado que o `aria-expanded` já publica. */}
+        <ChevronDown
+          className={cn("h-3.5 w-3.5 shrink-0 transition-transform", aberto && "rotate-180")}
+          aria-hidden="true"
+        />
         {gatilho}
       </button>
       <div id={idRegiao} hidden={!aberto}>
