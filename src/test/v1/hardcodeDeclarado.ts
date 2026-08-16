@@ -87,7 +87,10 @@ export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
   // vocabulário único a tinha matado.
   "src/shared/feedback/ConfirmDialog.tsx": 6,
   "src/shared/states/EmptyState.tsx": 6,
-  "src/components/auth/AuthExperienceShell.tsx": 4,
+  // `AuthExperienceShell.tsx` foi REMOVIDO (4 → 0). Ele existia só para o callback, e o callback
+  // parou de usá-lo: uma casca institucional com três blocos explicando a mecânica de OIDC não
+  // tem função numa tela por onde a pessoa passa em 800 ms. Sem consumidor em toda a árvore, ele
+  // é peça escrita e nunca mais ligada — o tipo de arquivo que sobrevive porque compila.
   "src/shared/layout/PageHeader.tsx": 4,
   "src/shared/states/SkeletonState.tsx": 3,
   "src/shell/MobileNav.tsx": 2,

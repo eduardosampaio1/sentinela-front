@@ -313,3 +313,64 @@ describe("AnalysesListPage — acessibilidade (axe)", () => {
     expect(await violacoes(container)).toEqual([]);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// O LÉXICO DE VALOR NA LINHA — ausência não é zero
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// O contrato de `AnalysisListItem` diz, sobre `observed_conversations`, que `null` significa
+// **ausente, nunca zero**, e que *"renderizar 0 ou '—' como se fosse medição transformaria
+// não-medição em fato"*. A regra estava escrita no contrato e não era medida em lugar nenhum:
+// a lista simplesmente descartava o campo, então nenhuma asserção podia falhar.
+//
+// Estes casos existem para que ela passe a ter dentes. O primeiro prova que o número medido
+// chega à tela; o segundo, que a ausência recebe FORMA (a hachura) e não um zero.
+
+describe("AnalysesListPage · o léxico de valor na linha", () => {
+  const comConversas = (id: string, observadas: number | null) => ({
+    analysis_id: id,
+    status: "completed" as AnalysisStatus,
+    record_count: 5,
+    result_available: true,
+    created_at: "2020-01-02T00:00:00Z",
+    observed_conversations: observadas,
+    instance_id: null,
+  });
+
+  it("conversas observadas chegam à tela quando o produtor as publica", async () => {
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses`, () =>
+        HttpResponse.json(page([comConversas("an-medida", 12480) as never])),
+      ),
+    );
+    renderList();
+    // `toLocaleString` decide o separador pelo ambiente; a asserção olha os dígitos, não a
+    // pontuação — senão o caso reprova numa máquina com outro locale e ninguém entende por quê.
+    await waitFor(() => {
+      const texto = document.body.textContent ?? "";
+      expect(texto.replace(/[.,\s]/g, "")).toContain("12480");
+    });
+  });
+
+  it("ausência recebe HACHURA, e a tela não inventa um zero", async () => {
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses`, () =>
+        HttpResponse.json(page([comConversas("an-ausente", null) as never])),
+      ),
+    );
+    const { container } = renderList();
+
+    await screen.findByText(/an-ausente/);
+
+    // A forma: o trilho da medida ausente carrega a classe da hachura, que é o segundo canal —
+    // o que distingue "não veio" de "veio e é zero" para quem não lê a cor.
+    await waitFor(() => {
+      expect(container.querySelectorAll(".medida-ausente").length).toBeGreaterThan(0);
+    });
+
+    // E o antifato: nenhum `0` aparece como se fosse a contagem observada. Sem este caso, um
+    // `?? 0` acidental no futuro passaria — a hachura continuaria lá, desenhada sobre um zero.
+    const numeros = Array.from(container.querySelectorAll(".tabular")).map((n) => n.textContent?.trim());
+    expect(numeros).not.toContain("0");
+  });
+});

@@ -15,8 +15,10 @@ import type { AnalysisListItem, CanonicalScope } from "@/lib/v1";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/shared/states/LoadingState";
-import { EmptyState, StatusBadge, Toolbar } from "@/design/patterns";
+import { EmptyState, LinhaDeColecao, StatusBadge, Toolbar } from "@/design/patterns";
 import type { EstadoPublico } from "@/design/patterns/estados";
+import type { ValorDaMedida } from "@/design/primitives/valorDaMedida";
+import { useRevelacao } from "@/design/motion";
 import { useAnalysesList } from "../data/list";
 import { useInstancesList } from "@/features/instances/data/instance";
 import { classifyListError } from "../data/listView";
@@ -31,58 +33,106 @@ function formatarData(iso: string | null): string {
 
 /** M39 — a seleção é um controle SEPARADO do link, não o link mudando de comportamento.
  *  Sequestrar o clique da linha faria "abrir" e "escolher" morarem no mesmo alvo, e quem navega
- *  por teclado ou leitor de tela perderia a distinção. O checkbox tem nome próprio. */
+ *  por teclado ou leitor de tela perderia a distinção. O checkbox tem nome próprio.
+ *
+ *  ## O que a linha passou a mostrar, e de onde veio
+ *
+ *  **O nome da Instância no lugar do UUID.** O título era `analysis_id` — uma lista de UUIDs é um
+ *  corredor de portas fechadas: nada nela ajuda a escolher qual abrir. O nome vem de
+ *  `instance_id`, que o contrato publica, resolvido contra a lista de Instâncias que esta tela JÁ
+ *  carrega para o filtro. É junção de dois recursos publicados, não cálculo: o Front continua sem
+ *  derivar estado nenhum. Análise sem Instância (toda a legada) mantém o identificador no título,
+ *  porque aí não há nome que exista.
+ *
+ *  **`observed_conversations`.** O contrato publica este campo e a lista o descartava. Ele é o
+ *  número que dá escala à linha — 12.480 conversas e 90 conversas são decisões diferentes sobre
+ *  abrir ou não.
+ *
+ *  E ele entra pelo LÉXICO, não como texto: o próprio contrato diz que `null` aqui significa
+ *  **ausente, nunca zero**, e que *"renderizar 0 ou '—' como se fosse medição transformaria
+ *  não-medição em fato"*. Ausente recebe a hachura; medido recebe o número. */
 function ItemLinha({
   item,
   selecao,
+  nomeDaInstancia,
 }: {
   item: AnalysisListItem;
   selecao?: { marcada: boolean; alternar: () => void; bloqueada: boolean };
+  /** Nome já resolvido, ou `undefined` quando não há Instância ou ela não está na página. */
+  nomeDaInstancia?: string;
 }) {
   const { t } = useLanguage();
+
   const registros =
     item.record_count === null
       ? t("canonicalAnalysis.list.recordsUnknown")
       : t("canonicalAnalysis.list.records", { count: item.record_count });
-  return (
-    <li className={selecao ? "flex items-center gap-3" : undefined}>
-      {selecao && (
-        <input
-          type="checkbox"
-          className="h-4 w-4 flex-none accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          checked={selecao.marcada}
-          // Bloqueia a TERCEIRA, nunca desmarcar: quem já escolheu duas ainda pode trocar.
-          disabled={selecao.bloqueada && !selecao.marcada}
-          onChange={selecao.alternar}
+
+  const conversas: ValorDaMedida =
+    item.observed_conversations === null || item.observed_conversations === undefined
+      ? { tipo: "ausente", motivo: t("canonicalAnalysis.list.conversationsAbsent") }
+      : {
+          tipo: "medido",
+          texto: item.observed_conversations.toLocaleString(),
+          // A fração não é escala publicada e não vira julgamento: sem faixa, `Numero` fica
+          // neutro. Ela existe só para o trilho ter comprimento, e por isso não é lida em
+          // lugar nenhum desta linha.
+          fracao: 1,
+        };
+
+  const linha = (
+    <LinhaDeColecao
+      item={{
+        chave: item.analysis_id,
+        titulo: nomeDaInstancia ?? item.analysis_id,
+        subtitulo: nomeDaInstancia ? `${item.analysis_id} · ${registros}` : registros,
+        destino: `/analyses/${encodeURIComponent(item.analysis_id)}`,
+        numero: { valor: conversas, rotulo: t("canonicalAnalysis.list.conversations") },
+        // M38 · o rótulo vem da família já publicada (`estadoPublico.*`) pelo `StatusBadge`, e
+        // não de `canonicalAnalysis.state.*` — duas palavras para o MESMO estado (`preparing`
+        // era "Preparing" aqui e "Reserved" lá). O Blueprint marca `StatusBadge` 🔴 vinculante
+        // para EVO-01 exatamente como defesa contra isso.
+        estado: {
+          rotulo: item.result_available ? t("canonicalAnalysis.list.resultReady") : "",
+          sinal: (
+            <StatusBadge
+              vocabulario="publico"
+              estado={item.status as EstadoPublico}
+              rotulo={t(`estadoPublico.${item.status}`)}
+            />
+          ),
+        },
+        quando: formatarData(item.created_at),
+      }}
+      Envoltorio={({ destino, children, className }) => (
+        <Link
+          to={destino ?? "#"}
           aria-label={t("canonicalAnalysis.list.open", { id: item.analysis_id })}
-        />
+          className={className}
+        >
+          {children}
+        </Link>
       )}
-      <Link
-        to={`/analyses/${encodeURIComponent(item.analysis_id)}`}
+    />
+  );
+
+  if (!selecao) return linha;
+
+  return (
+    <li className="flex items-center gap-3">
+      <input
+        type="checkbox"
+        className="h-4 w-4 flex-none accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        checked={selecao.marcada}
+        // Bloqueia a TERCEIRA, nunca desmarcar: quem já escolheu duas ainda pode trocar.
+        disabled={selecao.bloqueada && !selecao.marcada}
+        onChange={selecao.alternar}
         aria-label={t("canonicalAnalysis.list.open", { id: item.analysis_id })}
-        className="flex min-w-0 flex-1 flex-col gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div className="min-w-0">
-          <span className="block truncate font-medium text-foreground">{item.analysis_id}</span>
-          <span className="text-sm text-muted-foreground">{registros}</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 text-sm">
-          {/* M38 · microcorreção final. Era um chip a mão lendo `canonicalAnalysis.state.*.title`,
-              enquanto INST-03 e HOME-01 liam `estadoPublico.*` pelo `StatusBadge` — duas palavras
-              para o MESMO estado (`preparing` era "Preparing" aqui e "Reserved" lá). O Blueprint
-              marca `StatusBadge` 🔴 vinculante para EVO-01 exatamente como defesa contra isso.
-              Nenhuma copy foi escrita: o rótulo passa a vir da família já publicada. */}
-          <StatusBadge
-            vocabulario="publico"
-            estado={item.status as EstadoPublico}
-            rotulo={t(`estadoPublico.${item.status}`)}
-          />
-          {item.result_available && (
-            <span className="text-muted-foreground">{t("canonicalAnalysis.list.resultReady")}</span>
-          )}
-          <span className="text-muted-foreground">{formatarData(item.created_at)}</span>
-        </div>
-      </Link>
+      />
+      {/* A linha vira `ul` interna de um item só para o `li` dela continuar tendo pai válido:
+          `LinhaDeColecao` É um `li`, e um `li` solto dentro de outro `li` é árvore inválida —
+          leitor de tela anuncia contagem errada. */}
+      <ul className="min-w-0 flex-1 overflow-hidden rounded-lg border border-border">{linha}</ul>
     </li>
   );
 }
@@ -134,6 +184,22 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
   }
 
   const list = useAnalysesList(scope, cursor, instancia || undefined);
+
+  /**
+   * `instance_id → name`, montado da lista que o filtro JÁ carrega.
+   *
+   * Não é consulta nova e não é N+1: são os mesmos itens que povoam o seletor acima. Uma
+   * Instância fora da página carregada simplesmente não resolve, e a linha cai no identificador
+   * — que é o comportamento anterior, não um vazio.
+   */
+  const nomeDeInstancia = new Map<string, string>(
+    (instancias.data?.items ?? []).map((i) => [i.instance_id, i.name]),
+  );
+
+  // A chave inclui o cursor E o filtro: paginar troca as linhas sem desmontar a lista, e um
+  // observador preso à página anterior não veria as novas — a próxima página apareceria parada
+  // enquanto a primeira teve movimento. É o mesmo motivo de incluir o estado de carga.
+  const raizDaLista = useRevelacao<HTMLDivElement>(`${cursor ?? ""}|${instancia}|${list.isFetching}`);
 
   function irProxima() {
     const next = list.data?.next_cursor ?? null;
@@ -252,7 +318,7 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
   const podeComparar = items.length >= 2 || podeAvancar || podeVoltar;
 
   return (
-    <div className="space-y-6">
+    <div ref={raizDaLista} className="space-y-6">
       {/* A `Toolbar` do DS entra aqui porque agora existe função REAL — a decisão da M38 dizia
           que ela não nasce vazia nem por decreto. Fora do modo de seleção há uma ação; dentro,
           três, e o contador diz onde a pessoa está.
@@ -300,11 +366,19 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
       {selecionando && (
         <p className="text-sm text-muted-foreground">{t("canonicalAnalysis.compare.selectHint")}</p>
       )}
-      <ul aria-label={t("canonicalAnalysis.list.title")} className="space-y-3">
+      <ul
+        aria-label={t("canonicalAnalysis.list.title")}
+        className={
+          selecionando
+            ? "space-y-3"
+            : "grid gap-px overflow-hidden rounded-lg border border-border bg-border"
+        }
+      >
         {items.map((item) => (
           <ItemLinha
             key={item.analysis_id}
             item={item}
+            nomeDaInstancia={item.instance_id ? nomeDeInstancia.get(item.instance_id) : undefined}
             selecao={
               selecionando
                 ? {

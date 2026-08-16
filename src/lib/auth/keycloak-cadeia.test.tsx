@@ -176,9 +176,11 @@ describe("M01 · CALLBACK — a sessão nasce do provedor", () => {
   it("o callback conclui pelo cliente canônico, sem Supabase", async () => {
     const { default: AuthCallbackPage } = await import("@/pages/AuthCallbackPage");
     render(
-      <MemoryRouter initialEntries={["/auth/callback"]}>
-        <AuthCallbackPage />
-      </MemoryRouter>,
+      <LanguageProvider>
+        <MemoryRouter initialEntries={["/auth/callback"]}>
+          <AuthCallbackPage />
+        </MemoryRouter>
+      </LanguageProvider>,
     );
     await waitFor(() => expect(chamadas).toContain("completeLoginCallback"));
   });

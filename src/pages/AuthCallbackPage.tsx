@@ -1,9 +1,42 @@
+// PORTAL · o retorno do provedor.
+//
+// ## O que esta tela é: uma espera de menos de um segundo
+//
+// A versão anterior a tratava como superfície institucional. Ela renderizava uma casca de
+// marketing com três "highlights" — *Signed exchange*, *Token cleanup*, *Scoped continuation* —
+// explicando a MECÂNICA da troca de código para alguém que está de passagem por 800 ms e não
+// pediu para entender OIDC. Nada ali ajudava a decidir coisa nenhuma.
+//
+// Pior: a descrição dizia que o callback *"validates the auth artifact from Supabase"*. O
+// Supabase foi erradicado na M02, e o texto continuou afirmando a arquitetura antiga na cara do
+// usuário. Copy que envelhece sem ninguém notar é a mesma classe de defeito que a evidência
+// documentando um estado que a tela nunca renderizou — só que voltada para fora.
+//
+// ## Espera, não tela em branco
+//
+// Espera precisa dizer o que está acontecendo. `role="status"` com `aria-live` porque o texto
+// muda sozinho: quem usa leitor de tela precisa ouvir "validando" virar "tudo certo" sem ter de
+// ir procurar.
+//
+// ## A falha vira um TERMINAL, não um recado
+//
+// Quando a troca não completa, a pessoa está presa: não entrou e não tem o que tentar aqui. A
+// mensagem antiga era `error.message` — "Authentication callback did not return a session", que
+// é uma frase escrita para quem depura. O fato que importa é outro e é simples: o link de
+// retorno vale uma vez só. Dizer isso explica por que recarregar não adianta.
+//
+// A lógica de troca não mudou: a guarda contra o double-invoke do StrictMode continua, e ela é
+// necessária porque o `code` do OIDC é de uso único.
+
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
-import AuthExperienceShell from "@/components/auth/AuthExperienceShell";
 import { clearTransientAuthLocation, normalizeNextPath } from "@/lib/authFlow";
 import { getAuthClient } from "@/lib/auth/index";
+import { Button } from "@/components/ui/button";
+import { Portal, Terminal } from "@/design/patterns";
+import { useRevelacao } from "@/design/motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // O StrictMode (React 18 dev) dispara o effect 2×; o authorization code OIDC é single-use,
 // então a 2ª troca falharia com "Code not valid". Compartilhamos UMA troca por carregamento
@@ -11,8 +44,6 @@ import { getAuthClient } from "@/lib/auth/index";
 let authExchangePromise: Promise<void> | null = null;
 
 async function exchangeAuthArtifact(): Promise<void> {
-  // Um provider só desde a M02. O ramo Supabase que existia aqui — troca de `code`, `setSession`
-  // por token de hash e leitura de sessão existente — era código morto sob Keycloak, e saiu.
   const session = await getAuthClient().completeLoginCallback();
   if (!session) {
     throw new Error("Authentication callback did not return a session.");
@@ -20,11 +51,16 @@ async function exchangeAuthArtifact(): Promise<void> {
   clearTransientAuthLocation({ removeCode: true });
 }
 
+/** Milissegundos entre "entrou" e a navegação. Curto o bastante para não ser espera, longo o
+ *  bastante para a confirmação ser lida — sem ele a tela pisca e ninguém sabe o que aconteceu. */
+const PAUSA_ANTES_DE_SEGUIR = 800;
+
 export default function AuthCallbackPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [status, setStatus] = useState("Validating your secure session...");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fase, setFase] = useState<"validando" | "concluido" | "falhou">("validando");
+  const raiz = useRevelacao<HTMLElement>(fase);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,23 +68,20 @@ export default function AuthCallbackPage() {
     async function completeAuth() {
       const nextPath = normalizeNextPath(searchParams.get("next"));
       try {
-        // Uma única troca por carregamento de página (guarda contra o double-invoke do StrictMode).
         if (!authExchangePromise) {
           authExchangePromise = exchangeAuthArtifact();
         }
         await authExchangePromise;
 
         if (cancelled) return;
-        setStatus("Authentication completed. Redirecting...");
+        setFase("concluido");
         window.setTimeout(() => {
           if (!cancelled) navigate(nextPath, { replace: true });
-        }, 800);
-      } catch (error) {
-        if (cancelled) return;
-        setErrorMessage(
-          error instanceof Error ? error.message : "Authentication callback failed.",
-        );
-        setStatus("Session validation failed.");
+        }, PAUSA_ANTES_DE_SEGUIR);
+      } catch {
+        // A exceção não chega à tela: ela é escrita para quem depura, e aqui não há nada que a
+        // pessoa possa fazer com ela. O fato acionável é que o link de retorno vale uma vez só.
+        if (!cancelled) setFase("falhou");
       }
     }
 
@@ -58,48 +91,30 @@ export default function AuthCallbackPage() {
     };
   }, [navigate, searchParams]);
 
-  return (
-    <AuthExperienceShell
-      eyebrow="Secure Callback"
-      title="Complete the signed Sentinela session and return to the workspace."
-      description="This callback validates the auth artifact from Supabase, removes transient tokens from the URL, and restores the session before forwarding you."
-      status={status}
-      error={errorMessage}
-      highlights={[
-        {
-          title: "Signed exchange",
-          description: "The callback exchanges the auth code for a session before entering the app.",
-        },
-        {
-          title: "Token cleanup",
-          description: "Transient recovery and callback artifacts are removed from the browser URL after validation.",
-        },
-        {
-          title: "Scoped continuation",
-          description: "Users are redirected only to internal Sentinela routes after the session is restored.",
-        },
-      ]}
-      cardClassName="max-w-none"
-    >
-      <div className="space-y-5">
-        <div>
-          <div className="dashboard-kicker">Authentication state</div>
-          <h2 className="mt-2 text-2xl font-semibold text-foreground">Callback checkpoint</h2>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            If this page does not complete automatically, the callback link may have expired. Return
-            to login and trigger a new secure sign-in flow.
-          </p>
-        </div>
+  if (fase === "falhou") {
+    return (
+      <main ref={raiz} className="min-h-dvh bg-background">
+        <Terminal
+          codigo="Sentinela"
+          titulo={t("auth.callbackFailedTitle")}
+          consequencia={t("auth.callbackFailedBody")}
+          saidas={
+            <Button size="sm" asChild>
+              <Link to="/login">{t("auth.callbackRestart")}</Link>
+            </Button>
+          }
+        />
+      </main>
+    );
+  }
 
-        <div className="rounded-3xl border border-border/60 bg-background/45 p-5">
-          <div className="text-sm font-medium text-foreground">Need to restart the flow?</div>
-          <div className="mt-3 text-sm text-muted-foreground">
-            <Link to="/login" className="text-primary underline underline-offset-4">
-              Return to login
-            </Link>
-          </div>
-        </div>
-      </div>
-    </AuthExperienceShell>
+  return (
+    <main ref={raiz} className="min-h-dvh bg-background">
+      <Portal marca="Sentinela" titulo={t("auth.callbackTitle")}>
+        <p role="status" aria-live="polite" className="text-center text-sm text-muted-foreground">
+          {fase === "concluido" ? t("auth.callbackDone") : t("auth.callbackWaiting")}
+        </p>
+      </Portal>
+    </main>
   );
 }

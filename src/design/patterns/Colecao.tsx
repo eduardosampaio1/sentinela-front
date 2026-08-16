@@ -83,21 +83,44 @@ const TINTA: Record<string, string> = {
   fora: "text-destructive",
 };
 
+/**
+ * A célula do número.
+ *
+ * ## Ausência recebe FORMA, não um travessão
+ *
+ * A primeira versão desenhava `—` no lugar do valor quando a medida não veio. É exatamente o
+ * que o contrato de listagem proíbe com estas palavras: *"renderizar 0 ou '—' como se fosse
+ * medição transformaria não-medição em fato"*. E o travessão é pior que o zero em um aspecto —
+ * ele parece um valor que ninguém preencheu, sugerindo defeito de carga, quando a ausência é
+ * frequentemente a decisão correta (supressão por privacidade, massa insuficiente).
+ *
+ * Agora a ausência ocupa o mesmo espaço do número com a hachura, que é o segundo canal: ela
+ * sobrevive à escala de cinza e ao daltonismo, e diz "aqui não há medida" sem fingir uma.
+ */
 function Numero({ item }: { item: NonNullable<ItemDeColecao["numero"]> }) {
   const leitura = leituraDaMedida(item.valor);
+
+  if (leitura.semNumero) {
+    return (
+      <div className="text-right">
+        <span
+          className="medida-ausente ml-auto block h-3 w-full rounded-sm"
+          aria-hidden="true"
+        />
+        <div className="mt-1 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
+          {leitura.texto}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="text-right">
-      <div
-        className={
-          leitura.semNumero
-            ? "text-sm text-muted-foreground"
-            : `tabular text-xl font-medium ${TINTA[item.tom ?? "neutro"]}`
-        }
-      >
-        {leitura.semNumero ? "—" : leitura.texto}
+      <div className={`tabular text-xl font-medium ${TINTA[item.tom ?? "neutro"]}`}>
+        {leitura.texto}
       </div>
       <div className="text-[0.65rem] uppercase tracking-wider text-muted-foreground">
-        {leitura.semNumero ? leitura.texto : item.rotulo}
+        {item.rotulo}
       </div>
     </div>
   );
