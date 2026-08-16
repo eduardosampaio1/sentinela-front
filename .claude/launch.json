@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 5173
+    },
+    {
+      "name": "sentinela-navegacao",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:navegacao"],
+      "port": 5173
     }
   ]
 }

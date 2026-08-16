@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:navegacao": "vite --mode navegacao",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",

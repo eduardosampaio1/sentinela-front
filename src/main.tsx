@@ -1,3 +1,6 @@
+// A porta de navegação manual precisa correr ANTES de tudo: ela decide o valor que o cadeado
+// abaixo vai ler. Import estático de efeito colateral roda antes do corpo deste módulo.
+import "./dev/navegacaoManual";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Providers } from "./app/providers";
