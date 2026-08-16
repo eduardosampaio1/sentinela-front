@@ -241,6 +241,9 @@ async function emEstado(
 
 /** O produtor recusa o documento: `404 result_not_available`. Ausência, não queda. */
 async function semResultado(page: Page): Promise<void> {
+  // O status segue anunciando `result_available: true`, e isso NAO e incoerencia: e o caso de
+  // RETENCAO -- o documento existiu e a purga o levou. Com `result_available: false` a tela diz
+  // outra coisa (o resultado ainda esta sendo preparado), que e um estado diferente.
   await page.route("**/v1/analyses/*/result**", (r) =>
     r.fulfill(json({ code: "result_not_available" }, 404)),
   );
