@@ -76,23 +76,17 @@ interface Divida {
  * todo arquivo futuro que caísse ali: é assim que dívida declarada vira permissão sem que ninguém
  * tenha decidido isso.
  */
+// AQUI FICAVAM `LandingPage.tsx` (1215 → 1182 → **52**) e `AionPage.tsx` (1180 → 1167 → **51**).
+//
+// Os dois entraram nesta lista na M07 com o motivo *"decompor é missão própria (D17)"*, e ficaram
+// nela por dez missões. A M47 fez a D17: os dois viraram nove e dez arquivos, nenhum acima de 240
+// linhas, e o caso `arquivo que caiu abaixo do limite SAI da lista` os expulsou daqui — que é
+// exatamente o desfecho que este gate foi escrito para provocar.
+//
+// A M46 já tinha arrancado deles os blocos de token, e não por virtude: a catraca recusou as ~44
+// linhas de comentário que as correções de a11y exigiam. Uma dívida que impede a própria correção
+// é uma dívida que acabou de anunciar o prazo.
 const BASELINE: ReadonlyMap<string, Divida> = new Map([
-  [
-    "src/features/landing/LandingPage.tsx",
-    {
-      teto: 1182, // M46: era 1215; os tokens saíram para `tokens.ts`.
-      motivo:
-        "monólito de página nomeado pelo plano; decompor é missão própria (D17), fora do escopo da M07",
-    },
-  ],
-  [
-    "src/features/aion/AionPage.tsx",
-    {
-      teto: 1167, // M46: era 1180; os tokens saíram para `tokens.ts`.
-      motivo:
-        "monólito de página nomeado pelo plano; decompor é missão própria (D17), fora do escopo da M07",
-    },
-  ],
   [
     "src/test/fixtures/canonical-result/massasV2.ts",
     {
@@ -129,14 +123,21 @@ describe("M07 · 1. a régua mede o que diz medir", () => {
     // mudou (e a baseline inteira virou incomparável). Os dois exigem alguém olhar.
     const landing = MEDIDOS.find((x) => x.rel === "src/features/landing/LandingPage.tsx");
     const aion = MEDIDOS.find((x) => x.rel === "src/features/aion/AionPage.tsx");
-    // M46 — os dois encolheram, e o plano acompanha.
+    // M47 — os dois monólitos do plano DEIXARAM de ser monólitos.
     //
-    // 1215 → 1182 e 1180 → 1167: os blocos de tokens saíram para `tokens.ts` ao lado de cada um.
-    // A extração foi FORÇADA por esta catraca: as correções de a11y e o `<main>` que faltava
-    // somavam ~44 linhas aos dois arquivos, e o teto recusou. Encolher em vez de subir o teto é
-    // exatamente o que ela existe para provocar.
-    expect(landing?.linhas, "LandingPage divergiu do número do plano").toBe(1182);
-    expect(aion?.linhas, "AionPage divergiu do número do plano").toBe(1167);
+    // O plano documentava 1215 e 1180. A M46 baixou para 1182 e 1167 extraindo os tokens; a M47
+    // decompôs os dois de vez. Hoje são as composições, e nada mais.
+    //
+    // Os números continuam EXATOS aqui de propósito. Se a régua mudar (contar linhas de outro
+    // jeito), estes dois valores saem do lugar e a baseline inteira vira incomparável — que é a
+    // falha que este caso existe para pegar, e ela não depende de o arquivo ser grande.
+    expect(landing?.linhas, "LandingPage divergiu do número do plano").toBe(52);
+    expect(aion?.linhas, "AionPage divergiu do número do plano").toBe(51);
+
+    // E a régua tem de continuar reconhecendo um arquivo GRANDE, senão ela só foi verificada
+    // contra arquivos pequenos e a comparação com a baseline não vale.
+    const massas = MEDIDOS.find((x) => x.rel === "src/test/fixtures/canonical-result/massasV2.ts");
+    expect(massas?.linhas, "massasV2 divergiu — a régua mudou?").toBe(1035);
   });
 });
 

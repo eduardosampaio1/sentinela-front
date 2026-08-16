@@ -59,3 +59,12 @@ export const display: React.CSSProperties = {
 export const mono: React.CSSProperties = {
   fontFamily: "'JetBrains Mono', 'Berkeley Mono', ui-monospace, monospace",
 };
+
+/**
+ * Os papéis de cor que um `Tag` pode vestir.
+ *
+ * Mora aqui, e não em `primitivos.tsx`, por um motivo mecânico: arquivo que exporta componente E
+ * tipo acorda o `react-refresh/only-export-components`, e o lint tem catraca desde a M46. Como
+ * papel de cor, o lugar dele é o vocabulário mesmo.
+ */
+export type TagColor = "cyan" | "amber" | "red" | "green" | "purple";

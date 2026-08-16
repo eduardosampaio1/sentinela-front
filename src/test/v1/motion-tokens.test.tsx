@@ -210,8 +210,15 @@ const PADRAO_TIMING =
  */
 const DIVIDA_TIMING: ReadonlyMap<string, number> = new Map([
   ["src/components/ui/sheet.tsx", 1],
-  ["src/features/aion/AionPage.tsx", 5],
-  ["src/features/landing/LandingPage.tsx", 1],
+  // M47 — a dívida das duas páginas foi PARTIDA junto com elas, e conserva os números:
+  //   AionPage 5 = DemoInterativa 1 + DiagramaDeFluxo 4
+  //   LandingPage 1 = PainelArgos 1
+  // Os três arquivos que a herdaram são justamente os que animam — a demo com temporizador, o
+  // diagrama SVG e o painel do herói. A dívida foi para onde o movimento mora, o que é a única
+  // forma de ela um dia ser paga por quem entende do assunto.
+  ["src/features/aion/DemoInterativa.tsx", 1],
+  ["src/features/aion/DiagramaDeFluxo.tsx", 4],
+  ["src/features/landing/PainelArgos.tsx", 1],
   ["src/shared/states/LoadingState.tsx", 4],
   ["src/styles/globals.css", 13],
 ]);

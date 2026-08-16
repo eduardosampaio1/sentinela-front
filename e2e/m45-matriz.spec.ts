@@ -673,7 +673,7 @@ test.describe("M45 · G1-bis · a dívida declarada é nominal e não cresce", (
       achados.sort(),
       "um `data-overflow-ok` NOVO: prove que a largura é intencional (a página não pode rolar na " +
         "horizontal) e adicione aqui, ou conserte o layout",
-    ).toEqual(["LandingPage.tsx:marquee", "LandingPage.tsx:orbe-decorativo"]);
+    ).toEqual(["secoes-problema.tsx:orbe-decorativo", "topo.tsx:marquee"]);
   });
 });
 
