@@ -23,7 +23,13 @@ export {
 export { ComparisonRow, ComparisonRowQuebrada } from "./ComparisonRow";
 export { ConfirmDestructive } from "./ConfirmDestructive";
 export { DataTable, type ColunaDaTabela } from "./DataTable";
-export { Documento, DestaqueDeDocumento, type SecaoDeDocumento } from "./Documento";
+export {
+  Documento,
+  DestaqueDeDocumento,
+  IndiceDeDocumento,
+  type SecaoDeDocumento,
+} from "./Documento";
+export { useSecaoAtiva } from "./secaoAtiva";
 export { EmptyState, ErrorState, LoadingState, type AcaoDeErro } from "./EstadosDeTela";
 export {
   Campo,

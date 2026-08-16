@@ -228,6 +228,72 @@
     border: 1px dashed hsl(var(--ds-border-strong));
   }
 
+  /* ── CORPO DE DOCUMENTO LEGAL ─────────────────────────────────────────────────────────────
+     Estas regras vinham de um `<style>` INJETADO em runtime dentro de `LegalPage.tsx`, com as
+     cores interpoladas de um objeto de literais. Era uma terceira folha de estilo nascendo — o
+     defeito exato que o vocabulário único matou no nível do token, reaparecendo um nível acima.
+
+     Aqui elas são uma folha só e as cores vêm do vocabulário. O conteúdo dos três documentos
+     não muda: eles continuam entregando `h2`, `h3`, `p`, `ul` e `strong` como sempre. */
+  .legal-body h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: hsl(var(--ds-text-primary));
+    margin: 2.5rem 0 0.75rem;
+    letter-spacing: -0.018em;
+    /* O índice pula por âncora e a barra do topo é fixa: sem isto o título fica embaixo dela. */
+    scroll-margin-top: 5rem;
+  }
+  .legal-body h3 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: hsl(var(--ds-text-primary));
+    margin: 1.75rem 0 0.5rem;
+  }
+  .legal-body p {
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    color: hsl(var(--ds-text-secondary));
+    margin-bottom: 1rem;
+  }
+  .legal-body ul {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+  }
+  .legal-body ul li {
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    color: hsl(var(--ds-text-secondary));
+    padding: 0.25rem 0 0.25rem 1.25rem;
+    position: relative;
+  }
+  .legal-body ul li::before {
+    content: "–";
+    position: absolute;
+    left: 0;
+    color: hsl(var(--ds-text-muted));
+  }
+  .legal-body strong {
+    color: hsl(var(--ds-text-primary));
+    font-weight: 600;
+  }
+  .legal-body a {
+    color: hsl(var(--ds-accent));
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .legal-body .callout {
+    background: hsl(var(--ds-surface-raised));
+    border: 1px solid hsl(var(--ds-border-default));
+    border-radius: var(--ds-radius-default);
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+  }
+  .legal-body .callout p {
+    margin-bottom: 0;
+  }
+
   /* Card base */
   .card-base {
     background: #0D1525;

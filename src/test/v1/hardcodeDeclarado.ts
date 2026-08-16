@@ -72,7 +72,13 @@ export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
   // seis tintas literais que pintavam texto centrado. O que sobrou não tem cor própria.
   "src/core/errors/ErrorBoundary.tsx": 9,
   "src/features/auth/SessionExpiredPage.tsx": 7,
-  "src/features/legal/LegalPage.tsx": 7,
+  // `LegalPage.tsx` SAIU: 7 → 0. Um arquivo, três rotas — a mesma aritmética que fez a M46
+  // descobrir que 27 nós de contraste eram UM template contado três vezes.
+  //
+  // O objeto `L` de sete cores existia porque em M46 não havia vocabulário para vestir aqueles
+  // papéis. Agora há, e junto com ele foi embora o `<style>` injetado em runtime que interpolava
+  // as cores de dentro do JS — uma terceira folha de estilo nascendo, um nível acima de onde o
+  // vocabulário único a tinha matado.
   "src/shared/feedback/ConfirmDialog.tsx": 6,
   "src/shared/states/EmptyState.tsx": 6,
   "src/components/auth/AuthExperienceShell.tsx": 4,

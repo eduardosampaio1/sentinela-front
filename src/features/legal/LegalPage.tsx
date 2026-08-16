@@ -1,43 +1,88 @@
-import type { ReactNode } from "react";
+// DOCUMENTO · a moldura dos três textos legais.
+//
+// Um arquivo, três rotas: `/privacy`, `/terms` e `/security`. Foi assim que a M46 descobriu que
+// os 27 nós de contraste não eram três defeitos — eram UM template contado três vezes. A mesma
+// aritmética vale ao contrário, e é por isso que esta é a maior alavanca do sistema: corrigir
+// aqui corrige nos três.
+//
+// ## O que saiu
+//
+// **O objeto `L` de sete cores literais.** Ele existia porque em M46 não havia vocabulário para
+// vestir estes papéis; agora há. Cada uma foi para o token equivalente, e as razões de contraste
+// que aquele comentário defendia continuam valendo por construção — os tokens de texto foram
+// calibrados com folga, não com o mínimo.
+//
+// **O `<style>` injetado em runtime.** As regras de `.legal-body` viviam num bloco interpolado
+// dentro do componente. Era uma terceira folha de estilo nascendo, com as cores vindo de dentro
+// do JS — o defeito que o vocabulário único matou no nível do token, reaparecendo um nível
+// acima. Foram para `globals.css`, onde folha de estilo mora.
+//
+// **`100vh`.** No celular, `vh` conta a barra do navegador que some ao rolar, e a página ganha
+// um pedaço morto embaixo. `dvh` acompanha.
+//
+// ## O que entrou: o índice
+//
+// Um texto legal é lido procurando uma frase, não do começo ao fim. Sem índice a pessoa rola
+// caçando, e ao voltar de uma seção recomeça a busca visual do zero.
+//
+// Ele é DERIVADO dos `h2` que os três documentos já escrevem, não declarado. A alternativa seria
+// reestruturar ~630 linhas de conteúdo jurídico em objetos de seção — reescrever texto legal
+// numa missão de design, que é exatamente o que não se faz sem quem o escreveu. Derivar mantém
+// os três arquivos de conteúdo intocados e o índice sempre igual ao que está na tela.
+
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { IndiceDeDocumento } from "@/design/patterns/Documento";
+import { useSecaoAtiva } from "@/design/patterns/secaoAtiva";
+import { useRevelacao } from "@/design/motion";
 
-// ─── Shared legal page shell ──────────────────────────────────────────────────
-
-// ## Contraste — M46
-//
-// Este objeto é a fonte dos 27 nós de a11y que os três documentos legais somavam (`/terms` 8,
-// `/privacy` 10, `/security` 9). Não eram três defeitos: era UM template, contado três vezes.
-//
-// Todas as razões abaixo são contra `bg` (#070C18), medidas em WCAG 2 AA para texto pequeno
-// (mínimo 4.5:1) — que é o que estes tokens vestem: rótulos de 12px, corpo de 15px e links.
-const L = {
-  bg:      "#070C18",
-  surface: "#0D1525",
-  border:  "rgba(255,255,255,0.08)",
-  text:    "#F1F5F9",
-  muted:   "#94A3B8", // 7.62:1 — sempre passou; quem reprovava era o `opacity: 0.7` sobre ele.
-  // 0.35 compunha #5E6169 sobre o fundo = 3.15:1. A 0.48 compõe ~4.9:1 e continua secundário:
-  // o token existe para ser discreto, e discreto não precisa ser ilegível.
-  ghost:   "rgba(255,255,255,0.48)",
-  // #5E6AD2 dava 4.15:1 — reprovava por pouco, e reprovava no lugar pior: os LINKS do corpo legal
-  // e o supertítulo. Mesma matiz, mais claro: 5.90:1.
-  accent:  "#7C86E0",
-};
+/**
+ * Transforma um título em identificador de âncora estável e legível.
+ *
+ * `vistos` desempata: a PRIMEIRA ocorrência de um título fica com o apelido limpo, e só uma
+ * repetição posterior ganha sufixo. É o que mantém um link já compartilhado válido quando um
+ * segundo "Escopo" nasce meses depois — prefixar todo mundo com a posição resolveria a colisão
+ * pelo mesmo preço, mas produziria `secao-1-1-who-we-are` em documentos cujos títulos já são
+ * numerados, e âncora que a pessoa não consegue ler é âncora que ela não confere antes de colar.
+ */
+function comoAncora(texto: string, vistos: Set<string>): string {
+  const base = texto
+    .toLowerCase()
+    .normalize("NFD")
+    // `\p{Diacritic}` em vez do intervalo de marcas combinantes escrito à mão: aquele intervalo
+    // é composto de caracteres invisíveis no editor, e some sem aviso numa conversão de
+    // codificação distraída — deixando a função de aparência correta e sem efeito.
+    //
+    // Na prática a linha seguinte já apagaria os acentos, porque só letras e dígitos ASCII
+    // sobrevivem a ela. A decomposição existe para "ação" virar `acao` em vez de `a-o`.
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  const limpo = base || "secao";
+  if (!vistos.has(limpo)) {
+    vistos.add(limpo);
+    return limpo;
+  }
+  let n = 2;
+  while (vistos.has(`${limpo}-${n}`)) n += 1;
+  vistos.add(`${limpo}-${n}`);
+  return `${limpo}-${n}`;
+}
 
 function LegalNav() {
   const { language, setLanguage } = useLanguage();
   return (
-    <header className="h-14 sticky top-0 z-40 flex items-center justify-between px-6 sm:px-8 border-b"
-      style={{ background: `${L.bg}f5`, borderColor: L.border, backdropFilter: "blur(12px)" }}>
-      <Link to="/" className="flex items-center gap-2.5 group">
+    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/95 px-6 backdrop-blur sm:px-8">
+      <Link to="/" className="flex items-center gap-2.5">
         <img src="/sentinela-icon.svg" alt="" width="26" height="26" className="rounded-md" />
-        <span className="text-sm font-semibold tracking-tight" style={{ color: L.text }}>Sentinela</span>
+        <span className="text-sm font-semibold tracking-tight text-foreground">Sentinela</span>
       </Link>
       <button
+        type="button"
         onClick={() => setLanguage(language === "pt" ? "en" : "pt")}
-        className="text-xs font-medium px-2.5 py-1 rounded-md border transition-colors"
-        style={{ color: L.muted, borderColor: L.border, background: "transparent" }}>
+        className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+      >
         {language === "pt" ? "EN" : "PT"}
       </button>
     </header>
@@ -56,124 +101,96 @@ export function LegalPage({
   children: ReactNode;
 }) {
   const { language } = useLanguage();
+  const corpo = useRef<HTMLDivElement>(null);
+  const raiz = useRevelacao<HTMLDivElement>(title);
+  const [secoes, setSecoes] = useState<readonly { id: string; titulo: string }[]>([]);
+
+  // O índice é montado depois da renderização porque só então os `h2` existem. `children` na
+  // dependência: trocar de documento sem desmontar a moldura precisa reconstruir a lista.
+  useEffect(() => {
+    const titulos = Array.from(corpo.current?.querySelectorAll("h2") ?? []);
+    const vistos = new Set<string>();
+    setSecoes(
+      titulos.map((no) => {
+        const texto = no.textContent?.trim() ?? "";
+        // O id é escrito no nó: o observador de posição procura por `getElementById`, e um
+        // documento cujos títulos não têm id devolveria índice sem destino nenhum.
+        if (!no.id) no.id = comoAncora(texto, vistos);
+        else vistos.add(no.id);
+        return { id: no.id, titulo: texto };
+      }),
+    );
+  }, [children]);
+
+  const ativa = useSecaoAtiva(secoes.map((s) => s.id));
+
   return (
-    <div style={{ background: L.bg, minHeight: "100vh", color: L.text }}>
+    <div ref={raiz} className="min-h-dvh bg-background text-foreground">
       <LegalNav />
-      <main style={{ maxWidth: "740px", margin: "0 auto", padding: "56px 24px 96px" }}>
-        {/* Back */}
-        <Link to="/"
-          className="inline-flex items-center gap-1.5 text-sm mb-10 transition-colors hover:opacity-100"
-          style={{ color: L.muted, opacity: 0.85 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-            strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M19 12H5M12 5l-7 7 7 7" />
-          </svg>
-          {language === "pt" ? "Voltar ao início" : "Back to home"}
-        </Link>
 
-        {/* Hero */}
-        <div className="mb-12 pb-10 border-b" style={{ borderColor: L.border }}>
-          <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: L.accent, letterSpacing: "0.18em" }}>
-            Sentinela
-          </p>
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3" style={{ color: L.text }}>
-            {title}
-          </h1>
-          <p className="text-base leading-relaxed mb-4" style={{ color: L.muted }}>
-            {subtitle}
-          </p>
-          <span className="text-xs" style={{ color: L.ghost }}>
-            {language === "pt" ? "Última atualização" : "Last updated"}: {updated}
-          </span>
-        </div>
+      <main className="mx-auto grid max-w-5xl gap-9 px-6 pb-24 pt-10 md:grid-cols-[12rem_minmax(0,1fr)]">
+        <IndiceDeDocumento
+          rotulo={language === "pt" ? "Nesta página" : "On this page"}
+          secoes={secoes}
+          ativa={ativa}
+        />
 
-        {/* Content */}
-        <div className="legal-body">
-          {children}
-        </div>
+        <article className="min-w-0 max-w-[66ch]">
+          <Link
+            to="/"
+            className="mb-8 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M19 12H5M12 5l-7 7 7 7" />
+            </svg>
+            {language === "pt" ? "Voltar ao início" : "Back to home"}
+          </Link>
+
+          <div data-revelar className="mb-10 border-b border-border pb-8">
+            <h1 className="mb-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              {title}
+            </h1>
+            <p className="mb-4 text-base leading-relaxed text-muted-foreground">{subtitle}</p>
+            <span className="text-xs text-muted-foreground">
+              {language === "pt" ? "Última atualização" : "Last updated"}: {updated}
+            </span>
+          </div>
+
+          <div ref={corpo} className="legal-body">
+            {children}
+          </div>
+        </article>
       </main>
 
-      {/* Footer bar */}
-      <footer className="border-t py-6 px-6 sm:px-8" style={{ borderColor: L.border }}>
-        <div style={{ maxWidth: "740px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-          <span className="text-xs" style={{ color: L.ghost }}>
-            © {new Date().getFullYear()} Baluarte Tecnologia. {language === "pt" ? "Todos os direitos reservados." : "All rights reserved."}
+      <footer className="border-t border-border px-6 py-6 sm:px-8">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+          <span>
+            © {new Date().getFullYear()} Baluarte Tecnologia.{" "}
+            {language === "pt" ? "Todos os direitos reservados." : "All rights reserved."}
           </span>
-          <div className="flex items-center gap-4 text-xs" style={{ color: L.muted }}>
-            <Link to="/privacy" className="hover:opacity-100 transition-opacity" style={{ opacity: 0.85 }}>
+          <div className="flex items-center gap-4">
+            <Link to="/privacy" className="transition-colors hover:text-foreground">
               {language === "pt" ? "Privacidade" : "Privacy"}
             </Link>
-            <Link to="/terms" className="hover:opacity-100 transition-opacity" style={{ opacity: 0.85 }}>
+            <Link to="/terms" className="transition-colors hover:text-foreground">
               {language === "pt" ? "Termos" : "Terms"}
             </Link>
-            <Link to="/security" className="hover:opacity-100 transition-opacity" style={{ opacity: 0.85 }}>
+            <Link to="/security" className="transition-colors hover:text-foreground">
               Security
             </Link>
           </div>
         </div>
       </footer>
-
-      <style>{`
-        .legal-body h2 {
-          font-size: 1.125rem;
-          font-weight: 600;
-          color: ${L.text};
-          margin: 2.5rem 0 0.75rem;
-          letter-spacing: -0.018em;
-        }
-        .legal-body h3 {
-          font-size: 0.9375rem;
-          font-weight: 600;
-          color: ${L.text};
-          margin: 1.75rem 0 0.5rem;
-        }
-        .legal-body p {
-          font-size: 0.9375rem;
-          line-height: 1.75;
-          color: ${L.muted};
-          margin-bottom: 1rem;
-        }
-        .legal-body ul {
-          list-style: none;
-          margin: 0 0 1rem;
-          padding: 0;
-        }
-        .legal-body ul li {
-          font-size: 0.9375rem;
-          line-height: 1.75;
-          color: ${L.muted};
-          padding: 0.25rem 0 0.25rem 1.25rem;
-          position: relative;
-        }
-        .legal-body ul li::before {
-          content: "–";
-          position: absolute;
-          left: 0;
-          color: ${L.ghost};
-        }
-        .legal-body strong {
-          color: ${L.text};
-          font-weight: 600;
-        }
-        .legal-body a {
-          color: ${L.accent};
-          text-decoration: underline;
-          text-underline-offset: 3px;
-        }
-        .legal-body a:hover {
-          opacity: 0.8;
-        }
-        .legal-body .callout {
-          background: ${L.surface};
-          border: 1px solid ${L.border};
-          border-radius: 10px;
-          padding: 1rem 1.25rem;
-          margin: 1.5rem 0;
-        }
-        .legal-body .callout p {
-          margin-bottom: 0;
-        }
-      `}</style>
     </div>
   );
 }
