@@ -78,6 +78,23 @@ export function IdentidadeDoObjeto({
 // commit. Até lá, `IdentidadeDoObjeto` e `SecaoDoObjeto` são o arquétipo inteiro.
 
 /**
+ * O que uma seção É — e a aparência sai daqui, não de uma prop de estilo.
+ *
+ *   • `leitura` — a seção apresenta fatos. Cabeçalho com régua embaixo, conteúdo solto na página.
+ *   • `acao`    — a seção oferece um ato. Cartão: o bloco se fecha em volta do que se pode fazer.
+ *
+ * ## Por que a natureza, e não `aparencia: "cartao" | "regua"`
+ *
+ * Porque o produto tinha as DUAS aparências convivendo — cartão nos ajustes, régua no perfil e
+ * nos arquétipos — e nenhuma decisão escrita separando os casos. Uma prop de estilo teria
+ * mantido isso: cada tela escolheria de novo, e a escolha seria gosto.
+ *
+ * Declarando a natureza, a regra fica no sistema e não no chamador. Quem escrever uma seção nova
+ * responde "isto é leitura ou ação?", que é uma pergunta sobre o CONTEÚDO — e a forma segue.
+ */
+export type NaturezaDaSecao = "leitura" | "acao";
+
+/**
  * Título de seção dentro de um objeto. O `detalhe` fica à direita e conta o que a seção tem.
  *
  * O detalhe é IRMÃO do `h2`, não filho. Dentro do cabeçalho ele passava a fazer parte do nome
@@ -88,22 +105,27 @@ export function IdentidadeDoObjeto({
 export function SecaoDoObjeto({
   titulo,
   detalhe,
+  natureza,
   children,
 }: {
   titulo: string;
   detalhe?: string;
+  /** Sem valor padrão de propósito: escolher entre leitura e ação é a decisão, e um default
+   *  deixaria a maioria das seções sem ninguém ter decidido nada. */
+  natureza: NaturezaDaSecao;
   children: ReactNode;
 }) {
+  const cartao = natureza === "acao";
+
   return (
     <section className="mt-10">
-      <div
-        data-revelar
-        className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-border pb-3"
-      >
-        <h2 className="text-xs uppercase tracking-wider text-muted-foreground">{titulo}</h2>
-        {detalhe && <p className="text-xs text-muted-foreground">{detalhe}</p>}
+      <div data-revelar className={cartao ? "rounded-lg border border-border bg-card p-5" : ""}>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-border pb-3">
+          <h2 className="text-xs uppercase tracking-wider text-muted-foreground">{titulo}</h2>
+          {detalhe && <p className="text-xs text-muted-foreground">{detalhe}</p>}
+        </div>
+        <div className="mt-4">{children}</div>
       </div>
-      <div className="mt-4">{children}</div>
     </section>
   );
 }

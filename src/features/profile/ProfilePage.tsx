@@ -33,8 +33,6 @@
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { getAuthClient } from "@/lib/auth/index";
 import { IdentidadeDoObjeto, SecaoDoObjeto } from "@/design/patterns";
 import { useRevelacao } from "@/design/motion";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -81,11 +79,6 @@ export function ProfilePage() {
     },
   ];
 
-  function irParaOProvedor() {
-    const url = getAuthClient().accountManagementUrl();
-    if (url) window.location.href = url;
-  }
-
   return (
     <AppShell topBarTitle={t("account.profileTitle")}>
       <PageFrame maxWidth="lg">
@@ -100,7 +93,13 @@ export function ProfilePage() {
             {t("account.profileSubtitle")}
           </p>
 
-          <SecaoDoObjeto titulo={t("account.identityTitle")} detalhe={t("account.identityBody")}>
+          {/* `leitura`: esta seção apresenta fatos e não oferece ato nenhum. A forma sai daí —
+              cabeçalho com régua, conteúdo solto — e não de uma escolha de aparência. */}
+          <SecaoDoObjeto
+            titulo={t("account.identityTitle")}
+            detalhe={t("account.identityBody")}
+            natureza="leitura"
+          >
             <dl className="grid gap-0">
               {campos.map((c) => (
                 <div
@@ -129,16 +128,22 @@ export function ProfilePage() {
             </dl>
           </SecaoDoObjeto>
 
-          <SecaoDoObjeto titulo={t("account.signInTitle")}>
-            <div data-revelar className="grid gap-3 rounded-lg border border-border bg-card p-4">
-              <p className="text-sm text-muted-foreground">{t("account.signInBody")}</p>
-              {/* O aviso da travessia é o próprio texto acima: ele diz que o assunto fica com o
-                  provedor ANTES do botão que leva até lá. Mesma regra do PORTAL. */}
-              <Button size="sm" variant="outline" className="justify-self-start" onClick={irParaOProvedor}>
-                {t("account.signInAction")}
-              </Button>
-            </div>
-          </SecaoDoObjeto>
+          {/* A AÇÃO SAIU DAQUI, e essa é a decisão 3 materializada: o botão de gerenciar acesso
+              vivia nesta tela E na de ajustes. Duas superfícies para o mesmo ato é como nasceu a
+              divergência do nome do Workspace que a BD12 consertou.
+              PERFIL é LEITURA.
+
+              ## E aqui NÃO há link para os ajustes, apesar de a decisão pedir a travessia escrita
+              ##
+              Porque a M31 proíbe: a rota de configurações é superfície LEGADA, e o gate reprova
+              qualquer caminho pela interface até ela — item de menu, breadcrumb ou link.
+              Descoberto ao tentar escrever exatamente esse link.
+              O achado maior é que a tela de ajustes **não tem porta de entrada nenhuma** hoje: só
+              se chega digitando a URL. Enquanto isso não for decidido, apontar para lá daqui
+              seria eu abrir por conta própria uma porta que uma missão anterior fechou. */}
+          <p data-revelar className="mt-10 text-sm text-muted-foreground">
+            {t("account.profileIsRead")}
+          </p>
         </div>
       </PageFrame>
     </AppShell>

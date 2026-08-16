@@ -17,7 +17,7 @@
 // `GET /v1/me` — o Account **não** é fonte de nome nem de e-mail, e esta tela não mostra claim
 // bruta, token nem papel inventado.
 
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { PageHeader } from "@/shared/layout/PageHeader";
@@ -31,44 +31,21 @@ import { SecaoDeWorkspace } from "@/features/workspace/SecaoDeWorkspace";
 import { useNomeDoWorkspace } from "@/features/workspace/data/workspace";
 import { SecaoDeNotificacoes } from "@/features/communication/SecaoDeNotificacoes";
 import { useCanonicalScope } from "@/features/canonical-analysis/ui/scope";
+import { SecaoDoObjeto } from "@/design/patterns";
 import { useRevelacao } from "@/design/motion";
 
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  // `data-revelar` aqui cobre as cinco seções de uma vez, e é o que basta: elas entram na ordem
-  // do documento, que nesta tela é a ordem de importância — identidade, idioma, acesso, espaço,
-  // notificações.
-  //
-  // Este `Section` NÃO virou `SecaoDoObjeto`. Os dois fazem a mesma coisa e são, sim, duplicação
-  // — mas cada um com uma aparência: aqui cada bloco é um CARTÃO, e no arquétipo é um cabeçalho
-  // com régua embaixo. Trocar mudaria a composição de cinco seções numa passada de movimento, e
-  // a convergência dos dois pede uma decisão de aparência que não é desta missão.
-  return (
-    <section data-revelar className="card-base p-6">
-      <div className="mb-4 border-b border-border pb-4">
-        <h2 className="text-base font-semibold text-foreground">{title}</h2>
-        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Campo({ rotulo, valor }: { rotulo: string; valor: string }) {
-  return (
-    <>
-      <dt className="text-sm text-muted-foreground">{rotulo}</dt>
-      <dd className="text-sm text-foreground sm:mt-0">{valor}</dd>
-    </>
-  );
-}
+// O `Section` LOCAL foi removido, e com ele a duplicação que a missão anterior tinha registrado
+// sem resolver: ele fazia o mesmo que o `SecaoDoObjeto` do sistema, com outra aparência — aqui
+// cartão, lá cabeçalho com régua —, e nenhuma decisão escrita separava os casos.
+//
+// A decisão de owner de 2026-08-16 escolheu a regra: **cartão onde há AÇÃO, régua onde há
+// LEITURA**. Ela vive no `SecaoDoObjeto`, que deriva a forma da natureza declarada em vez de
+// aceitar uma prop de estilo — assim ela não pode divergir por tela.
+//
+// Nesta página: espaços é leitura; idioma, acesso, configuração do espaço e notificações são
+// ação. É por isso que a primeira seção agora respira e as outras quatro se fecham.
+//
+// `Campo` saiu junto: ele existia só para o par nome/e-mail, que mudou de tela.
 
 export function SettingsPage() {
   const { signOut } = useAuth();
@@ -104,51 +81,60 @@ export function SettingsPage() {
       <PageFrame maxWidth="lg">
         <PageHeader title={t("account.title")} description={t("account.subtitle")} />
 
-        <div ref={raiz} className="space-y-6">
-          <Section title={t("account.identityTitle")} description={t("account.identityBody")}>
+        {/* A distinção de papel fica ESCRITA, não subentendida. Sem esta frase, alguém que
+            procura o próprio e-mail nesta tela e não acha conclui que sumiu — em vez de saber
+            que ele mora na tela ao lado, que é a de leitura. */}
+        <p className="mt-2 text-sm text-muted-foreground">
+          {t("account.settingsIsAction")}{" "}
+          <Link
+            to="/profile"
+            className="text-[hsl(var(--ds-accent-ink))] underline underline-offset-4"
+          >
+            {t("account.goToProfile")}
+          </Link>
+        </p>
+
+        <div ref={raiz} className="mt-6 space-y-6">
+          {/* NOME E E-MAIL SAÍRAM DAQUI — decisão de owner de 2026-08-16.
+              Eles apareciam nesta tela E no perfil: o mesmo fato em duas superfícies é como
+              nasceu a divergência do nome do Workspace que a BD12 teve de consertar. Perfil é
+              LEITURA e ficou com a identidade; aqui fica o que é AÇÃO.
+              A lista de espaços NÃO saiu junto, porque ela é o único lugar do produto onde este
+              fato aparece — remover para "des-duplicar" apagaria informação, não repetição. */}
+          <SecaoDoObjeto natureza="leitura" titulo={t("account.membershipTitle")} detalhe={t("account.membershipBody")}>
             {conta.isPending ? (
               <p className="text-sm text-muted-foreground" role="status">
                 {t("common.loading")}
               </p>
             ) : conta.data ? (
-              <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-[10rem_1fr]">
-                <Campo rotulo={t("account.name")} valor={conta.data.user.name} />
-                <Campo rotulo={t("account.email")} valor={conta.data.user.email} />
-                {/* Lista, e não texto unido por separador: um nome de workspace pode CONTER o
-                    separador — a massa tem "Acme · Laboratório" —, e aí "Acme · Acme · Laboratório"
-                    não deixa ver onde um termina e o outro começa. Achado da revisão da captura. */}
-                <>
-                  <dt className="text-sm text-muted-foreground">{t("account.workspaces")}</dt>
-                  <dd className="text-sm text-foreground">
-                    {conta.data.workspaces.length ? (
-                      <ul className="space-y-1">
-                        {/* O espaço ATIVO usa o nome reconciliado pelo produtor. Sem isto, esta
-                            lista continuava exibindo o nome de bootstrap logo acima da seção que
-                            mostra o nome novo — o mesmo espaço, dois nomes, uma tela. Os demais
-                            seguem com a projeção da claim: para eles nenhum produtor foi
-                            consultado, e identificar é o papel que ela tem. */}
-                        {conta.data.workspaces.map((w) => (
-                          <li key={w.id}>
-                            {w.id === escopo.workspaceId ? (nomeDoEscopo ?? w.name) : w.name}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      t("account.noWorkspaces")
-                    )}
-                  </dd>
-                </>
-              </dl>
+              conta.data.workspaces.length ? (
+                // Lista, e não texto unido por separador: um nome de workspace pode CONTER o
+                // separador — a massa tem "Acme · Laboratório" —, e aí "Acme · Acme · Laboratório"
+                // não deixa ver onde um termina e o outro começa. Achado da revisão da captura.
+                <ul className="space-y-1 text-sm text-foreground">
+                  {/* O espaço ATIVO usa o nome reconciliado pelo produtor. Sem isto, esta lista
+                      exibia o nome de bootstrap logo acima da seção que mostra o nome novo — o
+                      mesmo espaço, dois nomes, uma tela. Os demais seguem com a projeção da
+                      claim: para eles nenhum produtor foi consultado. */}
+                  {conta.data.workspaces.map((w) => (
+                    <li key={w.id}>
+                      {w.id === escopo.workspaceId ? (nomeDoEscopo ?? w.name) : w.name}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">{t("account.noWorkspaces")}</p>
+              )
             ) : (
               <p className="text-sm text-destructive" role="alert">
                 {t("account.identityFailed")}
               </p>
             )}
-          </Section>
+          </SecaoDoObjeto>
 
-          <Section title={t("account.languageTitle")} description={t("account.languageBody")}>
+          <SecaoDoObjeto natureza="acao" titulo={t("account.languageTitle")} detalhe={t("account.languageBody")}>
             <SecaoDeIdioma />
-          </Section>
+          </SecaoDoObjeto>
 
           {/* M42 · CFG-03, POR ÚLTIMO e de propósito.
               Ela estava entre `Language` e `Password`, cercada por duas seções de CONTA — e numa
@@ -160,7 +146,7 @@ export function SettingsPage() {
               a identidade nem o idioma. A configuração da Instância não está aqui — ela mora onde
               o contexto de Instância existe, e inventar um seletor seria superfície sem
               authority. */}
-          <Section title={t("account.signInTitle")} description={t("account.signInBody")}>
+          <SecaoDoObjeto natureza="acao" titulo={t("account.signInTitle")} detalhe={t("account.signInBody")}>
             <div className="flex flex-wrap items-center gap-3">
               {urlDoProvedor && (
                 <Button
@@ -183,11 +169,11 @@ export function SettingsPage() {
                 {t("account.signOut")}
               </Button>
             </div>
-          </Section>
+          </SecaoDoObjeto>
 
-          <Section title={t("workspaceConfig.title")} description={t("workspaceConfig.body")}>
+          <SecaoDoObjeto natureza="acao" titulo={t("workspaceConfig.title")} detalhe={t("workspaceConfig.body")}>
             <SecaoDeWorkspace workspaceId={escopo?.workspaceId ?? null} />
-          </Section>
+          </SecaoDoObjeto>
 
           {/* M44 · COM-01 — DEPOIS do Workspace, e na MESMA página.
               Depois porque a ordem conta uma história: primeiro quem você é e como o produto
@@ -199,9 +185,9 @@ export function SettingsPage() {
               lugares o que é a mesma pergunta: "como este espaço está configurado". Seção
               própria, com carregamento e falha próprios: um `503` do dono da comunicação não
               pode derrubar o nome do espaço nem o idioma da conta. */}
-          <Section title={t("notifications.title")} description={t("notifications.body")}>
+          <SecaoDoObjeto natureza="acao" titulo={t("notifications.title")} detalhe={t("notifications.body")}>
             <SecaoDeNotificacoes workspaceId={escopo?.workspaceId ?? null} />
-          </Section>
+          </SecaoDoObjeto>
         </div>
       </PageFrame>
     </AppShell>

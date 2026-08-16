@@ -42,7 +42,7 @@ export { EmptyState, ErrorState, LoadingState, type AcaoDeErro } from "./Estados
 //
 // O desenho continua no protótipo. Quando existir superfície de composição, ele volta com um
 // consumidor no mesmo commit.
-export { IdentidadeDoObjeto, SecaoDoObjeto } from "./Objeto";
+export { IdentidadeDoObjeto, SecaoDoObjeto, type NaturezaDaSecao } from "./Objeto";
 export { OuEntao, Portal } from "./Portal";
 export { Terminal } from "./Terminal";
 export { ProgressiveState, type EixoExibido } from "./ProgressiveState";
