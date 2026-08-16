@@ -19,7 +19,8 @@ import { PageHeader } from "@/shared/layout/PageHeader";
 import { EmptyState } from "@/shared/states/EmptyState";
 import { ErrorState } from "@/shared/states/ErrorState";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { LinhaDeColecao } from "@/design/patterns";
+import { useRevelacao } from "@/design/motion";
 
 /**
  * O papel, em chave de texto LITERAL.
@@ -47,10 +48,12 @@ export function WorkspacesPage() {
   const { memberships, membershipsLoading, membershipsError, workspace, switchWorkspace } =
     useAuth();
   const { t } = useLanguage();
+  const raiz = useRevelacao<HTMLDivElement>(membershipsLoading ? "carregando" : memberships.length);
 
   return (
     <AppShell topBarTitle={t("workspacesPage.title")}>
       <PageFrame maxWidth="lg">
+        <div ref={raiz}>
         <PageHeader
           title={t("workspacesPage.title")}
           description={t("workspacesPage.subtitle")}
@@ -80,43 +83,44 @@ export function WorkspacesPage() {
         )}
 
         {!membershipsLoading && !membershipsError && memberships.length > 0 && (
-          <ul className="space-y-2" aria-label={t("workspacesPage.listLabel")}>
+          <ul
+            aria-label={t("workspacesPage.listLabel")}
+            className="grid gap-px overflow-hidden rounded-lg border border-border bg-border"
+          >
             {memberships.map((m) => {
               const ativo = workspace?.id === m.id;
               return (
-                <li
+                <LinhaDeColecao
                   key={m.id}
-                  data-testid={`workspace-${m.id}`}
-                  data-ativo={ativo ? "sim" : "nao"}
-                  className={cn(
-                    "flex items-center justify-between gap-4 rounded-xl border p-4",
-                    ativo ? "border-primary bg-primary/5" : "border-border bg-card",
-                  )}
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-foreground">{m.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {rotuloDoPapel(m.role, t)}
-                    </p>
-                  </div>
-                  {/* `text-foreground`, e não `text-primary`: a cor da marca sobre o fundo da
-                      página dava 3.56:1 a 12px, abaixo do 4.5:1 de AA. Achado da matriz
-                      transversal da M45 — nenhuma suíte rodava axe NESTA superfície, e ela é
-                      REAL no Blueprint. */}
-                  {ativo ? (
-                    <span className="text-xs font-medium text-foreground">
-                      {t("workspacesPage.active")}
-                    </span>
-                  ) : (
-                    <Button size="sm" variant="ghost" onClick={() => switchWorkspace(m.id)}>
-                      {t("workspacesPage.switch")}
-                    </Button>
-                  )}
-                </li>
+                  item={{
+                    chave: m.id,
+                    titulo: m.name,
+                    subtitulo: rotuloDoPapel(m.role, t),
+                    ativo,
+                    dados: { "data-testid": `workspace-${m.id}`, "data-ativo": ativo ? "sim" : "nao" },
+                    // `text-foreground`, e não `text-primary`: a cor da marca sobre o fundo da
+                    // página dava 3.56:1 a 12px, abaixo do 4.5:1 de AA. Achado da matriz
+                    // transversal da M45 — nenhuma suíte rodava axe NESTA superfície, e ela é
+                    // REAL no Blueprint.
+                    acao: ativo ? (
+                      <span className="text-xs font-medium text-foreground">
+                        {t("workspacesPage.active")}
+                      </span>
+                    ) : (
+                      <Button size="sm" variant="ghost" onClick={() => switchWorkspace(m.id)}>
+                        {t("workspacesPage.switch")}
+                      </Button>
+                    ),
+                  }}
+                  // Sem destino: nenhum espaço tem tela própria. Um `<a>` aqui seria focável,
+                  // anunciado como link e não iria a lugar nenhum.
+                  Envoltorio={({ children, className }) => <div className={className}>{children}</div>}
+                />
               );
             })}
           </ul>
         )}
+        </div>
       </PageFrame>
     </AppShell>
   );

@@ -62,6 +62,18 @@ export interface ItemDeColecao {
   estado?: { rotulo: string; sinal: ReactNode };
   /** Idade, já formatada. Esta camada não sabe formatar tempo. */
   quando?: string;
+  /**
+   * Ação sobre o item, para a coleção que é SELECIONADA em vez de aberta.
+   *
+   * A lista de espaços de trabalho é o caso: nenhum item leva a uma tela própria — um deles é o
+   * corrente e os outros oferecem trocar. Sem este slot, encaixá-la aqui exigiria fingir que ela
+   * é navegação, e o arquétipo passaria a mentir sobre o que aquela tela faz.
+   */
+  acao?: ReactNode;
+  /** O item corrente de uma coleção de seleção. Marca "é este", nunca "é o melhor". */
+  ativo?: boolean;
+  /** Atributos `data-*` de teste que a superfície já publicava. Repassados sem interpretação. */
+  dados?: Readonly<Record<string, string>>;
 }
 
 const TINTA: Record<string, string> = {
@@ -107,19 +119,29 @@ export function LinhaDeColecao({
   const interativa = Boolean(item.destino);
 
   return (
-    <li data-revelar className="bg-card">
+    <li
+      data-revelar
+      {...item.dados}
+      // A borda de marca no item corrente é o segundo canal do "é este": só o fundo mais claro
+      // não sobrevive à escala de cinza, e quem tem baixa visão perde qual espaço está aberto.
+      className={item.ativo ? "border-l-2 border-primary bg-primary/5" : "bg-card"}
+    >
       {Envoltorio({
         destino: item.destino,
+        // Flex, não grade de colunas fixas. Uma grade de cinco faixas coloca os filhos na ordem
+        // das faixas, então uma linha esparsa — as Instâncias publicam só nome e data — jogaria
+        // a data na coluna da tendência e deixaria o resto vazio à direita. Com flex, a célula
+        // que não existe simplesmente não ocupa lugar, e é isso que faz o mesmo componente
+        // servir a uma linha de dois campos e a uma de cinco.
         className: [
-          "grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-3 px-4 py-4",
-          "sm:grid-cols-[minmax(0,1.7fr)_minmax(0,7rem)_minmax(0,8rem)_minmax(0,6rem)_minmax(0,5rem)]",
+          "flex w-full items-center gap-4 px-4 py-4 sm:gap-6",
           interativa
             ? "transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             : "",
         ].join(" "),
         children: (
           <>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium text-foreground">{item.titulo}</div>
               {item.subtitulo && (
                 <div className="truncate text-xs text-muted-foreground">{item.subtitulo}</div>
@@ -129,25 +151,31 @@ export function LinhaDeColecao({
             {/* A tendência some antes do número quando falta largura: ela é contexto, e o número
                 é a decisão. Esconder a decisão para preservar o contexto seria inverter os dois. */}
             {item.tendencia && (
-              <div className="hidden sm:block">
+              <div className="hidden w-24 flex-none sm:block">
                 <Tendencia pontos={item.tendencia} />
               </div>
             )}
 
             {item.estado && (
-              <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
+              <div className="hidden w-32 flex-none items-center gap-2 text-xs text-muted-foreground sm:flex">
                 {item.estado.sinal}
                 <span className="truncate">{item.estado.rotulo}</span>
               </div>
             )}
 
-            {item.numero && <Numero item={item.numero} />}
+            {item.numero && (
+              <div className="w-20 flex-none">
+                <Numero item={item.numero} />
+              </div>
+            )}
 
             {item.quando && (
-              <div className="hidden text-right text-xs text-muted-foreground sm:block">
+              <div className="hidden flex-none text-right text-xs text-muted-foreground sm:block">
                 {item.quando}
               </div>
             )}
+
+            {item.acao && <div className="flex-none">{item.acao}</div>}
           </>
         ),
       })}

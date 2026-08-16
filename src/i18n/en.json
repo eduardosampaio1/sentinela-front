@@ -745,6 +745,7 @@
     "emptyHistory": "No analyses in this instance yet.",
     "emptyHistoryAction": "No analyses in this instance yet. Start the first one and it will show up here.",
     "emptyWorkspace": "No instances in this workspace. Instances group analyses of the same system over time.",
+    "createdOn": "Created on",
     "errorHistory": "We couldn't load the analyses for this instance right now. Try again.",
     "historyTitle": "Analyses in this instance",
     "label": "Instance",

@@ -745,6 +745,7 @@
     "emptyHistory": "Nenhuma análise nesta instância ainda.",
     "emptyHistoryAction": "Nenhuma análise nesta instância ainda. Inicie a primeira e ela aparecerá aqui.",
     "emptyWorkspace": "Nenhuma instância neste workspace. Instâncias agrupam análises do mesmo sistema ao longo do tempo.",
+    "createdOn": "Criada em",
     "errorHistory": "Não foi possível carregar as análises desta instância agora. Tente novamente.",
     "historyTitle": "Análises desta instância",
     "label": "Instância",
