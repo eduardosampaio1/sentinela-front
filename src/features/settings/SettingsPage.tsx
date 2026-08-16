@@ -31,6 +31,7 @@ import { SecaoDeWorkspace } from "@/features/workspace/SecaoDeWorkspace";
 import { useNomeDoWorkspace } from "@/features/workspace/data/workspace";
 import { SecaoDeNotificacoes } from "@/features/communication/SecaoDeNotificacoes";
 import { useCanonicalScope } from "@/features/canonical-analysis/ui/scope";
+import { useRevelacao } from "@/design/motion";
 
 function Section({
   title,
@@ -41,8 +42,16 @@ function Section({
   description?: string;
   children: React.ReactNode;
 }) {
+  // `data-revelar` aqui cobre as cinco seções de uma vez, e é o que basta: elas entram na ordem
+  // do documento, que nesta tela é a ordem de importância — identidade, idioma, acesso, espaço,
+  // notificações.
+  //
+  // Este `Section` NÃO virou `SecaoDoObjeto`. Os dois fazem a mesma coisa e são, sim, duplicação
+  // — mas cada um com uma aparência: aqui cada bloco é um CARTÃO, e no arquétipo é um cabeçalho
+  // com régua embaixo. Trocar mudaria a composição de cinco seções numa passada de movimento, e
+  // a convergência dos dois pede uma decisão de aparência que não é desta missão.
   return (
-    <section className="card-base p-6">
+    <section data-revelar className="card-base p-6">
       <div className="mb-4 border-b border-border pb-4">
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
         {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
@@ -80,6 +89,11 @@ export function SettingsPage() {
   // só a preferência está pendente — e são duas dependências diferentes, com falhas diferentes.
   const urlDoProvedor = getAuthClient().accountManagementUrl();
 
+  // A identidade e o nome do espaço chegam por caminhos diferentes: a chave junta os dois para
+  // que a seção que resolver depois também entre com movimento, em vez de aparecer pronta no
+  // meio de uma tela que já se moveu.
+  const raiz = useRevelacao<HTMLDivElement>(`${conta.isPending}|${nomeDoEscopo}`);
+
   async function sair() {
     await signOut();
     navigate("/login");
@@ -90,7 +104,7 @@ export function SettingsPage() {
       <PageFrame maxWidth="lg">
         <PageHeader title={t("account.title")} description={t("account.subtitle")} />
 
-        <div className="space-y-6">
+        <div ref={raiz} className="space-y-6">
           <Section title={t("account.identityTitle")} description={t("account.identityBody")}>
             {conta.isPending ? (
               <p className="text-sm text-muted-foreground" role="status">

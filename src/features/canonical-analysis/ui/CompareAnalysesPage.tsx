@@ -34,6 +34,7 @@ import { Link, useParams } from "react-router-dom";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { ErrorState, LoadingState } from "@/design/patterns";
+import { useRevelacao } from "@/design/motion";
 import { Button } from "@/components/ui/button";
 import { ProblemError } from "@/lib/v1/problem";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -72,6 +73,11 @@ export function CompareAnalysesPage() {
   // esta página é a ação. `habilitado` segue o escopo: sem workspace ativo não há o que pedir.
   const a = useAnalysisArgos(scope, analysisAId ?? null, Boolean(scope && analysisAId));
   const b = useAnalysisArgos(scope, analysisBId ?? null, Boolean(scope && analysisBId));
+
+  // Os dois lados chegam em momentos diferentes, e a chave junta os dois: com um só, o segundo
+  // lado a responder trocaria o corpo sem remontar o observador — e a comparação apareceria
+  // parada logo depois de a tela ter se movido pela metade.
+  const raiz = useRevelacao<HTMLDivElement>(`${a.dataUpdatedAt}|${b.dataUpdatedAt}|${a.isPending || b.isPending}`);
 
   function corpo() {
     if (a.isPending || b.isPending) {
@@ -164,7 +170,11 @@ export function CompareAnalysesPage() {
   return (
     <AppShell topBarTitle={t("canonicalAnalysis.compare.title")}>
       <PageFrame>
-        <header className="space-y-1">
+        {/* O `ref` envolve cabeçalho E corpo. Prendê-lo no `header` deixaria o próprio header de
+            fora — o observador varre os DESCENDENTES da raiz, nunca a raiz — e o corpo, que é a
+            comparação inteira, ficaria sem movimento nenhum. */}
+        <div ref={raiz}>
+        <header data-revelar className="space-y-1">
           <Link
             to="/analyses"
             className="inline-block text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
@@ -201,7 +211,8 @@ export function CompareAnalysesPage() {
             </Link>
           </p>
         </header>
-        <div className="mt-6">{corpo()}</div>
+        <div data-revelar className="mt-6">{corpo()}</div>
+        </div>
       </PageFrame>
     </AppShell>
   );

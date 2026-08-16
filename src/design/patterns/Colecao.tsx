@@ -101,13 +101,21 @@ function Numero({ item }: { item: NonNullable<ItemDeColecao["numero"]> }) {
   const leitura = leituraDaMedida(item.valor);
 
   if (leitura.semNumero) {
+    // AUSENTE e NÃO MEDIDO são fatos diferentes e recebem formas diferentes — hachura para
+    // "perguntamos e não veio", tracejado vazio para "ninguém tentou medir".
+    //
+    // A primeira versão desta célula tratava os dois pelo mesmo `semNumero` e desenhava a
+    // hachura nos dois. O tipo distinguia quatro estados e a tela desenhava dois: o léxico
+    // existia no compilador e não chegava ao olho, que é a forma mais silenciosa de ele deixar
+    // de valer.
+    const naoMedida = item.valor.tipo === "naoMedida";
     return (
       <div className="text-right">
         <span
-          className="medida-ausente ml-auto block h-3 w-full rounded-sm"
+          className={`${naoMedida ? "medida-nao-medida" : "medida-ausente"} ml-auto block h-3 w-full rounded-sm`}
           aria-hidden="true"
         />
-        <div className="mt-1 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
+        <div className="mt-1 whitespace-nowrap text-[0.65rem] uppercase tracking-wider text-muted-foreground">
           {leitura.texto}
         </div>
       </div>
@@ -119,7 +127,7 @@ function Numero({ item }: { item: NonNullable<ItemDeColecao["numero"]> }) {
       <div className={`tabular text-xl font-medium ${TINTA[item.tom ?? "neutro"]}`}>
         {leitura.texto}
       </div>
-      <div className="text-[0.65rem] uppercase tracking-wider text-muted-foreground">
+      <div className="whitespace-nowrap text-[0.65rem] uppercase tracking-wider text-muted-foreground">
         {item.rotulo}
       </div>
     </div>
@@ -145,9 +153,21 @@ export function LinhaDeColecao({
     <li
       data-revelar
       {...item.dados}
-      // A borda de marca no item corrente é o segundo canal do "é este": só o fundo mais claro
-      // não sobrevive à escala de cinza, e quem tem baixa visão perde qual espaço está aberto.
-      className={item.ativo ? "border-l-2 border-primary bg-primary/5" : "bg-card"}
+      // O item corrente é marcado pela BORDA da marca, e o fundo continua sendo o mesmo dos
+      // outros. A primeira versão usava `bg-primary/5` — um tingimento translúcido — e ele
+      // custava contraste ao texto secundário por cima: composto sobre a linha, o rótulo de
+      // papel caía abaixo de 4,5:1.
+      //
+      // A borda basta porque ela não está sozinha: a linha corrente troca o botão de ação por um
+      // rótulo em texto, e texto é o canal que sobrevive a tudo. Dois canais sem tingir nada.
+      // `min-w-0` é obrigatório, não estilo. Item de grid nasce com `min-width: auto`, o que o
+      // impede de encolher abaixo do conteúdo — então a coluna inteira crescia até caber o
+      // identificador sem quebra, e a linha media 438 px numa viewport de 375. Os `truncate` de
+      // dentro nunca entravam em ação, porque nada nunca ficava apertado.
+      //
+      // O estouro era INVISÍVEL na tela: o shell tem `overflow-x-hidden` e recortava a borda. Só
+      // um gate que mede a caixa de cada elemento, em vez de `scrollWidth`, o enxerga.
+      className={`min-w-0 ${item.ativo ? "border-l-2 border-primary bg-card" : "bg-card"}`}
     >
       {Envoltorio({
         destino: item.destino,
@@ -172,28 +192,43 @@ export function LinhaDeColecao({
             </div>
 
             {/* A tendência some antes do número quando falta largura: ela é contexto, e o número
-                é a decisão. Esconder a decisão para preservar o contexto seria inverter os dois. */}
+                é a decisão. Esconder a decisão para preservar o contexto seria inverter os dois.
+
+                O ponto de quebra é `lg`, não `sm`, e o número veio de medida: em `sm` a linha
+                estourava a página em 189 px no tablet e 125 px no celular. Com quatro células de
+                largura fixa mais `gap`, não sobrava espaço para o título — e `flex-none` impede
+                exatamente o encolhimento que salvaria a linha. */}
             {item.tendencia && (
-              <div className="hidden w-24 flex-none sm:block">
+              <div className="hidden w-24 flex-none lg:block">
                 <Tendencia pontos={item.tendencia} />
               </div>
             )}
 
+            {/* `min-w-0` junto com `truncate`: sem ele um item de flex nunca encolhe abaixo do
+                conteúdo, e o rótulo de estado empurrava a linha para fora da página em vez de
+                cortar. É a mesma armadilha que fez `/aion` rolar 226 px na M45. */}
             {item.estado && (
-              <div className="hidden w-32 flex-none items-center gap-2 text-xs text-muted-foreground sm:flex">
+              <div className="hidden w-32 min-w-0 flex-none items-center gap-2 text-xs text-muted-foreground lg:flex">
                 {item.estado.sinal}
                 <span className="truncate">{item.estado.rotulo}</span>
               </div>
             )}
 
+            {/* Sem largura fixa. Com `w-20 flex-none` o rótulo do número transbordava a célula:
+                "conversations" não cabe em 80 px e não quebra, então a linha estourava a página
+                em 125 px no celular — invisível na tela, porque o shell recorta, e visível para
+                o gate que mede geometria em vez de `scrollWidth`.
+
+                Curioso e instrutivo: em PT ("conversas") coubera. Um rótulo que só estoura num
+                idioma é o caso que a regra de expansão de copy existe para lembrar. */}
             {item.numero && (
-              <div className="w-20 flex-none">
+              <div className="flex-none">
                 <Numero item={item.numero} />
               </div>
             )}
 
             {item.quando && (
-              <div className="hidden flex-none text-right text-xs text-muted-foreground sm:block">
+              <div className="hidden flex-none whitespace-nowrap text-right text-xs text-muted-foreground lg:block">
                 {item.quando}
               </div>
             )}
@@ -212,7 +247,11 @@ export function LinhaDeColecao({
  */
 export function ListaDeColecao({ children }: { children: ReactNode }) {
   return (
-    <ul className="grid gap-px overflow-hidden rounded-lg border border-border bg-border">
+    // `grid-cols-1` explícito: sem ele o grid cria a coluna implícita com largura `auto`, que
+    // acompanha o conteúdo mais largo em vez da caixa disponível. Junto com o `min-w-0` da linha
+    // é cinto e suspensório — e os dois valem, porque a próxima superfície pode montar o `ul` por
+    // conta própria, como duas já montam.
+    <ul className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border">
       {children}
     </ul>
   );

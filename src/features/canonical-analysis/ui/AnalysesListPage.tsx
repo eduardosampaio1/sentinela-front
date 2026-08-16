@@ -371,7 +371,7 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
         className={
           selecionando
             ? "space-y-3"
-            : "grid gap-px overflow-hidden rounded-lg border border-border bg-border"
+            : "grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border"
         }
       >
         {items.map((item) => (

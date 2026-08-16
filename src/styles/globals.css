@@ -278,8 +278,10 @@
     color: hsl(var(--ds-text-primary));
     font-weight: 600;
   }
+  /* `accent-ink`, não `accent`: o acento de ação dá 4,15:1 como tinta e reprova AA — e link
+     dentro de corpo legal é o lugar em que isso mais custa. Ver o token para a medida. */
   .legal-body a {
-    color: hsl(var(--ds-accent));
+    color: hsl(var(--ds-accent-ink));
     text-decoration: underline;
     text-underline-offset: 3px;
   }

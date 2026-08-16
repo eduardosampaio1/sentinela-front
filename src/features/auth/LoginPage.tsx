@@ -101,7 +101,7 @@ export function LoginPage() {
             {t("auth.noAccount")}{" "}
             <Link
               to="/register"
-              className="text-primary underline underline-offset-2 transition-colors hover:text-foreground"
+              className="text-[hsl(var(--ds-accent-ink))] underline underline-offset-2 transition-colors hover:text-foreground"
             >
               {t("auth.createOne")}
             </Link>
@@ -119,7 +119,7 @@ export function LoginPage() {
         {/* O aviso ANTES dos botões — os três saem do domínio. */}
         <p
           data-revelar
-          className="mb-5 rounded-lg border border-border bg-muted px-4 py-3 text-xs text-muted-foreground"
+          className="mb-5 rounded-lg border border-border bg-card px-4 py-3 text-xs text-muted-foreground"
         >
           {t("auth.signInNotice")}
         </p>

@@ -94,9 +94,14 @@ export function IndiceDeDocumento({
             <a
               href={`#${s.id}`}
               aria-current={ativa === s.id ? "true" : undefined}
+              // O item ativo NÃO usa tinta de acento. Ele já tem dois canais — a borda da marca
+              // à esquerda e o fundo tingido —, e pôr tinta de acento por cima de fundo de
+              // acento dobra o sinal cobrando contraste: medido em 4,39:1 sobre
+              // `surface-selected`, contra o mínimo de 4,5. A tinta foi calibrada contra o fundo
+              // BASE, e o item ativo é justamente o único que não tem esse fundo.
               className={`block rounded border-l-2 px-3 py-1.5 transition-colors ${
                 ativa === s.id
-                  ? "border-primary bg-accent text-primary"
+                  ? "border-primary bg-accent font-medium text-foreground"
                   : "border-transparent text-muted-foreground hover:bg-card hover:text-foreground"
               }`}
             >

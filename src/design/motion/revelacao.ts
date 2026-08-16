@@ -103,6 +103,9 @@ function formaDe(papel: PapelDeRevelacao): Receita {
         origem: "bottom center",
       };
     case "ponto":
+      // Único papel que ainda usa opacidade, e só porque um ponto discreto — célula de mapa de
+      // calor, marcador de risco — não carrega texto: não há contraste de leitura a degradar.
+      // Se algum dia ele envolver texto, vale a mesma lição do `bloco`.
       return {
         quadros: [{ opacity: 0 }, { opacity: 1 }],
         duracao: "--ds-duration-base",
@@ -110,11 +113,19 @@ function formaDe(papel: PapelDeRevelacao): Receita {
       };
     case "bloco":
     default:
+      // DESLOCAMENTO PURO, sem opacidade — e isto foi um gate que ensinou, não uma preferência.
+      //
+      // A primeira versão entrava com `opacity: 0 → 1`. A matriz transversal reprovou `axe` com
+      // `color-contrast` em VINTE jornadas de uma vez, e todas as reprovadas eram justamente as
+      // páginas que tinham acabado de receber movimento. Não era o instrumento medindo cedo
+      // demais: durante os 320 ms do fade o texto está mesmo abaixo de 4,5:1, para o axe e para
+      // quem lê. Um fade de entrada torna todo texto ilegível por um instante.
+      //
+      // Deslocar comunica a chegada igual e não toca em nenhum canal de leitura. É também a
+      // forma mais forte da regra 01: com `fill: none` e sem opacidade, o pior caso de uma
+      // animação que trave é o bloco aparecer no lugar certo, com contraste cheio, sem gesto.
       return {
-        quadros: [
-          { opacity: 0, transform: "translateY(0.7rem)" },
-          { opacity: 1, transform: "none" },
-        ],
+        quadros: [{ transform: "translateY(0.7rem)" }, { transform: "none" }],
         duracao: "--ds-duration-slow",
         curva: "--ds-easing-enter",
       };

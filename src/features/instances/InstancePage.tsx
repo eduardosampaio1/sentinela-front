@@ -41,6 +41,7 @@ import { Link, useParams } from "react-router-dom";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { EmptyState, ErrorState, LoadingState } from "@/design/patterns";
+import { useRevelacao } from "@/design/motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCanonicalScope } from "@/features/canonical-analysis/ui/scope";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,20 @@ export default function InstancePage() {
 
   const instancia = useInstance(scope, instanceId);
   const historico = useInstanceHistory(scope, instanceId, cursor);
+
+  /**
+   * Esta tela recebeu o ritmo e NÃO recebeu sinais vitais.
+   *
+   * O arquétipo OBJETO previa uma faixa de saúde, volume e custo no topo. Aqui ela não pode
+   * existir: o cabeçalho deste arquivo escreve a proibição por extenso — *"nenhum estado, saúde,
+   * contador, 'última execução' ou badge sobre a Instância… a proibição vale também para
+   * insinuação"*. Os números que o protótipo mostrava naquele bloco eram inventados.
+   *
+   * A chave inclui o cursor porque paginar o histórico troca as linhas sem desmontar a página.
+   */
+  const raiz = useRevelacao<HTMLDivElement>(
+    `${instancia.dataUpdatedAt}|${cursor ?? ""}|${historico.isFetching}`,
+  );
 
   // M37 · INST-04. A identidade vem do `useParams` — a MESMA que carregou a tela —, e não do
   // objeto em cache: é o que garante que a análise nasça presa à Instância deste endereço,
@@ -133,7 +148,11 @@ export default function InstancePage() {
   return (
     <AppShell>
       <PageFrame>
-        <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        {/* O `ref` fica no `PageFrame` e não num `div` novo: envolver a árvore só para pendurar
+            movimento acrescentaria um nó sem papel semântico, e esta tela já tem `header`,
+            `section` e `nav` fazendo o trabalho de estrutura. */}
+        <div ref={raiz}>
+        <header data-revelar className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
           <div className="min-w-0 space-y-1">
           {/* Volta para a lista. Sem ela, quem chega por deep link fica sem saber onde está na
               hierarquia — o Trunk Test pergunta "onde estou?" e a tela não respondia. O link
@@ -293,6 +312,7 @@ export default function InstancePage() {
             />
           )}
         </section>
+        </div>
       </PageFrame>
     </AppShell>
   );

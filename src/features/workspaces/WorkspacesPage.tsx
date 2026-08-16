@@ -85,7 +85,7 @@ export function WorkspacesPage() {
         {!membershipsLoading && !membershipsError && memberships.length > 0 && (
           <ul
             aria-label={t("workspacesPage.listLabel")}
-            className="grid gap-px overflow-hidden rounded-lg border border-border bg-border"
+            className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border"
           >
             {memberships.map((m) => {
               const ativo = workspace?.id === m.id;

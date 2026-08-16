@@ -71,6 +71,21 @@
 
   --ds-text-primary: 210 40% 95%;
   --ds-text-secondary: 210 40% 85%;
+  /**
+   * 🔒 Fica em 54%, e a tentativa de subir está registrada porque ela vai se repetir.
+   *
+   * Este valor passa contra `surface-base` (4,83:1) e contra `surface-raised` (5,04:1), e
+   * **reprova contra `surface-muted`** (4,21:1). A correção óbvia — clarear a tinta — foi tentada
+   * e medida: a 65 % ele passa em tudo e então colide com `--ds-danger` em escala de cinza
+   * (1,09:1, abaixo do limiar de 1,2 de `contraste-de-estado`), apagando o segundo canal que V6
+   * exige. A janela que satisfaz os dois lados tem meio ponto percentual de largura, o que é o
+   * mesmo que não existir.
+   *
+   * A conclusão não é sobre o valor: é sobre o USO. `surface-muted` é "área de menor ênfase —
+   * bloco desabilitado, fundo de campo inerte", como está escrito acima. Texto secundário sobre
+   * ela é o erro; o par correto é texto secundário sobre `raised`, e foi assim que as caixas de
+   * aviso desta missão foram corrigidas.
+   */
   --ds-text-muted: 215 20% 54%;
   /** Texto sobre a cor de ação e sobre `danger` — os dois são escuros o bastante para branco. */
   --ds-text-on-accent: 0 0% 100%;
@@ -103,6 +118,23 @@
      V5: cor de ação é reservada. Um acento só. */
 
   --ds-accent: 236 77% 61%;
+
+  /**
+   * O acento como TINTA — a mesma matiz, clara o bastante para ser lida.
+   *
+   * `--ds-accent` é uma SUPERFÍCIE de ação: o botão preenchido, onde o texto por cima é
+   * `--ds-text-on-accent`. Usá-lo como cor de texto sobre o fundo escuro dá **4,15:1**, que
+   * reprova AA para texto pequeno — e reprova no pior lugar, que são os links dentro de um
+   * corpo de texto longo.
+   *
+   * Isto não é teoria: a M46 mediu exatamente esse valor nos três documentos legais e resolveu
+   * escolhendo `#7C86E0` (5,90:1) **à mão, dentro do componente**. A correção era certa e o lugar
+   * era errado — no primeiro dia em que alguém trocou aquele literal pelo token do vocabulário,
+   * o defeito voltou inteiro, nas três páginas de uma vez.
+   *
+   * O papel existir aqui é o que impede a próxima repetição. Mesmo H e S do acento, L em 68%.
+   */
+  --ds-accent-ink: 234 61% 68%;
 
   /* ── Sinais semânticos ───────────────────────────────────────────────────────────────────
      V6 continua valendo na composição: cor NUNCA é canal único. Estes tokens dão a cor; o

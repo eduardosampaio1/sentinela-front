@@ -66,7 +66,7 @@ export function Portal({
         {aviso && (
           <p
             data-revelar
-            className="rounded-lg border border-border bg-muted px-4 py-3 text-center text-xs text-muted-foreground"
+            className="rounded-lg border border-border bg-card px-4 py-3 text-center text-xs text-muted-foreground"
           >
             {aviso}
           </p>

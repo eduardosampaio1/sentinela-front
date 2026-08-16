@@ -17,7 +17,14 @@ export { Chip, type EnfaseDoChip } from "./Chip";
 export { DefinitionGrid } from "./DefinitionGrid";
 export { Disclosure } from "./Disclosure";
 export { IconeDecorativo, IconeInformativo } from "./Icon";
-export { Medida, TrilhoDeMedida } from "./Medida";
+// `Medida` e `TrilhoDeMedida` (o trilho com faixa esperada ao fundo e valor à frente) foram
+// removidos junto com `SinaisVitais`, e pela mesma razão: eles desenhavam uma medida COM RÉGUA
+// PUBLICADA, e nenhuma superfície fora de ARGOS/Analytics tem uma para mostrar.
+//
+// O léxico não morreu com eles — ele vive onde é consumido: `ValorDaMedida` tipa os quatro
+// fatos, `leituraDaMedida` estreita o union num lugar só, `tomPelaFaixa` mantém o julgamento
+// preso à régua, `Tendencia` desenha a série curta, e as classes `.medida-ausente` e
+// `.medida-nao-medida` dão forma à ausência na célula de número da COLEÇÃO.
 export {
   leituraDaMedida,
   tomPelaFaixa,

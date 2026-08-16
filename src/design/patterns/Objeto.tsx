@@ -2,26 +2,19 @@
 //
 // ## A ordem, que é a decisão inteira
 //
-// Identidade, **sinais vitais**, depois configuração, depois histórico.
+// Identidade primeiro, depois o que o objeto declara sobre si, depois o histórico.
 //
-// Vitais antes de configuração porque a pergunta que traz alguém a esta tela é "isto está bem?",
-// não "como isto está configurado?". A ordem inversa é o padrão de tela de administração e está
-// errada aqui: ela obriga a rolar por parâmetros que ninguém veio ver para chegar ao estado.
+// A identidade vem antes porque a pergunta que traz alguém a esta tela é "é este mesmo?", e
+// porque quem chega por link direto precisa saber onde está antes de qualquer outra coisa.
 //
-// ## Cada vital declara a própria régua
+// ## O que este arquétipo NÃO tem, e por quê
 //
-// O rodapé de um vital não é legenda opcional: é o que separa "87 está dentro do esperado" de
-// "87 me parece bom". Sem régua publicada o número aparece na cor de ação e o rodapé diz que
-// não há faixa — porque "sem faixa" é informação, e o cinza sozinho seria lido como "mediano".
-//
-// Quando nem medir é possível, o vital admite: contorno tracejado e o motivo. É o caso da
-// medida que exige uma leitura de referência para existir — sem referência ela não é zero e não
-// é falha; ela não é calculável, e dizer isso é mais honesto que desenhar um traço.
+// Ele foi projetado com uma faixa de sinais vitais no topo — saúde, volume, custo, cada um com
+// a sua régua — e essa faixa foi removida antes de nascer. O motivo está registrado embaixo,
+// no lugar exato onde ela morava: nenhum objeto deste produto publica medida com faixa, e as
+// que existem vivem em ARGOS e Analytics, que têm componentes próprios.
 
 import type { ReactNode } from "react";
-import { TrilhoDeMedida } from "@/design/primitives/Medida";
-import { leituraDaMedida, tomPelaFaixa } from "@/design/primitives/valorDaMedida";
-import type { FaixaEsperada, ValorDaMedida } from "@/design/primitives/valorDaMedida";
 
 /** Cabeçalho de identidade: quem é este objeto, e as ações que valem sobre ele inteiro. */
 export function IdentidadeDoObjeto({
@@ -44,7 +37,7 @@ export function IdentidadeDoObjeto({
     >
       <span
         aria-hidden="true"
-        className="grid h-14 w-14 flex-none place-items-center rounded-lg border border-border bg-muted text-lg font-medium text-primary"
+        className="grid h-14 w-14 flex-none place-items-center rounded-lg border border-border bg-card text-lg font-medium text-[hsl(var(--ds-accent-ink))]"
       >
         {sigla}
       </span>
@@ -63,56 +56,26 @@ export function IdentidadeDoObjeto({
   );
 }
 
-export interface SinalVital {
-  chave: string;
-  rotulo: string;
-  valor: ValorDaMedida;
-  faixa?: FaixaEsperada;
-  /** O que dizer sobre a régua quando não há faixa publicada. Vem do produto. */
-  regua: string;
-}
-
-const TINTA = {
-  neutro: "text-foreground",
-  dentro: "text-success",
-  borda: "text-warning",
-  fora: "text-destructive",
-} as const;
-
-export function SinaisVitais({ sinais }: { sinais: readonly SinalVital[] }) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {sinais.map((s) => {
-        const leitura = leituraDaMedida(s.valor);
-        const tom = s.valor.tipo === "medido" ? tomPelaFaixa(s.valor.fracao, s.faixa) : "neutro";
-        return (
-          <div
-            key={s.chave}
-            data-revelar
-            className="grid gap-3 rounded-lg border border-border bg-card p-4"
-          >
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">
-              {s.rotulo}
-            </span>
-            <span
-              className={
-                leitura.semNumero
-                  ? "text-base text-muted-foreground"
-                  : `tabular text-3xl font-medium leading-none ${TINTA[tom]}`
-              }
-            >
-              {leitura.texto}
-            </span>
-            <TrilhoDeMedida valor={s.valor} faixa={s.faixa} tom={tom} />
-            <span className="text-xs text-muted-foreground">
-              {s.faixa ? s.faixa.rotulo : s.regua}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// SINAIS VITAIS — projetado, e REMOVIDO antes de nascer
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// O arquétipo previa uma faixa de sinais vitais no topo do objeto: saúde, volume, custo, deriva
+// — cada um com a própria régua. No protótipo ficou bom. No produto não existe.
+//
+// A Instância publica TRÊS campos — identidade, nome e data de criação —, e `InstancePage.tsx`
+// escreve a proibição por extenso: *"Nenhum estado, saúde, contador, 'última execução' ou badge
+// sobre a Instância… a proibição vale também para insinuação"*. A Home diz o mesmo com outras
+// palavras (D9: não é dashboard de KPIs). As medidas com faixa vivem em ARGOS e Analytics, que
+// têm componentes próprios e já estão prontos.
+//
+// Ou seja: os números que eu desenhei nos vitais do protótipo eu inventei. Mantê-los como
+// componente seria guardar um molde à espera de um dado que o contrato recusa publicar — e o
+// próximo a encontrá-lo iria supor que existe origem para ele.
+//
+// Isto fica registrado, e não apagado, porque a decisão pode mudar: no dia em que houver
+// produtor de saúde de Instância, o desenho está no protótipo e volta com consumidor no mesmo
+// commit. Até lá, `IdentidadeDoObjeto` e `SecaoDoObjeto` são o arquétipo inteiro.
 
 /**
  * Título de seção dentro de um objeto. O `detalhe` fica à direita e conta o que a seção tem.
