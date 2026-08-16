@@ -195,10 +195,16 @@ test("11 · foco visível no controle", async ({ page }) => {
   await capturar(page, "11-desktop-foco-teclado-pt", "pt");
 });
 
-test("12 · mobile em português, com a escolha salva", async ({ page }) => {
-  await montar(page, { inicial: "pt" });
-  await page.setViewportSize({ width: 375, height: 812 });
-  await page.goto(ROTA);
-  await expect(page.getByText(/Português é o idioma que você escolheu/)).toBeVisible();
-  await capturar(page, "12-mobile-pt-escolha-salva", "pt");
-});
+// AQUI FICAVA `12-mobile-pt-escolha-salva`, REMOVIDA na M45.6.
+//
+// Ela montava `{ inicial: "pt" }` — **exatamente a mesma montagem** da captura 7 — e as duas saíam
+// byte a byte idênticas. O gate de evidência da M45.6 acusou.
+//
+// As âncoras eram diferentes e as duas passavam, o que escondia o problema: com o idioma já em
+// `pt`, o botão de salvar E a frase "Português é o idioma que você escolheu" estão na MESMA tela.
+// O estado que o nome promete — *depois de salvar* — não é visualmente distinto de *já está em
+// português*, nesta montagem. Duas imagens, dois nomes, um estado.
+//
+// Não foi substituída por uma versão "com ação": alcançar a escolha salva a partir de outro idioma
+// exige dirigir o formulário, e isso é a captura 8 (`salvando`) mais o desfecho — trabalho de quem
+// for reabrir a M41, não desta tranche.

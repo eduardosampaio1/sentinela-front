@@ -22,7 +22,10 @@ async function semear(
         );
       }
       if (sem) sessionStorage.setItem("__sentinela_baseline_sem_candidatos__", "1");
-      if (idioma) localStorage.setItem("sentinela.language", idioma);
+      // A CHAVE certa é `sentinela:language`, com dois-pontos. Com o ponto, nada era escrito e o
+      // idioma ficava no padrão (`en`) — e as duas capturas que diziam "en" saíram byte-a-byte
+      // IDÊNTICAS às que não diziam nada. Dois arquivos, dois nomes, uma prova só.
+      if (idioma) localStorage.setItem("sentinela:language", idioma);
     },
     [opts.baseline ?? null, opts.semCandidatos ? "1" : "", opts.idioma ?? ""] as const,
   );
@@ -31,15 +34,36 @@ async function semear(
 const secao = (page: Page) =>
   page.getByRole("region", { name: /Análise de referência|Reference analysis/ });
 
-async function capturar(page: Page, info: { outputPath: (n: string) => string }, nome: string) {
+/**
+ * Captura DEPOIS de provar o ESTADO e o IDIOMA.
+ *
+ * A âncora era a seção — visível nos três estados. `com-referencia` passaria renderizando
+ * `sem-referencia`, e foi assim que duas capturas duplicadas conviveram sem ninguém notar.
+ */
+async function capturar(
+  page: Page,
+  nome: string,
+  ancora: RegExp,
+  idioma: "pt" | "en",
+) {
   await expect(secao(page)).toBeVisible();
+  await expect(
+    secao(page).getByText(ancora).first(),
+    `${nome}: o estado que o nome promete não apareceu antes do disparo`,
+  ).toBeVisible({ timeout: 15_000 });
+  const marca = idioma === "pt" ? /Análise de referência/ : /Reference analysis/;
+  await expect(
+    page.locator("main").getByText(marca).first(),
+    `${nome}: a captura diz ser ${idioma} — o conteúdo tem de provar`,
+  ).toBeVisible();
   await page.screenshot({ path: `docs/inst05/${nome}.png`, fullPage: true });
 }
 
+/** Cada estado com a âncora do SEU estado — a da seção é a mesma nos três. */
 const ESTADOS = [
-  { nome: "sem-referencia", opts: {} },
-  { nome: "com-referencia", opts: { baseline: A } },
-  { nome: "sem-candidatos", opts: { semCandidatos: true } },
+  { nome: "sem-referencia", opts: {}, ancora: /doesn.t have a reference analysis yet|ainda não tem uma análise de referência/ },
+  { nome: "com-referencia", opts: { baseline: A }, ancora: /Current reference|Referência atual/ },
+  { nome: "sem-candidatos", opts: { semCandidatos: true }, ancora: /No analysis can be the reference yet|Nenhuma análise pode ser referência/ },
 ] as const;
 
 const VIEWPORTS = [
@@ -54,26 +78,35 @@ for (const vp of VIEWPORTS) {
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await semear(page, e.opts);
       await page.goto(`/instances/${INSTANCIA}`);
-      await capturar(page, info, `${vp.nome}-${e.nome}`);
+      await capturar(page, `${vp.nome}-${e.nome}`, e.ancora, "en");
     });
   }
 }
 
-test("shot desktop · EN com referência", async ({ page }, info) => {
+// O PAR DE IDIOMA — agora em PT, e o motivo é que ele existe para provar o OUTRO idioma.
+//
+// Ele nasceu declarando `en`, que é o PADRÃO da interface. Com a chave errada nada era escrito, e
+// mesmo com a chave certa a captura sairia idêntica às demais: `en` sobre `en`. As duas imagens
+// eram cópias byte-a-byte de `desktop-com-referencia` e `desktop-sem-referencia`.
+//
+// Em PT elas passam a mostrar o que a dupla sempre quis mostrar: a mesma tela, no idioma que NÃO é
+// o padrão. Os arquivos foram renomeados junto — um nome que diz `en` sobre uma imagem em PT seria
+// trocar um defeito por outro.
+test("shot desktop · PT com referência", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await semear(page, { baseline: A, idioma: "en" });
+  await semear(page, { baseline: A, idioma: "pt" });
   await page.goto(`/instances/${INSTANCIA}`);
-  await capturar(page, info, "desktop-en-com-referencia");
+  await capturar(page, "desktop-pt-com-referencia", /Referência atual/, "pt");
 });
 
-test("shot desktop · EN sem referência", async ({ page }, info) => {
+test("shot desktop · PT sem referência", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await semear(page, { idioma: "en" });
+  await semear(page, { idioma: "pt" });
   await page.goto(`/instances/${INSTANCIA}`);
-  await capturar(page, info, "desktop-en-sem-referencia");
+  await capturar(page, "desktop-pt-sem-referencia", /ainda não tem uma análise de referência/, "pt");
 });
 
-test("shot mobile · troca em voo", async ({ page }, info) => {
+test("shot mobile · troca em voo", async ({ page }) => {
   // O estado transitório: o botão em `aria-busy` enquanto o POST viaja. Sem captura, "reflete
   // atividade" é afirmação sobre código.
   await page.setViewportSize({ width: 375, height: 812 });

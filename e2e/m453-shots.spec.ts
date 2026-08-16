@@ -14,7 +14,7 @@
 
 import { expect, test, type Page } from "@playwright/test";
 import { MASSA_A } from "@/test/fixtures/canonical-result/massas";
-import { V2_READY, V2_WITHHELD } from "@/test/fixtures/canonical-result/massasV2";
+import { V2_READY } from "@/test/fixtures/canonical-result/massasV2";
 
 test.use({ serviceWorkers: "block" });
 
@@ -41,6 +41,8 @@ interface Opcoes {
   readonly doc?: unknown;
   /** `404` = o produtor não tem documento · `503` = o serviço caiu. Nunca a mesma tela. */
   readonly recusa?: 404 | 503;
+  /** A regiao Analytics de RES-01 le o ENDPOINT VIVO, nao o bloco do documento (Blueprint 4.6). */
+  readonly analyticsRetido?: boolean;
 }
 
 async function montar(page: Page, o: Opcoes = {}) {
@@ -114,13 +116,15 @@ async function montar(page: Page, o: Opcoes = {}) {
     r.fulfill(
       json({
         analysis_id: ANALISE,
-        component_status: "ready",
+        component_status: o.analyticsRetido ? "withheld" : "ready",
         snapshot_contract_version: "analytics-snapshot-v9",
         snapshot_digest: "sd",
-        snapshot: { snapshot_contract_version: "analytics-snapshot-v9", record_count: 1240, numeric: [], distributions: [], dimensions: [], concentrations: [], time_series: [] },
+        snapshot: o.analyticsRetido
+          ? null
+          : { snapshot_contract_version: "analytics-snapshot-v9", record_count: 1240, numeric: [], distributions: [], dimensions: [], concentrations: [], time_series: [] },
         disclosure_rule_version: "dr-1",
         projection_digest: "pd",
-        withheld: null,
+        withheld: o.analyticsRetido ? { reason_code: "min_group_size" } : null,
         generated_at: "2026-08-01T00:00:00Z",
       }),
     ),
@@ -167,7 +171,16 @@ interface Tela {
 const TELAS: readonly Tela[] = [
   { nome: "01-desktop-v2-en", w: 1280, h: 1400, opts: {}, ancora: /Why trust this result/ },
   { nome: "02-desktop-v1-legado-en", w: 1280, h: 1400, opts: { doc: envelope(MASSA_A as Record<string, unknown>) }, ancora: /Why trust this result/ },
-  { nome: "03-desktop-analytics-retido-en", w: 1280, h: 1400, opts: { doc: envelope(V2_WITHHELD as Record<string, unknown>) }, ancora: /Why trust this result/ },
+  // AQUI FICAVA `03-desktop-analytics-retido-en`, REMOVIDA na M45.6.
+  //
+  // Ela saía byte a byte idêntica a `01-desktop-v2-en`, e o gate de evidência da M45.6 acusou.
+  // Tentei duas causas — a âncora era a MESMA da 01, e depois servir o `withheld` pelo endpoint
+  // vivo que o Blueprint §4.6 declara como fonte da região, em vez do bloco do documento. As duas
+  // continuaram produzindo a MESMA imagem, com a âncora do estado retido passando nas duas.
+  //
+  // Não sei explicar, e evidência que eu não sei explicar não vai para `docs/`. O estado fica
+  // registrado como NÃO MEDIDO, com a pergunta aberta: por que a região Analytics de RES-01
+  // renderiza igual com `component_status` `ready` e `withheld`.
   { nome: "04-desktop-sem-resultado-en", w: 1280, h: 900, opts: { recusa: 404 }, ancora: /No result is available/ },
   { nome: "05-desktop-fora-do-ar-en", w: 1280, h: 900, opts: { recusa: 503 }, ancora: /temporarily unavailable/ },
   { nome: "06-mobile-v2-en", w: 375, h: 1400, opts: {}, ancora: /Why trust this result/ },
