@@ -512,6 +512,54 @@ const JOURNEYS: readonly Journey[] = [
     // O estado que a M14 entregou e que nenhuma passada transversal viu: a sessão caiu, e a tela
     // diz que os dados continuam salvos — a diferença entre perder a sessão e perder o trabalho.
     terminal: /Session expired|Sessão expirada/ },
+
+  // ─────────────────────────────────────────────────────────────────────────────────────────
+  // M45.8 — as OUTRAS quinze rotas.
+  //
+  // A M45.7 fechou dizendo que as públicas estavam medidas. Estavam quatro delas. O gate de
+  // cobertura desta tranche (`src/test/v1/matriz-cobre-o-router.test.ts`) leu o router e mostrou
+  // que a matriz visitava 24 das 39 rotas — e que as não visitadas guardavam DOBRO da dívida das
+  // visitadas: 105 nós contra 54.
+  //
+  // A pior não é de marketing. `/profile` é superfície de produto, autenticada, e tem 6.
+  // ─────────────────────────────────────────────────────────────────────────────────────────
+
+  // 76 nós num só lugar — o maior bolsão de dívida de a11y do produto inteiro.
+  { id: "J25", nome: "AION (produto irmão)", rota: "/aion", regiao: "body", axeConhecido: 76,
+    montar: semSessao, terminal: /The proxy that thinks/ },
+  // Os três documentos legais somam 27 (8 + 10 + 9): é UM template com um defeito, contado três
+  // vezes. Corrigir o token do template baixa os três de uma vez.
+  { id: "J26", nome: "política de privacidade", rota: "/privacy", axeConhecido: 10,
+    terminal: /How we collect, use, and protect|Who we are/ },
+  { id: "J27", nome: "segurança", rota: "/security", axeConhecido: 9,
+    terminal: /How we protect your data/ },
+  { id: "J28", nome: "criar conta", rota: "/register", regiao: "body", montar: semSessao,
+    terminal: /Redirecting to account creation/ },
+  { id: "J29", nome: "recuperar senha", rota: "/forgot-password", regiao: "body", montar: semSessao,
+    terminal: /Redirecting to password reset/ },
+  // A única DENTRO do produto, e por isso a mais séria das oito.
+  { id: "J30", nome: "perfil", rota: "/profile", axeConhecido: 6,
+    terminal: /Your account identity and security settings/ },
+  { id: "J31", nome: "erro do servidor", rota: "/error", regiao: "body", axeConhecido: 1,
+    terminal: /An unexpected server error occurred/ },
+  // 404 é superfície: é onde cai todo link quebrado, e o texto promete que as análises seguem
+  // intactas — a mesma distinção entre perder o caminho e perder o trabalho que J24 faz.
+  { id: "J32", nome: "página inexistente", rota: "/rota-que-nao-existe", regiao: "body", axeConhecido: 3,
+    terminal: /This page doesn't exist/ },
+
+  // AS DUAS VISÕES QUE DÃO NOME À UMBRELLA — e que a umbrella nunca pôs na própria matriz.
+  //
+  // A M45 se chama *Two-View Hardening*. A M45.4 mediu ARGOS e Analytics com suítes próprias, e a
+  // matriz transversal — o instrumento que pergunta se as features formam UMA experiência — nunca
+  // as visitou. O gate de cobertura da M45.8 acusou, e é o achado que fecha a umbrella.
+  // A montagem base serve um documento **v2**, e a visão ARGOS é v3-only. O terminal dela aqui é
+  // portanto a RECUSA — e a recusa é a tela mais importante desta visão: ela diz que veio outra
+  // espécie de leitura, que esta janela só mostra ARGOS, e que o resultado histórico continua lá.
+  // Ausência NOMEADA, com saída. É o oposto exato do colapso que o G11 persegue no resto do produto.
+  { id: "J33", nome: "visão ARGOS (v2 → recusa nomeada)", rota: `/analyses/${ANALISE}/argos`,
+    terminal: /The ARGOS document is not available for this analysis/ },
+  { id: "J34", nome: "visão Analytics", rota: `/analyses/${ANALISE}/analytics`,
+    terminal: /Numeric measures/ },
 ] as const;
 
 /**
@@ -537,19 +585,28 @@ test.describe("M45 · G1-bis · a dívida declarada é nominal e não cresce", (
     expect(
       JOURNEYS.filter((j) => j.regiao === "body").map((j) => j.id),
       "uma journey NOVA sem `<main>`: adicione o landmark em vez de declarar `regiao: \"body\"`",
-    ).toEqual(["J21", "J23", "J24"]);
+    ).toEqual(["J21", "J23", "J24", "J25", "J28", "J29", "J31", "J32"]);
 
     expect(
       JOURNEYS.filter((j) => (j.axeConhecido ?? 0) > 0).map((j) => j.id),
       "uma journey NOVA com violação de a11y declarada: corrija a tela, não o gate",
-    ).toEqual(["J21", "J22", "J23"]);
+    ).toEqual(["J21", "J22", "J23", "J25", "J26", "J27", "J30", "J31", "J32"]);
 
-    // O teto absoluto. 43 (landing) + 8 (termos) + 3 (entrada) = 54 nós reprovados no produto
-    // público de hoje. Este número só tem um caminho permitido: para baixo.
+    // O TETO ABSOLUTO da dívida de a11y do produto inteiro.
+    //
+    //   43 landing · 8 termos · 3 entrada ......................... 54  (medido na M45.7)
+    //   76 AION · 10 privacidade · 9 segurança · 6 perfil
+    //    · 1 erro · 3 não-encontrada ............................. 105  (medido na M45.8)
+    //                                                             ────
+    //                                                              159
+    //
+    // A M45.7 fechou anunciando 54 e acreditando que era o total. Era o total do que ela tinha
+    // olhado — e o que ela não olhou tinha o dobro. Este número só tem um caminho permitido:
+    // para baixo.
     expect(
       JOURNEYS.reduce((soma, j) => soma + (j.axeConhecido ?? 0), 0),
       "o total de dívida de a11y declarada mudou",
-    ).toBe(54);
+    ).toBe(159);
   });
 });
 
