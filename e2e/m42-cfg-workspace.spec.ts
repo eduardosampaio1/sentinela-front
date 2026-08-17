@@ -445,7 +445,10 @@ test.describe("M42 · CFG-03 no browser", () => {
     // tem acesso. Nada disso regrediu — a correção mira o NOME do espaço, não o papel da claim.
     await expect(page.getByText("Marcos Tavares")).toBeVisible();
     await expect(page.getByText("marcos.tavares@cliente.test")).toBeVisible();
-    await expect(page.getByText(/^You can open$|^Você pode abrir$/)).toBeVisible();
+    // O RÓTULO da lista de acesso mudou de "You can open" para "Your workspaces": o primeiro era
+    // um pedaço de frase, o segundo nomeia a coisa. O que esta prova defende é que a lista
+    // EXISTE e que a claim continua alimentando-a — não a palavra escolhida para intitulá-la.
+    await expect(page.getByText(/^Your workspaces$|^Seus espaços$/)).toBeVisible();
 
     // E o que ela deixou de fazer: nomear o espaço ativo. A lista de acesso mostra o nome do
     // PRODUTOR, porque para este espaço ele já respondeu nesta mesma tela.

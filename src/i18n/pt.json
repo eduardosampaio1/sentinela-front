@@ -39,8 +39,7 @@
     "signOut": "Sair",
     "subtitle": "Seus dados, o idioma em que o produto fala com você e este espaço.",
     "title": "Conta",
-    "usingDefault": "Usando inglês, o padrão. Você ainda não escolheu um idioma.",
-    "workspaces": "Você pode abrir"
+    "usingDefault": "Usando inglês, o padrão. Você ainda não escolheu um idioma."
   },
   "alertsPage": {
     "title": "Alertas",

@@ -95,12 +95,56 @@ export function SettingsPage() {
         </p>
 
         <div ref={raiz} className="mt-6 space-y-6">
-          {/* NOME E E-MAIL SAÍRAM DAQUI — decisão de owner de 2026-08-16.
-              Eles apareciam nesta tela E no perfil: o mesmo fato em duas superfícies é como
-              nasceu a divergência do nome do Workspace que a BD12 teve de consertar. Perfil é
-              LEITURA e ficou com a identidade; aqui fica o que é AÇÃO.
-              A lista de espaços NÃO saiu junto, porque ela é o único lugar do produto onde este
-              fato aparece — remover para "des-duplicar" apagaria informação, não repetição. */}
+          {/* NOME E E-MAIL VOLTARAM — decisão de owner de 2026-08-16, revendo a de horas antes.
+              Eu os tirei daqui para des-duplicar contra o perfil, e a suíte de browser mostrou o
+              preço: seis provas de M41, M42 e M44 caíram, e uma delas explica por quê melhor do
+              que eu explicaria. A prova M44 C/D compara o DESTINO da notificação com o e-mail da
+              CONTA para mostrar que o primeiro não vem do segundo — e essa comparação só existe
+              se os dois fatos estiverem na MESMA tela. Sem esta seção, a pessoa deixa de ter
+              como ver que as notificações não vão para o e-mail com que ela entra.
+              O perfil segue dono da identidade como ASSUNTO; aqui ela é CONTEXTO do que se
+              configura. É o mesmo fato lido da mesma fonte, não dois fatos. */}
+          <SecaoDoObjeto
+            natureza="leitura"
+            titulo={t("account.identityTitle")}
+            detalhe={t("account.identityBody")}
+          >
+            {conta.isPending ? (
+              <p className="text-sm text-muted-foreground" role="status">
+                {t("common.loading")}
+              </p>
+            ) : conta.data ? (
+              // `GET /v1/me` é a fonte, e é a ÚNICA autorizada: o docblock desta tela diz que o
+              // Account não é fonte de nome nem de e-mail e que aqui não entra claim bruta.
+              <dl className="grid gap-0">
+                {[
+                  { chave: "nome", rotulo: t("account.name"), valor: conta.data.user.name },
+                  { chave: "email", rotulo: t("account.email"), valor: conta.data.user.email },
+                ].map((c) => (
+                  <div
+                    key={c.chave}
+                    className="grid gap-1 border-b border-border py-3 last:border-b-0 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] sm:gap-6"
+                  >
+                    <dt className="text-sm text-muted-foreground">{c.rotulo}</dt>
+                    {/* `min-w-0` porque o e-mail é a string longa desta tela e a coluna de grade
+                        nasce com `min-width: auto` — foi assim que a linha da Home estourou
+                        438px num viewport de 375. */}
+                    <dd className="min-w-0 break-words text-sm text-foreground">
+                      {c.valor ?? t("account.fieldAbsent")}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="text-sm text-destructive" role="alert">
+                {t("account.identityFailed")}
+              </p>
+            )}
+          </SecaoDoObjeto>
+
+          {/* A lista de espaços NÃO saiu na tranche anterior, porque ela é o único lugar do
+              produto onde este fato aparece — remover para "des-duplicar" apagaria informação,
+              não repetição. */}
           <SecaoDoObjeto natureza="leitura" titulo={t("account.membershipTitle")} detalhe={t("account.membershipBody")}>
             {conta.isPending ? (
               <p className="text-sm text-muted-foreground" role="status">
