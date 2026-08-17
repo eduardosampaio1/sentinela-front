@@ -296,3 +296,86 @@ describe("F3 · severidade e faixa vêm do produtor, nunca do navegador", () => 
     expect(within(secao).queryByText(pt.canonicalAnalysis.argos.band)).not.toBeInTheDocument();
   });
 });
+
+describe("F3 · conclusão antes de evidência, sem escada de gravidade", () => {
+  const G = pt.canonicalAnalysis.argos;
+
+  /** Documento com as duas metades: uma conclusão e uma medição. */
+  function comAsDuasMetades() {
+    const { doc } = documentoReal();
+    return {
+      analysis_id: "an-abc",
+      result_schema_version: "analysis-result-v3",
+      indicator_registry_version: doc.indicator_registry_version,
+      result: {
+        ...doc,
+        alerts: [{ id: "a1", code: "COST_SPIKE", title: "Custo subiu", severity: "critical" }],
+        recommendations: [{ id: "r1", title: "Revisar prompt", priority: "P1" }],
+        dimensions: [
+          {
+            id: "reliability",
+            value: 0.9,
+            availability: "available",
+            reason: "ok",
+            scale: { kind: "ratio_unit" },
+          },
+        ],
+      },
+    };
+  }
+
+  it("o grupo das conclusões vem ANTES do grupo das medições", async () => {
+    // A ordem de leitura é a única priorização que o Front pode decidir: não depende de saber
+    // qual severidade é pior, e vale igual para qualquer documento. Antes desta tranche quem
+    // abria o laudo lia seis blocos de número antes de descobrir que havia alerta.
+    renderizar(comAsDuasMetades());
+    const conclusoes = await screen.findByRole("region", { name: G.groupConclusions });
+    const medicoes = await screen.findByRole("region", { name: G.groupMeasurements });
+    expect(
+      conclusoes.compareDocumentPosition(medicoes) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("agrupar NÃO reordena por gravidade — a ordem dentro da família é a do documento", async () => {
+    // O cadeado que já existia protegia uma lista plana. Agora que há grupo ele precisa valer
+    // dentro do grupo: agrupar é editorial, rankear seria a escada que o contrato não publica.
+    const base = comAsDuasMetades();
+    renderizar({
+      ...base,
+      result: {
+        ...base.result,
+        alerts: [
+          { id: "a1", code: "LOW_SAMPLE", title: "Amostra baixa", severity: "info" },
+          { id: "a2", code: "COST_SPIKE", title: "Custo subiu", severity: "critical" },
+        ],
+      },
+    });
+    const secao = await screen.findByRole("region", { name: G.alerts });
+    const titulos = within(secao)
+      .getAllByRole("listitem")
+      .map((li) => li.textContent ?? "");
+    // `info` PRIMEIRO, porque é assim que o documento veio — e não `critical` por ser pior.
+    expect(titulos[0]).toContain("Amostra baixa");
+    expect(titulos[1]).toContain("Custo subiu");
+  });
+
+  it("sem conclusão nenhuma, o cartão de conclusões NÃO nasce", async () => {
+    // Cartão com o título "O que o ARGOS concluiu" e nada dentro afirmaria que houve conclusão.
+    // É a mesma afirmação que a seção vazia faria, e esta tela recusa as duas. O documento real
+    // traz as dez famílias AUSENTES, então ele é exatamente a massa que prova isto.
+    renderizar(documentoReal().envelope);
+    await screen.findByTestId("argos-view");
+    await waitFor(() =>
+      expect(screen.queryByRole("region", { name: G.groupConclusions })).not.toBeInTheDocument(),
+    );
+  });
+
+  it("a prioridade da recomendação é anunciada como prioridade", async () => {
+    // Sem o rótulo, o leitor de tela ouvia "Revisar prompt P1" e não tinha como saber o que era
+    // `P1` — enquanto o irmão `alerts` já rotulava a severidade. Assimetria, não estilo.
+    renderizar(comAsDuasMetades());
+    const secao = await screen.findByRole("region", { name: G.recommendations });
+    expect(within(secao).getByText(`${G.priority}:`)).toBeInTheDocument();
+    expect(within(secao).getByText("P1")).toBeInTheDocument();
+  });
+});

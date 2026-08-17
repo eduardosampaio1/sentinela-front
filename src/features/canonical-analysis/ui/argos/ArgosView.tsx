@@ -49,19 +49,71 @@ import { Indicador, Medicao } from "./Medicao";
 function Secao({
   id,
   titulo,
+  nivel,
   children,
 }: {
   readonly id: string;
   readonly titulo: string;
+  /** 2 no topo do documento, 3 dentro de um `Grupo`. Sem padrão: a hierarquia é afirmação. */
+  readonly nivel: 2 | 3;
   readonly children: React.ReactNode;
 }) {
+  const H = nivel === 2 ? "h2" : "h3";
   // `data-revelar` aqui cobre TODAS as seções desta visão de uma vez, e elas entram na ordem do
   // documento — que aqui é a ordem de leitura do laudo. O movimento é deslocamento puro: a regra
   // que a matriz transversal impôs depois de reprovar contraste em vinte jornadas é que entrada
   // com opacidade deixa texto abaixo de 4,5:1 enquanto roda.
   return (
     <section data-revelar aria-labelledby={id} className="space-y-1">
-      <h2 id={id} className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <H id={id} className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        {titulo}
+      </H>
+      {children}
+    </section>
+  );
+}
+
+/**
+ * Os dois grupos do laudo: o que o ARGOS **concluiu** e o que o ARGOS **mediu**.
+ *
+ * ## Por que agrupar é legítimo e ordenar por gravidade não é
+ *
+ * Esta tela tinha dez famílias empilhadas com o mesmo peso, e quem abria lia seis blocos de número
+ * antes de descobrir que havia alerta. A conclusão vinha depois da evidência.
+ *
+ * A correção óbvia seria colorir por severidade e subir o mais grave. Ela é proibida, e não por
+ * gosto: `severity`, `priority` e `band` são **string aberta** no contrato — não há enum em lugar
+ * nenhum, e o exemplo real do v3 traz as dez famílias ausentes. Ordenar `critical` acima de `info`
+ * exigiria uma escada que o produtor não publicou, inventada aqui. Dois testes desta casa já
+ * travam isso: a severidade que sai é a que entrou, e a ordem dos itens é a do documento.
+ *
+ * O que sobra é o que o Front realmente pode decidir: a **ordem de leitura**. Conclusão antes de
+ * evidência é editorial, vale para qualquer documento, e não depende de saber qual severidade é
+ * pior. Nenhum item muda de lugar dentro da sua família.
+ *
+ * O grupo só existe quando tem conteúdo: cartão com título e nada dentro afirmaria que o ARGOS
+ * concluiu algo — a mesma afirmação que a seção vazia faria, e que esta tela recusa.
+ */
+function Grupo({
+  id,
+  titulo,
+  destaque,
+  children,
+}: {
+  readonly id: string;
+  readonly titulo: string;
+  /** O grupo das conclusões ganha superfície própria; o das medições fica na régua. */
+  readonly destaque: boolean;
+  readonly children: React.ReactNode;
+}) {
+  return (
+    <section
+      aria-labelledby={id}
+      className={
+        destaque ? "space-y-6 rounded-lg border border-border bg-card p-5" : "space-y-6"
+      }
+    >
+      <h2 id={id} className="text-xs font-semibold uppercase tracking-widest text-accent-ink">
         {titulo}
       </h2>
       {children}
@@ -103,7 +155,8 @@ function Familia<T>({
   if (!familiaFoiProduzida(documento, familia)) return null;
   const lista = itens ?? [];
   return (
-    <Secao id={id} titulo={titulo}>
+    // Toda família vive dentro de um `Grupo`, então o nível é sempre 3.
+    <Secao id={id} titulo={titulo} nivel={3}>
       {lista.length === 0 ? <Vazia /> : children(lista)}
     </Secao>
   );
@@ -253,6 +306,17 @@ export function ArgosView() {
     }
 
     const d = leitura.documento;
+    // O grupo só nasce com conteúdo. `familiaFoiProduzida` é a MESMA pergunta que cada `Familia`
+    // faz — perguntá-la aqui antes evita o cartão com título e nada dentro, que afirmaria que o
+    // ARGOS concluiu algo quando ele não produziu conclusão nenhuma.
+    const temConclusao =
+      Boolean(d.executive_summary) ||
+      familiaFoiProduzida(d, "alerts") ||
+      familiaFoiProduzida(d, "issues") ||
+      familiaFoiProduzida(d, "recommendations");
+    const temMedicao = (
+      ["scores", "dimensions", "indicators", "intents", "risks", "projections", "evidence"] as const
+    ).some((f) => familiaFoiProduzida(d, f));
     return (
       <div className="space-y-8">
         {/* Parcialidade é declaração do produtor sobre o documento inteiro. Vem primeiro porque
@@ -273,12 +337,79 @@ export function ArgosView() {
           </div>
         ) : null}
 
-        {d.executive_summary ? (
-          <Secao id="argos-sumario" titulo={t("canonicalAnalysis.argos.executiveSummary")}>
-            <p className="whitespace-pre-line py-2 text-sm">{d.executive_summary.text}</p>
-          </Secao>
+        {temConclusao ? (
+          <Grupo
+            id="argos-conclusoes"
+            titulo={t("canonicalAnalysis.argos.groupConclusions")}
+            destaque
+          >
+            {d.executive_summary ? (
+              <Secao
+                id="argos-sumario"
+                titulo={t("canonicalAnalysis.argos.executiveSummary")}
+                nivel={3}
+              >
+                <p className="whitespace-pre-line py-2 text-sm">{d.executive_summary.text}</p>
+              </Secao>
+            ) : null}
+
+            <Familia
+              documento={d}
+              familia="alerts"
+              id="argos-alerts"
+              titulo={t("canonicalAnalysis.argos.alerts")}
+              itens={d.alerts}
+            >
+              {(itens) => (
+                <Achados itens={itens} rotuloSeveridade={t("canonicalAnalysis.argos.severity")} />
+              )}
+            </Familia>
+
+            <Familia
+              documento={d}
+              familia="issues"
+              id="argos-issues"
+              titulo={t("canonicalAnalysis.argos.issues")}
+              itens={d.issues}
+            >
+              {(itens) => (
+                <Achados itens={itens} rotuloSeveridade={t("canonicalAnalysis.argos.severity")} />
+              )}
+            </Familia>
+
+            <Familia
+              documento={d}
+              familia="recommendations"
+              id="argos-recommendations"
+              titulo={t("canonicalAnalysis.argos.recommendations")}
+              itens={d.recommendations}
+            >
+              {(itens) => (
+                <ul className="space-y-2">
+                  {itens.map((r) => (
+                    <li key={r.id} className="border-b border-border/60 py-2 last:border-b-0">
+                      <span className="text-sm">{r.title}</span>
+                      {/* O leitor de tela ouvia "Reduzir custo P1" e não tinha como saber que
+                          `P1` era prioridade: o irmão `Achados` já rotulava a severidade e este
+                          não rotulava nada. Mesma assimetria, mesma correção. */}
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        <span className="sr-only">{t("canonicalAnalysis.argos.priority")}: </span>
+                        {r.priority}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Familia>
+          </Grupo>
         ) : null}
 
+        {temMedicao ? (
+        <Grupo
+          id="argos-medicoes"
+          titulo={t("canonicalAnalysis.argos.groupMeasurements")}
+          destaque={false}
+        >
         {/* Escores globais. `composite_of` é RESPEITADO: um composto declara as partes que o
             formam, e é isso que impede alguém somar o agregado junto delas. */}
         <Familia
@@ -378,7 +509,17 @@ export function ArgosView() {
                     {i.underrepresented
                       ? ` · ${t("canonicalAnalysis.argos.underrepresented")}`
                       : ""}
-                    {i.severity ? ` · ${i.severity}` : ""}
+                    {/* Mesma correção do `priority`: a severidade da intenção saía como um
+                        pedaço solto depois de um ponto médio, sem dizer o que era. */}
+                    {i.severity ? (
+                      <>
+                        {" · "}
+                        <span className="sr-only">
+                          {t("canonicalAnalysis.argos.severity")}:{" "}
+                        </span>
+                        {i.severity}
+                      </>
+                    ) : null}
                   </p>
                 </div>
               ))}
@@ -443,49 +584,6 @@ export function ArgosView() {
 
         <Familia
           documento={d}
-          familia="recommendations"
-          id="argos-recommendations"
-          titulo={t("canonicalAnalysis.argos.recommendations")}
-          itens={d.recommendations}
-        >
-          {(itens) => (
-            <ul className="space-y-2">
-              {itens.map((r) => (
-                <li key={r.id} className="border-b border-border/60 py-2 last:border-b-0">
-                  <span className="text-sm">{r.title}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">{r.priority}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Familia>
-
-        <Familia
-          documento={d}
-          familia="alerts"
-          id="argos-alerts"
-          titulo={t("canonicalAnalysis.argos.alerts")}
-          itens={d.alerts}
-        >
-          {(itens) => (
-            <Achados itens={itens} rotuloSeveridade={t("canonicalAnalysis.argos.severity")} />
-          )}
-        </Familia>
-
-        <Familia
-          documento={d}
-          familia="issues"
-          id="argos-issues"
-          titulo={t("canonicalAnalysis.argos.issues")}
-          itens={d.issues}
-        >
-          {(itens) => (
-            <Achados itens={itens} rotuloSeveridade={t("canonicalAnalysis.argos.severity")} />
-          )}
-        </Familia>
-
-        <Familia
-          documento={d}
           familia="evidence"
           id="argos-evidence"
           titulo={t("canonicalAnalysis.argos.evidence")}
@@ -502,10 +600,13 @@ export function ArgosView() {
             </ul>
           )}
         </Familia>
+        </Grupo>
+        ) : null}
 
         {/* Procedência da montagem. Não é decoração: é o que explica um output que aparece ou
-            some entre duas execuções. */}
-        <Secao id="argos-provenance" titulo={t("canonicalAnalysis.argos.provenance")}>
+            some entre duas execuções. Fica FORA dos dois grupos porque não é nem conclusão nem
+            medição: é o que diz sob qual registro e catálogo as duas foram produzidas. */}
+        <Secao id="argos-provenance" titulo={t("canonicalAnalysis.argos.provenance")} nivel={2}>
           <dl className="grid gap-x-6 gap-y-1 py-2 text-xs text-muted-foreground sm:grid-cols-2">
             <div className="flex gap-1">
               <dt>{t("canonicalAnalysis.argos.registryVersion")}:</dt>
