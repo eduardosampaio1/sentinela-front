@@ -58,14 +58,18 @@ let clienteAtual: ReturnType<typeof montar>;
 vi.mock("../../data/client", () => ({ useV1Client: () => clienteAtual }));
 vi.mock("../scope", () => ({ useCanonicalScope: () => ({ workspaceId: "ws-1" }) }));
 
-function renderizar(envelope: unknown, statusHttp = 200) {
+/**
+ * @param busca query string do domínio, incluindo o `?`. Vazio = Visão geral, que é a ausência do
+ * parâmetro — a mesma URL que todo deep link já salvo carrega.
+ */
+function renderizar(envelope: unknown, statusHttp = 200, busca = "") {
   window.localStorage.setItem("sentinela:language", "pt");
   clienteAtual = montar(envelope, statusHttp);
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <LanguageProvider>
       <QueryClientProvider client={qc}>
-        <MemoryRouter initialEntries={["/analyses/an-abc/argos"]}>
+        <MemoryRouter initialEntries={[`/analyses/an-abc/argos${busca}`]}>
           <Routes>
             <Route path="/analyses/:analysisId/argos" element={<ArgosView />} />
           </Routes>
@@ -405,5 +409,108 @@ describe("F3 · conclusão antes de evidência, sem escada de gravidade", () => 
     const secao = await screen.findByRole("region", { name: G.recommendations });
     expect(within(secao).getByText(`${G.priority}:`)).toBeInTheDocument();
     expect(within(secao).getByText("P1")).toBeInTheDocument();
+  });
+});
+
+describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () => {
+  const G = pt.canonicalAnalysis.argos;
+  const base = { availability: "available", reason: "ok", scale: { kind: "ratio_unit" } } as const;
+
+  /** Dois escores em domínios DIFERENTES, mais um sem domínio declarado. */
+  function comDominios() {
+    const { doc } = documentoReal();
+    return {
+      analysis_id: "an-abc",
+      result_schema_version: "analysis-result-v3",
+      indicator_registry_version: doc.indicator_registry_version,
+      result: {
+        ...doc,
+        method: { ...doc.method, min_samples_per_intent: 30 },
+        scores: [
+          { measurement: { id: "behavior_score", value: 0.64, domain: "behavioral", ...base } },
+          { measurement: { id: "semantic_drift", value: 0.12, domain: "semantic", ...base } },
+          // Publicado SEM `domain`. Não pode entrar em aba nenhuma.
+          { measurement: { id: "global_confidence", value: 0.88, ...base } },
+        ],
+        risks: [{ id: "containment_risk", measurement: { id: "containment_risk", value: 0.3, domain: "economic", ...base } }],
+        intents: [
+          {
+            intent_id: "cobranca.segunda_via",
+            score: { id: "intent", value: 0.51, ...base },
+            support: 214,
+            underrepresented: true,
+            response_variance: { id: "rv", value: 0.42, ...base },
+          },
+        ],
+      },
+    };
+  }
+
+  it("a Visão geral é a AUSÊNCIA do parâmetro, e mostra tudo", async () => {
+    // Isto é o que protege todo deep link já salvo: `/argos` sem query abre onde abria antes.
+    renderizar(comDominios());
+    const secao = await screen.findByRole("region", { name: G.scores });
+    for (const id of ["behavior_score", "semantic_drift", "global_confidence"]) {
+      expect(within(secao).getByText(G.output[id as keyof typeof G.output])).toBeInTheDocument();
+    }
+  });
+
+  it("a aba NARROWS: o escore do outro domínio sai da tela", async () => {
+    renderizar(comDominios(), 200, "?dominio=semantic");
+    const secao = await screen.findByRole("region", { name: G.scores });
+    expect(within(secao).getByText(G.output.semantic_drift)).toBeInTheDocument();
+    expect(within(secao).queryByText(G.output.behavior_score)).not.toBeInTheDocument();
+  });
+
+  it("família SEM item no domínio é OMITIDA, e não diz 'rodou e não achou'", async () => {
+    // A diferença que `recortarPorDominio` existe para preservar: `null` (não está neste corte)
+    // contra `[]` (procuramos e não há). Riscos só existem em `economic`; na aba `semantic` a
+    // seção não pode nascer afirmando ausência.
+    renderizar(comDominios(), 200, "?dominio=semantic");
+    await screen.findByRole("region", { name: G.scores });
+    expect(screen.queryByRole("region", { name: G.risks })).not.toBeInTheDocument();
+    expect(screen.queryByText(G.familyEmpty)).not.toBeInTheDocument();
+  });
+
+  it("o publicado SEM domínio não vira quinta aba — e a tela diz quantos são", async () => {
+    renderizar(comDominios());
+    const nav = await screen.findByRole("navigation", { name: G.domainsNavLabel });
+    // Quatro domínios mais a Visão geral. Uma quinta aba seria um domínio que ninguém declarou.
+    expect(within(nav).getAllByRole("link")).toHaveLength(5);
+    // A contagem tem que estar INTERPOLADA. Sem isto a tela mostraria `{{n}}` — e a primeira
+    // versão deste caso não media o número, então passaria com o placeholder cru na tela.
+    //
+    // O número não é fixado de propósito: ele depende de quantos indicadores o artefato REAL
+    // publica sem `domain`, e prender o teste a isso o quebraria quando o backend crescesse.
+    expect(nav.textContent ?? "").toMatch(/\d+ publicados sem domínio declarado/);
+  });
+
+  it("o herói é o `behavior_score` e só existe na Visão geral", async () => {
+    const { container } = renderizar(comDominios());
+    await screen.findByRole("region", { name: G.scores });
+    expect(container.querySelector('[data-heroi="true"]')).not.toBeNull();
+  });
+
+  it("na aba de um domínio NÃO há herói — ele é o resumo do documento, não do corte", async () => {
+    const { container } = renderizar(comDominios(), 200, "?dominio=behavioral");
+    await screen.findByRole("region", { name: G.scores });
+    expect(container.querySelector('[data-heroi="true"]')).toBeNull();
+  });
+
+  it("`dominio` fora do vocabulário cai na Visão geral em vez de quebrar", async () => {
+    renderizar(comDominios(), 200, "?dominio=inventado");
+    const secao = await screen.findByRole("region", { name: G.scores });
+    expect(within(secao).getByText(G.output.behavior_score)).toBeInTheDocument();
+  });
+
+  it("os três campos de intenção que ninguém lia aparecem", async () => {
+    renderizar(comDominios());
+    const secao = await screen.findByRole("region", { name: G.intents });
+    // `min_samples_per_intent` — piso DECLARADO, contexto da marca e não a origem dela.
+    expect(within(secao).getByText(`${G.minSamples}:`)).toBeInTheDocument();
+    // `response_variance` — publicado desde sempre e nunca renderizado.
+    expect(within(secao).getByText(`${G.responseVariance}:`)).toBeInTheDocument();
+    // `underrepresented` como selo próprio, não pedaço de frase depois de um ponto médio.
+    expect(within(secao).getByText(G.underrepresented)).toBeInTheDocument();
   });
 });

@@ -206,6 +206,12 @@
       "groupConclusions": "O que o ARGOS concluiu",
       "groupMeasurements": "O que o ARGOS mediu",
       "priority": "Prioridade",
+      "domainsNavLabel": "Domínios deste diagnóstico",
+      "overview": "Visão geral",
+      "withoutDomain": "{{n}} publicados sem domínio declarado, e aparecem aqui na Visão geral.",
+      "minSamples": "Amostra mínima por intenção",
+      "intentScore": "Escore",
+      "responseVariance": "Variância da resposta",
       "output": {
         "behavior_score": "Escore de comportamento",
         "ai_health_score": "Saúde da IA",

@@ -203,6 +203,20 @@ describe("nenhum estado público fica sem texto", () => {
 describe("o frontend não conhece o interior do sistema", () => {
   // O Gateway é fachada. Se um destes termos aparecer no vocabulário público ou nos textos
   // da jornada, o detalhe interno vazou para a tela — e o contrato deixou de ser fachada.
+  /**
+   * Um termo proibido vazou neste texto?
+   *
+   * Substring para todos, EXCETO `minio`, que vale como palavra. O motivo está escrito na
+   * varredura do código: `dominio` — identificador em português do campo `domain`, que o contrato
+   * v3 publica em toda medição — contém literalmente `minio`, e o cadeado passou a acusar três
+   * arquivos de vazarem o nome do object storage por escreverem "domínio".
+   *
+   * Este é o matcher ÚNICO: a prova de sanidade usa o mesmo, porque um gate provado com um matcher
+   * e executado com outro prova o matcher errado.
+   */
+  const vaza = (texto: string, proibido: string): boolean =>
+    proibido === "minio" ? /\bminio\b/.test(texto) : texto.includes(proibido);
+
   const PROIBIDOS = [
     "bucket",
     "object_key",
@@ -299,6 +313,20 @@ function semPropriedadesPublicadas(fonte: string): string {
     // `attempt` sai desta lista: `attempt_count` é conceito do Orchestrator, mas a palavra
     // aparece legitimamente em ingles corrente. O cadeado de estados acima ja o cobre onde
     // importa — no vocabulario publico.
+    //
+    // MICROCORREÇÃO — `minio` DENTRO de `dominio`.
+    //
+    // O contrato v3 publica `domain` em toda medição, com vocabulário fechado de quatro valores, e
+    // a tela passou a agrupar por ele. Os identificadores em português saem `dominio`,
+    // `agruparPorDominio`, `PARAM_DOMINIO` — e `dominio` contém literalmente a substring `minio`.
+    // Três arquivos foram acusados de vazar o nome do object storage por escreverem "domínio".
+    //
+    // A AFIRMAÇÃO do cadeado é sobre MinIO, o armazenamento. O ALCANCE dele era a substring, e as
+    // duas divergiram no dia em que a tela precisou da palavra "domínio". `minio` passa a valer
+    // como PALAVRA: `minio.local` e `import minio` seguem pegos; `dominio` não é MinIO.
+    //
+    // Só `minio` muda de regra. Os outros seguem por substring de propósito — `worker` precisa
+    // pegar `workerPool`, e exigir fronteira ali afrouxaria o cadeado em vez de afinar.
     const noCodigo = PROIBIDOS.filter((p) => p !== "attempt");
     const culpados: string[] = [];
     for (const a of arquivos) {
@@ -311,7 +339,7 @@ function semPropriedadesPublicadas(fonte: string): string {
       // publica saem do texto antes da varredura. O que sobra é o conceito.
       const limpo = semPropriedadesPublicadas(src);
       for (const proibido of noCodigo) {
-        if (limpo.includes(proibido)) culpados.push(`${path.relative(raiz, a)}: ${proibido}`);
+        if (vaza(limpo, proibido)) culpados.push(`${path.relative(raiz, a)}: ${proibido}`);
       }
     }
     expect(culpados).toEqual([]);
@@ -336,7 +364,7 @@ function semPropriedadesPublicadas(fonte: string): string {
       "import { presigned } from './storage';",
     ]) {
       const limpo = semPropriedadesPublicadas(uso.toLowerCase());
-      const pegou = PROIBIDOS.filter((p) => p !== "attempt").some((p) => limpo.includes(p));
+      const pegou = PROIBIDOS.filter((p) => p !== "attempt").some((p) => vaza(limpo, p));
       expect(pegou, `conceito de infraestrutura passou: ${uso}`).toBe(true);
     }
   });
@@ -344,7 +372,7 @@ function semPropriedadesPublicadas(fonte: string): string {
   it("`max_time_buckets` legítimo passa; `bucket` solto na MESMA linha não", () => {
     const legitimo = "max_time_buckets: contagem(bruto.max_time_buckets),".toLowerCase();
     expect(
-      PROIBIDOS.some((p) => semPropriedadesPublicadas(legitimo).includes(p)),
+      PROIBIDOS.some((p) => vaza(semPropriedadesPublicadas(legitimo), p)),
       "o campo publicado foi acusado",
     ).toBe(false);
 

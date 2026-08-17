@@ -23,7 +23,7 @@
 // indisponibilidade explícita — nunca o v1 com cara de resultado completo, que faria dez
 // famílias ausentes parecerem "o ARGOS não produziu nada".
 
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
@@ -39,8 +39,17 @@ import { useAnalysisArgos } from "../../data/argos";
 import { resolverLeituraArgos } from "../../result/adapterV3";
 import { useAnalysisStatus } from "../../data/analysis";
 import { familiaFoiProduzida, type FamiliaArgos } from "../../result/contratoV3";
-import { nomeadoPeloCatalogo } from "../../result/catalogoArgos";
+import { ID_DO_HEROI, nomeadoPeloCatalogo } from "../../result/catalogoArgos";
+import {
+  agruparPorDominio,
+  contagemPorDominio,
+  dominioDaUrl,
+  recortarPorDominio,
+} from "../../result/dominiosDoArgos";
 import { descriptorDe } from "../../result/descriptors";
+import { AbasDeDominio } from "./AbasDeDominio";
+import { Heroi } from "./Heroi";
+import { Intencoes } from "./Intencoes";
 import { AnalysisShell } from "../AnalysisShell";
 import { ProblemFeedback, problemCodeOf } from "../notices";
 import { useCanonicalScope } from "../scope";
@@ -217,9 +226,17 @@ export function ArgosView() {
   // O status alimenta o shell — a leitura é a mesma da jornada, deduplicada pela `queryKey`.
   const status = useAnalysisStatus(scope, analysisId);
   const argos = useAnalysisArgos(scope, analysisId);
-  // A chave junta as duas leituras: o documento chega depois do status, e um observador montado
-  // sobre a árvore de carregamento não observa seção nenhuma — o laudo apareceria parado.
-  const raiz = useRevelacao<HTMLDivElement>(`${argos.dataUpdatedAt}|${argos.isPending}`);
+  // O domínio pedido pela URL. `null` = Visão geral, que é a AUSÊNCIA do parâmetro — assim todo
+  // link para `/argos` que já existe abre exatamente onde abria antes.
+  const { search } = useLocation();
+  const dominio = dominioDaUrl(search);
+  // A chave junta as duas leituras E o domínio: o documento chega depois do status, e um observador
+  // montado sobre a árvore de carregamento não observa seção nenhuma — o laudo apareceria parado.
+  // Sem o domínio na chave, trocar de aba trocaria o conteúdo sem movimento, e a tela pareceria
+  // ter piscado em vez de ter navegado.
+  const raiz = useRevelacao<HTMLDivElement>(
+    `${argos.dataUpdatedAt}|${argos.isPending}|${dominio ?? "geral"}`,
+  );
 
   const titulo = t("canonicalAnalysis.argos.title");
 
@@ -319,18 +336,47 @@ export function ArgosView() {
       );
     }
 
-    const d = leitura.documento;
+    const completo = leitura.documento;
+    const agrupamento = agruparPorDominio(completo);
+
+    /**
+     * ## A aba é FILTRO, não portão
+     *
+     * O protótipo tinha uma Visão geral que mostrava quatro respostas e escondia trinta números
+     * atrás de três portas. Aqui a Visão geral mostra tudo, e a aba NARROWS.
+     *
+     * A diferença importa: uma aba que esconde faz a pessoa caçar. Quem chega por deep link antigo,
+     * ou quem só quer conferir um número, continua vendo o laudo inteiro sem descobrir primeiro em
+     * qual domínio o produtor pôs aquele indicador — informação que ela não tem por que saber de
+     * cabeça. A aba serve para quem já sabe onde quer olhar.
+     *
+     * `recortarPorDominio` devolve `null` — não `[]` — para a família sem item no corte, e é o que
+     * impede a aba de dizer "rodou e não achou" sobre algo que está na aba vizinha.
+     */
+    const d = dominio ? recortarPorDominio(completo, dominio) : completo;
+
     // O grupo só nasce com conteúdo. `familiaFoiProduzida` é a MESMA pergunta que cada `Familia`
     // faz — perguntá-la aqui antes evita o cartão com título e nada dentro, que afirmaria que o
     // ARGOS concluiu algo quando ele não produziu conclusão nenhuma.
+    //
+    // As CONCLUSÕES não se recortam por domínio: alerta, achado e recomendação não publicam
+    // `domain`, e o resumo executivo é sobre o documento inteiro. Elas vivem na Visão geral.
     const temConclusao =
-      Boolean(d.executive_summary) ||
-      familiaFoiProduzida(d, "alerts") ||
-      familiaFoiProduzida(d, "issues") ||
-      familiaFoiProduzida(d, "recommendations");
+      dominio === null &&
+      (Boolean(completo.executive_summary) ||
+        familiaFoiProduzida(completo, "alerts") ||
+        familiaFoiProduzida(completo, "issues") ||
+        familiaFoiProduzida(completo, "recommendations"));
     const temMedicao = (
       ["scores", "dimensions", "indicators", "intents", "risks", "projections", "evidence"] as const
     ).some((f) => familiaFoiProduzida(d, f));
+    // O protagonista sai do documento COMPLETO e só aparece na Visão geral: ele é o resumo do
+    // comportamento inteiro, não de um domínio. Sem `behavior_score` publicado, não há herói —
+    // promover outro escore ao posto trocaria em silêncio qual número é a manchete.
+    const heroi =
+      dominio === null
+        ? (completo.scores ?? []).find((s) => s.measurement.id === ID_DO_HEROI) ?? null
+        : null;
     return (
       <div className="space-y-8">
         {/* Parcialidade é declaração do produtor sobre o documento inteiro. Vem primeiro porque
@@ -350,6 +396,20 @@ export function ArgosView() {
             ) : null}
           </div>
         ) : null}
+
+        {/* As abas ficam ACIMA de tudo e fora dos grupos: elas dizem qual corte está na tela, e um
+            controle de navegação abaixo do conteúdo que ele controla não é encontrado. */}
+        <AbasDeDominio
+          contagens={contagemPorDominio(agrupamento)}
+          semDominio={agrupamento.semDominio.length}
+        />
+
+        {/* O herói ANTES das conclusões, e isto foi uma escolha contra o meu próprio instinto.
+            A ordem "conclusão antes de evidência" que esta tela adotou vale entre CONCLUSÃO e
+            MEDIÇÃO. O protagonista não é medição avulsa: ele é o resumo do comportamento, a mesma
+            natureza do resumo executivo. Ele abre a leitura, e o texto explica o que o número quer
+            dizer logo abaixo. */}
+        {heroi ? <Heroi escore={heroi} rotulo={rotuloDe(ID_DO_HEROI)} /> : null}
 
         {temConclusao ? (
           <Grupo
@@ -514,30 +574,10 @@ export function ArgosView() {
           itens={d.intents}
         >
           {(itens) => (
-            <div>
-              {itens.map((i) => (
-                <div key={i.intent_id}>
-                  <Medicao medicao={i.score} rotulo={i.intent_id} />
-                  <p className="pb-2 text-xs text-muted-foreground">
-                    {t("canonicalAnalysis.argos.support")}: {i.support}
-                    {i.underrepresented
-                      ? ` · ${t("canonicalAnalysis.argos.underrepresented")}`
-                      : ""}
-                    {/* Mesma correção do `priority`: a severidade da intenção saía como um
-                        pedaço solto depois de um ponto médio, sem dizer o que era. */}
-                    {i.severity ? (
-                      <>
-                        {" · "}
-                        <span className="sr-only">
-                          {t("canonicalAnalysis.argos.severity")}:{" "}
-                        </span>
-                        {i.severity}
-                      </>
-                    ) : null}
-                  </p>
-                </div>
-              ))}
-            </div>
+            // O suporte passa a ser dito por COMPRIMENTO, e três campos publicados que ninguém
+            // lia entram: `response_variance`, `method.min_samples_per_intent` e a marca
+            // `underrepresented` como selo próprio em vez de pedaço de frase.
+            <Intencoes intents={itens} pisoDeAmostra={completo.method.min_samples_per_intent ?? null} />
           )}
         </Familia>
 

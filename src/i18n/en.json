@@ -206,6 +206,12 @@
       "groupConclusions": "What ARGOS concluded",
       "groupMeasurements": "What ARGOS measured",
       "priority": "Priority",
+      "domainsNavLabel": "Domains of this assessment",
+      "overview": "Overview",
+      "withoutDomain": "{{n}} published without a declared domain, shown here in Overview.",
+      "minSamples": "Minimum sample per intent",
+      "intentScore": "Score",
+      "responseVariance": "Response variance",
       "output": {
         "behavior_score": "Behaviour score",
         "ai_health_score": "AI health",

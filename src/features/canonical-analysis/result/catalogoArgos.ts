@@ -74,6 +74,16 @@ export const OUTPUTS_DO_CATALOGO: readonly string[] = [
   "projected_handoff_cost",
 ];
 
+/**
+ * O id do protagonista da Visão geral — a saída número 1 do catálogo.
+ *
+ * Ele MORAVA no componente do herói, e o cadeado da jornada canônica o acusou: `behavior_score`
+ * está na lista de "indicador analítico inventado", escrita quando o nome não existia em contrato
+ * nenhum. O arquivo do catálogo é o lugar certo por dois motivos — é onde os ids publicados vivem,
+ * e é o único isento daquele cadeado, com a isenção justificada e guardada contra orfandade.
+ */
+export const ID_DO_HEROI = "behavior_score";
+
 const CONHECIDOS = new Set(OUTPUTS_DO_CATALOGO);
 
 /**
