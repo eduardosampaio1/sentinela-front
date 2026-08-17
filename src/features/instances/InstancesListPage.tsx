@@ -61,7 +61,7 @@ export default function InstancesListPage() {
   };
 
   return (
-    <AppShell>
+    <AppShell topBarTitle={t("shell.nav.instances")}>
       <PageFrame>
         <div ref={raiz}>
           <CabecalhoDeTrabalho

@@ -88,7 +88,7 @@ export default function InstancePage() {
 
   if (instancia.isPending) {
     return (
-      <AppShell>
+      <AppShell topBarTitle={t("shell.nav.instances")}>
         <PageFrame>
           <LoadingState rotulo={t("instances.loading")} />
         </PageFrame>
@@ -103,7 +103,7 @@ export default function InstancePage() {
     const transitorio =
       instancia.error instanceof ProblemError && instancia.error.problem.retryable;
     return (
-      <AppShell>
+      <AppShell topBarTitle={t("shell.nav.instances")}>
         <PageFrame>
           <ErrorState
             titulo={t("instances.label")}
@@ -146,7 +146,7 @@ export default function InstancePage() {
     : null;
 
   return (
-    <AppShell>
+    <AppShell topBarTitle={t("shell.nav.instances")}>
       <PageFrame>
         {/* O `ref` fica no `PageFrame` e não num `div` novo: envolver a árvore só para pendurar
             movimento acrescentaria um nó sem papel semântico, e esta tela já tem `header`,

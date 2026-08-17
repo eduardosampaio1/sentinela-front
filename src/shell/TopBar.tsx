@@ -1,28 +1,34 @@
-import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { MobileNav } from "./MobileNav";
 
 // ─── Breadcrumb label map ─────────────────────────────────────────────────────
 
-// M31 - `/dashboard/settings` saiu daqui junto com o item de menu que levava ate la. A rota
-// continua registrada no router (superficie legada), mas nenhuma UI a oferece nem a nomeia.
-const ROUTE_LABELS: Record<string, string> = {
-  "/home": "Launchpad",
-  "/dashboard": "Dashboard",
-  "/dashboard/analysis": "Analysis",
-  "/dashboard/diagnostics": "Diagnostics",
-  "/dashboard/guardrails": "Guardrails",
-  "/dashboard/optimization": "Optimization",
-  "/dashboard/history": "History",
-  "/workspaces": "Workspaces",
-  "/profile": "Profile",
-};
-
-function useBreadcrumbs() {
-  const location = useLocation();
-  const label = ROUTE_LABELS[location.pathname] ?? null;
-  return label;
-}
+// AQUI FICAVA `ROUTE_LABELS` — nove rótulos de rota cravados em inglês, e o `useBreadcrumbs` que
+// os lia.
+//
+// ## Por que sair em vez de traduzir
+//
+// A troca do registro desta faixa para caixa alta puxou o olho para eles, e eu ia traduzir as nove
+// entradas. Fui conferir contra o router primeiro, e nenhuma era alcançável:
+//
+//   `/dashboard/analysis`, `/diagnostics`, `/guardrails`, `/optimization`, `/history`
+//       são `<Navigate>`. O rótulo não pode aparecer, porque ninguém fica na rota.
+//
+//   `/home`, `/profile`, `/workspaces`, `/dashboard`
+//       as quatro páginas passam `topBarTitle` do dicionário. O mapa ficava na sombra delas.
+//
+// Nove entradas, zero alcançáveis. Traduzir teria produzido copy órfã em dois idiomas — o mesmo
+// defeito de `account.workspaces`, que esta sessão já apagou por não ter consumidor.
+//
+// ## O defeito de verdade estava em OUTRO lugar
+//
+// Quatro usos de `AppShell` caíam através do mapa sem estar nele: `/instances` e
+// `/instances/:id`. Eles chegavam ao último fallback e a faixa deles dizia **"Sentinela"** em vez
+// de "Instâncias" — em qualquer idioma. As duas páginas passaram a declarar `shell.nav.instances`,
+// que é o MESMO rótulo da barra lateral: um ato, um nome.
+//
+// O fallback final continua "Sentinela", e ele não é string cravada no sentido da regra: é o nome
+// da marca, e marca não se traduz.
 
 // ─── Analysis freshness badge ─────────────────────────────────────────────────
 
@@ -51,9 +57,9 @@ interface TopBarProps {
 }
 
 export function TopBar({ title, actions, className }: TopBarProps) {
-  const contextLabel = useBreadcrumbs();
-
-  const label = title ?? contextLabel ?? "Sentinela";
+  // Só duas fontes agora: o título que a página declara, ou o nome da marca. O intermediário
+  // (`ROUTE_LABELS`) era inalcançável — ver a nota no topo do arquivo.
+  const label = title ?? "Sentinela";
 
   return (
     <header
@@ -65,7 +71,18 @@ export function TopBar({ title, actions, className }: TopBarProps) {
       {/* Left: mobile hamburger + page label */}
       <div className="flex items-center gap-1 min-w-0 flex-1">
         <MobileNav />
-        <h2 className="text-sm font-semibold text-muted-foreground truncate">{label}</h2>
+        {/* O REGISTRO da faixa passa a ser o do prototipo: mono, caixa alta, entrelinha aberta.
+              Vem do papel `micro` do sistema — a classe nao e escrita aqui, senao a proxima tela
+              faria diferente e a densidade voltaria a divergir por superficie.
+
+              O que NAO entrou: o losango de marca que o prototipo tinha antes do nome. A barra
+              lateral ja carrega a marca e o nome "Sentinela"; um segundo losango a tres centimetros
+              do primeiro e identidade repetida, nao hierarquia.
+
+              `truncate` fica: rotulo de rota longa em 375px empurrava as acoes para fora. */}
+          <h2 className="truncate font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-muted-foreground">
+            {label}
+          </h2>
       </div>
 
       {/* Right: actions + badges + user */}
