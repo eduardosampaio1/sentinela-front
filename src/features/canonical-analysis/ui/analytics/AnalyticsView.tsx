@@ -32,6 +32,8 @@ import { estatisticaConhecida } from "../../result/estatisticas";
 import { LoadingState } from "@/shared/states/LoadingState";
 import type { EstadoPublico } from "@/design/patterns/estados";
 import { useRevelacao } from "@/design/motion";
+import { Disclosure } from "@/design/primitives";
+import { MapaDeProcedencia } from "./MapaDeProcedencia";
 import { useAnalysisAnalytics, useAnalysisProgress, useAnalysisStatus } from "../../data/analysis";
 import { lerSnapshot, type SnapshotAnalitico } from "../../result/analyticsProjection";
 import { AnalysisShell } from "../AnalysisShell";
@@ -113,6 +115,18 @@ function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
               { rotulo: t("canonicalAnalysis.analyticsView.absent"), valor: m.absent_count },
             ]}
           />
+          {/* O MAPA fica atrás de um gatilho, e essa é a decisão.
+              Esta visão responde "de onde vieram esses números", e a cadeia inteira — denominador,
+              massa, método, parâmetros — é a resposta completa. Mas ela é a resposta de quem
+              PERGUNTOU: aberta por padrão em toda medida, a tela vira uma parede de grafos e a
+              contagem, que é o fato de primeira leitura, some no meio.
+              Mesma regra da procedência em RES-01: marginália, não corpo. */}
+          <Disclosure
+            className="mt-2"
+            gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}
+          >
+            <MapaDeProcedencia medida={m} denominador={snapshot.record_count} />
+          </Disclosure>
         </div>
       ))}
     </div>
