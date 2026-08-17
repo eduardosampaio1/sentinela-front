@@ -49,14 +49,14 @@ export const HARDCODE_DECLARADO: Readonly<Record<string, number>> = {
   "src/features/landing/secoes-conversao.tsx": 0,
   "src/features/aion/casca.tsx": 0,
   "src/features/aion/primitivos.tsx": 0,
-  "src/features/aion/DemoInterativa.tsx": 4,
+  "src/features/aion/DemoInterativa.tsx": 2,
   "src/features/aion/DiagramaDeFluxo.tsx": 2,
   "src/features/aion/secoes-topo.tsx": 2,
   "src/features/aion/secoes-modulos.tsx": 0,
-  "src/features/aion/secoes-integracao.tsx": 11,
+  "src/features/aion/secoes-integracao.tsx": 7,
   "src/features/aion/ContactSection.tsx": 1,
   "src/features/landing/tokens.ts": 0,
-  "src/features/aion/tokens.ts": 13,
+  "src/features/aion/tokens.ts": 7,
   "src/features/aion/AionPage.tsx": 0,
   // `ProfilePage.tsx` SAIU: 23 → 0, a maior dívida individual da lista.
   //

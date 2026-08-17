@@ -24,7 +24,7 @@ export function IntegrationSection() {
         </div>
 
         <div className="rounded-2xl overflow-hidden border mb-10"
-          style={{ background: "#0D1117", borderColor: A.border }}>
+          style={{ background: "hsl(var(--ds-surface-base))", borderColor: A.border }}>
           <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: A.border }}>
             <div className="w-3 h-3 rounded-full bg-red-500/60" />
             <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
@@ -35,14 +35,14 @@ export function IntegrationSection() {
             <div className="flex gap-3 py-1.5 px-3 -mx-3 mb-1"
               style={{ background: "rgba(239,68,68,0.08)", borderLeft: "2px solid #EF4444" }}>
               <span style={{ color: "#EF4444", userSelect: "none", flexShrink: 0 }}>-</span>
-              <span style={{ color: "#94A3B8", whiteSpace: "pre" }}>
+              <span style={{ color: A.muted, whiteSpace: "pre" }}>
                 {"const client = "}<span style={{ color: "#60A5FA" }}>new</span>{" "}<span style={{ color: "#34D399" }}>OpenAI</span>{"({ "}<span style={{ color: "#F59E0B" }}>baseURL</span>{": "}<span style={{ color: "#F87171" }}>{'"https://api.openai.com/v1"'}</span>{" });"}
               </span>
             </div>
             <div className="flex gap-3 py-1.5 px-3 -mx-3"
               style={{ background: `${A.primary}0d`, borderLeft: `2px solid ${A.primary}` }}>
               <span style={{ color: A.primary, userSelect: "none", flexShrink: 0 }}>+</span>
-              <span style={{ color: "#94A3B8", whiteSpace: "pre" }}>
+              <span style={{ color: A.muted, whiteSpace: "pre" }}>
                 {"const client = "}<span style={{ color: "#60A5FA" }}>new</span>{" "}<span style={{ color: "#34D399" }}>OpenAI</span>{"({ "}<span style={{ color: "#F59E0B" }}>baseURL</span>{": "}<span style={{ color: "#86EFAC" }}>{'"https://your-aion.internal/v1"'}</span>{" });"}
               </span>
             </div>
@@ -122,7 +122,7 @@ export function AgnosticSection() {
                 If yes — pass the URL. AION routes, controls, and monitors it. Data stays on-premise.{" "}
                 <code style={{ ...mono, color: A.amber }}>risk_tier: high</code> applied automatically.
               </p>
-              <div className="rounded-xl overflow-hidden border" style={{ background: "#0D1117", borderColor: A.border }}>
+              <div className="rounded-xl overflow-hidden border" style={{ background: "hsl(var(--ds-surface-base))", borderColor: A.border }}>
                 <div className="px-4 py-2 border-b" style={{ borderColor: A.border }}>
                   <span className="text-xs" style={{ color: A.muted, ...mono }}>.env</span>
                 </div>

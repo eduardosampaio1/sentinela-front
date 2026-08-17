@@ -74,7 +74,7 @@ export function InteractiveDemo() {
 
   return (
     <div className="max-w-xl mx-auto rounded-2xl overflow-hidden border text-left"
-      style={{ background: "#0D1117", borderColor: `${A.primary}35`, boxShadow: `0 0 40px -8px ${A.primary}25` }}>
+      style={{ background: "hsl(var(--ds-surface-base))", borderColor: `${A.primary}35`, boxShadow: `0 0 40px -8px ${A.primary}25` }}>
       <style>{DEMO_CSS}</style>
 
       {/* Title bar */}
@@ -112,7 +112,7 @@ export function InteractiveDemo() {
       <div className="px-4 pt-3 pb-2">
         <p className="text-xs mb-1.5" style={{ color: A.muted, ...mono }}>messages[0].content</p>
         <p className="text-xs leading-relaxed px-3 py-2 rounded-lg"
-          style={{ color: "#94A3B8", background: `${A.primary}08`, border: `1px solid ${A.border}`, ...mono }}>
+          style={{ color: A.muted, background: `${A.primary}08`, border: `1px solid ${A.border}`, ...mono }}>
           "{s.input}"
         </p>
       </div>
