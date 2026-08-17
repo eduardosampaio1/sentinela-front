@@ -47,19 +47,33 @@ export function valorDoItem(entrada: ItemDeDominio, locale: string): string | nu
  *
  * O docblock do próprio `Scale` diz: *"a faixa em que o número vive. Declarada, nunca inferida."*
  *
- * `percent` fica de FORA de propósito: o nome sugere 0..100, mas percentual de crescimento passa
- * de 100 e percentual de queda é negativo. Sem `maximum` explícito, não há limite — e chutar 100
- * seria a inferência que este arquivo existe para não fazer.
+ * ## `percent` ENTROU, e a correção veio de ler o produtor
  *
- * `currency`, `count`, `duration` e `raw` não têm teto natural. Sem `maximum`, não há denominador.
+ * Eu havia deixado `percent` de fora com um argumento que parecia sólido: o nome sugere 0..100, mas
+ * percentual de crescimento passa de 100 e percentual de queda é negativo, então chutar 100 seria
+ * inferência.
+ *
+ * O produtor discorda, e ele é a autoridade. `result_v3.py` declara `_FAIXAS_CANONICAS` — uma tabela
+ * de kind → faixa fechada — e ela lista `PERCENT: (0.0, 100.0)`. Não é comentário: a tabela é usada
+ * para **validar o valor** na publicação. Um `percent` fora de 0..100 não sai do assembler.
+ *
+ * Então o meu Front estava mais FROUXO que o contrato: eu recusava um limite que o produtor já
+ * garante. As três faixas fechadas dele são as três que este arquivo agora usa.
+ *
+ * `currency`, `count`, `duration` e `raw` seguem sem teto — e o produtor concorda: eles não estão
+ * na tabela, `CURRENCY` é declarada "faixa aberta" e `RAW` é "sem faixa contratada".
  */
 function limiteDe(m: Medivel): { readonly min: number; readonly max: number } | null {
   const { kind, minimum, maximum } = m.scale;
+  // Limite EXPLÍCITO manda sobre a faixa do kind: se o produtor declarou, ele sabe algo que a
+  // tabela genérica não sabe. Hoje o assembler nunca preenche estes dois — ver o discovery das
+  // escalas —, e o dia em que preencher, esta linha já obedece.
   if (minimum !== null && minimum !== undefined && maximum !== null && maximum !== undefined) {
     return maximum > minimum ? { min: minimum, max: maximum } : null;
   }
+  // As MESMAS três faixas fechadas que `_FAIXAS_CANONICAS` usa para validar no produtor.
   if (kind === "ratio_unit") return { min: 0, max: 1 };
-  if (kind === "score_100") return { min: 0, max: 100 };
+  if (kind === "score_100" || kind === "percent") return { min: 0, max: 100 };
   return null;
 }
 
