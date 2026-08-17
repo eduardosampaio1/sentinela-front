@@ -115,6 +115,19 @@ function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
               { rotulo: t("canonicalAnalysis.analyticsView.absent"), valor: m.absent_count },
             ]}
           />
+          {/* O MÉTODO na linha, não só dentro do mapa.
+              Esta visão existe para responder a origem, e o método é a origem — a contagem diz
+              QUANTO, o método diz COMO. Ele estava publicado e só aparecia para quem abrisse o
+              gatilho; quem lesse a lista inteira sem abrir nenhum não via de onde nada veio. */}
+          {/* A linha inteira vem do dicionário, com interpolação: o `· v` entre o id e a versão é
+              copy, e o gate de texto literal reprovou — com razão. Prefixo de versão muda por
+              idioma tanto quanto qualquer outra palavra. */}
+          <p className="mt-1 font-mono text-[0.7rem] text-muted-foreground">
+            {t("canonicalAnalysis.analyticsView.methodLine", {
+              id: m.method_id,
+              version: String(m.method_version),
+            })}
+          </p>
           {/* O MAPA fica atrás de um gatilho, e essa é a decisão.
               Esta visão responde "de onde vieram esses números", e a cadeia inteira — denominador,
               massa, método, parâmetros — é a resposta completa. Mas ela é a resposta de quem
@@ -150,6 +163,15 @@ function Distribuicoes({
             <span className="text-sm">{d.measure_id}</span>
             {d.suppression_applied || d.high_cardinality_suppressed ? <Suprimido /> : null}
           </div>
+          {/* O PISO DE PRIVACIDADE é a origem da supressão, e estava publicado sem aparecer.
+              Sem ele, "suprimido" é uma conclusão sem causa: com ele, a pessoa sabe que grupos
+              abaixo de N não podem ser publicados, e para de procurar um erro de carga.
+              `value_type` diz sobre que TIPO de valor a distribuição foi montada. */}
+          <p className="mt-0.5 font-mono text-[0.7rem] text-muted-foreground">
+            {t("canonicalAnalysis.analyticsView.valueType")}: {d.value_type}
+            {" · "}
+            {t("canonicalAnalysis.analyticsView.minGroup")}: {d.min_group_size}
+          </p>
           <ul className="mt-1 space-y-0.5">
             {d.groups.map((g) => (
               <li key={g.label} className="flex justify-between gap-3 text-xs">
@@ -254,6 +276,13 @@ function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
               {s.suppression_applied || s.temporal_series_suppressed ? <Suprimido /> : null}
             </span>
           </div>
+          {/* A série também publica método e versão, e pela mesma razão eles ficam na linha. */}
+          <p className="mt-0.5 font-mono text-[0.7rem] text-muted-foreground">
+            {t("canonicalAnalysis.analyticsView.methodLine", {
+              id: s.method_id,
+              version: String(s.method_version),
+            })}
+          </p>
           <ul className="mt-1 space-y-0.5">
             {s.windows.map((j) => (
               <li key={j.window_start} className="flex justify-between gap-3 text-xs">
@@ -399,6 +428,31 @@ export function AnalyticsView() {
                   <div className="flex gap-1">
                     <dt>{t("canonicalAnalysis.analyticsView.notPresented")}:</dt>
                     <dd className="tabular-nums">{snapshot.blocosNaoApresentados}</dd>
+                  </div>
+                ) : null}
+
+                {/* OS TRÊS QUE FALTAVAM, e a razão de eles doerem mais que o de cima.
+                    `blocosNaoApresentados` é decisão NOSSA — esta tela escolheu não mostrar certos
+                    blocos, e dizia isso. Os três abaixo são outra coisa: são medidas e blocos que
+                    o PRODUTOR contou e não entregou, cada um por um motivo diferente.
+                    Silenciá-los fazia a tela afirmar completude que ela não tem — quem lê via
+                    catorze medidas e não sabia que existiam mais três que não puderam vir. */}
+                {snapshot.medidasNaoResumidas > 0 ? (
+                  <div className="flex gap-1">
+                    <dt>{t("canonicalAnalysis.analyticsView.notSummarized")}:</dt>
+                    <dd className="tabular-nums">{snapshot.medidasNaoResumidas}</dd>
+                  </div>
+                ) : null}
+                {snapshot.medidasNaoAutorizadas > 0 ? (
+                  <div className="flex gap-1">
+                    <dt>{t("canonicalAnalysis.analyticsView.notAuthorized")}:</dt>
+                    <dd className="tabular-nums">{snapshot.medidasNaoAutorizadas}</dd>
+                  </div>
+                ) : null}
+                {snapshot.blocosIlegiveis > 0 ? (
+                  <div className="flex gap-1">
+                    <dt>{t("canonicalAnalysis.analyticsView.unreadable")}:</dt>
+                    <dd className="tabular-nums">{snapshot.blocosIlegiveis}</dd>
                   </div>
                 ) : null}
               </dl>
