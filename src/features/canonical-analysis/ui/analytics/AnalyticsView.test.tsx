@@ -342,3 +342,68 @@ describe("F4 · o export canônico mora aqui", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("F4 · a contagem publicada também é dita por comprimento", () => {
+  /** A barra preenchida do `Bar`. Suprimida NÃO tem esta parte — é o que se mede aqui. */
+  function preenchimento(linha: HTMLElement): HTMLElement | null {
+    return linha.querySelector<HTMLElement>('[style*="width"]');
+  }
+
+  function linhaCom(secao: HTMLElement, texto: string): HTMLElement {
+    const alvo = within(secao)
+      .getAllByRole("listitem")
+      .find((li) => (li.textContent ?? "").includes(texto));
+    if (!alvo) throw new Error(`nenhuma linha com "${texto}"`);
+    return alvo;
+  }
+
+  it("a janela SUPRIMIDA não desenha barra — e a publicada desenha", async () => {
+    // Este é o cadeado que o módulo de largura NÃO consegue dar. Lá, filtrar a suprimida é
+    // no-op (somar zeros não abaixa um máximo, e a mutação provou). A diferença observável
+    // está aqui: barra de largura zero e barra de valor zero são indistinguíveis, e afirmam o
+    // oposto — "não houve" contra "não podemos dizer".
+    renderizar();
+    const secao = await screen.findByRole("region", {
+      name: pt.canonicalAnalysis.analyticsView.series,
+    });
+    expect(preenchimento(linhaCom(secao, "2026-08-01"))).not.toBeNull();
+    expect(preenchimento(linhaCom(secao, "2026-08-02"))).toBeNull();
+    expect(linhaCom(secao, "2026-08-02").textContent).toContain(
+      pt.canonicalAnalysis.analyticsView.suppressed,
+    );
+  });
+
+  it("as FAIXAS de concentração aparecem na tela, não só dentro do mapa", async () => {
+    // Elas sempre vieram publicadas. Esta visão mandava-as direto para o mapa de procedência, e
+    // quem não abrisse o mapa nunca via a FORMA da concentração — que é a pergunta que a seção
+    // existe para responder. A superfície congelada já as desenhava.
+    const base = vistaAnalytics();
+    renderizar({
+      ...base,
+      snapshot: {
+        ...SNAPSHOT,
+        concentrations: [
+          {
+            ...SNAPSHOT.concentrations[0],
+            bands: [
+              { lower_value: 0, upper_value: 10, entity_count: 8 },
+              { lower_value: 10, upper_value: 20, entity_count: 2 },
+            ],
+          },
+        ],
+      },
+    });
+    const secao = await screen.findByRole("region", {
+      name: pt.canonicalAnalysis.analyticsView.concentrations,
+    });
+    // Ancorar no RÓTULO da faixa, não na contagem: "2" casa com meia tela — inclusive com a
+    // estatística `0.42` e com a própria faixa "10–20". A primeira versão deste caso reprovou
+    // por isso, e o defeito era do instrumento.
+    const maior = linhaCom(secao, "0–10");
+    const menor = linhaCom(secao, "10–20");
+    // A maior faixa ocupa a largura inteira; a menor, um quarto dela. A barra corresponde ao
+    // número escrito ao lado — uma barra que mente é pior que barra nenhuma, porque é lida antes.
+    expect(preenchimento(maior)?.style.width).toBe("100.0%");
+    expect(preenchimento(menor)?.style.width).toBe("25.0%");
+  });
+});

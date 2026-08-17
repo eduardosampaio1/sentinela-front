@@ -32,7 +32,12 @@ import { estatisticaConhecida } from "../../result/estatisticas";
 import { LoadingState } from "@/shared/states/LoadingState";
 import type { EstadoPublico } from "@/design/patterns/estados";
 import { useRevelacao } from "@/design/motion";
-import { Disclosure } from "@/design/primitives";
+import { Bar, Disclosure } from "@/design/primitives";
+import {
+  largurasDeConcentracao,
+  largurasDeDistribuicao,
+  largurasDeSerie,
+} from "../../result/barrasDaProjecao";
 import { MapaDeProcedencia } from "./MapaDeProcedencia";
 import { useAnalysisAnalytics, useAnalysisProgress, useAnalysisStatus } from "../../data/analysis";
 import { lerSnapshot, type SnapshotAnalitico } from "../../result/analyticsProjection";
@@ -155,9 +160,12 @@ function Distribuicoes({
   readonly denominador: number;
 }) {
   const { t } = useLanguage();
+  // A conta acontece AQUI, antes da árvore, e não dentro do `map` que desenha. É a mesma regra
+  // que fez a superfície congelada calcular no adaptador em vez de no componente.
+  const larguras = itens.map(largurasDeDistribuicao);
   return (
     <div>
-      {itens.map((d) => (
+      {itens.map((d, iBloco) => (
         <div key={d.measure_id} className="border-b border-border/60 py-3 last:border-b-0">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="text-sm">{d.measure_id}</span>
@@ -172,12 +180,18 @@ function Distribuicoes({
             {" · "}
             {t("canonicalAnalysis.analyticsView.minGroup")}: {d.min_group_size}
           </p>
-          <ul className="mt-1 space-y-0.5">
-            {d.groups.map((g) => (
-              <li key={g.label} className="flex justify-between gap-3 text-xs">
-                <span className="truncate">{g.label}</span>
-                <span className="tabular-nums text-muted-foreground">{g.count}</span>
-              </li>
+          {/* A contagem continua em texto, ao lado da barra. A barra é REDUNDÂNCIA: quem não
+              distingue comprimento lê o número, e quem lê rápido vê a forma. Nenhum fato desta
+              lista existe só na barra — é a regra que proíbe informação por cor ou forma sozinha. */}
+          <ul className="mt-1 space-y-1">
+            {d.groups.map((g, i) => (
+              <Bar
+                key={g.label}
+                rotulo={g.label}
+                valor={String(g.count)}
+                largura={larguras[iBloco][i]}
+                rotuloSuprimido={t("canonicalAnalysis.analyticsView.suppressed")}
+              />
             ))}
           </ul>
           {/* `other_count: null` NÃO é zero: significa que nem a soma dos suprimidos alcançou o
@@ -197,10 +211,17 @@ function Distribuicoes({
 }
 
 function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const larguras = snapshot.concentrations.map(largurasDeConcentracao);
+  // A faixa é um INTERVALO, e o rótulo precisa dizer isso. Formatar é trabalho da tela — o
+  // módulo de largura não conhece locale de propósito.
+  const faixa = (inferior: number, superior: number) =>
+    `${inferior.toLocaleString(language === "pt" ? "pt-BR" : "en-US")}–${superior.toLocaleString(
+      language === "pt" ? "pt-BR" : "en-US",
+    )}`;
   return (
     <div>
-      {snapshot.concentrations.map((c) => (
+      {snapshot.concentrations.map((c, iBloco) => (
         <div key={c.measure_id} className="border-b border-border/60 py-3 last:border-b-0">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="text-sm">{c.measure_id}</span>
@@ -246,6 +267,25 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
               </li>
             ))}
           </ul>
+          {/* AS FAIXAS ESTAVAM PUBLICADAS E INVISÍVEIS.
+              Esta visão mostrava só as duas estatísticas de Pareto e mandava as faixas direto
+              para o mapa — quem não abrisse o mapa nunca via a FORMA da concentração, que é a
+              pergunta que a seção existe para responder: onde os valores se acumulam.
+              A superfície congelada já as desenhava; a visão nova nasceu sem. */}
+          {c.bands.length > 0 ? (
+            <ul className="mt-2 space-y-1">
+              {c.bands.map((b, i) => (
+                <Bar
+                  key={`${b.lower_value}-${b.upper_value}`}
+                  rotulo={faixa(b.lower_value, b.upper_value)}
+                  valor={String(b.entity_count)}
+                  largura={larguras[iBloco][i]}
+                  rotuloSuprimido={t("canonicalAnalysis.analyticsView.suppressed")}
+                />
+              ))}
+            </ul>
+          ) : null}
+
           {/* A concentração desdobra em FAIXAS de valor com contagem de entidades, e carrega três
               recusas distintas — grosseirização, supressão e cardinalidade alta. Cada uma vira seu
               próprio nó no mapa: agrupá-las num "suprimido" único apagaria por que o número não
@@ -264,9 +304,10 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
 
 function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
   const { t } = useLanguage();
+  const larguras = snapshot.time_series.map(largurasDeSerie);
   return (
     <div>
-      {snapshot.time_series.map((s) => (
+      {snapshot.time_series.map((s, iBloco) => (
         <div key={s.dimension_id} className="border-b border-border/60 py-3 last:border-b-0">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="text-sm">{s.dimension_id}</span>
@@ -283,17 +324,20 @@ function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
               version: String(s.method_version),
             })}
           </p>
-          <ul className="mt-1 space-y-0.5">
-            {s.windows.map((j) => (
-              <li key={j.window_start} className="flex justify-between gap-3 text-xs">
-                <span className="tabular-nums">{j.window_start}</span>
-                <span className="tabular-nums text-muted-foreground">
-                  {/* `count: null` só acontece em `suppressed`. Zero é VALOR, não ausência —
-                      trocar um pelo outro apagaria a diferença entre "não houve" e "não
-                      podemos dizer". */}
-                  {j.count !== null ? j.count : t("canonicalAnalysis.analyticsView.suppressed")}
-                </span>
-              </li>
+          {/* `count: null` só acontece em `suppressed`. Zero é VALOR, não ausência — trocar um
+              pelo outro apagaria a diferença entre "não houve" e "não podemos dizer". O `Bar` já
+              sabe disso: com `suprimida` ele não desenha barra alguma, porque barra de largura
+              zero e barra de valor zero são indistinguíveis e afirmam o oposto. */}
+          <ul className="mt-1 space-y-1">
+            {s.windows.map((j, i) => (
+              <Bar
+                key={j.window_start}
+                rotulo={j.window_start}
+                valor={j.count !== null ? String(j.count) : null}
+                largura={larguras[iBloco][i]}
+                suprimida={j.count === null}
+                rotuloSuprimido={t("canonicalAnalysis.analyticsView.suppressed")}
+              />
             ))}
           </ul>
           {/* A série desdobra em JANELAS, e a janela suprimida entra no mapa com a hachura —

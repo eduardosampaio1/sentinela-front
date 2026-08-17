@@ -30,6 +30,7 @@ import {
   type IndicatorView,
   type RecommendationView,
 } from "./indicadores";
+import { escalar } from "./escalaVisual";
 import { validateCanonicalResultV2, type ValidationOutcomeV2 } from "./validatorV2";
 import type {
   EstatisticaDeConcentracao,
@@ -288,26 +289,9 @@ function contagens(
   }));
 }
 
-/**
- * Escala visual 0..1 relativa ao maior valor da lista. Ver `GroupView.scale`.
- *
- * Máximo zero ⇒ escala zero para todos: uma lista de zeros não tem barra maior, e dividir por
- * zero produziria `NaN` que o navegador desenharia como largura vazia sem ninguém saber por quê.
- *
- * O resultado já sai LIMITADO a 0..1. O limite mora aqui e não no componente porque limitar é
- * aritmética, e a regra da plataforma é que aritmética não acontece em componente — nem a
- * inofensiva, porque é assim que a primeira conta entra na árvore de UI.
- */
-function escalar(valores: number[]): (v: number) => string {
-  const maximo = valores.reduce((a, b) => (b > a ? b : a), 0);
-  return (v: number) => {
-    if (maximo <= 0) return "0%";
-    const fracao = v / maximo;
-    const limitada = fracao < 0 ? 0 : fracao > 1 ? 1 : fracao;
-    // Uma casa decimal basta para a barra, e evita um valor CSS de dezessete dígitos.
-    return `${(limitada * 100).toFixed(1)}%`;
-  };
-}
+// `escalar` MUDOU DE ARQUIVO, não de comportamento. Ela vive em `escalaVisual.ts` porque a visão
+// Medidas passou a desenhar as mesmas barras, e uma segunda cópia aqui seria duas definições de
+// "qual é a maior barra" livres para divergir. Ver `GroupView.scale`.
 
 function apresentarMedida(m: ResumoNumerico, locale: string): MeasureView {
   const numero = (v: number | null): string | null =>
