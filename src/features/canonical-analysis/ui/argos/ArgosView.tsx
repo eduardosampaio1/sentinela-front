@@ -53,6 +53,7 @@ import { Heroi } from "./Heroi";
 import { Intencoes } from "./Intencoes";
 import { Portas } from "./Portas";
 import { Satelites } from "./Satelites";
+import { BarraDeReferencia } from "./BarraDeReferencia";
 import { AnalysisShell } from "../AnalysisShell";
 import { ProblemFeedback, problemCodeOf } from "../notices";
 import { useCanonicalScope } from "../scope";
@@ -400,6 +401,11 @@ export function ArgosView() {
             ) : null}
           </div>
         ) : null}
+
+        {/* A REFERENCIA vem antes das abas: ela e contexto da analise inteira, nao de um corte por
+            dominio. E vem antes do heroi porque e ela que explica por que nao ha comparacao ao
+            lado do numero grande. */}
+        <BarraDeReferencia scope={scope} instanceId={status.data?.instance_id ?? null} />
 
         {/* As abas ficam ACIMA de tudo e fora dos grupos: elas dizem qual corte está na tela, e um
             controle de navegação abaixo do conteúdo que ele controla não é encontrado. */}

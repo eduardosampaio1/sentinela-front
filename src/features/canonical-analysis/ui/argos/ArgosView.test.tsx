@@ -46,6 +46,16 @@ function montar(envelope: unknown, statusHttp = 200) {
       chamadas.push("getAnalytics");
       return {};
     }),
+    // A barra de referência lê o baseline da Instância. Ele entra no cliente BASE para que o tipo
+    // exista em todos os casos — sem isto, `expect(cliente.getBaseline).not.toHaveBeenCalled()`
+    // não compila, e a asserção mais importante da barra é justamente essa.
+    //
+    // O status base não manda `instance_id`, então nesta fábrica a barra nem pede: é o estado da
+    // análise legada, e é o padrão certo para os outros casos deste arquivo.
+    getBaseline: vi.fn(async () => {
+      chamadas.push("getBaseline");
+      return { instance_id: "", baseline_analysis_id: null, baseline_set_at: null };
+    }),
   };
   return client;
 }
@@ -409,6 +419,103 @@ describe("F3 · conclusão antes de evidência, sem escada de gravidade", () => 
     const secao = await screen.findByRole("region", { name: G.recommendations });
     expect(within(secao).getByText(`${G.priority}:`)).toBeInTheDocument();
     expect(within(secao).getByText("P1")).toBeInTheDocument();
+  });
+});
+
+describe("F3 · a barra de referência tem TRÊS estados", () => {
+  const B = pt.baseline;
+
+  /** O status manda `instance_id`; o baseline manda o ponteiro. Os dois vêm de chamadas diferentes. */
+  function montarComInstancia(instanceId: string | null, baselineId: string | null) {
+    const { envelope } = documentoReal();
+    chamadas.length = 0;
+    clienteAtual = {
+      getResult: vi.fn(async () => envelope),
+      getStatus: vi.fn(async () => ({
+        analysis_id: "an-abc",
+        status: "completed",
+        result_available: true,
+        instance_id: instanceId,
+      })),
+      getAnalytics: vi.fn(async () => ({})),
+      getBaseline: vi.fn(async () => ({
+        instance_id: instanceId ?? "",
+        baseline_analysis_id: baselineId,
+        baseline_set_at: baselineId ? "2026-08-01T00:00:00Z" : null,
+      })),
+    } as unknown as ReturnType<typeof montar>;
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    window.localStorage.setItem("sentinela:language", "pt");
+    return render(
+      <LanguageProvider>
+        <QueryClientProvider client={qc}>
+          <MemoryRouter initialEntries={["/analyses/an-abc/argos"]}>
+            <Routes>
+              <Route path="/analyses/:analysisId/argos" element={<ArgosView />} />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>
+      </LanguageProvider>,
+    );
+  }
+
+  it("análise SEM Instância: a barra não aparece E nada é pedido", async () => {
+    // O estado que se esquece. `instance_id: null` inclui toda a análise legada, e ali referência
+    // não é conceito: dizer "sem referência" prometeria um controle que não existe — o erro que
+    // custou a D21.
+    //
+    // ## Este caso mede DUAS coisas, e a segunda é a que tem dente
+    //
+    // Mutei o guarda `if (!instanceId) return null` e os 31 casos continuaram verdes. O motivo é
+    // defesa em profundidade: com `instanceId` nulo o hook fica `enabled: false`, então
+    // `baseline.isPending` nunca sai de `true` e o SEGUNDO guarda devolve `null` de qualquer forma.
+    // Um guarda mascarando o outro é exatamente o padrão que faz mutação sobreviver.
+    //
+    // O que é observável, e portanto o que este caso afirma: `getBaseline` NÃO é chamado. Isso
+    // protege duas coisas de verdade — requisição desperdiçada, e o dia em que alguém "consertar"
+    // o hook passando `instanceId ?? ""` e a tela montar um link para `/instances/`.
+    const { container } = montarComInstancia(null, null);
+    await screen.findByTestId("argos-view");
+    await waitFor(() => expect(container.querySelector("[data-referencia]")).toBeNull());
+    expect(clienteAtual.getBaseline).not.toHaveBeenCalled();
+  });
+
+  it("Instância SEM referência: a barra diz isso e oferece o caminho", async () => {
+    montarComInstancia("inst-1", null);
+    const barra = await waitFor(() => {
+      const el = document.querySelector('[data-referencia="ausente"]');
+      if (!el) throw new Error("barra ausente não apareceu");
+      return el as HTMLElement;
+    });
+    expect(barra.textContent).toContain(B.none);
+    // A ação leva para a INSTÂNCIA: o Diagnóstico é leitura, e eleger referência é ato dela.
+    expect(within(barra).getByRole("link", { name: B.set })).toHaveAttribute(
+      "href",
+      "/instances/inst-1",
+    );
+  });
+
+  it("Instância COM referência: a barra diz QUAL, e não alerta", async () => {
+    montarComInstancia("inst-1", "an-referencia-9");
+    const barra = await waitFor(() => {
+      const el = document.querySelector('[data-referencia="definida"]');
+      if (!el) throw new Error("barra definida não apareceu");
+      return el as HTMLElement;
+    });
+    expect(barra.textContent).toContain("an-referencia-9");
+    // `status`, nunca `alert`: referência definida é informação, e ausência é configuração
+    // pendente. Alertar por qualquer um dos dois ensina a ignorar alertas.
+    expect(barra.getAttribute("role")).toBe("status");
+  });
+
+  it("o vocabulário é o de `baseline.*` — não há segundo nome para o mesmo ato", async () => {
+    // Eu havia criado `setReference`/`noReference` próprios. Mesmo ato com dois nomes é o defeito
+    // que a regra de copy existe para impedir, e a pessoa que abre as duas telas veria termos
+    // diferentes para a mesma coisa.
+    const argos = pt.canonicalAnalysis.argos as Record<string, unknown>;
+    for (const inventada of ["setReference", "noReference", "referenceLabel", "changeReference"]) {
+      expect(argos[inventada], `\`${inventada}\` voltou — use \`baseline.*\``).toBeUndefined();
+    }
   });
 });
 
