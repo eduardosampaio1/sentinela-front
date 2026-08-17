@@ -179,7 +179,25 @@ describe("prova 8 — nenhum mapper de documento canônico para modelo legado", 
   it("nada converte `analysis-result-v1` na forma legada", () => {
     // O mapper não precisa se chamar "mapper". O que o denuncia é ler o documento canônico e
     // produzir os campos do modelo antigo — e esses campos têm nomes próprios.
-    const camposLegados = ["consistency_score", "token_waste_estimate", "cross_intent_similarity", "critical_alerts_count"];
+    //
+    // ## Dois nomes MUDARAM DE LADO, e a lista precisou ser lida de novo
+    //
+    // `consistency_score` e `cross_intent_similarity` entraram aqui quando existiam apenas no
+    // modelo morto. A recuperação do ARGOS v3 (12–13/08) congelou o `argos-catalog-1.0` e os
+    // publicou como as saídas 3 e 10 — deixaram de ser fantasma e viraram vocabulário do
+    // contrato. Mantê-los proibidos impediria a tela de NOMEAR o que o motor publica, que é o
+    // oposto do que este cadeado quer.
+    //
+    // Os outros dois FICAM, e a diferença é real:
+    //
+    //   `token_waste_estimate`    o catálogo o marca BLOCKED_BY_MEASUREMENT_SEMANTICS — o produtor
+    //                             mede `int(round(avg_tokens))` e o nome promete desperdício.
+    //                             Continua sendo indicador que ninguém publica.
+    //   `critical_alerts_count`   PLURAL. A saída publicada é `critical_alert_count`, singular.
+    //                             São nomes diferentes, e só o do modelo antigo é proibido.
+    //
+    // A troca é de LISTA, não de rigor: o cadeado segue proibindo o modelo legado.
+    const camposLegados = ["token_waste_estimate", "critical_alerts_count"];
     const culpados: string[] = [];
     for (const a of arquivos) {
       const src = semComentarios(a);

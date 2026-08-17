@@ -404,7 +404,25 @@ describe("M14 · 6. nenhuma superfície nasce com texto hardcoded", () => {
 // As quatro frases que eu havia encurtado ficaram encurtadas de qualquer forma, porque a redação
 // melhorou: dentro de uma seção intitulada "Instância", o rótulo não precisa repetir "da
 // instância" — virou "Nome"/"Name", "Salvar nome"/"Save name" e "ID".
-const ACIMA_DO_ORCAMENTO = 45;
+// 45 → 49 ao nomear os 15 outputs do `argos-catalog-1.0` que chegavam à tela como id cru.
+//
+// Doze dos quinze couberam. Um encolheu por mérito: dentro de uma seção intitulada "Escores",
+// `AI health score` repetia a seção — virou "AI health"/"Saúde da IA", que é melhor copy e ainda
+// desceu a razão. É a mesma lição que este arquivo já registrou com "da instância".
+//
+// Os quatro que ficam, e por que nenhum é prolixidade:
+//
+//   `estimated_handoff_cost`   1,41   PT escreve "handoff" (7) como "transferência" (14)
+//   `projected_handoff_cost`   1,46   a mesma palavra, a mesma conta
+//   `behavior_score`           1,53   "Escore de comportamento" precisa do "escore": sem ele
+//                                     colide com a DIMENSÃO "Comportamental", que aparece na
+//                                     mesma tela, e duas coisas diferentes ficariam com nomes a
+//                                     uma letra de distância
+//   `response_stability`       1,33   estoura por um fio; encurtar viraria "Estabilidade" seca
+//
+// Duas das quatro são a MESMA palavra do idioma. Encurtá-las seria escolher um termo pior para
+// caber num orçamento — e o orçamento existe para proteger o layout, não para editar o PT.
+const ACIMA_DO_ORCAMENTO = 49;
 const ORCAMENTO = 1.3;
 
 describe("M14 · 7. PT-BR cabe no orçamento de +30 %", () => {

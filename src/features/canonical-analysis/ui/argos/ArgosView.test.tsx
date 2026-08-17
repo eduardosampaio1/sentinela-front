@@ -370,6 +370,34 @@ describe("F3 · conclusão antes de evidência, sem escada de gravidade", () => 
     );
   });
 
+  it("um escore do catálogo aparece com NOME, e um id desconhecido continua cru", async () => {
+    // A fiação, não o registro. O `catalogoArgos.test.ts` prova que a tabela de nomes está
+    // coerente; este prova que a tela chega até ela — o caminho da chave pode estar errado e a
+    // tabela, certíssima, sairia na tela como `canonicalAnalysis.argos.output.behavior_score`.
+    const base = comAsDuasMetades();
+    const medida = {
+      value: 0.8,
+      availability: "available",
+      reason: "ok",
+      scale: { kind: "ratio_unit" },
+    };
+    renderizar({
+      ...base,
+      result: {
+        ...base.result,
+        scores: [
+          { measurement: { id: "behavior_score", ...medida } },
+          // Saída que nenhum dos dois registros conhece: o cadeado anti-invenção manda mostrar
+          // o id cru em vez de adivinhar um rótulo.
+          { measurement: { id: "metrica_nova_do_backend", ...medida } },
+        ],
+      },
+    });
+    const secao = await screen.findByRole("region", { name: G.scores });
+    expect(within(secao).getByText(pt.canonicalAnalysis.argos.output.behavior_score)).toBeInTheDocument();
+    expect(within(secao).getByText("metrica_nova_do_backend")).toBeInTheDocument();
+  });
+
   it("a prioridade da recomendação é anunciada como prioridade", async () => {
     // Sem o rótulo, o leitor de tela ouvia "Revisar prompt P1" e não tinha como saber o que era
     // `P1` — enquanto o irmão `alerts` já rotulava a severidade. Assimetria, não estilo.

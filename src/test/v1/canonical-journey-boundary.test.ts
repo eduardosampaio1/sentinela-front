@@ -91,6 +91,25 @@ describe("Cadeado — jornada canônica (backend-first)", () => {
  * isenção órfã é pior que nenhuma: ela continua aberta para o próximo arquivo que casar o
  * padrão, sem que ninguém tenha decidido isso.
  */
+/**
+ * A SEGUNDA isenção, e ela nasceu de o cadeado ter envelhecido — não de eu querer passar.
+ *
+ * `INDICADOR_ANALITICO` proíbe o literal `behavior_score` porque, quando foi escrito, esse nome
+ * não existia em contrato nenhum: quem o digitasse estaria inventando um indicador. A afirmação
+ * era certa e continua certa.
+ *
+ * O que mudou foi o mundo. A recuperação do ARGOS v3 (12–13/08) congelou o `argos-catalog-1.0`
+ * com 39 saídas quantitativas, e `behavior_score` é a **número 1** delas. O nome deixou de ser
+ * fantasia e virou vocabulário publicado — mas o cadeado seguiu tratando-o como ghost, porque o
+ * alcance dele (o literal) é maior que a afirmação dele (não inventar).
+ *
+ * A isenção vale para UM tipo de arquivo: registro de NOME, que só mapeia id publicado → chave de
+ * dicionário. Ele não calcula, não deriva e não decide nada — `catalogoArgos.test.ts` prova que
+ * os dois registros são disjuntos, que todo id tem nome nos dois idiomas, que não há rótulo órfão
+ * e que um id desconhecido continua saindo cru.
+ */
+const ehRegistroDeNome = (arq: string) => /[\\/]catalogoArgos\.ts$/.test(arq);
+
   for (const [nome, re] of [
     ["materialização do dataset (FileReader/.text/.arrayBuffer/JSON.parse/hash)", MATERIALIZACAO],
     ["fallback legado / SSE / vocabulário interno", LEGADO_OU_INTERNO],
@@ -103,7 +122,16 @@ describe("Cadeado — jornada canônica (backend-first)", () => {
     ["mutation com auto-retry (retry: true)", MUTATION_AUTO_RETRY],
   ] as const) {
     it(`nenhum arquivo viola: ${nome}`, () => {
-      for (const arq of arquivos) {
+      const alvos = re === INDICADOR_ANALITICO ? arquivos.filter((a) => !ehRegistroDeNome(a)) : arquivos;
+      // A isenção não pode ficar órfã: se o arquivo sumir, ela continua aberta para o próximo que
+      // casar o padrão sem ninguém decidir isso. Mesma disciplina da isenção anterior.
+      if (re === INDICADOR_ANALITICO) {
+        expect(
+          arquivos.some(ehRegistroDeNome),
+          "o registro de nomes sumiu — remova a isenção",
+        ).toBe(true);
+      }
+      for (const arq of alvos) {
         const codigo = semComentarios(readFileSync(arq, "utf8"));
         const m = codigo.match(re);
         expect(m, `${arq}: violação "${m?.[0]}"`).toBeNull();

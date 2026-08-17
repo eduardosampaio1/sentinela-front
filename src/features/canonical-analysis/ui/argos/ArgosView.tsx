@@ -39,6 +39,7 @@ import { useAnalysisArgos } from "../../data/argos";
 import { resolverLeituraArgos } from "../../result/adapterV3";
 import { useAnalysisStatus } from "../../data/analysis";
 import { familiaFoiProduzida, type FamiliaArgos } from "../../result/contratoV3";
+import { nomeadoPeloCatalogo } from "../../result/catalogoArgos";
 import { descriptorDe } from "../../result/descriptors";
 import { AnalysisShell } from "../AnalysisShell";
 import { ProblemFeedback, problemCodeOf } from "../notices";
@@ -223,17 +224,30 @@ export function ArgosView() {
   const titulo = t("canonicalAnalysis.argos.title");
 
   /**
-   * O rótulo de uma medida.
+   * O rótulo de uma medida, por DUAS fontes e nesta ordem.
    *
-   * O contrato **não publica rótulo humano** para os 39 outputs do catálogo. Inventar tradução
-   * para todos seria adivinhar; mostrar o `id` é feio e honesto. O meio-termo já existe nesta
-   * casa: `descriptorDe` conhece os ids do registro canônico e o dicionário tem o rótulo deles.
+   * O contrato não publica rótulo humano no payload, e inventar tradução seria adivinhar. Mas
+   * "não vem no payload" nunca quis dizer "não existe": o `argos-catalog-1.0` congelou os 39
+   * outputs COM o nome de cada um, e este arquivo lia só o registro de economia, que cobre 14.
    *
-   * Sem descritor, sai o `id` cru — nunca um rótulo adivinhado. É o mesmo cadeado que
-   * `descriptors.ts` declara: "indicador novo no backend não aparece com rótulo adivinhado".
+   * Resultado medido antes desta correção: 15 identificadores chegavam crus à tela, entre eles
+   * `ai_health_score` e `behavior_score` — os dois números que são a manchete do produto.
+   *
+   * 1. `descriptorDe` primeiro, porque ele é mais rico: além do nome, carrega a descrição e o
+   *    campo do código analítico que sustenta o valor.
+   * 2. `chaveDoCatalogo` depois, para os que o catálogo nomeia e o registro de economia não.
+   * 3. Sem nenhum dos dois, sai o `id` cru — e este terceiro caso CONTINUA sendo o cadeado:
+   *    output novo no backend não aparece com rótulo adivinhado.
+   *
+   * Os dois conjuntos são disjuntos por construção, e o teste prova. Um id nos dois teria dois
+   * nomes livres para divergir.
    */
   function rotuloDe(id: string): string {
-    return descriptorDe(id) ? t(`canonicalAnalysis.result.indicator.${id}.label`) : id;
+    if (descriptorDe(id)) return t(`canonicalAnalysis.result.indicator.${id}.label`);
+    // Caminho LITERAL de propósito: `t(variavel)` seria opaco para o gate de i18n, e uma chave
+    // ausente sairia na tela como a própria chave — pior que o id cru, porque parece um rótulo.
+    if (nomeadoPeloCatalogo(id)) return t(`canonicalAnalysis.argos.output.${id}`);
+    return id;
   }
 
   function corpo() {
