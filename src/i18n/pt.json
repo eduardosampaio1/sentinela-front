@@ -207,7 +207,10 @@
       "groupMeasurements": "O que o ARGOS mediu",
       "priority": "Prioridade",
       "domainsNavLabel": "Domínios deste diagnóstico",
-"whereToInvestigate": "Onde investigar",
+      "whereToInvestigate": "Onde investigar",
+      "notMeasurableHere": "não medível nesta análise",
+      "measuredOver": "medido sobre {{n}} conversas",
+      "otherScores": "Outros escores globais",
       "investigate": "Investigar",
       "metricCount": "{{n}} métricas",
       "domainQuestion": {

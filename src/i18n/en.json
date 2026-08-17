@@ -207,7 +207,10 @@
       "groupMeasurements": "What ARGOS measured",
       "priority": "Priority",
       "domainsNavLabel": "Domains of this assessment",
-"whereToInvestigate": "Where to investigate",
+      "whereToInvestigate": "Where to investigate",
+      "notMeasurableHere": "not measurable in this analysis",
+      "measuredOver": "measured over {{n}} conversations",
+      "otherScores": "Other global scores",
       "investigate": "Investigate",
       "metricCount": "{{n}} metrics",
       "domainQuestion": {

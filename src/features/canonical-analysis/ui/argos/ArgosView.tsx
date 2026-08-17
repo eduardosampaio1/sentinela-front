@@ -47,10 +47,12 @@ import {
   recortarPorDominio,
 } from "../../result/dominiosDoArgos";
 import { descriptorDe } from "../../result/descriptors";
+import { formatarNumero } from "../../result/formatacao";
 import { AbasDeDominio } from "./AbasDeDominio";
 import { Heroi } from "./Heroi";
 import { Intencoes } from "./Intencoes";
 import { Portas } from "./Portas";
+import { Satelites } from "./Satelites";
 import { AnalysisShell } from "../AnalysisShell";
 import { ProblemFeedback, problemCodeOf } from "../notices";
 import { useCanonicalScope } from "../scope";
@@ -221,6 +223,7 @@ function Achados({
 
 export function ArgosView() {
   const { t, language } = useLanguage();
+  const locale = language === "pt" ? "pt-BR" : "en-US";
   const params = useParams();
   const analysisId = params.analysisId ?? null;
   const scope = useCanonicalScope();
@@ -410,7 +413,21 @@ export function ArgosView() {
             MEDIÇÃO. O protagonista não é medição avulsa: ele é o resumo do comportamento, a mesma
             natureza do resumo executivo. Ele abre a leitura, e o texto explica o que o número quer
             dizer logo abaixo. */}
-        {heroi ? <Heroi escore={heroi} rotulo={rotuloDe(ID_DO_HEROI)} /> : null}
+        {/* A PRIMEIRA DOBRA do protótipo: protagonista à esquerda, satélites à direita.
+            `1.35fr / 1fr` é a proporção dele — o herói ganha mais espaço porque carrega um número
+            de 104px, e os satélites empilham em coluna. Abaixo de 1024px viram uma coluna só:
+            duas colunas de cartão em 375px dariam 160px de largura útil cada. */}
+        {heroi ? (
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+            <Heroi escore={heroi} rotulo={rotuloDe(ID_DO_HEROI)} />
+            <Satelites
+              escores={completo.scores ?? []}
+              idDoHeroi={ID_DO_HEROI}
+              denominador={formatarNumero(completo.summary.record_count, locale, 0)}
+              rotuloDe={rotuloDe}
+            />
+          </div>
+        ) : null}
 
         {/* AS PORTAS — o "onde investigar" do protótipo, e só na Visão geral.
             Dentro de uma aba de domínio elas seriam um menu apontando para onde a pessoa já está. */}
