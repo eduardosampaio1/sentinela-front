@@ -197,7 +197,26 @@ describe("cópia local de public-v1 × origem", () => {
 
     // As medições são o que a tela lê campo a campo; um `reason` ou um `scale` que suma da
     // cópia vira estado inventado na interface, não erro de compilação.
-    for (const tipo of ["PublicMeasurement", "PublicIndicatorV3", "PublicScore", "PublicRisk"]) {
+    // ## A lista CRESCEU, e a brecha era exatamente onde a proxima entrega vai passar
+      //
+      // Ela cobria quatro tipos. Mutei a copia para medir o alcance: apagar `data_coverage` de
+      // `PublicMeasurement` reprova — o gate tem dente. Apagar `maximum` de **`Scale`** passa com
+      // doze verdes.
+      //
+      // `Scale` e o tipo que carrega `minimum`/`maximum`, e e o candidato natural a receber a faixa
+      // ESPERADA que `docs/PEDIDO-FAIXA-ESPERADA.md` pede. Se o produtor a publicasse ali hoje, a
+      // copia local ficaria velha, o `tsc` seguiria verde, e o campo simplesmente nao chegaria a
+      // tela. E o mesmo desfecho que o catalogo do ARGOS descreve para as 26 metricas que "puderam
+      // sumir sem ninguem recusar nenhuma".
+      //
+      // A lista passou a ser TODA interface que esta tela le campo a campo. Nenhuma delas quebra
+      // compilacao ao perder um campo opcional — e e por isso que a comparacao e a unica defesa.
+      for (const tipo of [
+        "PublicMeasurement", "PublicIndicatorV3", "PublicScore", "PublicRisk",
+        "Scale", "PublicProjection", "PublicIntent", "PublicSummary", "MethodMetadata",
+        "Partiality", "PublicAlert", "PublicIssue", "PublicRecommendation",
+        "PublicEvidenceSummary", "PublicExecutiveSummary", "PublicDenominator",
+      ]) {
       expect(camposDaInterface(copia, tipo), `${tipo} divergiu da origem`).toEqual(
         camposDaInterface(origem, tipo),
       );
