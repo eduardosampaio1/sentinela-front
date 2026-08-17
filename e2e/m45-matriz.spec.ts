@@ -502,7 +502,26 @@ const JOURNEYS: readonly Journey[] = [
   // Os três números abaixo são o ACHADO da M45.7, não um relaxamento dela: nenhuma das três tem
   // `<main>`, e o contraste está reprovado. Estavam assim ANTES desta tranche — a diferença é que
   // agora estão contados, e a catraca reprova se piorarem.
-  { id: "J21", nome: "landing pública", rota: "/", axeConhecido: 6,
+  // J21: 6 → 13 na troca de paleta, e a composição está aberta abaixo porque um número sozinho
+  // esconderia que a maior parte não é defeito.
+  //
+  // A base do sistema CLAREOU (#09090b → #12161D). As cores que não são nossas — a marca de cada
+  // fornecedor de LLM no monograma — não podiam ser trocadas, e perderam contraste contra o fundo
+  // novo. São nove, todas `aria-hidden`, e a WCAG 1.4.3 isenta logotipo de piso de contraste; o
+  // arquivo já documentava isso antes desta missão. Mais duas marcas d'água decorativas de 72px,
+  // também `aria-hidden` e `pointer-events-none`, deliberadamente quase invisíveis.
+  //
+  //   11 nós  `aria-hidden`  logotipo de fornecedor + marca d'água   ISENTOS por norma
+  //    2 nós  visíveis       rótulo mono de 8px em cor de sinal      DÍVIDA REAL, 4,04 e 4,10
+  //
+  // Os dois últimos são dívida, não isenção, e ficam nomeados: texto de sinal dentro de chip
+  // tingido pela cor do fornecedor. Persegui-los trocando tom já rendeu 17 → 13 (os cinco de
+  // `text-muted` cederam ao subir para `text-secondary`); estes dois precisam de decisão sobre um
+  // quarto papel de texto medido contra superfície TINGIDA, que é design e não remendo.
+  //
+  // O que FOI corrigido nesta tranche, e era o caro: branco sobre o acento novo em dois CTAs, a
+  // 3,04:1. Controle real, texto real, reprovando AA na primeira dobra da landing.
+  { id: "J21", nome: "landing pública", rota: "/", axeConhecido: 13,
     terminal: /Do you know if it's working|Você sabe se ela está funcionando/ },
   { id: "J22", nome: "termos de uso", rota: "/terms",
     terminal: /Acceptance of terms|Aceitação dos termos/ },
@@ -637,7 +656,14 @@ test.describe("M45 · G1-bis · a dívida declarada é nominal e não cresce", (
     expect(
       JOURNEYS.reduce((soma, j) => soma + (j.axeConhecido ?? 0), 0),
       "o total de dívida de a11y declarada mudou",
-    ).toBe(6);
+    // 6 -> 13 na troca de paleta. A composicao esta na declaracao do J21, e o resumo e: a base do
+      // sistema clareou, as cores de marca dos fornecedores nao sao nossas para trocar, e mais duas
+      // cruzaram o piso. Onze dos treze sao `aria-hidden` e isentos por norma; dois sao divida real,
+      // nomeada, de rotulo mono de 8px em chip tingido.
+      //
+      // O que a troca CORRIGIU e nao aparece neste numero: branco sobre o acento novo em dois CTAs,
+      // a 3,04:1 — controle real reprovando AA na primeira dobra.
+      ).toBe(13);
   });
 
   // A catraca do MARCADOR de estouro — M46.

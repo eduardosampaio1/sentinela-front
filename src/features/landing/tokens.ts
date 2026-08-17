@@ -1,63 +1,104 @@
-// Tokens visuais da landing.
+// A landing DEIXOU de ter paleta própria — decisão de owner, 2026-08-17.
 //
-// Extraídos de `LandingPage.tsx` na M46, pelo mesmo motivo do AION: o arquivo tem ~1200 linhas e a
-// régua da casa é 400. A extração não conserta o monólito — tira dele a peça mais consultada.
+// O design do protótipo aprovado passou a ser o padrão do site inteiro. Este arquivo era uma
+// paleta paralela: `#09090b` zinc neutro, índigo `#5e6ad2`, cartões em branco translúcido — um
+// dialeto de página, com valores que ninguém fora daqui revisava.
 //
-// Três destes tokens respondiam por 26 dos 43 nós de a11y reprovados da página, e um token que
-// mora no meio de 1200 linhas é um token que ninguém revisa.
+// Ele NÃO foi apagado, e a diferença importa: `C` é consumido como `style={{ color: C.muted }}`
+// em três arquivos, 94 vezes. Reescrever os três consumidores para classe seria uma refatoração
+// grande e arriscada para chegar ao mesmo lugar. Trocar os VALORES por referência aos tokens do
+// sistema resolve as 94 de uma vez, e transforma o que era fonte de verdade em ADAPTADOR.
+//
+// A regra que fica: nenhuma cor nasce aqui. Toda entrada abaixo aponta para `tokens.css`.
+//
+// ## O que se perdeu na tradução, e por que a escolha é essa
+//
+// A landing tinha QUATRO degraus de texto (`text` > `muted` > `ghost` > `subtle`) e DOIS de cartão
+// (`bgCard` > `bgCardStr`). O sistema tem três degraus de texto e uma escada de superfície com
+// papéis definidos. Não cabe tudo, e algo tinha que colapsar.
+//
+// Colapsaram os CARTÕES, e o motivo é medido: `--ds-text-muted` dá 4,17:1 sobre `surface-overlay`
+// — reprova AA. Se `bgCardStr` apontasse para `overlay`, qualquer rótulo `ghost`/`subtle` dentro
+// dele cairia, e são rótulos de 9px, justamente onde a M46 gastou uma missão consertando 26 nós.
+//
+// Com os dois cartões em `raised`, o pior par fica em 4,57:1 e passa. A landing perde um degrau de
+// profundidade e mantém os dois degraus de BORDA, que é de onde ela tira separação de verdade.
+//
+// ## As razões contra a base nova (#12161D), medidas antes de escrever
+//
+//   text    15,41    muted   8,16    ghost/subtle  4,91
+//   accent   6,09    green   7,90    amber  8,32    red  5,97
+//
+// Todas passam AA. Três delas MELHORARAM em relação aos valores que a M46 escolheu à mão.
+//
+// ⚠️ `green` e `amber` do sistema colapsam em escala de cinza (1,05 de separação). Esta página usa
+// as duas em gráfico E como texto em chip. Onde a distinção verde/âmbar carregar significado, ela
+// precisa de rótulo ou forma — cor sozinha não serve, e aqui isso deixou de ser teoria.
 
-/** Superfícies, texto, acento e cores de estado. Razões medidas contra `bg`/`bgAlt`. */
+/** Ponte para os tokens do sistema. NENHUM valor nasce neste arquivo. */
 export const C = {
-  // Surfaces — Linear's luminance stacking
-  bg:         "#09090b",
-  bgAlt:      "#0f1011",
-  bgCard:     "rgba(255,255,255,0.025)",
-  bgCardStr:  "rgba(255,255,255,0.04)",
+  // ── Superfícies ──────────────────────────────────────────────────────────────
+  bg: "hsl(var(--ds-surface-base))",
+  bgAlt: "hsl(var(--ds-surface-raised))",
+  /** Os dois degraus de cartão colapsaram em `raised`. Ver a nota do cabeçalho. */
+  bgCard: "hsl(var(--ds-surface-raised))",
+  bgCardStr: "hsl(var(--ds-surface-raised))",
 
-  // Borders
-  border:     "rgba(255,255,255,0.06)",
-  borderStr:  "rgba(255,255,255,0.1)",
+  // ── Bordas — os dois degraus SOBREVIVEM, e é deles que vem a separação ───────
+  border: "hsl(var(--ds-border-subtle))",
+  borderStr: "hsl(var(--ds-border-default))",
 
-  // Text — Linear's cool near-white palette
-  text:       "#f7f8f8",
-  muted:      "#a1a1aa", // 7.43:1 — sempre passou.
+  // ── Texto ────────────────────────────────────────────────────────────────────
+  text: "hsl(var(--ds-text-primary))",
+  muted: "hsl(var(--ds-text-secondary))",
   /**
-   * M46 — `ghost` era `#71717a` (3.94:1) e `subtle` era `#52525b` (2.46:1).
+   * `ghost` e `subtle` também apontam para `text-secondary`, e isto CUSTOU um degrau.
    *
-   * Juntos respondiam por 26 dos 43 nós reprovados desta página, boa parte em rótulos de 9px —
-   * onde a legibilidade já é exigente antes de qualquer regra. Os substitutos preservam os DOIS
-   * degraus da hierarquia (`muted` > `ghost` > `subtle`), agora acima do piso.
+   * A primeira tentativa mandou os dois para `--ds-text-muted`, que passa AA sobre `base` (4,91) e
+   * sobre `raised` (4,57). A matriz reprovou: cinco rótulos de 8–9px ficaram entre 4,04 e 4,3.
+   *
+   * O motivo é específico e não estava no meu radar — esses rótulos vivem DENTRO de chips tingidos
+   * pela cor de marca do fornecedor (`rgba(204,120,92,0.14)` e irmãs). O fundo deixa de ser `base`
+   * e vira um composto quente, e `text-muted` não tem folga para isso em 8px.
+   *
+   * Resultado: a landing tinha QUATRO degraus de texto e agora tem DOIS. É perda real, e o
+   * caminho de volta não é um remendo aqui — é decidir se o sistema quer um quarto papel de texto,
+   * medido contra superfície TINGIDA e não só contra as três do sistema. Decisão de design, não
+   * de arquivo de ponte.
    */
-  ghost:      "#8b8b95", // 5.65:1
-  subtle:     "#80808c", // 4.88:1
+  ghost: "hsl(var(--ds-text-secondary))",
+  subtle: "hsl(var(--ds-text-secondary))",
 
-  // Single brand accent: Linear indigo-violet
-  accent:     "#5e6ad2",
-  accentBr:   "#828fff", // M46: era #7170ff, que dava 4.40:1 em chips de 9px. Agora 5.90:1.
-  accentHov:  "#9ba6ff",
-  accentBg:   "rgba(94,106,210,0.08)",
-  accentBord: "rgba(94,106,210,0.22)",
+  // ── Ação ─────────────────────────────────────────────────────────────────────
+  accent: "hsl(var(--ds-accent))",
+  /** Era `#828fff` escolhido à mão na M46 para dar 5,90:1. O token dá 6,09. */
+  accentBr: "hsl(var(--ds-accent-ink))",
+  /** V5: um acento só. O sistema não tem degrau de hover, e inventar um aqui recriaria o dialeto. */
+  accentHov: "hsl(var(--ds-accent-ink))",
+  accentBg: "hsl(var(--ds-accent) / 0.08)",
+  accentBord: "hsl(var(--ds-accent) / 0.22)",
 
-  // Status colors — usadas em gráfico E como TEXTO em chips de 9px, que é onde reprovavam.
-  green:      "#27a644",
-  amber:      "#fbbf24", // M46: era #d97706 (4.36:1).
-  red:        "#f87171", // M46: era #dc2626 (3.04:1). Agora 6.65:1.
-  greenBg:    "rgba(39,166,68,0.08)",
-  greenBord:  "rgba(39,166,68,0.2)",
-  amberBg:    "rgba(217,119,6,0.08)",
-  amberBord:  "rgba(217,119,6,0.22)",
-  redBg:      "rgba(220,38,38,0.07)",
-  redBord:    "rgba(220,38,38,0.2)",
+  // ── Sinais ───────────────────────────────────────────────────────────────────
+  green: "hsl(var(--ds-success))",
+  amber: "hsl(var(--ds-warning))",
+  red: "hsl(var(--ds-danger))",
+  greenBg: "hsl(var(--ds-success) / 0.08)",
+  greenBord: "hsl(var(--ds-success) / 0.2)",
+  amberBg: "hsl(var(--ds-warning) / 0.08)",
+  amberBord: "hsl(var(--ds-warning) / 0.22)",
+  redBg: "hsl(var(--ds-danger) / 0.07)",
+  redBord: "hsl(var(--ds-danger) / 0.2)",
 };
 
-// Inter Variable with Linear's OpenType features
+// As famílias saem da MESMA fonte que o Tailwind declara. `'Inter'` estava aqui e nunca carregou:
+// a CSP não permite CDN de fonte, então o navegador caía no fallback do sistema sem ninguém saber.
+// Agora aponta para o que o produto realmente tem.
 export const display: React.CSSProperties = {
-  fontFamily: "'Inter', -apple-system, system-ui, sans-serif",
+  fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
   fontFeatureSettings: '"cv01", "ss03"',
 };
-// JetBrains Mono for technical labels
 export const mono: React.CSSProperties = {
-  fontFamily: "'JetBrains Mono', 'Berkeley Mono', ui-monospace, monospace",
+  fontFamily: "'JetBrains Mono', ui-monospace, monospace",
 };
 
 /**

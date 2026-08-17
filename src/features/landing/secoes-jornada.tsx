@@ -66,7 +66,7 @@ export function HowItWorksSection() {
               className="rounded-2xl p-7 relative overflow-hidden transition-all duration-200 cursor-default"
               style={{
                 background: C.bgCard,
-                boxShadow: "rgba(255,255,255,0.07) 0px 0px 0px 1px, rgba(0,0,0,0.15) 0px 2px 8px -2px",
+                boxShadow: "hsl(var(--ds-border-default)) 0px 0px 0px 1px, rgba(0,0,0,0.15) 0px 2px 8px -2px",
               }}
             >
               {/* Watermark — M46: é textura, e agora está declarada como tal.
@@ -141,7 +141,7 @@ export function OutcomesSection() {
               className="rounded-2xl p-8 text-center relative overflow-hidden"
               style={{
                 background: C.bgCard,
-                boxShadow: "rgba(255,255,255,0.07) 0px 0px 0px 1px, rgba(0,0,0,0.15) 0px 2px 8px -2px",
+                boxShadow: "hsl(var(--ds-border-default)) 0px 0px 0px 1px, rgba(0,0,0,0.15) 0px 2px 8px -2px",
               }}>
               <div className="absolute inset-x-0 top-0 h-px"
                 style={{ background: `linear-gradient(90deg, transparent, ${o.color}50, transparent)` }} />

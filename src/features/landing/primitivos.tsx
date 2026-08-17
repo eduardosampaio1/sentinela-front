@@ -18,7 +18,7 @@ export function Tag({ label, color = "cyan" }: { label: string; color?: TagColor
     amber:  { bg: C.amberBg,   border: C.amberBord,  text: C.amber },
     red:    { bg: C.redBg,     border: C.redBord,     text: C.red },
     green:  { bg: C.greenBg,   border: C.greenBord,   text: C.green },
-    purple: { bg: "rgba(255,255,255,0.04)", border: C.border, text: C.muted },
+    purple: { bg: C.bgCard, border: C.border, text: C.muted },
   };
   const { bg, border, text } = conf[color];
   return (

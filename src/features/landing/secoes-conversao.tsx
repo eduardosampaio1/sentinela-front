@@ -48,7 +48,7 @@ export function PricingSection() {
           <div className="relative rounded-2xl p-8"
             style={{
               background: C.accentBg,
-              boxShadow: `${C.accentBord} 0px 0px 0px 1px, 0 0 48px -12px rgba(94,106,210,0.2), inset 0 1px 0 rgba(255,255,255,0.07)`,
+              boxShadow: `${C.accentBord} 0px 0px 0px 1px, 0 0 48px -12px hsl(var(--ds-accent) / 0.2), inset 0 1px 0 hsl(var(--ds-border-default))`,
             }}>
             <div className="absolute inset-x-0 top-0 h-px rounded-t-2xl"
               style={{ background: `linear-gradient(90deg, transparent, ${C.accentBr}90, transparent)` }} />
@@ -66,7 +66,7 @@ export function PricingSection() {
 
             <Link to="/register">
               <Button className="w-full rounded-lg h-12 text-base"
-                style={{ ...display, fontWeight: 500, background: C.accent, color: "#ffffff", boxShadow: `0 0 20px -6px ${C.accent}60` }}>
+                style={{ ...display, fontWeight: 500, background: C.accent, color: "hsl(var(--ds-text-on-accent))", boxShadow: `0 0 20px -6px ${C.accent}60` }}>
                 {t("landing.v2.pricing.cta")}
               </Button>
             </Link>
@@ -76,7 +76,7 @@ export function PricingSection() {
           <div className="rounded-2xl p-6"
             style={{
               background: C.bgCard,
-              boxShadow: "rgba(255,255,255,0.07) 0px 0px 0px 1px",
+              boxShadow: "hsl(var(--ds-border-default)) 0px 0px 0px 1px",
             }}>
             <div style={{ ...mono, fontSize: "9px", letterSpacing: "0.18em", textTransform: "uppercase", color: C.ghost, marginBottom: "1rem" }}>
               {t("landing.v2.pricing.featuresLabel")}
@@ -101,7 +101,7 @@ export function PricingSection() {
         <div className="max-w-2xl mx-auto mt-4 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4"
           style={{
             background: C.bgCard,
-            boxShadow: "rgba(255,255,255,0.07) 0px 0px 0px 1px",
+            boxShadow: "hsl(var(--ds-border-default)) 0px 0px 0px 1px",
           }}>
           <div className="flex-1">
             <Tag label="Runtime Control" color="cyan" />
@@ -111,7 +111,7 @@ export function PricingSection() {
           </div>
           <Link to="/aion" className="shrink-0">
             <Button variant="ghost" size="sm" className="rounded-lg whitespace-nowrap"
-              style={{ ...display, fontWeight: 400, color: C.muted, boxShadow: `rgba(255,255,255,0.07) 0px 0px 0px 1px` }}>
+              style={{ ...display, fontWeight: 400, color: C.muted, boxShadow: `hsl(var(--ds-border-default)) 0px 0px 0px 1px` }}>
               {t("landing.v2.pricing.aionCta")}
             </Button>
           </Link>
@@ -129,8 +129,8 @@ export function FinalCTA() {
     <section className="relative py-32 px-6 overflow-hidden" style={{ background: C.bg }}>
       <div className="absolute inset-0 pointer-events-none" style={{
         background: `
-          radial-gradient(ellipse at 20% 50%, rgba(94,106,210,0.08) 0%, transparent 52%),
-          radial-gradient(ellipse at 80% 50%, rgba(113,112,255,0.06) 0%, transparent 52%)
+          radial-gradient(ellipse at 20% 50%, hsl(var(--ds-accent) / 0.08) 0%, transparent 52%),
+          radial-gradient(ellipse at 80% 50%, hsl(var(--ds-accent) / 0.06) 0%, transparent 52%)
         `,
       }} />
       <div className="absolute inset-x-0 top-0 h-px"
@@ -172,13 +172,13 @@ export function FinalCTA() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link to="/register">
             <Button size="lg" className="rounded-lg h-12 px-10 text-base"
-              style={{ ...display, fontWeight: 500, background: `linear-gradient(135deg, ${C.accent}, ${C.accentBr})`, color: "#ffffff", boxShadow: `0 0 36px -10px rgba(94,106,210,0.5)` }}>
+              style={{ ...display, fontWeight: 500, background: `linear-gradient(135deg, ${C.accent}, ${C.accentBr})`, color: "hsl(var(--ds-text-on-accent))", boxShadow: `0 0 36px -10px hsl(var(--ds-accent) / 0.5)` }}>
               {t("landing.v2.cta.primary")}
             </Button>
           </Link>
           <Link to="/login">
             <Button size="lg" variant="outline" className="rounded-lg h-12 px-10 text-base"
-              style={{ ...display, fontWeight: 400, boxShadow: `rgba(255,255,255,0.1) 0px 0px 0px 1px`, borderColor: "transparent", color: C.muted }}>
+              style={{ ...display, fontWeight: 400, boxShadow: `hsl(var(--ds-border-default)) 0px 0px 0px 1px`, borderColor: "transparent", color: C.muted }}>
               {t("landing.v2.cta.secondary")}
             </Button>
           </Link>

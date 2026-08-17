@@ -17,8 +17,8 @@ export function ARGOSPanel({ score }: { score: number }) {
       <div
         className="absolute top-0 left-0 rounded-xl p-3 w-40 z-20"
         style={{
-          background: "rgba(9,9,11,0.96)",
-          boxShadow: `rgba(255,255,255,0.08) 0px 0px 0px 1px, 0 8px 32px -8px rgba(0,0,0,0.6), 0 0 20px -8px rgba(39,166,68,0.15)`,
+          background: "hsl(var(--ds-surface-raised))",
+          boxShadow: `hsl(var(--ds-border-default)) 0px 0px 0px 1px, 0 8px 32px -8px rgba(0,0,0,0.6), 0 0 20px -8px hsl(var(--ds-success) / 0.15)`,
           backdropFilter: "blur(12px)",
         }}
       >
@@ -27,7 +27,7 @@ export function ARGOSPanel({ score }: { score: number }) {
           <span style={{ ...mono, fontSize: "22px", fontWeight: 700, color: C.green, lineHeight: 1 }}>78%</span>
           <span style={{ ...mono, fontSize: "9px", color: C.green, paddingBottom: 2 }}>↑ +4%</span>
         </div>
-        <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+        <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: "hsl(var(--ds-surface-selected))" }}>
           <div style={{ width: "78%", height: "100%", borderRadius: 999, background: C.green, opacity: 0.7 }} />
         </div>
       </div>
@@ -36,8 +36,8 @@ export function ARGOSPanel({ score }: { score: number }) {
       <div
         className="relative rounded-2xl overflow-hidden"
         style={{
-          boxShadow: `rgba(255,255,255,0.09) 0px 0px 0px 1px, 0 0 60px -20px rgba(94,106,210,0.18), 0 40px 80px -30px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)`,
-          background: "linear-gradient(145deg, rgba(15,16,17,0.98), rgba(9,9,11,0.99))",
+          boxShadow: `hsl(var(--ds-border-strong)) 0px 0px 0px 1px, 0 0 60px -20px hsl(var(--ds-accent) / 0.18), 0 40px 80px -30px rgba(0,0,0,0.7), inset 0 1px 0 hsl(var(--ds-border-default))`,
+          background: "linear-gradient(145deg, hsl(var(--ds-surface-raised)), hsl(var(--ds-surface-base)))",
         }}
       >
         <div className="absolute inset-x-0 top-0 h-px"
@@ -45,7 +45,7 @@ export function ARGOSPanel({ score }: { score: number }) {
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3"
-          style={{ borderBottom: `1px solid ${C.border}`, background: "rgba(255,255,255,0.02)" }}>
+          style={{ borderBottom: `1px solid ${C.border}`, background: C.bgCard }}>
           <div className="flex items-center gap-2.5">
             <GlowDot color={C.accentBr} />
             <span style={{ ...mono, fontSize: "11px", color: C.accentBr, fontWeight: 600 }}>ARGOS · MK 3.5</span>
@@ -69,7 +69,7 @@ export function ARGOSPanel({ score }: { score: number }) {
               <span style={{ ...display, fontSize: "56px", fontWeight: 700, color: C.accentBr, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{score}</span>
               <span style={{ ...mono, fontSize: "16px", color: C.ghost, paddingBottom: 6 }}>/100</span>
             </div>
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "hsl(var(--ds-surface-selected))" }}>
               <div
                 className="h-full rounded-full transition-all duration-700 ease-out"
                 style={{ width: `${score}%`, background: `linear-gradient(90deg, ${C.amber}88, ${C.accentBr})` }}
@@ -85,7 +85,7 @@ export function ARGOSPanel({ score }: { score: number }) {
               { label: "Confidence", v: "68%",   d: "stable",      col: C.green },
             ].map((m) => (
               <div key={m.label} className="rounded-xl p-2.5"
-                style={{ boxShadow: `rgba(255,255,255,0.06) 0px 0px 0px 1px`, background: "rgba(255,255,255,0.02)" }}>
+                style={{ boxShadow: `hsl(var(--ds-border-default)) 0px 0px 0px 1px`, background: C.bgCard }}>
                 <div style={{ ...mono, fontSize: "8px", letterSpacing: "0.14em", textTransform: "uppercase", color: C.ghost, marginBottom: 3 }}>{m.label}</div>
                 <div style={{ ...mono, fontSize: "15px", fontWeight: 700, color: m.col, lineHeight: 1 }}>{m.v}</div>
                 <div style={{ ...mono, fontSize: "8px", color: C.ghost, marginTop: 2 }}>{m.d}</div>
@@ -136,8 +136,8 @@ export function ARGOSPanel({ score }: { score: number }) {
       <div
         className="absolute bottom-0 right-0 rounded-xl p-3 w-44 z-20"
         style={{
-          background: "rgba(9,9,11,0.96)",
-          boxShadow: `rgba(255,255,255,0.08) 0px 0px 0px 1px, 0 8px 32px -8px rgba(0,0,0,0.6), 0 0 20px -8px rgba(220,38,38,0.15)`,
+          background: "hsl(var(--ds-surface-raised))",
+          boxShadow: `hsl(var(--ds-border-default)) 0px 0px 0px 1px, 0 8px 32px -8px rgba(0,0,0,0.6), 0 0 20px -8px hsl(var(--ds-danger) / 0.15)`,
           backdropFilter: "blur(12px)",
         }}
       >

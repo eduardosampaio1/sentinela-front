@@ -196,7 +196,7 @@ export function PlatformSection() {
               className={`rounded-2xl p-6 relative overflow-hidden transition-all duration-200 cursor-default${cap.wide ? " xl:col-span-2" : ""}`}
               style={{
                 background: C.bgCard,
-                boxShadow: "rgba(255,255,255,0.07) 0px 0px 0px 1px, rgba(0,0,0,0.15) 0px 2px 8px -2px",
+                boxShadow: "hsl(var(--ds-border-default)) 0px 0px 0px 1px, rgba(0,0,0,0.15) 0px 2px 8px -2px",
               }}
             >
               {cap.wide ? (

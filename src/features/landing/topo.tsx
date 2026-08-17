@@ -39,8 +39,8 @@ export function Hero() {
       {/* Background — very subtle indigo radials, no dot grid */}
       <div className="absolute inset-0" style={{
         background: `
-          radial-gradient(ellipse at 10% 50%, rgba(94,106,210,0.07) 0%, transparent 50%),
-          radial-gradient(ellipse at 90% 20%, rgba(113,112,255,0.05) 0%, transparent 45%),
+          radial-gradient(ellipse at 10% 50%, hsl(var(--ds-accent) / 0.07) 0%, transparent 50%),
+          radial-gradient(ellipse at 90% 20%, hsl(var(--ds-accent) / 0.05) 0%, transparent 45%),
           ${C.bg}
         `,
       }} />
@@ -106,13 +106,13 @@ export function Hero() {
             <div className="flex flex-col sm:flex-row gap-3">
               <Link to="/register">
                 <Button size="lg" className="rounded-lg h-12 px-8 text-base w-full sm:w-auto"
-                  style={{ ...display, fontWeight: 500, background: C.accent, color: "#ffffff", boxShadow: `0 0 28px -8px ${C.accent}60` }}>
+                  style={{ ...display, fontWeight: 500, background: C.accent, color: "hsl(var(--ds-text-on-accent))", boxShadow: `0 0 28px -8px ${C.accent}60` }}>
                   {t("landing.v2.hero.cta1")}
                 </Button>
               </Link>
               <a href="#platform">
                 <Button size="lg" variant="outline" className="rounded-lg h-12 px-8 text-base w-full sm:w-auto"
-                  style={{ ...display, fontWeight: 400, boxShadow: `rgba(255,255,255,0.07) 0px 0px 0px 1px`, borderColor: "transparent", color: C.muted }}>
+                  style={{ ...display, fontWeight: 400, boxShadow: `hsl(var(--ds-border-default)) 0px 0px 0px 1px`, borderColor: "transparent", color: C.muted }}>
                   {t("landing.v2.hero.cta2")}
                 </Button>
               </a>
@@ -146,7 +146,7 @@ const MODELS = [
   { name: "Phi-4",         short: "Ph", color: "#00BCF2", bg: "rgba(0,188,242,0.14)"   },
   { name: "Gemma 2",       short: "Ga", color: "#34A853", bg: "rgba(52,168,83,0.14)"   },
   { name: "Mixtral",       short: "Mx", color: "#E87D26", bg: "rgba(232,125,38,0.14)"  },
-  { name: "Custom LLMs",   short: "+",  color: "#7170ff", bg: "rgba(113,112,255,0.14)" },
+  { name: "Custom LLMs",   short: "+",  color: C.accent, bg: C.accentBg },
 ];
 
 function ModelBadge({ m }: { m: typeof MODELS[number] }) {
@@ -155,8 +155,8 @@ function ModelBadge({ m }: { m: typeof MODELS[number] }) {
       className="flex items-center gap-2.5 rounded-lg flex-shrink-0"
       style={{
         padding: "7px 14px 7px 10px",
-        boxShadow: "rgba(255,255,255,0.07) 0px 0px 0px 1px",
-        background: "rgba(255,255,255,0.025)",
+        boxShadow: "hsl(var(--ds-border-default)) 0px 0px 0px 1px",
+        background: C.bgCard,
       }}
     >
       {/* M46 — o monograma é a MARCA do fornecedor (`#1877F2` é da Meta, `#4E6EF2` da DeepSeek,
@@ -187,7 +187,7 @@ export function ContextStrip() {
   const track = [...MODELS, ...MODELS];
 
   return (
-    <div style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, background: "rgba(255,255,255,0.01)", padding: "18px 0 22px" }}>
+    <div style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, background: C.bgAlt, padding: "18px 0 22px" }}>
       {/* Label row */}
       <div className="max-w-6xl mx-auto px-6 flex items-center gap-3 mb-5">
         <span style={{ ...mono, fontSize: "9px", letterSpacing: "0.22em", textTransform: "uppercase", color: C.subtle }}>

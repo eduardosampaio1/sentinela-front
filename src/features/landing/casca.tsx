@@ -17,7 +17,7 @@ export function Navbar() {
       className="fixed top-3 left-4 right-4 sm:left-6 sm:right-6 z-50 h-14 flex items-center justify-between px-4 sm:px-5 rounded-xl"
       style={{
         background: "rgba(9,9,11,0.90)",
-        boxShadow: "rgba(255,255,255,0.07) 0px 0px 0px 1px, 0 8px 24px -8px rgba(0,0,0,0.5)",
+        boxShadow: "hsl(var(--ds-border-default)) 0px 0px 0px 1px, 0 8px 24px -8px rgba(0,0,0,0.5)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
       }}
@@ -61,7 +61,7 @@ export function Navbar() {
         <button
           onClick={() => setLanguage(language === "en" ? "pt" : "en")}
           className="rounded-lg px-2.5 py-1 text-xs transition-colors hover:text-slate-200"
-          style={{ ...mono, fontWeight: 600, color: C.ghost, boxShadow: `rgba(255,255,255,0.07) 0px 0px 0px 1px`, background: "rgba(255,255,255,0.02)", cursor: "pointer", border: "none" }}
+          style={{ ...mono, fontWeight: 600, color: C.ghost, boxShadow: `hsl(var(--ds-border-default)) 0px 0px 0px 1px`, background: C.bgCard, cursor: "pointer", border: "none" }}
         >
           {language === "en" ? "PT" : "EN"}
         </button>
@@ -73,7 +73,7 @@ export function Navbar() {
         </Link>
         <Link to="/register">
           <Button size="sm" className="rounded-lg"
-            style={{ ...display, background: C.accent, color: "#ffffff", fontWeight: 500 }}>
+            style={{ ...display, background: C.accent, color: "hsl(var(--ds-text-on-accent))", fontWeight: 500 }}>
             {t("landing.v2.nav.start")}
           </Button>
         </Link>
