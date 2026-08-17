@@ -110,8 +110,13 @@ export function ProfilePage() {
                   <dt className="text-xs uppercase tracking-wider text-muted-foreground">
                     {c.rotulo}
                   </dt>
-                  {/* Campo sem valor NÃO vira travessão silencioso: o rótulo do vazio diz que a
-                      origem não publicou, que é diferente de "está em branco". */}
+                  {/* Campo sem valor NÃO vira travessão silencioso, e TAMBÉM não vira mensagem
+                      de falha.
+                      A primeira versão usava `identityFailed` — "não deu para carregar seus dados
+                      agora" — para qualquer campo nulo. Visto na tela: o provedor de acesso, que o
+                      mock simplesmente não publica, aparecia acusando erro de carga. São estados
+                      diferentes: `unavailable` não é `failed`, e trocar um pelo outro manda a
+                      pessoa procurar um problema que não existe. */}
                   <dd
                     className={
                       c.valor
@@ -121,7 +126,7 @@ export function ProfilePage() {
                         : "text-sm text-muted-foreground"
                     }
                   >
-                    {c.valor ?? t("account.identityFailed")}
+                    {c.valor ?? t("account.fieldAbsent")}
                   </dd>
                 </div>
               ))}
