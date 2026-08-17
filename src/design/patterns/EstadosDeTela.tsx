@@ -92,7 +92,15 @@ export function ErrorState({
         <AlertTriangle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
         <Stack espaco="xs" className="min-w-0 flex-1">
           <Text papel="titulo">{titulo}</Text>
-          <Text tom="discreto">{explicacao}</Text>
+          {/* `secundario`, nao `discreto` — a troca de paleta cobrou um papel errado.
+                axe mediu `text-muted-foreground` a 4,41:1 sobre o `bg-destructive/10` desta caixa,
+                contra os 4,5 exigidos. Erra por nove centesimos, e num lugar caro: e a frase que
+                explica o que aconteceu.
+                O token nao e o culpado — a nota dele ja diz que texto de apoio vive sobre `base` ou
+                `raised`, e esta superficie e tingida. E a correcao nao e geometrica: a explicacao de
+                um erro NAO e texto incidental. `discreto` estava errado desde sempre; a paleta
+                antiga so tinha folga bastante para esconder. */}
+            <Text tom="secundario">{explicacao}</Text>
           {detalhe !== undefined && (
             <Text papel="rotulo" tom="discreto" literal>
               {detalhe}

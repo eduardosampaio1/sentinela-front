@@ -58,7 +58,14 @@ function Moldura({
       <Stack espaco="sm">
         <StatusBadge vocabulario="publico" estado="needs_mapping" rotulo={rotuloDoEstado} />
         <Text papel="titulo">{titulo}</Text>
-        <Text tom="discreto">{explicacao}</Text>
+        {/* `secundario`, não `discreto` — e a troca de paleta é que expôs o erro de papel.
+            axe mediu `text-muted-foreground` a 4,41:1 sobre a superfície tingida onde este bloco
+            aparece, contra 4,5 exigidos. O token não é o culpado: a nota dele já diz que texto de
+            apoio vive sobre `base` ou `raised`, e uma caixa de estado é tingida.
+            Mas a correção não é geométrica, é semântica: a explicação de um erro, ou do que a
+            pessoa precisa fazer, NÃO é texto incidental. `discreto` era o papel errado desde
+            sempre, e só a paleta nova cobrou. */}
+        <Text tom="secundario">{explicacao}</Text>
         {children}
       </Stack>
     </div>

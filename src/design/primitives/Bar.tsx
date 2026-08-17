@@ -40,7 +40,20 @@ export function Bar({
         {/* Suprimida NÃO desenha barra de largura zero: uma barra vazia e uma barra de valor zero
             são indistinguíveis, e as duas afirmam coisas opostas. */}
         {!suprimida && (
-          <span className="block h-full rounded-full bg-primary" style={{ width: largura }} />
+          // `data-revelar="barra"` — A RECEITA JÁ EXISTIA E NÃO TINHA CONSUMIDOR.
+          //
+          // O motor de movimento declara `barra` desde que nasceu: `scaleX(0)` → `scaleX(1)`,
+          // `--ds-duration-deliberate`, `--ds-easing-emphasis`, origem à esquerda "porque é de lá
+          // que ela é medida". Varri o produto e o atributo não aparecia em lugar nenhum: o gesto
+          // estava escrito e desligado.
+          //
+          // Não há duração literal aqui, e nem poderia — o motor lê os tokens em runtime, e é isso
+          // que mantém as cinco durações congeladas valendo para todo mundo.
+          <span
+            data-revelar="barra"
+            className="block h-full rounded-full bg-primary"
+            style={{ width: largura }}
+          />
         )}
       </span>
       <span className={suprimida ? "text-muted-foreground" : "font-medium tabular-nums text-foreground"}>
