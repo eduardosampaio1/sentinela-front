@@ -127,7 +127,7 @@
       "blocked": "The operation that resolves this is not exposed in the public contract yet."
     },
     "analyticsView": {
-      "title": "Analytics",
+      "title": "Measures",
       "mapTitle": "Where this number came from",
       "mapDenominator": "Records read",
       "mapMeasure": "Measure",

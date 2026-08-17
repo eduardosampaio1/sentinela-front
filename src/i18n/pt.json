@@ -127,7 +127,7 @@
       "blocked": "A operação que resolve isto ainda não está exposta no contrato público."
     },
     "analyticsView": {
-      "title": "Analytics",
+      "title": "Medidas",
       "mapTitle": "De onde veio este número",
       "mapDenominator": "Registros lidos",
       "mapMeasure": "Medida",
