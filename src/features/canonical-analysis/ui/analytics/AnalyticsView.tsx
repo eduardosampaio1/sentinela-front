@@ -125,7 +125,7 @@ function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
             className="mt-2"
             gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}
           >
-            <MapaDeProcedencia medida={m} denominador={snapshot.record_count} />
+            <MapaDeProcedencia bloco={{ tipo: "numerico", dado: m }} denominador={snapshot.record_count} />
           </Disclosure>
         </div>
       ))}
@@ -135,8 +135,11 @@ function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
 
 function Distribuicoes({
   itens,
+  denominador,
 }: {
   readonly itens: SnapshotAnalitico["distributions"];
+  /** `record_count` — a raiz do mapa. Nao e um numero deste bloco. */
+  readonly denominador: number;
 }) {
   const { t } = useLanguage();
   return (
@@ -162,6 +165,9 @@ function Distribuicoes({
               {t("canonicalAnalysis.analyticsView.other")}: {d.other_count}
             </p>
           ) : null}
+          <Disclosure className="mt-2" gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}>
+            <MapaDeProcedencia bloco={{ tipo: "distribuicao", dado: d }} denominador={denominador} />
+          </Disclosure>
         </div>
       ))}
     </div>
@@ -218,6 +224,16 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
               </li>
             ))}
           </ul>
+          {/* A concentração desdobra em FAIXAS de valor com contagem de entidades, e carrega três
+              recusas distintas — grosseirização, supressão e cardinalidade alta. Cada uma vira seu
+              próprio nó no mapa: agrupá-las num "suprimido" único apagaria por que o número não
+              veio, que é justamente o que alguém abre o mapa para descobrir. */}
+          <Disclosure className="mt-2" gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}>
+            <MapaDeProcedencia
+              bloco={{ tipo: "concentracao", dado: c }}
+              denominador={snapshot.record_count}
+            />
+          </Disclosure>
         </div>
       ))}
     </div>
@@ -251,6 +267,14 @@ function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
               </li>
             ))}
           </ul>
+          {/* A série desdobra em JANELAS, e a janela suprimida entra no mapa com a hachura —
+              `count: null` acontece apenas em `suppressed`, e zero é valor. */}
+          <Disclosure className="mt-2" gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}>
+            <MapaDeProcedencia
+              bloco={{ tipo: "serie", dado: s }}
+              denominador={snapshot.record_count}
+            />
+          </Disclosure>
         </div>
       ))}
     </div>
@@ -333,12 +357,12 @@ export function AnalyticsView() {
               id="anl-distribuicoes"
               titulo={t("canonicalAnalysis.analyticsView.distributions")}
             >
-              <Distribuicoes itens={snapshot.distributions} />
+              <Distribuicoes itens={snapshot.distributions} denominador={snapshot.record_count} />
             </Secao>
 
             {/* Rótulo explícito: estas NÃO são as dimensões de saúde do ARGOS. */}
             <Secao id="anl-dimensoes" titulo={t("canonicalAnalysis.analyticsView.dimensions")}>
-              <Distribuicoes itens={snapshot.dimensions} />
+              <Distribuicoes itens={snapshot.dimensions} denominador={snapshot.record_count} />
             </Secao>
 
             <Secao
