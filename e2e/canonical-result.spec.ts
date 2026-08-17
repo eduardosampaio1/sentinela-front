@@ -55,10 +55,10 @@ test.describe("E5 — resultado canônico (browser real)", () => {
     await expect(cobertura).not.toContainText("8,500");
     // contagem e contagem, sem "%" -- o par do caso acima. Se a unidade viesse do rotulo em
     // vez do documento, os dois passariam (ou falhariam) juntos.
-    // Âncora no INÍCIO do texto do card: "Analyzed conversations" também aparece no meio da
+    // Âncora no INÍCIO do texto do card: "Conversations" também aparece no meio da
     // descrição de outros indicadores ("Share of ... analyzed conversations"), e um `hasText`
     // solto casava quatro cards.
-    const contagem = page.locator("li", { hasText: /^Analyzed conversations/ });
+    const contagem = page.locator("li", { hasText: /^Conversations/ });
     await expect(contagem).toContainText("100");
     await expect(contagem, "contagem não é formatada como taxa").not.toContainText("100%");
     // `token_waste_absolute` ("Wasted records") NAO e mais asserido: ele saiu do registro
@@ -81,11 +81,11 @@ test.describe("E5 — resultado canônico (browser real)", () => {
   test("refresh: reload reconstrói por workspace + analysis_id (da URL)", async ({ page }) => {
     await semear(page, "an-res", MASSA_A);
     await page.goto("/canonical/analyses/an-res/result");
-    await expect(page.getByText("Useful outcome rate")).toBeVisible();
+    await expect(page.getByText("Useful rate")).toBeVisible();
 
     await page.reload();
     await expect(page.getByTestId("canonical-result-page")).toBeVisible();
-    await expect(page.getByText("Useful outcome rate")).toBeVisible();
+    await expect(page.getByText("Useful rate")).toBeVisible();
     await expect(page.locator("li", { hasText: "Intent coverage" })).toContainText("85");
   });
 
@@ -103,7 +103,7 @@ test.describe("E5 — resultado canônico (browser real)", () => {
   test("parcial: seção suportada renderiza e a parcialidade é sinalizada", async ({ page }) => {
     await semear(page, "an-parc", MASSA_D_PARCIAL);
     await page.goto("/canonical/analyses/an-parc/result");
-    await expect(page.getByText("Useful outcome rate")).toBeVisible();
+    await expect(page.getByText("Useful rate")).toBeVisible();
     await expect(page.getByText(/Some sections aren't available/i)).toBeVisible();
   });
 
@@ -115,7 +115,7 @@ test.describe("E5 — resultado canônico (browser real)", () => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await semear(page, "an-res", MASSA_A);
       await page.goto("/canonical/analyses/an-res/result");
-      await expect(page.getByText("Useful outcome rate")).toBeVisible();
+      await expect(page.getByText("Useful rate")).toBeVisible();
       const excesso = await page.evaluate(() => {
         const el = document.scrollingElement ?? document.documentElement;
         return el.scrollWidth - el.clientWidth;

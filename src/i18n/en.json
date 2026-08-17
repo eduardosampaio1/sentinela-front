@@ -225,8 +225,8 @@
       "intentScore": "Score",
       "responseVariance": "Response variance",
       "output": {
-        "behavior_score": "Behaviour score",
-        "ai_health_score": "AI health",
+        "behavior_score": "Behavior score",
+        "ai_health_score": "AI health score",
         "consistency_score": "Consistency score",
         "global_confidence": "Global confidence",
         "cross_intent_similarity": "Cross-intent similarity",
@@ -393,11 +393,11 @@
       "noIndicators": "No supported indicator in this result.",
       "indicator": {
         "useful_outcome_rate": {
-          "label": "Useful outcome rate",
+          "label": "Useful rate",
           "description": "Share of analyzed conversations with a useful outcome, as declared by the domain."
         },
         "outcome_field_coverage_rate": {
-          "label": "Outcome field coverage",
+          "label": "Outcome field coverage rate",
           "description": "Share of records that carried an outcome field at all. Low coverage limits every outcome-based number below."
         },
         "conversion_rate": {
@@ -409,31 +409,31 @@
           "description": "Share of the intent catalog observed in this dataset."
         },
         "analyzed_conversation_count": {
-          "label": "Analyzed conversations",
+          "label": "Conversations",
           "description": "How many conversations entered the analysis. It is the denominator of the rates above."
         },
         "useful_outcome_count": {
-          "label": "Useful outcomes",
+          "label": "Useful outcomes observed",
           "description": "How many conversations had a useful outcome. Absolute count, never a percentage."
         },
         "handoff_count": {
-          "label": "Handoffs",
+          "label": "Handoff count",
           "description": "How many conversations were handed off, as observed in the records."
         },
         "conversion_count": {
-          "label": "Conversions",
+          "label": "Conversion count",
           "description": "How many conversations reached the conversion status. Absolute count."
         },
         "total_estimated_cost": {
-          "label": "Total estimated cost",
+          "label": "Observed total cost",
           "description": "Sum of the per-record cost estimates provided by the source. It is an estimate, not billing."
         },
         "token_cost_total": {
-          "label": "Token cost",
+          "label": "Observed token cost",
           "description": "Portion of the estimated cost attributed to tokens."
         },
         "handoff_cost_total": {
-          "label": "Handoff cost",
+          "label": "Observed handoff cost",
           "description": "Portion of the estimated cost attributed to handoffs."
         },
         "cost_per_useful_outcome": {
@@ -445,7 +445,7 @@
           "description": "Estimated cost divided by analyzed conversations."
         },
         "mean_response_variance_per_intent": {
-          "label": "Mean response variance per intent",
+          "label": "Response variance",
           "description": "Average variance of responses within each intent. It measures dispersion — it is not consistency, drift or confidence."
         }
       },

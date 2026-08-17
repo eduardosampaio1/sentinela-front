@@ -651,7 +651,11 @@ export function ArgosView() {
                   <Medicao
                     medicao={{ ...p.measurement, unit: p.currency ?? p.measurement.unit }}
                     // O horizonte e DADO e entra no rotulo — nunca inferido do nome do id.
-                    rotulo={`${rotuloDe(p.id)} · ${p.horizon}`}
+                    //
+                    // A BARRA e o separador OFICIAL, nao escolha de estilo: o nome registrado e
+                    // `Projected token cost / month`. Com `·` a tela mostrava as duas partes certas
+                    // e o nome oficial nenhum — e a Regra de Ouro de nomes manda o oficial vencer.
+                    rotulo={`${rotuloDe(p.id)} / ${p.horizon}`}
                   />
                   {p.basis ? (
                     <p className="pb-2 text-xs text-muted-foreground">

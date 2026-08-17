@@ -410,19 +410,27 @@ describe("M14 · 6. nenhuma superfície nasce com texto hardcoded", () => {
 // `AI health score` repetia a seção — virou "AI health"/"Saúde da IA", que é melhor copy e ainda
 // desceu a razão. É a mesma lição que este arquivo já registrou com "da instância".
 //
-// Os quatro que ficam, e por que nenhum é prolixidade:
+// ## 49 → 41: a Regra de Ouro de nomes matou os quatro piores, e não por encurtamento
 //
-//   `estimated_handoff_cost`   1,41   PT escreve "handoff" (7) como "transferência" (14)
+// Os quatro que este bloco documentava como "estouro legítimo" eram TODOS nome de métrica:
+//
+//   `estimated_handoff_cost`   1,41   PT escrevia "handoff" (7) como "transferência" (14)
 //   `projected_handoff_cost`   1,46   a mesma palavra, a mesma conta
-//   `behavior_score`           1,53   "Escore de comportamento" precisa do "escore": sem ele
-//                                     colide com a DIMENSÃO "Comportamental", que aparece na
-//                                     mesma tela, e duas coisas diferentes ficariam com nomes a
-//                                     uma letra de distância
-//   `response_stability`       1,33   estoura por um fio; encurtar viraria "Estabilidade" seca
+//   `behavior_score`           1,53   "Escore de comportamento" precisava do "escore"
+//   `response_stability`       1,33   estourava por um fio
 //
-// Duas das quatro são a MESMA palavra do idioma. Encurtá-las seria escolher um termo pior para
-// caber num orçamento — e o orçamento existe para proteger o layout, não para editar o PT.
-const ACIMA_DO_ORCAMENTO = 49;
+// A Regra de Ouro "Nomes de métrica e tradução" (vault, 2026-08-17) decidiu que 34 das 39 saídas
+// do ARGOS não traduzem — basta uma palavra ser construto do produto para o nome inteiro ficar em
+// inglês. Os quatro viraram razão **1,00**, e junto com eles outros vinte nomes.
+//
+// Note o que NÃO aconteceu: ninguém encurtou frase nenhuma para caber no orçamento. A razão caiu
+// porque o nome oficial passou a ser o mesmo texto nos dois idiomas — decisão de produto, com a
+// queda da métrica como efeito, não como objetivo. Encurtar PT para caber continua proibido.
+//
+// Os 41 restantes são frase de interface, não nome de métrica: ali "transferência" e "disponível"
+// seguem sendo as palavras certas em português, e o orçamento existe para proteger o layout, não
+// para editar o idioma.
+const ACIMA_DO_ORCAMENTO = 41;
 const ORCAMENTO = 1.3;
 
 describe("M14 · 7. PT-BR cabe no orçamento de +30 %", () => {

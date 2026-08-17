@@ -225,21 +225,21 @@
       "intentScore": "Escore",
       "responseVariance": "Variância da resposta",
       "output": {
-        "behavior_score": "Escore de comportamento",
-        "ai_health_score": "Saúde da IA",
-        "consistency_score": "Escore de consistência",
-        "global_confidence": "Confiança global",
-        "cross_intent_similarity": "Similaridade entre intenções",
-        "response_stability": "Estabilidade da resposta",
-        "semantic_drift": "Desvio semântico",
-        "estimated_handoff_cost": "Custo estimado de transferência",
-        "intents_detected_count": "Intenções detectadas",
-        "covered_intents_count": "Intenções cobertas",
+        "behavior_score": "Behavior score",
+        "ai_health_score": "AI health score",
+        "consistency_score": "Consistency score",
+        "global_confidence": "Global confidence",
+        "cross_intent_similarity": "Cross-intent similarity",
+        "response_stability": "Response stability",
+        "semantic_drift": "Semantic drift",
+        "estimated_handoff_cost": "Estimated handoff cost",
+        "intents_detected_count": "Intents detected",
+        "covered_intents_count": "Covered intents",
         "critical_alert_count": "Alertas críticos",
-        "containment_risk": "Risco de contenção",
-        "conversion_risk": "Risco de conversão",
-        "projected_token_cost": "Custo de tokens projetado",
-        "projected_handoff_cost": "Custo de transferência projetado"
+        "containment_risk": "Containment risk",
+        "conversion_risk": "Conversion risk",
+        "projected_token_cost": "Projected token cost",
+        "projected_handoff_cost": "Projected handoff cost"
       },
       "familyEmpty": "Esta capacidade rodou e não achou nada.",
       "indicators": "Indicadores",
@@ -393,11 +393,11 @@
       "noIndicators": "Nenhum indicador suportado neste resultado.",
       "indicator": {
         "useful_outcome_rate": {
-          "label": "Taxa de desfecho útil",
+          "label": "Useful rate",
           "description": "Fração das conversas analisadas com desfecho útil, conforme o domínio."
         },
         "outcome_field_coverage_rate": {
-          "label": "Cobertura do campo de desfecho",
+          "label": "Outcome field coverage rate",
           "description": "Fração dos registros que trouxeram campo de desfecho. Cobertura baixa limita todos os números baseados em desfecho."
         },
         "conversion_rate": {
@@ -405,19 +405,19 @@
           "description": "Fração das conversas analisadas que atingiram o status de conversão declarado pelo domínio."
         },
         "intent_coverage_rate": {
-          "label": "Cobertura de intenções",
+          "label": "Intent coverage",
           "description": "Fração do catálogo de intenções observada neste conjunto de dados."
         },
         "analyzed_conversation_count": {
-          "label": "Conversas analisadas",
+          "label": "Conversas",
           "description": "Quantas conversas entraram na análise. É o denominador das taxas acima."
         },
         "useful_outcome_count": {
-          "label": "Desfechos úteis",
+          "label": "Useful outcomes observed",
           "description": "Quantas conversas tiveram desfecho útil. Contagem absoluta, nunca percentual."
         },
         "handoff_count": {
-          "label": "Transferências",
+          "label": "Handoff count",
           "description": "Quantas conversas foram transferidas, conforme observado nos registros."
         },
         "conversion_count": {
@@ -425,19 +425,19 @@
           "description": "Quantas conversas atingiram o status de conversão. Contagem absoluta."
         },
         "total_estimated_cost": {
-          "label": "Custo total estimado",
+          "label": "Observed total cost",
           "description": "Soma das estimativas de custo por registro fornecidas pela origem. É estimativa, não fatura."
         },
         "token_cost_total": {
-          "label": "Custo de tokens",
+          "label": "Observed token cost",
           "description": "Parcela do custo estimado atribuída a tokens."
         },
         "handoff_cost_total": {
-          "label": "Custo de transferências",
+          "label": "Observed handoff cost",
           "description": "Parcela do custo estimado atribuída a transferências."
         },
         "cost_per_useful_outcome": {
-          "label": "Custo por desfecho útil",
+          "label": "Cost per useful outcome",
           "description": "Custo estimado dividido pelos desfechos úteis. Sem desfecho útil não há denominador — o valor é ausente, não zero."
         },
         "cost_per_session": {
@@ -445,7 +445,7 @@
           "description": "Custo estimado dividido pelas conversas analisadas."
         },
         "mean_response_variance_per_intent": {
-          "label": "Variância média de resposta por intenção",
+          "label": "Response variance",
           "description": "Variância média das respostas dentro de cada intenção. Mede dispersão — não é consistência, drift nem confiança."
         }
       },

@@ -69,14 +69,14 @@ describe("ResultPage — renderização canônica dos indicadores (massa A)", ()
     const rotuloRegistros = await screen.findByText("Records analyzed");
     expect(rotuloRegistros.parentElement?.textContent).toContain("100");
 
-    // `Useful outcomes` NAO esta mais no resumo: no contrato canonico ele e um INDICADOR, com
+    // `Useful outcomes observed` NAO esta mais no resumo: no contrato canonico ele e um INDICADOR, com
     // estado e denominador proprios. Duplica-lo criaria dois lugares para o mesmo numero.
-    const uteis = screen.getByText("Useful outcomes").closest("li");
+    const uteis = screen.getByText("Useful outcomes observed").closest("li");
     expect(uteis, "useful outcomes deve ser um indicador (li), nao um item do resumo").toBeTruthy();
     expect(uteis?.textContent).toContain("80");
 
     // indicadores: rótulo do descriptor + valor formatado + unidade
-    expect(screen.getByText("Useful outcome rate")).toBeTruthy();
+    expect(screen.getByText("Useful rate")).toBeTruthy();
     expect(screen.getByText("Intent coverage")).toBeTruthy();
     // Escopado ao cartao: com 14 indicadores, "85" tambem e a cobertura do campo de desfecho.
     const cobertura = screen.getByText("Intent coverage").closest("li");
@@ -84,7 +84,7 @@ describe("ResultPage — renderização canônica dos indicadores (massa A)", ()
     expect(cobertura?.textContent).toContain("%");
 
     // contagem NUNCA vira percentual
-    const conversas = screen.getByText("Analyzed conversations").closest("li");
+    const conversas = screen.getByText("Conversations").closest("li");
     expect(conversas?.textContent).toContain("100");
     expect(conversas?.textContent).not.toContain("100%");
 
@@ -108,7 +108,7 @@ describe("ResultPage — ausência, parcialidade e incompatibilidade", () => {
     expect(cpuo?.textContent).not.toMatch(/\b0\b/);
 
     // Zero REAL continua sendo zero — e essa e a diferenca que importa.
-    const taxa = screen.getByText("Useful outcome rate").closest("li");
+    const taxa = screen.getByText("Useful rate").closest("li");
     expect(taxa?.textContent).toContain("0");
     expect(taxa?.textContent).toContain("%");
 
@@ -126,7 +126,7 @@ describe("ResultPage — ausência, parcialidade e incompatibilidade", () => {
   it("massa parcial: indicador suportado aparece + aviso de parcialidade", async () => {
     servir(MASSA_D_PARCIAL);
     montar();
-    expect(await screen.findByText("Useful outcome rate")).toBeTruthy();
+    expect(await screen.findByText("Useful rate")).toBeTruthy();
     expect(screen.getByText(/Some sections aren't available/i)).toBeTruthy();
   });
 
@@ -151,7 +151,7 @@ describe("ResultPage — integridade indicador ↔ descriptor ↔ campo canônic
   it("todo indicador renderizado tem descriptor com label, description e sourceField", async () => {
     servir(MASSA_A);
     montar();
-    await screen.findByText("Useful outcome rate");
+    await screen.findByText("Useful rate");
     for (const id of MASSA_A.indicators.map((i: { id: string }) => i.id)) {
       const d = INDICATOR_DESCRIPTORS[id];
       expect(d, `sem descriptor: ${id}`).toBeTruthy();
@@ -164,7 +164,7 @@ describe("ResultPage — integridade indicador ↔ descriptor ↔ campo canônic
   it("axe: sem violações na página de resultado", async () => {
     servir(MASSA_A);
     const { container } = montar();
-    await screen.findByText("Useful outcome rate");
+    await screen.findByText("Useful rate");
     const r = await axe.run(container, { rules: { "color-contrast": { enabled: false } } });
     expect(r.violations).toEqual([]);
   });

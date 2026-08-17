@@ -464,14 +464,73 @@ describe("M31 · 7. o locale PT está em PT", () => {
           achatar(v, pre ? `${pre}.${k}` : k),
         );
 
+  // ## A isenção dos NOMES DE MÉTRICA, e por que ela é nominal
+  //
+  // A Regra de Ouro "Nomes de métrica e tradução" (vault, 2026-08-17) decidiu que 34 das 39 saídas
+  // do ARGOS **não traduzem**: basta uma palavra ser construto do produto (`score`, `drift`,
+  // `handoff`, `intent`, `token`, `observed`…) para o nome inteiro ficar em inglês, porque meio
+  // nome traduzido é pior que nenhum — `Custo de handoff observado` não é o nome oficial nem é
+  // português.
+  //
+  // Isso cria pares idênticos LEGÍTIMOS de duas palavras ou mais, que este cadeado passou a
+  // reprovar. A isenção é **nominal**: vale só para `indicator.<id>.label`. A `description` do
+  // mesmo indicador continua sob o cadeado — e é exatamente lá que o esquecimento de tradução
+  // acontece de verdade, porque descrição é frase, não nome.
+  const NOME_DE_METRICA = /^indicator\.[a-z_0-9]+\.label$/;
+
   it("nenhuma frase de RES-01 é idêntica à sua versão inglesa", () => {
     const ingles = new Map(achatar(en.canonicalAnalysis.result));
     // Frases, não termos: `delta`, `drift` e `P1` são iguais nos dois idiomas POR CONGELAMENTO
     // (§15), e exigir que difiram quebraria o vocabulário congelado. Duas palavras ou mais.
     const iguais = achatar(pt.canonicalAnalysis.result).filter(
-      ([chave, valor]) => valor.split(/\s+/).length >= 2 && ingles.get(chave) === valor,
+      ([chave, valor]) =>
+        valor.split(/\s+/).length >= 2 &&
+        ingles.get(chave) === valor &&
+        !NOME_DE_METRICA.test(chave),
     );
     expect(iguais.map(([c]) => c)).toEqual([]);
+  });
+
+  it("a isenção de nome de métrica cobre exatamente os que a regra manda não traduzir", () => {
+    // Sem esta asserção a isenção seria um buraco: bastaria alguém traduzir `Observed total cost`
+    // de volta — ou parar de traduzir `Conversas` — para o cadeado seguir verde. Aqui a regra
+    // vira teste: a lista é o contrato, e diverge nos dois sentidos.
+    const ingles = new Map(achatar(en.canonicalAnalysis.result));
+    const isentos = achatar(pt.canonicalAnalysis.result)
+      .filter(([chave, valor]) => NOME_DE_METRICA.test(chave) && ingles.get(chave) === valor)
+      .map(([c]) => c.replace(/^indicator\.|\.label$/g, ""))
+      .sort();
+
+    expect(isentos).toEqual(
+      [
+        "cost_per_useful_outcome",
+        "handoff_count",
+        "intent_coverage_rate",
+        "mean_response_variance_per_intent",
+        "outcome_field_coverage_rate",
+        "token_cost_total",
+        "total_estimated_cost",
+        "handoff_cost_total",
+        "useful_outcome_count",
+        "useful_outcome_rate",
+      ].sort(),
+    );
+  });
+
+  it("os cinco que a regra manda TRADUZIR continuam traduzidos", () => {
+    // O lado positivo da mesma regra. `Conversations` vira `Conversas` porque nenhuma palavra do
+    // nome é construto do produto; se alguém "padronizar" isso para inglês, cai aqui.
+    const ingles = new Map(achatar(en.canonicalAnalysis.result));
+    const portugues = new Map(achatar(pt.canonicalAnalysis.result));
+    for (const id of [
+      "analyzed_conversation_count",
+      "conversion_rate",
+      "conversion_count",
+      "cost_per_session",
+    ]) {
+      const chave = `indicator.${id}.label`;
+      expect(portugues.get(chave), chave).not.toBe(ingles.get(chave));
+    }
   });
 
   it("controle positivo: o comparador enxerga uma frase idêntica quando ela existe", () => {

@@ -91,7 +91,7 @@ const ROTAS = [
   { nome: "lista", url: "/canonical/analyses", ancora: "Your analyses" },
   { nome: "entrada", url: "/canonical/analyses/new", ancora: "New analysis" },
   // A página de RESULTADO é a superfície nova da E5 — precisa do mesmo gate (Codex E7 R2 [P2]).
-  { nome: "resultado", url: "/canonical/analyses/an-c1/result", ancora: "Useful outcome rate" },
+  { nome: "resultado", url: "/canonical/analyses/an-c1/result", ancora: "Useful rate" },
 ];
 
 for (const rota of ROTAS) {
