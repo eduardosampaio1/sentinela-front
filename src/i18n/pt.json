@@ -207,6 +207,15 @@
       "groupMeasurements": "O que o ARGOS mediu",
       "priority": "Prioridade",
       "domainsNavLabel": "Domínios deste diagnóstico",
+"whereToInvestigate": "Onde investigar",
+      "investigate": "Investigar",
+      "metricCount": "{{n}} métricas",
+      "domainQuestion": {
+        "semantic": "O sentido derivou, e onde?",
+        "behavioral": "O comportamento mudou, e onde?",
+        "structural": "A forma das respostas se mantém?",
+        "economic": "Quanto custou, e quanto virou valor?"
+      },
       "overview": "Visão geral",
       "withoutDomain": "{{n}} publicados sem domínio declarado, e aparecem aqui na Visão geral.",
       "minSamples": "Amostra mínima por intenção",

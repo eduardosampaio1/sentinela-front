@@ -25,6 +25,7 @@
 // que a manchete mudou de assunto.
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Text } from "@/design/primitives";
 import type { PublicScore } from "@/lib/v1/contract/public-v3.types";
 import {
   apresentacaoDaMedicao,
@@ -60,18 +61,19 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
     >
       <h3
         id="argos-heroi"
-        className="text-xs font-semibold uppercase tracking-widest text-accent-ink"
+        className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-[hsl(var(--ds-accent-ink))]"
       >
         {rotulo}
       </h3>
 
       <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
         {valor !== null ? (
-          // `tabular-nums` e peso médio: número grande em peso pesado vira cartaz. O tamanho já
-          // carrega a hierarquia, e a fonte de largura fixa é o que faz dígito parecer medida.
-          <span className="text-6xl font-medium leading-none tabular-nums tracking-tight">
+          // O papel `heroi` mora no sistema, não aqui. Ele é fluido de propósito — 104px do
+          // protótipo não cabe em 375px de viewport — e traz peso médio e numerais tabulares:
+          // número grande em peso pesado vira cartaz, e dígito de largura variável destrói leitura.
+          <Text papel="heroi" numerico>
             {valor}
-          </span>
+          </Text>
         ) : (
           // Sem valor, o ESTADO ocupa o lugar do número, no tamanho do texto — nunca um zero
           // grande, nunca um travessão do tamanho de um número.

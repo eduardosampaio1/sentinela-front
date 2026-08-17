@@ -50,6 +50,7 @@ import { descriptorDe } from "../../result/descriptors";
 import { AbasDeDominio } from "./AbasDeDominio";
 import { Heroi } from "./Heroi";
 import { Intencoes } from "./Intencoes";
+import { Portas } from "./Portas";
 import { AnalysisShell } from "../AnalysisShell";
 import { ProblemFeedback, problemCodeOf } from "../notices";
 import { useCanonicalScope } from "../scope";
@@ -410,6 +411,10 @@ export function ArgosView() {
             natureza do resumo executivo. Ele abre a leitura, e o texto explica o que o número quer
             dizer logo abaixo. */}
         {heroi ? <Heroi escore={heroi} rotulo={rotuloDe(ID_DO_HEROI)} /> : null}
+
+        {/* AS PORTAS — o "onde investigar" do protótipo, e só na Visão geral.
+            Dentro de uma aba de domínio elas seriam um menu apontando para onde a pessoa já está. */}
+        {dominio === null ? <Portas agrupamento={agrupamento} rotuloDe={rotuloDe} /> : null}
 
         {temConclusao ? (
           <Grupo

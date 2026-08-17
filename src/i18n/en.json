@@ -207,6 +207,15 @@
       "groupMeasurements": "What ARGOS measured",
       "priority": "Priority",
       "domainsNavLabel": "Domains of this assessment",
+"whereToInvestigate": "Where to investigate",
+      "investigate": "Investigate",
+      "metricCount": "{{n}} metrics",
+      "domainQuestion": {
+        "semantic": "Did meaning drift, and where?",
+        "behavioral": "Did behaviour change, and where?",
+        "structural": "Is the shape of the answers holding?",
+        "economic": "What did it cost, and what became value?"
+      },
       "overview": "Overview",
       "withoutDomain": "{{n}} published without a declared domain, shown here in Overview.",
       "minSamples": "Minimum sample per intent",
