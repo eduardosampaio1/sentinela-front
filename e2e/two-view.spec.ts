@@ -111,7 +111,9 @@ test.describe("F6 — ONE ANALYSIS, TWO VIEWS (browser real)", () => {
     // `aria-current` e não só cor: quem não distingue as duas cores precisa saber onde está.
     await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
 
-    await nav.getByRole("link", { name: "Analytics" }).click();
+    // "Measures", não "Analytics": o rótulo mudou porque a categoria genérica não dizia à pessoa
+    // o que ela ia encontrar. A ROTA, que é o que esta prova defende, ficou igual.
+    await nav.getByRole("link", { name: "Measures" }).click();
     await expect(page.getByTestId("analytics-view")).toBeVisible();
     expect(new URL(page.url()).pathname).toBe("/analyses/an-v3/analytics");
   });

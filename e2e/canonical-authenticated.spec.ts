@@ -69,11 +69,14 @@ test.describe("Jornada canônica autenticada (browser real + MSW stateful)", () 
     //
     // A assercao segue exigindo o href EXATO do analysis_id desta jornada, pelo mesmo motivo de
     // antes: um link certo para a analise errada passa despercebido em captura.
-    const verArgos = page.getByRole("link", { name: "ARGOS", exact: true });
+    // Os RÓTULOS mudaram: "ARGOS" era nome de motor e "Analytics" era categoria genérica, e
+    // ninguém que abre a tela sabe o que nenhum dos dois quer dizer. Em EN viraram "Assessment" e
+    // "Measures". As ROTAS não mudaram — e são elas que esta prova protege.
+    const verArgos = page.getByRole("link", { name: "Assessment", exact: true });
     await expect(verArgos).toBeVisible();
     await expect(verArgos).toHaveAttribute("href", "/analyses/an-e2e/argos");
 
-    const verAnalytics = page.getByRole("link", { name: "Analytics", exact: true });
+    const verAnalytics = page.getByRole("link", { name: "Measures", exact: true });
     await expect(verAnalytics).toBeVisible();
     await expect(verAnalytics).toHaveAttribute("href", "/analyses/an-e2e/analytics");
 
