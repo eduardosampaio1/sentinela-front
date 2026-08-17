@@ -56,9 +56,20 @@ function Porta({
   const larguras = largurasDeItens(amostra);
 
   return (
-    <li>
+    // `data-revelar` em CADA porta, não só na seção.
+    //
+    // Com um `data-revelar` na seção inteira as quatro entravam no mesmo quadro, e o resultado é
+    // um bloco que aparece — não uma sequência que se apresenta. O motor escalona por ÍNDICE do
+    // elemento, então basta cada cartão ser um alvo para o ritmo aparecer.
+    //
+    // A receita é `bloco`: deslocamento puro, sem opacidade. A matriz transversal impôs essa regra
+    // depois de reprovar contraste em vinte jornadas — texto entrando com opacidade fica abaixo de
+    // 4,5:1 enquanto a animação roda, e axe mede o quadro, não o destino.
+    <li data-revelar>
       {/* O cartão INTEIRO é o link. O protótipo fazia o cartão clicável, e um cartão com um
-          "investigar" pequeno no pé obriga a mirar — alvo de toque de 44px é a régua da casa. */}
+          "investigar" pequeno no pé obriga a mirar — alvo de toque de 44px é a régua da casa.
+          `transition-colors` no hover: cor muda, geometria não. Animar borda ou fundo por
+          `transform` não existe, e animar largura obrigaria layout a cada quadro. */}
       <Link
         to={`${pathname}?${PARAM_DOMINIO}=${dominio}`}
         className="flex h-full flex-col gap-3 rounded-lg border border-border bg-card p-5 transition-colors hover:border-[hsl(var(--ds-accent-ink))] hover:bg-muted"

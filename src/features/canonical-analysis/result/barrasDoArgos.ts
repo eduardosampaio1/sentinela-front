@@ -35,29 +35,60 @@ export function valorDoItem(entrada: ItemDeDominio, locale: string): string | nu
 }
 
 /**
+ * O limite em que o número vive, LIDO do contrato — nunca inventado aqui.
+ *
+ * ## Eu tinha subestimado o que o contrato publica
+ *
+ * A versão anterior desta função tratava só `ratio_unit` e dava barra cheia para todo o resto,
+ * porque eu acreditava que o limite não era publicado. Está publicado, e em dois lugares:
+ *
+ *   `scale.minimum` / `scale.maximum`   explícitos, quando o produtor os declara
+ *   `scale.kind`                        `ratio_unit` é 0..1 e `score_100` é 0..100 por definição
+ *
+ * O docblock do próprio `Scale` diz: *"a faixa em que o número vive. Declarada, nunca inferida."*
+ *
+ * `percent` fica de FORA de propósito: o nome sugere 0..100, mas percentual de crescimento passa
+ * de 100 e percentual de queda é negativo. Sem `maximum` explícito, não há limite — e chutar 100
+ * seria a inferência que este arquivo existe para não fazer.
+ *
+ * `currency`, `count`, `duration` e `raw` não têm teto natural. Sem `maximum`, não há denominador.
+ */
+function limiteDe(m: Medivel): { readonly min: number; readonly max: number } | null {
+  const { kind, minimum, maximum } = m.scale;
+  if (minimum !== null && minimum !== undefined && maximum !== null && maximum !== undefined) {
+    return maximum > minimum ? { min: minimum, max: maximum } : null;
+  }
+  if (kind === "ratio_unit") return { min: 0, max: 1 };
+  if (kind === "score_100") return { min: 0, max: 100 };
+  return null;
+}
+
+/**
  * Uma largura por item, na ordem em que os itens vieram.
  *
  * ## Escala por ITEM, não por família
  *
- * Escalar contra o maior da lista é o que a barra de contagem faz, e aqui seria errado: estes itens
- * têm ESCALAS diferentes — razão 0..1, contagem, moeda. O maior valor absoluto seria sempre o de
- * moeda, e as razões virariam traços invisíveis ao lado dele.
+ * Escalar contra o maior da lista seria errado aqui: estes itens têm escalas diferentes — razão
+ * 0..1, escore 0..100, contagem, moeda. O maior valor absoluto seria sempre o de moeda, e as razões
+ * virariam traços invisíveis ao lado dele. Cada item é medido contra o PRÓPRIO limite.
  *
- * Então cada item é escalado contra o próprio limite quando a escala é conhecida (`ratio_unit` vai
- * de 0 a 1), e recebe largura cheia quando não há limite publicado — porque barra sem denominador
- * não mede nada, e fingir um denominador é inventar.
+ * ## Sem limite publicado, a barra fica CHEIA — decisão de owner
+ *
+ * Eu havia recomendado não desenhar barra nenhuma nesse caso, e o owner escolheu a barra cheia.
+ * O risco fica registrado: cheia pode ser lida como "está no máximo", e ninguém publicou máximo.
+ * O que reduz o risco é que o número aparece ao lado em todas as linhas, e que agora este caso é
+ * RARO — com `minimum`/`maximum`, `ratio_unit` e `score_100` cobertos, sobra moeda, contagem e
+ * duração sem teto declarado.
  */
 export function largurasDeItens(itens: readonly ItemDeDominio[]): string[] {
   return itens.map((entrada) => {
     const m = medicaoDe(entrada);
     if (m.value === null || m.value === undefined) return "0%";
-    if (m.scale.kind === "ratio_unit") {
-      const limitado = m.value < 0 ? 0 : m.value > 1 ? 1 : m.value;
-      return `${(limitado * 100).toFixed(1)}%`;
-    }
-    // Sem limite publicado, a barra não tem o que medir. Cheia é honesto: ela deixa de afirmar
-    // proporção e passa a ser só presença — e o número ao lado continua dizendo tudo.
-    return "100%";
+    const limite = limiteDe(m);
+    if (limite === null) return "100%";
+    const fracao = (m.value - limite.min) / (limite.max - limite.min);
+    const limitada = fracao < 0 ? 0 : fracao > 1 ? 1 : fracao;
+    return `${(limitada * 100).toFixed(1)}%`;
   });
 }
 
