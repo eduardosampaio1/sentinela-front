@@ -113,6 +113,7 @@ export interface PublicIntent {
   response_stability?: PublicMeasurement | null;
   response_variance?: PublicMeasurement | null;
   score: PublicMeasurement;
+  semantic_drift?: PublicMeasurement | null;
   severity?: string | null;
   support: number;
   underrepresented?: boolean;
