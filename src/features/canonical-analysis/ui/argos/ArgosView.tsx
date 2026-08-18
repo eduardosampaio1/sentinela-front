@@ -41,14 +41,14 @@ import { useAnalysisStatus } from "../../data/analysis";
 import { familiaFoiProduzida, type FamiliaArgos } from "../../result/contratoV3";
 import { ID_DO_HEROI, nomeadoPeloCatalogo } from "../../result/catalogoArgos";
 import {
-  agruparPorDominio,
-  contagemPorDominio,
-  dominioDaUrl,
-  recortarPorDominio,
-} from "../../result/dominiosDoArgos";
+  agruparPorPorta,
+  contagemPorPorta,
+  portaDaUrl,
+  recortarPorPorta,
+} from "../../result/portasDoArgos";
 import { descriptorDe } from "../../result/descriptors";
 import { formatarNumero } from "../../result/formatacao";
-import { AbasDeDominio } from "./AbasDeDominio";
+import { AbasDePorta } from "./AbasDePorta";
 import { Heroi } from "./Heroi";
 import { Intencoes } from "./Intencoes";
 import { Portas } from "./Portas";
@@ -231,16 +231,21 @@ export function ArgosView() {
   // O status alimenta o shell — a leitura é a mesma da jornada, deduplicada pela `queryKey`.
   const status = useAnalysisStatus(scope, analysisId);
   const argos = useAnalysisArgos(scope, analysisId);
-  // O domínio pedido pela URL. `null` = Visão geral, que é a AUSÊNCIA do parâmetro — assim todo
+  // A PORTA pedida pela URL. `null` = Visão geral, que é a AUSÊNCIA do parâmetro — assim todo
   // link para `/argos` que já existe abre exatamente onde abria antes.
+  //
+  // O `?dominio=` antigo NÃO é traduzido para porta, e a decisão é medida: o parâmetro nasceu
+  // em 17/08 e o commit nunca saiu desta máquina, então existem ZERO links salvos. Mapear
+  // `economic` → `economia` afirmaria uma equivalência falsa — o domínio mostrava UMA métrica,
+  // a porta mostra dezoito —, e o link passaria a apontar para outra coisa em silêncio.
   const { search } = useLocation();
-  const dominio = dominioDaUrl(search);
+  const porta = portaDaUrl(search);
   // A chave junta as duas leituras E o domínio: o documento chega depois do status, e um observador
   // montado sobre a árvore de carregamento não observa seção nenhuma — o laudo apareceria parado.
   // Sem o domínio na chave, trocar de aba trocaria o conteúdo sem movimento, e a tela pareceria
   // ter piscado em vez de ter navegado.
   const raiz = useRevelacao<HTMLDivElement>(
-    `${argos.dataUpdatedAt}|${argos.isPending}|${dominio ?? "geral"}`,
+    `${argos.dataUpdatedAt}|${argos.isPending}|${porta ?? "geral"}`,
   );
 
   const titulo = t("canonicalAnalysis.argos.title");
@@ -342,7 +347,7 @@ export function ArgosView() {
     }
 
     const completo = leitura.documento;
-    const agrupamento = agruparPorDominio(completo);
+    const agrupamento = agruparPorPorta(completo);
 
     /**
      * ## A aba é FILTRO, não portão
@@ -355,10 +360,10 @@ export function ArgosView() {
      * qual domínio o produtor pôs aquele indicador — informação que ela não tem por que saber de
      * cabeça. A aba serve para quem já sabe onde quer olhar.
      *
-     * `recortarPorDominio` devolve `null` — não `[]` — para a família sem item no corte, e é o que
+     * `recortarPorPorta` devolve `null` — não `[]` — para a família sem item no corte, e é o que
      * impede a aba de dizer "rodou e não achou" sobre algo que está na aba vizinha.
      */
-    const d = dominio ? recortarPorDominio(completo, dominio) : completo;
+    const d = porta ? recortarPorPorta(completo, porta) : completo;
 
     // O grupo só nasce com conteúdo. `familiaFoiProduzida` é a MESMA pergunta que cada `Familia`
     // faz — perguntá-la aqui antes evita o cartão com título e nada dentro, que afirmaria que o
@@ -367,7 +372,7 @@ export function ArgosView() {
     // As CONCLUSÕES não se recortam por domínio: alerta, achado e recomendação não publicam
     // `domain`, e o resumo executivo é sobre o documento inteiro. Elas vivem na Visão geral.
     const temConclusao =
-      dominio === null &&
+      porta === null &&
       (Boolean(completo.executive_summary) ||
         familiaFoiProduzida(completo, "alerts") ||
         familiaFoiProduzida(completo, "issues") ||
@@ -379,7 +384,7 @@ export function ArgosView() {
     // comportamento inteiro, não de um domínio. Sem `behavior_score` publicado, não há herói —
     // promover outro escore ao posto trocaria em silêncio qual número é a manchete.
     const heroi =
-      dominio === null
+      porta === null
         ? (completo.scores ?? []).find((s) => s.measurement.id === ID_DO_HEROI) ?? null
         : null;
     return (
@@ -409,9 +414,9 @@ export function ArgosView() {
 
         {/* As abas ficam ACIMA de tudo e fora dos grupos: elas dizem qual corte está na tela, e um
             controle de navegação abaixo do conteúdo que ele controla não é encontrado. */}
-        <AbasDeDominio
-          contagens={contagemPorDominio(agrupamento)}
-          semDominio={agrupamento.semDominio.length}
+        <AbasDePorta
+          contagens={contagemPorPorta(agrupamento)}
+          semPorta={agrupamento.semPorta.length}
         />
 
         {/* O herói ANTES das conclusões, e isto foi uma escolha contra o meu próprio instinto.
@@ -476,7 +481,7 @@ export function ArgosView() {
 
         {/* AS PORTAS — o "onde investigar" do protótipo, e só na Visão geral.
             Dentro de uma aba de domínio elas seriam um menu apontando para onde a pessoa já está. */}
-        {dominio === null ? <Portas agrupamento={agrupamento} rotuloDe={rotuloDe} /> : null}
+        {porta === null ? <Portas agrupamento={agrupamento} rotuloDe={rotuloDe} /> : null}
 
         {temConclusao ? (
           <Grupo

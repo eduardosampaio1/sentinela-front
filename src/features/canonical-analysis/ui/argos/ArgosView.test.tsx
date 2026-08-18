@@ -519,7 +519,7 @@ describe("F3 · a barra de referência tem TRÊS estados", () => {
   });
 });
 
-describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () => {
+describe("F3 · as PORTAS filtram, e a porta é eixo de leitura — não `domain`", () => {
   const G = pt.canonicalAnalysis.argos;
   const base = { availability: "available", reason: "ok", scale: { kind: "ratio_unit" } } as const;
 
@@ -580,34 +580,46 @@ describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () =>
     }
   });
 
-  it("a aba NARROWS: o escore do outro domínio sai da tela", async () => {
-    renderizar(comDominios(), 200, "?dominio=semantic");
+  it("a porta NARROWS: o que pertence a outra sai da tela", async () => {
+    renderizar(comDominios(), 200, "?porta=qualidade");
     const secao = await screen.findByRole("region", { name: G.scores });
     expect(within(secao).getByText(G.output.semantic_drift)).toBeInTheDocument();
+    // `global_confidence` é de Cobertura; o herói não é item de porta nenhuma.
+    expect(within(secao).queryByText(G.output.global_confidence)).not.toBeInTheDocument();
     expect(within(secao).queryByText(G.output.behavior_score)).not.toBeInTheDocument();
   });
 
-  it("família SEM item no domínio é OMITIDA, e não diz 'rodou e não achou'", async () => {
-    // A diferença que `recortarPorDominio` existe para preservar: `null` (não está neste corte)
-    // contra `[]` (procuramos e não há). Riscos só existem em `economic`; na aba `semantic` a
-    // seção não pode nascer afirmando ausência.
-    renderizar(comDominios(), 200, "?dominio=semantic");
+  it("família SEM item na porta é OMITIDA, e não diz 'rodou e não achou'", async () => {
+    // A diferença que `recortarPorPorta` existe para preservar: `null` (não está neste corte)
+    // contra `[]` (procuramos e não há). O risco da massa é de Economia; na porta Qualidade
+    // a seção não pode nascer afirmando ausência.
+    renderizar(comDominios(), 200, "?porta=qualidade");
     await screen.findByRole("region", { name: G.scores });
     expect(screen.queryByRole("region", { name: G.risks })).not.toBeInTheDocument();
     expect(screen.queryByText(G.familyEmpty)).not.toBeInTheDocument();
   });
 
-  it("o publicado SEM domínio não vira quinta aba — e a tela diz quantos são", async () => {
+  it("são TRÊS portas mais a Visão geral — e nada fica sem lugar", async () => {
     renderizar(comDominios());
     const nav = await screen.findByRole("navigation", { name: G.domainsNavLabel });
-    // Quatro domínios mais a Visão geral. Uma quinta aba seria um domínio que ninguém declarou.
-    expect(within(nav).getAllByRole("link")).toHaveLength(5);
-    // A contagem tem que estar INTERPOLADA. Sem isto a tela mostraria `{{n}}` — e a primeira
-    // versão deste caso não media o número, então passaria com o placeholder cru na tela.
-    //
-    // O número não é fixado de propósito: ele depende de quantos indicadores o artefato REAL
-    // publica sem `domain`, e prender o teste a isso o quebraria quando o backend crescesse.
-    expect(nav.textContent ?? "").toMatch(/\d+ publicados sem domínio declarado/);
+    expect(within(nav).getAllByRole("link")).toHaveLength(4);
+    // O GANHO desta fatia, medido: com o eixo `domain`, o artefato real deixava 31 saídas num
+    // balde e a barra dizia isso em voz alta. Com as portas não há sobra, e a linha some.
+    expect(nav.textContent ?? "").not.toMatch(/sem porta declarada/);
+  });
+
+  it("mas a linha de sobra APARECE quando há saída sem porta", async () => {
+    // O contra-cadeado do caso acima. Sem ele, "não aparece" passaria também se a linha nunca
+    // pudesse aparecer — e aí o teste mediria a impossibilidade, não a ausência de sobra.
+    const doc = comDominios();
+    (doc.result.scores as unknown[]).push({
+      measurement: { id: "saida_sem_porta_declarada", value: 0.5, ...base },
+    });
+    renderizar(doc);
+    const nav = await screen.findByRole("navigation", { name: G.domainsNavLabel });
+    expect(nav.textContent ?? "").toMatch(/1 publicados sem porta declarada/);
+    // A contagem precisa estar INTERPOLADA: sem isto a tela mostraria `{{n}}` cru, e a
+    // primeira versão deste caso não media o número — passaria com o placeholder na tela.
   });
 
   it("o herói é o `behavior_score` e só existe na Visão geral", async () => {
@@ -616,8 +628,8 @@ describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () =>
     expect(container.querySelector('[data-heroi="true"]')).not.toBeNull();
   });
 
-  it("na aba de um domínio NÃO há herói — ele é o resumo do documento, não do corte", async () => {
-    const { container } = renderizar(comDominios(), 200, "?dominio=behavioral");
+  it("dentro de uma porta NÃO há herói — ele é o resumo do documento, não do corte", async () => {
+    const { container } = renderizar(comDominios(), 200, "?porta=qualidade");
     await screen.findByRole("region", { name: G.scores });
     expect(container.querySelector('[data-heroi="true"]')).toBeNull();
   });
@@ -659,8 +671,8 @@ describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () =>
     ).not.toBeInTheDocument();
   });
 
-  it("`dominio` fora do vocabulário cai na Visão geral em vez de quebrar", async () => {
-    renderizar(comDominios(), 200, "?dominio=inventado");
+  it("`porta` fora do vocabulário cai na Visão geral em vez de quebrar", async () => {
+    renderizar(comDominios(), 200, "?porta=inventada");
     const secao = await screen.findByRole("region", { name: G.scores });
     expect(within(secao).getByText(G.output.behavior_score)).toBeInTheDocument();
   });
@@ -719,30 +731,30 @@ describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () =>
    */
   describe("o preço da emenda ao T4 — porta no endereço, sem mentir no papel ARIA", () => {
     it("deep link DIRETO abre na porta pedida, e ela se anuncia por aria-current", async () => {
-      renderizar(comDominios(), 200, "?dominio=economic");
-      const ativa = await screen.findByRole("link", { current: "page", name: /econômica/i });
-      expect(ativa.getAttribute("href")).toContain("dominio=economic");
+      renderizar(comDominios(), 200, "?porta=economia");
+      const ativa = await screen.findByRole("link", { current: "page", name: /economia/i });
+      expect(ativa.getAttribute("href")).toContain("porta=economia");
     });
 
     it("sem parâmetro é a Visão geral — nenhum deep link antigo muda de destino", async () => {
       renderizar(comDominios(), 200, "");
       const ativa = await screen.findByRole("link", { current: "page", name: /visão geral/i });
-      expect(ativa.getAttribute("href")).not.toContain("dominio=");
+      expect(ativa.getAttribute("href")).not.toContain("porta=");
     });
 
     it("a porta é LINK: nenhum `role=tab` na árvore renderizada", async () => {
-      const { container } = renderizar(comDominios(), 200, "?dominio=economic");
-      await screen.findByRole("link", { current: "page", name: /econômica/i });
+      const { container } = renderizar(comDominios(), 200, "?porta=economia");
+      await screen.findByRole("link", { current: "page", name: /economia/i });
       expect(container.querySelectorAll('[role="tab"]').length).toBe(0);
       expect(container.querySelectorAll('[role="tablist"]').length).toBe(0);
-      expect(container.querySelectorAll("a[href*='dominio=']").length).toBeGreaterThanOrEqual(4);
+      expect(container.querySelectorAll("a[href*='porta=']").length).toBeGreaterThanOrEqual(3);
     });
 
     it("cada porta aponta para a SUA — nenhuma reaproveita o destino da ativa", async () => {
-      const { container } = renderizar(comDominios(), 200, "?dominio=semantic");
-      await screen.findByRole("link", { current: "page", name: /semântica/i });
-      const destinos = [...container.querySelectorAll("a[href*='dominio=']")].map((a) =>
-        new URL(a.getAttribute("href") as string, "http://x").searchParams.get("dominio"),
+      const { container } = renderizar(comDominios(), 200, "?porta=qualidade");
+      await screen.findByRole("link", { current: "page", name: /qualidade/i });
+      const destinos = [...container.querySelectorAll("a[href*='porta=']")].map((a) =>
+        new URL(a.getAttribute("href") as string, "http://x").searchParams.get("porta"),
       );
       expect(new Set(destinos).size).toBe(destinos.length);
     });

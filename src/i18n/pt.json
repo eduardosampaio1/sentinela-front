@@ -294,7 +294,12 @@
         "qualidade": "Qualidade & Comportamento",
         "economia": "Economia & Eficiência",
         "cobertura": "Cobertura & Evidência",
-        "semPorta": "{{n}} publicados sem porta declarada, e aparecem aqui na Visão geral."
+        "semPorta": "{{n}} publicados sem porta declarada, e aparecem aqui na Visão geral.",
+        "pergunta": {
+          "qualidade": "A IA se comporta como deveria, e onde não?",
+          "economia": "Quanto custou, e quanto virou resultado?",
+          "cobertura": "Esta leitura tem base suficiente?"
+        }
       }
     },
     "compare": {

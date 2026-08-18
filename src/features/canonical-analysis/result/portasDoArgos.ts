@@ -250,3 +250,37 @@ export function contagemPorPorta(a: AgrupamentoPorPorta): Readonly<Record<Porta,
     cobertura: a.porPorta.cobertura.length,
   };
 }
+
+/**
+ * O documento RECORTADO por uma porta — a tela renderiza a MESMA árvore sobre menos itens.
+ *
+ * ## `null`, não `[]`, e a razão é a mesma do recorte por domínio
+ *
+ * `familiaFoiProduzida` distingue por presença de campo: `null` = "esta capacidade não foi
+ * produzida", `[]` = "rodou e não encontrou nada". A tela omite a seção no primeiro caso e
+ * escreve "procurou e não achou" no segundo.
+ *
+ * Se o recorte devolvesse `[]` para uma família que existe mas não tem item NESTA porta, a tela
+ * afirmaria "procuramos e não há" — quando a verdade é "há, em outra porta". `null` faz a seção
+ * simplesmente não aparecer naquele corte, que é o que é verdade.
+ *
+ * Família originalmente ausente continua ausente: `null` recortado de `null` segue `null`.
+ */
+export function recortarPorPorta(
+  d: AnalysisResultV3Document,
+  porta: Porta,
+): AnalysisResultV3Document {
+  const itens = agruparPorPorta(d).porPorta[porta];
+  const ouNada = <T,>(lista: T[]): T[] | null => (lista.length > 0 ? lista : null);
+  const daFamilia = (familia: ItemDaPorta["familia"]) =>
+    itens.filter((i) => i.familia === familia).map((i) => i.item);
+
+  return {
+    ...d,
+    scores: ouNada(daFamilia("scores") as AnalysisResultV3Document["scores"] & unknown[]),
+    dimensions: ouNada(daFamilia("dimensions") as AnalysisResultV3Document["dimensions"] & unknown[]),
+    indicators: ouNada(daFamilia("indicators") as AnalysisResultV3Document["indicators"] & unknown[]),
+    risks: ouNada(daFamilia("risks") as AnalysisResultV3Document["risks"] & unknown[]),
+    projections: ouNada(daFamilia("projections") as AnalysisResultV3Document["projections"] & unknown[]),
+  } as AnalysisResultV3Document;
+}

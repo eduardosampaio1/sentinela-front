@@ -1,13 +1,22 @@
 // As PORTAS da Visão geral — os cartões que o protótipo chamava de "onde investigar".
 //
-// ## Quatro portas, não três
+// ## Três portas — e isto REVERTE o que estava escrito aqui
 //
-// O protótipo desenhou TRÊS portas — "Qualidade & Comportamento", "Economia & Eficiência",
-// "Cobertura & Evidência". Aquele agrupamento era um chute editorial dele, feito antes de alguém
-// olhar o contrato. O contrato publica `domain` com vocabulário FECHADO de quatro valores, e é
-// esse o eixo real.
+// A versão anterior deste arquivo dizia "quatro portas, não três": o protótipo agrupava
+// editorialmente, o contrato publica `domain` com vocabulário fechado de quatro valores, "e é
+// esse o eixo real". O argumento sobre PROCEDÊNCIA continua certo — `domain` é publicado, a
+// porta não é.
 //
-// Então: mesmo desenho, taxonomia verdadeira. Uma porta por domínio publicado.
+// O que ele não mediu foi o ALCANCE. `assemble_v3._dominio_de` só classifica as quatro dimensões
+// de saúde, e diz por quê: *"inventar um domínio para `useful_outcome_rate` seria afirmar uma
+// classificação que ninguém fez"*. Medido no catálogo: **4 das 39 saídas têm `domain`; 33 saem
+// `null`** — e a própria tela anunciava isso, *"31 publicados sem domínio declarado, e aparecem
+// aqui na Visão geral"*.
+//
+// Quatro cartões que cobriam quatro métricas, com trinta e uma num balde, não eram "a taxonomia
+// verdadeira": eram a lista plana com quatro exceções. Os dois eixos COEXISTEM — `domain` segue
+// sendo a procedência das dimensões, e a porta é o eixo de leitura sobre o que o contrato deixa
+// `null` de propósito. A porta nunca é escrita em `domain`, e há teste para isso.
 //
 // ## Os três sinais de cada porta, e a regra que escolhe
 //
@@ -28,25 +37,25 @@
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Text } from "@/design/primitives";
-import type { Domain } from "@/lib/v1/contract/public-v3.types";
 import {
-  DOMINIOS,
-  PARAM_DOMINIO,
-  type AgrupamentoPorDominio,
-  type ItemDeDominio,
-} from "../../result/dominiosDoArgos";
+  PARAM_PORTA,
+  PORTAS,
+  type AgrupamentoPorPorta,
+  type ItemDaPorta,
+  type Porta as ChaveDaPorta,
+} from "../../result/portasDoArgos";
 import { largurasDeItens, valorDoItem } from "../../result/barrasDoArgos";
 
 /** Quantos sinais cada porta resume. Três, como o protótipo. */
 const SINAIS_POR_PORTA = 3;
 
 function Porta({
-  dominio,
+  porta,
   itens,
   rotuloDe,
 }: {
-  readonly dominio: Domain;
-  readonly itens: readonly ItemDeDominio[];
+  readonly porta: ChaveDaPorta;
+  readonly itens: readonly ItemDaPorta[];
   readonly rotuloDe: (id: string) => string;
 }) {
   const { t, language } = useLanguage();
@@ -71,12 +80,12 @@ function Porta({
           `transition-colors` no hover: cor muda, geometria não. Animar borda ou fundo por
           `transform` não existe, e animar largura obrigaria layout a cada quadro. */}
       <Link
-        to={`${pathname}?${PARAM_DOMINIO}=${dominio}`}
+        to={`${pathname}?${PARAM_PORTA}=${porta}`}
         className="flex h-full flex-col gap-3 rounded-lg border border-border bg-card p-5 transition-colors hover:border-[hsl(var(--ds-accent-ink))] hover:bg-muted"
       >
         <div className="flex items-baseline gap-3">
-          <Text papel="destaque">{t(`canonicalAnalysis.argos.dimension.${dominio}`)}</Text>
-          {/* A contagem é DADO: quantos números o produtor pôs neste domínio. */}
+          <Text papel="destaque">{t(`canonicalAnalysis.argos.portas.${porta}`)}</Text>
+          {/* A contagem é DADO: quantas saídas o documento colocou nesta porta. */}
           <Text papel="micro" tom="discreto" numerico className="ml-auto">
             {t("canonicalAnalysis.argos.metricCount", { n: itens.length })}
           </Text>
@@ -85,7 +94,7 @@ function Porta({
         {/* A PERGUNTA que a porta responde. É copy, e é o que transforma um rótulo taxonômico em
             um motivo para entrar. */}
         <Text papel="corpo" tom="discreto">
-          {t(`canonicalAnalysis.argos.domainQuestion.${dominio}`)}
+          {t(`canonicalAnalysis.argos.portas.pergunta.${porta}`)}
         </Text>
 
         <ul className="mt-auto flex flex-col gap-2 border-t border-border pt-3">
@@ -129,13 +138,13 @@ export function Portas({
   agrupamento,
   rotuloDe,
 }: {
-  readonly agrupamento: AgrupamentoPorDominio;
+  readonly agrupamento: AgrupamentoPorPorta;
   readonly rotuloDe: (id: string) => string;
 }) {
   const { t } = useLanguage();
   // Porta VAZIA não nasce: um cartão dizendo "0 métricas" convida a entrar numa tela em branco.
   // A aba correspondente continua lá, com a contagem zero visível antes do clique.
-  const comConteudo = DOMINIOS.filter((d) => agrupamento.porDominio[d].length > 0);
+  const comConteudo = PORTAS.filter((p) => agrupamento.porPorta[p].length > 0);
   if (comConteudo.length === 0) return null;
 
   return (
@@ -146,14 +155,9 @@ export function Portas({
       >
         {t("canonicalAnalysis.argos.whereToInvestigate")}
       </h2>
-      <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {comConteudo.map((d) => (
-          <Porta
-            key={d}
-            dominio={d}
-            itens={agrupamento.porDominio[d]}
-            rotuloDe={rotuloDe}
-          />
+      <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {comConteudo.map((p) => (
+          <Porta key={p} porta={p} itens={agrupamento.porPorta[p]} rotuloDe={rotuloDe} />
         ))}
       </ul>
     </section>

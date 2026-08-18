@@ -294,7 +294,12 @@
         "qualidade": "Quality & Behavior",
         "economia": "Economics & Efficiency",
         "cobertura": "Coverage & Evidence",
-        "semPorta": "{{n}} published without a declared door, and they appear here in the Overview."
+        "semPorta": "{{n}} published without a declared door, and they appear here in the Overview.",
+        "pergunta": {
+          "qualidade": "Is the AI behaving as it should, and where not?",
+          "economia": "What did it cost, and what became outcome?",
+          "cobertura": "Does this reading have enough evidence?"
+        }
       }
     },
     "compare": {
