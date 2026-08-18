@@ -301,7 +301,15 @@
           "cobertura": "Does this reading have enough evidence?"
         }
       },
-      "bulletDescription": "{{rotulo}}: {{valor}}. Warning below {{warn}}, critical below {{critical}}."
+      "bulletDescription": "{{rotulo}}: {{valor}}. Warning below {{warn}}, critical below {{critical}}.",
+      "severityReason": "Reason",
+      "severityReasonAbsent": "not published",
+      "severityReasonCode": {
+        "SCORE_BELOW_CRIT": "score below critical",
+        "SCORE_BELOW_WARN": "score below warning",
+        "CROSS_INTENT_PENALTY": "cross-intent contamination",
+        "SEMANTIC_MISMATCH_EVIDENCE": "answers outside the intent"
+      }
     },
     "compare": {
       "absentSide": "not published",

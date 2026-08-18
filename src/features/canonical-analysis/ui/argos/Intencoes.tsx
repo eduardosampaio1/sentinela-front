@@ -112,6 +112,33 @@ export function Intencoes({
                   <span className="text-foreground">{i.severity}</span>
                 </dd>
               ) : null}
+              {/* O MOTIVO do veredito, e por que ele é obrigatório aqui.
+
+                  `severity` NÃO é o limiar aplicado ao escore: o motor a escala para `WARN`
+                  por evidência de mismatch semântico sem olhar a nota. Medido com o motor
+                  real, uma intenção com `governance_score = 100` sai `WARN` — e com o
+                  limiar publicado, 100 cai na zona VERDE. Sem esta linha a tela mostra
+                  atenção ao lado de um número bom e não tem o que dizer.
+
+                  TRÊS estados. `null` = o produtor não declarou (motor anterior à fatia), e
+                  a tela DIZ isso em vez de calar: veredito sem explicação é o defeito, e
+                  "não sabemos por quê" é honesto onde o silêncio não é. `[]` = declarou e
+                  não há motivo, e aí não há o que mostrar.
+
+                  Os códigos saem CRUS quando não há tradução. Sumir com um código que o
+                  produtor mandou é pior que exibi-lo sem rótulo. */}
+              {i.severity && (i.severity || "").toUpperCase() !== "OK" ? (
+                <dd className="text-muted-foreground">
+                  {t("canonicalAnalysis.argos.severityReason")}:{" "}
+                  <span className="text-foreground">
+                    {i.severity_reason === null || i.severity_reason === undefined
+                      ? t("canonicalAnalysis.argos.severityReasonAbsent")
+                      : i.severity_reason
+                          .map((c) => rotuloDoMotivo(t, c))
+                          .join(" · ")}
+                  </span>
+                </dd>
+              ) : null}
               {/* Dado do produtor, não conclusão minha sobre o piso. */}
               {i.underrepresented ? (
                 <dd className="rounded border border-border px-1.5 py-0.5 text-muted-foreground">
@@ -124,4 +151,29 @@ export function Intencoes({
       </dl>
     </div>
   );
+}
+
+/**
+ * O rótulo humano de um código de motivo, ou o CÓDIGO CRU.
+ *
+ * Caminho literal por código, e não `t(variavel)`: o gate de i18n não enxerga chave montada, e
+ * uma chave ausente sairia na tela como a própria chave — que parece um rótulo e não é.
+ *
+ * O vocabulário é ABERTO no contrato de propósito: código novo no motor chega ao consumidor em
+ * vez de derrubar a montagem. Aqui isso vira a regra do `default`: mostra cru. Sumir com o que
+ * o produtor mandou seria pior que exibir sem tradução.
+ */
+function rotuloDoMotivo(t: (k: string) => string, codigo: string): string {
+  switch (codigo) {
+    case "SCORE_BELOW_CRIT":
+      return t("canonicalAnalysis.argos.severityReasonCode.SCORE_BELOW_CRIT");
+    case "SCORE_BELOW_WARN":
+      return t("canonicalAnalysis.argos.severityReasonCode.SCORE_BELOW_WARN");
+    case "CROSS_INTENT_PENALTY":
+      return t("canonicalAnalysis.argos.severityReasonCode.CROSS_INTENT_PENALTY");
+    case "SEMANTIC_MISMATCH_EVIDENCE":
+      return t("canonicalAnalysis.argos.severityReasonCode.SEMANTIC_MISMATCH_EVIDENCE");
+    default:
+      return codigo;
+  }
 }

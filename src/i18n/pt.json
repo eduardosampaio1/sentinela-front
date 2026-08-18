@@ -301,7 +301,15 @@
           "cobertura": "Esta leitura tem base suficiente?"
         }
       },
-      "bulletDescription": "{{rotulo}}: {{valor}}. Atenção abaixo de {{warn}}, crítico abaixo de {{critical}}."
+      "bulletDescription": "{{rotulo}}: {{valor}}. Atenção abaixo de {{warn}}, crítico abaixo de {{critical}}.",
+      "severityReason": "Motivo",
+      "severityReasonAbsent": "não publicado",
+      "severityReasonCode": {
+        "SCORE_BELOW_CRIT": "escore abaixo do crítico",
+        "SCORE_BELOW_WARN": "escore abaixo da atenção",
+        "CROSS_INTENT_PENALTY": "contaminação entre intenções",
+        "SEMANTIC_MISMATCH_EVIDENCE": "respostas fora da intenção"
+      }
     },
     "compare": {
       "absentSide": "não publicada",
