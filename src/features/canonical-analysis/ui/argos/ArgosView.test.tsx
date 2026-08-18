@@ -702,4 +702,49 @@ describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () =>
     // `underrepresented` como selo próprio, não pedaço de frase depois de um ponto médio.
     expect(within(secao).getByText(G.underrepresented)).toBeInTheDocument();
   });
+
+  /**
+   * O PREÇO da emenda ao T4, virado prova — e a razão de o `Tabs` NÃO ter sido criado.
+   *
+   * A emenda (Product Freeze §10.1, 2026-08-18) autorizou o pattern e cobrou de volta o que a
+   * aba não dá: deep link, refresh e histórico. Ao abrir a implementação, o pattern já existia
+   * em outra forma — `<Link>` com query string e `aria-current="page"` —, e os três preços
+   * foram medidos no navegador antes desta decisão. A autorização ficou registrada como
+   * concedida e NÃO usada; estes testes existem para que isso não dependa de memória.
+   *
+   * O `role="tab"` é verificado aqui **além** do gate `two-view-gates.test.ts` §F6·15 de
+   * propósito, e não é guarda redundante: aquele varre o FONTE por texto, e este observa a
+   * árvore RENDERIZADA. Um `role="tab"` que chegasse por biblioteca, sem o literal no código,
+   * passaria pelo primeiro e morre aqui.
+   */
+  describe("o preço da emenda ao T4 — porta no endereço, sem mentir no papel ARIA", () => {
+    it("deep link DIRETO abre na porta pedida, e ela se anuncia por aria-current", async () => {
+      renderizar(comDominios(), 200, "?dominio=economic");
+      const ativa = await screen.findByRole("link", { current: "page", name: /econômica/i });
+      expect(ativa.getAttribute("href")).toContain("dominio=economic");
+    });
+
+    it("sem parâmetro é a Visão geral — nenhum deep link antigo muda de destino", async () => {
+      renderizar(comDominios(), 200, "");
+      const ativa = await screen.findByRole("link", { current: "page", name: /visão geral/i });
+      expect(ativa.getAttribute("href")).not.toContain("dominio=");
+    });
+
+    it("a porta é LINK: nenhum `role=tab` na árvore renderizada", async () => {
+      const { container } = renderizar(comDominios(), 200, "?dominio=economic");
+      await screen.findByRole("link", { current: "page", name: /econômica/i });
+      expect(container.querySelectorAll('[role="tab"]').length).toBe(0);
+      expect(container.querySelectorAll('[role="tablist"]').length).toBe(0);
+      expect(container.querySelectorAll("a[href*='dominio=']").length).toBeGreaterThanOrEqual(4);
+    });
+
+    it("cada porta aponta para a SUA — nenhuma reaproveita o destino da ativa", async () => {
+      const { container } = renderizar(comDominios(), 200, "?dominio=semantic");
+      await screen.findByRole("link", { current: "page", name: /semântica/i });
+      const destinos = [...container.querySelectorAll("a[href*='dominio=']")].map((a) =>
+        new URL(a.getAttribute("href") as string, "http://x").searchParams.get("dominio"),
+      );
+      expect(new Set(destinos).size).toBe(destinos.length);
+    });
+  });
 });

@@ -299,6 +299,39 @@ não se fundem na tela.
 > (estado da porta no endereço), sob pena de a emenda trocar navegação por aparência. Fica como
 > requisito da fatia, não como detalhe.
 >
+> **A autorização NÃO foi exercida — e a razão é medida, 2026-08-18.**
+>
+> Ao abrir a implementação, o pattern que a emenda autorizava criar **já existia**, em outra
+> forma e melhor: `AbasDeDominio.tsx` navega por *query string* (`?dominio=`) com `<Link>` e
+> `aria-current="page"`. O argumento está escrito no próprio arquivo, e é mais forte que o meu:
+>
+> > *"A tentação era usar o padrão ARIA de abas. Seria mentira: `role="tab"` promete troca de
+> > painel sem sair do lugar, e aqui a URL muda de verdade. Link com `aria-current="page"`
+> > descreve o que acontece."*
+>
+> Os três preços que esta emenda cobrava foram **medidos no navegador**, não deduzidos:
+> deep link direto abre na porta pedida; refresh sobrevive e não volta à Visão geral; o botão
+> voltar retorna à porta anterior. `role="tab"` na página: **zero**.
+>
+> Então o `Tabs` **não é criado**. O que o protótipo chama de "aba" é aparência, e essa aparência
+> o produto já produz com semântica de link — que é a semântica verdadeira, porque o endereço
+> muda. Criar o pattern acrescentaria um terceiro conceito estrutural para obter o que já se
+> tem, e ainda mentiria para tecnologia assistiva.
+>
+> **Consequências, para não ficarem implícitas:**
+>
+> - O **T4 permanece íntegro na prática**, e o gate `two-view-gates.test.ts` §F6·15 (*"subrota,
+>   nunca aba"*) **não é afrouxado nem estreitado**. Ele segue proibindo `role="tab"` na feature,
+>   e é correto que siga.
+> - A emenda fica registrada como **autorização concedida e não usada**. Isso não é desperdício:
+>   sem o registro, a autorização ficaria aberta para alguém exercer depois sem refazer a
+>   medição — que é exatamente como uma isenção órfã vira permissão.
+> - As três portas do protótipo usarão o **mesmo mecanismo**, com o parâmetro próprio da porta.
+>   O trabalho continua; o que não acontece é a invenção de um primitivo estrutural.
+>
+> Se o owner preferir o `Tabs` literal apesar disto, a autorização segue de pé e basta dizer —
+> mas o custo passa a ser conhecido: perde-se deep link real e mente-se no papel ARIA.
+>
 > **Por que por escrito.** Regra congelada que muda em silêncio deixa de ser regra. O
 > questionamento é bem-vindo — a instrução do owner nesta frente é *"regras estão para serem
 > cumpridas, mas nada nos impede de questionar; se surgir algo que quebre uma regra, me
