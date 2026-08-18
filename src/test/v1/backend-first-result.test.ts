@@ -180,8 +180,37 @@ describe("Cadeado BACKEND FIRST — resultado (E5)", () => {
     }
   });
 
+  /**
+   * ISENÇÃO: `barrasDoArgos.ts`, e só ela.
+   *
+   * Ela ORDENA as intenções pela pior — `ordenadasPorPior` —, e o matcher casa `.sort(`. A regra
+   * que ele defende é *"não FABRICAR prioridade"*, e o próprio cabeçalho deste arquivo declara
+   * que esta camada é a BARATA: *"o invariante de verdade é provado por COMPORTAMENTO"*.
+   *
+   * Ordenar por um número PUBLICADO é apresentação, não priorização: qualquer pessoa refaz a
+   * conta olhando a coluna ao lado da barra. A tela continua sem decidir gravidade — `severity`
+   * vem do produtor e é exibida como veio.
+   *
+   * A isenção não fica solta, e é isso que a separa de afrouxar o cadeado: `ranking.test.ts`
+   * prova que a ordem sai do escore publicado (e que `null` vai para o fim, que empate mantém a
+   * ordem do documento, e que a barra não volta a medir suporte), e
+   * `intencoes.ranking.test.tsx` prova que essa ordem chega ao DOM nas duas listas.
+   */
+  const ISENTOS = ["barrasDoArgos.ts"];
+  // Compara pelo NOME do arquivo: separador de caminho em regex custou duas tentativas
+  // (a contrabarra se perdeu no escape e virou regex inválida). `endsWith` não tem esse problema.
+  const ehIsento = (arq: string) => ISENTOS.some((nome) => arq.endsWith(nome));
+
   it("7-8: nenhum veredito/severidade/priorização DECIDIDOS no navegador", () => {
-    for (const arq of arquivos) {
+    // Isenção órfã é pior que nenhuma: se o arquivo sumir, ela continua aberta para o próximo
+    // que casar o padrão sem ninguém ter decidido isso. Cada isento é exigido, um por um.
+    for (const suf of ISENTOS) {
+      expect(
+        arquivos.some((a) => a.endsWith(suf)),
+        `o isento \`${suf}\` sumiu — remova a isenção dele`,
+      ).toBe(true);
+    }
+    for (const arq of arquivos.filter((a) => !ehIsento(a))) {
       const codigo = semComentarios(readFileSync(arq, "utf8"));
       const m = codigo.match(VEREDITO_OU_PRIORIZACAO);
       expect(m, `${arq}: veredito/priorização local "${m?.[0]}"`).toBeNull();

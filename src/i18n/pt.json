@@ -311,7 +311,11 @@
         "SEMANTIC_MISMATCH_EVIDENCE": "respostas fora da intenção"
       },
       "notMeasuredShort": "não medido",
-      "costCompositionDescription": "Composição do custo total de {{total}}."
+      "costCompositionDescription": "Composição do custo total de {{total}}.",
+      "domainLabel": "Domínio",
+      "thresholdsLabel": "Limiares",
+      "thresholdWarn": "atenção",
+      "thresholdCritical": "crítico"
     },
     "compare": {
       "absentSide": "não publicada",

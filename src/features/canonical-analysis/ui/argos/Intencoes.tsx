@@ -20,7 +20,10 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Bar } from "@/design/primitives";
 import type { PublicIntent } from "@/lib/v1/contract/public-v3.types";
-import { largurasDeSuporte } from "../../result/barrasDoArgos";
+import {
+  largurasDeEscore,
+  ordenadasPorPior,
+} from "../../result/barrasDoArgos";
 import { valorEscrito } from "../../result/medicaoV3";
 
 export function Intencoes({
@@ -33,7 +36,19 @@ export function Intencoes({
 }) {
   const { t, language } = useLanguage();
   const locale = language === "pt" ? "pt-BR" : "en-US";
-  const larguras = largurasDeSuporte(intents);
+  // RANKING: pior primeiro, e a barra mede QUALIDADE.
+  //
+  // A versão anterior desenhava a barra pelo SUPORTE, na ordem do documento — respondia "qual
+  // intenção tem mais conversas", que é pergunta de cobertura, não de qualidade. Com a massa de
+  // hoje (escores 10, 80, 22.5) a pior ficava no meio da lista.
+  //
+  // O suporte NÃO some: ele passa para a linha de detalhe, junto do resto. A primeira versão
+  // desta mudança o tirou da barra e o comentário afirmou que ele continuava na linha — e não
+  // continuava: o detalhe nunca o mostrou. Afirmação sobre a tela se confere na tela.
+  const ordenadas = ordenadasPorPior(intents);
+  const larguras = largurasDeEscore(ordenadas);
+
+
 
   return (
     <div>
@@ -45,23 +60,29 @@ export function Intencoes({
       ) : null}
 
       <ul className="space-y-1">
-        {intents.map((i, idx) => (
-          <Bar
-            key={i.intent_id}
-            // `intent_id` é vocabulário do CLIENTE: não se traduz e não se humaniza. É o mesmo
-            // motivo pelo qual `rotuloDe` não o toca.
-            rotulo={i.intent_id}
-            valor={String(i.support)}
-            largura={larguras[idx]}
-            rotuloSuprimido={t("canonicalAnalysis.argos.availability.unavailable")}
-          />
-        ))}
+        {ordenadas.map((i, idx) => {
+          const escore = valorEscrito(i.score, locale);
+          return (
+            <Bar
+              key={i.intent_id}
+              // `intent_id` é vocabulário do CLIENTE: não se traduz e não se humaniza. É o mesmo
+              // motivo pelo qual `rotuloDe` não o toca.
+              rotulo={i.intent_id}
+              // O ESCORE é o que a barra mede, e por isso é o que ela escreve. O suporte fica na
+              // linha de detalhe abaixo: escrever os dois aqui faria o número ao lado da barra
+              // deixar de dizer o que a barra representa.
+              valor={escore}
+              largura={larguras[idx]}
+              rotuloSuprimido={t("canonicalAnalysis.argos.availability.unavailable")}
+            />
+          );
+        })}
       </ul>
 
       {/* O detalhe por intenção, abaixo da barra e só quando o produtor o publicou. Cada campo é
           rotulado: `severity` saía como pedaço solto depois de um ponto médio, sem dizer o que era. */}
       <dl className="mt-3 space-y-2">
-        {intents.map((i) => {
+        {ordenadas.map((i) => {
           const estabilidade = i.response_stability ? valorEscrito(i.response_stability, locale) : null;
           const variancia = i.response_variance ? valorEscrito(i.response_variance, locale) : null;
           const deriva = i.semantic_drift ? valorEscrito(i.semantic_drift, locale) : null;
@@ -77,6 +98,13 @@ export function Intencoes({
           return (
             <div key={i.intent_id} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-xs">
               <dt className="font-mono text-muted-foreground">{i.intent_id}</dt>
+              {/* O SUPORTE vem primeiro porque é o denominador que sustenta tudo o que vem
+                  depois: uma nota sobre uma conversa e uma nota sobre duzentas não são a mesma
+                  afirmação, e a ordem de leitura diz isso sem precisar de frase. */}
+              <dd className="text-muted-foreground">
+                {t("canonicalAnalysis.argos.support")}:{" "}
+                <span className="tabular-nums text-foreground">{i.support}</span>
+              </dd>
               {escore !== null ? (
                 <dd className="text-muted-foreground">
                   {t("canonicalAnalysis.argos.intentScore")}:{" "}

@@ -28,6 +28,8 @@ import {
   escalaEscrita,
   motivoRelevante,
   unidadeInforma,
+  confiancaEscrita,
+  limiarEscrito,
   valorEscrito,
   type Apresentacao,
 } from "../../result/medicaoV3";
@@ -68,6 +70,23 @@ interface CorpoProps {
   readonly escala: string | null;
   readonly unidade?: string | null;
   readonly metodo?: string | null;
+  /**
+   * Os TRÊS campos que o contrato publicava e a tela não mostrava.
+   *
+   * Medido contra `PublicMeasurement`: ele publica onze campos, e o `Corpo` renderizava oito.
+   * `confidence`, `domain` e `thresholds` só apareciam no herói ou em lugar nenhum — e os três
+   * mudam a leitura do número que está ao lado deles.
+   *
+   * O protótipo levava este detalhe para uma GAVETA lateral, e não é o que se faz aqui: lá os
+   * cartões carregam só nome e valor, então a gaveta é o único lugar onde o resto cabe. Aqui o
+   * cartão já traz cobertura, escala e método inline — três campos a mais não pagam foco preso,
+   * scrim e tecla de escape.
+   */
+  readonly confianca?: string | null;
+  /** O domínio PUBLICADO. Procedência do produtor, não a porta — que é eixo de leitura. */
+  readonly dominio?: string | null;
+  /** Os cortes, escritos. A régua desenhada é do bullet; aqui eles são texto conferível. */
+  readonly limiar?: string | null;
 }
 
 function Corpo(props: CorpoProps) {
@@ -82,6 +101,9 @@ function Corpo(props: CorpoProps) {
     escala,
     unidade,
     metodo,
+    confianca,
+    dominio,
+    limiar,
   } = props;
 
   return (
@@ -115,7 +137,7 @@ function Corpo(props: CorpoProps) {
         <p className="text-xs text-muted-foreground">{motivoTexto}</p>
       ) : null}
 
-      {(cobertura || escala || metodo) && (
+      {(cobertura || escala || metodo || confianca || dominio || limiar) && (
         <dl className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
           {cobertura ? (
             <div className="flex gap-1">
@@ -133,6 +155,31 @@ function Corpo(props: CorpoProps) {
             <div className="flex gap-1">
               <dt>{t("canonicalAnalysis.argos.method")}:</dt>
               <dd>{metodo}</dd>
+            </div>
+          ) : null}
+          {/* CONFIANÇA da medição — não é o `Global confidence`, que é escore da análise
+              inteira. O rótulo diz "da medição" por isso: dois números com o mesmo nome na
+              mesma tela seria a confusão que o campo foi criado para desfazer. */}
+          {confianca ? (
+            <div className="flex gap-1">
+              <dt>{t("canonicalAnalysis.argos.measurementConfidence")}:</dt>
+              <dd className="tabular-nums">{confianca}</dd>
+            </div>
+          ) : null}
+          {/* DOMÍNIO publicado. Fica ao lado da procedência, e não perto do nome, porque ele é
+              classificação do PRODUTOR — não a porta, que é decisão de leitura desta tela. */}
+          {dominio ? (
+            <div className="flex gap-1">
+              <dt>{t("canonicalAnalysis.argos.domainLabel")}:</dt>
+              <dd>{dominio}</dd>
+            </div>
+          ) : null}
+          {/* Os CORTES escritos. O bullet desenha a régua para quem vê; este par é o canal que
+              sobrevive à escala de cinza e o que permite CONFERIR a posição do marcador. */}
+          {limiar ? (
+            <div className="flex gap-1">
+              <dt>{t("canonicalAnalysis.argos.thresholdsLabel")}:</dt>
+              <dd className="tabular-nums">{limiar}</dd>
             </div>
           ) : null}
         </dl>
@@ -168,6 +215,14 @@ export function Medicao({
       escala={escalaEscrita(medicao.scale, language)}
       unidade={unidadeInforma(medicao.unit, medicao.scale) ? medicao.unit : null}
       metodo={medicao.method_version}
+      confianca={confiancaEscrita(medicao.confidence, language)}
+      dominio={medicao.domain ?? null}
+      limiar={limiarEscrito(
+        medicao.thresholds,
+        language,
+        t("canonicalAnalysis.argos.thresholdWarn"),
+        t("canonicalAnalysis.argos.thresholdCritical"),
+      )}
     />
   );
 }

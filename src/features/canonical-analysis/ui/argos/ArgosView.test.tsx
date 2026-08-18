@@ -687,9 +687,16 @@ describe("F3 · as PORTAS filtram, e a porta é eixo de leitura — não `domain
     // inteira. Dois numeros com o mesmo nome seria a confusao que o campo desfaz.
     // O heroi vive na PRIMEIRA DOBRA, fora da regiao `ESCORES` — procurar dentro dela era o
     // defeito da primeira versao deste teste.
-    renderizar(comDominios(), 200);
+    const { container } = renderizar(comDominios(), 200);
     await screen.findByRole("region", { name: G.scores });
-    expect(screen.getByText(`${G.measurementConfidence}:`)).toBeInTheDocument();
+    // ESCOPADO ao herói. O rótulo deixou de ser exclusivo dele: a confiança passou a aparecer
+    // também na linha de cada medição, que é onde ela sempre pertenceu — `PublicMeasurement`
+    // publica `confidence` por medição, e a tela só a mostrava no topo. `getByText` global
+    // passou a achar vários e reprovar, e o teste estava certo em reprovar: ele afirmava
+    // "aparece no herói" medindo a tela inteira.
+    const heroi = container.querySelector('[data-heroi="true"]') as HTMLElement;
+    expect(heroi).toBeTruthy();
+    expect(within(heroi).getByText(`${G.measurementConfidence}:`)).toBeInTheDocument();
   });
 
   it("o `semantic_drift` por intenção aparece, e é o que permite o drill-down", async () => {

@@ -311,7 +311,11 @@
         "SEMANTIC_MISMATCH_EVIDENCE": "answers outside the intent"
       },
       "notMeasuredShort": "not measured",
-      "costCompositionDescription": "Composition of the total cost of {{total}}."
+      "costCompositionDescription": "Composition of the total cost of {{total}}.",
+      "domainLabel": "Domain",
+      "thresholdsLabel": "Thresholds",
+      "thresholdWarn": "warning",
+      "thresholdCritical": "critical"
     },
     "compare": {
       "absentSide": "not published",

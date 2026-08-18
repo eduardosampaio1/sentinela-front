@@ -123,3 +123,57 @@ export function largurasDeSuporte(intents: readonly PublicIntent[]): string[] {
   const escala = escalar(intents.map((i) => i.support));
   return intents.map((i) => escala(i.support));
 }
+
+/**
+ * As intenções ORDENADAS pela pior, e por que a ordem é o conteúdo.
+ *
+ * O protótipo chama esta gramática de *ranking*, e a razão dele é a que vale: uma lista na ordem
+ * do documento obriga a percorrer tudo para achar o problema; ordenada, o problema é a primeira
+ * linha. Com a massa de hoje — escores `10`, `80`, `22.5` — é a diferença entre ler três linhas e
+ * ler uma.
+ *
+ * ## Isto NÃO é priorização inventada
+ *
+ * Ordenar por um número publicado é apresentação: qualquer pessoa refaz a conta olhando a coluna.
+ * O que a tela continua proibida de fazer é decidir gravidade — e ela não decide: `severity` vem
+ * do produtor e é exibida como veio.
+ *
+ * ## Sem escore vai para o FIM, e não para o topo
+ *
+ * `null` não é zero. Uma intenção sem amostra não é a pior — é a desconhecida, e colocá-la no topo
+ * afirmaria um problema que ninguém mediu. A ordem entre as sem-escore é a do documento.
+ */
+export function ordenadasPorPior(intents: readonly PublicIntent[]): readonly PublicIntent[] {
+  const valor = (i: PublicIntent) =>
+    typeof i.score?.value === "number" && Number.isFinite(i.score.value) ? i.score.value : null;
+  // `.map` já devolve array NOVO, e é ele que o `sort` reordena — a lista do chamador nunca é
+  // tocada. Havia um `[...intents]` aqui antes do `map`: a mutação que o removia SOBREVIVEU,
+  // e sobreviveu por ser equivalente, não por falta de teste. Cópia defensiva que não
+  // defende nada é pior que nenhuma: ela sugere um risco onde não há, e o próximo leitor
+  // gasta o mesmo minuto que eu gastei para descobrir que ela é inerte.
+  return intents
+    .map((i, ordem) => ({ i, ordem, v: valor(i) }))
+    .sort((a, b) => {
+      if (a.v === null && b.v === null) return a.ordem - b.ordem;
+      if (a.v === null) return 1;
+      if (b.v === null) return -1;
+      // Menor escore é pior, e pior vem primeiro. Empate mantém a ordem do documento.
+      return a.v === b.v ? a.ordem - b.ordem : a.v - b.v;
+    })
+    .map((x) => x.i);
+}
+
+/**
+ * As larguras a partir do ESCORE da intenção, não do suporte.
+ *
+ * Irmã de `largurasDeSuporte`, e as duas existem porque respondem perguntas diferentes: suporte
+ * responde *"esta leitura tem base?"*, escore responde *"esta intenção está bem?"*. Uma barra só
+ * teria de escolher uma, e a escolha ficaria implícita.
+ */
+export function largurasDeEscore(intents: readonly PublicIntent[]): string[] {
+  const valores = intents.map((i) =>
+    typeof i.score?.value === "number" && Number.isFinite(i.score.value) ? i.score.value : 0,
+  );
+  const escala = escalar(valores);
+  return valores.map((v) => escala(v));
+}

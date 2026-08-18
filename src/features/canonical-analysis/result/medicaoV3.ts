@@ -170,3 +170,32 @@ export function coberturaEscrita(
   if (cobertura >= 1) return null;
   return formatarPercentual(cobertura, locale);
 }
+
+/**
+ * Os dois cortes, escritos — `"60 · 75"`.
+ *
+ * O bullet desenha a régua para quem VÊ. Este par é o canal que sobrevive à escala de cinza, e
+ * é o que permite CONFERIR a posição do marcador em vez de confiar nela.
+ *
+ * Cada corte sai NOMEADO, e essa foi uma correção. A primeira versão escrevia só os dois números
+ * "na ordem publicada", com um comentário afirmando que a ordem carregava a direção. **Não
+ * carregava:** os dois ramos produziam a mesma coisa — sempre o menor primeiro —, e a mutação que
+ * os substituía por `min · max` sobreviveu porque era EQUIVALENTE. O comentário descrevia uma
+ * intenção, não o código.
+ *
+ * Com o nome ao lado do número, a direção é lida sem depender de ordem nenhuma: `atenção 75 ·
+ * crítico 60` diz que menor é pior, e `atenção 0,5 · crítico 0,8` diz o contrário.
+ *
+ * Sem limiar, `null` — a linha não aparece, e nenhum corte é inventado para as 36 saídas que não
+ * os têm.
+ */
+export function limiarEscrito(
+  t: { readonly warn: number; readonly critical: number } | null | undefined,
+  locale: string,
+  rotuloWarn = "warn",
+  rotuloCritical = "crit",
+): string | null {
+  if (!t || !Number.isFinite(t.warn) || !Number.isFinite(t.critical)) return null;
+  const fmt = (v: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(v);
+  return `${rotuloWarn} ${fmt(t.warn)} · ${rotuloCritical} ${fmt(t.critical)}`;
+}
