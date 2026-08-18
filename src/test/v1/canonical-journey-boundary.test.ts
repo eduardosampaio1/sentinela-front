@@ -39,13 +39,47 @@ const COR = /#[0-9a-fA-F]{3,8}\b/;
 // E4-4: cursor OPACO decodificado/derivado localmente (offset, base64, split…).
 const CURSOR_DECODE = /\batob\s*\(|parseInt\s*\(\s*[a-zA-Z]*[Cc]ursor|Number\s*\(\s*[a-zA-Z]*[Cc]ursor|[Cc]ursor\.(split|slice|substring|substr|charAt|replace|indexOf|match|padStart)\b/;
 // E4-8: indicador analítico inventado no histórico (fora do escopo até E5).
-const INDICADOR_ANALITICO = /\bverdict\b|\bdrift\b|\bconfidence\b|\brecommendation\b|\bguardrail\b|behavior_score|tokens_used|risk_score/i;
+//
+// `confidence` SAIU deste matcher, e pelo mesmo motivo — e com a mesma disciplina — da isenção
+// do `behavior_score` documentada mais abaixo: **o alcance do literal ficou maior que a
+// afirmação da regra.** Quando ele foi escrito, `confidence` não existia em contrato nenhum, e
+// quem o digitasse estaria inventando um indicador. A afirmação era certa e continua certa.
+//
+// O que mudou foi o mundo: a D5 (assembler 0.6.0) publicou `PublicMeasurement.confidence` — a
+// confiança DAQUELA medição, separada do valor. Ler um campo publicado não é inventar
+// indicador; é consumir contrato, que é o que esta feature existe para fazer.
+//
+// A remoção **não fica solta**: `test_confidence_e_vocabulario_publicado` prova que o campo
+// está no contrato copiado. No dia em que ele sair do contrato, aquele teste reprova e alguém
+// tem de decidir conscientemente — em vez de o literal voltar a ser permitido por esquecimento.
+const INDICADOR_ANALITICO = /\bverdict\b|\bdrift\b|\brecommendation\b|\bguardrail\b|behavior_score|tokens_used|risk_score/i;
 // E6-6: mutation NUNCA re-tenta automaticamente (retry de mutation só por ação explícita do usuário).
 const MUTATION_AUTO_RETRY = /retry:\s*true/;
 
 const arquivos = listar(FEATURE);
 
 describe("Cadeado — jornada canônica (backend-first)", () => {
+  // A justificativa da remoção do `confidence` do `INDICADOR_ANALITICO`, virada prova.
+  //
+  // Sem isto, a remoção seria uma permissão sem dono: alguém tirou o literal, e no dia em que o
+  // campo saísse do contrato ninguém saberia que a razão evaporou. Com isto, a razão vive no
+  // mesmo arquivo que a regra, e morre junto com ela.
+  it("`confidence` é vocabulário PUBLICADO — a razão de ele ter saído do matcher", () => {
+    const contrato = readFileSync(
+      join(AQUI, "..", "..", "lib", "v1", "contract", "public-v3.types.ts"),
+      "utf8",
+    );
+    expect(
+      /^\s*confidence\??:/m.test(contrato),
+      "`confidence` não é mais campo publicado — recoloque-o em `INDICADOR_ANALITICO`",
+    ).toBe(true);
+    // E o matcher não pode tê-lo de volta sem que este teste seja revisto junto.
+    expect(INDICADOR_ANALITICO.test("confidence")).toBe(false);
+    // Os outros continuam com dentes: a remoção foi de UM literal, não do cadeado.
+    expect(INDICADOR_ANALITICO.test("behavior_score")).toBe(true);
+    expect(INDICADOR_ANALITICO.test("drift")).toBe(true);
+  });
+
   it("os matchers têm dentes (sanidade)", () => {
     expect(MATERIALIZACAO.test("f.arrayBuffer()")).toBe(true);
     expect(MATERIALIZACAO.test("new FileReader()")).toBe(true);
