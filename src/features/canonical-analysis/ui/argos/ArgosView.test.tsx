@@ -562,6 +562,7 @@ describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () =>
             support: 214,
             underrepresented: true,
             response_variance: { id: "rv", value: 0.42, ...base },
+            semantic_drift: { id: "sd", value: 0.73, ...base },
           },
         ],
       },
@@ -660,6 +661,18 @@ describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () =>
     renderizar(comDominios(), 200, "?dominio=inventado");
     const secao = await screen.findByRole("region", { name: G.scores });
     expect(within(secao).getByText(G.output.behavior_score)).toBeInTheDocument();
+  });
+
+  it("o `semantic_drift` por intenção aparece, e é o que permite o drill-down", async () => {
+    // D4. O campo chegou ao contrato e ao tipo, e por um momento NINGUÉM o exibia — que é a
+    // mesma "peça escrita e nunca ligada" que esta frente inteira persegue, só que do lado de
+    // cá. Sem esta asserção, o drift chegaria à tela e sumiria na próxima refatoração.
+    //
+    // O rótulo é o nome OFICIAL da métrica, não traduzido: MAIOR É PIOR, e uma paráfrase
+    // sugeriria qualidade.
+    renderizar(comDominios());
+    const secao = await screen.findByRole("region", { name: G.intents });
+    expect(within(secao).getByText(`${G.output.semantic_drift}:`)).toBeInTheDocument();
   });
 
   it("os três campos de intenção que ninguém lia aparecem", async () => {

@@ -64,9 +64,15 @@ export function Intencoes({
         {intents.map((i) => {
           const estabilidade = i.response_stability ? valorEscrito(i.response_stability, locale) : null;
           const variancia = i.response_variance ? valorEscrito(i.response_variance, locale) : null;
+          const deriva = i.semantic_drift ? valorEscrito(i.semantic_drift, locale) : null;
           const escore = valorEscrito(i.score, locale);
           const temDetalhe =
-            escore !== null || estabilidade !== null || variancia !== null || i.severity || i.underrepresented;
+            escore !== null ||
+            estabilidade !== null ||
+            variancia !== null ||
+            deriva !== null ||
+            i.severity ||
+            i.underrepresented;
           if (!temDetalhe) return null;
           return (
             <div key={i.intent_id} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-xs">
@@ -89,6 +95,15 @@ export function Intencoes({
                 <dd className="text-muted-foreground">
                   {t("canonicalAnalysis.argos.responseVariance")}:{" "}
                   <span className="tabular-nums text-foreground">{variancia}</span>
+                </dd>
+              ) : null}
+              {/* MAIOR E PIOR, como a variancia acima — e por isso o rotulo e o nome oficial da
+                  metrica, nao uma parafrase que sugira qualidade. Mede quao diferentes sao as
+                  respostas dadas DENTRO desta intencao, ou seja, a perguntas parecidas. */}
+              {deriva !== null ? (
+                <dd className="text-muted-foreground">
+                  {t("canonicalAnalysis.argos.output.semantic_drift")}:{" "}
+                  <span className="tabular-nums text-foreground">{deriva}</span>
                 </dd>
               ) : null}
               {i.severity ? (
