@@ -300,7 +300,8 @@
           "economia": "Quanto custou, e quanto virou resultado?",
           "cobertura": "Esta leitura tem base suficiente?"
         }
-      }
+      },
+      "bulletDescription": "{{rotulo}}: {{valor}}. Atenção abaixo de {{warn}}, crítico abaixo de {{critical}}."
     },
     "compare": {
       "absentSide": "não publicada",

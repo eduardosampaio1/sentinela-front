@@ -13,6 +13,8 @@
 // missão própria — não por cópia.
 
 export { Bar } from "./Bar";
+export { Bullet } from "./Bullet";
+export { zonaDoValor, type ZonaDoBullet } from "./zonaDoBullet";
 export { Chip, type EnfaseDoChip } from "./Chip";
 export { DefinitionGrid } from "./DefinitionGrid";
 export { Disclosure } from "./Disclosure";

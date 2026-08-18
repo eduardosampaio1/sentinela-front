@@ -11,10 +11,17 @@
 //
 // ## O que ele NÃO tem, e por que a ausência é a decisão certa
 //
-// **Sem medidor com faixa esperada.** O protótipo tinha um bullet com a faixa do "esperado" e a
-// marca do período anterior. Nenhum dos dois é publicado: não há faixa esperada em contrato
-// nenhum, e o `analysis-result-v3` não tem campo de comparação. Desenhar a régua e inventar a
-// marca transformaria julgamento meu em dado do produtor.
+// **~~Sem medidor com faixa esperada~~ — a premissa caiu, e o medidor entrou.** A recusa dizia
+// "não há faixa esperada em contrato nenhum", e estava certa quando foi escrita. Duas fatias de
+// backend a derrubaram: `PublicMeasurement.thresholds` publica os dois cortes que o motor APLICA
+// (`THR_WARN=75` / `THR_CRIT=60`), em campo próprio — nunca em `Scale`, que é a régua.
+//
+// O bullet não inventa: ele desenha o que veio, e **só aparece quando o limiar veio**. Sem
+// `thresholds` não há barra — é o caso das outras 36 saídas, e uma régua cinza "só para mostrar
+// a escala" convidaria a leitura de posição que nada sustenta.
+//
+// A outra metade da recusa CONTINUA valendo: a marca do período anterior segue sem publicação, e
+// o `analysis-result-v3` não tem campo de comparação. O bullet não a desenha.
 //
 // **Sem vão de delta.** A tentação era mostrar um espaço hachurado dizendo "sem comparação". Mas
 // hachura é para o que ESTÁ ausente, e comparação não é um campo ausente deste documento — é um
@@ -25,7 +32,7 @@
 // que a manchete mudou de assunto.
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Text } from "@/design/primitives";
+import { Bullet, Text } from "@/design/primitives";
 import type { PublicScore } from "@/lib/v1/contract/public-v3.types";
 import {
   apresentacaoDaMedicao,
@@ -71,6 +78,30 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
       >
         {rotulo}
       </h3>
+
+      {/* O BULLET, e só quando o produtor declarou os cortes. `thresholds` ausente devolve
+          `null` aqui mesmo — a tela não desenha régua sem zona, e o número segue sendo o fato. */}
+      {m.thresholds ? (
+        <div className="mt-4">
+          <Bullet
+            valor={m.value ?? null}
+            warn={m.thresholds.warn}
+            critical={m.thresholds.critical}
+            // A régua vem da ESCALA, não do limiar: `score_100` vive em 0..100. Deduzir os
+            // extremos dos próprios cortes encolheria o eixo até as zonas, e a posição do
+            // marcador passaria a exagerar toda variação.
+            piso={0}
+            teto={m.scale.kind === "ratio_unit" ? 1 : 100}
+            rotuloDoValor={valor ?? "—"}
+            descricao={t("canonicalAnalysis.argos.bulletDescription", {
+              rotulo,
+              valor: valor ?? "—",
+              warn: String(m.thresholds.warn),
+              critical: String(m.thresholds.critical),
+            })}
+          />
+        </div>
+      ) : null}
 
       <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
         {valor !== null ? (

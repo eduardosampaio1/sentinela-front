@@ -115,6 +115,7 @@ export interface PublicIntent {
   score: PublicMeasurement;
   semantic_drift?: PublicMeasurement | null;
   severity?: string | null;
+  severity_reason?: string[] | null;
   support: number;
   underrepresented?: boolean;
 }
@@ -137,6 +138,7 @@ export interface PublicMeasurement {
   method_version?: string | null;
   reason: Reason;
   scale: Scale;
+  thresholds?: PublicThresholds | null;
   unit?: string | null;
   value: number | null;
 }
@@ -178,6 +180,12 @@ export interface PublicScore {
 export interface PublicSummary {
   analyzed_at: string;
   record_count: number;
+}
+
+/** Os dois cortes que dividem a régua em três zonas: ok, atenção, crítico. */
+export interface PublicThresholds {
+  critical: number;
+  warn: number;
 }
 
 /** Motivo tipado, para máquina. Espelha `MeasurementReason` do domínio. */

@@ -300,7 +300,8 @@
           "economia": "What did it cost, and what became outcome?",
           "cobertura": "Does this reading have enough evidence?"
         }
-      }
+      },
+      "bulletDescription": "{{rotulo}}: {{valor}}. Warning below {{warn}}, critical below {{critical}}."
     },
     "compare": {
       "absentSide": "not published",
