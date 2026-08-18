@@ -33,6 +33,7 @@ import { useRevelacao } from "@/design/motion";
 import type {
   AnalysisResultV3Document,
   PublicAlert,
+  PublicIndicatorV3,
   PublicIssue,
 } from "@/lib/v1/contract/public-v3.types";
 import { useAnalysisArgos } from "../../data/argos";
@@ -46,9 +47,11 @@ import {
   portaDaUrl,
   recortarPorPorta,
 } from "../../result/portasDoArgos";
+import { valorEscrito } from "../../result/medicaoV3";
 import { descriptorDe } from "../../result/descriptors";
 import { formatarNumero } from "../../result/formatacao";
 import { AbasDePorta } from "./AbasDePorta";
+import { BarraDeComposicao } from "@/design/primitives";
 import { Heroi } from "./Heroi";
 import { Intencoes } from "./Intencoes";
 import { Portas } from "./Portas";
@@ -625,6 +628,17 @@ export function ArgosView() {
         >
           {(itens) => (
             <div>
+              {/* A COMPOSIÇÃO DO CUSTO, antes da lista — a gramática "parte-do-todo" do
+                  protótipo (`.stack`). Quatro números soltos obrigam quem lê a fazer a divisão
+                  de cabeça para saber o que pesa; uma barra responde antes da leitura.
+
+                  Ela só aparece quando o TOTAL veio: total não se infere somando partes, e uma
+                  barra montada sobre uma soma seria um todo que ninguém declarou.
+
+                  A transferência chega `null` HOJE — não medida, não zero. É exatamente o caso
+                  que a hachura existe para dizer, e por isso ele vem antes da lista em vez de
+                  depois: a diferença entre "não custou" e "não medimos" muda a decisão. */}
+              <ComposicaoDoCusto itens={itens} rotuloDe={rotuloDe} locale={locale} />
               {itens.map((i) => (
                 <Indicador
                   key={i.id}
@@ -782,3 +796,56 @@ export function ArgosView() {
 }
 
 export default ArgosView;
+
+
+/**
+ * A composição do custo — o TOTAL e de onde ele veio.
+ *
+ * Fica neste arquivo, e não numa primitiva, porque a escolha de QUAIS indicadores compõem o
+ * custo é conhecimento de produto, não de desenho. A primitiva sabe desenhar parte-do-todo; ela
+ * não sabe que `token_cost_total` e `handoff_cost_total` somam `total_estimated_cost`.
+ *
+ * Nenhuma conta acontece aqui além da que a barra precisa: os valores vêm do documento, e o
+ * total é o publicado — jamais a soma das partes.
+ */
+function ComposicaoDoCusto({
+  itens,
+  rotuloDe,
+  locale,
+}: {
+  readonly itens: readonly PublicIndicatorV3[];
+  readonly rotuloDe: (id: string) => string;
+  readonly locale: string;
+}) {
+  const { t } = useLanguage();
+  const de = (id: string) => itens.find((i) => i.id === id) ?? null;
+  const total = de("total_estimated_cost");
+  if (!total || total.value === null || total.value === undefined) return null;
+
+  const partes = (["token_cost_total", "handoff_cost_total"] as const)
+    .map((id) => {
+      const ind = de(id);
+      if (!ind) return null;
+      return {
+        id,
+        rotulo: rotuloDe(id),
+        valor: ind.value ?? null,
+        escrito: valorEscrito(ind, locale, ind.display_precision ?? 2) ?? "—",
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+  if (partes.length === 0) return null;
+
+  return (
+    <div className="mb-4">
+      <BarraDeComposicao
+        partes={partes}
+        total={total.value}
+        rotuloAusente={t("canonicalAnalysis.argos.notMeasuredShort")}
+        descricao={t("canonicalAnalysis.argos.costCompositionDescription", {
+          total: valorEscrito(total, locale, total.display_precision ?? 2) ?? "—",
+        })}
+      />
+    </div>
+  );
+}

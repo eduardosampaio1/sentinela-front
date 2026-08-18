@@ -98,7 +98,10 @@ export const display: React.CSSProperties = {
   fontFeatureSettings: '"cv01", "ss03"',
 };
 export const mono: React.CSSProperties = {
-  fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+  // A pilha do SISTEMA. Antes nomeava 'JetBrains Mono', que saiu do import quando o
+  // Diagnostico adotou a mono do prototipo -- e nome de fonte que ninguem carrega e
+  // declaracao que mente, mesmo caindo no fallback declarado ao lado.
+  fontFamily: "ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace",
 };
 
 /**

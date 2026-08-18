@@ -16,8 +16,11 @@ const TOM = {
 const PAPEL = {
   corpo: "text-sm",
   rotulo: "text-xs",
-  titulo: "text-sm font-medium",
-  destaque: "text-base font-medium",
+  // 620, o peso do titulo de cartao no prototipo (`.card .hd h3`). `font-medium` (500) deixava
+  // o titulo leve demais para separar-se do corpo sem depender de cor.
+  titulo: "text-sm font-[620]",
+  // 660, o peso do titulo de PORTA no prototipo (`.door > .t h3`).
+  destaque: "text-base font-[660]",
   /**
    * O rótulo MICRO do protótipo: mono, caixa alta, 11px, entrelinha aberta.
    *
@@ -36,7 +39,17 @@ const PAPEL = {
    * Peso MÉDIO, não pesado: em 104px o peso já vem do tamanho, e negrito viraria cartaz. E
    * `tabular-nums` porque é dado — dígito que muda de largura destrói a leitura.
    */
-  heroi: "text-[clamp(3.25rem,9vw,6.5rem)] font-medium leading-[0.85] tracking-[-0.04em] tabular-nums",
+  /**
+   * MONO, e isto foi correção depois de comparar com o protótipo BUSCADO — não com a memória
+   * dele. O protótipo declara `.heroNum .v { font-family: var(--mono) }`, e o número maior da
+   * tela estava saindo na fonte de texto. Numa fonte de máquina de escrever o dígito tem
+   * largura fixa e desenho técnico: é o que faz o número parecer medida, e não manchete.
+   *
+   * Peso 500 e entrelinha .85 já batiam. O `tracking` foi de -0.04 para -0.05em, que é o
+   * literal do protótipo — em 104px, um centésimo de em são pixels visíveis.
+   */
+  heroi:
+    "font-mono text-[clamp(3.25rem,9vw,6.5rem)] font-medium leading-[0.85] tracking-[-0.05em] tabular-nums",
 } as const;
 
 export function Text({

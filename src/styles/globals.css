@@ -3,7 +3,7 @@
    ganhar peso. O eixo `opsz` SAI do pedido de proposito: a `Inter Tight` nao o tem, e
    pedir um eixo inexistente devolve estatico em vez de variavel. O eixo `wght` continua,
    porque e ele que o sistema usa. */
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap');
 
 @tailwind base;
 

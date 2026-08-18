@@ -20,7 +20,17 @@ export default {
         // caia em fallback silencioso -- media, nao suposta. So nao aparecia porque o
         // `body` sobrepoe. Declaracao que mente sobre a fonte e a que envelhece pior.
         sans: ["Inter Tight", "system-ui", "-apple-system", "sans-serif"],
-        mono: ["JetBrains Mono", "monospace"],
+        // A pilha do SISTEMA, como no protótipo aprovado: `ui-monospace` pega a mono nativa de
+        // cada plataforma, e as seguintes são o fallback nomeado. Antes era "JetBrains Mono",
+        // baixada do Google Fonts — o protótipo não a usa, e a nativa não custa requisição.
+        mono: [
+          "ui-monospace",
+          "Cascadia Mono",
+          "SF Mono",
+          "Menlo",
+          "Consolas",
+          "monospace",
+        ],
       },
       colors: {
         border: "hsl(var(--border))",

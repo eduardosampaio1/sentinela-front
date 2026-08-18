@@ -58,4 +58,7 @@ export const display = {
   fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
   letterSpacing: "-0.022em",
 } as const;
-export const mono = { fontFamily: "'JetBrains Mono', ui-monospace, monospace" } as const;
+// A pilha do SISTEMA. Antes nomeava 'JetBrains Mono', que saiu do import quando o
+// Diagnostico adotou a mono do prototipo -- e nome de fonte que ninguem carrega e
+// declaracao que mente, mesmo caindo no fallback declarado ao lado.
+export const mono = { fontFamily: "ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace" } as const;

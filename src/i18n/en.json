@@ -309,7 +309,9 @@
         "SCORE_BELOW_WARN": "score below warning",
         "CROSS_INTENT_PENALTY": "cross-intent contamination",
         "SEMANTIC_MISMATCH_EVIDENCE": "answers outside the intent"
-      }
+      },
+      "notMeasuredShort": "not measured",
+      "costCompositionDescription": "Composition of the total cost of {{total}}."
     },
     "compare": {
       "absentSide": "not published",
