@@ -102,7 +102,23 @@ function Porta({
             const id = "measurement" in entrada.item ? entrada.item.measurement.id : entrada.item.id;
             const valor = valorDoItem(entrada, locale);
             return (
-              <li key={`${entrada.familia}:${id}`} className="flex items-center gap-3 text-xs">
+              // GRADE de três colunas, e não `flex` com `ml-auto`.
+              //
+              // O owner mediu a olho o que a régua confirmou: os trilhos começavam em 541, 543 e
+              // **551** dentro do MESMO cartão. A causa era o `ml-auto` morar no trilho — o valor
+              // vinha depois com largura variável (`78,6%` tem 34px, `12%` tem 24px), então cada
+              // linha empurrava o trilho para um lugar diferente.
+              //
+              // E quando a barra some — moeda não tem régua —, nada empurrava o valor: ele colava
+              // no rótulo, à esquerda, enquanto o vizinho com barra ficava à direita.
+              //
+              // Com colunas fixas os dois problemas somem pela mesma porta: o trilho tem lugar
+              // próprio (reservado mesmo quando não há barra, senão as linhas voltam a divergir)
+              // e o valor tem coluna própria, alinhada à DIREITA — que é onde número se compara.
+              <li
+                key={`${entrada.familia}:${id}`}
+                className="grid grid-cols-[minmax(0,1fr)_3rem_4.5rem] items-center gap-3 text-xs"
+              >
                 <Text papel="rotulo" tom="discreto" className="min-w-0 truncate">
                   {rotuloDe(id)}
                 </Text>
@@ -113,9 +129,13 @@ function Porta({
                     anterior desenhava o trilho CHEIO para elas. Dois custos diferentes ficavam
                     com a mesma barra completa. Agora o espaço fica vazio — o número já está
                     escrito, e o alinhamento da coluna se mantém pelo `ml-auto` do valor. */}
-                {larguras[i] === null ? null : (
+                {larguras[i] === null ? (
+                  // O VÃO é o que mantém as linhas alinhadas. Colapsar a coluna faria o valor
+                  // de um custo subir para o lugar do trilho do vizinho.
+                  <span aria-hidden="true" />
+                ) : (
                   <span
-                    className="ml-auto h-1 w-12 shrink-0 overflow-hidden rounded-full bg-muted"
+                    className="h-1 w-full overflow-hidden rounded-full bg-muted"
                     aria-hidden="true"
                   >
                     <span
@@ -125,7 +145,10 @@ function Porta({
                     />
                   </span>
                 )}
-                <Text papel="rotulo" numerico className="shrink-0 tabular-nums">
+                {/* Coluna própria, alinhada à DIREITA: é assim que uma pilha de números se compara de
+                    relance — as unidades sob as unidades. Alinhado à esquerda, cada valor
+                    começa num lugar e o olho tem de reancorar a cada linha. */}
+                <Text papel="rotulo" numerico className="text-right tabular-nums">
                   {valor ?? t("canonicalAnalysis.argos.availability.unavailable")}
                 </Text>
               </li>
