@@ -274,6 +274,36 @@ não se fundem na tela.
 | **T6** | O lifecycle (`/analyses/:id`) mostra identidade, estado, progresso, disponibilidade dos componentes e as **entradas** das duas visões — e **não** vira terceira página de dados | dado em três lugares diverge em dois |
 | **T7** | **`/result` é LEGACY COMPATIBILITY.** Continua funcional e não recebe feature nova; nenhuma navegação canônica nova aponta para ele quando a visão correta existe | deep link antigo não pode quebrar, e a aposentadoria é decisão posterior |
 
+> **Emenda ao T4 — decisão de owner, 2026-08-18 (protótipo aprovado vira produto).**
+>
+> O T4 recusava o pattern `Tabs` com uma razão declarada: *"inventá-lo seria um terceiro conceito
+> estrutural sem equivalente"*. Naquele momento havia **duas** leituras e nada mais, e a razão
+> valia — subrota entregava tudo o que a aba entregaria, com deep link de graça.
+>
+> O protótipo aprovado do ARGOS muda o fato que sustentava a razão. Ele organiza **37 métricas
+> publicáveis** em uma resposta e três portas — *Qualidade & Comportamento*, *Economia &
+> Eficiência*, *Cobertura & Evidência* —, e a navegação entre elas não é escolha estética: é o
+> que impede as 37 de virarem a lista plana que a auditoria do próprio protótipo mediu
+> (*"18 números, todos em 16px/600, mesma cor"*).
+>
+> Consultado sobre reabrir ou usar subrotas, o owner decidiu: **"o produto não tem o pattern
+> Tabs — então vamos criar"**. `Tabs` passa a ser pattern do produto.
+>
+> **O que a emenda NÃO afrouxa.** As portas são recortes internos de **uma** leitura — a ARGOS,
+> fonte única `analysis-result-v3`. Elas não criam leitura nova, não viram Analysis nova e não
+> tocam a Analytics: o **T1**, o **T2**, o **T3** e o **T5** continuam valendo integralmente, e
+> o owner reafirmou o escopo em separado — *"Analytics não entra nessa refatoração de design"*.
+>
+> **O que a emenda custa, e é aceito.** Aba não dá deep link, refresh nem histórico por si — era
+> exatamente o argumento do T4. A implementação é obrigada a devolver isso por outro meio
+> (estado da porta no endereço), sob pena de a emenda trocar navegação por aparência. Fica como
+> requisito da fatia, não como detalhe.
+>
+> **Por que por escrito.** Regra congelada que muda em silêncio deixa de ser regra. O
+> questionamento é bem-vindo — a instrução do owner nesta frente é *"regras estão para serem
+> cumpridas, mas nada nos impede de questionar; se surgir algo que quebre uma regra, me
+> pergunte"* —, e o registro é o que separa questionar de ignorar.
+
 > **Emenda ao T7 — decisão de owner, 2026-08-15 (M45.3).**
 >
 > A M45.3 mediu a consequência do congelamento sem aposentadoria: quem chega a `/result` por um
