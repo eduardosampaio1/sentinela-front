@@ -142,7 +142,21 @@ describe("Cadeado — jornada canônica (backend-first)", () => {
  * os dois registros são disjuntos, que todo id tem nome nos dois idiomas, que não há rótulo órfão
  * e que um id desconhecido continua saindo cru.
  */
-const ehRegistroDeNome = (arq: string) => /[\\/]catalogoArgos\.ts$/.test(arq);
+/**
+ * A isenção vale para REGISTRO CHAVEADO POR ID PUBLICADO — e agora são dois arquivos.
+ *
+ * `portasDoArgos.ts` entrou pelo mesmo teste que `catalogoArgos.ts` passou: ele mapeia
+ * `public_id` → porta e prioridade de LEITURA. Não calcula, não deriva, não decide nada
+ * analítico — e por isso precisa nomear os ids, incluindo `behavior_score`, exatamente como o
+ * registro de nomes precisa.
+ *
+ * A diferença entre isto e afrouxar o cadeado é o gate próprio de cada um: `catalogoArgos.test`
+ * prova que os registros são disjuntos e que id desconhecido sai cru; `portasDoArgos.test` prova
+ * zero órfãs, nenhum *count* acima de `P2`, e que a porta **não** vira `domain`. Um arquivo que
+ * casasse o padrão sem trazer o seu próprio gate não entraria aqui.
+ */
+const REGISTROS_POR_ID = [/[\\/]catalogoArgos\.ts$/, /[\\/]portasDoArgos\.ts$/];
+const ehRegistroDeNome = (arq: string) => REGISTROS_POR_ID.some((re) => re.test(arq));
 
   for (const [nome, re] of [
     ["materialização do dataset (FileReader/.text/.arrayBuffer/JSON.parse/hash)", MATERIALIZACAO],
@@ -160,10 +174,15 @@ const ehRegistroDeNome = (arq: string) => /[\\/]catalogoArgos\.ts$/.test(arq);
       // A isenção não pode ficar órfã: se o arquivo sumir, ela continua aberta para o próximo que
       // casar o padrão sem ninguém decidir isso. Mesma disciplina da isenção anterior.
       if (re === INDICADOR_ANALITICO) {
-        expect(
-          arquivos.some(ehRegistroDeNome),
-          "o registro de nomes sumiu — remova a isenção",
-        ).toBe(true);
+        // CADA isento precisa existir, um por um. Verificar só que "algum" existe deixaria a
+        // isenção do que sumiu aberta para o próximo arquivo que casar o padrão — que é
+        // exatamente a órfã que esta checagem existe para impedir, só que mascarada pelo outro.
+        for (const padrao of REGISTROS_POR_ID) {
+          expect(
+            arquivos.some((a) => padrao.test(a)),
+            `o isento \`${padrao.source}\` sumiu — remova a isenção dele`,
+          ).toBe(true);
+        }
       }
       for (const arq of alvos) {
         const codigo = semComentarios(readFileSync(arq, "utf8"));
