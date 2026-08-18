@@ -430,7 +430,19 @@ describe("M14 · 6. nenhuma superfície nasce com texto hardcoded", () => {
 // Os 41 restantes são frase de interface, não nome de métrica: ali "transferência" e "disponível"
 // seguem sendo as palavras certas em português, e o orçamento existe para proteger o layout, não
 // para editar o idioma.
-const ACIMA_DO_ORCAMENTO = 41;
+// **42 desde as PORTAS (2026-08-18).** A nova é `argos.portas.qualidade`:
+// "Qualidade & Comportamento" (25) contra "Quality & Behavior" (18) — razão 1,39.
+//
+// Não encurtei, e o parágrafo acima é a razão: *encurtar PT para caber continua proibido*.
+// "Comportamento" é a palavra certa em português para o que a porta agrupa, e é a mesma que
+// o produto já usa no nome da métrica-mãe (`Behavior score`). Trocá-la por um sinônimo mais
+// curto para satisfazer uma métrica seria editar o idioma para agradar o gate.
+//
+// As outras duas portas passaram sem ajuda: `economia` 0,95× e `cobertura` 1,11×. E a Visão
+// geral NÃO acrescentou chave — ela reusa `argos.overview`, que já existia; a primeira versão
+// desta fatia criou uma chave duplicada para a mesma palavra, e isso é o que a regra de copy
+// proíbe antes mesmo de o orçamento opinar.
+const ACIMA_DO_ORCAMENTO = 42;
 const ORCAMENTO = 1.3;
 
 describe("M14 · 7. PT-BR cabe no orçamento de +30 %", () => {

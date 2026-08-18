@@ -289,7 +289,13 @@
       "title": "Assessment",
       "unavailableTitle": "The ARGOS document is not available for this analysis",
       "underrepresented": "underrepresented",
-      "window": "Window"
+      "window": "Window",
+      "portas": {
+        "qualidade": "Quality & Behavior",
+        "economia": "Economics & Efficiency",
+        "cobertura": "Coverage & Evidence",
+        "semPorta": "{{n}} published without a declared door, and they appear here in the Overview."
+      }
     },
     "compare": {
       "absentSide": "not published",

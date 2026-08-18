@@ -289,7 +289,13 @@
       "title": "Diagnóstico",
       "unavailableTitle": "O documento ARGOS não está disponível para esta análise",
       "underrepresented": "sub-representada",
-      "window": "Janela"
+      "window": "Janela",
+      "portas": {
+        "qualidade": "Qualidade & Comportamento",
+        "economia": "Economia & Eficiência",
+        "cobertura": "Cobertura & Evidência",
+        "semPorta": "{{n}} publicados sem porta declarada, e aparecem aqui na Visão geral."
+      }
     },
     "compare": {
       "absentSide": "não publicada",

@@ -32,6 +32,8 @@
 // sobre um catálogo que virou 39, e métrica órfã numa reorganização se perde exatamente como se
 // perdia na lista.
 
+import type { AnalysisResultV3Document } from "@/lib/v1/contract/public-v3.types";
+import type { ItemDeDominio } from "./dominiosDoArgos";
 import { OUTPUTS_DO_CATALOGO } from "./catalogoArgos";
 import { INDICATOR_DESCRIPTORS } from "./descriptors";
 
@@ -193,3 +195,58 @@ export const NOMEAVEIS: readonly string[] = [
     "min_samples_per_intent",
   ]),
 ];
+
+/**
+ * O agrupamento por porta, com a mesma disciplina do agrupamento por domínio.
+ *
+ * A ordem de varredura é a ordem de leitura DENTRO da porta — escore, dimensão, indicador,
+ * risco, projeção — e dentro de cada família a ordem é a do DOCUMENTO. Reordenar por valor
+ * seria priorização decidida no navegador, que esta visão proíbe.
+ *
+ * **`semPorta` não é lixeira, é declaração.** Uma saída publicada que a tabela não conhece cai
+ * ali e a Visão geral a mostra com o id cru — a mesma degradação honesta que o rótulo já usa
+ * para output novo. Escondê-la seria pior que qualquer erro de agrupamento: a saída existiria
+ * no documento e não na tela, e ninguém saberia procurar.
+ */
+export interface AgrupamentoPorPorta {
+  readonly porPorta: Readonly<Record<Porta, readonly ItemDaPorta[]>>;
+  /** Publicados que a tabela não conhece. Aparecem na Visão geral, nunca somem. */
+  readonly semPorta: readonly ItemDaPorta[];
+}
+
+/** Uma linha do laudo com a família preservada — a família decide COMO o item é desenhado. */
+export type ItemDaPorta = ItemDeDominio;
+
+export function agruparPorPorta(d: AnalysisResultV3Document): AgrupamentoPorPorta {
+  const porPorta: Record<Porta, ItemDaPorta[]> = { qualidade: [], economia: [], cobertura: [] };
+  const semPorta: ItemDaPorta[] = [];
+
+  const colocar = (id: string, entrada: ItemDaPorta) => {
+    const destino = destinoDe(id);
+    // O herói tem destino e NENHUMA porta: ele é a resposta da Visão geral, não item de porta.
+    // `destino && portas vazias` é diferente de `destino === null`, e confundir os dois faria a
+    // manchete do produto reaparecer como linha de lista.
+    if (destino === null) {
+      semPorta.push(entrada);
+      return;
+    }
+    for (const porta of destino.portas) porPorta[porta].push(entrada);
+  };
+
+  for (const s of d.scores ?? []) colocar(s.measurement.id, { familia: "scores", item: s });
+  for (const m of d.dimensions ?? []) colocar(m.id, { familia: "dimensions", item: m });
+  for (const i of d.indicators ?? []) colocar(i.id, { familia: "indicators", item: i });
+  for (const r of d.risks ?? []) colocar(r.id, { familia: "risks", item: r });
+  for (const p of d.projections ?? []) colocar(p.id, { familia: "projections", item: p });
+
+  return { porPorta, semPorta };
+}
+
+/** Quantos itens cada porta recebeu. Contagem, não juízo — ela deixa a porta vazia se anunciar. */
+export function contagemPorPorta(a: AgrupamentoPorPorta): Readonly<Record<Porta, number>> {
+  return {
+    qualidade: a.porPorta.qualidade.length,
+    economia: a.porPorta.economia.length,
+    cobertura: a.porPorta.cobertura.length,
+  };
+}

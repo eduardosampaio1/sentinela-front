@@ -22,6 +22,8 @@ import {
   destinoDe,
   pertenceA,
   portaDaUrl,
+  agruparPorPorta,
+  contagemPorPorta,
 } from "./portasDoArgos";
 
 describe("Portas · 1. zero órfãs", () => {
@@ -168,5 +170,79 @@ describe("Portas · 6. a repetição é deliberada, e contada", () => {
 
   it("o herói NÃO se repete numa porta — ele é a resposta, não um item", () => {
     expect(DESTINO.behavior_score!.portas).toEqual([]);
+  });
+});
+
+describe("Portas · 7. o agrupamento — e o que ele se recusa a esconder", () => {
+  const med = (id: string) => ({
+    id,
+    value: 1,
+    availability: "measured",
+    reason: "ok",
+    scale: { kind: "ratio_unit" },
+  });
+  const doc = () =>
+    ({
+      scores: [
+        { measurement: med("behavior_score") },
+        { measurement: med("global_confidence") },
+        { measurement: med("saida_que_a_tabela_nao_conhece") },
+      ],
+      dimensions: [med("semantic"), med("economic")],
+      indicators: [med("cost_per_useful_outcome"), med("critical_alert_count")],
+      risks: [{ id: "containment_risk", measurement: med("containment_risk") }],
+      projections: [{ id: "projected_token_cost@month", measurement: med("projected_token_cost@month") }],
+    }) as never;
+
+  it("cada item cai na porta declarada", () => {
+    const a = agruparPorPorta(doc());
+    const ids = (p: "qualidade" | "economia" | "cobertura") =>
+      a.porPorta[p].map((x) => ("measurement" in x.item ? x.item.measurement.id : x.item.id));
+    expect(ids("qualidade")).toContain("semantic");
+    expect(ids("economia")).toEqual(
+      expect.arrayContaining(["economic", "cost_per_useful_outcome", "containment_risk"]),
+    );
+    expect(ids("cobertura")).toEqual(
+      expect.arrayContaining(["global_confidence", "critical_alert_count"]),
+    );
+  });
+
+  it("o HERÓI não vira item de porta nenhuma — ele é a resposta", () => {
+    const a = agruparPorPorta(doc());
+    const todos = [...a.porPorta.qualidade, ...a.porPorta.economia, ...a.porPorta.cobertura]
+      .map((x) => ("measurement" in x.item ? x.item.measurement.id : x.item.id));
+    expect(todos).not.toContain("behavior_score");
+    // E ele TAMBÉM não cai em `semPorta`: destino com portas vazias é diferente de sem destino.
+    const soltos = a.semPorta.map((x) => ("measurement" in x.item ? x.item.measurement.id : x.item.id));
+    expect(soltos).not.toContain("behavior_score");
+  });
+
+  it("saída que a tabela NÃO conhece aparece em `semPorta` — nunca some", () => {
+    // O gate que importa deste bloco. Uma saída publicada que sumisse da tela existiria no
+    // documento e não na interface, e ninguém saberia procurar por ela.
+    const a = agruparPorPorta(doc());
+    const soltos = a.semPorta.map((x) => ("measurement" in x.item ? x.item.measurement.id : x.item.id));
+    expect(soltos).toContain("saida_que_a_tabela_nao_conhece");
+  });
+
+  it("o horizonte da projeção cai na porta do id base", () => {
+    const a = agruparPorPorta(doc());
+    const ids = a.porPorta.economia.map((x) => ("measurement" in x.item ? x.item.measurement.id : x.item.id));
+    expect(ids).toContain("projected_token_cost@month");
+  });
+
+  it("a contagem é o tamanho real de cada porta", () => {
+    const a = agruparPorPorta(doc());
+    const c = contagemPorPorta(a);
+    expect(c.qualidade).toBe(a.porPorta.qualidade.length);
+    expect(c.economia).toBe(a.porPorta.economia.length);
+    expect(c.cobertura).toBe(a.porPorta.cobertura.length);
+    expect(c.qualidade + c.economia + c.cobertura).toBeGreaterThan(0);
+  });
+
+  it("documento vazio não inventa porta cheia", () => {
+    const a = agruparPorPorta({} as never);
+    expect(contagemPorPorta(a)).toEqual({ qualidade: 0, economia: 0, cobertura: 0 });
+    expect(a.semPorta).toEqual([]);
   });
 });
