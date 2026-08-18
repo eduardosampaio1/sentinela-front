@@ -94,12 +94,25 @@ function limiteDe(m: Medivel): { readonly min: number; readonly max: number } | 
  * RARO — com `minimum`/`maximum`, `ratio_unit` e `score_100` cobertos, sobra moeda, contagem e
  * duração sem teto declarado.
  */
-export function largurasDeItens(itens: readonly ItemDeDominio[]): string[] {
+export function largurasDeItens(itens: readonly ItemDeDominio[]): (string | null)[] {
   return itens.map((entrada) => {
     const m = medicaoDe(entrada);
     if (m.value === null || m.value === undefined) return "0%";
     const limite = limiteDe(m);
-    if (limite === null) return "100%";
+    // SEM RÉGUA, SEM BARRA — e isto era `return "100%"`.
+    //
+    // Moeda, contagem e duração não têm faixa canônica: não existe "o máximo" de um custo em
+    // dólares. A versão anterior devolvia barra CHEIA nesses casos, e o owner viu o resultado
+    // na tela: `US$ 2,40` e `US$ 1,68` desenhavam a mesma barra completa, lado a lado, como se
+    // os dois estivessem no teto de alguma coisa — e como se fossem iguais.
+    //
+    // Barra cheia é a afirmação visual mais forte que existe, e ela estava sendo usada para
+    // dizer "não sei medir isto". Ausência renderizada como valor, escolhendo o valor máximo:
+    // é o mesmo defeito que esta casa proíbe no dado, aparecendo no desenho.
+    //
+    // `null` faz o chamador não desenhar trilho nenhum. O número continua escrito ao lado, que
+    // é onde ele sempre esteve — a barra era o atalho, nunca o fato.
+    if (limite === null) return null;
     const fracao = (m.value - limite.min) / (limite.max - limite.min);
     const limitada = fracao < 0 ? 0 : fracao > 1 ? 1 : fracao;
     return `${(limitada * 100).toFixed(1)}%`;

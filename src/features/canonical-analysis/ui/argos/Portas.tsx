@@ -107,17 +107,24 @@ function Porta({
                   {rotuloDe(id)}
                 </Text>
                 {/* Mini-barra: magnitude, nunca veredito. `aria-hidden` porque o número está ao
-                    lado — a barra é redundância, e leitor de tela não precisa dela. */}
-                <span
-                  className="ml-auto h-1 w-12 shrink-0 overflow-hidden rounded-full bg-muted"
-                  aria-hidden="true"
-                >
+                    lado — a barra é redundância, e leitor de tela não precisa dela.
+
+                    SEM RÉGUA, SEM BARRA: moeda e contagem não têm faixa canônica, e a versão
+                    anterior desenhava o trilho CHEIO para elas. Dois custos diferentes ficavam
+                    com a mesma barra completa. Agora o espaço fica vazio — o número já está
+                    escrito, e o alinhamento da coluna se mantém pelo `ml-auto` do valor. */}
+                {larguras[i] === null ? null : (
                   <span
-                    data-revelar="barra"
-                    className="block h-full rounded-full bg-primary"
-                    style={{ width: larguras[i] }}
-                  />
-                </span>
+                    className="ml-auto h-1 w-12 shrink-0 overflow-hidden rounded-full bg-muted"
+                    aria-hidden="true"
+                  >
+                    <span
+                      data-revelar="barra"
+                      className="block h-full rounded-full bg-primary"
+                      style={{ width: larguras[i] as string }}
+                    />
+                  </span>
+                )}
                 <Text papel="rotulo" numerico className="shrink-0 tabular-nums">
                   {valor ?? t("canonicalAnalysis.argos.availability.unavailable")}
                 </Text>
