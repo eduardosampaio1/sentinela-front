@@ -23,9 +23,22 @@ describe("WS-A1 · autoridade do contrato público", () => {
       expect(c.digest, `candidata sem digest: ${c.caminho}`).toMatch(/^[0-9a-f]{64}$/);
       expect(c.caminho.length).toBeGreaterThan(0);
     }
-    expect(
-      ["declarada-por-env", "candidata-unica", "candidatas-identicas", "ambigua", "ausente"],
-    ).toContain(resolucao.motivo);
+    // O vocabulário é FECHADO, e um motivo novo tem de ser declarado aqui. Foi este caso que
+    // cobrou o `checkout-desatualizado` quando ele nasceu — e cobrar é o serviço dele.
+    expect([
+      "declarada-por-env",
+      "candidata-unica",
+      "candidatas-identicas",
+      // Uma candidata é SUBCONJUNTO ESTRITO da outra: mesmo contrato em dois pontos do
+      // tempo, não duas autoridades. Medido nesta máquina: `../sentinela` e
+      // `../sentinela-facts` são o MESMO repositório (mesmo remoto, 198 de 200 commits em
+      // comum) em checkouts diferentes — 12 operações contra 27, e as 12 estão todas entre
+      // as 27. Tratar isso como ambiguidade fazia o gate ficar vermelho em função de quais
+      // pastas existem no disco de quem roda.
+      "checkout-desatualizado",
+      "ambigua",
+      "ausente",
+    ]).toContain(resolucao.motivo);
   });
 
   it("NÃO escolhe em silêncio quando há origens divergentes", () => {

@@ -31,12 +31,22 @@ export interface CandidataDeOrigem {
   versao: string | null;
   /** Quantidade de entradas em `operations` — o eixo em que as origens divergem hoje. */
   operacoes: number;
+  /**
+   * As operações como CONJUNTO (`METHOD path`), e não só a contagem.
+   *
+   * A contagem responde "quantas"; só o conjunto responde "quais", e é essa a diferença entre
+   * duas situações que a contagem confunde: **checkout mais velho** (um é subconjunto estrito do
+   * outro) e **divergência real** (cada um tem operação que o outro não tem). A primeira não é
+   * ambiguidade nenhuma — é o mesmo contrato em dois pontos do tempo.
+   */
+  operacoesIds: readonly string[];
 }
 
 export type MotivoDaEscolha =
   | "declarada-por-env" // SENTINELA_CONTRACT_ORIGIN apontou
   | "candidata-unica" // só uma existe no disco
   | "candidatas-identicas" // várias existem, mesmo digest — não há o que arbitrar
+  | "checkout-desatualizado" // uma é SUBCONJUNTO estrito da outra: mesmo contrato, ponto diferente
   | "ambigua" // várias existem e divergem, e ninguém declarou: NÃO escolhemos
   | "ausente"; // nenhuma existe
 
@@ -55,10 +65,17 @@ function lerCandidata(caminho: string): CandidataDeOrigem | null {
   const bruto = readFileSync(arquivo, "utf-8");
   let versao: string | null = null;
   let operacoes = 0;
+  let operacoesIds: string[] = [];
   try {
     const doc = JSON.parse(bruto) as { version?: string; operations?: unknown[] };
     versao = typeof doc.version === "string" ? doc.version : null;
     operacoes = Array.isArray(doc.operations) ? doc.operations.length : 0;
+    operacoesIds = Array.isArray(doc.operations)
+      ? doc.operations.map((o) => {
+          const x = o as { method?: string; path?: string };
+          return `${String(x.method ?? "?")} ${String(x.path ?? "?")}`;
+        })
+      : [];
   } catch {
     // JSON quebrado é candidata inválida, não candidata silenciosa: fica com digest e 0 operações,
     // e a comparação de digest vai acusá-la como divergente.
@@ -78,7 +95,34 @@ function lerCandidata(caminho: string): CandidataDeOrigem | null {
     digest: createHash("sha256").update(bruto.replace(/\r\n/g, "\n")).digest("hex"),
     versao,
     operacoes,
+    operacoesIds,
   };
+}
+
+/**
+ * A candidata cujas operações CONTÊM as de todas as outras, quando ela existe.
+ *
+ * `null` quando alguma candidata tem operação que a maior não tem — aí não há "mais completa",
+ * há divergência, e quem chama devolve `ambigua`.
+ *
+ * Empate em tamanho com conjuntos diferentes também devolve `null`: dois contratos do mesmo
+ * tamanho e conteúdo diferente é exatamente o caso em que escolher seria adivinhar.
+ */
+function escolherSuperconjuntoEstrito(
+  candidatas: CandidataDeOrigem[],
+): CandidataDeOrigem | null {
+  const maior = [...candidatas].sort((a, b) => b.operacoesIds.length - a.operacoesIds.length)[0];
+  if (!maior || maior.operacoesIds.length === 0) return null;
+  const dela = new Set(maior.operacoesIds);
+  for (const c of candidatas) {
+    if (c.caminho === maior.caminho) continue;
+    if (c.operacoesIds.length === 0) return null;
+    // Alguma operação que a maior NÃO tem? Então não é subconjunto, e não há arbitragem.
+    if (c.operacoesIds.some((op) => !dela.has(op))) return null;
+    // Mesmo tamanho e conteúdo diferente já foi barrado acima; mesmo tamanho e mesmo conteúdo
+    // teria caído em `candidatas-identicas` pelo digest.
+  }
+  return maior;
 }
 
 /**
@@ -133,6 +177,30 @@ export function resolverOrigemDoContrato(
     };
   }
 
+  // ANTES de declarar ambiguidade: uma é SUBCONJUNTO ESTRITO da outra?
+  //
+  // Medido no estado real desta máquina: `../sentinela` e `../sentinela-facts` são o MESMO
+  // repositório — mesmo remoto, 198 de 200 commits em comum — em dois checkouts. O contrato de um
+  // tem 12 operações, o do outro 27, e as 12 estão TODAS entre as 27: zero operações próprias.
+  //
+  // Isso não é "duas autoridades", é a mesma autoridade em dois pontos do tempo. Recusar aqui
+  // fazia o gate ficar vermelho em função de quais pastas existem no disco de quem roda — e
+  // pedir `SENTINELA_CONTRACT_ORIGIN` para contornar transformava um diagnóstico em ritual.
+  //
+  // A ambiguidade CONTINUA para o caso que a merece: quando cada candidata tem operação que a
+  // outra não tem, não há "mais nova" — há duas, e escolher seria adivinhar. O superconjunto só
+  // vence porque o contrato desta casa é ADITIVO por regra declarada; remover operação pública é
+  // quebra, e quebra tem gate próprio no repo do produtor.
+  const superconjunto = escolherSuperconjuntoEstrito(candidatas);
+  if (superconjunto) {
+    return {
+      motivo: "checkout-desatualizado",
+      escolhida: superconjunto,
+      candidatas,
+      divergencia: null,
+    };
+  }
+
   return {
     motivo: "ambigua",
     escolhida: null,
@@ -161,5 +229,14 @@ export function explicarResolucao(r: ResolucaoDeOrigem): string {
     );
   }
   const e = r.escolhida!;
+  if (r.motivo === "checkout-desatualizado") {
+    const outras = r.candidatas.filter((c) => c.caminho !== e.caminho);
+    return (
+      `origem: ${e.caminho} (checkout-desatualizado) · ${e.operacoes} operações · ` +
+      `digest ${e.digest.slice(0, 12)}\n  ` +
+      `as outras são SUBCONJUNTO estrito e ficaram para trás: ` +
+      outras.map((c) => `${c.caminho} → ${c.operacoes}`).join(", ")
+    );
+  }
   return `origem: ${e.caminho} (${r.motivo}) · versão ${e.versao ?? "—"} · ${e.operacoes} operações · digest ${e.digest.slice(0, 12)}`;
 }
