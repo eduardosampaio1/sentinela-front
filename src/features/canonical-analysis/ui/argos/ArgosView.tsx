@@ -433,7 +433,46 @@ export function ArgosView() {
               rotuloDe={rotuloDe}
             />
           </div>
-        ) : null}
+        ) : (
+          /* A AUSÊNCIA DO RESUMO, dita em vez de silenciada.
+
+             Antes o ramo era `: null` — a primeira dobra simplesmente não existia, e quem abria
+             o laudo via o documento começar pelas conclusões sem nada explicando que faltava um
+             número. Ausência silenciosa é a que o leitor atribui a si mesmo: "não achei onde
+             está o resumo".
+
+             ## Por que NÃO é `EmptyState`
+
+             O padrão de estado vazio é para tela vazia, e esta está cheia — dimensões,
+             indicadores, conclusões e procedência estão todos abaixo. Um bloco de vazio aqui
+             diria que a análise não tem nada, quando o que ela não tem é UMA coisa.
+
+             ## Por que não reusa `familyEmpty` nem `notMeasurableHere`
+
+             As duas afirmam outra coisa. `familyEmpty` é "rodou e não achou item" — falso aqui.
+             `notMeasurableHere` é sobre recorte de domínio: a medida existe, só não pertence à
+             aba aberta. Esta é a terceira ausência, e ela precisava de palavra própria.
+
+             E o texto NÃO promete que o número vem depois: prometer roadmap na tela é dívida
+             que o produto paga sem ter assinado. Ele diz o que falta, e aponta para o que há. */
+          <section
+            aria-labelledby="argos-sem-resumo"
+            className="space-y-2 rounded-lg border border-border bg-card p-5"
+          >
+            <h2
+              id="argos-sem-resumo"
+              className="text-xs font-semibold uppercase tracking-widest text-accent-ink"
+            >
+              {t("canonicalAnalysis.argos.noSummaryTitle")}
+            </h2>
+            {/* HTML cru com Tailwind, e não a primitiva `Text`: este arquivo inteiro é assim,
+                e importar a primitiva só aqui criaria dois idiomas na mesma tela. A `Vazia()`
+                logo acima é a vizinha exata — mesma classe de corpo secundário. */}
+            <p className="text-sm text-muted-foreground">
+              {t("canonicalAnalysis.argos.noSummaryBody")}
+            </p>
+          </section>
+        )}
 
         {/* AS PORTAS — o "onde investigar" do protótipo, e só na Visão geral.
             Dentro de uma aba de domínio elas seriam um menu apontando para onde a pessoa já está. */}

@@ -524,6 +524,21 @@ describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () =>
   const base = { availability: "available", reason: "ok", scale: { kind: "ratio_unit" } } as const;
 
   /** Dois escores em domínios DIFERENTES, mais um sem domínio declarado. */
+  /** O documento REAL, sem tocar em `scores` — que e como ele chega hoje: ausente.
+
+      Nao e uma massa "de borda": `behavior_score` nao e produzido pela cadeia (medido — nao
+      existe no motor, nem em `compute_scores`, nem no retorno), entao ESTE e o estado de
+      producao e o `comDominios()` e que semeia o heroi para exercitar a primeira dobra. */
+  function semEscores() {
+    const { doc } = documentoReal();
+    return {
+      analysis_id: "an-abc",
+      result_schema_version: "analysis-result-v3",
+      indicator_registry_version: doc.indicator_registry_version,
+      result: { ...doc, method: { ...doc.method, min_samples_per_intent: 30 } },
+    };
+  }
+
   function comDominios() {
     const { doc } = documentoReal();
     return {
@@ -602,6 +617,43 @@ describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () =>
     const { container } = renderizar(comDominios(), 200, "?dominio=behavioral");
     await screen.findByRole("region", { name: G.scores });
     expect(container.querySelector('[data-heroi="true"]')).toBeNull();
+  });
+
+  it("sem herói, a ausência é DITA — não é espaço em branco", async () => {
+    // O ramo era `: null`: a primeira dobra simplesmente não existia, e o documento começava
+    // pelas conclusões sem nada explicando que faltava um número. Ausência silenciosa é a que
+    // o leitor atribui a si mesmo — "não achei onde está o resumo".
+    //
+    // `behavior_score` NÃO é produzido pela cadeia hoje (medido: não existe no motor, nem em
+    // `compute_scores`, nem no retorno). Então este é o estado REAL de produção, não uma borda
+    // rara — e é por isso que ele precisa de palavra.
+    renderizar(semEscores(), 200);
+    const secao = await screen.findByRole("region", {
+      name: pt.canonicalAnalysis.argos.noSummaryTitle,
+    });
+    expect(
+      within(secao).getByText(pt.canonicalAnalysis.argos.noSummaryBody),
+    ).toBeInTheDocument();
+  });
+
+  it("a ausência do resumo NÃO apaga o resto do laudo", async () => {
+    // O contra-cadeado. Um texto de ausência que viesse no lugar da página inteira diria "a
+    // análise não tem nada", quando o que ela não tem é UMA coisa — e as dimensões, os
+    // indicadores e a procedência seguem ali.
+    renderizar(semEscores(), 200);
+    await screen.findByRole("region", { name: pt.canonicalAnalysis.argos.noSummaryTitle });
+    expect(
+      await screen.findByRole("region", { name: G.groupMeasurements }),
+    ).toBeInTheDocument();
+  });
+
+  it("com herói, o texto de ausência NÃO aparece", async () => {
+    // Sem isto, o par acima passaria com um texto que estivesse sempre na tela.
+    renderizar(comDominios(), 200);
+    await screen.findByRole("region", { name: G.scores });
+    expect(
+      screen.queryByText(pt.canonicalAnalysis.argos.noSummaryTitle),
+    ).not.toBeInTheDocument();
   });
 
   it("`dominio` fora do vocabulário cai na Visão geral em vez de quebrar", async () => {

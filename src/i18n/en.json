@@ -248,6 +248,8 @@
       "loading": "Loading the ARGOS reading…",
       "method": "Method",
       "noDocumentBody": "It completed before this capability existed. The historical result is still available.",
+      "noSummaryTitle": "This analysis has no summary score",
+      "noSummaryBody": "The health dimensions and the indicators below are measured. They are not combined into a single number here.",
       "noDocumentTitle": "This analysis has no ARGOS document",
       "partialTitle": "The producer declared this result incomplete",
       "projections": "Projections",
