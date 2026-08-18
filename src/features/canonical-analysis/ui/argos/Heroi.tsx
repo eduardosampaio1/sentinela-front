@@ -30,6 +30,7 @@ import type { PublicScore } from "@/lib/v1/contract/public-v3.types";
 import {
   apresentacaoDaMedicao,
   coberturaEscrita,
+  confiancaEscrita,
   escalaEscrita,
   motivoRelevante,
   unidadeInforma,
@@ -51,6 +52,11 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
   const apresentacao = apresentacaoDaMedicao(m);
   const cobertura = coberturaEscrita(m.data_coverage, locale);
   const escala = escalaEscrita(m.scale, locale);
+  // D5 — a confianca DESTA medicao. Rotulo proprio, e nao "Confianca" seco, porque a lista de
+  // escores logo abaixo publica `Global confidence`, que e outra coisa: um escore sobre a
+  // analise inteira. Dois numeros com o mesmo nome na mesma tela seria a confusao que o campo
+  // foi criado para desfazer.
+  const confianca = confiancaEscrita(m.confidence, locale);
 
   return (
     <section
@@ -105,6 +111,12 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
           <div className="flex gap-1">
             <dt>{t("canonicalAnalysis.argos.coverage")}:</dt>
             <dd className="tabular-nums">{cobertura}</dd>
+          </div>
+        ) : null}
+        {confianca !== null ? (
+          <div className="flex gap-1">
+            <dt>{t("canonicalAnalysis.argos.measurementConfidence")}:</dt>
+            <dd className="tabular-nums">{confianca}</dd>
           </div>
         ) : null}
         {escala !== null ? (

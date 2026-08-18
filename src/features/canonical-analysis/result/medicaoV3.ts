@@ -143,6 +143,25 @@ export function unidadeInforma(unidade: string | null | undefined, escala: Scale
  * repetido em toda linha vira moldura, e o olho para de ver justamente a linha em que ela é
  * 60% — que é a única em que ela importa.
  */
+/**
+ * A confiança DESTA medição, escrita — e `null` quando é plena.
+ *
+ * Irmã de `coberturaEscrita` e não a mesma função: cobertura é sobre QUANTO do dado entrou,
+ * confiança é sobre O QUANTO SE CONFIA no resultado. Reusar uma pela outra apagaria a
+ * distinção que o campo foi criado para preservar.
+ *
+ * Esconde `1` pelo mesmo motivo que a cobertura esconde: confiança plena não é ressalva, e
+ * escrevê-la vira ruído ao lado do número que importa.
+ */
+export function confiancaEscrita(
+  confianca: number | null | undefined,
+  locale: string,
+): string | null {
+  if (confianca === null || confianca === undefined) return null;
+  if (confianca >= 1) return null;
+  return formatarPercentual(confianca, locale);
+}
+
 export function coberturaEscrita(
   cobertura: number | null | undefined,
   locale: string,

@@ -130,6 +130,7 @@ export interface PublicIssue {
 /** Uma medição pública: valor separado de disponibilidade, com motivo. */
 export interface PublicMeasurement {
   availability: Availability;
+  confidence?: number | null;
   data_coverage?: number | null;
   domain?: Domain | null;
   id: string;

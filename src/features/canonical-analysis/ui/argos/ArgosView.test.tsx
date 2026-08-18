@@ -526,9 +526,11 @@ describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () =>
   /** Dois escores em domínios DIFERENTES, mais um sem domínio declarado. */
   /** O documento REAL, sem tocar em `scores` — que e como ele chega hoje: ausente.
 
-      Nao e uma massa "de borda": `behavior_score` nao e produzido pela cadeia (medido — nao
-      existe no motor, nem em `compute_scores`, nem no retorno), entao ESTE e o estado de
-      producao e o `comDominios()` e que semeia o heroi para exercitar a primeira dobra. */
+      Ate a D5 esta era a massa de PRODUCAO: `behavior_score` nao existia no motor, nem em
+      `compute_scores`, nem no retorno. A D5 lhe deu produtor — o agregado de
+      `max(0, raw_governance_score - cross_intent_penalty)`, com a confianca em campo proprio —,
+      entao hoje ela e a massa do documento que NAO traz o heroi, e nao mais o estado corrente.
+      O `comDominios()` continua semeando o heroi para exercitar a primeira dobra. */
   function semEscores() {
     const { doc } = documentoReal();
     return {
@@ -549,7 +551,7 @@ describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () =>
         ...doc,
         method: { ...doc.method, min_samples_per_intent: 30 },
         scores: [
-          { measurement: { id: "behavior_score", value: 0.64, domain: "behavioral", ...base } },
+          { measurement: { id: "behavior_score", value: 0.64, domain: "behavioral", confidence: 0.4, ...base } },
           { measurement: { id: "semantic_drift", value: 0.12, domain: "semantic", ...base } },
           // Publicado SEM `domain`. Não pode entrar em aba nenhuma.
           { measurement: { id: "global_confidence", value: 0.88, ...base } },
@@ -661,6 +663,21 @@ describe("F3 · as abas de domínio filtram, e o domínio é o PUBLICADO", () =>
     renderizar(comDominios(), 200, "?dominio=inventado");
     const secao = await screen.findByRole("region", { name: G.scores });
     expect(within(secao).getByText(G.output.behavior_score)).toBeInTheDocument();
+  });
+
+  it("a confiança da medição aparece no herói, e não se confunde com `global_confidence`", async () => {
+    // D5. A confiança saiu de DENTRO do valor — o escore legado fazia `qualidade x amostra` e,
+    // com comportamento perfeito, reportava apenas `n/10`. Ela agora e dimensao propria, e
+    // precisa APARECER: uma metade que sai do numero e nao chega a tela apenas sumiu.
+    //
+    // O rotulo e "Confiança da medição" e nao "Confiança" seco, porque a lista de escores da
+    // mesma tela publica `Global confidence`, que e outra coisa — um escore sobre a analise
+    // inteira. Dois numeros com o mesmo nome seria a confusao que o campo desfaz.
+    // O heroi vive na PRIMEIRA DOBRA, fora da regiao `ESCORES` — procurar dentro dela era o
+    // defeito da primeira versao deste teste.
+    renderizar(comDominios(), 200);
+    await screen.findByRole("region", { name: G.scores });
+    expect(screen.getByText(`${G.measurementConfidence}:`)).toBeInTheDocument();
   });
 
   it("o `semantic_drift` por intenção aparece, e é o que permite o drill-down", async () => {
