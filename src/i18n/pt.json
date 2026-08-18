@@ -1187,6 +1187,10 @@
       "account": "Gerenciar conta",
       "accountHint": "Abre o provedor de identidade",
       "signOut": "Sair"
+    },
+    "sidebar": {
+      "collapse": "Recolher menu",
+      "expand": "Expandir menu"
     }
   },
   "workspacesPage": {

@@ -35,6 +35,17 @@ const TOM: Record<ZonaDoBullet, string> = {
   critico: "hsl(var(--ds-danger))",
 };
 
+/**
+ * As pontas da régua, escritas.
+ *
+ * Sem casas quando o número é inteiro (`0`, `100`) e com no máximo duas quando não é (`0,8`).
+ * `Intl` sozinho escreveria `0` e `1` para uma escala `ratio_unit`, que é o certo, e `0,75` onde
+ * precisa — sem inventar precisão que a escala não tem.
+ */
+function rotuloDaRegua(v: number): string {
+  return Number.isInteger(v) ? String(v) : String(Number(v.toFixed(2)));
+}
+
 export function Bullet({
   valor,
   warn,
@@ -108,13 +119,22 @@ export function Bullet({
           />
         ) : null}
       </div>
-      {/* Os cortes escritos. É o canal que sobrevive à escala de cinza, e o que permite conferir
-          a posição do marcador em vez de confiar nela. */}
+      {/* As PONTAS DA RÉGUA, e não os cortes. Correção de leitura pedida pelo owner:
+          *"por que colocamos 60 · 75? a escala deveria ser 0 a 100"* — e ele está certo.
+
+          Número na extremidade de uma barra é lido como o FIM DO EIXO. Escrever `60 · 75` ali
+          dizia que a régua terminava em 75, quando o `behavior_score` vive em 0..100 e o
+          marcador estava posicionado contra 0..100. É o mesmo erro que a revisão adversarial já
+          tinha pegado no contrato — limiar ocupando o lugar da régua —, e ele voltou pela porta
+          do desenho.
+
+          Os cortes NÃO somem: eles são as fronteiras das zonas coloridas, que é onde um limiar
+          se lê sem virar eixo, e aparecem NOMEADOS na linha de detalhe da medição
+          (`atenção 75 · crítico 60`). Aqui embaixo fica a régua, que é o que a posição precisa. */}
       <div className="flex justify-between text-[0.6875rem] tabular-nums text-muted-foreground">
+        <span>{rotuloDaRegua(piso)}</span>
         <span>{rotuloDoValor}</span>
-        <span aria-hidden="true">
-          {menorEPior ? `${critical} · ${warn}` : `${warn} · ${critical}`}
-        </span>
+        <span>{rotuloDaRegua(teto)}</span>
       </div>
     </div>
   );

@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { guardarRecolhida, lerRecolhida } from "./larguraDaBarra";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SentinelaMark } from "@/components/brand/SentinelaMark";
@@ -97,7 +99,13 @@ const PRIMARY_NAV: NavItem[] = [
 //
 // `/dashboard` agora é rota de compatibilidade: ela mesma pergunta ao backend e decide entre
 // redirecionar e mostrar estado vazio. Não há o que desabilitar.
-function SidebarNavItem({ item }: { item: NavItem }) {
+function SidebarNavItem({
+  item,
+  recolhida = false,
+}: {
+  item: NavItem;
+  readonly recolhida?: boolean;
+}) {
   const location = useLocation();
   const { t } = useLanguage();
 
@@ -112,8 +120,10 @@ function SidebarNavItem({ item }: { item: NavItem }) {
     <NavLink
       to={item.to}
       end={item.exact}
+      title={recolhida ? t(`shell.nav.${item.labelSuffix}`) : undefined}
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150",
+        recolhida && "justify-center",
         // M31 — o RÓTULO do item ativo não é mais `text-primary`. O axe-core mediu 3,44:1
         // (`#4f59e8` sobre `#0d1328`) contra os 4,5:1 que a AA exige para texto normal: o item
         // que marca "você está aqui" era o menos legível da barra. O identificador de ativo não
@@ -128,8 +138,13 @@ function SidebarNavItem({ item }: { item: NavItem }) {
         path={item.icon}
         className={isActive ? "text-primary" : "text-current"}
       />
-      <span className="text-sm font-medium truncate">{t(`shell.nav.${item.labelSuffix}`)}</span>
-      {isActive && (
+      {/* Recolhido, o rótulo sai da TELA e não da ÁRVORE: `sr-only` mantém o nome para leitor
+          de tela, e o link continua tendo nome acessível. Removê-lo deixaria um link só com
+          ícone — o "mystery meat" que a régua desta casa proíbe. */}
+      <span className={recolhida ? "sr-only" : "text-sm font-medium truncate"}>
+        {t(`shell.nav.${item.labelSuffix}`)}
+      </span>
+      {isActive && !recolhida && (
         <span
           className="ml-auto w-1.5 h-1.5 rounded-full bg-primary"
           aria-hidden="true"
@@ -157,21 +172,43 @@ function SidebarNavItem({ item }: { item: NavItem }) {
 
 // ─── Sidebar inner content (shared between desktop + mobile drawer) ────────────
 
-export function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
+export function SidebarContent({
+  onNavClick,
+  recolhida = false,
+}: {
+  onNavClick?: () => void;
+  /** No desktop recolhido só os ícones ficam. O drawer do mobile nunca recolhe. */
+  readonly recolhida?: boolean;
+}) {
   const { t } = useLanguage();
 
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Logo */}
-      <div className="h-14 flex items-center px-5 border-b border-border flex-shrink-0">
+      <div
+        className={`h-14 flex items-center border-b border-border flex-shrink-0 ${
+          recolhida ? "justify-center px-0" : "px-5"
+        }`}
+      >
         <div className="flex items-center gap-2.5">
           <SentinelaMark size={26} className="text-primary flex-shrink-0" />
-          <span className="text-sm font-semibold tracking-tight text-foreground">Sentinela</span>
+          {/* O símbolo fica; o nome sai da tela. `sr-only` e não removido — o cabeçalho continua
+              precisando dizer de que produto se trata. */}
+          <span
+            className={
+              recolhida ? "sr-only" : "text-sm font-semibold tracking-tight text-foreground"
+            }
+          >
+            Sentinela
+          </span>
         </div>
       </div>
 
       {/* Escopo de tenant — SEMPRE visível, inclusive quando não há workspace ativo. */}
-      <WorkspaceSwitcher onNavigate={onNavClick} />
+      {/* O seletor de workspace é TEXTO por natureza — o nome do tenant. Recolhido ele não tem
+          forma de ícone que não minta sobre qual workspace está ativo, então sai. Quem precisa
+          trocar de escopo expande a barra, e o gatilho está sempre visível. */}
+      {recolhida ? null : <WorkspaceSwitcher onNavigate={onNavClick} />}
 
       <nav
         className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto min-h-0"
@@ -179,11 +216,11 @@ export function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
         onClick={onNavClick}
       >
         {PRIMARY_NAV.map((item) => (
-          <SidebarNavItem key={item.to} item={item} />
+          <SidebarNavItem key={item.to} item={item} recolhida={recolhida} />
         ))}
       </nav>
 
-      <UserMenu />
+      <UserMenu recolhida={recolhida} />
     </div>
   );
 }
@@ -191,9 +228,43 @@ export function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
 // ─── Desktop sidebar ──────────────────────────────────────────────────────────
 
 export function Sidebar() {
+  const { t } = useLanguage();
+  const [recolhida, setRecolhida] = useState(lerRecolhida);
+
+  function alternar() {
+    setRecolhida((v) => {
+      const proxima = !v;
+      guardarRecolhida(proxima);
+      return proxima;
+    });
+  }
+
   return (
-    <aside className="w-[220px] flex-shrink-0 h-screen sticky top-0 hidden md:flex flex-col border-r border-border">
-      <SidebarContent />
+    // RECOLHER, e não esconder: a barra encolhe para os ícones em vez de sumir. Uma barra que
+    // some leva junto o gatilho de voltar, e a pessoa fica sem saber que ela existe — que é o
+    // mesmo defeito das telas de Conta e Perfil, alcançáveis só por endereço digitado.
+    <aside
+      data-recolhida={recolhida ? "true" : "false"}
+      className={`${
+        recolhida ? "w-[60px]" : "w-[220px]"
+      } flex-shrink-0 h-screen sticky top-0 hidden md:flex flex-col border-r border-border transition-[width] duration-200`}
+    >
+      <SidebarContent recolhida={recolhida} />
+      {/* O gatilho fica no PÉ e sempre visível, aberta ou recolhida. No topo ele disputaria com
+          a marca; escondido atrás de hover, sumiria para quem navega por teclado. */}
+      <button
+        type="button"
+        onClick={alternar}
+        aria-expanded={!recolhida}
+        aria-label={recolhida ? t("shell.sidebar.expand") : t("shell.sidebar.collapse")}
+        title={recolhida ? t("shell.sidebar.expand") : t("shell.sidebar.collapse")}
+        // `min-h-11`: alvo de toque abaixo de 44px já reprovou nesta casa.
+        className="flex min-h-11 items-center justify-center border-t border-border text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span aria-hidden="true" className="text-xs">
+          {recolhida ? "››" : "‹‹"}
+        </span>
+      </button>
     </aside>
   );
 }

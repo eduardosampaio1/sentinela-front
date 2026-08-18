@@ -182,9 +182,23 @@ export function revelarConteudo(raiz: ParentNode | null): void {
 /**
  * Liga a revelação por proximidade da janela (regra 04) e devolve como desligar.
  *
- * Cada elemento é revelado toda vez que volta a entrar na tela. Quem rola para baixo e volta vê
- * de novo — que é a diferença entre movimento que explica a chegada do conteúdo e movimento que
- * aconteceu uma vez, antes de a pessoa estar olhando.
+ * Cada elemento é revelado UMA VEZ, na primeira vez que entra na tela.
+ *
+ * ## Isto era "toda vez", e o owner viu o defeito antes de qualquer teste
+ *
+ * *"Tem algum bug nas animações dessas barras, está piscando na minha tela, e algumas nem
+ * aparecem."* Estava piscando porque estava certo pela regra escrita: revelar a cada entrada.
+ * Rolar para baixo e voltar re-animava tudo, e uma barra flagrada no meio do `scaleX` parece
+ * curta — ou ausente.
+ *
+ * A razão original continua boa e **não é o que muda**: movimento que acontece antes de a
+ * pessoa estar olhando é movimento perdido, e por isso a revelação não pode disparar na
+ * montagem. Mas isso se resolve revelando na PRIMEIRA vez que o elemento aparece. Repetir a
+ * cada volta era a correção passando do ponto: ela resolvia um problema de temporização
+ * criando um de estabilidade.
+ *
+ * Marcar e parar de observar é o que fecha os dois: quem chega vê o gesto, quem volta vê a
+ * tela parada — que é o que uma tela de leitura deve ser.
  */
 export function observarRevelacao(raiz: ParentNode | null): () => void {
   if (!raiz || ehReduzido()) return () => {};
@@ -196,7 +210,13 @@ export function observarRevelacao(raiz: ParentNode | null): () => void {
   }
 
   const posicoes = new WeakMap<Element, number>();
-  Array.from(raiz.querySelectorAll(SELETOR)).forEach((alvo, i) => posicoes.set(alvo, i));
+  // Quem já foi revelado fica de fora do observador NOVO. Sem isto, remontar o observador —
+  // e ele remonta a cada troca de porta, porque a chave do `useRevelacao` inclui a porta —
+  // reanimaria a página inteira, que é o piscar por outro caminho.
+  const pendentes = Array.from(raiz.querySelectorAll(SELETOR)).filter(
+    (alvo) => !(alvo as HTMLElement).dataset.reveladoUmaVez,
+  );
+  pendentes.forEach((alvo, i) => posicoes.set(alvo, i));
 
   const observador = new IntersectionObserver(
     (entradas) => {
@@ -206,11 +226,18 @@ export function observarRevelacao(raiz: ParentNode | null): () => void {
       const visiveis = entradas
         .filter((e) => e.isIntersecting)
         .sort((a, b) => (posicoes.get(a.target) ?? 0) - (posicoes.get(b.target) ?? 0));
-      visiveis.forEach((entrada, i) => revelarElemento(entrada.target, i));
+      visiveis.forEach((entrada, i) => {
+        revelarElemento(entrada.target, i);
+        // Revelado é definitivo: o atributo sobrevive a re-render e o `unobserve` garante que
+        // nem o observador atual volte a disparar. Só a marca não bastaria — dois elementos que
+        // entram no mesmo lote seriam reagrupados de novo na próxima entrada.
+        (entrada.target as HTMLElement).dataset.reveladoUmaVez = "1";
+        observador.unobserve(entrada.target);
+      });
     },
     { threshold: 0.2 },
   );
 
-  Array.from(raiz.querySelectorAll(SELETOR)).forEach((alvo) => observador.observe(alvo));
+  pendentes.forEach((alvo) => observador.observe(alvo));
   return () => observador.disconnect();
 }

@@ -71,11 +71,29 @@ describe("Bullet · a zona sai dos cortes, nas duas direções", () => {
 describe("Bullet · o desenho não vaza, e não depende de cor", () => {
   const base = { warn: 75, critical: 60, piso: 0, teto: 100, descricao: "escore" };
 
-  it("escreve o valor e os cortes em TEXTO", () => {
+  it("escreve o valor e as PONTAS DA RÉGUA em texto", () => {
+    // Correção pedida pelo owner: as extremidades mostravam os CORTES (`60 · 75`), e número
+    // na ponta de uma barra é lido como fim do eixo — dizia que a régua acabava em 75,
+    // quando o escore vive em 0..100 e o marcador estava posicionado contra 0..100.
     render(<Bullet {...base} valor={80.4} rotuloDoValor="80,4" />);
-    // O canal que sobrevive à escala de cinza: quem não distingue as cores lê os três números.
     expect(screen.getByText("80,4")).toBeInTheDocument();
-    expect(screen.getByText("60 · 75")).toBeInTheDocument();
+    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(screen.getByText("100")).toBeInTheDocument();
+  });
+
+  it("os CORTES não aparecem como ponta de eixo", () => {
+    // O contra-cadeado da correção. Eles continuam existindo — são as fronteiras das zonas
+    // coloridas, e aparecem NOMEADOS na linha de detalhe da medição.
+    render(<Bullet {...base} valor={80.4} rotuloDoValor="80,4" />);
+    expect(screen.queryByText("60 · 75")).toBeNull();
+    expect(screen.queryByText("75 · 60")).toBeNull();
+  });
+
+  it("a régua de `ratio_unit` sai como 0 e 1, não como 0 e 100", () => {
+    render(<Bullet valor={0.8} warn={0.75} critical={0.6} piso={0} teto={1}
+      rotuloDoValor="0,8" descricao="x" />);
+    expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.queryByText("100")).toBeNull();
   });
 
   it("a figura tem nome — leitor de tela recebe frase, não uma pilha de divs", () => {

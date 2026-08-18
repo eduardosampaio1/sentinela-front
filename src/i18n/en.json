@@ -1187,6 +1187,10 @@
       "account": "Manage account",
       "accountHint": "Opens your identity provider",
       "signOut": "Sign out"
+    },
+    "sidebar": {
+      "collapse": "Collapse menu",
+      "expand": "Expand menu"
     }
   },
   "workspacesPage": {
