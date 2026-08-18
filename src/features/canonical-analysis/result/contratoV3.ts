@@ -135,6 +135,21 @@ export function validarResultadoV3(
     }
   }
 
+  // `summary.record_count` é o DENOMINADOR, e ele não pode faltar.
+  //
+  // O contrato o declara obrigatório (`PublicSummary.record_count: number`), e até aqui a
+  // checagem só exigia que `summary` fosse um objeto. Um documento sem o campo passava, e a tela
+  // escrevia **"medido sobre NaN conversas"** — encontrado ao pôr a tela no ar, não em teste.
+  //
+  // `NaN` é pior que zero, e zero já é o que esta casa proíbe: ele não é número, não é ausência
+  // declarada, e o leitor não tem como saber se o problema é o dado ou a tela. Recusar o
+  // documento na fronteira dá a resposta certa — *"o que voltou está sem as informações de que
+  // esta visão precisa"* —, que é verdade, em vez de uma medição com cara de defeito.
+  const resumo = d.summary as Record<string, unknown>;
+  if (typeof resumo.record_count !== "number" || !Number.isFinite(resumo.record_count)) {
+    return { status: "recusado", reason: "malformed_document" };
+  }
+
   // Cada família, quando PRESENTE, precisa ter a forma que a View espera. `null` e ausente
   // continuam legítimos e distintos de `[]` — a checagem aceita os três e recusa só o que não
   // é nenhum dos três (um objeto onde deveria haver lista, por exemplo).

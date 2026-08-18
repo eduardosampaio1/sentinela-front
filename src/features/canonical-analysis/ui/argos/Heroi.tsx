@@ -79,6 +79,25 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
         {rotulo}
       </h3>
 
+      <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
+        {valor !== null ? (
+          // O papel `heroi` mora no sistema, não aqui. Ele é fluido de propósito — 104px do
+          // protótipo não cabe em 375px de viewport — e traz peso médio e numerais tabulares:
+          // número grande em peso pesado vira cartaz, e dígito de largura variável destrói leitura.
+          <Text papel="heroi" numerico>
+            {valor}
+          </Text>
+        ) : (
+          // Sem valor, o ESTADO ocupa o lugar do número, no tamanho do texto — nunca um zero
+          // grande, nunca um travessão do tamanho de um número.
+          <span className="text-lg font-medium text-muted-foreground" data-sem-valor="true">
+            {t(`canonicalAnalysis.argos.availability.${m.availability}`)}
+          </span>
+        )}
+        {valor !== null && unidadeInforma(m.unit, m.scale) ? (
+          <span className="pb-2 text-sm text-muted-foreground">{m.unit}</span>
+        ) : null}
+      </div>
       {/* O BULLET, e só quando o produtor declarou os cortes. `thresholds` ausente devolve
           `null` aqui mesmo — a tela não desenha régua sem zona, e o número segue sendo o fato. */}
       {m.thresholds ? (
@@ -103,25 +122,6 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
         </div>
       ) : null}
 
-      <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
-        {valor !== null ? (
-          // O papel `heroi` mora no sistema, não aqui. Ele é fluido de propósito — 104px do
-          // protótipo não cabe em 375px de viewport — e traz peso médio e numerais tabulares:
-          // número grande em peso pesado vira cartaz, e dígito de largura variável destrói leitura.
-          <Text papel="heroi" numerico>
-            {valor}
-          </Text>
-        ) : (
-          // Sem valor, o ESTADO ocupa o lugar do número, no tamanho do texto — nunca um zero
-          // grande, nunca um travessão do tamanho de um número.
-          <span className="text-lg font-medium text-muted-foreground" data-sem-valor="true">
-            {t(`canonicalAnalysis.argos.availability.${m.availability}`)}
-          </span>
-        )}
-        {valor !== null && unidadeInforma(m.unit, m.scale) ? (
-          <span className="pb-2 text-sm text-muted-foreground">{m.unit}</span>
-        ) : null}
-      </div>
 
       {/* Um valor parcial apresentado como completo é pior que ausência, porque ninguém desconfia
           dele. A ressalva vem junto do número, não numa nota de pé. */}
