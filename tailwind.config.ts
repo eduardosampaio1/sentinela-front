@@ -15,7 +15,11 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Plus Jakarta Sans", "system-ui", "-apple-system", "sans-serif"],
+        // `Inter Tight`, a mesma do `body`. Antes era "Plus Jakarta Sans", que NAO e importada
+        // em lugar nenhum: o preflight do Tailwind aplica esta lista em `html`, entao ela
+        // caia em fallback silencioso -- media, nao suposta. So nao aparecia porque o
+        // `body` sobrepoe. Declaracao que mente sobre a fonte e a que envelhece pior.
+        sans: ["Inter Tight", "system-ui", "-apple-system", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
       colors: {

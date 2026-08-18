@@ -1,4 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500&display=swap');
+/* `Inter Tight` e nao `Inter`: e a familia do prototipo aprovado, e a diferenca nao e
+   cosmetica -- ela e mais estreita, entao numero grande e titulo ganham densidade sem
+   ganhar peso. O eixo `opsz` SAI do pedido de proposito: a `Inter Tight` nao o tem, e
+   pedir um eixo inexistente devolve estatico em vez de variavel. O eixo `wght` continua,
+   porque e ele que o sistema usa. */
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 
@@ -101,7 +106,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background-color: #070C18;
     color: #F1F5F9;
     line-height: 1.5;
