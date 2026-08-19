@@ -62,8 +62,17 @@ export function Bullet({
   /** Os extremos da RÉGUA, não das zonas. Vêm da escala, não do limiar. */
   readonly piso: number;
   readonly teto: number;
-  /** O número já escrito, para quem lê texto em vez de posição. */
-  readonly rotuloDoValor: string;
+  /**
+   * O número escrito no meio da régua. `null` OMITE a célula.
+   *
+   * No herói ele é `null`, e a razão veio do owner olhando a tela: o valor já está logo acima,
+   * em 104px. Repeti-lo em 11px sob a barra não acrescenta leitura — acrescenta ruído, e faz o
+   * olho conferir duas vezes o mesmo número.
+   *
+   * A célula continua existindo para quem usar o bullet SEM o número por perto: ali ela é o
+   * canal que não depende de posição.
+   */
+  readonly rotuloDoValor?: string | null;
   /** Frase pronta para leitor de tela. A camada de produto escreve; esta não traduz. */
   readonly descricao: string;
 }) {
@@ -90,7 +99,12 @@ export function Bullet({
   const zona = valor === null ? null : zonaDoValor(valor, warn, critical);
 
   return (
-    <div className="flex flex-col gap-1">
+    // `max-w-sm`: a régua tem COMPRIMENTO ÚTIL, não largura de container.
+    //
+    // Ela ocupava a largura inteira do cartão do herói (~430px) e o owner viu o efeito: uma
+    // barra longa demais achata as três zonas e faz o marcador parecer preciso ao pixel, quando
+    // a régua é 0..100. Encurtar aproxima os cortes e devolve a leitura de faixa.
+    <div className="flex max-w-sm flex-col gap-1">
       {/* `img` com `aria-label`: uma barra é figura, e a frase pronta diz o que ela mostra.
           Sem isto o leitor de tela receberia uma sequência de divs sem sentido. */}
       <div role="img" aria-label={descricao} className="relative h-2 w-full rounded-full">
@@ -140,7 +154,7 @@ export function Bullet({
           (`atenção 75 · crítico 60`). Aqui embaixo fica a régua, que é o que a posição precisa. */}
       <div className="flex justify-between text-[0.6875rem] tabular-nums text-muted-foreground">
         <span>{rotuloDaRegua(piso)}</span>
-        <span>{rotuloDoValor}</span>
+        {rotuloDoValor ? <span>{rotuloDoValor}</span> : <span aria-hidden="true" />}
         <span>{rotuloDaRegua(teto)}</span>
       </div>
     </div>

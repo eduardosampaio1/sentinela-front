@@ -77,8 +77,11 @@ function veredito(
   limiar: { readonly warn: number; readonly critical: number } | null | undefined,
 ) {
   if (!limiar) {
+    // Sem faixa publicada não há ponto de estado: um ponto neutro ao lado de uma frase de
+    // ausência sugeriria um estado que ninguém declarou. E o texto fica menor, porque aqui
+    // ele não é veredito — é a explicação de por que não há um.
     return (
-      <span className="text-muted-foreground">
+      <span className="text-base font-normal text-muted-foreground">
         {t("canonicalAnalysis.argos.verdictNone")}
       </span>
     );
@@ -86,21 +89,39 @@ function veredito(
   switch (zonaDoValor(valor, limiar.warn, limiar.critical)) {
     case "ok":
       return (
-        <span className="text-[hsl(var(--ds-success))]">
-          {t("canonicalAnalysis.argos.verdictOk")}
-        </span>
+        <>
+          <span
+            aria-hidden="true"
+            className="h-2.5 w-2.5 shrink-0 rounded-full bg-[hsl(var(--ds-success))]"
+          />
+          <span className="text-[hsl(var(--ds-success))]">
+            {t("canonicalAnalysis.argos.verdictOk")}
+          </span>
+        </>
       );
     case "atencao":
       return (
-        <span className="text-[hsl(var(--ds-warning))]">
-          {t("canonicalAnalysis.argos.verdictWarn")}
-        </span>
+        <>
+          <span
+            aria-hidden="true"
+            className="h-2.5 w-2.5 shrink-0 rounded-full bg-[hsl(var(--ds-warning))]"
+          />
+          <span className="text-[hsl(var(--ds-warning))]">
+            {t("canonicalAnalysis.argos.verdictWarn")}
+          </span>
+        </>
       );
     default:
       return (
-        <span className="text-[hsl(var(--ds-danger))]">
-          {t("canonicalAnalysis.argos.verdictCritical")}
-        </span>
+        <>
+          <span
+            aria-hidden="true"
+            className="h-2.5 w-2.5 shrink-0 rounded-full bg-[hsl(var(--ds-danger))]"
+          />
+          <span className="text-[hsl(var(--ds-danger))]">
+            {t("canonicalAnalysis.argos.verdictCritical")}
+          </span>
+        </>
       );
   }
 }
@@ -162,21 +183,41 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
           <span className="pb-2 text-sm text-muted-foreground">{m.unit}</span>
         ) : null}
       </div>
-      {/* O VEREDITO EM PALAVRA — o achado mais grave da avaliação da primeira vista.
+      {/* O VEREDITO EM DESTAQUE — dois pedidos do owner, e o segundo mudou a hierarquia.
 
-          A tela mostrava `80,36` em 104px, com uma barra de três cores embaixo, e NUNCA dizia
-          se aquilo era bom. A conclusão existia no produto — o motor publica os cortes e a
-          barra já os desenha —, mas chegar nela exigia decodificar cor. É a pergunta que a
-          régua desta casa manda eliminar: *"e daí?"*.
+          Primeiro: a tela mostrava `80,36` em 104px, com uma barra de três cores embaixo, e
+          NUNCA dizia se aquilo era bom. A conclusão existia no produto, mas chegar nela exigia
+          decodificar COR.
 
-          A frase NÃO é juízo da tela: ela nomeia a zona em que o valor caiu segundo os cortes
-          PUBLICADOS, que é a mesma conta que pinta o marcador. Nenhuma informação nova entra
-          aqui — o que entra é a palavra que faltava.
+          Depois: *"precisa ganhar destaque, é bater o olho e saber se está ruim ou não"*.
 
-          Sem limiar, a tela DIZ que não há faixa em vez de calar: um número grande sem veredito
-          e sem explicação é o que produz a dúvida que esta linha existe para fechar. */}
+          E ele tem razão sobre a hierarquia, não só sobre o tamanho. O número é PRECISO; o
+          veredito é a RESPOSTA. Quem abre a tela quer saber se está bom antes de saber quanto —
+          o `80,36` responde "quanto", e só o veredito responde "e daí".
+
+          Por isso ele sobe de `text-sm` para `text-xl`/620 e ganha um ponto de estado à
+          esquerda: em uma olhada, cor e forma dizem a mesma coisa que a palavra, e a palavra
+          continua lá para quem não distingue as cores. */}
       {m.value !== null && m.value !== undefined ? (
-        <p className="mt-3 text-sm">{veredito(t, m.value, m.thresholds)}</p>
+        // A CONFIANÇA sobe para esta linha, e isso fecha o buraco que encurtar a régua abriu.
+        //
+        // Com a barra em 384px num cartão de 447px úteis, sobravam ~60px de nada à direita
+        // dela e uma linha inteira embaixo só para a confiança. Pondo os dois na mesma faixa,
+        // o veredito ocupa a esquerda, a confiança a direita, e some uma linha inteira.
+        //
+        // Elas pertencem juntas: uma diz o veredito, a outra diz o quanto se pode confiar
+        // nele. Lidas em sequência vertical pareciam fatos separados.
+        <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <p className="flex items-center gap-2 text-xl font-[620] leading-tight">
+            {veredito(t, m.value, m.thresholds)}
+          </p>
+          {confianca !== null ? (
+            <p className="text-xs text-muted-foreground">
+              {t("canonicalAnalysis.argos.measurementConfidence")}:{" "}
+              <span className="tabular-nums text-foreground">{confianca}</span>
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {/* O BULLET, e só quando o produtor declarou os cortes. `thresholds` ausente devolve
@@ -192,7 +233,9 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
             // marcador passaria a exagerar toda variação.
             piso={0}
             teto={m.scale.kind === "ratio_unit" ? 1 : 100}
-            rotuloDoValor={valor ?? "—"}
+            // `null`: o valor já está acima, em 104px. Repeti-lo em 11px sob a barra faz o
+            // olho conferir duas vezes o mesmo número.
+            rotuloDoValor={null}
             descricao={t("canonicalAnalysis.argos.bulletDescription", {
               rotulo,
               valor: valor ?? "—",
@@ -225,12 +268,9 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
             <dd className="tabular-nums">{cobertura}</dd>
           </div>
         ) : null}
-        {confianca !== null ? (
-          <div className="flex gap-1">
-            <dt>{t("canonicalAnalysis.argos.measurementConfidence")}:</dt>
-            <dd className="tabular-nums">{confianca}</dd>
-          </div>
-        ) : null}
+        {/* A CONFIANÇA saiu daqui e subiu para a linha do veredito. Ela ficou nos dois lugares
+            por uma passagem minha, e o mesmo número apareceu duas vezes no mesmo cartão — o
+            defeito exato que eu tinha acabado de remover ao tirar o `80,36` de baixo da régua. */}
         {escala !== null ? (
           <div className="flex gap-1">
             <dt>{t("canonicalAnalysis.argos.scale")}:</dt>

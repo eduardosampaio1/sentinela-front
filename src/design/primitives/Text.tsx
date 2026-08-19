@@ -48,8 +48,21 @@ const PAPEL = {
    * Peso 500 e entrelinha .85 já batiam. O `tracking` foi de -0.04 para -0.05em, que é o
    * literal do protótipo — em 104px, um centésimo de em são pixels visíveis.
    */
+  /**
+   * Escala reduzida de `clamp(3.25rem,9vw,6.5rem)` — 52 a 104px — para 40 a 64px.
+   *
+   * O owner: *"esse número tá gigante, o 'Dentro do esperado' está desproporcional"*. A razão é
+   * o INTERVALO: 104px contra 20px do veredito é um salto de 5:1, e salto assim não é
+   * hierarquia — é ruptura. O olho não lê os dois como partes da mesma resposta.
+   *
+   * Em 64px contra 20px o passo cai para 3,2:1, que é um degrau de escala tipográfica: o número
+   * segue sendo o maior elemento sem deixar o resto do cartão parecer legenda.
+   *
+   * Os 104px vinham do protótipo, e lá eles cabiam num cartão maior, com mais coisa em volta.
+   * Copiar o valor sem copiar o contexto foi o mesmo erro da proporção `1.35fr`.
+   */
   heroi:
-    "font-mono text-[clamp(3.25rem,9vw,6.5rem)] font-medium leading-[0.85] tracking-[-0.05em] tabular-nums",
+    "font-mono text-[clamp(2.5rem,5.5vw,4rem)] font-medium leading-[0.9] tracking-[-0.04em] tabular-nums",
 } as const;
 
 export function Text({

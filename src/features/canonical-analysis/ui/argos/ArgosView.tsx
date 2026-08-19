@@ -445,9 +445,14 @@ export function ArgosView() {
             natureza do resumo executivo. Ele abre a leitura, e o texto explica o que o número quer
             dizer logo abaixo. */}
         {/* A PRIMEIRA DOBRA do protótipo: protagonista à esquerda, satélites à direita.
-            `1.35fr / 1fr` é a proporção dele — o herói ganha mais espaço porque carrega um número
-            de 104px, e os satélites empilham em coluna. Abaixo de 1024px viram uma coluna só:
-            duas colunas de cartão em 375px dariam 160px de largura útil cada.
+            A proporção era `1.35fr / 1fr`, herdada do protótipo — lá o herói carrega mais coisa.
+            Aqui ela abriu um buraco: com a régua encurtada a 384px, a TINTA VISÍVEL do cartão
+            parava ali e sobravam ~180px de nada à direita, embora o cabeçalho ocupasse a largura
+            inteira e a medição de caixa não acusasse vão nenhum.
+
+            `grid-cols-2` dá metade a cada lado. O herói passa a caber no que mostra, e os quatro
+            satélites 2×2 ganham a largura que faltava para o rótulo não quebrar em duas linhas.
+            Abaixo de 1024px vira uma coluna só: dois cartões em 375px dariam 160px úteis cada.
 
             `items-start` veio depois, e consertou o defeito que a proporção sozinha criava.
             MEDIDO: o cartão do herói tinha 562px — **62% da altura da janela** — e **62% dele
@@ -472,7 +477,7 @@ export function ArgosView() {
             O herói segue o maior elemento da dobra por TAMANHO DE TIPO, que é onde ele deve
             vencer — não por metros de vão. */}
         {heroi ? (
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+          <div className="grid gap-4 lg:grid-cols-2">
             <Heroi escore={heroi} rotulo={rotuloDe(ID_DO_HEROI)} />
             <Satelites
               escores={completo.scores ?? []}
