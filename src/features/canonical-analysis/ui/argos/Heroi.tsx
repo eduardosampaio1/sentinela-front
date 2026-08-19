@@ -199,25 +199,9 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
           esquerda: em uma olhada, cor e forma dizem a mesma coisa que a palavra, e a palavra
           continua lá para quem não distingue as cores. */}
       {m.value !== null && m.value !== undefined ? (
-        // A CONFIANÇA sobe para esta linha, e isso fecha o buraco que encurtar a régua abriu.
-        //
-        // Com a barra em 384px num cartão de 447px úteis, sobravam ~60px de nada à direita
-        // dela e uma linha inteira embaixo só para a confiança. Pondo os dois na mesma faixa,
-        // o veredito ocupa a esquerda, a confiança a direita, e some uma linha inteira.
-        //
-        // Elas pertencem juntas: uma diz o veredito, a outra diz o quanto se pode confiar
-        // nele. Lidas em sequência vertical pareciam fatos separados.
-        <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <p className="flex items-center gap-2 text-xl font-[620] leading-tight">
-            {veredito(t, m.value, m.thresholds)}
-          </p>
-          {confianca !== null ? (
-            <p className="text-xs text-muted-foreground">
-              {t("canonicalAnalysis.argos.measurementConfidence")}:{" "}
-              <span className="tabular-nums text-foreground">{confianca}</span>
-            </p>
-          ) : null}
-        </div>
+        <p className="mt-2 flex items-center gap-2 text-xl font-[620] leading-tight">
+          {veredito(t, m.value, m.thresholds)}
+        </p>
       ) : null}
 
       {/* O BULLET, e só quando o produtor declarou os cortes. `thresholds` ausente devolve
@@ -268,9 +252,17 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
             <dd className="tabular-nums">{cobertura}</dd>
           </div>
         ) : null}
-        {/* A CONFIANÇA saiu daqui e subiu para a linha do veredito. Ela ficou nos dois lugares
-            por uma passagem minha, e o mesmo número apareceu duas vezes no mesmo cartão — o
-            defeito exato que eu tinha acabado de remover ao tirar o `80,36` de baixo da régua. */}
+        {/* A CONFIANÇA fica AQUI, abaixo da régua e em linha própria.
+            Ela chegou a subir para a linha do veredito, para tapar o vão que encurtar a barra
+            abriu. Não era o lugar dela: o veredito é a resposta, e um segundo número ao lado
+            dele disputa a leitura que ele acabou de ganhar. O vão fechou por outro caminho —
+            estreitando a coluna. */}
+        {confianca !== null ? (
+          <div className="flex gap-1">
+            <dt>{t("canonicalAnalysis.argos.measurementConfidence")}:</dt>
+            <dd className="tabular-nums text-foreground">{confianca}</dd>
+          </div>
+        ) : null}
         {escala !== null ? (
           <div className="flex gap-1">
             <dt>{t("canonicalAnalysis.argos.scale")}:</dt>

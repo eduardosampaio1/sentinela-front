@@ -450,8 +450,11 @@ export function ArgosView() {
             parava ali e sobravam ~180px de nada à direita, embora o cabeçalho ocupasse a largura
             inteira e a medição de caixa não acusasse vão nenhum.
 
-            `grid-cols-2` dá metade a cada lado. O herói passa a caber no que mostra, e os quatro
-            satélites 2×2 ganham a largura que faltava para o rótulo não quebrar em duas linhas.
+            `1fr / 1.8fr` foi onde parou, e a proporção agora vem do CONTEÚDO em vez do
+            protótipo. O herói mostra um número, um veredito, uma régua de 208px e uma linha de
+            confiança — cabe em um terço. Os quatro satélites 2×2 precisam do resto para o
+            rótulo e o denominador não quebrarem em duas linhas.
+
             Abaixo de 1024px vira uma coluna só: dois cartões em 375px dariam 160px úteis cada.
 
             `items-start` veio depois, e consertou o defeito que a proporção sozinha criava.
@@ -477,7 +480,7 @@ export function ArgosView() {
             O herói segue o maior elemento da dobra por TAMANHO DE TIPO, que é onde ele deve
             vencer — não por metros de vão. */}
         {heroi ? (
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)]">
             <Heroi escore={heroi} rotulo={rotuloDe(ID_DO_HEROI)} />
             <Satelites
               escores={completo.scores ?? []}

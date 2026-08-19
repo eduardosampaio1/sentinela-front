@@ -99,12 +99,15 @@ export function Bullet({
   const zona = valor === null ? null : zonaDoValor(valor, warn, critical);
 
   return (
-    // `max-w-sm`: a régua tem COMPRIMENTO ÚTIL, não largura de container.
+    // `max-w-[13rem]` = 208px: a régua tem COMPRIMENTO ÚTIL, não largura de container.
     //
-    // Ela ocupava a largura inteira do cartão do herói (~430px) e o owner viu o efeito: uma
-    // barra longa demais achata as três zonas e faz o marcador parecer preciso ao pixel, quando
-    // a régua é 0..100. Encurtar aproxima os cortes e devolve a leitura de faixa.
-    <div className="flex max-w-sm flex-col gap-1">
+    // Ela ocupava a largura inteira do cartão (~430px), e barra longa demais achata as três
+    // zonas e faz o marcador parecer preciso ao pixel numa régua de 0..100.
+    //
+    // 208px não é número escolhido a esmo: é a largura do texto do veredito logo acima. A régua
+    // fica ancorada nele, e os dois formam um bloco em vez de duas linhas de comprimentos
+    // diferentes — que era o que fazia o cartão parecer desmontado.
+    <div className="flex max-w-[13rem] flex-col gap-1">
       {/* `img` com `aria-label`: uma barra é figura, e a frase pronta diz o que ela mostra.
           Sem isto o leitor de tela receberia uma sequência de divs sem sentido. */}
       <div role="img" aria-label={descricao} className="relative h-2 w-full rounded-full">
