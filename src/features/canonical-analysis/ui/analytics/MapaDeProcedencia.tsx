@@ -43,6 +43,8 @@ import {
   Background,
   BackgroundVariant,
   Controls,
+  Handle,
+  Position,
   ReactFlow,
   type Edge,
   type Node,
@@ -56,8 +58,33 @@ import type {
   SerieTemporal,
 } from "../../result/analyticsProjection";
 
+// ## A CAIXA DO NÓ É DECLARADA, não medida — e isso é correção de defeito
+//
+// Por padrão o React Flow mede cada nó com um `ResizeObserver` e só então calcula onde a aresta
+// encosta. O `ResizeObserver` **não entrega callback** em página que o navegador não está
+// desenhando: aba em segundo plano, `document.hidden`, impressão, captura fora de tela. Sem
+// medição não há `handleBounds`; sem `handleBounds` o `getEdgePosition` devolve `null`; e o
+// `EdgeWrapper` retorna `null` **sem logar nada**.
+//
+// O sintoma é cruel: os NÓS aparecem e as ARESTAS não. Um mapa de cadeia sem as ligações é a
+// única forma de ele mentir — ele continua parecendo um desenho legítimo, e já não afirma
+// procedência nenhuma. E como este canvas é `aria-hidden` com a lista ao lado, nenhum teste de
+// a11y pega: a lista continua completa enquanto o desenho perdeu o que ele tinha de único.
+//
+// Aqui o desenho é de LEITURA e de tamanho fixo, então a geometria vem declarada: `width`,
+// `height` e os dois pontos de conexão em coordenadas do próprio nó. O CSS repete exatamente as
+// mesmas medidas — se as duas divergirem, a aresta encosta no lugar errado, e é por isso que
+// elas moram uma ao lado da outra.
+const LARGURA = 176;
+const ALTURA = 52;
 const COLUNA = 220;
 const FAIXA = 70;
+
+/** Entra à esquerda, sai à direita — no meio da altura, nos dois casos. */
+const PONTOS = [
+  { type: "target" as const, position: Position.Left, x: 0, y: ALTURA / 2 },
+  { type: "source" as const, position: Position.Right, x: LARGURA, y: ALTURA / 2 },
+];
 /** Quantos filhos o desenho mostra antes de dizer quantos sobraram. */
 const TETO_DE_FILHOS = 6;
 
@@ -87,11 +114,17 @@ function No({ data }: { data: DadoDoNo }) {
   return (
     <div
       className={[
-        "min-w-[10rem] max-w-[12.5rem] rounded-lg border px-3 py-2",
+        // As MESMAS medidas de LARGURA/ALTURA. Divergir daqui move a ponta da aresta.
+        "w-44 h-[52px] overflow-hidden rounded-lg border px-3 py-2",
         semDado ? "medida-ausente border-border" : "border-border bg-card",
         data.papel === "raiz" ? "border-l-2 border-l-primary" : "",
       ].join(" ")}
     >
+      {/* Invisíveis, não ausentes. Quando a página É desenhada, a medição sobrescreve os
+          pontos declarados — e sem elemento no DOM ela devolve lista vazia, derrubando a
+          aresta do mesmo jeito. Os dois caminhos precisam chegar ao mesmo lugar. */}
+      <Handle type="target" position={Position.Left} className="!h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent opacity-0" />
+      <Handle type="source" position={Position.Right} className="!h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent opacity-0" />
       <div className="truncate text-[0.6rem] uppercase tracking-wider text-muted-foreground" title={data.rotulo}>
         {data.rotulo}
       </div>
@@ -114,7 +147,7 @@ export function MapaDeProcedencia({
 }) {
   const { t } = useLanguage();
 
-  const { nos, arestas, linhas } = useMemo(() => {
+  const { nos, arestas, linhas, altura } = useMemo(() => {
     const nos: Node<DadoDoNo>[] = [];
     const arestas: Edge[] = [];
     const linhas: { rotulo: string; valor: string }[] = [];
@@ -134,6 +167,9 @@ export function MapaDeProcedencia({
         id,
         type: "no",
         position: { x: coluna * COLUNA, y: faixa * FAIXA },
+        width: LARGURA,
+        height: ALTURA,
+        handles: PONTOS,
         data: { papel, rotulo, valor },
       });
       linhas.push({ rotulo, valor });
@@ -242,7 +278,13 @@ export function MapaDeProcedencia({
       por("metodo", "metodo", k("mapMethod"), `${s.method_id} · v${s.method_version}`, 4, 1.5, "granularidade");
     }
 
-    return { nos, arestas, linhas };
+    // A ALTURA VEM DO CONTEÚDO. `fitView` enquadra quando o navegador roda o passo de layout;
+    // quando ele não roda, a moldura fica em escala 1 e uma altura fixa cortaria a última
+    // janela da série sem avisar. O teto de 480 cobre o pior caso real — seis filhos mais o nó
+    // do que sobrou pedem 468.
+    const fundo = Math.max(...nos.map((x) => x.position.y)) + ALTURA + 20;
+    const altura = Math.min(480, Math.max(200, fundo));
+    return { nos, arestas, linhas, altura };
   }, [bloco, denominador, t]);
 
   return (
@@ -251,7 +293,8 @@ export function MapaDeProcedencia({
           lista abaixo carrega os mesmos fatos, e é ela que responde a quem audita. */}
       <div
         aria-hidden="true"
-        className="h-[19rem] overflow-hidden rounded-lg border border-border bg-background"
+        style={{ height: altura }}
+        className="overflow-hidden rounded-lg border border-border bg-background"
       >
         <ReactFlow
           nodes={nos}
