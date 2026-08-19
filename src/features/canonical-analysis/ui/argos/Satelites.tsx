@@ -26,7 +26,8 @@
 // análise" vem acompanhado de por quê — que é a diferença entre a pessoa esperar e a pessoa agir.
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Text } from "@/design/primitives";
+import { Explicacao, Text } from "@/design/primitives";
+import { explicacaoDe } from "../../result/catalogoArgos";
 import type { PublicScore } from "@/lib/v1/contract/public-v3.types";
 import {
   coberturaEscrita,
@@ -54,8 +55,15 @@ function Satelite({
   return (
     // `data-revelar` por cartão: eles entram em sequência com o herói e as portas, não em bloco.
     <li data-revelar className="rounded-lg border border-border bg-card p-5">
-      <Text papel="micro" tom="discreto" as="p">
+      {/* O nome e a EXPLICAÇÃO, juntos. Os quatro satélites são o primeiro écran junto do
+          herói, e os quatro têm nome em inglês por decisão registrada — é aqui que a frase
+          decide se a decisão de não traduzir se sustenta ou vira barreira. */}
+      <Text papel="micro" tom="discreto" as="p" className="flex flex-wrap items-center gap-1.5">
         {rotulo}
+        <Explicacao
+          texto={explicacaoDe(t, m.id)}
+          rotuloDoGatilho={t("canonicalAnalysis.argos.explainMetric", { rotulo })}
+        />
       </Text>
 
       <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">

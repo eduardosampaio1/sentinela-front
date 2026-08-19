@@ -51,7 +51,7 @@ import { valorEscrito } from "../../result/medicaoV3";
 import { descriptorDe } from "../../result/descriptors";
 import { formatarNumero } from "../../result/formatacao";
 import { AbasDePorta } from "./AbasDePorta";
-import { BarraDeComposicao } from "@/design/primitives";
+import { BarraDeComposicao, Disclosure } from "@/design/primitives";
 import { Heroi } from "./Heroi";
 import { Intencoes } from "./Intencoes";
 import { Portas } from "./Portas";
@@ -400,12 +400,29 @@ export function ArgosView() {
             className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm"
           >
             <p className="font-medium">{t("canonicalAnalysis.argos.partialTitle")}</p>
+            {/* A FRASE, e o código atrás de um gatilho.
+
+                A tela mostrava `indicator_not_measured` cru, logo abaixo do título. É nome de
+                campo do contrato: quem lê não tem como saber se é erro, aviso ou detalhe
+                técnico — e o aviso ficava sendo a única coisa da tela escrita em linguagem de
+                máquina.
+
+                O código NÃO some: ele é o que serve para abrir um chamado, e some seria pior.
+                Ele vai para onde detalhe técnico pertence — atrás de um gatilho, para quem
+                estiver investigando. */}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t("canonicalAnalysis.argos.partialBody")}
+            </p>
             {d.partiality.reasons.length > 0 ? (
-              <ul className="mt-1 list-inside list-disc text-xs text-muted-foreground">
-                {d.partiality.reasons.map((r) => (
-                  <li key={r}>{r}</li>
-                ))}
-              </ul>
+              <div className="mt-2">
+                <Disclosure gatilho={t("canonicalAnalysis.argos.partialCodes")}>
+                  <ul className="list-inside list-disc font-mono text-xs text-muted-foreground">
+                    {d.partiality.reasons.map((r) => (
+                      <li key={r}>{r}</li>
+                    ))}
+                  </ul>
+                </Disclosure>
+              </div>
             ) : null}
           </div>
         ) : null}

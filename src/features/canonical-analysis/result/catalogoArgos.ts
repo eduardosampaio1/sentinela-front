@@ -96,3 +96,60 @@ const CONHECIDOS = new Set(OUTPUTS_DO_CATALOGO);
 export function nomeadoPeloCatalogo(id: string): boolean {
   return CONHECIDOS.has(id);
 }
+
+/**
+ * A EXPLICAÇÃO de uma saída, ou `null` quando ela ainda não tem uma escrita.
+ *
+ * ## Por que um `switch` de quinze linhas, e não `t(`…${id}`)`
+ *
+ * A primeira versão montava a chave. O gate de i18n reprovou, e reprovou certo: ele
+ * CONGELA o número de chamadas `t(variavel)` e é uma catraca **descendente** — enquanto
+ * elas existirem, orfandade de tradução é indecidível, e o número só pode cair. Subir de
+ * 9 para 10 é exatamente o que ela existe para impedir.
+ *
+ * É o mesmo caminho literal que `rotuloDoMotivo` já usa para os códigos de severidade,
+ * nesta mesma frente. Verboso, e é o preço de a chave ser conferível.
+ *
+ * ## Sem descrição, `null` — e quem chama não desenha nada
+ *
+ * Metade das saídas ainda não tem texto. Um `i` que abre e não diz nada é pior que
+ * nenhum: promete explicação e entrega vazio.
+ *
+ * O horizonte da projeção cai no id base: `projected_token_cost@month` é o mesmo output.
+ */
+export function explicacaoDe(t: (k: string) => string, id: string): string | null {
+  switch (id.split("@")[0]) {
+    case "behavior_score":
+      return t("canonicalAnalysis.argos.outputDescription.behavior_score");
+    case "ai_health_score":
+      return t("canonicalAnalysis.argos.outputDescription.ai_health_score");
+    case "consistency_score":
+      return t("canonicalAnalysis.argos.outputDescription.consistency_score");
+    case "global_confidence":
+      return t("canonicalAnalysis.argos.outputDescription.global_confidence");
+    case "cross_intent_similarity":
+      return t("canonicalAnalysis.argos.outputDescription.cross_intent_similarity");
+    case "response_stability":
+      return t("canonicalAnalysis.argos.outputDescription.response_stability");
+    case "semantic_drift":
+      return t("canonicalAnalysis.argos.outputDescription.semantic_drift");
+    case "estimated_handoff_cost":
+      return t("canonicalAnalysis.argos.outputDescription.estimated_handoff_cost");
+    case "containment_risk":
+      return t("canonicalAnalysis.argos.outputDescription.containment_risk");
+    case "conversion_risk":
+      return t("canonicalAnalysis.argos.outputDescription.conversion_risk");
+    case "intents_detected_count":
+      return t("canonicalAnalysis.argos.outputDescription.intents_detected_count");
+    case "covered_intents_count":
+      return t("canonicalAnalysis.argos.outputDescription.covered_intents_count");
+    case "critical_alert_count":
+      return t("canonicalAnalysis.argos.outputDescription.critical_alert_count");
+    case "projected_token_cost":
+      return t("canonicalAnalysis.argos.outputDescription.projected_token_cost");
+    case "projected_handoff_cost":
+      return t("canonicalAnalysis.argos.outputDescription.projected_handoff_cost");
+    default:
+      return null;
+  }
+}

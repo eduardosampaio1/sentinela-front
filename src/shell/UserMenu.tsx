@@ -37,9 +37,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /** A classe dos itens do menu. Uma só: três cópias divergem no primeiro ajuste. */
+/** A classe dos itens do menu. Uma só: três cópias divergem no primeiro ajuste.
+ *
+ * `min-h-11` = 44px. Item de menu é alvo de toque como qualquer outro, e a medição da
+ * primeira vista pegou este arquivo junto com os da navegação. */
 const ITEM =
-  "w-full text-left px-2 py-1.5 rounded-lg text-xs text-muted-foreground " +
-  "hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "flex w-full min-h-11 items-center text-left px-2 py-1.5 rounded-lg text-xs " +
+  "text-muted-foreground hover:bg-muted/60 focus-visible:outline-none " +
+  "focus-visible:ring-2 focus-visible:ring-ring";
 
 function nomeExibido(user: ReturnType<typeof useAuth>["user"]): string {
   const meta = user?.user_metadata as Record<string, unknown> | undefined;
@@ -80,7 +85,7 @@ export function UserMenu({ recolhida = false }: { readonly recolhida?: boolean }
         aria-expanded={aberto}
         aria-haspopup="menu"
         aria-label={t("shell.user.menu")}
-        className="w-full flex items-center justify-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="w-full flex min-h-11 items-center justify-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="w-7 h-7 rounded-full bg-primary/[0.12] border border-primary/20 flex items-center justify-center flex-shrink-0">
           <span className="text-[10px] font-bold text-foreground">{iniciais(nome)}</span>

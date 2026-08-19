@@ -17,6 +17,7 @@ export { BarraDeComposicao } from "./BarraDeComposicao";
 export { fatiasDaComposicao, type ParteDaComposicao } from "./composicao";
 export { Bullet } from "./Bullet";
 export { zonaDoValor, type ZonaDoBullet } from "./zonaDoBullet";
+export { Explicacao } from "./Explicacao";
 export { Chip, type EnfaseDoChip } from "./Chip";
 export { DefinitionGrid } from "./DefinitionGrid";
 export { Disclosure } from "./Disclosure";

@@ -122,7 +122,9 @@ function SidebarNavItem({
       end={item.exact}
       title={recolhida ? t(`shell.nav.${item.labelSuffix}`) : undefined}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150",
+        // `min-h-11` = 44px, a régua de alvo de toque desta casa — a mesma que a barra de
+        // portas já usa. Medido antes: estes itens tinham **36px**, e o do usuário 40px.
+        "flex min-h-11 items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150",
         recolhida && "justify-center",
         // M31 — o RÓTULO do item ativo não é mais `text-primary`. O axe-core mediu 3,44:1
         // (`#4f59e8` sobre `#0d1328`) contra os 4,5:1 que a AA exige para texto normal: o item

@@ -32,7 +32,8 @@
 // que a manchete mudou de assunto.
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Bullet, Text } from "@/design/primitives";
+import { Bullet, Explicacao, Text, zonaDoValor } from "@/design/primitives";
+import { explicacaoDe } from "../../result/catalogoArgos";
 import type { PublicScore } from "@/lib/v1/contract/public-v3.types";
 import {
   apresentacaoDaMedicao,
@@ -50,6 +51,59 @@ import {
 // "indicador analítico inventado", escrita quando o nome não existia em contrato nenhum. O catálogo
 // é o lugar certo por dois motivos: é onde os ids publicados moram, e é o único arquivo isento
 // daquele cadeado, com a isenção justificada e guardada contra orfandade.
+
+/**
+ * O VEREDITO em palavra — o achado mais grave da avaliação da primeira vista.
+ *
+ * A tela mostrava `80,36` em 104px, com uma barra de três cores embaixo, e NUNCA dizia se
+ * aquilo era bom. A conclusão existia no produto — o motor publica os cortes e a barra já os
+ * desenha —, mas chegar nela exigia decodificar cor. É a pergunta que a régua desta casa manda
+ * eliminar: *"e daí?"*.
+ *
+ * A frase NÃO é juízo da tela: ela nomeia a zona em que o valor caiu segundo os cortes
+ * PUBLICADOS, que é a mesma conta que pinta o marcador. Nenhuma informação nova entra aqui — o
+ * que entra é a palavra que faltava.
+ *
+ * Sem limiar, a tela DIZ que não há faixa em vez de calar: número grande sem veredito e sem
+ * explicação é o que produz a dúvida que esta linha existe para fechar.
+ *
+ * `switch` com chave LITERAL, e não `t(mapa[zona])`: o gate de i18n congela o número de chamadas
+ * opacas numa catraca DESCENDENTE, e a primeira versão disto a fez subir de 9 para 10 — que é
+ * exatamente o que ela existe para impedir.
+ */
+function veredito(
+  t: (k: string) => string,
+  valor: number,
+  limiar: { readonly warn: number; readonly critical: number } | null | undefined,
+) {
+  if (!limiar) {
+    return (
+      <span className="text-muted-foreground">
+        {t("canonicalAnalysis.argos.verdictNone")}
+      </span>
+    );
+  }
+  switch (zonaDoValor(valor, limiar.warn, limiar.critical)) {
+    case "ok":
+      return (
+        <span className="text-[hsl(var(--ds-success))]">
+          {t("canonicalAnalysis.argos.verdictOk")}
+        </span>
+      );
+    case "atencao":
+      return (
+        <span className="text-[hsl(var(--ds-warning))]">
+          {t("canonicalAnalysis.argos.verdictWarn")}
+        </span>
+      );
+    default:
+      return (
+        <span className="text-[hsl(var(--ds-danger))]">
+          {t("canonicalAnalysis.argos.verdictCritical")}
+        </span>
+      );
+  }
+}
 
 export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readonly rotulo: string }) {
   const { t, language } = useLanguage();
@@ -76,7 +130,17 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
         id="argos-heroi"
         className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-[hsl(var(--ds-accent-ink))]"
       >
-        {rotulo}
+        <span className="inline-flex items-center gap-1.5">
+          {rotulo}
+          {/* A EXPLICAÇÃO ao lado do nome. O owner reparou que a avaliação não a pedira, e o
+              protótipo tem o padrão desde sempre. Aqui ela importa mais que em qualquer outro
+              lugar: este é o número que a tela apresenta como resposta, e o nome dele está em
+              inglês por decisão registrada de não traduzir métrica. */}
+          <Explicacao
+            texto={explicacaoDe(t, m.id)}
+            rotuloDoGatilho={t("canonicalAnalysis.argos.explainMetric", { rotulo })}
+          />
+        </span>
       </h3>
 
       <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
@@ -98,6 +162,23 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
           <span className="pb-2 text-sm text-muted-foreground">{m.unit}</span>
         ) : null}
       </div>
+      {/* O VEREDITO EM PALAVRA — o achado mais grave da avaliação da primeira vista.
+
+          A tela mostrava `80,36` em 104px, com uma barra de três cores embaixo, e NUNCA dizia
+          se aquilo era bom. A conclusão existia no produto — o motor publica os cortes e a
+          barra já os desenha —, mas chegar nela exigia decodificar cor. É a pergunta que a
+          régua desta casa manda eliminar: *"e daí?"*.
+
+          A frase NÃO é juízo da tela: ela nomeia a zona em que o valor caiu segundo os cortes
+          PUBLICADOS, que é a mesma conta que pinta o marcador. Nenhuma informação nova entra
+          aqui — o que entra é a palavra que faltava.
+
+          Sem limiar, a tela DIZ que não há faixa em vez de calar: um número grande sem veredito
+          e sem explicação é o que produz a dúvida que esta linha existe para fechar. */}
+      {m.value !== null && m.value !== undefined ? (
+        <p className="mt-3 text-sm">{veredito(t, m.value, m.thresholds)}</p>
+      ) : null}
+
       {/* O BULLET, e só quando o produtor declarou os cortes. `thresholds` ausente devolve
           `null` aqui mesmo — a tela não desenha régua sem zona, e o número segue sendo o fato. */}
       {m.thresholds ? (
