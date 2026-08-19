@@ -447,9 +447,22 @@ export function ArgosView() {
         {/* A PRIMEIRA DOBRA do protótipo: protagonista à esquerda, satélites à direita.
             `1.35fr / 1fr` é a proporção dele — o herói ganha mais espaço porque carrega um número
             de 104px, e os satélites empilham em coluna. Abaixo de 1024px viram uma coluna só:
-            duas colunas de cartão em 375px dariam 160px de largura útil cada. */}
+            duas colunas de cartão em 375px dariam 160px de largura útil cada.
+
+            `items-start` veio depois, e consertou o defeito que a proporção sozinha criava.
+            MEDIDO: o cartão do herói tinha 562px — **62% da altura da janela** — e **62% dele
+            era vão vazio**. Os cinco blocos dentro dele somam 216px; o resto era a grade
+            esticando os dois lados até a altura da coluna de satélites.
+
+            O protótipo tem a MESMA estrutura de duas colunas e não sofre disso, e a diferença é
+            a contagem: lá são TRÊS satélites, aqui quatro. Copiar a proporção sem copiar a
+            contagem produziu um cartão que estica sem ter o que mostrar.
+
+            Com `items-start` cada coluna tem a altura do próprio conteúdo, e os satélites
+            passaram a 2×2. O herói segue o maior elemento da dobra por TAMANHO DE TIPO, que é
+            onde ele deve vencer — não por metros de vão. */}
         {heroi ? (
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
             <Heroi escore={heroi} rotulo={rotuloDe(ID_DO_HEROI)} />
             <Satelites
               escores={completo.scores ?? []}

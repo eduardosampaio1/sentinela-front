@@ -140,7 +140,15 @@ export function Satelites({
       <h3 id="argos-satelites" className="sr-only">
         {t("canonicalAnalysis.argos.otherScores")}
       </h3>
-      <ul className="grid gap-4">
+      {/* DUAS colunas a partir de `sm`, e não quatro empilhados.
+          Quatro cartões numa pilha faziam uma coluna de ~500px ao lado de um herói de 216px de
+          conteúdo. Em 2×2 a coluna cai pela metade e a dobra inteira encolhe junto.
+
+          NENHUMA hierarquia entre eles, e isso é decisão: o produtor não publica ranking de
+          importância, e dar tamanhos diferentes afirmaria uma que ninguém declarou. A crítica
+          que eu mesmo escrevi ("quatro cartões iguais, sem ordem de leitura") estava errada
+          neste ponto — tratamento idêntico é o que o dado sustenta. */}
+      <ul className="grid gap-4 sm:grid-cols-2">
         {restantes.map((s) => (
           <Satelite
             key={s.measurement.id}
