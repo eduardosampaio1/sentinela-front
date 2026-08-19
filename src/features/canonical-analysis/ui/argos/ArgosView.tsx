@@ -458,11 +458,21 @@ export function ArgosView() {
             a contagem: lá são TRÊS satélites, aqui quatro. Copiar a proporção sem copiar a
             contagem produziu um cartão que estica sem ter o que mostrar.
 
-            Com `items-start` cada coluna tem a altura do próprio conteúdo, e os satélites
-            passaram a 2×2. O herói segue o maior elemento da dobra por TAMANHO DE TIPO, que é
-            onde ele deve vencer — não por metros de vão. */}
+            A correção foi em DUAS etapas, e a segunda desfaz metade da primeira de propósito.
+
+            `items-start` matou o esticamento, e os satélites passaram a 2×2 — a coluna deles
+            caiu de ~500px para 321px. Aí o herói ficou 46px MAIS BAIXO que ela, e as duas
+            colunas terminavam desalinhadas: o desenho pedia um bloco, e a tela entregava um
+            degrau.
+
+            Com a coluna curta, esticar de volta custa esses 46px e nada mais — o vão que
+            sobrava eram 346px, e ele veio da coluna LONGA, não do esticamento em si. Então o
+            esticamento volta, e o que fica corrigido é a causa.
+
+            O herói segue o maior elemento da dobra por TAMANHO DE TIPO, que é onde ele deve
+            vencer — não por metros de vão. */}
         {heroi ? (
-          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
             <Heroi escore={heroi} rotulo={rotuloDe(ID_DO_HEROI)} />
             <Satelites
               escores={completo.scores ?? []}

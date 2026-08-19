@@ -102,10 +102,17 @@ export function Bullet({
             style={{
               left: `${f.de * 100}%`,
               width: `${Math.max(0, f.ate - f.de) * 100}%`,
-              // Zona é CONTEXTO, não alarme: opacidade baixa para o marcador continuar sendo o
-              // que se lê primeiro. Uma barra em cor cheia competiria com o próprio número.
+              // Zona LEGÍVEL, e isto mudou depois de ver a tela.
+              //
+              // A primeira versão usava `0.28` com o argumento de que "zona é contexto, não
+              // alarme". O argumento tinha um furo: em `0.28` sobre superfície escura as três
+              // zonas ficavam quase indistinguíveis entre si, e a régua parava de comunicar
+              // exatamente o que ela existe para comunicar — onde termina cada faixa.
+              //
+              // O medo de competir com o número não se confirma: o número tem 104px e a barra
+              // tem 8. Quem compete com o herói é outro texto grande, não uma faixa de 8px.
               backgroundColor: TOM[f.zona],
-              opacity: 0.28,
+              opacity: 0.85,
             }}
           />
         ))}
