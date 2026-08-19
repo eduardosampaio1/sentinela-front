@@ -46,6 +46,7 @@ import { ProblemFeedback } from "../notices";
 import { useCanonicalScope } from "../scope";
 import { AcaoDeExport } from "./AcaoDeExport";
 import { AnalyticsRetido } from "./Retido";
+import { IndiceDeRegioes, type RegiaoIndexada } from "./IndiceDeRegioes";
 
 function Secao({
   id,
@@ -408,8 +409,36 @@ export function AnalyticsView() {
 
     const snapshot = lerSnapshot(vista.snapshot);
 
+    // ÍNDICE DE REGIÕES — M31, e ele chega aqui com três anos de atraso conceitual.
+    //
+    // O componente foi escrito para a RES-01, que tinha sete regiões e 2902px no desktop. Esta
+    // visão tem as MESMAS sete e o mesmo problema, e nunca o recebeu: a correção pousou na tela
+    // que estava sendo medida, e não nas que herdaram o defeito. Sem atalho, descobrir que
+    // existe "Procedência e divulgação" exigia rolar até topá-la — a 4ª pergunta do trunk test
+    // de Krug ("quais são minhas opções neste nível?") sem resposta.
+    //
+    // A lista é montada a partir das MESMAS condições que renderizam cada região, e cada rótulo
+    // vem da MESMA chave do título da seção. Âncora morta é pior que ausência de índice, e um
+    // índice que chama a região por outro nome é a inconsistência que ele deveria resolver.
+    const regioes: RegiaoIndexada[] = [
+      ...(snapshot !== null
+        ? [
+            { ancora: "anl-numericos", rotulo: t("canonicalAnalysis.analyticsView.numeric") },
+            { ancora: "anl-distribuicoes", rotulo: t("canonicalAnalysis.analyticsView.distributions") },
+            { ancora: "anl-dimensoes", rotulo: t("canonicalAnalysis.analyticsView.dimensions") },
+            { ancora: "anl-concentracoes", rotulo: t("canonicalAnalysis.analyticsView.concentrations") },
+            { ancora: "anl-series", rotulo: t("canonicalAnalysis.analyticsView.series") },
+            { ancora: "anl-procedencia", rotulo: t("canonicalAnalysis.analyticsView.disclosure") },
+          ]
+        : []),
+      ...(analysisId
+        ? [{ ancora: "anl-export", rotulo: t("canonicalAnalysis.analyticsView.export") }]
+        : []),
+    ];
+
     return (
       <div className="space-y-8">
+        <IndiceDeRegioes regioes={regioes} />
         {/* O estado do componente é TEXTO, e vem antes de tudo: é ele que explica por que o
             resto pode estar incompleto — ou ausente. */}
         <p role="status" className="text-sm text-muted-foreground">
