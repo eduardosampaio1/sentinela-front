@@ -300,10 +300,21 @@ describe("M13 · o legado de `shared/` é dívida congelada", () => {
   // errado, e aí seriam 16.
   //
   // A partir daqui, o canônico é `src/design/patterns/`. O legado só pode ENCOLHER.
+  //
+  // ⚠️ O FURO DA CATRACA, medido em 2026-08-19 e fechado aqui.
+  //
+  // `LoadingState` ficou de fora desta lista desde o início, e era justamente o maior: os
+  // quatro travados encolheram como a regra prometia — ErrorState 7→3, EmptyState 4→2,
+  // SkeletonState 2→1, ConfirmDialog 2→1 — e o único sem teto está em **9**.
+  //
+  // A catraca estava medindo o que era fácil de medir, não o que estava crescendo. Entra com o
+  // teto de hoje: isso não paga a dívida, e impede que a próxima tela de carregamento nasça no
+  // vocabulário errado enquanto ela não é paga.
   const CONGELADO: Readonly<Record<string, number>> = {
     "shared/states/ErrorState": 7,
     "shared/states/EmptyState": 4,
     "shared/states/SkeletonState": 2,
+    "shared/states/LoadingState": 9,
     "shared/feedback/ConfirmDialog": 2,
   };
 
