@@ -51,159 +51,168 @@
   /* ── Superfícies ─────────────────────────────────────────────────────────────────────────
      A escada de elevação. Cada degrau é um papel, não um número. */
 
-  /* ═══ A PALETA MUDOU DE ORIGEM — decisão de owner, 2026-08-17 ═══════════════════════════════
-     O protótipo aprovado do Diagnóstico passa a ser o padrão do site inteiro, e a regra "design
-     system é fonte única" foi suspensa PARA A TROCA — não para abrir dialeto por página. O
-     protótipo vira O sistema: os valores entram aqui, uma vez, e as 21 rotas mudam de cara porque
-     consomem estes tokens. Nenhum `#hex` foi para dentro de componente.
+  /* ═══ A PALETA MUDOU DE ORIGEM PELA SEGUNDA VEZ — decisão de owner, 2026-08-19 ══════════
+     A V4 do Molde passa a ser o padrão do site inteiro, no lugar do protótipo de 17/08. O
+     mecanismo é o mesmo que aquela troca estabeleceu e provou: os valores entram AQUI, uma vez,
+     e as 21 rotas mudam de cara porque consomem estes tokens. Nenhum `#hex` foi para dentro de
+     componente, e a camada legada (`globals.css`) continua sendo adaptador puro.
 
-     O que mudou de fato: ardósia AZULADA de saturação baixa (23%) em lugar do azul-marinho
-     saturado (45–50%). A escada de elevação ficou mais curta e mais próxima — elevação por tom,
-     como o protótipo pede, e não por salto de luminância.
+     O que mudou de fato: a ardósia azulada de saturação baixa (23%) dá lugar a um azul-noite
+     MUITO mais escuro e mais saturado (base 5% de luminância contra 9%, 60% de saturação contra
+     23%), e o acento troca de índigo `#7C8CFF` para roxo `#8B5CF6`. A escada de elevação
+     continua curta e por TOM, e continua SUBINDO em luminância — medida degrau a degrau abaixo.
 
-     Cada valor abaixo foi CONVERTIDO do hex do protótipo e MEDIDO antes de entrar. As medidas
-     estão nos comentários; as três que mudaram decisão estão marcadas. ══════════════════════ */
+     Cada valor foi CONVERTIDO do hex da V4 e MEDIDO antes de entrar. As medidas estão nos
+     comentários; as QUATRO que mudaram decisão estão marcadas. O relatório completo, com as
+     tabelas e o que a conversão encontrou, está em `docs/DESIGN-06-PALETA-V4.md`.
 
-  /** O vazio: fundo da aplicação e do shell. Protótipo `--bg` #12161D. */
-  --ds-surface-base: 218 23% 9%;
-  /** Conteúdo elevado sobre o vazio: cartão, painel, popover ancorado. `--s1` #181D26. */
-  --ds-surface-raised: 219 23% 12%;
-  /** Camada sobreposta ao conteúdo: diálogo, menu flutuante. `--s2` #1E2530.
-      Agora tem valor PRÓPRIO — a nota antiga dizia que coincidia com `raised` e que separá-los era
-      decisão de superfície real. O protótipo separou, e a separação entrou junto. */
-  --ds-surface-overlay: 217 23% 15%;
-  /** Item de lista em foco/hover dentro de navegação. `--s2`. */
-  --ds-surface-sunken: 217 23% 15%;
-  /** Área de menor ênfase: bloco desabilitado, fundo de campo inerte. `--s2`. */
-  --ds-surface-muted: 217 23% 15%;
-  /** Item selecionado, e fundo de ação secundária. `--s3` #252D3A. */
-  --ds-surface-selected: 217 22% 19%;
+     ⚠️ DOIS ACENTOS NÃO ENTRARAM. A V4 usa roxo como ação e ciano como quantidade. A
+     Constituição §1 pede **um acento só**, e a prova para o segundo não fecha: roxo×ciano dão
+     **2,34** de contraste entre si, abaixo dos 3:1 que a §7 exige entre séries adjacentes. O
+     roxo entra nesta troca; o ciano fica pendente de emenda à §4, com consumidor e prova — que
+     é a regra que o rodapé deste arquivo enuncia. ════════════════════════════════════ */
 
-  /* ── Texto ───────────────────────────────────────────────────────────────────────────────
-     V4: contraste é folga, não mínimo. */
-
-  /** `--ink` #E8EDF4 — 15,41:1 sobre a base. */
-  --ds-text-primary: 215 35% 93%;
-  /** `--ink-2` #A4AFBE — 8,16:1 sobre a base. */
-  --ds-text-secondary: 215 17% 69%;
+  /** O vazio: fundo da aplicação e do shell. V4 `--fundo` #050814. L=0,0026. */
+  --ds-surface-base: 228 60% 5%;
+  /** Conteúdo elevado sobre o vazio: cartão, painel. V4 `--sup` #0C1220. L=0,0062 — SOBE. */
+  --ds-surface-raised: 222 45% 9%;
   /**
-   * 🔒 `--ink-3` #7A8697. A REGRA SOBREVIVEU À TROCA DE PALETA, com números novos.
+   * Camada sobreposta ao conteúdo: diálogo, menu flutuante, balão de ajuda.
    *
-   * Medido nesta paleta: 4,91:1 sobre `base`, 4,57:1 sobre `raised`, e **4,17:1 sobre `overlay`
-   * e `muted`** — que reprova AA para texto pequeno. É o MESMO desenho do problema anterior, com
-   * outras cores: a folga existe nas duas superfícies de conteúdo e desaparece na superfície de
-   * menor ênfase.
-   *
-   * E a correção óbvia continua fechada: clarear a tinta a empurra para a luminância de
-   * `--ds-danger`, e a separação em escala de cinza entre as duas já está em 1,22 — a um centésimo
-   * do limiar de 1,2 que `contraste-de-estado` exige. Não há margem para subir.
-   *
-   * A conclusão é sobre o USO, não sobre o valor: texto de apoio vive sobre `base` ou `raised`.
-   * Sobre `muted` — "bloco desabilitado, fundo de campo inerte" — ele não vai.
+   * ⚠️ MUDOU DECISÃO — e o defeito era da V4. O protótipo pinta o balão com #0B1120, que tem
+   * L=0,0058 contra os L=0,0062 do painel sobre o qual ele flutua: a camada sobreposta ficava
+   * MAIS ESCURA que o conteúdo, e a regra desta escada é que elevação nunca escurece. Entra o
+   * `--sup3` #101826 da própria V4, que é o degrau acima e L=0,0090 — SOBE.
    */
-  --ds-text-muted: 215 12% 54%;
+  --ds-surface-overlay: 218 41% 11%;
+  /** Item de lista em foco/hover dentro de navegação. V4 `--sup2` #0E1525. L=0,0076. */
+  --ds-surface-sunken: 222 45% 10%;
+  /** Área de menor ênfase: bloco desabilitado, fundo de campo inerte. V4 `--sup2`. */
+  --ds-surface-muted: 222 45% 10%;
+  /** Item selecionado, e fundo de ação secundária. V4 `--sup4` #141C2E. L=0,0118. */
+  --ds-surface-selected: 222 39% 13%;
+
+  /* ── Texto ─────────────────────────────────────────────────────────────────────
+     V4: contraste é folga, não mínimo — e aqui a folga ficou grande, porque a base escureceu. */
+
+  /** V4 `--t1` #EAF0FA — 17,45:1 sobre a base. */
+  --ds-text-primary: 218 62% 95%;
+  /** V4 `--t2` #A9B6CC — 9,75:1 sobre a base. */
+  --ds-text-secondary: 218 26% 73%;
+  /**
+   * ✅ O ACHADO ABERTO DESDE A M11 FECHOU, e não por correção: pela troca de base.
+   *
+   * A paleta anterior deixava a tinta de apoio em **4,17:1 sobre `overlay` e `muted`** — reprova
+   * AA para texto pequeno —, e a correção óbvia estava fechada porque clarear a tinta a
+   * empurrava para a luminância do `danger`. A conclusão registrada era sobre o USO: texto de
+   * apoio não ia sobre `muted`.
+   *
+   * Com a base em 5% de luminância, o mesmo papel mede **7,10 / 6,65 / 6,32 / 6,48** sobre base,
+   * raised, overlay e muted. A restrição de uso CAI — e ela sai daqui porque deixou de existir,
+   * não porque foi esquecida.
+   *
+   * ⚠️ QUAL DOS QUATRO DEGRAUS — e a resposta não foi a folga. A V4 tem QUATRO degraus de tinta
+   * e este vocabulário tem três; ao colapsar, um fica de fora. O `--t3` #8D9BB2 tem mais folga
+   * (6,32 no pior caso contra 4,74), e foi a primeira escolha por isso.
+   *
+   * O gate `contraste-de-estado` reprovou, e o achado é melhor que o critério: com o `--t3`, o
+   * tom NEUTRO e o tom NEGATIVO ficam a **1,05** de separação em escala de cinza — colidem. Erro
+   * e não-estado viravam a mesma mancha para quem não distingue cor. Com o `--t4` a separação é
+   * **1,39**, e contra positivo e atenção sobe para 2,15 e 2,25.
+   *
+   * Então fica o `--t4`: 4,74 no pior caso ainda passa AA com folga sobre as quatro superfícies,
+   * e a folga extra do `--t3` não valia apagar a distinção de um estado crítico.
+   */
+  --ds-text-muted: 216 16% 54%;
   /**
    * Tinta sobre QUALQUER superfície de sinal — ação, sucesso, aviso, perigo.
    *
-   * ERA BRANCO, e a medição da paleta nova reprovou o branco nas quatro: 2,98 sobre a ação, 2,30
-   * sobre sucesso, 2,18 sobre aviso, 3,04 sobre perigo. Nenhuma chega perto de 4,5.
+   * ⚠️ MUDOU DECISÃO em relação à própria V4. O protótipo escreve BRANCO sobre o roxo cheio, e
+   * a medição reprova: **4,23** contra os 4,5 exigidos. Sobre verde, âmbar e rosa o branco é
+   * pior ainda — 1,74 / 1,67 / 2,69.
    *
-   * Tinta escura passa nas quatro com folga — 6,09 / 7,90 / 8,32 / 5,97 —, e é a escolha que o
-   * próprio protótipo fez no botão primário. Com isso os dois tokens que existiam (`on-accent`
-   * para as escuras, `on-signal` para as claras) colapsam em UM: a paleta nova não tem superfície
-   * de sinal escura o bastante para branco.
+   * A tinta escura passa nas quatro: **4,72 / 11,46 / 11,97 / 7,42**. Fica ela.
    *
-   * `--ds-text-on-signal` continua existindo como ALIAS para não quebrar quem já o consome, e
-   * aponta para o mesmo valor — dois nomes para o mesmo fato é aceitável quando o fato é um; dois
-   * VALORES seriam o defeito.
+   * O 4,72 no roxo é a MENOR folga de toda esta paleta — 22 centésimos acima do mínimo. Escurecer
+   * o acento um grau resolveria com sobra; não foi feito porque o roxo é a identidade da troca, e
+   * a decisão de mexer nele é do owner. Mas está medido, e está escrito: botão primário com
+   * texto pequeno é o único lugar desta paleta sem folga.
    */
-  --ds-text-on-accent: 218 23% 9%;
-  /** Alias de `--ds-text-on-accent`. Ver a nota acima: um fato, um valor. */
-  --ds-text-on-signal: 218 23% 9%;
+  --ds-text-on-accent: 228 60% 5%;
+  /** Alias de `--ds-text-on-accent`. Um fato, um valor. */
+  --ds-text-on-signal: 228 60% 5%;
 
-  /* ── Bordas ──────────────────────────────────────────────────────────────────────────────
-     V1: separação é borda e alinhamento, não sombra. E borda tem ESCALA. */
+  /* ── Bordas ──────────────────────────────────────────────────────────────────
+     A V4 desenha borda com BRANCO E ARDÓSIA TRANSLÚCIDOS. Alfa não pode entrar num token que
+     `hsl(var(--token))` consome, então cada uma foi COMPOSTA sobre a base e virou valor opaco.
+     Composição sobre a base, e não sobre `raised`: a diferença entre as duas é de um centésimo
+     nesta escada, e um valor só é melhor que dois quase-iguais. */
 
-  /** `--edge` #2E3744 — 1,51:1 sobre a base e 1,41:1 sobre `raised`.
-      O 1,41 é subtil de propósito: é literalmente a escolha do protótipo, que separa por TOM e não
-      por linha forte. Onde a borda precisa ser LIDA, o papel é `border-strong`. */
-  --ds-border-default: 215 19% 22%;
-  /** Divisor interno, menos presente que a borda padrão. Um degrau abaixo de `--edge`. */
-  --ds-border-subtle: 217 22% 19%;
+  /** V4 `--borda2` = ardósia .18 sobre a base → #1A2031. 1,23:1 sobre base, 1,15 sobre raised. */
+  --ds-border-default: 224 31% 15%;
+  /** V4 `--borda` = branco .06 sobre a base → #141722. 1,12:1 sobre base. */
+  --ds-border-subtle: 227 26% 11%;
   /**
-   * Borda que precisa ser LIDA como forma, não percebida como separação.
+   * Borda que precisa ser LIDA como forma, não percebida como separação. O consumidor é o léxico
+   * de valor de medida: o contorno tracejado de NÃO MEDIDO e a hachura de AUSENTE, que são
+   * desenho e precisam sobreviver à escala de cinza.
    *
-   * O papel já estava declarado pela Constituição §4 e estava aqui sem valor de propósito — a
-   * regra do rodapé deste arquivo é que o valor nasce junto com o componente que o consome, e
-   * não antes. O consumidor chegou: o léxico de valor de medida (`Medida.tsx`) precisa de duas
-   * formas que são desenho, não moldura — o contorno tracejado de NÃO MEDIDO e a hachura de
-   * AUSENTE. Ambas param de existir com `border-default`, que foi calibrada para desaparecer.
+   * ⚠️ MUDOU DECISÃO. As bordas da V4 são mais fracas que as da paleta anterior — 1,23 contra
+   * 1,51 na padrão —, porque a V4 separa por TOM e por sombra, não por linha. Isso é escolha de
+   * direção e vale para moldura. Mas a `border-strong` não é moldura, e a mesma ardósia a .38 (o
+   * degrau mais forte que a V4 usa) daria **1,76** — abaixo dos 1,95 que a hachura de ausência
+   * já provou precisar.
    *
-   * Na paleta nova o papel casa com `--absent` #3E4854 do protótipo, que é justamente a cor que ele
-   * usava na hachura de ausência. 1,95:1 contra a base e 1,82:1 contra `raised` — abaixo do mínimo
-   * de texto, e correto: isto não é texto. É desenho, e o bastante para a hachura sobreviver à
-   * escala de cinza.
+   * Entra a .46 → #3A455E: **2,09 sobre base e 1,95 sobre raised**, que iguala o par provado.
+   * É o único valor desta troca que NÃO sai direto de um hex da V4, e sai por medição contra um
+   * requisito que já existia.
    */
-  --ds-border-strong: 213 15% 29%;
+  --ds-border-strong: 222 24% 30%;
 
-  /* ── Ação ────────────────────────────────────────────────────────────────────────────────
-     V5: cor de ação é reservada. Um acento só. */
+  /* ── Ação ───────────────────────────────────────────────────────────────────
+     V5: cor de ação é reservada. Um acento só — ver a nota do topo sobre o ciano. */
 
-  /** `--brand` #7C8CFF. Como SUPERFÍCIE de ação leva `--ds-text-on-accent`, que é escuro. */
-  --ds-accent: 233 100% 74%;
-
+  /** V4 `--roxo` #8B5CF6. Como SUPERFÍCIE leva `--ds-text-on-accent`, que é escuro (4,72). */
+  --ds-accent: 258 90% 66%;
   /**
-   * O acento como TINTA — a mesma matiz, clara o bastante para ser lida.
+   * O acento como TINTA — a mesma família, clara o bastante para ser lida.
    *
-   * `--ds-accent` é uma SUPERFÍCIE de ação: o botão preenchido, onde o texto por cima é
-   * `--ds-text-on-accent`. Usá-lo como cor de texto sobre o fundo escuro dá **4,15:1**, que
-   * reprova AA para texto pequeno — e reprova no pior lugar, que são os links dentro de um
-   * corpo de texto longo.
+   * Aqui os dois valores voltam a DIVERGIR, e a razão é medida. Na paleta anterior `accent` e
+   * `accent-ink` convergiram porque o índigo dava 6,09 como tinta e não precisava de um segundo
+   * valor. O roxo #8B5CF6 dá **4,72** como tinta sobre a base — passa, mas com a folga de 22
+   * centésimos, e no pior lugar possível, que é link dentro de corpo de texto longo.
    *
-   * Isto não é teoria: a M46 mediu exatamente esse valor nos três documentos legais e resolveu
-   * escolhendo `#7C86E0` (5,90:1) **à mão, dentro do componente**. A correção era certa e o lugar
-   * era errado — no primeiro dia em que alguém trocou aquele literal pelo token do vocabulário,
-   * o defeito voltou inteiro, nas três páginas de uma vez.
-   *
-   * O papel existir aqui é o que impede a próxima repetição.
-   *
-   * ## A PALETA NOVA RESOLVEU O PROBLEMA NA RAIZ, e o papel fica de qualquer forma
-   *
-   * O `--brand` #7C8CFF do protótipo dá **6,09:1** sobre a base como tinta — passa AA com folga,
-   * onde o acento antigo dava 4,15. Então acento e acento-tinta convergem no mesmo valor, e a
-   * distinção que existia por necessidade de contraste deixou de ser necessária.
-   *
-   * O token NÃO foi removido: os consumidores dele são links dentro de texto corrido, e o dia em
-   * que o acento voltar a escurecer é o dia em que a distinção volta a fazer falta. Papel separado
-   * do valor é o que permite trocar um sem caçar o outro — foi assim que esta troca de paleta
-   * inteira caiu em um arquivo.
+   * O `--roxo3` #C084FC da própria V4 dá **7,56**, e é exatamente o valor que o protótipo usa
+   * como tinta — ícone ativo, link, `<code>` dentro do balão. A distinção volta a existir
+   * porque a necessidade voltou, e o papel separado é o que permitiu isso sem caçar literal.
    */
-  --ds-accent-ink: 233 100% 74%;
+  --ds-accent-ink: 270 95% 75%;
 
-  /* ── Sinais semânticos ───────────────────────────────────────────────────────────────────
+  /* ── Sinais semânticos ────────────────────────────────────────────────────────
      V6 continua valendo na composição: cor NUNCA é canal único. Estes tokens dão a cor; o
      ícone, a forma e o rótulo são responsabilidade do componente. */
 
-  /** `--ok` #43C08A — 7,90:1 sobre a base como tinta. */
-  --ds-success: 154 50% 51%;
-  /** `--warn` #E0A45C — 8,32:1 sobre a base como tinta. */
-  --ds-warning: 33 68% 62%;
-  /** `--bad` #E4726B — 5,97:1 sobre a base como tinta. */
-  --ds-danger: 3 69% 66%;
+  /** V4 `--verde` #4ADE80 — 11,46:1 sobre a base como tinta. */
+  --ds-success: 142 69% 58%;
+  /** V4 `--ambar` #FBBF24 — 11,97:1 sobre a base como tinta. */
+  --ds-warning: 43 96% 56%;
+  /** V4 `--rosa` #FB7185 — 7,42:1 sobre a base como tinta. */
+  --ds-danger: 351 95% 71%;
 
   /**
-   * ⚠️ ACHADO DA CONVERSÃO, e ele é uma restrição de composição, não um defeito de token.
+   * ⚠️ A RESTRIÇÃO DE COMPOSIÇÃO SOBREVIVEU À TROCA, com números piores por um centésimo.
    *
-   * `success` e `warning` desta paleta ficam a **1,05** de separação em escala de cinza — colapsam.
-   * Verde e âmbar são o MESMO tom para quem não distingue cor, e para qualquer captura em cinza.
+   * `success` e `warning` desta paleta ficam a **1,04** de separação em escala de cinza — a
+   * anterior tinha 1,05. Verde e âmbar continuam sendo o MESMO tom para quem não distingue cor,
+   * e para qualquer captura em cinza.
    *
-   * Isto não invalida a paleta: V6 já proíbe cor como canal único, e nada neste produto distingue
-   * "bom" de "atenção" só pela cor — não há faixa esperada publicada, então não há semáforo. As
-   * duas aparecem sempre com palavra ao lado.
+   * Isto não invalida a paleta: V6 já proibe cor como canal único, e nada neste produto
+   * distingue "bom" de "atenção" só pela cor — não há faixa esperada publicada, então não há
+   * semáforo. As duas aparecem sempre com palavra ao lado.
    *
-   * Mas a restrição passa a estar ESCRITA, porque ela é fácil de violar sem perceber: nenhum par
+   * A restrição continua ESCRITA porque continua fácil de violar sem perceber: nenhum par
    * `success`/`warning` pode carregar significado sem rótulo, ícone ou forma. Os outros pares
-   * medidos passam — aviso×perigo 1,39, sucesso×perigo 1,32, apoio×perigo 1,22.
+   * medidos passam — aviso×perigo **1,61** (era 1,39) e apoio×acento **1,50**.
    */
 
   /* ── Forma ───────────────────────────────────────────────────────────────────────────────── */

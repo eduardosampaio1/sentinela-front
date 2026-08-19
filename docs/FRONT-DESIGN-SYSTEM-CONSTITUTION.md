@@ -25,6 +25,16 @@ Cada regra carrega **um** de três selos:
 
 🔶 **PROVISIONAL** — aprovado com alterações no `DESIGN-05` (`77641c8`).
 
+> **EMENDADO DUAS VEZES, e as duas por decisão de owner.** Em 2026-08-17 o protótipo aprovado do
+> Diagnóstico passou a ser o padrão do site. Em **2026-08-19** a **V4 do Molde** tomou o lugar
+> dele — ver **`DESIGN-06-PALETA-V4.md`**, que traz a conversão medida, as quatro decisões que a
+> medição mudou e o que ficou pendente.
+>
+> A emenda alcança **paleta**. Não alcança a personalidade, os doze princípios, o motion (§5, 🔒
+> FROZEN) nem a D23 — um tema só. E ela deixa uma tensão ABERTA, escrita para não ser esquecida:
+> a V4 tem **dois** acentos e esta seção pede **um**. Entrou o roxo; o ciano depende de emenda à
+> §4, e a prova que falta está medida — roxo × ciano dão 2,34, abaixo dos 3:1 da §7.
+
 **Personalidade:** calibrado, sóbrio, exato. A tela é um **instrumento**, não um relatório nem um
 painel. **Assinatura:** a **marginália de procedência** — todo indicador publicado carrega, ao
 lado, de onde veio e sobre quantos registros.

@@ -14,6 +14,7 @@
 |---|---|
 | **O que o produto faz, exige e proíbe?** Comportamento, estados, semântica, lifecycle, comunicação, exclusão, idioma, o que está fora da V1 | **`PRODUCT-EXPERIENCE-FREEZE-V1.md`** |
 | **Como se parece e como se compõe?** Direção visual, tokens, camadas, motion, a11y, responsive, data viz | **`FRONT-DESIGN-SYSTEM-CONSTITUTION.md`** |
+| **Por que a paleta é esta?** A conversão medida da V4, as decisões que a medição mudou, o que ficou pendente | **`DESIGN-06-PALETA-V4.md`** — emenda à Constituição §1 |
 | **Quais superfícies existem, com quais estados, scenarios, componentes e dependências?** | **`EXPERIENCE-BLUEPRINT-V1.md`** |
 | **Como o front é construído por dentro?** Fronteiras, contrato, mock, validadores, auth, privacidade, gates | **`FRONT-ARCHITECTURE-AND-MOCK-CONTRACT.md`** |
 | **Em que ordem se constrói?** | **`FRONT-V1-IMPLEMENTATION-PLAN.md`** — 48 missões de front + 9 deltas de backend |
