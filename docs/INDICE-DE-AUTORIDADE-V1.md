@@ -16,6 +16,7 @@
 | **Como se parece e como se compõe?** Direção visual, tokens, camadas, motion, a11y, responsive, data viz | **`FRONT-DESIGN-SYSTEM-CONSTITUTION.md`** |
 | **Por que a paleta é esta?** A conversão medida da V4, as decisões que a medição mudou, o que ficou pendente | **`DESIGN-06-PALETA-V4.md`** — emenda à Constituição §1 |
 | **Quais superfícies existem, com quais estados, scenarios, componentes e dependências?** | **`EXPERIENCE-BLUEPRINT-V1.md`** |
+| **Uma superfície PROPOSTA e ainda não aprovada?** | **`PROPOSTA-NAV-01-PALETA-DE-COMANDOS.md`** — proposta, **não** autoridade: escrita no formato do Blueprint e pronta para colar em §4.11 e §16 se o owner aprovar |
 | **Como o front é construído por dentro?** Fronteiras, contrato, mock, validadores, auth, privacidade, gates | **`FRONT-ARCHITECTURE-AND-MOCK-CONTRACT.md`** |
 | **Em que ordem se constrói?** | **`FRONT-V1-IMPLEMENTATION-PLAN.md`** — 48 missões de front + 9 deltas de backend |
 
