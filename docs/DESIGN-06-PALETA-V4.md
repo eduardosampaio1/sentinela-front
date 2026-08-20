@@ -135,19 +135,39 @@ Fica o `--t4`. A folga extra do `--t3` não valia apagar a distinção de um est
 
 ## 4. O que NÃO entrou, e o que falta decidir
 
-### 4.1 O ciano — dois acentos, e a prova não fecha
+### 4.1 O ciano — FECHADO, e o motivo não é o número
 
 A V4 usa **roxo como ação e ciano como quantidade**: gradiente de barra, traço da sparkline, valor
-de Pareto. A Constituição §1 pede **um acento só**, e a §7 exige ≥3:1 entre séries adjacentes.
+de Pareto. A §1 pede **um acento só**, e a §7 exige ≥3:1 entre séries adjacentes. Roxo × ciano
+dão **2,34**, e a primeira redação deste documento bloqueou o ciano por aí.
 
-**Roxo × ciano dão 2,34.** Abaixo do piso.
+**Fui medir o que o produto já entrega.** A única composição multi-série que existe é a
+`BarraDeComposicao`, com três tons do MESMO acento:
 
-O roxo entrou nesta troca. O ciano fica pendente de **emenda à §4**, com consumidor e prova — que
-é exatamente a regra que o rodapé do `tokens.css` enuncia: *"o valor nasce com o componente que o
-consome"*. `--ds-chart-*` continua declarado e sem valor.
+| par de séries vizinhas | contraste |
+|---|---:|
+| accent 100% × 62% | **1,82** |
+| accent 62% × 38% | **1,49** |
+| roxo × ciano (a proposta da V4) | 2,34 |
 
-**Consequência prática, hoje:** onde a V4 desenha `linear-gradient(90deg, roxo, ciano)`, o sistema
-tem só o roxo. As barras vão sair monocromáticas até a emenda.
+O que está em produção é **pior que a proposta**, com folga. Bloquear o novo por um critério que
+o existente não cumpre é gate que envelheceu virando argumento.
+
+**O motivo verdadeiro está escrito no próprio componente:** *"não depende de cor — a legenda
+escreve o nome e o valor de cada parte"*. A distinção entre séries neste produto é feita por
+**rótulo**; a cor é atalho. Um segundo matiz não resolve um problema que existe — e no uso que a
+V4 fazia dele (o valor "positivo" de Pareto) competiria com `--ds-success`, que é semântico.
+
+**Decisão: o ciano não entra.** `--ds-chart-*` continua declarado e sem valor, e o segundo matiz
+nasce no dia em que existir uma série que o rótulo não distingue.
+
+**Consequência prática:** onde a V4 desenha `linear-gradient(90deg, roxo, ciano)`, o sistema
+desenha a rampa de um acento só. É menos vistoso e diz a mesma coisa.
+
+**E fica um achado ABERTO, que não é desta troca:** a §7 pede ≥3:1 entre séries adjacentes e o
+produto entrega 1,49. A regra não está sendo cumprida pela paleta — está sendo contornada por
+não depender de cor. Isso é legítimo e é **outra coisa** do que a §7 diz. Ou a §7 passa a
+exigir o rótulo em vez do contraste, ou a rampa precisa abrir. Não decidi por conta própria.
 
 ### 4.2 A restrição que sobreviveu
 

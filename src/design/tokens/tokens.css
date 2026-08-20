@@ -66,11 +66,24 @@
      comentários; as QUATRO que mudaram decisão estão marcadas. O relatório completo, com as
      tabelas e o que a conversão encontrou, está em `docs/DESIGN-06-PALETA-V4.md`.
 
-     ⚠️ DOIS ACENTOS NÃO ENTRARAM. A V4 usa roxo como ação e ciano como quantidade. A
-     Constituição §1 pede **um acento só**, e a prova para o segundo não fecha: roxo×ciano dão
-     **2,34** de contraste entre si, abaixo dos 3:1 que a §7 exige entre séries adjacentes. O
-     roxo entra nesta troca; o ciano fica pendente de emenda à §4, com consumidor e prova — que
-     é a regra que o rodapé deste arquivo enuncia. ════════════════════════════════════ */
+     ⚠️ DOIS ACENTOS NÃO ENTRARAM — e o motivo NÃO é o número. A V4 usa roxo como ação e ciano
+     como quantidade. A primeira redação desta nota bloqueava o ciano em **2,34** de contraste
+     contra o roxo, abaixo dos 3:1 que a §7 pede entre séries adjacentes.
+
+     Medi a única composição multi-série que o produto tem hoje — a `BarraDeComposicao`, com
+     três tons do MESMO acento a 100%, 62% e 38% — e ela fica em **1,82** e **1,49** entre tons
+     vizinhos. Pior que o ciano, com folga. Bloquear o novo por um critério que o existente não
+     cumpre é gate que envelheceu virando argumento.
+
+     O motivo verdadeiro é outro, e está escrito no próprio componente: *"não depende de cor — a
+     legenda escreve o nome e o valor de cada parte"*. A distinção entre séries no produto é
+     feita por RÓTULO, e a cor é atalho. Um segundo tom não resolve um problema que existe: ele
+     acrescenta um matiz à tela e nada à leitura — e, no uso que a V4 fazia dele (valor
+     "positivo" de Pareto), competiria com `--ds-success`, que é semântico.
+
+     Então o ciano NÃO entra, `--ds-chart-*` continua sem valor, e a regra que fica é a mesma do
+     rodapé: o segundo matiz nasce no dia em que existir uma série que o rótulo não distingue.
+     ══════════════════════════════════════════════════════════════════════════════════ */
 
   /** O vazio: fundo da aplicação e do shell. V4 `--fundo` #050814. L=0,0026. */
   --ds-surface-base: 228 60% 5%;
