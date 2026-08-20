@@ -467,11 +467,46 @@ compartilhável · refresh: refaz `GET /result`; nada é reconstruído do browse
 
 | classe | superfícies |
 |---|---|
-| **REAL** | 16 |
+| **REAL** | 17 |
 | **APPROVED DELTA** (total ou parcial) | 17 |
 | **FUTURE / DO NOT BUILD** | 2 (AUTH-06 registro, excluir conta) |
 | 🔴 **contrato ambíguo** (Supabase) | 2 (AUTH-01, AUTH-03) |
-| **TOTAL** | **37** |
+| **TOTAL** | **38** |
+
+> **REAL subiu de 16 para 17 com NAV-01** (§4.11, decisão de owner 2026-08-19). Ela é REAL por não
+> consumir operação nenhuma: indexa o view model que a visão já carregou.
+
+---
+
+### 4.11 Navegação transversal — 1 superfície
+
+**Decisão de owner, 2026-08-19.** A proposta completa, com as três alternativas de escopo e o
+custo medido de cada uma, está em `PROPOSTA-NAV-01-PALETA-DE-COMANDOS.md`. O que foi aprovado:
+**escopo (b)**. O escopo (c) — buscar ENTRE análises — virou **BD15**. O escopo (a) — indexar só a
+navegação global — foi **descartado**: a lateral tem quatro itens e todos estão visíveis.
+
+| id | nome / objetivo | objeto | rota pretendida | AS-IS | entrada → saída | CTA principal | estados | fonte de verdade | contrato |
+|---|---|---|---|---|---|---|---|---|---|
+| **NAV-01** | **Paleta de comandos** — alcançar uma região da análise sem rolar | Analysis (a aberta) | **sem rota** — diálogo sobre a visão atual | — | `⌘K`/`Ctrl+K` ou gatilho na barra → âncora da região, ou rota do shell | — (a lista é o comando) | fechada · aberta vazia · aberta com termo · **sem resultado** | o **view model já carregado** + `PRIMARY_NAV` | **REAL** — não consome operação |
+
+**Escopo (b), literal:** as regiões da análise ABERTA mais os quatro destinos do shell. Ela é
+**acelerador das duas visões**, não cromo global — fora de `/analyses/:id/*` não há o que indexar,
+e ela **não abre**.
+
+**Campos vazios de propósito:** deep link (é diálogo; um `?paleta=aberta` afirmaria que o estado é
+endereçável) · refresh (fecha) · **scenarios: nenhum** — não consome operação, e é essa a economia
+que o escopo (b) compra.
+
+**O que ela não faz** — cada linha é um gate que já existe:
+
+| não faz | quem cobra |
+|---|---|
+| não busca no backend | `operationInventory` — não há operação de busca publicada |
+| não ordena por relevância | `backend-first-result` — ranking é aritmética **e** priorização no navegador |
+| não inventa destino: toda âncora é um `<h2 id>` que existe | mesmo princípio de `IndiceDeRegioes` (M31) |
+| não traduz nome de métrica — casa por apelido, sem exibi-lo | §15 |
+| não é o único caminho para nada | §16 — é acelerador (Nielsen 7) |
+| não substitui as portas do Diagnóstico (`?porta=`, `?dominio=`) | `two-view-gates` |
 
 ---
 
@@ -1019,6 +1054,7 @@ actor · timestamp · motivo/ação · resultado` (**D30**), nunca o conteúdo d
 | `DataTable` | cabeçalhos associados; no modo stacked, cada campo mantém seu rótulo |
 | Gráficos | alternativa textual com os mesmos números; séries distinguíveis em escala de cinza e sob deuteranopia |
 | `ErrorState` | anunciado; foco movido para a mensagem |
+| `PaletaDeComandos` (NAV-01) | `role="dialog"` com **foco preso** e devolvido ao gatilho · `Esc` fecha · lista com `role="listbox"`/`option` e `aria-activedescendant` — **nunca** foco item a item, nunca `role="tab"` · contagem de resultados em `aria-live="polite"` · alvo ≥ 44×44 por item · **gatilho visível na barra**, porque atalho de teclado sozinho não é descoberto · sem resultado, diz o que fazer — nunca lista vazia muda |
 
 ---
 

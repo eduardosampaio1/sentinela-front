@@ -42,6 +42,7 @@ import { MapaDeProcedencia } from "./MapaDeProcedencia";
 import { useAnalysisAnalytics, useAnalysisProgress, useAnalysisStatus } from "../../data/analysis";
 import { lerSnapshot, type SnapshotAnalitico } from "../../result/analyticsProjection";
 import { AnalysisShell } from "../AnalysisShell";
+import { PaletaDeComandos } from "../PaletaDeComandos";
 import { ProblemFeedback } from "../notices";
 import { useCanonicalScope } from "../scope";
 import { AcaoDeExport } from "./AcaoDeExport";
@@ -553,6 +554,10 @@ export function AnalyticsView() {
             estado={status.data?.status as EstadoPublico | undefined}
             titulo={titulo}
           />
+          {/* NAV-01 — acelerador, nunca o único caminho. Ela indexa as regiões que ESTIVEREM
+              dentro de `raiz`, então vem depois do shell e antes do corpo: assim o gatilho fica
+              na altura do título, e a varredura alcança tudo que o corpo renderizou. */}
+          <PaletaDeComandos raiz={raiz} />
           {corpo()}
         </div>
       </PageFrame>

@@ -411,6 +411,17 @@
       "emptyInstance": "No analyses in this instance yet.",
       "showAll": "Show every analysis"
     },
+    "palette": {
+      "count": "{{n}} results",
+      "countOne": "1 result",
+      "empty": "Nothing matches. Try a region name, such as “Intents”.",
+      "groupGoTo": "Go to",
+      "groupHere": "In this analysis",
+      "label": "Command palette",
+      "placeholder": "Search a region, measure or destination…",
+      "shortcut": "⌘K",
+      "trigger": "Search this analysis"
+    },
     "problem": {
       "authentication_required": "Your session is no longer valid. Please sign in again.",
       "forbidden_or_not_found": "This analysis doesn't exist or isn't available in your workspace.",

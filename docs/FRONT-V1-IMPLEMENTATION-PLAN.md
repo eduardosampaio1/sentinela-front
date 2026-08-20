@@ -1613,6 +1613,7 @@ Dispatcher → **ORCHESTRATOR** → Gateway.
 | **BD07** | **Canonicalização de contrato** (C1+C2) | B9 | ✅ decisão 4 | Fase 3, M48 |
 | **BD08** | **Schema aninhado do Analytics** (C5) | B9 | ✅ decisão 4 | M21 |
 | **BD09** | **Resolução de destinatário** — **condicional** ao resultado de M43 | B5 | condicional | M44, M48 |
+| **BD15** | **Busca entre análises** — `GET /v1/analyses` pagina e **não publica operação de busca**. Filtrar no cliente faria um campo com cara de global afirmar completude sobre a única página que ele tem | — | ⏳ **falta autorizar** | NAV-01 escopo (c) |
 
 > **A coluna "autorizado?" é AUTORIZAÇÃO, não execução.** Estado de execução em 2026-08-10:
 > **BD07 ✅ EXECUTADA** (`746abec` no front + o mirror byte-a-byte no repo do Gateway — as duas
@@ -1627,6 +1628,11 @@ Dispatcher → **ORCHESTRATOR** → Gateway.
 > bloco para implementação**. Cada uma ainda precisa, individualmente, de objetivo literal,
 > pré-condições, contrato, critérios, freeze próprio e missão dependente nomeada — e de
 > autorização explícita do owner para começar. **Existir no plano não é estar pronta para código.**
+>
+> **BD15 nasceu de uma RECUSA, não de uma necessidade** (2026-08-19). Ela foi registrada no
+> momento em que NAV-01 foi aprovada no escopo (b) — a paleta indexa a análise aberta e não busca
+> entre análises. O delta existe para que a próxima pessoa que quiser (c) encontre a razão escrita
+> em vez de implementar o filtro no cliente, que é o caminho que parece funcionar.
 >
 > **Duas obrigações da V1 não têm BD alguma** e por isso não aparecem na tabela acima:
 > **Baseline** (EVO-03/INST-05 — ver M40) e **lifecycle/configuração de Workspace** (WS-02/WS-04 —

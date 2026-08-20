@@ -411,6 +411,17 @@
       "emptyInstance": "Nenhuma análise nesta instância ainda.",
       "showAll": "Ver todas as análises"
     },
+    "palette": {
+      "count": "{{n}} resultados",
+      "countOne": "1 resultado",
+      "empty": "Nada com esse termo. Tente o nome de uma região, como “Intenções”.",
+      "groupGoTo": "Ir para",
+      "groupHere": "Nesta análise",
+      "label": "Paleta de comandos",
+      "placeholder": "Buscar região, métrica ou destino…",
+      "shortcut": "⌘K",
+      "trigger": "Buscar nesta análise"
+    },
     "problem": {
       "authentication_required": "Sua sessão não é mais válida. Entre novamente.",
       "forbidden_or_not_found": "Esta análise não existe ou não está disponível no seu workspace.",

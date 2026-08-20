@@ -58,6 +58,7 @@ import { Portas } from "./Portas";
 import { Satelites } from "./Satelites";
 import { BarraDeReferencia } from "./BarraDeReferencia";
 import { AnalysisShell } from "../AnalysisShell";
+import { PaletaDeComandos } from "../PaletaDeComandos";
 import { ProblemFeedback, problemCodeOf } from "../notices";
 import { useCanonicalScope } from "../scope";
 import { Indicador, Medicao } from "./Medicao";
@@ -836,6 +837,10 @@ export function ArgosView() {
             estado={status.data?.status as EstadoPublico | undefined}
             titulo={titulo}
           />
+          {/* NAV-01 — acelerador, nunca o único caminho. Ela indexa as regiões que ESTIVEREM
+              dentro de `raiz`, então vem depois do shell e antes do corpo: assim o gatilho fica
+              na altura do título, e a varredura alcança tudo que o corpo renderizou. */}
+          <PaletaDeComandos raiz={raiz} />
           {corpo()}
         </div>
       </PageFrame>
