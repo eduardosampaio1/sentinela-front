@@ -368,7 +368,15 @@ export function AnalyticsView() {
   const analytics = useAnalysisAnalytics(scope, analysisId);
   // O eixo `export` de `/progress`, e ele apenas — mesma leitura que a rota legada faz. Tentar
   // o download para descobrir o estado usaria a ação como sonda.
-  const eixoExport = progresso.data?.axes.find((a) => a.axis === "export")?.state ?? null;
+  //
+  // O `?.` em `axes` NÃO é decoração. Medido em 2026-08-20, na primeira corrida contra o
+  // backend real: uma resposta sem `axes` derrubava a tela INTEIRA com
+  // `TypeError: Cannot read properties of undefined (reading 'find')`. A causa daquele dia era
+  // divergência de contrato — já corrigida na origem —, mas a lição sobrevive à causa: uma
+  // seção opcional desta página não pode ter o poder de apagar as outras oito. Sem o eixo, o
+  // export fica `null`, que é o mesmo estado de "ainda não sei" que a tela já sabe mostrar.
+  const eixoExport =
+    progresso.data?.axes?.find((a) => a.axis === "export")?.state ?? null;
   // A chave junta a projeção e o progresso: as duas chegam por caminhos diferentes, e a seção que
   // resolver depois precisa entrar com movimento em vez de aparecer pronta numa tela que já se
   // moveu. O movimento é deslocamento puro — entrada com opacidade derruba o contraste do texto

@@ -33,6 +33,7 @@
 
 import { http, HttpResponse } from "msw";
 import type { HttpHandler } from "msw";
+import { PROGRESS_AXES } from "@/lib/v1";
 import type {
   AnalysisListPage,
   AnalyticsAxisState,
@@ -212,7 +213,13 @@ const progresso = (
   http.get(`${base}/v1/analyses/:id/progress`, () =>
     json({
       analysis_id: "an-abc",
-      axes: Object.entries(eixos).map(([axis, state]) => ({ axis, state })),
+      // A ORDEM vem de `PROGRESS_AXES`, e não de `Object.entries`.
+      //
+      // `Object.entries` devolve na ordem em que CADA chamador escreveu o literal. Um cenário
+      // que escrevesse `{ analytics: …, engine: … }` publicaria uma ordem que o produtor não
+      // publica, e o mock voltaria a divergir do serviço em silêncio — que foi exatamente o
+      // defeito que a corrida contra o backend real revelou em 2026-08-20.
+      axes: PROGRESS_AXES.map((axis) => ({ axis, state: eixos[axis] })),
     }),
   );
 
