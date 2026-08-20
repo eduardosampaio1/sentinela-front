@@ -51,6 +51,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ALTURA_DO_NO, alturaDoMapa } from "../../result/geometriaDoMapa";
 import type {
   ResumoDeConcentracao,
   ResumoDeDistribuicao,
@@ -76,7 +77,8 @@ import type {
 // mesmas medidas — se as duas divergirem, a aresta encosta no lugar errado, e é por isso que
 // elas moram uma ao lado da outra.
 const LARGURA = 176;
-const ALTURA = 52;
+/** Reexportado da geometria: a altura da caixa e o teto da moldura têm de ser o mesmo número. */
+const ALTURA = ALTURA_DO_NO;
 const COLUNA = 220;
 const FAIXA = 70;
 
@@ -278,13 +280,9 @@ export function MapaDeProcedencia({
       por("metodo", "metodo", k("mapMethod"), `${s.method_id} · v${s.method_version}`, 4, 1.5, "granularidade");
     }
 
-    // A ALTURA VEM DO CONTEÚDO. `fitView` enquadra quando o navegador roda o passo de layout;
-    // quando ele não roda, a moldura fica em escala 1 e uma altura fixa cortaria a última
-    // janela da série sem avisar. O teto de 480 cobre o pior caso real — seis filhos mais o nó
-    // do que sobrou pedem 468.
-    const fundo = Math.max(...nos.map((x) => x.position.y)) + ALTURA + 20;
-    const altura = Math.min(480, Math.max(200, fundo));
-    return { nos, arestas, linhas, altura };
+    // A altura vem do CONTEÚDO, e a conta mora em `result/geometriaDoMapa.ts` — fora de `ui/`,
+    // que é onde o cadeado `backend-first-result` proíbe aritmética. A razão está escrita lá.
+    return { nos, arestas, linhas, altura: alturaDoMapa(nos.map((x) => x.position.y)) };
   }, [bloco, denominador, t]);
 
   return (
