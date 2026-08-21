@@ -77,7 +77,9 @@ describe("M32 · 1. um só vocabulário de estados", () => {
 describe("M32 · 2. Ações necessárias", () => {
   it("`needs_mapping` aparece com o motivo do bloqueio e SEM operação", () => {
     montar(<RegiaoDeAcoes itens={[item({ analysis_id: "an-nm", status: "needs_mapping" })]} />);
-    expect(screen.getByText(pt.canonicalAnalysis.needsMapping.blocked)).toBeTruthy();
+    // A nota deixou de explicar impedimento e passou a apontar o caminho: a operacao que
+    // resolve existe agora, e resolver e assunto da analise -- nao da fila.
+    expect(screen.getByText(pt.canonicalAnalysis.needsMapping.goConfirm)).toBeTruthy();
     // Nenhum "Confirmar" funcional e nenhum estado local fingindo resolução.
     expect(screen.queryByRole("button")).toBeNull();
     // O único caminho oferecido é ABRIR a análise — rota que existe. Isto não é deep link para

@@ -78,6 +78,18 @@ const CASOS = [
   { nome: "IconeDecorativo", render: () => <IconeDecorativo>▲</IconeDecorativo> },
   { nome: "Note", render: (t: string) => <Note>{t}</Note> },
   { nome: "Panel", render: (t: string) => <ul><Panel titulo={t}>{t}</Panel></ul> },
+  // SEM `<ul>` de proposito: e a diferenca que este caso existe para medir. A regra
+  // `listitem` do axe reprova `li` fora de lista, entao um `Panel` solto que voltasse a ser
+  // `li` reprovaria aqui -- que e como o marcador orfao chegou ao editor de mapeamento sem
+  // nenhum teste reclamar.
+  {
+    nome: "Panel como section",
+    render: (t: string) => (
+      <Panel como="section" titulo={t}>
+        {t}
+      </Panel>
+    ),
+  },
   { nome: "Stack", render: (t: string) => <Stack><span>{t}</span><span>{t}</span></Stack> },
   { nome: "Text", render: (t: string) => <Text>{t}</Text> },
 ] as const;

@@ -13,6 +13,7 @@
 import { type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { http, HttpResponse } from "msw";
 import { beforeAll, describe, expect, it, vi } from "vitest";
@@ -40,6 +41,7 @@ interface BundlePt {
   canonicalAnalysis: {
     state: { needs_mapping: { message: string } };
     action: { checkAgain: string };
+    mapping: { title: string };
   };
 }
 
@@ -88,39 +90,130 @@ describe("o relógio para em needs_mapping", () => {
 });
 
 describe("a parada de mapping chega na tela", () => {
-  it("mostra o que falta e oferece reconsultar — não um banner de fila mudo", async () => {
-    // O backend é FORÇADO a devolver `needs_mapping`: sem isto o teste renderiza o estado
-    // padrão do handler e afirma que a página montou, o que é verdade em qualquer estado e
-    // portanto não prova nada sobre este.
+  it("oferece o EDITOR — não mais um botão que reconsulta", async () => {
+    // ## O que este caso media, e o que passou a medir
+    //
+    // Ele afirmava que a tela dizia *"a operação que resolve isto não está exposta no contrato
+    // público"* e oferecia só reconsultar. As duas coisas estavam certas: a operação não
+    // existia, e um botão que fingisse abrir algo seria pior que a ausência.
+    //
+    // As duas operações foram expostas (`GET`/`POST /v1/analyses/{id}/mapping`). A frase saiu do
+    // produto junto com o motivo dela, e este caso passou a medir a saída em vez do impedimento.
     server.use(
       http.get(`${MSW_BASE}/v1/analyses/an-map`, () =>
         HttpResponse.json(statusView("needs_mapping", { analysis_id: "an-map" })),
       ),
+      http.get(`${MSW_BASE}/v1/analyses/an-map/mapping`, () =>
+        HttpResponse.json({
+          requires_decision: true,
+          records_observed: 120,
+          sample_truncated: false,
+          format_id: "csv.v1",
+          columns: [
+            { name: "conversa", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 118 },
+            { name: "resposta", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 90 },
+          ],
+          suggestion: { conversation_id: { source: "conversa", confidence: 0.9 } },
+          ambiguous: { assistant_text: ["resposta", "texto"] },
+          required_fields: ["conversation_id", "assistant_text"],
+          optional_fields: ["user_text"],
+        }),
+      ),
     );
     const { unmount } = renderAt("an-map");
 
-    // A mensagem do produto, palavra por palavra. O provider renderiza em `en` por padrão; o
-    // texto pt é conferido contra o dicionário no teste de i18n abaixo.
+    // O editor chega, com o título que pede a decisão em vez de descrever a tela.
     await waitFor(() =>
-      expect(
-        screen.getByText("We need to confirm how some fields should be interpreted."),
-      ).toBeTruthy(),
+      expect(screen.getByText("Tell us which column is which")).toBeTruthy(),
     );
-    // A ação existe e é clicável — a tela não fica muda.
-    expect(screen.getByRole("button", { name: "Check again" })).toBeTruthy();
-    // E NÃO oferece retry: reenviar o mesmo arquivo daria o mesmo resultado.
-    expect(screen.queryByRole("button", { name: /try again|retry|tentar/i })).toBeNull();
 
-    // M45.2 — E DIZ POR QUE NÃO ADIANTA INSISTIR.
+    // A sugestão vem PREENCHIDA: obrigar a reconfirmar o que a máquina acertou transformaria
+    // confirmação em digitação.
+    const conversa = screen.getByLabelText(/Conversation ID/) as HTMLSelectElement;
+    expect(conversa.value).toBe("conversa");
+
+    // E o empate vem VAZIO, dito em texto: é o único campo onde a máquina chegou até o fim e
+    // não conseguiu escolher.
+    const resposta = screen.getByLabelText(/Assistant reply/) as HTMLSelectElement;
+    expect(resposta.value).toBe("");
+    expect(screen.getByText(/More than one column fits/)).toBeTruthy();
+
+    // NÃO oferece retry: reenviar o mesmo arquivo daria o mesmo resultado.
+    expect(screen.queryByRole("button", { name: /try again|retry|tentar/i })).toBeNull();
+    // E não afirma mais que a operação não existe — ela existe.
+    expect(screen.queryByText(/not exposed in the public contract/i)).toBeNull();
+    unmount();
+  });
+
+  it("não acusa antes da tentativa, e acusa depois dela", async () => {
+    // ## O defeito que este caso trava
     //
-    // Esta frase existia só na Home. Quem clica no chip "Ação necessária" da lista aterrissa
-    // AQUI, encontrava um botão de reconsultar e concluía que a confirmação dependia dela —
-    // ficando a insistir num botão que nunca resolveria. O produto sabia o motivo e não o dizia
-    // na tela onde a pessoa está.
-    expect(
-      screen.getByText("The operation that resolves this is not exposed in the public contract yet."),
-      "a parada não diz que a operação que a resolve não existe",
-    ).toBeTruthy();
+    // O campo obrigatório vazio nascia com `border-destructive` — a tela abria em vermelho para
+    // quem nem tinha tocado nela. A acusação era falsa duas vezes: ninguém errou nada ainda, e o
+    // campo está vazio porque a MÁQUINA não conseguiu escolher entre duas colunas.
+    //
+    // Cor não é testável em jsdom; `aria-invalid` é — e é o mesmo fato, dito para quem não vê a
+    // borda. Travar o atributo trava os dois: eles saem da mesma condição.
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses/an-map`, () =>
+        HttpResponse.json(statusView("needs_mapping", { analysis_id: "an-map" })),
+      ),
+      http.get(`${MSW_BASE}/v1/analyses/an-map/mapping`, () =>
+        HttpResponse.json({
+          requires_decision: true,
+          records_observed: 120,
+          sample_truncated: false,
+          format_id: "csv.v1",
+          columns: [
+            { name: "conversa", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 118 },
+            { name: "resposta", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 90 },
+          ],
+          suggestion: { conversation_id: { source: "conversa" } },
+          ambiguous: { assistant_text: ["resposta", "texto"] },
+          required_fields: ["conversation_id", "assistant_text"],
+          optional_fields: [],
+        }),
+      ),
+    );
+    const { unmount } = renderAt("an-map");
+
+    const vazio = (await screen.findByLabelText(/Assistant reply/)) as HTMLSelectElement;
+    expect(vazio.value).toBe("");
+    // ANTES de tentar: vazio, sim; reprovado, não.
+    expect(vazio.getAttribute("aria-invalid")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "Confirm and continue" }));
+
+    // DEPOIS de tentar: agora é erro de verdade — a pessoa pediu para seguir e não dá.
+    await waitFor(() => expect(vazio.getAttribute("aria-invalid")).toBe("true"));
+    // E o erro NOMEIA o campo, em vez de dizer "preencha os campos obrigatórios".
+    expect(screen.getByRole("alert").textContent).toContain("Assistant reply");
+
+    // Escolher limpa a acusação sem exigir nova tentativa.
+    await userEvent.selectOptions(vazio, "resposta");
+    await waitFor(() => expect(vazio.getAttribute("aria-invalid")).toBeNull());
+    unmount();
+  });
+
+  it("falha ao LER o perfil não vira \"a análise falhou\" nem \"a capability não existe\"", async () => {
+    // Três coisas diferentes, e colapsá-las é o defeito clássico desta superfície: a análise
+    // parada, a leitura do perfil falhando, e a operação inexistente. A terceira deixou de
+    // existir; as duas primeiras continuam distintas, e a frase precisa dizer QUAL é.
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses/an-map`, () =>
+        HttpResponse.json(statusView("needs_mapping", { analysis_id: "an-map" })),
+      ),
+      http.get(`${MSW_BASE}/v1/analyses/an-map/mapping`, () =>
+        HttpResponse.json({ code: "temporarily_unavailable" }, { status: 503 }),
+      ),
+    );
+    const { unmount } = renderAt("an-map");
+
+    await waitFor(() =>
+      expect(screen.getByText("We could not read the file's columns right now.")).toBeTruthy(),
+    );
+    // Aqui o botão de reconsultar CONTINUA fazendo sentido: o que falhou foi a leitura.
+    expect(screen.getByRole("button", { name: "Check again" })).toBeTruthy();
     unmount();
   });
 
@@ -130,6 +223,9 @@ describe("a parada de mapping chega na tela", () => {
     // A ação existe em i18n: sem ela o botão renderizaria a chave crua na tela.
     expect(String((pt as unknown as BundlePt).canonicalAnalysis.action.checkAgain).trim().length)
       .toBeGreaterThan(0);
+    // O editor tem título próprio em PT: sem ele a tela renderizaria a chave crua.
+    expect((pt as unknown as BundlePt).canonicalAnalysis.mapping.title)
+      .toBe("Diga qual coluna \u00e9 qual");
   });
 
   it("a página tem um `case` PRÓPRIO para needs_mapping, não o `default`", () => {
@@ -137,9 +233,12 @@ describe("a parada de mapping chega na tela", () => {
     // o mesmo banner de "na fila / executando" e nenhuma ação. O teste de render acima nao
     // discrimina isso sozinho porque os dois caminhos montam a pagina.
     const fonte = readFileSync(resolve(__dirname, "AnalysisPage.tsx"), "utf-8");
-    expect(fonte).toContain('case "needs_mapping":');
-    const trecho = fonte.slice(fonte.indexOf('case "needs_mapping":'), fonte.indexOf('case "completed":'));
-    expect(trecho, "o case existe mas não oferece ação nenhuma").toContain("canonicalAnalysis.action.checkAgain");
+    expect(fonte).toContain('case "needs_mapping"');
+    const trecho = fonte.slice(fonte.indexOf('case "needs_mapping"'), fonte.indexOf('case "completed":'));
+    // O que o `case` precisa oferecer MUDOU: era uma ação qualquer (reconsultar), passou a ser o
+    // editor. Um `case` que só reconsultasse voltaria a ser o beco sem saída — com a agravante
+    // de a capability existir e a tela não a alcançar.
+    expect(trecho, "o case existe mas não abre o editor").toContain("<MappingStep");
   });
 });
 

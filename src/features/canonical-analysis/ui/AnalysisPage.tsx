@@ -13,6 +13,8 @@ import { LoadingState } from "@/shared/states/LoadingState";
 import {
   useAnalysisAnalytics,
   useAnalysisProgress,
+  useAnalysisMapping,
+  useConfirmMapping,
   useAnalysisStatus,
   useRetryAnalysis,
   useSubmitAnalysis,
@@ -20,6 +22,7 @@ import {
 import { useIdempotencyIntent } from "../data/intent";
 import { useCanonicalScope } from "./scope";
 import { UploadStep } from "./UploadStep";
+import { MappingStep } from "./MappingStep";
 import { PainelDeEixos } from "./PainelDeEixos";
 import { IdentidadeDaAnalise } from "./IdentidadeDaAnalise";
 import type { EstadoPublico } from "@/design/patterns/estados";
@@ -36,6 +39,11 @@ export function AnalysisPage() {
   const scope = useCanonicalScope();
   const queryClient = useQueryClient();
   const status = useAnalysisStatus(scope, analysisId);
+  // Só busca o perfil quando a análise de fato parou esperando a decisão. Perfilar LÊ o
+  // arquivo; pedi-lo em toda visita gastaria leitura de dataset por navegação.
+  const precisaMapear = status.data?.status === "needs_mapping";
+  const mapeamento = useAnalysisMapping(scope, analysisId, precisaMapear);
+  const confirmar = useConfirmMapping();
   // M34 — AN-03 é a primeira superfície a consumir `/progress`. O progresso é lido SEMPRE que há
   // escopo: os eixos existem independentemente do estado da análise, e condicioná-los ao status
   // faria a tela decidir quando o backend tem algo a dizer.
@@ -133,41 +141,70 @@ export function AnalysisPage() {
             <ProblemFeedback error={submit.error} onRetry={dispararSubmit} retryDisabled={submitBloqueado} />
           </div>
         );
-      case "needs_mapping":
+      case "needs_mapping": {
         // Caso PRÓPRIO, não `default`. Caindo no default, esta parada renderizaria o mesmo
         // banner de "na fila / executando" e o polling seguiria rodando: a tela travada com
-        // cara de trabalho em curso — exatamente o que a máquina de apresentação existe para
-        // evitar, e que ela sozinha não consegue evitar se ninguém a consome.
+        // cara de trabalho em curso.
         //
-        // O editor humano de mapping ainda não existe. A saída honesta NÃO é um botão que
-        // finge abrir algo: é dizer o que falta (o banner traz o texto) e oferecer a única
-        // ação que de fato faz sentido hoje — reconsultar, já que o polling automático parou.
-        // M45.2 — a página passa a dizer o que SÓ a Home dizia.
+        // ## O que MUDOU aqui
         //
-        // Três superfícies falavam deste mesmo estado: a lista mostra o chip "Ação necessária"
-        // (rótulo congelado no §15 do Blueprint), esta página mostrava "Confirmação necessária" e
-        // um botão "Verificar novamente", e a Home era a ÚNICA que dizia a frase decisiva — *a
-        // operação que resolve isto ainda não está exposta no contrato público*.
+        // O comentário anterior registrava a saída honesta possível na época: *"o editor humano
+        // de mapping ainda não existe [...] a saída honesta NÃO é um botão que finge abrir algo"*.
+        // Ele estava certo, e a frase que a tela mostrava — *a operação que resolve isto ainda
+        // não está exposta no contrato público* — era verdade.
         //
-        // Quem clica no chip aterrissa AQUI. Sem essa frase, a pessoa lê "aja" na lista, encontra
-        // um botão que reconsulta e conclui que a confirmação depende dela — e fica insistindo num
-        // botão que nunca vai resolver. É o mesmo defeito que a M45.4 corrigiu na comparação, por
-        // outro caminho: o produto sabe por que não dá, e não conta na tela onde a pessoa está.
+        // As duas operações foram expostas (`GET`/`POST /v1/analyses/{id}/mapping`), e o editor
+        // existe. A frase saiu junto com o motivo dela.
         //
-        // A copy não foi reescrita nem duplicada: as duas frases saíram de `home.actions.*` para
-        // `canonicalAnalysis.needsMapping.*`, porque descrevem o ESTADO e não a Home, e as duas
-        // superfícies passaram a ler da mesma chave.
+        // ## Três estados, e nenhum colapsa no outro
+        //
+        // Carregar o perfil LÊ o arquivo e leva tempo; falhar ao lê-lo não é o mesmo que a
+        // análise ter falhado; e o editor só faz sentido com o perfil em mãos. Colapsá-los faria
+        // uma leitura lenta parecer a análise travada — que é exatamente o defeito que esta
+        // superfície existe para não repetir.
+        if (mapeamento.isPending) {
+          return (
+            <div className="space-y-4">
+              <StateBanner view={view} />
+              {/* Rotulo PROPRIO, e nao o titulo do editor: dizer *Diga qual coluna e qual* enquanto
+                  ainda se le o arquivo pede uma decisao que nao esta disponivel -- e faz o
+                  carregando ser indistinguivel do editor para quem mede a tela. */}
+              <LoadingState message={t("canonicalAnalysis.mapping.loading")} size="md" />
+            </div>
+          );
+        }
+        if (mapeamento.isError || !mapeamento.data) {
+          return (
+            <div className="space-y-4">
+              <StateBanner view={view} />
+              <p className="text-sm text-muted-foreground">
+                {t("canonicalAnalysis.needsMapping.loadFailed")}
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => void mapeamento.refetch()}
+                disabled={mapeamento.isFetching}
+              >
+                {t("canonicalAnalysis.action.checkAgain")}
+              </Button>
+            </div>
+          );
+        }
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
-            <p className="text-sm text-muted-foreground">
-              {t("canonicalAnalysis.needsMapping.blocked")}
-            </p>
-            <Button variant="outline" onClick={() => void status.refetch()} disabled={status.isFetching}>
-              {t("canonicalAnalysis.action.checkAgain")}
-            </Button>
+            <MappingStep
+              mapa={mapeamento.data}
+              aoConfirmar={async (regras) => {
+                await confirmar.mutateAsync({ analysisId, scope, rules: regras });
+                // Revalida o ESTADO, não o mapeamento: a partir daqui a ingestão anda sozinha,
+                // e o que a tela precisa saber é para onde a análise foi.
+                await status.refetch();
+              }}
+            />
           </div>
         );
+      }
       case "completed":
         return (
           <div className="space-y-4">

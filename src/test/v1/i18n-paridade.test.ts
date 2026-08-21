@@ -442,7 +442,17 @@ describe("M14 · 6. nenhuma superfície nasce com texto hardcoded", () => {
 // geral NÃO acrescentou chave — ela reusa `argos.overview`, que já existia; a primeira versão
 // desta fatia criou uma chave duplicada para a mesma palavra, e isso é o que a regra de copy
 // proíbe antes mesmo de o orçamento opinar.
-const ACIMA_DO_ORCAMENTO = 42;
+// 44, e as duas que subiram sao `assistant_text` e `user_text` do editor de mapeamento.
+//
+// Duas outras entraram e SAIRAM na mesma passagem: "Identificador da conversa" virou "ID da
+// conversa" e "Identificador da sessao" virou "ID da sessao". Isso NAO foi encurtar para agradar
+// o gate -- "ID" e o termo corrente em portugues tecnico e casa com o ingles ("Conversation ID");
+// a versao anterior era a traducao literal, nao o que a pessoa fala.
+//
+// As duas que ficam nao tem termo mais curto honesto. "Resposta do assistente" e "Mensagem do
+// usuario" sao os nomes das coisas nos dois idiomas, e o portugues e simplesmente mais longo
+// aqui. Encurta-las seria o que o comentario acima proibe: editar o idioma para agradar a medida.
+const ACIMA_DO_ORCAMENTO = 44;
 const ORCAMENTO = 1.3;
 
 describe("M14 · 7. PT-BR cabe no orçamento de +30 %", () => {

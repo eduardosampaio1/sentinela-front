@@ -6,6 +6,8 @@
 // `temporarily_unavailable` são ESTADO/indisponibilidade — nunca autorização para trocar de base.
 
 import type {
+  MappingConfirmedView,
+  MappingView,
   AnalysisHandle,
   AnalysisListPage,
   AnalysisAnalyticsView,
@@ -195,6 +197,35 @@ export interface V1Client {
     name: string,
     opts?: RequestOptions,
   ): Promise<InstanceView>;
+
+  /**
+   * O que o serviço entendeu do arquivo, e o que ele não conseguiu decidir sozinho.
+   *
+   * Só faz sentido quando a análise está em `needs_mapping` — antes do upload não há ingestão
+   * vinculada, e o Gateway responde `forbidden_or_not_found` para essa ordem.
+   */
+  getAnalysisMapping(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<MappingView>;
+
+  /**
+   * Confirma o mapeamento. Depois disto a ingestão anda sozinha.
+   *
+   * **`confirmed_by` NÃO viaja daqui.** Quem confirmou é fato de autenticação, e o Gateway o
+   * preenche com a identidade do chamador — mandá-lo do navegador deixaria o cliente assinar a
+   * decisão com o nome de outra pessoa, num campo que vai para o manifesto da ingestão.
+   *
+   * `rules` mapeia campo canônico → coluna de origem. A fronteira pública aceita só `source`:
+   * `transform` e `constant` existem no contrato interno e não têm superfície que os peça.
+   */
+  confirmAnalysisMapping(
+    analysisId: string,
+    scope: CanonicalScope,
+    rules: Record<string, { source: string }>,
+    opts?: RequestOptions,
+  ): Promise<MappingConfirmedView>;
 
   /**
    * M42 · CFG-03 — o Workspace, pela fronteira pública. **A autoridade do nome do espaço.**
@@ -481,6 +512,21 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       // quando só havia análise. Reusá-lo é o certo: um segundo encoder divergiria no primeiro
       // caractere especial, e o nome é dívida de harness, não motivo para duplicar.
       pedir<InstanceView>("GET", `/v1/instances/${encodeAnalysisId(instanceId)}`, { workspace_id: scope.workspaceId }, opts),
+    getAnalysisMapping: (analysisId, scope, opts) =>
+      pedir<MappingView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/mapping`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
+    confirmAnalysisMapping: (analysisId, scope, rules, opts) =>
+      pedir<MappingConfirmedView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/mapping`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify({ rules }), contentType: "application/json" },
+      ),
     createInstance: (scope, name, opts) =>
       pedir<InstanceView>(
         "POST",

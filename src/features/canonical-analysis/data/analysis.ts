@@ -3,6 +3,8 @@
 
 import { useMutation, useQuery, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
 import {
+  type MappingConfirmedView,
+  type MappingView,
   workspaceKeys,
   type AnalysisAnalyticsView,
   type AnalysisHandle,
@@ -79,6 +81,51 @@ export function useUploadData(): UseMutationResult<
     retry: false,
     mutationFn: ({ analysisId, scope, body, signal }) =>
       client.uploadData(analysisId, scope, body, { signal }),
+  });
+}
+
+/**
+ * O perfil e a sugestão de mapeamento (`GET /{id}/mapping`).
+ *
+ * **Sem `refetchInterval`.** Perfilar LÊ o arquivo, e o resultado só muda quando alguém
+ * confirma — repetir por relógio gastaria leitura do dataset para responder sempre a mesma
+ * coisa. O que precisa de polling é o status, e ele tem hook próprio.
+ *
+ * `enabled` é do chamador: só a tela de `needs_mapping` pede isto, e pedir antes do upload
+ * receberia `forbidden_or_not_found` do Gateway — ordem, não erro.
+ */
+export function useAnalysisMapping(
+  scope: CanonicalScope | null,
+  analysisId: string | null,
+  habilitadoPeloChamador = true,
+): UseQueryResult<MappingView> {
+  const client = useV1Client();
+  const habilitado = Boolean(scope && analysisId) && habilitadoPeloChamador;
+  return useQuery({
+    queryKey:
+      scope && analysisId ? workspaceKeys.mapping(scope.workspaceId, analysisId) : IDLE_KEY,
+    enabled: habilitado,
+    queryFn: ({ signal }) =>
+      client.getAnalysisMapping(analysisId as string, scope as CanonicalScope, { signal }),
+  });
+}
+
+/**
+ * Confirma o mapeamento (`POST /{id}/mapping`). Depois disto a ingestão anda sozinha.
+ *
+ * `retry: false` como as demais mutações desta fronteira: repetir uma confirmação sem que
+ * alguém decida repetir esconderia do usuário que a primeira falhou.
+ */
+export function useConfirmMapping(): UseMutationResult<
+  MappingConfirmedView,
+  unknown,
+  { analysisId: string; scope: CanonicalScope; rules: Record<string, { source: string }> }
+> {
+  const client = useV1Client();
+  return useMutation({
+    retry: false,
+    mutationFn: ({ analysisId, scope, rules }) =>
+      client.confirmAnalysisMapping(analysisId, scope, rules),
   });
 }
 

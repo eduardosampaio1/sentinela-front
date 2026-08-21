@@ -123,7 +123,8 @@
     "topBar": "Analysis",
     "needsMapping": {
       "explain": "The data arrived, but how some fields should be interpreted still needs confirming.",
-      "blocked": "The operation that resolves this is not exposed in the public contract yet."
+      "goConfirm": "Open the analysis to confirm.",
+      "loadFailed": "We could not read the file's columns right now."
     },
     "analyticsView": {
       "title": "Measures",
@@ -698,6 +699,36 @@
       "journeyReserved": "Analysis reserved. It is waiting for its dataset.",
       "topBar": "Analysis · add dataset",
       "sent": "Dataset received. We are preparing the analysis."
+    },
+    "mapping": {
+      "title": "Tell us which column is which",
+      "explain": "We recognized {{done}} of {{total}} required fields in your file.",
+      "required": "required",
+      "chooseColumn": "Choose a column",
+      "ambiguous": "More than one column fits: {{columns}}. Pick one.",
+      "optionalToggle": "Optional fields",
+      "confirm": "Confirm and continue",
+      "confirming": "Confirming…",
+      "afterConfirm": "After this the analysis goes on by itself.",
+      "missing": "Choose a column for: {{fields}}.",
+      "failed": "We could not confirm. Try again in a moment.",
+      "evidence": {
+        "coverage": "present in {{pct}}",
+        "distinct": "{{n}} distinct values",
+        "redacted": "name hidden"
+      },
+      "field": {
+        "conversationId": "Conversation ID",
+        "assistantText": "Assistant reply",
+        "userText": "User message",
+        "intent": "Intent",
+        "timestamp": "Date and time",
+        "sessionId": "Session ID",
+        "channel": "Channel",
+        "model": "Model",
+        "turns": "Turns"
+      },
+      "loading": "Reading the file's columns…"
     }
   },
   "common": {

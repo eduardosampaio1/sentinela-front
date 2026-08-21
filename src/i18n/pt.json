@@ -123,7 +123,8 @@
     "topBar": "Análise",
     "needsMapping": {
       "explain": "O dado chegou, mas falta confirmar como alguns campos devem ser interpretados.",
-      "blocked": "A operação que resolve isto ainda não está exposta no contrato público."
+      "goConfirm": "Abra a análise para confirmar.",
+      "loadFailed": "Não conseguimos ler as colunas do arquivo agora."
     },
     "analyticsView": {
       "title": "Medidas",
@@ -698,6 +699,36 @@
       "journeyReserved": "Análise reservada. Ela está esperando a base.",
       "topBar": "Análise · adicionar base",
       "sent": "Base recebida. Estamos preparando a análise."
+    },
+    "mapping": {
+      "title": "Diga qual coluna é qual",
+      "explain": "Reconhecemos {{done}} de {{total}} campos obrigatórios no seu arquivo.",
+      "required": "obrigatório",
+      "chooseColumn": "Escolha uma coluna",
+      "ambiguous": "Mais de uma coluna serve: {{columns}}. Escolha uma.",
+      "optionalToggle": "Campos opcionais",
+      "confirm": "Confirmar e continuar",
+      "confirming": "Confirmando…",
+      "afterConfirm": "Depois disso a análise segue sozinha.",
+      "missing": "Escolha uma coluna para: {{fields}}.",
+      "failed": "Não foi possível confirmar. Tente novamente em instantes.",
+      "evidence": {
+        "coverage": "presente em {{pct}}",
+        "distinct": "{{n}} valores distintos",
+        "redacted": "nome ocultado"
+      },
+      "field": {
+        "conversationId": "ID da conversa",
+        "assistantText": "Resposta do assistente",
+        "userText": "Mensagem do usuário",
+        "intent": "Intenção",
+        "timestamp": "Data e hora",
+        "sessionId": "ID da sessão",
+        "channel": "Canal",
+        "model": "Modelo",
+        "turns": "Turnos"
+      },
+      "loading": "Lendo as colunas do arquivo…"
     }
   },
   "common": {

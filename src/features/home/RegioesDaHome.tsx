@@ -148,8 +148,13 @@ export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] })
               </Link>
             }
             nota={
-              // Estado publico sem operacao publica: o catalogo declara o scenario `parcial` --
-              // "EXIBIR sim, RESOLVER nao". O motivo fica VISIVEL, e nao ha nenhum "Confirmar".
+              // Estado publico COM operacao publica, e isto mudou. O catalogo declarava o
+              // scenario `parcial` -- "EXIBIR sim, RESOLVER nao" -- porque a operacao que
+              // resolve nao existia. Ela existe (`GET`/`POST /v1/analyses/{id}/mapping`), e
+              // a nota deixou de explicar impedimento para apontar o caminho.
+              //
+              // Continua sem botao AQUI: a fila lista, e resolver e assunto da analise. Um
+              // `Confirmar` na linha abriria um editor de colunas dentro de uma lista.
               //
               // Nao usa `ActionRequiredSemOperacao` aqui: aquele pattern desenha a propria
               // moldura, e dentro da fila isso dava caixa-dentro-de-caixa. O efeito nao era
@@ -161,7 +166,7 @@ export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] })
                 <p className="mt-1 text-xs text-muted-foreground sm:w-full">
                   {t("canonicalAnalysis.needsMapping.explain")}{" "}
                   <span className="text-muted-foreground">
-                    {t("canonicalAnalysis.needsMapping.blocked")}
+                    {t("canonicalAnalysis.needsMapping.goConfirm")}
                   </span>
                 </p>
               ) : undefined

@@ -130,8 +130,16 @@
 // teste exige nao foi presumida: as demais asercoes de `fixtures-presas-ao-schema` rodaram
 // verdes na mesma passagem, e sao elas que comparam fixture contra schema.
 // Selo anterior: 1f1480c5347bd5839e53e2cb94e214a5507ede623f77332696fa207bb6b1218b
+// Reselado ao publicar as DUAS operacoes de mapeamento (`get_analysis_mapping`,
+// `confirm_analysis_mapping`) -- a capability que tirou `needs_mapping` de beco sem saida.
+//
+// ADITIVA: duas operacoes a mais no inventario, nenhuma alterada nem removida, e por isso
+// nenhuma fixture de read-model foi afetada. A reconferencia que o teste exige nao foi
+// presumida: as demais asercoes deste mesmo arquivo rodaram verdes na mesma passagem, e sao
+// elas que comparam fixture contra schema.
+// Selo anterior: e8976632c587b177e0e87ef154bbaecc3e1291c34b6ce3593300d21518ac9d31
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "e8976632c587b177e0e87ef154bbaecc3e1291c34b6ce3593300d21518ac9d31";
+  "18eeb06740b0d24de9eaba5222517cf1aca9375f4501ffe958765ef138f75458";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.

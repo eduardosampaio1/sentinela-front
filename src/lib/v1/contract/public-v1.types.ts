@@ -639,3 +639,55 @@ export interface AnalysisTimelineView {
   analysis_id: string;
   events: readonly TimelineEvent[];
 }
+
+/**
+ * O que o serviço entendeu do arquivo, e o que ele **não** conseguiu decidir sozinho.
+ *
+ * A leitura que tira `needs_mapping` de beco sem saída. Ela não traz amostra de conteúdo, e a
+ * ausência é decisão medida no dono: havia um `samples` com três valores do arquivo, e ele foi
+ * removido porque devolvia nome, telefone e CPF ao chamador.
+ *
+ * O que restou cumpre a função que a amostra tinha de verdade — reconhecer a coluna na tela —
+ * sem reverter para o valor: tipo, cobertura e cardinalidade.
+ */
+export interface ColunaDoArquivo {
+  name: string;
+  /** `true` quando o próprio NOME da coluna continha dado pessoal e virou `field_NNN`. */
+  name_redacted: boolean;
+  types: string[];
+  /** Fração de registros da amostra em que a coluna aparece preenchida. */
+  coverage: number | null;
+  distinct_values: number | null;
+}
+
+/** O que a heurística propôs para um campo canônico, e com quanta confiança. */
+export interface SugestaoDeCampo {
+  source?: string | null;
+  confidence?: number | null;
+}
+
+export interface MappingView {
+  requires_decision: boolean;
+  records_observed: number | null;
+  /** `true` quando a amostra parou antes do fim — `records_observed` não é o tamanho do arquivo. */
+  sample_truncated: boolean;
+  format_id: string | null;
+  columns: ColunaDoArquivo[];
+  /** Campo canônico → o que a heurística propôs. Ausente = ela não propôs nada. */
+  suggestion: Record<string, SugestaoDeCampo>;
+  /**
+   * Campo canônico → colunas que EMPATARAM.
+   *
+   * É a informação mais útil da view: são exatamente os campos onde a máquina chegou até o fim
+   * e não conseguiu escolher — e por isso são o foco da tela.
+   */
+  ambiguous: Record<string, string[]>;
+  required_fields: string[];
+  optional_fields: string[];
+}
+
+/** O desfecho da confirmação. `ingestion_state` sai de `needs_mapping` quando ela é aceita. */
+export interface MappingConfirmedView {
+  analysis_id: string;
+  ingestion_state: string | null;
+}

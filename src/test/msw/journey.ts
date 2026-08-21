@@ -560,6 +560,51 @@ export function makeJourneyHandlers(base: string) {
       gravarBaseline(null, null);
       return HttpResponse.json(vistaDoBaseline());
     }),
+    // ── o perfil de mapeamento ────────────────────────────────────────────────
+    //
+    // Só para identificadores que começam com `an-map`: servir isto para qualquer análise faria
+    // a tela de upload de uma análise nova pedir mapeamento antes de existir arquivo.
+    //
+    // Os números não são redondos de propósito. Cobertura 0.62 e 730 valores distintos numa
+    // coluna, contra 0.99 e 1150 noutra, é o material com que a pessoa reconhece qual é qual —
+    // e ela não pode ver o conteúdo. Fixture com tudo em 100% treinaria a tela contra um caso
+    // que não existe.
+    http.get(`${b}/v1/analyses/:id/mapping`, ({ params }) => {
+      const id = String(params.id);
+      if (!id.startsWith("an-map")) {
+        return HttpResponse.json(
+          { type: "urn:sentinela:error:forbidden_or_not_found", title: "forbidden_or_not_found", status: 404, code: "forbidden_or_not_found", detail: "no_ingestion" },
+          { status: 404, headers: { "content-type": "application/problem+json" } },
+        );
+      }
+      return HttpResponse.json({
+        requires_decision: true,
+        records_observed: 1240,
+        sample_truncated: false,
+        format_id: "csv.v1",
+        columns: [
+          { name: "id_conversa", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 1198 },
+          { name: "resposta_bot", name_redacted: false, types: ["string"], coverage: 0.99, distinct_values: 1150 },
+          { name: "texto_agente", name_redacted: false, types: ["string"], coverage: 0.62, distinct_values: 730 },
+          { name: "pergunta", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 1201 },
+          { name: "criado_em", name_redacted: false, types: ["datetime"], coverage: 1, distinct_values: 1240 },
+          { name: "field_007", name_redacted: true, types: ["string"], coverage: 0.4, distinct_values: 88 },
+        ],
+        suggestion: {
+          conversation_id: { source: "id_conversa", confidence: 0.94 },
+          user_text: { source: "pergunta", confidence: 0.81 },
+          timestamp: { source: "criado_em", confidence: 0.9 },
+        },
+        // O empate: duas colunas plausíveis para o mesmo campo. É o foco da tela.
+        ambiguous: { assistant_text: ["resposta_bot", "texto_agente"] },
+        required_fields: ["conversation_id", "assistant_text"],
+        optional_fields: ["user_text", "intent", "timestamp", "session_id", "channel", "model", "turns"],
+      });
+    }),
+    http.post(`${b}/v1/analyses/:id/mapping`, ({ params }) =>
+      HttpResponse.json({ analysis_id: String(params.id), ingestion_state: "mapped" }),
+    ),
+
     http.get(`${b}/v1/analyses/:id`, ({ params }) => {
       const id = String(params.id);
       const err = getStatusError(id);
@@ -568,6 +613,11 @@ export function makeJourneyHandlers(base: string) {
           { type: `urn:sentinela:error:${err.code}`, title: err.code, status: err.http, code: err.code, detail: err.code },
           { status: err.http, headers: { "content-type": "application/problem+json" } },
         );
+      }
+      // `an-map*` para em `needs_mapping`: e o unico jeito de a superficie do editor ser
+      // alcancavel a mao. Sem isto ela so existia dentro de teste.
+      if (id.startsWith("an-map")) {
+        return HttpResponse.json(view(id, "needs_mapping", false, null));
       }
       const { status, retryAllowed, instanceId } = corrente(id);
       return HttpResponse.json(view(id, status, retryAllowed, instanceId));

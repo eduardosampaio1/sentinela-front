@@ -56,6 +56,15 @@ export const workspaceKeys = {
     ["workspace", workspaceId, "analyses", "list", { instanceId, baselineEligible: true }] as const,
   status: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "status"] as const,
+  /**
+   * O perfil e a sugestao de mapeamento. Tenant-scoped como todo o resto.
+   *
+   * Chave PROPRIA e nao um pedaco de `status`: as duas mudam por motivos diferentes. O
+   * status muda o tempo todo (polling); o mapeamento so muda quando alguem confirma. Junta-
+   * las faria o perfil ser refeito a cada batida do relogio, e perfilar LE o arquivo.
+   */
+  mapping: (workspaceId: string, analysisId: string) =>
+    ["workspace", workspaceId, "analyses", "detail", analysisId, "mapping"] as const,
   /** M20 — progresso por eixo. Tenant-scoped como todo o resto: a troca de workspace isola. */
   progress: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "progress"] as const,
