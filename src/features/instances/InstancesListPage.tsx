@@ -21,11 +21,18 @@
 // precisa se distinguir de carregando, de erro e de não-autorizado; por isso são três ramos
 // separados e nenhum cai no outro por omissão.
 //
-// Sem CTA de criação: criar Instância não tem missão dona, e botão morto ou "em breve" seriam
-// piores que a ausência. O empty state explica O QUE É uma Instância, que é a informação útil
-// que resta quando não há "como começar" para oferecer.
+// O CTA de criação existe, e isto MUDOU. A frase anterior era "criar Instância não tem missão
+// dona, e botão morto ou 'em breve' seriam piores que a ausência" — verdadeira enquanto
+// ninguém tinha decidido a capability. Ela foi decidida: qualquer pessoa cria a própria.
+//
+// O backend já sabia fazer isso o tempo todo (`POST /v1/instances`, idempotente por
+// `Idempotency-Key`). O que faltava era o front pedir — nem o método existia no cliente.
+//
+// Diferente do Workspace, aqui a criação NAVEGA para dentro: a Instance nasce no workspace
+// que o token já autoriza, então não há claim nova para esperar.
 
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import {
@@ -35,7 +42,10 @@ import {
   LinhaDeColecao,
   ListaDeColecao,
   LoadingState,
+  CriarPorNome,
 } from "@/design/patterns";
+import { Button } from "@/components/ui/button";
+import { useV1Client } from "@/features/canonical-analysis/data/client";
 import { useRevelacao } from "@/design/motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCanonicalScope } from "@/features/canonical-analysis/ui/scope";
@@ -48,6 +58,30 @@ export default function InstancesListPage() {
   // A chave é o que remonta a revelação quando o dado chega: o observador montado sobre a árvore
   // de carregamento não observa linha nenhuma, e a lista apareceria parada.
   const raiz = useRevelacao<HTMLDivElement>(lista.isPending ? "carregando" : lista.dataUpdatedAt);
+  const cliente = useV1Client();
+  const navegar = useNavigate();
+  const [dialogoAberto, setDialogoAberto] = useState(false);
+
+  const criar = async (nome: string) => {
+    const inst = await cliente.createInstance(scope, nome);
+    setDialogoAberto(false);
+    // Vai direto para a Instance recem-criada. Voltar para a lista obrigaria a pessoa a
+    // procurar na tela o que ela acabou de criar -- e o proximo passo dela e sempre dentro.
+    navegar(`/instances/${inst.instance_id}`);
+  };
+
+  const textosDeCriacao = {
+    titulo: t("instances.createTitle"),
+    descricao: t("instances.createDescription"),
+    rotulo: t("instances.createLabel"),
+    ajuda: t("instances.createHelp"),
+    exemplo: t("instances.createExample"),
+    enviar: t("instances.createSubmit"),
+    enviando: t("instances.createSubmitting"),
+    cancelar: t("instances.createCancel"),
+    erroVazio: t("instances.createEmptyError"),
+    erroAoCriar: t("instances.createFailed"),
+  };
 
   const dia = (iso: string) => {
     const d = new Date(iso);
@@ -67,6 +101,15 @@ export default function InstancesListPage() {
           <CabecalhoDeTrabalho
             titulo={t("instances.listTitle")}
             contexto={t("instances.listSubtitle")}
+            // Um ponto focal por estado: com lista o CTA mora aqui, vazio ele e o centro do
+            // empty state. Nunca nos dois ao mesmo tempo.
+            acoes={
+              !lista.isPending && !lista.isError && (lista.data?.items.length ?? 0) > 0 ? (
+                <Button size="sm" onClick={() => setDialogoAberto(true)}>
+                  {t("instances.createCta")}
+                </Button>
+              ) : undefined
+            }
           />
 
           <div className="mt-6">
@@ -91,7 +134,11 @@ export default function InstancesListPage() {
               <EmptyState
                 titulo={t("instances.listTitle")}
                 explicacao={t("instances.emptyWorkspace")}
-                acao={null}
+                acao={
+                  <Button size="sm" onClick={() => setDialogoAberto(true)}>
+                    {t("instances.createCta")}
+                  </Button>
+                }
               />
             ) : (
               <ListaDeColecao>
@@ -117,6 +164,13 @@ export default function InstancesListPage() {
               </ListaDeColecao>
             )}
           </div>
+
+          <CriarPorNome
+            aberto={dialogoAberto}
+            aoFechar={() => setDialogoAberto(false)}
+            textos={textosDeCriacao}
+            aoCriar={criar}
+          />
         </div>
       </PageFrame>
     </AppShell>

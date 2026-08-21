@@ -909,7 +909,18 @@
     "startingAnalysis": "Starting…",
     "unavailable": "This instance is unavailable right now.",
     "emptyHistoryHint": "Start the first one and it will show up here.",
-    "errorHistoryTitle": "We couldn't load these analyses"
+    "errorHistoryTitle": "We couldn't load these analyses",
+    "createCta": "Create instance",
+    "createTitle": "New instance",
+    "createDescription": "An instance groups the analyses of one system over time.",
+    "createLabel": "Name",
+    "createHelp": "You can rename it later. Repeated names are allowed.",
+    "createExample": "WhatsApp Support",
+    "createSubmit": "Create instance",
+    "createSubmitting": "Creating...",
+    "createCancel": "Cancel",
+    "createEmptyError": "Name the instance to continue.",
+    "createFailed": "We could not create the instance right now. Try again in a moment."
   },
   "intentsPage": {
     "title": "Intents",
@@ -1242,7 +1253,22 @@
     "roleOwner": "Owner",
     "roleAdmin": "Admin",
     "roleMember": "Member",
-    "roleViewer": "Viewer"
+    "roleViewer": "Viewer",
+    "createCta": "Create workspace",
+    "createTitle": "New workspace",
+    "createDescription": "A workspace separates the systems of one company or team. You join it as the owner.",
+    "createLabel": "Name",
+    "createHelp": "You can rename it later. Repeated names are allowed.",
+    "createExample": "My Company",
+    "createSubmit": "Create workspace",
+    "createSubmitting": "Creating...",
+    "createCancel": "Cancel",
+    "createEmptyError": "Name the workspace to continue.",
+    "createFailed": "We could not create the workspace right now. Try again in a moment.",
+    "createdTitle": "Workspace created",
+    "createdBody": "“{{name}}” is ready. Sign in again to open it: your access is loaded at sign-in.",
+    "createdCta": "Sign in again",
+    "emptyCanCreate": "You are not in any workspace yet. Create the first one and it shows up here."
   },
   "notifications": {
     "title": "Notifications",

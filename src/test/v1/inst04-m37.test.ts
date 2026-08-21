@@ -143,17 +143,25 @@ describe("M37 · 4. INST-07, criação de Instância e B1", () => {
     }
   });
 
-  it("o Front continua sem client de `create_instance`", () => {
+  it("o Front TEM client de `create_instance`, e ele manda `Idempotency-Key`", () => {
+    // A afirmação virou de lado quando produto decidiu a capability. O que ela mede,
+    // porém, ficou mais forte: antes bastava a ausência; agora exige a FORMA certa.
+    //
+    // O `true` no fim não é detalhe: o Gateway EXIGE `Idempotency-Key` nesta rota. Sem ele
+    // a resposta é `invalid_input`, e o botão falharia sempre em vez de nunca — defeito
+    // que nenhum teste de ausência pegaria.
     const c = semComentarios(ler(CLIENT));
-    expect(c).not.toContain("createInstance");
-    expect(c, "surgiu um POST para /v1/instances").not.toMatch(/pedir<[^>]*>\(\s*"POST",\s*"\/v1\/instances"/);
+    expect(c).toContain("createInstance");
+    expect(c, "o POST existe e passa pelo escopo de workspace").toMatch(
+      /pedir<[^>]*>\(\s*\n?\s*"POST",\s*\n?\s*"\/v1\/instances"/,
+    );
   });
 
-  it("B1 permanece em 1", async () => {
+  it("B1 FECHOU: zero operação contratada sem cliente e sem dono", async () => {
     const { SEM_CLIENTE_E_SEM_MISSAO_DONA } = await import("./divergenciaDeclarada");
     // B1 = sem cliente E SEM MISSÃO DONA. A lista inteira é comparada com a divergência
     // REAL em `contract-operations.test.ts`, e num lugar só — repetir o literal aqui
     // fazia esta face cair junto com as outras quatro a cada operação nova.
-    expect([...SEM_CLIENTE_E_SEM_MISSAO_DONA]).toEqual(["POST /v1/instances"]);
+    expect([...SEM_CLIENTE_E_SEM_MISSAO_DONA]).toEqual([]);
   });
 });

@@ -393,7 +393,7 @@ describe("M23 · 6. o blocker B1", () => {
     // sem cliente E SEM MISSÃO DONA; a lista inteira é conferida contra a divergência REAL
     // em `contract-operations.test.ts`, num lugar só.
     expect([...SEM_CLIENTE_E_SEM_MISSAO_DONA].sort(), "a dívida de B1 divergiu do declarado").toEqual(
-      ["POST /v1/instances"],
+      [],
     );
   });
 

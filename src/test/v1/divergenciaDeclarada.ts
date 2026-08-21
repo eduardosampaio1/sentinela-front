@@ -61,7 +61,9 @@ export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
   // A M36 entregou `listInstances` e `getInstance`, e as duas SAÍRAM daqui. A lista encolhe
   // junto com a dívida — se ficasse, viraria folclore, que é o que esta declaração existe para
   // impedir.
-  "POST /v1/instances", // create_instance — SEM missão dona; owner: Produto/Arquitetura de Instância
+  // `create_instance` SAIU daqui: ganhou cliente (`createInstance`) e superfície.
+  // A reentrada aconteceu na ordem que esta declaração prescrevia — produto definiu a
+  // superfície primeiro, e só depois vieram client e UX. O que faltava nunca foi técnica.
 
   // As duas de idioma SAÍRAM na M41 (2026-08-14), e saíram juntas do jeito que a lista prescreve:
   // com o cliente entregue no mesmo commit. `useAccountLanguage` lê e `useSalvarIdioma` escreve,
@@ -117,7 +119,12 @@ export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
  * `contract-operations.test.ts`. Ela é que impede o contrato de crescer em silêncio.
  */
 export const SEM_CLIENTE_E_SEM_MISSAO_DONA: readonly string[] = [
-  "POST /v1/instances", // owner semântico: Produto/Arquitetura de Instância — sem missão no PLAN
+  // VAZIA. `POST /v1/instances` era o único item, e ele saiu quando produto decidiu a
+  // capability: qualquer pessoa cria a própria Instância. O backend já a publicava; o que
+  // faltava era superfície, e era isso que este registro dizia.
+  //
+  // Fica aqui vazia, como as irmãs: uma operação nova sem cliente e sem dono acusa
+  // vermelho contra `[]`, e ninguém precisa lembrar de recriar a declaração.
 ] as const;
 
 /**

@@ -162,6 +162,24 @@ export interface V1Client {
   getInstance(instanceId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<InstanceView>;
 
   /**
+   * Cria uma Instance no workspace do escopo.
+   *
+   * **Idempotente por `Idempotency-Key`**, e o Gateway a EXIGE: sem o cabeçalho ele responde
+   * `invalid_input`. A chave é gerada por chamada; reenviar a mesma com o mesmo `name` devolve a
+   * mesma Instance em vez de criar uma segunda, que é o que protege contra o duplo clique e
+   * contra o retry de rede.
+   *
+   * **Não há unicidade de nome.** Duas Instances podem chamar-se "Produção" no mesmo workspace —
+   * identidade é `instance_id`, e recusar o nome repetido inventaria uma regra que o contrato não
+   * tem.
+   */
+  createInstance(
+    scope: CanonicalScope,
+    name: string,
+    opts?: RequestOptions,
+  ): Promise<InstanceView>;
+
+  /**
    * M42 · CFG-04 — renomear a Instance. `name` é o ÚNICO atributo configurável dela na V1.
    *
    * `PATCH` e não `PUT`: a atualização é PARCIAL. O recurso tem identidade, carimbo e ponteiro de
@@ -189,6 +207,23 @@ export interface V1Client {
    * projeção de bootstrap e pode ficar velho após um rename.
    */
   getWorkspace(workspaceId: string, opts?: RequestOptions): Promise<WorkspaceView>;
+
+  /**
+   * Cria um Workspace e torna quem pediu o dono dele.
+   *
+   * **A ÚNICA operação de recurso sem escopo de tenant**, e por definição: o espaço não existe
+   * ainda, então não há `workspace_id` para mandar nem membership contra a qual autorizar. Usa
+   * `enviar`, não `pedir` — `pedir` exige o escopo e recusaria a chamada localmente, que é o
+   * comportamento certo dele e o errado para esta.
+   *
+   * O identificador **não** vai no corpo: ele nasce no Gateway, que é quem o correlaciona com a
+   * concessão de acesso no provedor de identidade.
+   *
+   * ⚠️ **O token em mãos não enxerga o espaço recém-criado.** O acesso é gravado no provedor de
+   * identidade, e a claim só entra num token novo — quem chamar precisa renovar a sessão antes de
+   * navegar para dentro dele.
+   */
+  createWorkspace(name: string, opts?: RequestOptions): Promise<WorkspaceView>;
 
   /** M42 · CFG-03 — renomear. Corpo com UM campo; o Gateway recusa campo a mais. */
   renameWorkspace(workspaceId: string, name: string, opts?: RequestOptions): Promise<WorkspaceView>;
@@ -446,6 +481,17 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       // quando só havia análise. Reusá-lo é o certo: um segundo encoder divergiria no primeiro
       // caractere especial, e o nome é dívida de harness, não motivo para duplicar.
       pedir<InstanceView>("GET", `/v1/instances/${encodeAnalysisId(instanceId)}`, { workspace_id: scope.workspaceId }, opts),
+    createInstance: (scope, name, opts) =>
+      pedir<InstanceView>(
+        "POST",
+        "/v1/instances",
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify({ name }), contentType: "application/json" },
+        // `true` liga o `Idempotency-Key`. O Gateway o EXIGE nesta rota — sem ele a resposta é
+        // `invalid_input`, e o botão falharia sempre em vez de nunca.
+        true,
+      ),
     renameInstance: (instanceId, scope, name, opts) =>
       pedir<InstanceView>(
         "PATCH",
@@ -459,6 +505,11 @@ export function createV1Client(config: V1ClientConfig): V1Client {
     // recusaria a chamada localmente, que é o comportamento certo dele e o errado para estas duas.
     getWorkspace: (workspaceId, opts) =>
       enviar<WorkspaceView>("GET", `/v1/workspaces/${encodeAnalysisId(workspaceId)}`, {}, opts),
+    createWorkspace: (name, opts) =>
+      enviar<WorkspaceView>("POST", "/v1/workspaces", {}, opts, {
+        body: JSON.stringify({ name }),
+        contentType: "application/json",
+      }),
     renameWorkspace: (workspaceId, name, opts) =>
       enviar<WorkspaceView>("PATCH", `/v1/workspaces/${encodeAnalysisId(workspaceId)}`, {}, opts, {
         body: JSON.stringify({ name }),

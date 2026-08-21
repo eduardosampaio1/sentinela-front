@@ -215,7 +215,7 @@ describe("M36 · 5. B1 vai de 3 para 1", () => {
     // B1 = sem cliente E SEM MISSÃO DONA. A lista inteira é comparada com a divergência
     // REAL em `contract-operations.test.ts`, e num lugar só — repetir o literal aqui
     // fazia esta face cair junto com as outras quatro a cada operação nova.
-    expect([...SEM_CLIENTE_E_SEM_MISSAO_DONA]).toEqual(["POST /v1/instances"]);
+    expect([...SEM_CLIENTE_E_SEM_MISSAO_DONA]).toEqual([]);
   });
 
   it("os dois métodos existem de verdade no client canônico", async () => {

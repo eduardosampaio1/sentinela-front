@@ -22,6 +22,8 @@ export {
 } from "./Colecao";
 export { ComparisonRow, ComparisonRowQuebrada } from "./ComparisonRow";
 export { ConfirmDestructive } from "./ConfirmDestructive";
+export { CriarPorNome, MAXIMO_DO_NOME } from "./CriarPorNome";
+export type { TextosDeCriacao } from "./CriarPorNome";
 export { DataTable, type ColunaDaTabela } from "./DataTable";
 export {
   Documento,

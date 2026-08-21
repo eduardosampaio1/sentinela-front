@@ -909,7 +909,18 @@
     "startingAnalysis": "Iniciando…",
     "unavailable": "Esta instância está indisponível agora.",
     "emptyHistoryHint": "Inicie a primeira e ela aparecerá aqui.",
-    "errorHistoryTitle": "Não foi possível carregar estas análises"
+    "errorHistoryTitle": "Não foi possível carregar estas análises",
+    "createCta": "Criar instância",
+    "createTitle": "Nova instância",
+    "createDescription": "Uma instância agrupa as análises de um mesmo sistema ao longo do tempo.",
+    "createLabel": "Nome",
+    "createHelp": "Você pode renomear depois. Nomes repetidos são permitidos.",
+    "createExample": "Atendimento WhatsApp",
+    "createSubmit": "Criar instância",
+    "createSubmitting": "Criando…",
+    "createCancel": "Cancelar",
+    "createEmptyError": "Dê um nome à instância para continuar.",
+    "createFailed": "Não foi possível criar a instância. Tente novamente em instantes."
   },
   "intentsPage": {
     "title": "Intents",
@@ -1242,7 +1253,22 @@
     "roleOwner": "Dono",
     "roleAdmin": "Admin",
     "roleMember": "Membro",
-    "roleViewer": "Leitor"
+    "roleViewer": "Leitor",
+    "createCta": "Criar workspace",
+    "createTitle": "Novo workspace",
+    "createDescription": "Um workspace separa os sistemas de uma empresa ou de um time. Você entra nele como dono.",
+    "createLabel": "Nome",
+    "createHelp": "Você pode renomear depois. Nomes repetidos são permitidos.",
+    "createExample": "Minha Empresa",
+    "createSubmit": "Criar workspace",
+    "createSubmitting": "Criando…",
+    "createCancel": "Cancelar",
+    "createEmptyError": "Dê um nome ao workspace para continuar.",
+    "createFailed": "Não foi possível criar o workspace. Tente novamente em instantes.",
+    "createdTitle": "Workspace criado",
+    "createdBody": "“{{name}}” está pronto. Entre novamente para abri-lo: seu acesso ê carregado no login.",
+    "createdCta": "Entrar novamente",
+    "emptyCanCreate": "Você ainda não participa de nenhum workspace. Crie o primeiro e ele aparece aqui."
   },
   "notifications": {
     "title": "Notificações",
