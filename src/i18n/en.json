@@ -1268,7 +1268,9 @@
     "createdTitle": "Workspace created",
     "createdBody": "“{{name}}” is ready. Sign in again to open it: your access is loaded at sign-in.",
     "createdCta": "Sign in again",
-    "emptyCanCreate": "You are not in any workspace yet. Create the first one and it shows up here."
+    "emptyCanCreate": "You are not in any workspace yet. Create the first one and it shows up here.",
+    "createdLater": "Later",
+    "switcherCreate": "Create workspace"
   },
   "notifications": {
     "title": "Notifications",

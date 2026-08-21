@@ -24,11 +24,13 @@
 // decoração. Antes da M25 o shell o imprimia sob o nome do workspace.
 
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { onWorkspaceSwitch } from "@/lib/v1";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNomeDoWorkspace } from "@/features/workspace/data/workspace";
+import { CriarWorkspace } from "@/features/workspaces/CriarWorkspace";
 import { cn } from "@/lib/utils";
 
 export function WorkspaceSwitcher({ onNavigate }: { onNavigate?: () => void }) {
@@ -36,6 +38,7 @@ export function WorkspaceSwitcher({ onNavigate }: { onNavigate?: () => void }) {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const [aberto, setAberto] = useState(false);
+  const [criando, setCriando] = useState(false);
 
   async function trocar(alvo: string) {
     const anterior = workspace?.id ?? null;
@@ -61,7 +64,12 @@ export function WorkspaceSwitcher({ onNavigate }: { onNavigate?: () => void }) {
   const rotulo = nome ?? t("shell.workspace.none");
   // WS-02/WS-04 não têm operação pública: com um único workspace não há troca a oferecer, e um
   // botão que abre uma lista de um item é um CTA que não leva a lugar nenhum.
-  const podeTrocar = memberships.length > 1;
+  // ABRE SEMPRE. Antes era `memberships.length > 1`, e com um workspace o componente virava
+  // paragrafo inerte. Isso era aceitavel enquanto `Workspaces` existia no menu; deixou de
+  // ser quando ele saiu, porque este passou a ser o unico caminho para criar o proximo — e
+  // quem acabou de entrar tem exatamente um.
+  //
+  // O painel continua util com um so: ele mostra qual e, e oferece criar outro.
 
   return (
     <div className="px-4 py-3 border-b border-border">
@@ -69,58 +77,73 @@ export function WorkspaceSwitcher({ onNavigate }: { onNavigate?: () => void }) {
         {t("shell.workspace.label")}
       </p>
 
-      {podeTrocar ? (
-        <>
-          <button
-            type="button"
-            onClick={() => setAberto((v) => !v)}
-            aria-expanded={aberto}
-            aria-haspopup="listbox"
-            aria-label={t("shell.workspace.switch")}
-            className="w-full text-left text-xs font-semibold text-foreground truncate leading-tight rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {rotulo}
-          </button>
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        aria-expanded={aberto}
+        aria-haspopup="listbox"
+        aria-label={t("shell.workspace.switch")}
+        className="w-full text-left text-xs font-semibold text-foreground truncate leading-tight rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {rotulo}
+      </button>
 
-          {aberto && (
-            <ul
-              role="listbox"
-              aria-label={t("shell.workspace.list")}
-              className="mt-2 space-y-0.5"
+      {aberto && (
+        <>
+          <ul
+            role="listbox"
+            aria-label={t("shell.workspace.list")}
+            className="mt-2 space-y-0.5"
+          >
+            {memberships.map((m) => {
+              const ativo = m.id === workspace?.id;
+              return (
+                <li key={m.id}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={ativo}
+                    onClick={() => void trocar(m.id)}
+                    className={cn(
+                      "w-full text-left px-2 py-1.5 rounded-lg text-xs truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      ativo
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground hover:bg-muted/60",
+                    )}
+                  >
+                    {/* So o NOME. O papel governa, nao rotula (D3).
+                        O item ATIVO usa o nome reconciliado: sem isso o mesmo espaco
+                        apareceria com o nome novo no botao acima e o velho aqui na lista,
+                        dentro do MESMO componente. Os demais seguem com a projecao de
+                        bootstrap — para eles nenhum produtor foi consultado, e identificar
+                        e exatamente o papel que a claim tem. */}
+                    {ativo ? rotulo : m.name}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* Criar fica SEPARADO da lista, e fora do `role="listbox"`: ele nao e uma opcao
+              de escopo, e um `<button>` solto dentro da lista seria anunciado como se fosse.
+              A regra visual acompanha a semantica. */}
+          <div className="mt-1.5 pt-1.5 border-t border-border">
+            <button
+              type="button"
+              onClick={() => {
+                setAberto(false);
+                setCriando(true);
+              }}
+              className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {memberships.map((m) => {
-                const ativo = m.id === workspace?.id;
-                return (
-                  <li key={m.id}>
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={ativo}
-                      onClick={() => void trocar(m.id)}
-                      className={cn(
-                        "w-full text-left px-2 py-1.5 rounded-lg text-xs truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        ativo
-                          ? "bg-muted text-foreground"
-                          : "text-muted-foreground hover:bg-muted/60",
-                      )}
-                    >
-                      {/* Só o NOME. O papel governa, não rotula (D3).
-                          O item ATIVO usa o nome reconciliado: sem isso o mesmo espaço
-                          apareceria com o nome novo no botão acima e o velho aqui na lista,
-                          dentro do MESMO componente. Os demais seguem com a projeção de
-                          bootstrap — para eles nenhum produtor foi consultado, e identificar
-                          é exatamente o papel que a claim tem. */}
-                      {ativo ? rotulo : m.name}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+              <Plus aria-hidden="true" className="h-3.5 w-3.5" />
+              {t("workspacesPage.switcherCreate")}
+            </button>
+          </div>
         </>
-      ) : (
-        <p className="text-xs font-semibold text-foreground truncate leading-tight">{rotulo}</p>
       )}
+
+      <CriarWorkspace aberto={criando} aoFechar={() => setCriando(false)} />
     </div>
   );
 }

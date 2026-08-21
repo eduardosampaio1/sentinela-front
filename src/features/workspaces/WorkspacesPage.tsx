@@ -26,8 +26,8 @@ import { PageHeader } from "@/shared/layout/PageHeader";
 import { EmptyState } from "@/shared/states/EmptyState";
 import { ErrorState } from "@/shared/states/ErrorState";
 import { Button } from "@/components/ui/button";
-import { CriarPorNome, LinhaDeColecao } from "@/design/patterns";
-import { useV1Client } from "@/features/canonical-analysis/data/client";
+import { LinhaDeColecao } from "@/design/patterns";
+import { CriarWorkspace } from "./CriarWorkspace";
 import { useRevelacao } from "@/design/motion";
 
 /**
@@ -53,43 +53,11 @@ function rotuloDoPapel(papel: string, t: (k: string) => string): string {
 }
 
 export function WorkspacesPage() {
-  const {
-    memberships,
-    membershipsLoading,
-    membershipsError,
-    workspace,
-    switchWorkspace,
-    signOut,
-  } = useAuth();
+  const { memberships, membershipsLoading, membershipsError, workspace, switchWorkspace } =
+    useAuth();
   const { t } = useLanguage();
-  const cliente = useV1Client();
   const [dialogoAberto, setDialogoAberto] = useState(false);
-  // O nome do que acabou de nascer. Guardado porque o sucesso PRECISA dize-lo de volta: sem
-  // o nome, "workspace criado" nao confirma nada -- poderia ser qualquer um.
-  const [recemCriado, setRecemCriado] = useState<string | null>(null);
   const raiz = useRevelacao<HTMLDivElement>(membershipsLoading ? "carregando" : memberships.length);
-
-  const criar = async (nome: string) => {
-    const ws = await cliente.createWorkspace(nome);
-    // Fecha e mostra o sucesso. NAO navega para dentro: o token em maos foi emitido antes
-    // deste espaco existir, e entrar agora bateria em 403 -- que a pessoa leria como bug, e
-    // nao como "seu acesso ainda nao foi carregado".
-    setDialogoAberto(false);
-    setRecemCriado(ws.name);
-  };
-
-  const textosDeCriacao = {
-    titulo: t("workspacesPage.createTitle"),
-    descricao: t("workspacesPage.createDescription"),
-    rotulo: t("workspacesPage.createLabel"),
-    ajuda: t("workspacesPage.createHelp"),
-    exemplo: t("workspacesPage.createExample"),
-    enviar: t("workspacesPage.createSubmit"),
-    enviando: t("workspacesPage.createSubmitting"),
-    cancelar: t("workspacesPage.createCancel"),
-    erroVazio: t("workspacesPage.createEmptyError"),
-    erroAoCriar: t("workspacesPage.createFailed"),
-  };
 
   return (
     <AppShell topBarTitle={t("workspacesPage.title")}>
@@ -177,29 +145,11 @@ export function WorkspacesPage() {
             })}
           </ul>
         )}
-        {/* O sucesso e um PAINEL, nao um toast: ele carrega uma instrucao que a pessoa
-            precisa executar, e toast some sozinho. Sumir levaria embora a unica explicacao
-            de por que o espaco recem-criado ainda nao esta na lista. */}
-        {recemCriado ? (
-          <div role="status" className="mt-6 rounded-lg border border-border bg-card p-4">
-            <p className="text-sm font-medium text-foreground">
-              {t("workspacesPage.createdTitle")}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t("workspacesPage.createdBody", { name: recemCriado })}
-            </p>
-            <Button className="mt-3" size="sm" onClick={() => void signOut()}>
-              {t("workspacesPage.createdCta")}
-            </Button>
-          </div>
-        ) : null}
-
-        <CriarPorNome
-          aberto={dialogoAberto}
-          aoFechar={() => setDialogoAberto(false)}
-          textos={textosDeCriacao}
-          aoCriar={criar}
-        />
+        {/* O fluxo inteiro mora no componente: pedir o nome e, depois, explicar por que o
+            espaco recem-criado ainda nao esta na lista. A confirmacao era um painel AQUI e
+            virou passo do dialogo, porque a criacao passou a ter uma segunda porta -- o
+            seletor da barra lateral -- e la nao caberia painel de pagina. */}
+        <CriarWorkspace aberto={dialogoAberto} aoFechar={() => setDialogoAberto(false)} />
         </div>
       </PageFrame>
     </AppShell>

@@ -1268,7 +1268,9 @@
     "createdTitle": "Workspace criado",
     "createdBody": "“{{name}}” está pronto. Entre novamente para abri-lo: seu acesso ê carregado no login.",
     "createdCta": "Entrar novamente",
-    "emptyCanCreate": "Você ainda não participa de nenhum workspace. Crie o primeiro e ele aparece aqui."
+    "emptyCanCreate": "Você ainda não participa de nenhum workspace. Crie o primeiro e ele aparece aqui.",
+    "createdLater": "Depois",
+    "switcherCreate": "Criar workspace"
   },
   "notifications": {
     "title": "Notificações",

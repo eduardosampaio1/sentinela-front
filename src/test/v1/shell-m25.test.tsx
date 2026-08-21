@@ -121,7 +121,7 @@ afterEach(() => window.localStorage.clear());
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M25 · 1. a IA do shell", () => {
-  it("navega para `/home`, `/analyses`, `/instances` e `/workspaces` — e só", () => {
+  it("navega para `/home`, `/analyses` e `/instances` — e só", () => {
     // **`/instances` ENTROU na M45, e o gate estava certo em acusar.**
     //
     // A IA do Blueprint §3.1 sempre listou `Instancias` no menu principal — marcada `:::delta`,
@@ -132,6 +132,21 @@ describe("M25 · 1. a IA do shell", () => {
     // Este número congelado é o gate FUNCIONANDO: ele obriga quem mexe na IA a passar por aqui.
     // O que mudou não foi a decisão de produto — foi o delta que a bloqueava.
     //
+    // **`/workspaces` SAIU, e a razão e o oposto da que trouxe `/instances`.**
+    //
+    // Ele não saiu por falta de destino: a rota existe e resolve. Saiu porque a presença
+    // dele AQUI afirmava que Workspace é coisa do mesmo tipo que Análise e Instância. Não
+    // é -- as duas VIVEM DENTRO dele, e `useCanonicalScope()` devolve `null` sem um
+    // selecionado. Um menu que achata contêiner e conteúdo em irmãos ensina uma estrutura
+    // que o domínio não tem.
+    //
+    // A decisão já existia neste arquivo, aplicada pela metade: a M25 removeu o
+    // `ContextBlock` porque o que ele oferecia como troca de escopo era um
+    // `navigate("/workspaces")` -- *mudar de página, não trocar de tenant*. Trocaram o
+    // componente e mantiveram o item. Esta é a outra metade.
+    //
+    // A porta passou a ser o `WorkspaceSwitcher`, que troca de verdade e agora também cria.
+    //
     // **`Configuracoes` continua FORA, e isso não é esquecimento.** O Blueprint também a lista no
     // menu principal, e a M25 a removeu por decisão registrada ("não tem destino congelado").
     // Hoje `/dashboard/settings` é destino congelado e alcançável pelo menu do usuário — mas
@@ -141,7 +156,7 @@ describe("M25 · 1. a IA do shell", () => {
     const destinos = within(nav)
       .getAllByRole("link")
       .map((a) => a.getAttribute("href"));
-    expect(destinos).toEqual(["/home", "/analyses", "/instances", "/workspaces"]);
+    expect(destinos).toEqual(["/home", "/analyses", "/instances"]);
   });
 
   it("NENHUM link do shell aponta para `/dashboard*` — compatibilidade não é IA canônica", () => {
@@ -262,11 +277,21 @@ describe("M25 · 3. WorkspaceSwitcher", () => {
     expect(qc.getQueryData(workspaceKeys.status("ws-a", "an-1"))).toBeTruthy();
   });
 
-  it("com UM workspace não há botão de troca — lista de um item é CTA que não leva a lugar nenhum", () => {
+  it("com UM workspace o painel CONTINUA abrindo — ele deixou de ser só troca", async () => {
+    // A afirmação virou de lado, e a razão antiga estava certa: *lista de um item é CTA que
+    // não leva a lugar nenhum* -- enquanto a única coisa que o painel fazia era trocar.
+    //
+    // Ele passou a criar também, e isso mudou o que é verdade aqui. Com `/workspaces` fora
+    // da navegação, este é o ÚNICO caminho para criar o próximo espaço -- e quem acabou de
+    // entrar tem exatamente um. Mantê-lo inerte com `memberships.length === 1` apagaria a
+    // capacidade justamente de quem mais precisa dela.
+    const u = userEvent.setup();
     authMock.mockReturnValue(auth({ memberships: [WS_A] }));
     montar(<SidebarContent />);
-    expect(screen.queryByRole("button", { name: en.shell.workspace.switch })).toBeNull();
-    expect(screen.getByText("Alfa")).toBeTruthy();
+
+    const botao = screen.getByRole("button", { name: en.shell.workspace.switch });
+    await u.click(botao);
+    expect(screen.getByRole("button", { name: en.workspacesPage.switcherCreate })).toBeTruthy();
   });
 
   it("o switcher usa o seam CANÔNICO — nenhum segundo mecanismo de invalidação", () => {
@@ -395,9 +420,9 @@ describe("M25 · 7. teclado", () => {
     expect(document.activeElement?.getAttribute("href")).toBe("/analyses");
     await u.tab();
     // `/instances` entrou na M45 — e o teclado atravessa a IA na MESMA ordem em que ela é vista.
+    // `/workspaces` SAIU da IA, e some daqui junto: uma ordem de tabulação que ainda o
+    // esperasse estaria medindo um menu que não existe mais.
     expect(document.activeElement?.getAttribute("href")).toBe("/instances");
-    await u.tab();
-    expect(document.activeElement?.getAttribute("href")).toBe("/workspaces");
     await u.tab(); // menu do usuário
     expect(document.activeElement?.getAttribute("aria-label")).toBe(en.shell.user.menu);
   });

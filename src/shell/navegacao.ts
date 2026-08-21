@@ -20,7 +20,7 @@ export interface NavItem {
    * consegue decidir orfandade a partir dela e congela a contagem. `t(`shell.nav.${x}`)` declara a
    * família, então a busca por chave órfã continua possível.
    */
-  labelSuffix: "home" | "analyses" | "instances" | "workspaces";
+  labelSuffix: "home" | "analyses" | "instances";
   icon: string;
   exact?: boolean;
 }
@@ -68,9 +68,26 @@ export const PRIMARY_NAV: readonly NavItem[] = [
     labelSuffix: "instances",
     icon: "M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75",
   },
-  {
-    to: "/workspaces",
-    labelSuffix: "workspaces",
-    icon: "M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v8.25m19.5 0v3.75a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6",
-  },
 ];
+
+// ─── `Workspaces` SAIU da navegação primária ────────────────────────────────────
+//
+// Ele afirmava, ao lado de Análises e Instâncias, que os três são coisas do mesmo tipo.
+// Não são: análise e instância **vivem dentro** de um workspace, e nenhuma das duas
+// significa coisa alguma sem um selecionado — `useCanonicalScope()` devolve `null` e as
+// três telas dependem dele. Um menu que achata contêiner e conteúdo em irmãos ensina uma
+// estrutura que o domínio não tem.
+//
+// A decisão já existia neste repositório, aplicada meio. O `Sidebar.tsx` registra que a
+// M25 removeu o `ContextBlock` porque o que ele oferecia como troca de escopo era um
+// `navigate("/workspaces")` — e a frase que ficou foi *mudar de página, não trocar de
+// tenant*. Trocaram o componente e mantiveram o item. Esta é a outra metade.
+//
+// **A rota continua registrada e resolvendo**, pela mesma razão de `/dashboard/*`: ela já
+// circulou, e 404 em endereço que existiu é defeito que só aparece para quem não está
+// por perto para reclamar. Ela é também o destino de quem entra sem workspace nenhum.
+//
+// Quem passa a ser a porta é o `WorkspaceSwitcher`, no topo da barra — e ele teve de
+// ganhar duas coisas para poder sê-la: abrir SEMPRE (antes só abria com mais de um
+// workspace) e oferecer criação. Sem a segunda, tirar este item apagaria a capacidade de
+// criar workspace de quem tem exatamente um.

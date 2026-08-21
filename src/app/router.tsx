@@ -178,13 +178,31 @@ function ProtectedRoute() {
 }
 
 function PublicOnlyRoute() {
-  const { user, loading } = useAuth();
+  const { user, loading, memberships, membershipsLoading, membershipsError } = useAuth();
 
   if (loading) {
     return <FullScreenLoader />;
   }
 
   if (user) {
+    // O destino depende de haver workspace, e por isso ESPERA a projecao de identidade.
+    //
+    // `/home` inteira e sobre o que existe DENTRO de um workspace: `useCanonicalScope()`
+    // devolve `null` sem um selecionado, e as tres regioes da tela dependem dele. Mandar para
+    // la quem nao tem nenhum entrega uma pagina cujo conteudo inteiro depende do que falta --
+    // e o caminho para resolver isso nao esta em lugar nenhum dela.
+    if (membershipsLoading) {
+      return <FullScreenLoader />;
+    }
+
+    // Falha de projecao NAO e "voce nao tem workspaces". Sao estados diferentes, e tratar o
+    // primeiro como o segundo mandaria alguem com espacos criar mais um por causa de uma
+    // indisponibilidade. Na duvida, o destino de sempre -- e a propria `/home` sabe se
+    // apresentar quando o escopo nao resolve.
+    if (!membershipsError && memberships.length === 0) {
+      return <Navigate to="/workspaces" replace />;
+    }
+
     return <Navigate to="/home" replace />;
   }
 
