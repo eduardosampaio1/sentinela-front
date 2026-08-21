@@ -19,7 +19,7 @@
 // `falhaDeTransporte.ts` para por que ele não pode afirmar que o dado não chegou.
 
 import { useState } from "react";
-import { Loader2, UploadCloud } from "lucide-react";
+import { Check, Loader2, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { CanonicalScope } from "@/lib/v1";
@@ -28,7 +28,20 @@ import { ProblemFeedback } from "./notices";
 import { ehFalhaDeTransporte } from "./falhaDeTransporte";
 import { AvisoDaJornada } from "./AvisoDaJornada";
 
-const ACEITOS = ".jsonl,.ndjson,application/x-ndjson,application/jsonl";
+// Os CINCO formatos que o serviço de ingestão tem adapter para ler. A lista estava em dois,
+// e a diferença não era invisível: `accept` e uma SUGESTÃO do navegador, então quem escolhia
+// "todos os arquivos" subia um CSV e o backend o processava normalmente. A tela recusava na
+// vitrine o que o produto aceita na porta.
+const ACEITOS = [
+  ".csv",
+  ".jsonl",
+  ".ndjson",
+  ".parquet",
+  ".xlsx",
+  "text/csv",
+  "application/x-ndjson",
+  "application/jsonl",
+].join(",");
 
 export function UploadStep({
   analysisId,
@@ -43,9 +56,18 @@ export function UploadStep({
   const [file, setFile] = useState<File | null>(null);
   const upload = useUploadData();
   const enviando = upload.isPending;
-  // Após o sucesso, o status ainda está `preparing` até o refetch avançar p/ `receiving` (quando
-  // este passo desmonta). Nessa janela o botão fica BLOQUEADO p/ não reenviar o dataset (Codex R5).
-  const bloqueado = enviando || upload.isSuccess;
+  const enviado = upload.isSuccess;
+  // O botão fica bloqueado nas DUAS situações — enviando e já enviado —, e isso continua certo:
+  // reenviar o mesmo dataset duplicaria a ingestão (Codex R5).
+  //
+  // O que MUDOU é a frase deixar de acompanhar o bloqueio. Ela dizia *enviando* nas duas, sob
+  // a premissa escrita aqui de que a janela seria curta — *"até o refetch avançar p/
+  // `receiving`, quando este passo desmonta"*. Quando a ingestão para em `needs_mapping` e
+  // ninguém propaga esse estado, a análise fica em `preparing` e a janela vira PERMANENTE: o
+  // envio funcionou e a tela girava um spinner para sempre, dizendo que ainda estava enviando.
+  //
+  // Duas verdades diferentes, dois textos.
+  const bloqueado = enviando || enviado;
 
   function enviar() {
     if (!file || bloqueado) return;
@@ -102,9 +124,28 @@ export function UploadStep({
       />
 
       {bloqueado && (
-        <p role="status" aria-live="polite" aria-busy="true" className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          {t("canonicalAnalysis.upload.sending")}
+        <p
+          role="status"
+          aria-live="polite"
+          // `aria-busy` só enquanto algo de fato corre. Mantê-lo depois do envio faria o leitor
+          // de tela anunciar trabalho em curso sobre uma operação que terminou.
+          aria-busy={enviando}
+          className="flex items-center gap-2 text-sm text-muted-foreground"
+        >
+          {/* Duas chaves LITERAIS, e nao `t(condicao ? a : b)`: chamada opaca cega o rastreador
+              de orfandade do i18n, que deixa de saber se a chave ainda tem consumidor. O gate da
+              M14 conta essas chamadas justamente para que elas nao cresçam sem decisao. */}
+          {enviando ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              {t("canonicalAnalysis.upload.sending")}
+            </>
+          ) : (
+            <>
+              <Check className="h-4 w-4 text-success" aria-hidden="true" />
+              {t("canonicalAnalysis.upload.sent")}
+            </>
+          )}
         </p>
       )}
 

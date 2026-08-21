@@ -680,7 +680,7 @@
     },
     "upload": {
       "title": "Adicione sua base",
-      "help": "Selecione um arquivo JSONL para analisar. O arquivo é enviado como está; nada é lido no seu navegador.",
+      "help": "Escolha o arquivo com as conversas. Aceitamos CSV, JSONL, NDJSON, Parquet e Excel. O arquivo ê enviado como está; nada ê lido no seu navegador.",
       "choose": "Escolher arquivo",
       "send": "Enviar base",
       "dropHint": "Arraste um arquivo aqui ou escolha um",
@@ -696,7 +696,8 @@
         "check": "Verificar o estado da análise"
       },
       "journeyReserved": "Análise reservada. Ela está esperando a base.",
-      "topBar": "Análise · adicionar base"
+      "topBar": "Análise · adicionar base",
+      "sent": "Base recebida. Estamos preparando a análise."
     }
   },
   "common": {

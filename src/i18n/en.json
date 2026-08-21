@@ -680,7 +680,7 @@
     },
     "upload": {
       "title": "Add your dataset",
-      "help": "Select a JSONL file to analyze. The file is sent as-is; nothing is read in your browser.",
+      "help": "Choose the file with the conversations. We accept CSV, JSONL, NDJSON, Parquet and Excel. The file is sent as-is; nothing is read in your browser.",
       "choose": "Choose file",
       "send": "Send dataset",
       "dropHint": "Drag a file here or choose one",
@@ -696,7 +696,8 @@
         "check": "Check the analysis state"
       },
       "journeyReserved": "Analysis reserved. It is waiting for its dataset.",
-      "topBar": "Analysis · add dataset"
+      "topBar": "Analysis · add dataset",
+      "sent": "Dataset received. We are preparing the analysis."
     }
   },
   "common": {
