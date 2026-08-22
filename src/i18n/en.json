@@ -652,7 +652,7 @@
       },
       "receiving": {
         "title": "Receiving",
-        "message": "Sending and validating your dataset."
+        "message": "We're validating and preparing your dataset."
       },
       "queued": {
         "title": "Queued",

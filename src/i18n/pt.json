@@ -652,7 +652,7 @@
       },
       "receiving": {
         "title": "Recebendo",
-        "message": "Enviando e validando sua base."
+        "message": "Estamos validando e preparando sua base."
       },
       "queued": {
         "title": "Na fila",
