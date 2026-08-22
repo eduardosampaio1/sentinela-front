@@ -3,6 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- O tradutor do navegador NÃO pode mexer nesta árvore.
+
+         Medido em homologação: o Chrome ofereceu traduzir inglês→português, o usuário aceitou, e
+         a tela morreu com `Failed to execute 'insertBefore' on 'Node'`. O tradutor substitui os
+         nós de texto por conta própria; o React, na renderização seguinte, procura o nó que
+         deixou de existir e quebra. É defeito conhecido da combinação, e não tem conserto do
+         lado do React.
+
+         O produto tem i18n PRÓPRIO (PT/EN, com o `lang` acompanhando a escolha em
+         `LanguageContext`), então a tradução automática é redundante — e hoje ela é pior que
+         redundante: derruba a página. Bloquear é a escolha honesta enquanto for assim.
+
+         O custo está registrado: quem não fala nenhum dos dois idiomas perde a máquina de
+         tradução. A saída para essa pessoa é um idioma novo no produto, não um tradutor que
+         quebra a tela. -->
+    <meta name="google" content="notranslate" />
     
     <title>Sentinela</title>
     <meta name="description" content="Plataforma de monitoramento e diagnóstico de saúde de IAs." />
