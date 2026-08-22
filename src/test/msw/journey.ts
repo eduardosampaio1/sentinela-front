@@ -591,9 +591,9 @@ export function makeJourneyHandlers(base: string) {
           { name: "field_007", name_redacted: true, types: ["string"], coverage: 0.4, distinct_values: 88 },
         ],
         suggestion: {
-          conversation_id: { source: "id_conversa", confidence: 0.94 },
-          user_text: { source: "pergunta", confidence: 0.81 },
-          timestamp: { source: "criado_em", confidence: 0.9 },
+          conversation_id: { source: "id_conversa" },
+          user_text: { source: "pergunta" },
+          timestamp: { source: "criado_em" },
         },
         // O empate: duas colunas plausíveis para o mesmo campo. É o foco da tela.
         ambiguous: { assistant_text: ["resposta_bot", "texto_agente"] },

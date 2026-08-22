@@ -113,7 +113,7 @@ describe("a parada de mapping chega na tela", () => {
             { name: "conversa", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 118 },
             { name: "resposta", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 90 },
           ],
-          suggestion: { conversation_id: { source: "conversa", confidence: 0.9 } },
+          suggestion: { conversation_id: { source: "conversa" } },
           ambiguous: { assistant_text: ["resposta", "texto"] },
           required_fields: ["conversation_id", "assistant_text"],
           optional_fields: ["user_text"],

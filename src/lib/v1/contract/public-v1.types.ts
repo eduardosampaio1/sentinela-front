@@ -663,7 +663,6 @@ export interface ColunaDoArquivo {
 /** O que a heurística propôs para um campo canônico, e com quanta confiança. */
 export interface SugestaoDeCampo {
   source?: string | null;
-  confidence?: number | null;
 }
 
 export interface MappingView {
