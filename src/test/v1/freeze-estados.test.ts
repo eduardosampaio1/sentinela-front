@@ -67,6 +67,14 @@ const CONGELADO = {
     "running",
     "recovering",
     "needs_mapping",
+    // A tela: `case "ready_to_submit"` em `AnalysisPage`, com o botão de submeter.
+    // A prova: `AnalysisPage.e6.test.tsx` e `journey-proofs.test.tsx` submetem a partir dele.
+    //
+    // Ele nasceu de um defeito medido em homologação: `artifact_ready` respondia `preparing`, o
+    // mesmo status de quem não mandou arquivo. O front escolhe a tela pelo status e mostrava
+    // "adicionar dataset" para uma análise com o dataset canônico pronto — e o botão de submeter
+    // vivia em `receiving`, onde submeter falha. ZERO das 6 análises do workspace virou job.
+    "ready_to_submit",
     "completed",
     "failed",
   ],

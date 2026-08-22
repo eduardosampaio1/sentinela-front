@@ -130,6 +130,26 @@ export function AnalysisPage() {
       case "preparing":
         return <UploadStep analysisId={analysisId} scope={scope} onUploaded={revalidar} />;
       case "receiving":
+        // Os bytes ainda estão chegando. NÃO há botão aqui, e a ausência é a correção.
+        //
+        // O convite de submeter morava neste caso, e submeter daqui não funciona: o Orchestrator
+        // só aceita a partir de `artifact_ready`, e o que voltava era `analysis_not_ready`. O
+        // botão existia exatamente no estado em que não podia funcionar e sumia no estado em que
+        // passava a funcionar — porque `artifact_ready` respondia `preparing`, e `preparing`
+        // renderiza a tela de upload.
+        //
+        // `receiving` faz polling, então esta tela anda sozinha até `ready_to_submit`. Nada se
+        // perde ao não oferecer ação aqui; o que se ganha é não oferecer uma que falha.
+        return (
+          <div className="space-y-4">
+            <StateBanner view={view} />
+          </div>
+        );
+      case "ready_to_submit":
+        // O estado que faltava, e a tela que ele destrava.
+        //
+        // Medido em homologação: ZERO das 6 análises do workspace chegou a virar job. Não por
+        // falha do motor — por nunca ter existido superfície que oferecesse ligá-lo.
         return (
           <div className="space-y-4">
             <StateBanner view={view} />

@@ -31,6 +31,7 @@ import {
   Minus,
   PieChart,
   RotateCw,
+  Play,
   UserRoundPen,
   X,
 } from "lucide-react";
@@ -54,6 +55,7 @@ const ICONE: Record<FormaDoEstado, typeof Check> = {
   montando: Cog,
   retomada: RotateCw,
   pessoa: UserRoundPen,
+  partida: Play,
   concluido: Check,
   parcial: PieChart,
   retido: Lock,

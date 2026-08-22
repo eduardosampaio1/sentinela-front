@@ -34,6 +34,11 @@ export function intervaloDePolling(status: AnalysisStatus | undefined): number |
     case "completed":
     case "failed":
       return false; // terminal: para de consultar
+    case "ready_to_submit":
+      // Mesma razão de `needs_mapping`: não é terminal e não muda sozinho. Consultar aqui
+      // seria bater no backend para sempre por uma resposta que só muda quando alguém clica —
+      // e contar ao usuário, pelo indicador de atividade, que algo está em curso.
+      return false;
     case "needs_mapping":
       // NÃO é terminal, mas também não muda sozinho: depende de uma pessoa confirmar como os
       // campos devem ser interpretados. Continuar consultando seria bater no backend para

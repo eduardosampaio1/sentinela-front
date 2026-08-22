@@ -670,6 +670,10 @@
         "title": "Confirmation needed",
         "message": "We need to confirm how some fields should be interpreted."
       },
+      "ready_to_submit": {
+        "title": "Ready to analyze",
+        "message": "Your dataset was received and validated. The analysis has not started yet."
+      },
       "completed": {
         "title": "Completed",
         "message": "Analysis completed."
@@ -709,7 +713,7 @@
       "optionalToggle": "Optional fields",
       "confirm": "Confirm and continue",
       "confirming": "Confirming…",
-      "afterConfirm": "After this the analysis goes on by itself.",
+      "afterConfirm": "After this the analysis is ready to start.",
       "missing": "Choose a column for: {{fields}}.",
       "failed": "We could not confirm. Try again in a moment.",
       "evidence": {
@@ -870,6 +874,7 @@
     "running": "Running",
     "recovering": "Recovering",
     "needs_mapping": "Action required",
+    "ready_to_submit": "Ready to analyze",
     "completed": "Completed",
     "failed": "Failed"
   },

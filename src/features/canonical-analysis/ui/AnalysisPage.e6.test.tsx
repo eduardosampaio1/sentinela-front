@@ -14,6 +14,13 @@ import { server, setupMsw } from "@/test/msw/server";
 import { CanonicalClientProvider } from "../data/client";
 import { AnalysisPage } from "./AnalysisPage";
 
+// O estado que oferece SUBMETER mudou de `receiving` para `ready_to_submit`.
+//
+// O que estes casos medem nao mudou -- submit nao refaz upload, nao dispara duas vezes, e
+// apresenta o erro pelo codigo. O que mudou e ONDE o botao vive: em `receiving` os bytes
+// ainda estao chegando e o Orchestrator recusa com `analysis_not_ready`. O botao existia
+// exatamente no estado em que nao podia funcionar.
+
 vi.mock("@/shell/AppShell", () => ({ AppShell: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ workspace: { id: "ws-1" } }) }));
 
@@ -101,7 +108,7 @@ describe("E6 — apresentação por código (capacity/result/idempotency)", () =
 
   it("submit capacity_wait: espera NEUTRA (status, não alert; sem retry; sem %)", async () => {
     server.use(
-      http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("receiving", { analysis_id: "an-abc" }))),
+      http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("ready_to_submit", { analysis_id: "an-abc" }))),
       http.post(`${MSW_BASE}/v1/analyses/:id/submit`, () => problem("capacity_wait", 503)),
     );
     renderAt();
@@ -115,7 +122,7 @@ describe("E6 — apresentação por código (capacity/result/idempotency)", () =
 
   it("submit idempotency_conflict: mensagem, SEM oferecer retry (não força nova chave)", async () => {
     server.use(
-      http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("receiving", { analysis_id: "an-abc" }))),
+      http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("ready_to_submit", { analysis_id: "an-abc" }))),
       http.post(`${MSW_BASE}/v1/analyses/:id/submit`, () => problem("idempotency_conflict", 409)),
     );
     renderAt();

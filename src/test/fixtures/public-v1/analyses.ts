@@ -42,6 +42,8 @@ export const STATUS_VIEWS: Record<AnalysisStatus, AnalysisStatusView> = {
   // Entrou com o estado novo. O `Record<AnalysisStatus, ...>` é EXAUSTIVO de propósito:
   // é ele que obriga a fixture a acompanhar a união, e foi ele que cobrou esta linha.
   needs_mapping: statusView("needs_mapping"),
+  // Mesma cobrança, mesmo motivo: o estado em que a análise está pronta e falta submeter.
+  ready_to_submit: statusView("ready_to_submit"),
   completed: statusView("completed"),
   failed: statusView("failed"),
 };

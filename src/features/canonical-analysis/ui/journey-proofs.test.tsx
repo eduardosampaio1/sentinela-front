@@ -14,6 +14,13 @@ import { server, setupMsw } from "@/test/msw/server";
 import { CanonicalClientProvider } from "../data/client";
 import { AnalysisPage } from "./AnalysisPage";
 
+// O estado que oferece SUBMETER mudou de `receiving` para `ready_to_submit`.
+//
+// O que estes casos medem nao mudou -- submit nao refaz upload, nao dispara duas vezes, e
+// apresenta o erro pelo codigo. O que mudou e ONDE o botao vive: em `receiving` os bytes
+// ainda estao chegando e o Orchestrator recusa com `analysis_not_ready`. O botao existia
+// exatamente no estado em que nao podia funcionar.
+
 vi.mock("@/shell/AppShell", () => ({ AppShell: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ workspace: { id: "ws-1" } }) }));
 vi.mock("react-router-dom", async (orig) => {
@@ -47,7 +54,7 @@ describe("E3 item 15 — submit NÃO refaz upload", () => {
     let submitCalls = 0;
     const submitKeys: (string | null)[] = [];
     server.use(
-      http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("receiving"))),
+      http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("ready_to_submit"))),
       http.post(`${MSW_BASE}/v1/analyses/:id/data`, () => {
         dataCalls += 1;
         return HttpResponse.json(statusView("receiving"));
@@ -84,7 +91,7 @@ describe("Codex R5 — submit bem-sucedido não permite 2º disparo na janela de
   it("após sucesso o botão fica desabilitado; segundo submit não ocorre", async () => {
     let submitCalls = 0;
     server.use(
-      http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("receiving"))),
+      http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("ready_to_submit"))),
       http.post(`${MSW_BASE}/v1/analyses/:id/submit`, () => {
         submitCalls += 1;
         return HttpResponse.json({ ...HANDLE, status: "queued" });

@@ -30,7 +30,7 @@
 // estava decidido em vez de propor uma paleta nova.
 
 /**
- * Os oito estados de `public_states` do contrato.
+ * Os nove estados de `public_states` do contrato.
  *
  * O nome é o do CONTRATO, não o do objeto que os carrega. A primeira versão deste arquivo os
  * chamava de `EstadoDeAnalise` — e o gate da M04 reprovou, com razão: um tipo do Design System
@@ -44,6 +44,7 @@ export type EstadoPublico =
   | "running"
   | "recovering"
   | "needs_mapping"
+  | "ready_to_submit"
   | "completed"
   | "failed";
 
@@ -77,6 +78,7 @@ export type FormaDoEstado =
   | "montando" // sendo produzido a partir de algo que já existe
   | "retomada" // em curso após uma tentativa
   | "pessoa" // parou esperando alguém
+  | "partida" // tudo no lugar, falta começar
   | "concluido"
   | "parcial" // terminou, parte omitida
   | "retido" // nada pode ser liberado
@@ -101,9 +103,22 @@ const PUBLICO: Readonly<Record<EstadoPublico, AparenciaDoEstado>> = {
   // Retomada tem forma PRÓPRIA: "voltou a tentar" e "está rodando pela primeira vez" são fatos
   // diferentes, e achatá-los esconde que houve uma falha antes.
   recovering: { tom: "neutro", forma: "retomada" },
-  // O único estado que pede AÇÃO HUMANA. É o que justifica gastar `atencao` aqui e em nenhum
-  // outro lugar da máquina de análise — e `atencao` não é erro: nada quebrou.
+  // Os DOIS estados que pedem AÇÃO HUMANA, e é o que justifica gastar `atencao` aqui e em
+  // nenhum outro lugar da máquina de análise — `atencao` não é erro: nada quebrou.
+  //
+  // Este comentário dizia "o único estado", e deixou de ser verdade quando `ready_to_submit`
+  // nasceu.
+  //
+  // A primeira tentativa deu FORMA IGUAL aos dois, com o argumento de que o rótulo distingue.
+  // O gate de V6 reprovou, e estava certo: badge em lista se lê por cor e desenho, não por
+  // texto — e quem não distingue a cor via um estado só. Compartilhar o tom é correto (os dois
+  // pedem ação humana); compartilhar a forma apagava a diferença justamente para quem mais
+  // depende dela.
+  //
+  // `pessoa` = parou esperando alguém DECIDIR algo. `partida` = está tudo no lugar, falta
+  // apertar o botão. São pedidos diferentes.
   needs_mapping: { tom: "atencao", forma: "pessoa" },
+  ready_to_submit: { tom: "atencao", forma: "partida" },
   completed: { tom: "positivo", forma: "concluido" },
   failed: { tom: "negativo", forma: "falha" },
 };

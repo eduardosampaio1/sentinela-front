@@ -670,6 +670,10 @@
         "title": "Confirmação necessária",
         "message": "Precisamos confirmar como alguns campos devem ser interpretados."
       },
+      "ready_to_submit": {
+        "title": "Pronta para analisar",
+        "message": "Sua base foi recebida e validada. Falta começar a análise."
+      },
       "completed": {
         "title": "Concluída",
         "message": "Análise concluída."
@@ -709,7 +713,7 @@
       "optionalToggle": "Campos opcionais",
       "confirm": "Confirmar e continuar",
       "confirming": "Confirmando…",
-      "afterConfirm": "Depois disso a análise segue sozinha.",
+      "afterConfirm": "Depois disso a análise fica pronta para começar.",
       "missing": "Escolha uma coluna para: {{fields}}.",
       "failed": "Não foi possível confirmar. Tente novamente em instantes.",
       "evidence": {
@@ -870,6 +874,7 @@
     "running": "Em execução",
     "recovering": "Retomando",
     "needs_mapping": "Ação necessária",
+    "ready_to_submit": "Pronta para analisar",
     "completed": "Concluída",
     "failed": "Falha"
   },

@@ -6,7 +6,7 @@
 
 import type { AnalysisStatus, AnalysisStatusView } from "@/lib/v1";
 
-export type AnalysisAction = "wait" | "view_result" | "retry" | "none" | "confirm_mapping";
+export type AnalysisAction = "wait" | "view_result" | "retry" | "none" | "confirm_mapping" | "submit";
 
 export interface AnalysisStateView {
   status: AnalysisStatus;
@@ -54,6 +54,15 @@ export function describeAnalysisState(
         indeterminate: false,
         isError: false,
       };
+    case "ready_to_submit":
+      // Os quatro sinais, pelo MESMO argumento que `needs_mapping` já registrava — e são
+      // sinais diferentes porque cada um evita um desfecho ruim específico:
+      //   `indeterminate: false` — nada está progredindo. O spinner aqui foi literalmente o
+      //     defeito: a análise pronta parecia estar trabalhando, e ninguém a submetia.
+      //   `terminal: false` — a jornada não acabou; falta um clique.
+      //   `isError: false` — nada quebrou. O dataset canônico existe e está válido.
+      //   `action: "submit"` — a ação humana pendente, e ela NÃO é "wait".
+      return { ...base, action: "submit", terminal: false, indeterminate: false, isError: false };
     case "completed":
       return { ...base, action: "view_result", terminal: true, indeterminate: false, isError: false };
     case "failed":

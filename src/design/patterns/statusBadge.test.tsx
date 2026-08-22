@@ -38,7 +38,10 @@ function renderEm(largura: number, ui: React.ReactElement) {
 }
 
 describe("M11 · cobertura: os DOIS vocabulários, inteiros", () => {
-  it("os 8 estados públicos do contrato têm aparência", () => {
+  it("os 9 estados públicos do contrato têm aparência", () => {
+    // A lista é literal, e não derivada do próprio tipo, de propósito: derivá-la faria o caso
+    // aprovar qualquer estado novo sozinho — e a aparência de um estado é decisão de design,
+    // não consequência de alguém ter acrescentado um membro à união.
     expect([...ESTADOS_PUBLICOS].sort()).toEqual(
       [
         "completed",
@@ -46,6 +49,7 @@ describe("M11 · cobertura: os DOIS vocabulários, inteiros", () => {
         "needs_mapping",
         "preparing",
         "queued",
+        "ready_to_submit",
         "receiving",
         "recovering",
         "running",

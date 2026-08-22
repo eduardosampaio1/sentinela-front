@@ -26,6 +26,14 @@ export type AnalysisStatus =
   // (nada está progredindo, e um indicador em andamento seria a tela travada com cara de
   // trabalho em curso).
   | "needs_mapping"
+  // O dataset canônico existe e falta submeter. Estado de AÇÃO HUMANA, como `needs_mapping`:
+  // não muda sozinho, e um indicador de progresso aqui seria a tela travada com cara de
+  // trabalho em curso.
+  //
+  // Ele nasceu de um defeito medido: `artifact_ready` respondia `preparing` — o mesmo status de
+  // quem não mandou arquivo nenhum — e esta tela, que decide o que mostrar pelo status, exibia
+  // "adicionar dataset" para uma análise pronta. Ela não travava; voltava.
+  | "ready_to_submit"
   | "completed" // resultado disponível
   | "failed"; // falha terminal (ver retry_allowed para recuperabilidade)
 
@@ -36,6 +44,7 @@ export const PUBLIC_STATES: readonly AnalysisStatus[] = [
   "running",
   "recovering",
   "needs_mapping",
+  "ready_to_submit",
   "completed",
   "failed",
 ] as const;

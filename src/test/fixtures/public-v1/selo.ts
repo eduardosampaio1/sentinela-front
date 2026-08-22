@@ -138,8 +138,19 @@
 // presumida: as demais asercoes deste mesmo arquivo rodaram verdes na mesma passagem, e sao
 // elas que comparam fixture contra schema.
 // Selo anterior: e8976632c587b177e0e87ef154bbaecc3e1291c34b6ce3593300d21518ac9d31
+// Reselado ao acrescentar `ready_to_submit` ao vocabulario publico -- o estado que tirou a
+// analise pronta de aparecer pedindo o arquivo que ela ja tinha.
+//
+// ADITIVA no vocabulario: nenhum estado saiu e nenhum mudou de significado para quem ja o
+// recebia. `prepared` continua `preparing`; o que mudou e que `artifact_ready`/`profiled`
+// pararam de se disfarcar dele.
+//
+// A reconferencia que o teste exige nao foi presumida: as demais asercoes deste mesmo
+// arquivo -- as que comparam fixture contra schema -- rodaram verdes na mesma passagem, e o
+// `Record<AnalysisStatus, ...>` de `analyses.ts` cobrou a fixture do estado novo.
+// Selo anterior: 18eeb06740b0d24de9eaba5222517cf1aca9375f4501ffe958765ef138f75458
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "18eeb06740b0d24de9eaba5222517cf1aca9375f4501ffe958765ef138f75458";
+  "f1b35dba5d86761c0eb788c5c6d331acf21cf870b7d551228a4f81a5197bd543";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.
