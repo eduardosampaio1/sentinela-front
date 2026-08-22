@@ -728,7 +728,8 @@
         "model": "Modelo",
         "turns": "Turnos"
       },
-      "loading": "Lendo as colunas do arquivo…"
+      "loading": "Lendo as colunas do arquivo…",
+      "noCandidate": "Não reconhecemos nenhuma coluna para este campo. Escolha você."
     }
   },
   "common": {

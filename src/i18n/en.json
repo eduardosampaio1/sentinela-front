@@ -728,7 +728,8 @@
         "model": "Model",
         "turns": "Turns"
       },
-      "loading": "Reading the file's columns…"
+      "loading": "Reading the file's columns…",
+      "noCandidate": "We did not recognize any column for this field. Pick it yourself."
     }
   },
   "common": {

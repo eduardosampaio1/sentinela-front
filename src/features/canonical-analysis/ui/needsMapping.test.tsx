@@ -145,6 +145,59 @@ describe("a parada de mapping chega na tela", () => {
     unmount();
   });
 
+  it("campo sem candidato NÃO usa a frase do empate", async () => {
+    // ## Medido no arquivo real, em homologação
+    //
+    //   suggestion: channel, intent, session_id, timestamp, user_text
+    //   ambiguous:  {}
+    //   colunas:    assistant_response, ..., event_id, session_id, ...
+    //
+    // Os DOIS campos obrigatórios vieram sem sugestão E sem empate. A tela mostrava dois
+    // seletores vazios e nenhuma frase — a explicação escrita só existia para o empate.
+    //
+    // Vazio sem explicação lê como defeito da tela, que é o oposto do que ela existe para
+    // fazer: dizer o que a máquina soube e o que ela não soube.
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses/an-map`, () =>
+        HttpResponse.json(statusView("needs_mapping", { analysis_id: "an-map" })),
+      ),
+      http.get(`${MSW_BASE}/v1/analyses/an-map/mapping`, () =>
+        HttpResponse.json({
+          requires_decision: true,
+          records_observed: 500,
+          sample_truncated: false,
+          format_id: "csv.v1",
+          columns: [
+            { name: "assistant_response", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 480 },
+            { name: "event_id", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 500 },
+            { name: "user_message", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 470 },
+          ],
+          // A máquina reconheceu o opcional e NENHUM dos obrigatórios.
+          suggestion: { user_text: { source: "user_message" } },
+          ambiguous: {},
+          required_fields: ["conversation_id", "assistant_text"],
+          optional_fields: ["user_text"],
+        }),
+      ),
+    );
+    const { unmount } = renderAt("an-map");
+
+    await waitFor(() =>
+      expect(screen.getByText("Tell us which column is which")).toBeTruthy(),
+    );
+
+    // Uma frase por campo obrigatório vazio — e são dois.
+    const semCandidato = screen.getAllByText(
+      "We did not recognize any column for this field. Pick it yourself.",
+    );
+    expect(semCandidato.length).toBe(2);
+
+    // E NUNCA a frase do empate: dizer "mais de uma coluna serve" quando nenhuma serviu
+    // manda a pessoa procurar um segundo candidato que não existe.
+    expect(screen.queryByText(/More than one column fits/)).toBeNull();
+    unmount();
+  });
+
   it("não acusa antes da tentativa, e acusa depois dela", async () => {
     // ## O defeito que este caso trava
     //

@@ -229,12 +229,27 @@ export function MappingStep({
           ))}
         </select>
 
-        {/* O empate é dito, e não escondido: são os campos onde a máquina chegou até o fim e
-            não conseguiu escolher. Sem a frase, a pessoa não sabe por que ESTE campo veio vazio
-            enquanto os outros vieram preenchidos. */}
-        {empatados.length > 1 && !escolhido ? (
+        {/* Por que ESTE campo veio vazio enquanto os outros vieram preenchidos.
+
+            Três situações, e cada uma pede coisa diferente da pessoa:
+
+              - EMPATE: a máquina achou candidatos e não soube escolher. Ela os nomeia, e a
+                pessoa desempata.
+              - SEM CANDIDATO: a máquina não reconheceu coluna nenhuma para o papel. Não há o
+                que nomear, e a pessoa escolhe do zero. Medido no arquivo real de homologação:
+                os DOIS campos obrigatórios caíram aqui, e a tela ficava muda — dois seletores
+                vazios sem explicação, que lê como defeito da tela.
+              - ESCOLHIDO: a evidência da coluna, que é o material de reconhecimento.
+
+            Colapsar as duas primeiras faria a tela dizer "mais de uma coluna serve" quando
+            nenhuma serviu. */}
+        {!escolhido && empatados.length > 1 ? (
           <p className="text-xs text-muted-foreground">
             {t("canonicalAnalysis.mapping.ambiguous", { columns: empatados.join(", ") })}
+          </p>
+        ) : !escolhido && obrigatorio ? (
+          <p className="text-xs text-muted-foreground">
+            {t("canonicalAnalysis.mapping.noCandidate")}
           </p>
         ) : (
           <Evidencia coluna={porNome.get(escolhido)} />

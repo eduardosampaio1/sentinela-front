@@ -591,11 +591,16 @@ export function makeJourneyHandlers(base: string) {
           { name: "field_007", name_redacted: true, types: ["string"], coverage: 0.4, distinct_values: 88 },
         ],
         suggestion: {
-          conversation_id: { source: "id_conversa" },
           user_text: { source: "pergunta" },
           timestamp: { source: "criado_em" },
         },
         // O empate: duas colunas plausíveis para o mesmo campo. É o foco da tela.
+        // A fixture carrega as DUAS situações de uma vez, e é de propósito.
+        //
+        // `conversation_id` ficou sem sugestão e sem empate; `assistant_text` empatou. É o
+        // estado mais instrutivo para validar a tela à mão — e o primeiro caso veio do arquivo
+        // REAL de homologação, onde os dois campos obrigatórios saíram sem candidato e a tela
+        // ficava muda porque só existia a frase do empate.
         ambiguous: { assistant_text: ["resposta_bot", "texto_agente"] },
         required_fields: ["conversation_id", "assistant_text"],
         optional_fields: ["user_text", "intent", "timestamp", "session_id", "channel", "model", "turns"],
