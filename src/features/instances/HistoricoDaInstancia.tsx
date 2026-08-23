@@ -49,7 +49,7 @@ export function HistoricoDaInstancia({
           cá via a mesma informação em duas formas, e tinha de reaprender onde olhar.
           Nada foi acrescentado: as conversas observadas entram pelo léxico, como lá, porque o
           contrato diz que `null` naquele campo é ausente e nunca zero. */}
-      <ul className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border">
+      <ul className="painel grid grid-cols-1 gap-px overflow-hidden bg-border">
         {itens.map((item) => (
           <LinhaDeColecao
             key={item.analysis_id}

@@ -154,7 +154,9 @@ export function HomePage() {
   return (
     <AppShell topBarTitle={t("shell.nav.home")}>
       <PageFrame maxWidth="lg">
-        <div ref={raiz} className="space-y-6" data-testid="home-page">
+        {/* `v4-superficie` da a esta rota a MOLDURA da V4 — nao um layout dela. Ver a nota
+            do escopo no `globals.css`: o Molde desenhou apenas a analise. */}
+        <div ref={raiz} className="v4-superficie space-y-6" data-testid="home-page">
           <div data-revelar className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <h1 className="text-2xl font-semibold text-foreground">{t("shell.nav.home")}</h1>

@@ -97,7 +97,9 @@ export default function InstancesListPage() {
   return (
     <AppShell topBarTitle={t("shell.nav.instances")}>
       <PageFrame>
-        <div ref={raiz}>
+        {/* `v4-superficie` da a esta rota a MOLDURA da V4 — nao um layout dela. Ver a
+            nota do escopo no `globals.css`: o Molde desenhou apenas a analise. */}
+        <div ref={raiz} className="v4-superficie">
           <CabecalhoDeTrabalho
             titulo={t("instances.listTitle")}
             contexto={t("instances.listSubtitle")}

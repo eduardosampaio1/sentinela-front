@@ -123,7 +123,7 @@ export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] })
     return (
       <section data-revelar aria-labelledby="home-acoes" className="space-y-3">
         <TituloDaRegiao id="home-acoes" texto={t("home.actions.title")} />
-        <p className="rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+        <p className="painel px-4 py-3 text-sm text-muted-foreground">
           {t("home.actions.none")}
         </p>
       </section>
@@ -133,7 +133,7 @@ export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] })
     <section data-revelar aria-labelledby="home-acoes" className="space-y-3">
       <TituloDaRegiao id="home-acoes" texto={t("home.actions.title")} />
       {/* A ÚNICA região com moldura. O peso é a mensagem: é aqui que alguém é esperado. */}
-      <ul className="rounded-lg border border-border bg-card px-4">
+      <ul className="painel px-4">
         {itens.map((item) => (
           <LinhaDeAnalise
             key={item.analysis_id}

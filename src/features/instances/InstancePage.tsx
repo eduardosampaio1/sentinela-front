@@ -151,7 +151,9 @@ export default function InstancePage() {
         {/* O `ref` fica no `PageFrame` e não num `div` novo: envolver a árvore só para pendurar
             movimento acrescentaria um nó sem papel semântico, e esta tela já tem `header`,
             `section` e `nav` fazendo o trabalho de estrutura. */}
-        <div ref={raiz}>
+        {/* `v4-superficie` da a esta rota a MOLDURA da V4 — nao um layout dela. Ver a
+            nota do escopo no `globals.css`: o Molde desenhou apenas a analise. */}
+        <div ref={raiz} className="v4-superficie">
         <header data-revelar className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
           <div className="min-w-0 space-y-1">
           {/* Volta para a lista. Sem ela, quem chega por deep link fica sem saber onde está na

@@ -589,7 +589,15 @@
 
 .v4-painel .conf-g .barra { width:64px; }
 
-/* Só a MOLDURA de `.painel` nomeia os dois escopos.
+/* Só a MOLDURA de `.painel` e compartilhada — e agora por TRES escopos.
+
+   O terceiro (`.v4-superficie`) e das rotas que o Molde nao desenhou. Ele diz isso com todas as
+   letras no proprio codigo: *"O Molde desenhou apenas a analise"*. Home, Instancias, Perfil e
+   Conta nao tem V4 para copiar, e inventar uma seria pior que nao ter — sairia um desenho que
+   ninguem aprovou, com a autoridade de um que foi.
+
+   O que essas rotas ganham e a MOLDURA, que e o que faz o site parecer um so. Nao um layout.
+
 
    A primeira versao compartilhou tambem `.corpo`, `> header` e `.rodape`, e isso foi longe
    demais: elas sao regioes do desenho do PAINEL, e Medidas define `.denom .corpo` com outra
@@ -606,7 +614,7 @@
    Entao o seletor nomeia os dois. E o unico lugar onde eles se cruzam, e o cruzamento e
    explicito. */
 /* ── painel base ─────────────────────────────────────────────────────────────────────── */
-.v4-painel .painel, .v4-medidas .painel { border:1px solid hsl(var(--ds-border-subtle)); border-radius:var(--ds-radius-panel);
+.v4-painel .painel, .v4-medidas .painel, .v4-superficie .painel { border:1px solid hsl(var(--ds-border-subtle)); border-radius:var(--ds-radius-panel);
   background:linear-gradient(180deg, rgba(255,255,255,.026), rgba(255,255,255,.006)),
              hsl(var(--ds-surface-raised));
   box-shadow:0 18px 46px -30px rgba(0,0,0,.9); }
