@@ -185,7 +185,13 @@
       "minimum": "minimum",
       "maximum": "maximum",
       "totalStat": "total",
-      "mean": "mean"
+      "mean": "mean",
+      "projectionDigest": "Projection digest",
+      "retainedCaption": "What the document carried and this screen does not show — four different questions, never added together.",
+      "notPresentedMeaning": "this screen chose not to show them",
+      "notSummarizedMeaning": "the calculation could not summarise them",
+      "notAuthorizedMeaning": "the disclosure policy did not authorise them",
+      "unreadableMeaning": "they did not match the contract and were discarded"
     },
     "argos": {
       "alerts": "Alerts",

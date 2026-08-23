@@ -25,7 +25,7 @@ import { describe, expect, it } from "vitest";
 
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import type { SnapshotAnalitico } from "../../result/analyticsProjection";
-import { PorQueEstaVazio } from "./AnalyticsView";
+import { Cabeca, PorQueEstaVazio, Retido } from "./AnalyticsView";
 
 /** Uma medida publicada, na forma que a tela lê. */
 function medida(troca: Record<string, unknown> = {}) {
@@ -139,6 +139,112 @@ describe("a faixa do vazio segue funcionando", () => {
       </LanguageProvider>,
     );
     expect(screen.getByText("Nothing is broken down by field")).toBeTruthy();
+    unmount();
+  });
+});
+
+// ══ O HERO ═════════════════════════════════════════════════════════════════════════════════
+//
+// Tudo nesta tela é contado sobre `record_count`, e ele estava no rodapé — depois de sete
+// seções que dependem dele. E o `projection_digest`, que é publicado, nunca aparecia.
+
+/** O envelope da projeção, na forma que a tela lê. */
+function envelope(troca: Record<string, unknown> = {}) {
+  return {
+    component_status: "ready",
+    snapshot_contract_version: "analytics-snapshot-v9",
+    projection_digest: "2a4b544c3a3e1aeb2787398d4bb6ff6d64cccfe46058e038112d6da21789bafa",
+    generated_at: "2026-08-23T12:08:18.100734+00:00",
+    ...troca,
+  };
+}
+
+describe("o denominador vem primeiro, e o digest existe", () => {
+  it("mostra os registros lidos e a identidade da projeção", () => {
+    const { unmount } = render(
+      <LanguageProvider>
+        <Cabeca snapshot={snapshot([])} vista={envelope()} />
+      </LanguageProvider>,
+    );
+    expect(screen.getByText("100")).toBeTruthy();
+    expect(screen.getByText(/analytics-snapshot-v9/)).toBeTruthy();
+    unmount();
+  });
+
+  it("publica o digest INTEIRO", () => {
+    // Um digest truncado não serve para conferir nada — e conferir é a única coisa para a qual
+    // ele existe. Se a tela cortar, duas pessoas comparando projeções diferentes podem ver o
+    // mesmo prefixo e concluir que falam do mesmo documento.
+    const dig = "2a4b544c3a3e1aeb2787398d4bb6ff6d64cccfe46058e038112d6da21789bafa";
+    const { unmount } = render(
+      <LanguageProvider>
+        <Cabeca snapshot={snapshot([])} vista={envelope()} />
+      </LanguageProvider>,
+    );
+    expect(screen.getByText(dig)).toBeTruthy();
+    unmount();
+  });
+
+  it("sem digest publicado, o bloco não aparece — e nada é inventado", () => {
+    const { unmount } = render(
+      <LanguageProvider>
+        <Cabeca snapshot={snapshot([])} vista={envelope({ projection_digest: null })} />
+      </LanguageProvider>,
+    );
+    expect(screen.queryByText(/Projection digest/i)).toBeNull();
+    unmount();
+  });
+});
+
+// ══ O RETIDO ═══════════════════════════════════════════════════════════════════════════════
+
+describe("os quatro contadores dizem o que significam", () => {
+  it("mostra os quatro SEMPRE, inclusive em zero", () => {
+    // O caso que carrega o peso. Escondendo o zero, a tela não distinguia "perguntamos e a
+    // resposta foi nenhum" de "ninguém perguntou" — a mesma confusão entre ausência e valor que
+    // este produto vem fechando em todo lugar.
+    const { unmount } = render(
+      <LanguageProvider>
+        <Retido snapshot={snapshot([])} />
+      </LanguageProvider>,
+    );
+    const linhas = screen.getAllByRole("row");
+    expect(linhas.length).toBe(4);
+    unmount();
+  });
+
+  it("cada contador vem com o SIGNIFICADO dele", () => {
+    // Quem lia `2` ao lado de "não apresentados" não tinha como saber o que aquilo era.
+    const { unmount } = render(
+      <LanguageProvider>
+        <Retido snapshot={snapshot([])} />
+      </LanguageProvider>,
+    );
+    expect(screen.getByText(/this screen chose not to show/i)).toBeTruthy();
+    expect(screen.getByText(/could not summarise/i)).toBeTruthy();
+    expect(screen.getByText(/did not authorise/i)).toBeTruthy();
+    expect(screen.getByText(/did not match the contract/i)).toBeTruthy();
+    unmount();
+  });
+
+  it("os quatro NÃO são somados", () => {
+    // São quatro perguntas distintas: o que a tela escolheu não mostrar, o que o cálculo não
+    // soube resumir, o que a política não autorizou, e o que não correspondia ao contrato.
+    // Um total produziria um número que não responde a nenhuma delas — e é o tipo de soma que
+    // esta tela existe para não fazer.
+    const snap = {
+      ...snapshot([]),
+      blocosNaoApresentados: 2,
+      medidasNaoResumidas: 3,
+      medidasNaoAutorizadas: 1,
+      blocosIlegiveis: 1,
+    };
+    const { unmount } = render(
+      <LanguageProvider>
+        <Retido snapshot={snap} />
+      </LanguageProvider>,
+    );
+    expect(screen.queryByText("7")).toBeNull();
     unmount();
   });
 });

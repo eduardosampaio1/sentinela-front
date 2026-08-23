@@ -407,3 +407,36 @@ describe("F4 · a contagem publicada também é dita por comprimento", () => {
     expect(preenchimento(menor)?.style.width).toBe("25.0%");
   });
 });
+
+// ══ MOLDE V4 · a fiação do hero e do retido ════════════════════════════════════════════════
+//
+// Estes casos existem porque duas mutações sobreviveram: remover `<Cabeca>` e remover
+// `<Retido>` do fluxo da página. Os casos que eu tinha montavam os dois componentes DIRETO —
+// eles provavam a peça, não a fiação.
+//
+// É o mesmo defeito que o teste da linha do tempo pública do Orchestrator existe para impedir:
+// pontos de emissão fiados e nunca exercitados pelo caminho de verdade.
+
+describe("Molde V4 · o denominador e o retido chegam à TELA", () => {
+  it("o hero mostra os registros lidos e o digest da projeção", async () => {
+    // O denominador estava no rodapé, depois de sete seções que dependem dele. E o
+    // `projection_digest` é publicado e nunca aparecia em lugar nenhum.
+    renderizar();
+    await screen.findByRole("region", { name: pt.canonicalAnalysis.analyticsView.numeric });
+
+    expect(screen.getByText(pt.canonicalAnalysis.analyticsView.projectionDigest)).toBeTruthy();
+    expect(screen.getByText("pd")).toBeTruthy();
+  });
+
+  it("o retido aparece na procedência, com os quatro contadores", async () => {
+    // Sempre os quatro, inclusive em zero: esconder o zero não distingue "perguntamos e a
+    // resposta foi nenhum" de "ninguém perguntou".
+    renderizar();
+    await screen.findByRole("region", { name: pt.canonicalAnalysis.analyticsView.numeric });
+
+    const legenda = screen.getByText(pt.canonicalAnalysis.analyticsView.retainedCaption);
+    const tabela = legenda.closest("table");
+    expect(tabela, "a tabela do retido não está na tela").toBeTruthy();
+    expect(tabela?.querySelectorAll("tbody tr").length).toBe(4);
+  });
+});

@@ -89,6 +89,132 @@ function Contagens({
 }
 
 /**
+ * O denominador, em primeiro lugar — e o digest que ninguém via.
+ *
+ * ## Por que no topo
+ *
+ * Tudo nesta tela é contado SOBRE `record_count`. Ele estava no rodapé, depois de sete seções
+ * que dependem dele: quem lia "whatsapp 153" na terceira seção não tinha o denominador à vista.
+ *
+ * O Molde V4 abre por aqui, e a razão é de leitura, não de estética.
+ *
+ * ## O digest
+ *
+ * `projection_digest` é publicado e **nunca aparecia**. Ele é o que permite a duas pessoas
+ * conferirem que estão falando da mesma projeção — sem ele, "o relatório mudou" é uma discussão
+ * sem árbitro.
+ *
+ * ## A repetição com a procedência é deliberada
+ *
+ * `Registros` e a versão do snapshot aparecem aqui e na seção de procedência. O hero é para
+ * LER; a procedência é para AUDITAR. O molde faz igual.
+ */
+export function Cabeca({
+  snapshot,
+  vista,
+}: {
+  readonly snapshot: SnapshotAnalitico;
+  readonly vista: {
+    component_status: string;
+    snapshot_contract_version: string | null;
+    projection_digest: string | null;
+    generated_at: string | null;
+  };
+}) {
+  const { t, language } = useLanguage();
+  const quando = vista.generated_at
+    ? new Date(vista.generated_at).toLocaleDateString(language === "pt" ? "pt-BR" : "en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : null;
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-6 rounded-lg border border-border bg-muted/30 p-4">
+      <div>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          {t("canonicalAnalysis.analyticsView.records")}
+        </p>
+        <p className="text-4xl font-semibold tabular-nums">{snapshot.record_count}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          <span className="font-mono">{vista.snapshot_contract_version ?? "—"}</span>
+          {" · "}
+          {vista.component_status}
+          {quando ? ` · ${quando}` : ""}
+        </p>
+      </div>
+      {vista.projection_digest ? (
+        <div className="max-w-full">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            {t("canonicalAnalysis.analyticsView.projectionDigest")}
+          </p>
+          {/* Inteiro, e quebrando: um digest truncado não serve para conferir nada, que é a
+              única coisa para a qual ele existe. */}
+          <p className="break-all font-mono text-[0.7rem] text-muted-foreground">
+            {vista.projection_digest}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * O que o documento trouxe e esta tela não mostra — quatro perguntas diferentes.
+ *
+ * ## O que mudou, e por quê
+ *
+ * Os quatro contadores apareciam como pares soltos, e **só quando maiores que zero**.
+ *
+ * Duas perdas nisso. Quem lia `2` ao lado de "não apresentados" não tinha como saber o que
+ * aquilo significa. E escondendo os zeros, a tela não distinguia *"perguntamos e a resposta foi
+ * nenhum"* de *"ninguém perguntou"* — a mesma confusão entre ausência e valor que este produto
+ * vem fechando em todo lugar.
+ *
+ * **Nunca somados.** São quatro perguntas distintas: o que a tela escolheu não mostrar, o que o
+ * cálculo não soube resumir, o que a política não autorizou, e o que não correspondia ao
+ * contrato. Somá-los produziria um número que não responde a nenhuma delas.
+ */
+export function Retido({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
+  const { t } = useLanguage();
+  const linhas = [
+    {
+      chave: "notPresented",
+      valor: snapshot.blocosNaoApresentados,
+    },
+    { chave: "notSummarized", valor: snapshot.medidasNaoResumidas },
+    { chave: "notAuthorized", valor: snapshot.medidasNaoAutorizadas },
+    { chave: "unreadable", valor: snapshot.blocosIlegiveis },
+  ];
+  return (
+    <table className="mt-3 w-full text-xs">
+      <caption className="mb-2 text-left text-xs text-muted-foreground">
+        {t("canonicalAnalysis.analyticsView.retainedCaption")}
+      </caption>
+      <tbody>
+        {linhas.map((l) => (
+          <tr key={l.chave} className="border-b border-border/40 last:border-b-0">
+            <th scope="row" className="py-1.5 text-left font-normal">
+              {t(`canonicalAnalysis.analyticsView.${l.chave}`)}
+            </th>
+            <td
+              className={`py-1.5 pl-4 text-right tabular-nums ${
+                l.valor > 0 ? "font-semibold" : "text-muted-foreground"
+              }`}
+            >
+              {l.valor}
+            </td>
+            <td className="py-1.5 pl-6 text-muted-foreground">
+              {t(`canonicalAnalysis.analyticsView.${l.chave}Meaning`)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+/**
  * As quatro estatísticas da medida — o número em si.
  *
  * ## O que faltava
@@ -579,6 +705,8 @@ export function AnalyticsView() {
             {/* Vem antes das seções pela mesma razão da parcialidade no Diagnóstico: é ela que
                 explica por que o resto pode estar vazio. Depois das seções, a pessoa já teria
                 rolado seis títulos em branco antes de encontrar a explicação. */}
+            {/* O denominador antes de tudo que é contado sobre ele. */}
+            <Cabeca snapshot={snapshot} vista={vista} />
             <PorQueEstaVazio snapshot={snapshot} />
             <Secao id="anl-numericos" titulo={t("canonicalAnalysis.analyticsView.numeric")}>
               <Numericos snapshot={snapshot} />
@@ -623,41 +751,16 @@ export function AnalyticsView() {
                     <dd>{vista.disclosure_rule_version}</dd>
                   </div>
                 ) : null}
-                {/* Blocos que o contrato traz e esta tela não apresenta — CONTADOS, nunca
-                    nomeados e nunca escondidos. `flag_crosses`/`numeric_crosses` estão entre
-                    eles, por decisão anterior a esta visão. */}
-                {snapshot.blocosNaoApresentados > 0 ? (
-                  <div className="flex gap-1">
-                    <dt>{t("canonicalAnalysis.analyticsView.notPresented")}:</dt>
-                    <dd className="tabular-nums">{snapshot.blocosNaoApresentados}</dd>
-                  </div>
-                ) : null}
-
-                {/* OS TRÊS QUE FALTAVAM, e a razão de eles doerem mais que o de cima.
-                    `blocosNaoApresentados` é decisão NOSSA — esta tela escolheu não mostrar certos
-                    blocos, e dizia isso. Os três abaixo são outra coisa: são medidas e blocos que
-                    o PRODUTOR contou e não entregou, cada um por um motivo diferente.
-                    Silenciá-los fazia a tela afirmar completude que ela não tem — quem lê via
-                    catorze medidas e não sabia que existiam mais três que não puderam vir. */}
-                {snapshot.medidasNaoResumidas > 0 ? (
-                  <div className="flex gap-1">
-                    <dt>{t("canonicalAnalysis.analyticsView.notSummarized")}:</dt>
-                    <dd className="tabular-nums">{snapshot.medidasNaoResumidas}</dd>
-                  </div>
-                ) : null}
-                {snapshot.medidasNaoAutorizadas > 0 ? (
-                  <div className="flex gap-1">
-                    <dt>{t("canonicalAnalysis.analyticsView.notAuthorized")}:</dt>
-                    <dd className="tabular-nums">{snapshot.medidasNaoAutorizadas}</dd>
-                  </div>
-                ) : null}
-                {snapshot.blocosIlegiveis > 0 ? (
-                  <div className="flex gap-1">
-                    <dt>{t("canonicalAnalysis.analyticsView.unreadable")}:</dt>
-                    <dd className="tabular-nums">{snapshot.blocosIlegiveis}</dd>
-                  </div>
-                ) : null}
               </dl>
+              {/* Os quatro contadores do produtor, com o que cada um SIGNIFICA.
+                  Antes eram pares soltos e só apareciam quando maiores que zero. Quem lia `2`
+                  ao lado de "não apresentados" não tinha como saber o que aquilo era — e o zero
+                  escondido não distinguia "perguntamos e a resposta foi nenhum" de "ninguém
+                  perguntou".
+                  `blocosNaoApresentados` é decisão NOSSA; os outros três são medidas que o
+                  PRODUTOR contou e não entregou, cada um por um motivo diferente. Silenciá-los
+                  fazia a tela afirmar completude que ela não tem. */}
+              <Retido snapshot={snapshot} />
             </Secao>
           </>
         )}
