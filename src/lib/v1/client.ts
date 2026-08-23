@@ -224,6 +224,14 @@ export interface V1Client {
     analysisId: string,
     scope: CanonicalScope,
     rules: Record<string, { source: string }>,
+    /**
+     * Por quais campos canônicos agrupar. Só os NOMES — a declaração inteira é constante por
+     * campo e o Gateway a anexa.
+     *
+     * Lista vazia viaja de propósito: ela AFIRMA "ninguém quis agrupar", que é diferente de a
+     * chave não existir. A Ingestão distingue os dois.
+     */
+    groupBy: string[],
     opts?: RequestOptions,
   ): Promise<MappingConfirmedView>;
 
@@ -519,13 +527,16 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         { workspace_id: scope.workspaceId },
         opts,
       ),
-    confirmAnalysisMapping: (analysisId, scope, rules, opts) =>
+    confirmAnalysisMapping: (analysisId, scope, rules, groupBy, opts) =>
       pedir<MappingConfirmedView>(
         "POST",
         `/v1/analyses/${encodeAnalysisId(analysisId)}/mapping`,
         { workspace_id: scope.workspaceId },
         opts,
-        { body: JSON.stringify({ rules }), contentType: "application/json" },
+        {
+          body: JSON.stringify({ rules, group_by: groupBy }),
+          contentType: "application/json",
+        },
       ),
     createInstance: (scope, name, opts) =>
       pedir<InstanceView>(

@@ -733,7 +733,9 @@
         "turns": "Turnos"
       },
       "loading": "Lendo as colunas do arquivo…",
-      "noCandidate": "Não reconhecemos nenhuma coluna para este campo. Escolha você."
+      "noCandidate": "Não reconhecemos nenhuma coluna para este campo. Escolha você.",
+      "groupTitle": "Agrupar os resultados por",
+      "groupExplain": "Escolha os campos pelos quais quer abrir as medidas. Só dá para usar campos que você mapeou."
     }
   },
   "common": {

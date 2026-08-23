@@ -733,7 +733,9 @@
         "turns": "Turns"
       },
       "loading": "Reading the file's columns…",
-      "noCandidate": "We did not recognize any column for this field. Pick it yourself."
+      "noCandidate": "We did not recognize any column for this field. Pick it yourself.",
+      "groupTitle": "Group the results by",
+      "groupExplain": "Pick the fields you want to break the measures down by. Only fields you mapped can be used."
     }
   },
   "common": {

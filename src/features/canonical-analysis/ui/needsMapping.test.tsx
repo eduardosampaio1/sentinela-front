@@ -117,6 +117,7 @@ describe("a parada de mapping chega na tela", () => {
           ambiguous: { assistant_text: ["resposta", "texto"] },
           required_fields: ["conversation_id", "assistant_text"],
           optional_fields: ["user_text"],
+          groupable_fields: ["channel", "timestamp"],
         }),
       ),
     );
@@ -177,6 +178,7 @@ describe("a parada de mapping chega na tela", () => {
           ambiguous: {},
           required_fields: ["conversation_id", "assistant_text"],
           optional_fields: ["user_text"],
+          groupable_fields: ["channel", "timestamp"],
         }),
       ),
     );
@@ -225,6 +227,7 @@ describe("a parada de mapping chega na tela", () => {
           ambiguous: { assistant_text: ["resposta", "texto"] },
           required_fields: ["conversation_id", "assistant_text"],
           optional_fields: [],
+          groupable_fields: ["channel", "timestamp"],
         }),
       ),
     );

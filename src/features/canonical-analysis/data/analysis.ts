@@ -124,13 +124,18 @@ export function useAnalysisMapping(
 export function useConfirmMapping(): UseMutationResult<
   MappingConfirmedView,
   unknown,
-  { analysisId: string; scope: CanonicalScope; rules: Record<string, { source: string }> }
+  {
+    analysisId: string;
+    scope: CanonicalScope;
+    rules: Record<string, { source: string }>;
+    groupBy: string[];
+  }
 > {
   const client = useV1Client();
   return useMutation({
     retry: false,
-    mutationFn: ({ analysisId, scope, rules }) =>
-      client.confirmAnalysisMapping(analysisId, scope, rules),
+    mutationFn: ({ analysisId, scope, rules, groupBy }) =>
+      client.confirmAnalysisMapping(analysisId, scope, rules, groupBy),
   });
 }
 

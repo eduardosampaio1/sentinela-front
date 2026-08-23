@@ -692,6 +692,14 @@ export interface MappingView {
   ambiguous: Record<string, string[]>;
   required_fields: string[];
   optional_fields: string[];
+  /**
+   * Campos canônicos que podem ser declarados como DIMENSÃO — a lista fechada, vinda do
+   * servidor.
+   *
+   * Ela viaja em vez de ficar de cor na tela pela mesma razão que `optional_fields`: a cópia
+   * que a fronteira mantinha da lista da Ingestão divergiu em silêncio, e nada pegou.
+   */
+  groupable_fields: string[];
 }
 
 /** O desfecho da confirmação. `ingestion_state` sai de `needs_mapping` quando ela é aceita. */

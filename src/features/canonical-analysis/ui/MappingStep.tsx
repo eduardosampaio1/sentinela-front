@@ -118,7 +118,10 @@ export function MappingStep({
    * e recebê-los aqui seria pedir o que não se usa. Esta tela decide o QUE confirmar; para onde
    * mandar é assunto de quem a montou.
    */
-  aoConfirmar: (regras: Record<string, { source: string }>) => Promise<void>;
+  aoConfirmar: (
+    regras: Record<string, { source: string }>,
+    agrupamento: string[],
+  ) => Promise<void>;
 }) {
   const { t } = useLanguage();
 
@@ -134,6 +137,10 @@ export function MappingStep({
   }, [mapa.suggestion]);
 
   const [escolhas, setEscolhas] = useState<Record<string, string>>(inicial);
+  // Nada vem marcado. Agrupar é uma decisão, e pré-marcar faria a pessoa publicar uma dimensão
+  // que ela não escolheu — pelo mesmo motivo por que a sugestão de coluna precisa de
+  // confirmação humana antes de virar verdade.
+  const [agrupar, setAgrupar] = useState<string[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   // Marca a TENTATIVA, e não a ausência.
@@ -155,6 +162,12 @@ export function MappingStep({
   const faltando = mapa.required_fields.filter((c) => !escolhas[c]);
   const jaResolvidos = mapa.required_fields.length - faltando.length;
 
+  // Agrupável E mapeado. A interseção muda enquanto a pessoa escolhe colunas, e é por isso que
+  // ela é derivada a cada render em vez de guardada: um campo desmapeado depois de marcado
+  // desapareceria da lista mas continuaria no envio.
+  const podeAgrupar = (mapa.groupable_fields ?? []).filter((c) => Boolean(escolhas[c]));
+  const agrupamentoEfetivo = agrupar.filter((c) => podeAgrupar.includes(c));
+
   async function confirmar() {
     if (enviando) return;
     setTentou(true);
@@ -173,7 +186,7 @@ export function MappingStep({
       for (const [campo, origem] of Object.entries(escolhas)) {
         if (origem) regras[campo] = { source: origem };
       }
-      await aoConfirmar(regras);
+      await aoConfirmar(regras, agrupamentoEfetivo);
     } catch {
       // A mensagem é NOSSA. O corpo do servidor pode carregar detalhe interno, e ecoá-lo faria
       // a tela repetir vocabulário que ninguém escreveu para ser lido.
@@ -285,6 +298,43 @@ export function MappingStep({
               {mapa.optional_fields.map((campo) => linha(campo, false))}
             </div>
           </details>
+        ) : null}
+
+        {podeAgrupar.length ? (
+          // Aparece só quando há por onde agrupar. Uma seção vazia com um texto explicando que
+          // está vazia é a mesma armadilha que a visão Medidas: parece defeito quando está
+          // certa. Aqui o silêncio é honesto — não há decisão a tomar.
+          <fieldset className="rounded-lg border border-border p-3">
+            <legend className="px-1 text-sm font-medium">
+              {t("canonicalAnalysis.mapping.groupTitle")}
+            </legend>
+            <Text as="p" papel="micro">
+              {t("canonicalAnalysis.mapping.groupExplain")}
+            </Text>
+            <div className="mt-3 flex flex-col gap-2">
+              {podeAgrupar.map((campo) => {
+                const id = `group-${campo}`;
+                return (
+                  <label key={campo} htmlFor={id} className="flex items-center gap-2 text-sm">
+                    <input
+                      id={id}
+                      type="checkbox"
+                      className="h-4 w-4 accent-primary"
+                      checked={agrupar.includes(campo)}
+                      onChange={(e) =>
+                        setAgrupar((atual) =>
+                          e.target.checked
+                            ? [...atual, campo]
+                            : atual.filter((c) => c !== campo),
+                        )
+                      }
+                    />
+                    {rotuloDoCampo(campo, t)}
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
         ) : null}
 
         {erro ? (

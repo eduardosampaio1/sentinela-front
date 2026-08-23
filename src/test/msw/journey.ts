@@ -603,7 +603,8 @@ export function makeJourneyHandlers(base: string) {
         // ficava muda porque só existia a frase do empate.
         ambiguous: { assistant_text: ["resposta_bot", "texto_agente"] },
         required_fields: ["conversation_id", "assistant_text"],
-        optional_fields: ["user_text", "intent", "timestamp", "session_id", "channel", "model", "turns"],
+        optional_fields: ["user_text", "intent", "timestamp", "session_id", "channel", "model", "turns", "source_type", "policy"],
+        groupable_fields: ["channel", "model", "policy", "source_type", "timestamp"],
       });
     }),
     http.post(`${b}/v1/analyses/:id/mapping`, ({ params }) =>

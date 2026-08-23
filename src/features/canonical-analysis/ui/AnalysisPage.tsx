@@ -215,8 +215,13 @@ export function AnalysisPage() {
             <StateBanner view={view} />
             <MappingStep
               mapa={mapeamento.data}
-              aoConfirmar={async (regras) => {
-                await confirmar.mutateAsync({ analysisId, scope, rules: regras });
+              aoConfirmar={async (regras, agrupamento) => {
+                await confirmar.mutateAsync({
+                  analysisId,
+                  scope,
+                  rules: regras,
+                  groupBy: agrupamento,
+                });
                 // Revalida o ESTADO, não o mapeamento: a partir daqui a ingestão anda sozinha,
                 // e o que a tela precisa saber é para onde a análise foi.
                 await status.refetch();
