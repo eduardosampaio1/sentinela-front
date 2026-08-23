@@ -215,7 +215,7 @@ describe("cópia local de public-v1 × origem", () => {
         "PublicMeasurement", "PublicIndicatorV3", "PublicScore", "PublicRisk",
         "Scale", "PublicProjection", "PublicIntent", "PublicSummary", "MethodMetadata",
         "Partiality", "PublicAlert", "PublicIssue", "PublicRecommendation",
-        "PublicEvidenceSummary", "PublicExecutiveSummary", "PublicDenominator",
+        "PublicEvidenceSummaryV3", "PublicExecutiveSummary", "PublicDenominator",
       ]) {
       expect(camposDaInterface(copia, tipo), `${tipo} divergiu da origem`).toEqual(
         camposDaInterface(origem, tipo),

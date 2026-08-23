@@ -23,7 +23,7 @@ import { Info } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type {
   PublicAlert,
-  PublicEvidenceSummary,
+  PublicEvidenceSummaryV3,
   PublicIndicatorV3,
   PublicIntent,
 } from "@/lib/v1/contract/public-v3.types";
@@ -33,7 +33,7 @@ import { formatarNumero } from "../../result/formatacao";
 
 export interface TrioDoPainelProps {
   readonly intents: readonly PublicIntent[] | null;
-  readonly evidence: readonly PublicEvidenceSummary[] | null;
+  readonly evidence: readonly PublicEvidenceSummaryV3[] | null;
   readonly alerts: readonly PublicAlert[] | null;
   /** `method.min_samples_per_intent` — o piso que separa «exige ação» de «sem base». */
   readonly pisoDeAmostra: number | null;
@@ -294,7 +294,7 @@ function Evidencias({
   evidence,
   locale,
 }: {
-  readonly evidence: readonly PublicEvidenceSummary[] | null;
+  readonly evidence: readonly PublicEvidenceSummaryV3[] | null;
   readonly locale: string;
 }) {
   const { t } = useLanguage();

@@ -23,7 +23,7 @@
 import type {
   AnalysisResultV3Document,
   PublicAlert,
-  PublicEvidenceSummary,
+  PublicEvidenceSummaryV3,
   PublicExecutiveSummary,
   PublicIndicatorV3,
   PublicIntent,
@@ -38,7 +38,7 @@ import type {
 export type {
   AnalysisResultV3Document,
   PublicAlert,
-  PublicEvidenceSummary,
+  PublicEvidenceSummaryV3,
   PublicExecutiveSummary,
   PublicIndicatorV3,
   PublicIntent,

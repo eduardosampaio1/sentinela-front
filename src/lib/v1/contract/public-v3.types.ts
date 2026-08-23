@@ -77,7 +77,7 @@ export interface PublicDenominator {
 }
 
 /** Resumo de evidência — allowlist, e com o TRECHO observado. */
-export interface PublicEvidenceSummary {
+export interface PublicEvidenceSummaryV3 {
   id: string;
   kind: string;
   label: string | null;
@@ -214,7 +214,7 @@ export interface AnalysisResultV3Document {
   analysis_id: string;
   argos_catalog_version: string;
   dimensions?: PublicMeasurement[] | null;
-  evidence?: PublicEvidenceSummary[] | null;
+  evidence?: PublicEvidenceSummaryV3[] | null;
   executive_summary?: PublicExecutiveSummary | null;
   indicator_registry_version: string;
   indicators?: PublicIndicatorV3[] | null;
