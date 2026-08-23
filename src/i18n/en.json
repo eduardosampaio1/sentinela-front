@@ -194,6 +194,12 @@
       "unreadableMeaning": "they did not match the contract and were discarded"
     },
     "argos": {
+      "criticalAlertsTitle": "Critical alerts",
+      "criticalAlertsOpen": "open",
+      "whereToActTitle": "Where to act",
+      "whereToActAbsent": "No recommendation was published for this analysis.",
+      "headerAnalyzedAt": "analysed on {{date}}",
+      "headerConversations": "{{count}} conversations",
       "alerts": "Alerts",
       "availability": {
         "available": "Available",
@@ -328,6 +334,7 @@
       "costCompositionDescription": "Composition of the total cost of {{total}}.",
       "domainLabel": "Domain",
       "thresholdsLabel": "Thresholds",
+      "zoneOk": "expected",
       "thresholdWarn": "warning",
       "thresholdCritical": "critical",
       "verdictOk": "Within the expected range",
@@ -745,7 +752,9 @@
         "sessionId": "Session ID",
         "channel": "Channel",
         "model": "Model",
-        "turns": "Turns"
+        "turns": "Turns",
+        "sourceType": "Source type",
+        "policy": "Policy"
       },
       "loading": "Reading the file's columns…",
       "noCandidate": "We did not recognize any column for this field. Pick it yourself.",

@@ -49,14 +49,16 @@ import {
 } from "../../result/portasDoArgos";
 import { valorEscrito } from "../../result/medicaoV3";
 import { descriptorDe } from "../../result/descriptors";
-import { formatarNumero } from "../../result/formatacao";
+import { formatarInstante, formatarNumero } from "../../result/formatacao";
 import { AbasDePorta } from "./AbasDePorta";
-import { BarraDeComposicao, Disclosure } from "@/design/primitives";
+import { BarraDeComposicao } from "@/design/primitives";
 import { Heroi } from "./Heroi";
 import { Intencoes } from "./Intencoes";
 import { Portas } from "./Portas";
 import { Satelites } from "./Satelites";
+import { CartaoDeAlertas } from "./CartaoDeAlertas";
 import { BarraDeReferencia } from "./BarraDeReferencia";
+import { FaixaDeParcialidade } from "./FaixaDeParcialidade";
 import { AnalysisShell } from "../AnalysisShell";
 import { PaletaDeComandos } from "../PaletaDeComandos";
 import { ProblemFeedback, problemCodeOf } from "../notices";
@@ -255,6 +257,44 @@ export function ArgosView() {
   const titulo = t("canonicalAnalysis.argos.title");
 
   /**
+   * Os fatos de contexto do cabeçalho — e SÓ o que o documento publica.
+   *
+   * A V4 do molde põe `24 fev – 2 mar` aqui. O registro de discovery classifica esse período
+   * como **mock**: `summary` publica `analyzed_at` (um INSTANTE) e `record_count`, não a
+   * janela dos dados. Uma faixa de datas desenhada a partir de um instante seria a tela
+   * afirmando um recorte que ninguém mediu.
+   *
+   * Então entra o que existe: QUANDO a análise foi feita, e SOBRE QUANTO. O período volta no
+   * dia em que o produtor publicar `window_start`/`window_end`.
+   *
+   * Fora de `corpo()` porque o cabeçalho é irmão do corpo, não filho: ele desenha mesmo quando
+   * o corpo cai no ramo de recusa.
+   */
+  const contextoDoCabecalho = ((): readonly string[] => {
+    if (!argos.data) return [];
+    const leitura = resolverLeituraArgos(argos.data);
+    if (leitura.estado !== "ok") return [];
+    const resumo = leitura.documento.summary;
+    const fatos: string[] = [];
+    if (resumo.analyzed_at) {
+      fatos.push(
+        t("canonicalAnalysis.argos.headerAnalyzedAt", {
+          date: formatarInstante(resumo.analyzed_at, locale),
+        }),
+      );
+    }
+    // `record_count` é número, e `0` é uma contagem legítima — `typeof` e não truthiness.
+    if (typeof resumo.record_count === "number") {
+      fatos.push(
+        t("canonicalAnalysis.argos.headerConversations", {
+          count: formatarNumero(resumo.record_count, locale, 0),
+        }),
+      );
+    }
+    return fatos;
+  })();
+
+  /**
    * O rótulo de uma medida, por DUAS fontes e nesta ordem.
    *
    * O contrato não publica rótulo humano no payload, e inventar tradução seria adivinhar. Mas
@@ -394,38 +434,19 @@ export function ArgosView() {
     return (
       <div className="space-y-8">
         {/* Parcialidade é declaração do produtor sobre o documento inteiro. Vem primeiro porque
-            é ela que explica por que o resto pode estar incompleto. */}
-        {d.partiality && !d.partiality.complete ? (
-          <div
-            role="status"
-            className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm"
-          >
-            <p className="font-medium">{t("canonicalAnalysis.argos.partialTitle")}</p>
-            {/* A FRASE, e o código atrás de um gatilho.
+            é ela que explica por que o resto pode estar incompleto.
 
-                A tela mostrava `indicator_not_measured` cru, logo abaixo do título. É nome de
-                campo do contrato: quem lê não tem como saber se é erro, aviso ou detalhe
-                técnico — e o aviso ficava sendo a única coisa da tela escrita em linguagem de
-                máquina.
-
-                O código NÃO some: ele é o que serve para abrir um chamado, e some seria pior.
-                Ele vai para onde detalhe técnico pertence — atrás de um gatilho, para quem
-                estiver investigando. */}
-            <p className="mt-1 text-xs text-muted-foreground">
-              {t("canonicalAnalysis.argos.partialBody")}
-            </p>
-            {d.partiality.reasons.length > 0 ? (
-              <div className="mt-2">
-                <Disclosure gatilho={t("canonicalAnalysis.argos.partialCodes")}>
-                  <ul className="list-inside list-disc font-mono text-xs text-muted-foreground">
-                    {d.partiality.reasons.map((r) => (
-                      <li key={r}>{r}</li>
-                    ))}
-                  </ul>
-                </Disclosure>
-              </div>
-            ) : null}
-          </div>
+            A `global_confidence` viaja junto: ela responde a pergunta que a faixa levanta.
+            Ver o cabeçalho de `FaixaDeParcialidade`. */}
+        {d.partiality ? (
+          <FaixaDeParcialidade
+            partiality={d.partiality}
+            confianca={
+              (completo.scores ?? []).find((s) => s.measurement.id === "global_confidence") ?? null
+            }
+            rotuloDaConfianca={rotuloDe("global_confidence")}
+            locale={locale}
+          />
         ) : null}
 
         {/* A REFERENCIA vem antes das abas: ela e contexto da analise inteira, nao de um corte por
@@ -481,8 +502,28 @@ export function ArgosView() {
             O herói segue o maior elemento da dobra por TAMANHO DE TIPO, que é onde ele deve
             vencer — não por metros de vão. */}
         {heroi ? (
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)]">
-            <Heroi escore={heroi} rotulo={rotuloDe(ID_DO_HEROI)} />
+          /* A DOBRA em duas linhas, e a razao de cada uma.
+
+             Linha 1 — `[o que fazer] [quanto, e isso e bom?]`. As duas perguntas que se responde
+             antes de olhar metrica nenhuma. O escore fica na coluna LARGA porque a regua dos
+             cortes mora nele: na coluna estreita as tres zonas espremem e os dois rotulos de
+             corte (`critico 60`, `atencao 75`) se sobrepoem — medido antes de mudar.
+
+             Linha 2 — os demais escores em FAIXA de largura inteira. Eles eram uma coluna 2x2 ao
+             lado do heroi porque a pagina tinha 1024px; com a largura inteira essa coluna
+             empurrava a regua para 360px para caber. A faixa devolve o espaco a quem precisa
+             dele e ainda poe os seis lado a lado, que e como se comparam. */
+          <div className="space-y-4">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)]">
+              <CartaoDeAlertas
+                contagem={
+                  (completo.indicators ?? []).find((i) => i.id === "critical_alert_count") ?? null
+                }
+                recomendacoes={completo.recommendations ?? null}
+                locale={locale}
+              />
+              <Heroi escore={heroi} rotulo={rotuloDe(ID_DO_HEROI)} />
+            </div>
             <Satelites
               escores={completo.scores ?? []}
               idDoHeroi={ID_DO_HEROI}
@@ -830,12 +871,22 @@ export function ArgosView() {
 
   return (
     <AppShell topBarTitle={titulo}>
-      <PageFrame maxWidth="lg">
+      {/* LARGURA INTEIRA, e a razao e o conteudo — nao gosto.
+
+          O Diagnostico e um PAINEL: alertas, escore com regua, seis medidas e tres colunas de
+          apoio. Em `lg` (1024px) as tres colunas viram tres blocos empilhados a um terco da
+          largura da janela, e a pessoa rola por uma coluna estreita para comparar coisas que o
+          desenho pos lado a lado justamente para serem comparadas.
+
+          As visoes de LEITURA LONGA continuam estreitas — medida de linha importa onde se le
+          prosa. Aqui nao se le prosa; varre-se uma grade. */}
+      <PageFrame maxWidth="full">
         <div ref={raiz} className="space-y-6" data-testid="argos-view">
           <AnalysisShell
             analysisId={analysisId ?? ""}
             estado={status.data?.status as EstadoPublico | undefined}
             titulo={titulo}
+            contexto={contextoDoCabecalho}
           />
           {/* NAV-01 — acelerador, nunca o único caminho. Ela indexa as regiões que ESTIVEREM
               dentro de `raiz`, então vem depois do shell e antes do corpo: assim o gatilho fica

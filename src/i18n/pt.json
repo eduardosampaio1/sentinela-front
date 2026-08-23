@@ -194,6 +194,12 @@
       "unreadableMeaning": "não correspondiam ao contrato e foram descartados"
     },
     "argos": {
+      "criticalAlertsTitle": "Alertas críticos",
+      "criticalAlertsOpen": "abertos",
+      "whereToActTitle": "Onde agir",
+      "whereToActAbsent": "Nenhuma recomendação foi publicada para esta análise.",
+      "headerAnalyzedAt": "analisada em {{date}}",
+      "headerConversations": "{{count}} conversas",
       "alerts": "Alertas",
       "availability": {
         "available": "Disponível",
@@ -328,6 +334,7 @@
       "costCompositionDescription": "Composição do custo total de {{total}}.",
       "domainLabel": "Domínio",
       "thresholdsLabel": "Limiares",
+      "zoneOk": "conforme",
       "thresholdWarn": "atenção",
       "thresholdCritical": "crítico",
       "verdictOk": "Dentro do esperado",
@@ -745,7 +752,9 @@
         "sessionId": "ID da sessão",
         "channel": "Canal",
         "model": "Modelo",
-        "turns": "Turnos"
+        "turns": "Turnos",
+        "sourceType": "Tipo de origem",
+        "policy": "Política"
       },
       "loading": "Lendo as colunas do arquivo…",
       "noCandidate": "Não reconhecemos nenhuma coluna para este campo. Escolha você.",

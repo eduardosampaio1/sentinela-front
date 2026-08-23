@@ -32,7 +32,7 @@
 // que a manchete mudou de assunto.
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Bullet, Explicacao, Text, zonaDoValor } from "@/design/primitives";
+import { Explicacao, ReguaDeFaixas, Text, zonaDoValor } from "@/design/primitives";
 import { explicacaoDe } from "../../result/catalogoArgos";
 import type { PublicScore } from "@/lib/v1/contract/public-v3.types";
 import {
@@ -204,11 +204,16 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
         </p>
       ) : null}
 
-      {/* O BULLET, e só quando o produtor declarou os cortes. `thresholds` ausente devolve
-          `null` aqui mesmo — a tela não desenha régua sem zona, e o número segue sendo o fato. */}
+      {/* A RÉGUA, e só quando o produtor declarou os cortes. `thresholds` ausente devolve
+          `null` aqui mesmo — a tela não desenha régua sem zona, e o número segue sendo o fato.
+
+          Ela substituiu o `Bullet` de 8px NESTE lugar, e só aqui: no herói a régua é o segundo
+          elemento da dobra, e três cores anônimas obrigavam a decodificar cor para saber o que
+          cada trecho significa. O `Bullet` continua sendo o certo onde a régua é adorno de uma
+          linha de lista — ali nomear as faixas em cada linha seria repetir a legenda N vezes. */}
       {m.thresholds ? (
         <div className="mt-4">
-          <Bullet
+          <ReguaDeFaixas
             valor={m.value ?? null}
             warn={m.thresholds.warn}
             critical={m.thresholds.critical}
@@ -217,15 +222,21 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
             // marcador passaria a exagerar toda variação.
             piso={0}
             teto={m.scale.kind === "ratio_unit" ? 1 : 100}
-            // `null`: o valor já está acima, em 104px. Repeti-lo em 11px sob a barra faz o
-            // olho conferir duas vezes o mesmo número.
-            rotuloDoValor={null}
             descricao={t("canonicalAnalysis.argos.bulletDescription", {
               rotulo,
               valor: valor ?? "—",
               warn: String(m.thresholds.warn),
               critical: String(m.thresholds.critical),
             })}
+            /* As palavras das faixas são de PRODUTO, e por isso viajam daqui. Duas delas são as
+               MESMAS dos cortes (`thresholdCritical`, `thresholdWarn`): a faixa abaixo do corte
+               crítico é a faixa crítica, e dar-lhe um segundo nome criaria duas palavras para o
+               mesmo conceito — que é o defeito que a M11 existe para impedir. */
+            nomes={{
+              critico: t("canonicalAnalysis.argos.thresholdCritical"),
+              atencao: t("canonicalAnalysis.argos.thresholdWarn"),
+              ok: t("canonicalAnalysis.argos.zoneOk"),
+            }}
           />
         </div>
       ) : null}

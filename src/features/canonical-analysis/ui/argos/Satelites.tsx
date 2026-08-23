@@ -140,15 +140,19 @@ export function Satelites({
       <h3 id="argos-satelites" className="sr-only">
         {t("canonicalAnalysis.argos.otherScores")}
       </h3>
-      {/* DUAS colunas a partir de `sm`, e não quatro empilhados.
-          Quatro cartões numa pilha faziam uma coluna de ~500px ao lado de um herói de 216px de
-          conteúdo. Em 2×2 a coluna cai pela metade e a dobra inteira encolhe junto.
+      {/* FAIXA, e não mais coluna. O 2×2 resolvia um problema que deixou de existir: enquanto
+          esta lista morava ao LADO do herói numa página de 1024px, empilhar quatro cartões fazia
+          uma coluna de ~500px. Ela agora ocupa a linha inteira abaixo da dobra, e ali a mesma
+          restrição de duas colunas deixaria metade da largura vazia.
+
+          Até três em `lg`, até seis em `xl`: o documento publica sete escores e um deles é o
+          herói, então seis é o conjunto REAL — não um teto escolhido a esmo.
 
           NENHUMA hierarquia entre eles, e isso é decisão: o produtor não publica ranking de
           importância, e dar tamanhos diferentes afirmaria uma que ninguém declarou. A crítica
           que eu mesmo escrevi ("quatro cartões iguais, sem ordem de leitura") estava errada
           neste ponto — tratamento idêntico é o que o dado sustenta. */}
-      <ul className="grid gap-4 sm:grid-cols-2">
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {restantes.map((s) => (
           <Satelite
             key={s.measurement.id}

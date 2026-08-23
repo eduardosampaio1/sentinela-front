@@ -246,11 +246,36 @@ describe("M31 · 5. a ordem e as casas das regiões", () => {
   });
 
   it("o rótulo do item ativo da barra lateral não é mais `text-primary`", () => {
-    // axe-core mediu 3,44:1 contra os 4,5:1 da AA. Quatro canais continuam marcando "ativo":
-    // fundo, anel, ícone e ponto — nenhum deles é a cor do texto.
+    // axe-core mediu 3,44:1 contra os 4,5:1 da AA. O item ativo se marca por fundo, borda,
+    // ícone e ponto — quatro canais, e nenhum deles é a cor do texto.
+    //
+    // ## Por que este caso deixou de citar a lista de classes
+    //
+    // Ele exigia a string `"bg-primary/10 text-foreground ring-1"` inteira. Isso amarrava um
+    // requisito de CONTRASTE ao desenho exato de um dia: quando o item ativo trocou o tint
+    // chapado pelo gradiente e o halo da V4, o caso reprovou uma tela que continua cumprindo
+    // o que ele existe para garantir — e nao teria reprovado se alguém trocasse só o `10` por
+    // `20`, que muda o contraste de verdade.
+    //
+    // O invariante é: o rótulo do ativo NAO usa a cor de ação, e USA a tinta primária. As duas
+    // afirmações sobrevivem a qualquer redesenho que respeite a AA.
     const f = semComentarios(ler("src/shell/Sidebar.tsx"));
-    expect(f).not.toContain("bg-primary/10 text-primary ring-1");
-    expect(f).toContain("bg-primary/10 text-foreground ring-1");
+    // O ramo ATIVO, isolado pela EXPRESSÃO e não por texto solto. Duas razões:
+    //
+    //   1. o ramo INATIVO mora no mesmo arquivo, e varrer o arquivo todo confundiria os dois;
+    //   2. o `text-primary` da MARCA (o logotipo, no topo da barra) também mora aqui, e ele
+    //      não é rótulo de navegação — uma varredura ampla reprovaria por ele.
+    const ramo = /isActive\s*\?\s*\[([\s\S]*?)\]\.join/.exec(f);
+    // A guarda que impede o caso de passar sobre NADA: se a forma do componente mudar de
+    // ternario-com-lista para outra coisa, o recorte volta vazio e um `not.toMatch` sobre
+    // string vazia passa sempre. Esta linha é o que transforma isso em reprovação.
+    expect(ramo?.[1], "o ramo do item ativo não foi encontrado — o caso ficaria vazio")
+      .toBeTruthy();
+    const ativo = ramo?.[1] ?? "";
+    expect(ativo.length).toBeGreaterThan(40);
+    expect(ativo, "o rótulo do ativo voltou à cor de ação — 3,44:1, reprova AA")
+      .not.toMatch(/\btext-primary\b/);
+    expect(ativo, "o rótulo do ativo precisa da tinta primária").toContain("text-foreground");
   });
 
   it("o TopBar não oferece um SEGUNDO menu de usuário", () => {

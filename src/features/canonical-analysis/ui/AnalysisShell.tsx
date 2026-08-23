@@ -47,9 +47,20 @@ export interface AnalysisShellProps {
   readonly estado?: EstadoPublico;
   /** Título da superfície atual — o `<h1>` da visão. */
   readonly titulo: string;
+  /**
+   * Fatos de contexto da análise, JÁ FORMATADOS pela visão que os leu.
+   *
+   * Strings prontas, e não o documento: o shell não pode ganhar dependência do envelope do
+   * resultado. Ele é comum a duas visões que leem documentos DIFERENTES (ARGOS e Analytics), e
+   * ensiná-lo a extrair campo de um deles o tornaria terceira página de dados — exatamente o
+   * que o comentário do topo deste arquivo diz que ele não é.
+   *
+   * Quem sabe o que é `analyzed_at` é quem leu o documento. Aqui só se sabe desenhar.
+   */
+  readonly contexto?: readonly string[];
 }
 
-export function AnalysisShell({ analysisId, estado, titulo }: AnalysisShellProps) {
+export function AnalysisShell({ analysisId, estado, titulo, contexto = [] }: AnalysisShellProps) {
   const { t } = useLanguage();
   const { pathname } = useLocation();
 
@@ -72,15 +83,37 @@ export function AnalysisShell({ analysisId, estado, titulo }: AnalysisShellProps
       </div>
 
       {/* A identidade é o que torna a Analysis retomável por deep link — e é ela que a pessoa
-          cola num chamado. Fica legível, não escondida num atributo. */}
-      <p className="text-sm text-muted-foreground">
+          cola num chamado. Fica legível, não escondida num atributo.
+
+          Ela e os fatos de contexto moram na MESMA linha, separados por `·`: são todos
+          identificação — de qual análise, de quando, sobre quanto. Empilhados em parágrafos
+          consecutivos, ocupavam três alturas de linha para dizer uma coisa só, e empurravam o
+          conteúdo para baixo da dobra numa tela que existe para ser varrida. */}
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
         <span className="sr-only">{t("canonicalAnalysis.shell.identity")}</span>{" "}
         <code className="font-mono text-xs">{analysisId}</code>
+        {contexto.map((fato) => (
+          /* `key` pelo próprio texto: são fatos distintos por construção (data, contagem), e
+             índice como chave reordenaria o DOM se a visão publicar um fato a mais no meio. */
+          <span key={fato} className="flex items-center gap-2">
+            <span aria-hidden className="text-border">·</span>
+            {fato}
+          </span>
+        ))}
       </p>
 
+      {/* SEGMENTO, e nao dois botoes soltos.
+
+          A V4 desenha as duas visoes como um grupo unico: uma trilha com borda, e o item atual
+          preenchido dentro dela. A diferenca nao e cosmetica — dois botoes com borda propria se
+          leem como duas acoes independentes, e um segmento se le como UM controle com dois
+          estados. E o que as visoes sao: dois recortes da MESMA analise.
+
+          A trilha usa `inline-flex` para ter a largura do conteudo: esticada, viraria uma barra
+          de navegacao de pagina inteira, que e outra coisa. */}
       {VISOES_DA_ANALISE.length > 0 ? (
         <nav aria-label={t("canonicalAnalysis.shell.viewsNavLabel")}>
-          <ul className="flex flex-wrap gap-2">
+          <ul className="inline-flex flex-wrap gap-[3px] rounded-xl border border-border bg-foreground/[0.025] p-[3px]">
             {VISOES_DA_ANALISE.map((visao) => {
               const destino = `/analyses/${encodeURIComponent(analysisId)}/${visao.caminho}`;
               const atual = pathname === destino;
@@ -92,11 +125,18 @@ export function AnalysisShell({ analysisId, estado, titulo }: AnalysisShellProps
                     // por leitor de tela e por quem não distingue as duas cores.
                     aria-current={atual ? "page" : undefined}
                     className={[
-                      "inline-flex min-h-11 items-center rounded-md border px-3 text-sm",
+                      // `min-h-11` (44px) continua: e a regua de alvo de toque desta casa, e
+                      // o segmento da V4 tem 32px. A regua ganha — alvo pequeno demais e
+                      // defeito de uso, e o desenho cabe nos 44 sem perder a forma.
+                      "inline-flex min-h-11 items-center rounded-[9px] px-4 text-sm",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       atual
-                        ? "border-primary bg-primary/10 font-medium text-foreground"
-                        : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+                        ? [
+                            "font-medium text-foreground",
+                            "bg-[linear-gradient(97deg,hsl(var(--ds-accent)/0.30),hsl(var(--ds-accent)/0.10))]",
+                            "shadow-[inset_0_0_0_1px_hsl(var(--ds-accent)/0.32)]",
+                          ].join(" ")
+                        : "text-muted-foreground hover:text-foreground",
                     ].join(" ")}
                   >
                     {/* Template com PREFIXO ESTATICO. A primeira versao passava `rotuloKey` e

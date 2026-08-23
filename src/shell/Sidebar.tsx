@@ -68,14 +68,33 @@ function SidebarNavItem({
         // que marca "você está aqui" era o menos legível da barra. O identificador de ativo não
         // dependia da cor do texto — continua no fundo, no anel, no ícone e no ponto à direita,
         // que são quatro canais, nenhum deles texto. Nada do tema foi reaberto (D23).
+        // A FORMA DA V4 para o item ativo: gradiente diagonal, borda de acento e um halo
+        // ABAIXO do item. Antes era um tint chapado com anel interno — a mesma informacao,
+        // sem o relevo que faz o item parecer levantado da barra.
+        //
+        // O halo (`0 8px 24px -12px`) e o que mais muda a leitura: ele projeta para BAIXO, e
+        // e por isso que o item ativo se descola em vez de so mudar de cor.
+        //
+        // Tudo em `hsl(var(--ds-accent))` com alfa. Nenhum `#hex` entra em componente — o
+        // gate `design-tokens-unico` reprova, e a V4 escreve estes mesmos tons como rgba do
+        // proprio roxo dela, que e o valor que ja mora no token.
         isActive
-          ? "bg-primary/10 text-foreground ring-1 ring-inset ring-primary/[0.12]"
-          : "text-muted-foreground hover:text-muted-foreground hover:bg-muted/60"
+          ? [
+              "text-foreground",
+              "border border-[hsl(var(--ds-accent)/0.34)]",
+              "bg-[linear-gradient(97deg,hsl(var(--ds-accent)/0.22),hsl(var(--ds-accent)/0.05))]",
+              "shadow-[0_0_0_1px_hsl(var(--ds-accent)/0.10),0_8px_24px_-12px_hsl(var(--ds-accent)/0.85)]",
+            ].join(" ")
+          : "border border-transparent text-muted-foreground hover:text-foreground hover:bg-foreground/[0.035]"
       )}
     >
+      {/* O icone ativo usa o acento como TINTA, e nao como superficie. Sao valores
+          diferentes de proposito: `--ds-accent` (#8B5CF6) mede 4,72 como tinta e
+          `--ds-accent-ink` (#C084FC) mede 7,56 — e a V4 usa exatamente esse segundo tom no
+          icone ativo. O `text-primary` apontava para o primeiro. */}
       <Icon
         path={item.icon}
-        className={isActive ? "text-primary" : "text-current"}
+        className={isActive ? "text-[hsl(var(--ds-accent-ink))]" : "text-current opacity-85"}
       />
       {/* Recolhido, o rótulo sai da TELA e não da ÁRVORE: `sr-only` mantém o nome para leitor
           de tela, e o link continua tendo nome acessível. Removê-lo deixaria um link só com

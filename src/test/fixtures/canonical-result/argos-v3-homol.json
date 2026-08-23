@@ -1,0 +1,1066 @@
+{
+  "risks": [
+    {
+      "id": "containment_risk",
+      "band": null,
+      "measurement": {
+        "id": "containment_risk",
+        "unit": null,
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.1972,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "v1"
+      }
+    },
+    {
+      "id": "conversion_risk",
+      "band": null,
+      "measurement": {
+        "id": "conversion_risk",
+        "unit": null,
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.1134,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "v1"
+      }
+    }
+  ],
+  "alerts": [
+    {
+      "id": "cross_intent_reuse-agendamento-cancelamento-duvida_fatura-segunda_via",
+      "code": "CROSS_INTENT_REUSE",
+      "title": "Cross-intent reuse detected",
+      "detail": "Very similar answers across intents (agendamento,cancelamento,duvida_fatura,segunda_via). Consider templates per intent.",
+      "severity": "high",
+      "evidence_refs": [],
+      "affected_intents": [
+        "agendamento",
+        "cancelamento",
+        "duvida_fatura",
+        "segunda_via"
+      ]
+    }
+  ],
+  "issues": null,
+  "method": {
+    "currency": null,
+    "currency_source": null,
+    "min_samples_per_intent": 5
+  },
+  "scores": [
+    {
+      "measurement": {
+        "id": "behavior_score",
+        "unit": null,
+        "scale": {
+          "kind": "score_100",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 89.23,
+        "domain": null,
+        "reason": "ok",
+        "confidence": 1.0,
+        "thresholds": {
+          "warn": 75.0,
+          "critical": 60.0
+        },
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "behavior_score@measurement_contract_v1"
+      },
+      "window_kind": null,
+      "window_size": null,
+      "composite_of": []
+    },
+    {
+      "measurement": {
+        "id": "ai_health_score",
+        "unit": null,
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.7327823756173603,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": 1.0,
+        "method_version": "ai_health@measurement_contract_v1"
+      },
+      "window_kind": null,
+      "window_size": null,
+      "composite_of": [
+        "semantic",
+        "behavioral",
+        "structural",
+        "economic"
+      ]
+    },
+    {
+      "measurement": {
+        "id": "consistency_score",
+        "unit": null,
+        "scale": {
+          "kind": "score_100",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 89.23,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "consistency_score@measurement_contract_v1"
+      },
+      "window_kind": null,
+      "window_size": null,
+      "composite_of": []
+    },
+    {
+      "measurement": {
+        "id": "global_confidence",
+        "unit": null,
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 1.0,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "global_confidence@measurement_contract_v1"
+      },
+      "window_kind": null,
+      "window_size": null,
+      "composite_of": []
+    },
+    {
+      "measurement": {
+        "id": "cross_intent_similarity",
+        "unit": null,
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.7852,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "cross_intent_similarity@measurement_contract_v1"
+      },
+      "window_kind": null,
+      "window_size": null,
+      "composite_of": []
+    },
+    {
+      "measurement": {
+        "id": "response_stability",
+        "unit": null,
+        "scale": {
+          "kind": "score_100",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 94.57,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "response_stability@measurement_contract_v1"
+      },
+      "window_kind": null,
+      "window_size": null,
+      "composite_of": []
+    },
+    {
+      "measurement": {
+        "id": "semantic_drift",
+        "unit": null,
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.1514,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "semantic_drift@measurement_contract_v1"
+      },
+      "window_kind": null,
+      "window_size": null,
+      "composite_of": []
+    }
+  ],
+  "intents": [
+    {
+      "score": {
+        "id": "intent_score",
+        "unit": null,
+        "scale": {
+          "kind": "score_100",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 89.66,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": {
+          "warn": 75.0,
+          "critical": 60.0
+        },
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      },
+      "support": 75,
+      "severity": "OK",
+      "intent_id": "duvida_fatura",
+      "semantic_drift": {
+        "id": "semantic_drift",
+        "unit": null,
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.1418,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      },
+      "severity_reason": [],
+      "underrepresented": false,
+      "response_variance": {
+        "id": "response_variance",
+        "unit": null,
+        "scale": {
+          "kind": "raw",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.0564,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      },
+      "response_stability": {
+        "id": "response_stability",
+        "unit": null,
+        "scale": {
+          "kind": "score_100",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 94.36,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      }
+    },
+    {
+      "score": {
+        "id": "intent_score",
+        "unit": null,
+        "scale": {
+          "kind": "score_100",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 89.96,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": {
+          "warn": 75.0,
+          "critical": 60.0
+        },
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      },
+      "support": 75,
+      "severity": "OK",
+      "intent_id": "cancelamento",
+      "semantic_drift": {
+        "id": "semantic_drift",
+        "unit": null,
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.1381,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      },
+      "severity_reason": [],
+      "underrepresented": false,
+      "response_variance": {
+        "id": "response_variance",
+        "unit": null,
+        "scale": {
+          "kind": "raw",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.0544,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      },
+      "response_stability": {
+        "id": "response_stability",
+        "unit": null,
+        "scale": {
+          "kind": "score_100",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 94.56,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      }
+    },
+    {
+      "score": {
+        "id": "intent_score",
+        "unit": null,
+        "scale": {
+          "kind": "score_100",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 88.14,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": {
+          "warn": 75.0,
+          "critical": 60.0
+        },
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      },
+      "support": 75,
+      "severity": "OK",
+      "intent_id": "segunda_via",
+      "semantic_drift": {
+        "id": "semantic_drift",
+        "unit": null,
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.1714,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      },
+      "severity_reason": [],
+      "underrepresented": false,
+      "response_variance": {
+        "id": "response_variance",
+        "unit": null,
+        "scale": {
+          "kind": "raw",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.0541,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      },
+      "response_stability": {
+        "id": "response_stability",
+        "unit": null,
+        "scale": {
+          "kind": "score_100",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 94.59,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      }
+    },
+    {
+      "score": {
+        "id": "intent_score",
+        "unit": null,
+        "scale": {
+          "kind": "score_100",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 89.15,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": {
+          "warn": 75.0,
+          "critical": 60.0
+        },
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      },
+      "support": 75,
+      "severity": "OK",
+      "intent_id": "agendamento",
+      "semantic_drift": {
+        "id": "semantic_drift",
+        "unit": null,
+        "scale": {
+          "kind": "ratio_unit",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.1544,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      },
+      "severity_reason": [],
+      "underrepresented": false,
+      "response_variance": {
+        "id": "response_variance",
+        "unit": null,
+        "scale": {
+          "kind": "raw",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 0.0524,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      },
+      "response_stability": {
+        "id": "response_stability",
+        "unit": null,
+        "scale": {
+          "kind": "score_100",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": 94.76,
+        "domain": null,
+        "reason": "ok",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "available",
+        "data_coverage": null,
+        "method_version": "1.0"
+      }
+    }
+  ],
+  "summary": {
+    "analyzed_at": "2026-08-23T17:13:03.456972+00:00",
+    "record_count": 300
+  },
+  "evidence": null,
+  "dimensions": [
+    {
+      "id": "semantic",
+      "unit": null,
+      "scale": {
+        "kind": "ratio_unit",
+        "maximum": null,
+        "minimum": null
+      },
+      "value": 0.6517632417582419,
+      "domain": "semantic",
+      "reason": "ok",
+      "confidence": null,
+      "thresholds": null,
+      "availability": "available",
+      "data_coverage": 1.0,
+      "method_version": null
+    },
+    {
+      "id": "behavioral",
+      "unit": null,
+      "scale": {
+        "kind": "ratio_unit",
+        "maximum": null,
+        "minimum": null
+      },
+      "value": 0.72904,
+      "domain": "behavioral",
+      "reason": "ok",
+      "confidence": null,
+      "thresholds": null,
+      "availability": "available",
+      "data_coverage": 1.0,
+      "method_version": null
+    },
+    {
+      "id": "structural",
+      "unit": null,
+      "scale": {
+        "kind": "ratio_unit",
+        "maximum": null,
+        "minimum": null
+      },
+      "value": 0.8,
+      "domain": "structural",
+      "reason": "ok",
+      "confidence": null,
+      "thresholds": null,
+      "availability": "available",
+      "data_coverage": 1.0,
+      "method_version": null
+    },
+    {
+      "id": "economic",
+      "unit": null,
+      "scale": {
+        "kind": "ratio_unit",
+        "maximum": null,
+        "minimum": null
+      },
+      "value": 0.8139293539325843,
+      "domain": "economic",
+      "reason": "ok",
+      "confidence": null,
+      "thresholds": null,
+      "availability": "available",
+      "data_coverage": 1.0,
+      "method_version": null
+    }
+  ],
+  "indicators": [
+    {
+      "id": "useful_outcome_rate",
+      "kind": "ratio",
+      "unit": "ratio",
+      "scale": {
+        "kind": "ratio_unit",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "measured",
+      "value": 0.0,
+      "domain": null,
+      "reason": "ok",
+      "coverage": null,
+      "currency": null,
+      "denominator": {
+        "kind": "analyzed_conversations",
+        "value": 300.0
+      },
+      "display_precision": 4
+    },
+    {
+      "id": "outcome_field_coverage_rate",
+      "kind": "ratio",
+      "unit": "ratio",
+      "scale": {
+        "kind": "ratio_unit",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "measured",
+      "value": 0.0,
+      "domain": null,
+      "reason": "ok",
+      "coverage": null,
+      "currency": null,
+      "denominator": {
+        "kind": "analyzed_conversations",
+        "value": 300.0
+      },
+      "display_precision": 4
+    },
+    {
+      "id": "conversion_rate",
+      "kind": "ratio",
+      "unit": "ratio",
+      "scale": {
+        "kind": "ratio_unit",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "measured",
+      "value": 0.0,
+      "domain": null,
+      "reason": "ok",
+      "coverage": null,
+      "currency": null,
+      "denominator": {
+        "kind": "analyzed_conversations",
+        "value": 300.0
+      },
+      "display_precision": 4
+    },
+    {
+      "id": "intent_coverage_rate",
+      "kind": "ratio",
+      "unit": "ratio",
+      "scale": {
+        "kind": "ratio_unit",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "measured",
+      "value": 1.0,
+      "domain": null,
+      "reason": "ok",
+      "coverage": null,
+      "currency": null,
+      "denominator": {
+        "kind": "intents",
+        "value": 4.0
+      },
+      "display_precision": 4
+    },
+    {
+      "id": "analyzed_conversation_count",
+      "kind": "count",
+      "unit": "conversations",
+      "scale": {
+        "kind": "count",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "measured",
+      "value": 300.0,
+      "domain": null,
+      "reason": "ok",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 0
+    },
+    {
+      "id": "useful_outcome_count",
+      "kind": "count",
+      "unit": "conversations",
+      "scale": {
+        "kind": "count",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "measured",
+      "value": 0.0,
+      "domain": null,
+      "reason": "ok",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 0
+    },
+    {
+      "id": "handoff_count",
+      "kind": "count",
+      "unit": "conversations",
+      "scale": {
+        "kind": "count",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "measured",
+      "value": 0.0,
+      "domain": null,
+      "reason": "ok",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 0
+    },
+    {
+      "id": "conversion_count",
+      "kind": "count",
+      "unit": "conversations",
+      "scale": {
+        "kind": "count",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "measured",
+      "value": 0.0,
+      "domain": null,
+      "reason": "ok",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 0
+    },
+    {
+      "id": "total_estimated_cost",
+      "kind": "currency",
+      "unit": "currency",
+      "scale": {
+        "kind": "currency",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "not_measured",
+      "value": null,
+      "domain": null,
+      "reason": "no_input_data",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 6
+    },
+    {
+      "id": "token_cost_total",
+      "kind": "currency",
+      "unit": "currency",
+      "scale": {
+        "kind": "currency",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "not_measured",
+      "value": null,
+      "domain": null,
+      "reason": "no_input_data",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 6
+    },
+    {
+      "id": "handoff_cost_total",
+      "kind": "currency",
+      "unit": "currency",
+      "scale": {
+        "kind": "currency",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "not_measured",
+      "value": null,
+      "domain": null,
+      "reason": "no_input_data",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 6
+    },
+    {
+      "id": "cost_per_useful_outcome",
+      "kind": "currency",
+      "unit": "currency",
+      "scale": {
+        "kind": "currency",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "not_measured",
+      "value": null,
+      "domain": null,
+      "reason": "no_input_data",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 6
+    },
+    {
+      "id": "cost_per_session",
+      "kind": "currency",
+      "unit": "currency",
+      "scale": {
+        "kind": "currency",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "not_measured",
+      "value": null,
+      "domain": null,
+      "reason": "no_input_data",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 6
+    },
+    {
+      "id": "mean_response_variance_per_intent",
+      "kind": "scalar",
+      "unit": null,
+      "scale": {
+        "kind": "raw",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "measured",
+      "value": 0.0,
+      "domain": null,
+      "reason": "ok",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 4
+    },
+    {
+      "id": "estimated_handoff_cost",
+      "kind": "currency",
+      "unit": "currency",
+      "scale": {
+        "kind": "currency",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "not_measured",
+      "value": null,
+      "domain": null,
+      "reason": "no_input_data",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 6
+    },
+    {
+      "id": "intents_detected_count",
+      "kind": "count",
+      "unit": "intents",
+      "scale": {
+        "kind": "count",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "measured",
+      "value": 4.0,
+      "domain": null,
+      "reason": "ok",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 0
+    },
+    {
+      "id": "covered_intents_count",
+      "kind": "count",
+      "unit": "intents",
+      "scale": {
+        "kind": "count",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "measured",
+      "value": 4.0,
+      "domain": null,
+      "reason": "ok",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 0
+    },
+    {
+      "id": "critical_alert_count",
+      "kind": "count",
+      "unit": "alerts",
+      "scale": {
+        "kind": "count",
+        "maximum": null,
+        "minimum": null
+      },
+      "state": "measured",
+      "value": 0.0,
+      "domain": null,
+      "reason": "ok",
+      "coverage": null,
+      "currency": null,
+      "denominator": null,
+      "display_precision": 0
+    }
+  ],
+  "partiality": {
+    "reasons": [
+      "indicator_not_measured"
+    ],
+    "complete": false
+  },
+  "analysis_id": "4c7b57b6-aefa-4d9c-8db1-7bd841ae3fd0",
+  "projections": [
+    {
+      "id": "projected_token_cost",
+      "basis": null,
+      "horizon": "month",
+      "currency": null,
+      "measurement": {
+        "id": "projected_token_cost",
+        "unit": null,
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": null,
+        "domain": null,
+        "reason": "no_input_data",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "unavailable",
+        "data_coverage": null,
+        "method_version": "v1"
+      }
+    },
+    {
+      "id": "projected_token_cost",
+      "basis": null,
+      "horizon": "year",
+      "currency": null,
+      "measurement": {
+        "id": "projected_token_cost",
+        "unit": null,
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": null,
+        "domain": null,
+        "reason": "no_input_data",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "unavailable",
+        "data_coverage": null,
+        "method_version": "v1"
+      }
+    },
+    {
+      "id": "projected_handoff_cost",
+      "basis": null,
+      "horizon": "month",
+      "currency": null,
+      "measurement": {
+        "id": "projected_handoff_cost",
+        "unit": null,
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": null,
+        "domain": null,
+        "reason": "no_input_data",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "unavailable",
+        "data_coverage": null,
+        "method_version": "v1"
+      }
+    },
+    {
+      "id": "projected_handoff_cost",
+      "basis": null,
+      "horizon": "year",
+      "currency": null,
+      "measurement": {
+        "id": "projected_handoff_cost",
+        "unit": null,
+        "scale": {
+          "kind": "currency",
+          "maximum": null,
+          "minimum": null
+        },
+        "value": null,
+        "domain": null,
+        "reason": "no_input_data",
+        "confidence": null,
+        "thresholds": null,
+        "availability": "unavailable",
+        "data_coverage": null,
+        "method_version": "v1"
+      }
+    }
+  ],
+  "recommendations": null,
+  "executive_summary": null,
+  "argos_catalog_version": "argos-catalog-1.0",
+  "result_schema_version": "analysis-result-v3",
+  "indicator_registry_version": "indicator-registry-1.1",
+  "measurement_contract_version": "measurement-1.0"
+}

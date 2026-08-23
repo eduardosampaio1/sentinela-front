@@ -230,8 +230,56 @@
 
   /* ── Forma ───────────────────────────────────────────────────────────────────────────────── */
 
-  /** 10px, o raio do protótipo. Era 0.75rem (12px) — o canto novo é um grau menos macio. */
-  --ds-radius-default: 0.625rem;
+  /**
+   * A ESCADA DE RAIOS da V4 — três degraus, e cada um é um papel.
+   *
+   * O vocabulário tinha UM raio, e o protótipo tem três. Com um só, o painel, o cartão dentro
+   * dele e o chip dentro do cartão ficam com o mesmo canto — e cantos iguais em elementos
+   * aninhados apagam a hierarquia que a elevação constrói. A V4 escalona: quanto maior a
+   * superfície, mais macio o canto.
+   *
+   *   painel  18px  a moldura de uma região inteira
+   *   card    14px  o cartão dentro dela
+   *   mini    10px  chip, botão, campo — o que cabe numa linha de texto
+   *
+   * `--ds-radius-default` continua existindo e continua valendo 10px: ele é o `--radius` do
+   * shadcn, consumido por `tailwind.config.ts`, e mudá-lo mexeria em todo componente da camada
+   * legada de uma vez. Ele passa a ser um APELIDO de `mini`, que é o papel dele de fato.
+   */
+  --ds-radius-panel: 1.125rem;
+  --ds-radius-card: 0.875rem;
+  --ds-radius-mini: 0.625rem;
+  --ds-radius-default: var(--ds-radius-mini);
+
+  /* ── Tipografia ────────────────────────────────────────────────────────────────────────────
+     A FAMÍLIA como token, e não literal numa regra de `body`.
+
+     O produto carregava `Inter Tight` com uma razão escrita: *"é a família do protótipo
+     aprovado"*. A razão era boa e o protótipo mudou — a decisão de 2026-08-19 trocou a origem
+     do desenho para a V4, e a V4 usa `Inter` com o eixo óptico `opsz`.
+
+     `opsz` não é enfeite: ele reajusta o desenho da letra por tamanho, e é o que faz o número
+     de 104px do herói e o micro-rótulo de 10px pertencerem à mesma voz. `Inter Tight` não tem
+     esse eixo — foi por isso que o pedido dela o omitia. */
+  --ds-font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /**
+   * O FUNDO da aplicação — e ele não é uma cor, é uma composição.
+   *
+   * `--ds-surface-base` sozinha dá o azul-noite chapado. A V4 põe dois halos radiais sobre ela:
+   * roxo no alto à esquerda e ciano no alto à direita, ambos com alfa baixíssimo. Eles não são
+   * decoração solta — são o que faz a página ter um "alto", e é contra esse alto que a barra
+   * superior fixa se descola quando o conteúdo rola por baixo dela.
+   *
+   * O ciano aparece AQUI e não como token de cor. A nota do topo deste arquivo recusa `--ds-
+   * chart-*` em ciano porque cor de série precisa de prova de contraste entre séries; um halo a
+   * 7,5% de alfa não é série, não carrega significado e não é lido — é textura de fundo. A
+   * recusa continua valendo para o que ela recusou.
+   */
+  --ds-surface-backdrop:
+    radial-gradient(900px 620px at 16% -8%, hsl(258 90% 66% / 0.13), transparent 62%),
+    radial-gradient(760px 560px at 88% 4%, hsl(189 85% 53% / 0.075), transparent 60%),
+    hsl(var(--ds-surface-base));
 
   /* ── Motion ──────────────────────────────────────────────────────────────────────────────
      🔒 Constituição §5, FROZEN: cinco durações, quatro curvas. Não mais.

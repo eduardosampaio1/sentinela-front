@@ -137,6 +137,28 @@ describe("a tela pergunta por quais campos agrupar", () => {
     unmount();
   });
 
+  it("`source_type` e `policy` mostram ROTULO, nao o identificador tecnico", async () => {
+    // Os dois campos entraram no contrato do Gateway na mesma fatia das dimensoes, e chegaram a
+    // tela SEM rotulo: o `default` do `rotuloDoCampo` devolve o proprio nome, e a pessoa lia
+    // `source_type` ao lado de "Channel" e "Date and time".
+    //
+    // O fallback esta certo — inventar rotulo para campo desconhecido seria pior. O defeito era
+    // publicar campo no backend e nao ensinar o nome dele aqui.
+    //
+    // Medido em homologacao antes do conserto: os dois seletores saiam com o slug cru.
+    instalar(perfil({ optional_fields: ["channel", "timestamp", "source_type", "policy"] }));
+    const { unmount } = renderAt("an-dim");
+
+    await waitFor(() =>
+      expect(screen.getByText("Tell us which column is which")).toBeTruthy(),
+    );
+    expect(screen.getByLabelText("Source type")).toBeTruthy();
+    expect(screen.getByLabelText("Policy")).toBeTruthy();
+    // E o identificador tecnico nao sobra em lugar nenhum da tela.
+    expect(screen.queryByText("source_type")).toBeNull();
+    unmount();
+  });
+
   it("o corpo enviado carrega `group_by` com o que foi marcado", async () => {
     // A asserção que importa: a marcação tem de CHEGAR ao servidor. Um checkbox que muda estado
     // local e não viaja é decoração — a tela pareceria funcionar e Medidas continuaria vazia,

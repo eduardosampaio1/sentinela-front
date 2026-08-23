@@ -1,9 +1,14 @@
-/* `Inter Tight` e nao `Inter`: e a familia do prototipo aprovado, e a diferenca nao e
-   cosmetica -- ela e mais estreita, entao numero grande e titulo ganham densidade sem
-   ganhar peso. O eixo `opsz` SAI do pedido de proposito: a `Inter Tight` nao o tem, e
-   pedir um eixo inexistente devolve estatico em vez de variavel. O eixo `wght` continua,
-   porque e ele que o sistema usa. */
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap');
+/* `Inter` com DOIS eixos, e a troca tem data: a decisao de 2026-08-19 mudou a origem do
+   desenho do prototipo de 17/08 para a V4 do Molde, e a V4 usa `Inter`.
+
+   O comentario anterior justificava `Inter Tight` por ser "a familia do prototipo aprovado" --
+   verdade na epoca, e o prototipo mudou. Ele tambem dizia que `opsz` saia de proposito porque
+   `Inter Tight` nao tem esse eixo; com `Inter` ele existe, e e ele que reajusta o desenho da
+   letra por tamanho. E o que faz o numero de 104px do heroi e o micro-rotulo de 10px soarem
+   como a mesma voz.
+
+   A familia em si mora em `--ds-font-sans` (tokens.css). Aqui so se CARREGA o arquivo. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap');
 
 @tailwind base;
 
@@ -104,11 +109,24 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* O `body` NAO tem mais valor proprio, e a diferenca era visivel.
+
+     Ele pintava `#070C18` por cima de `bg-background`, que resolve para `--ds-surface-base` =
+     `#050814`. Dois azuis diferentes, o literal ganhando por vir depois — e o token que a
+     decisao de 2026-08-19 instalou nunca chegava ao fundo da aplicacao. O mesmo valia para a
+     tinta: `#F1F5F9` sobrescrevia `--ds-text-primary`.
+
+     O gate `design-tokens-unico` nao pegou porque ele compara DECLARACOES de custom property
+     entre os dois arquivos; hex dentro de uma regra comum passava por fora dele. */
   body {
     @apply bg-background text-foreground;
-    font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background-color: #070C18;
-    color: #F1F5F9;
+    font-family: var(--ds-font-sans);
+    /* O fundo da V4: a cor base MAIS os dois halos. `background` e nao `background-color` —
+       e por isso ele vence o `bg-background` do utilitario, que e o comportamento desejado:
+       o utilitario da a cor, este da a composicao completa que a contem. */
+    background: var(--ds-surface-backdrop);
+    background-attachment: fixed;
+    font-feature-settings: "cv05" 1, "ss01" 1;
     line-height: 1.5;
   }
 

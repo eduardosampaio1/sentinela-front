@@ -65,6 +65,10 @@ function rotuloDoCampo(campo: string, t: (k: string) => string): string {
       return t("canonicalAnalysis.mapping.field.model");
     case "turns":
       return t("canonicalAnalysis.mapping.field.turns");
+    case "source_type":
+      return t("canonicalAnalysis.mapping.field.sourceType");
+    case "policy":
+      return t("canonicalAnalysis.mapping.field.policy");
     default:
       return campo;
   }

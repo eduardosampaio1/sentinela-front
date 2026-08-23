@@ -17,6 +17,8 @@ export { BarraDeComposicao } from "./BarraDeComposicao";
 export { fatiasDaComposicao, type ParteDaComposicao } from "./composicao";
 export { Bullet } from "./Bullet";
 export { zonaDoValor, type ZonaDoBullet } from "./zonaDoBullet";
+export { ReguaDeFaixas, type ReguaDeFaixasProps } from "./ReguaDeFaixas";
+export { BarraDeFracao, type BarraDeFracaoProps } from "./BarraDeFracao";
 export { Explicacao } from "./Explicacao";
 export { Chip, type EnfaseDoChip } from "./Chip";
 export { DefinitionGrid } from "./DefinitionGrid";

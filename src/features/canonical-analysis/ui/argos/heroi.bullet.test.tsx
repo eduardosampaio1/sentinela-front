@@ -56,12 +56,16 @@ describe("Herói · o bullet só existe quando o produtor declarou os cortes", (
     expect(screen.queryByRole("img")).toBeNull();
   });
 
+  // Os tres casos abaixo pedem o marcador por `[data-marcador]`. Os dois primeiros passavam
+  // com o seletor antigo, e passavam por ACIDENTE: `querySelector` devolve o primeiro do DOM, e
+  // o marcador vinha antes dos rotulos de corte. Verde por ordem de renderizacao e verde que a
+  // proxima reordenacao apaga.
   it("a régua vem da ESCALA, não dos cortes", () => {
     // Deduzir os extremos dos próprios limiares encolheria o eixo até as zonas, e a posição do
     // marcador passaria a exagerar toda variação. `score_100` vive em 0..100, e 80,36 tem de
     // cair a ~80% do eixo — não a 100%, que é onde cairia numa régua de 60..75.
     const { container } = montar({ ...MEDIDA, thresholds: { warn: 75, critical: 60 } });
-    const marcador = container.querySelector("span[style*='left']:not([style*='opacity'])") as HTMLElement;
+    const marcador = container.querySelector("[data-marcador]") as HTMLElement;
     expect(marcador).toBeTruthy();
     const esquerda = parseFloat(marcador.style.left);
     expect(esquerda).toBeGreaterThan(78);
@@ -77,7 +81,7 @@ describe("Herói · o bullet só existe quando o produtor declarou os cortes", (
       scale: { kind: "ratio_unit", minimum: null, maximum: null },
       thresholds: { warn: 0.75, critical: 0.6 },
     });
-    const marcador = container.querySelector("span[style*='left']:not([style*='opacity'])") as HTMLElement;
+    const marcador = container.querySelector("[data-marcador]") as HTMLElement;
     expect(parseFloat(marcador.style.left)).toBeGreaterThan(78);
   });
 
@@ -92,6 +96,10 @@ describe("Herói · o bullet só existe quando o produtor declarou os cortes", (
       thresholds: { warn: 75, critical: 60 },
     });
     expect(screen.getByRole("img")).toBeInTheDocument();
-    expect(container.querySelectorAll("span[style*='left']:not([style*='opacity'])")).toHaveLength(0);
+    // Pergunta pelo MARCADOR, nao pela forma do CSS dele. A versao anterior contava
+    // `span[style*='left']:not([style*='opacity'])`, que era o marcador enquanto ele fosse o
+    // unico elemento posicionado da regua. Quando os cortes passaram a ser escritos na fracao
+    // em que estao, o mesmo seletor passou a achar tres — e reprovou uma tela correta.
+    expect(container.querySelectorAll("[data-marcador]")).toHaveLength(0);
   });
 });
