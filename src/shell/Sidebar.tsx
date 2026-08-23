@@ -203,9 +203,14 @@ export function Sidebar() {
     // mesmo defeito das telas de Conta e Perfil, alcançáveis só por endereço digitado.
     <aside
       data-recolhida={recolhida ? "true" : "false"}
+      /* `v4-lateral` e o escopo da folha portada do Molde (ver `globals.css`).
+
+         As MEDIDAS tambem sao da V4: 232px aberta e 72px recolhida, contra 220 e 60. Nao e
+         gosto — 60px nao cabe um alvo de 44px com respiro dos dois lados, e a barra recolhida
+         era o unico lugar do produto onde o icone encostava na borda. */
       className={`${
-        recolhida ? "w-[60px]" : "w-[220px]"
-      } flex-shrink-0 h-screen sticky top-0 hidden md:flex flex-col border-r border-border transition-[width] duration-200`}
+        recolhida ? "w-[72px]" : "w-[232px]"
+      } v4-lateral flex-shrink-0 h-screen sticky top-0 hidden md:flex flex-col transition-[width] duration-200`}
     >
       <SidebarContent recolhida={recolhida} />
       {/* O gatilho fica no PÉ e sempre visível, aberta ou recolhida. No topo ele disputaria com

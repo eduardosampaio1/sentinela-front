@@ -78,18 +78,18 @@ export function UserMenu({ recolhida = false }: { readonly recolhida?: boolean }
   }
 
   return (
-    <div className="px-3 py-3 border-t border-border">
+    /* `usuario` — `margin-top:auto` empurra o bloco para o pe da coluna, que e onde a V4 o
+       poe. Antes ele dependia de o conteudo acima ser alto o bastante. */
+    <div className="usuario">
       <button
         type="button"
         onClick={() => setAberto((v) => !v)}
         aria-expanded={aberto}
         aria-haspopup="menu"
         aria-label={t("shell.user.menu")}
-        className="w-full flex min-h-11 items-center justify-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="us-gatilho focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <span className="w-7 h-7 rounded-full bg-primary/[0.12] border border-primary/20 flex items-center justify-center flex-shrink-0">
-          <span className="text-[10px] font-bold text-foreground">{iniciais(nome)}</span>
-        </span>
+        <span className="ini">{iniciais(nome)}</span>
         {/* Recolhido, sobram as INICIAIS — que já são o avatar. O nome sai da tela e fica no
             `aria-label` do botão, que nunca dependeu dele para ter nome acessível. */}
         {recolhida ? null : (

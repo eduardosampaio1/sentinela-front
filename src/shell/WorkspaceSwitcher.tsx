@@ -72,8 +72,13 @@ export function WorkspaceSwitcher({ onNavigate }: { onNavigate?: () => void }) {
   // O painel continua util com um so: ele mostra qual e, e oferece criar outro.
 
   return (
-    <div className="px-4 py-3 border-b border-border">
-      <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground mb-1.5">
+    /* `ws` — o workspace deixa de ser TEXTO com uma borda embaixo e vira um BLOCO.
+
+       Ele sempre foi clicavel (troca de tenant), e nao parecia: um rotulo minusculo sobre um
+       nome, separados do resto por um fio. A V4 o desenha como um cartao com borda e hover, que
+       e o que ele e — um controle. */
+    <div className="ws">
+      <p className="rot">
         {t("shell.workspace.label")}
       </p>
 
@@ -83,7 +88,7 @@ export function WorkspaceSwitcher({ onNavigate }: { onNavigate?: () => void }) {
         aria-expanded={aberto}
         aria-haspopup="listbox"
         aria-label={t("shell.workspace.switch")}
-        className="w-full text-left text-xs font-semibold text-foreground truncate leading-tight rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="ws-gatilho truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {rotulo}
       </button>
