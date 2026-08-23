@@ -76,12 +76,19 @@ export interface PublicDenominator {
   value: number;
 }
 
-/** Resumo agregado de evidência — só campos da allowlist. */
+/** Resumo de evidência — allowlist, e com o TRECHO observado. */
 export interface PublicEvidenceSummary {
   id: string;
   kind: string;
   label: string | null;
   observed_count: number;
+  /**
+   * O trecho observado, já sanitizado na origem pelo Privacy Gate e varrido na saída.
+   *
+   * `null` quando a evidência não é textual — e isso é comum. Ausência aqui não é "não
+   * achamos"; é "esta evidência não é texto".
+   */
+  excerpt?: string | null;
 }
 
 /** O resumo executivo, textual. */

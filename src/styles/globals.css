@@ -1313,3 +1313,43 @@
   display:block; margin:0 0 5px 2px; font-size:9.5px; letter-spacing:.13em;
   text-transform:uppercase; color:hsl(var(--ds-text-muted));
 }
+
+/* O TRECHO da evidencia.
+
+   Aspas tipograficas e barra a esquerda: os dois marcam que aquilo e CITACAO de outra fonte, e
+   nao frase do produto. Quem le precisa distinguir o que o Sentinela diz do que ele observou —
+   sem essa fronteira, uma resposta ruim do assistente do cliente se le como texto da tela.
+
+   `4` linhas de teto visual: o corte de verdade e no produtor (400 caracteres), este e so para
+   a linha nao empurrar as vizinhas. */
+.v4-painel .evid .trecho {
+  margin:6px 0 0; padding:0 0 0 10px;
+  border-left:2px solid hsl(var(--ds-accent) / 0.35);
+  font-size:12.5px; line-height:1.5; color:hsl(var(--ds-text-secondary));
+  font-style:italic; overflow-wrap:anywhere;
+  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;
+}
+.v4-painel .evid .trecho::before { content:"“"; }
+.v4-painel .evid .trecho::after  { content:"”"; }
+
+/* A linha da evidencia com TRECHO vira grade.
+
+   `.evid` e `flex` com `justify-content:space-between`, e isso bastava quando o lado esquerdo
+   era uma linha so. Com o trecho embaixo do rotulo, os dois filhos passaram a se sobrepor —
+   medido na captura: o rotulo por cima de "ocorrencias".
+
+   `minmax(0,1fr)` e o que permite ao texto encolher; `1fr` sozinho nao encolhe abaixo do
+   conteudo, e a coluna da contagem seria empurrada para fora. */
+.v4-painel .evid { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; }
+.v4-painel .evid > span { white-space:nowrap; padding-left:12px; }
+/* O ROTULO longo e CORTADO, e nao empurrado por cima do vizinho.
+
+   `intents` junta quatro nomes por virgula e passa de 50 caracteres. Sem o corte ele passava
+   por baixo da contagem — medido na captura, `...segund` colidindo com `ocorrencias`.
+
+   Duas linhas e nao uma: cortar quatro intencoes em uma linha esconde metade do rotulo, e o
+   rotulo E o que diz sobre o que a evidencia fala. */
+.v4-painel .evid p {
+  max-width:none; overflow-wrap:anywhere;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}

@@ -314,9 +314,27 @@ function Evidencias({
         ) : (
           evidence.map((e) => (
             <div className="evid" key={e.id}>
-              {/* `label` pode ser nulo por contrato, e aí o `kind` é o que resta para nomear a
-                  linha. Nunca o `id`: ele é chave, não frase. */}
-              <p>{e.label ?? e.kind}</p>
+              <div className="min-w-0">
+                {/* `label` pode ser nulo por contrato, e aí o `kind` é o que resta para nomear
+                    a linha. Nunca o `id`: ele é chave, não frase. */}
+                <p>{e.label ?? e.kind}</p>
+                {/* O TRECHO OBSERVADO.
+
+                    Ele é o que dá nome à família: sem o texto, "34 ocorrências de reuso entre
+                    intenções" diz QUE há um problema e não diz ONDE. Com o trecho, quem lê
+                    reconhece o próprio produto na frase e sabe o que procurar.
+
+                    Vem sanitizado na origem — o Privacy Gate é porta única na Ingestão e cobre
+                    sete classes fechadas de dado sensível — e cortado num teto, porque um
+                    excerto é um excerto: a conversa inteira sai pelo export, que tem retenção
+                    e auditoria próprias.
+
+                    `blockquote` e não `p`: é citação de outra fonte, e o leitor de tela anuncia
+                    como tal. Aspas tipográficas marcam a fronteira para quem vê. */}
+                {e.excerpt ? (
+                  <blockquote className="trecho">{e.excerpt}</blockquote>
+                ) : null}
+              </div>
               <span>
                 {t("canonicalAnalysis.argos.observedCount", {
                   n: formatarNumero(e.observed_count, locale, 0),

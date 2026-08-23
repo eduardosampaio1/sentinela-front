@@ -547,7 +547,15 @@
     "analyzed_at": "2026-08-23T17:13:03.456972+00:00",
     "record_count": 300
   },
-  "evidence": null,
+  "evidence": [
+    {
+      "id": "cross_intent_group-agendamento-cancelamento-duvida_fatura-segunda_via",
+      "kind": "cross_intent_group",
+      "observed_count": 34,
+      "label": "agendamento,cancelamento,duvida_fatura,segunda_via",
+      "excerpt": "confirmei o horario e enviei o comprovante por whatsapp"
+    }
+  ],
   "dimensions": [
     {
       "id": "semantic",
