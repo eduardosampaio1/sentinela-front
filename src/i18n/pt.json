@@ -353,7 +353,9 @@
         "projected_token_cost": "Projeção do custo de tokens para o horizonte indicado. Extrapolação, não medição.",
         "projected_handoff_cost": "Projeção do custo de transferências para o horizonte indicado. Extrapolação, não medição."
       },
-      "explainMetric": "O que é {{rotulo}}?"
+      "explainMetric": "O que é {{rotulo}}?",
+      "intentColumn": "Intenção",
+      "thresholdColumn": "Corte"
     },
     "compare": {
       "absentSide": "não publicada",

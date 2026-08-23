@@ -18,7 +18,6 @@
 // origem da marca.
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Bar } from "@/design/primitives";
 import type { PublicIntent } from "@/lib/v1/contract/public-v3.types";
 import {
   largurasDeEscore,
@@ -55,128 +54,159 @@ export function Intencoes({
       {/* O piso primeiro, porque é ele que explica a marca que aparece nas linhas abaixo. */}
       {pisoDeAmostra !== null ? (
         <p className="pb-2 text-xs text-muted-foreground">
-          {t("canonicalAnalysis.argos.minSamples")}: <span className="tabular-nums">{pisoDeAmostra}</span>
+          {t("canonicalAnalysis.argos.minSamples")}:{" "}
+          <span className="tabular-nums">{pisoDeAmostra}</span>
         </p>
       ) : null}
 
-      <ul className="space-y-1">
-        {ordenadas.map((i, idx) => {
-          const escore = valorEscrito(i.score, locale);
-          return (
-            <Bar
-              key={i.intent_id}
-              // `intent_id` é vocabulário do CLIENTE: não se traduz e não se humaniza. É o mesmo
-              // motivo pelo qual `rotuloDe` não o toca.
-              rotulo={i.intent_id}
-              // O ESCORE é o que a barra mede, e por isso é o que ela escreve. O suporte fica na
-              // linha de detalhe abaixo: escrever os dois aqui faria o número ao lado da barra
-              // deixar de dizer o que a barra representa.
-              valor={escore}
-              largura={larguras[idx]}
-              rotuloSuprimido={t("canonicalAnalysis.argos.availability.unavailable")}
-            />
-          );
-        })}
-      </ul>
+      {/* TABELA, e não duas listas paralelas — o desenho é o do Molde V4.
+          Antes eram barras em cima e uma linha corrida embaixo, com seis fatos separados por
+          espaço. Comparar o escore de duas intenções exigia ler duas linhas inteiras e achar o
+          número no meio de cada uma. Em coluna, comparar é percorrer uma coluna.
+          O que muda em relação ao molde: aqui nada é calculado. */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
+              <th scope="col" className="py-2 text-left font-normal">
+                {t("canonicalAnalysis.argos.intentColumn")}
+              </th>
+              <th scope="col" className="py-2 pl-4 text-right font-normal">
+                {t("canonicalAnalysis.argos.intentScore")}
+              </th>
+              {/* O CORTE como coluna, e não a distância até ele.
+                  A distância seria a tela produzindo um número que o backend não publicou. Com
+                  as duas colunas lado a lado quem quiser a diferença a lê — e a conta fica
+                  visível em vez de embutida. */}
+              <th scope="col" className="py-2 pl-4 text-right font-normal">
+                {t("canonicalAnalysis.argos.thresholdColumn")}
+              </th>
+              <th scope="col" className="py-2 pl-4 text-right font-normal">
+                {t("canonicalAnalysis.argos.severity")}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {ordenadas.map((i, idx) => {
+              const escore = valorEscrito(i.score, locale);
+              const corte = i.score?.thresholds?.warn ?? null;
+              const estabilidade = i.response_stability
+                ? valorEscrito(i.response_stability, locale)
+                : null;
+              const variancia = i.response_variance
+                ? valorEscrito(i.response_variance, locale)
+                : null;
+              const deriva = i.semantic_drift ? valorEscrito(i.semantic_drift, locale) : null;
+              const detalhes: [string, string][] = [];
+              // O SUPORTE primeiro: é o denominador que sustenta a linha inteira. Uma nota sobre
+              // uma conversa e uma sobre duzentas não são a mesma afirmação. É `support`
+              // publicado — nunca uma porcentagem calculada aqui.
+              detalhes.push([t("canonicalAnalysis.argos.support"), String(i.support)]);
+              if (estabilidade !== null) {
+                detalhes.push([
+                  t("canonicalAnalysis.argos.output.response_stability"),
+                  estabilidade,
+                ]);
+              }
+              // VARIÂNCIA: maior significa mais dispersão, não mais qualidade — e o rótulo diz
+              // isso, para não virar "consistência" na leitura.
+              if (variancia !== null) {
+                detalhes.push([t("canonicalAnalysis.argos.responseVariance"), variancia]);
+              }
+              // MAIOR É PIOR, como a variância. O rótulo é o nome oficial da métrica, não uma
+              // paráfrase que sugira qualidade.
+              if (deriva !== null) {
+                detalhes.push([t("canonicalAnalysis.argos.output.semantic_drift"), deriva]);
+              }
+              return (
+                <tr key={i.intent_id} className="border-b border-border/40 last:border-b-0">
+                  <td className="py-2 pr-4 align-top">
+                    {/* `intent_id` é vocabulário do CLIENTE: não se traduz e não se humaniza. */}
+                    <span className="font-mono">{i.intent_id}</span>
+                    {/* Dado do produtor, não conclusão minha sobre o piso. */}
+                    {i.underrepresented ? (
+                      <span className="ml-2 rounded border border-border px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
+                        {t("canonicalAnalysis.argos.underrepresented")}
+                      </span>
+                    ) : null}
+                    <dl className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                      {detalhes.map(([rot, val]) => (
+                        <div key={rot} className="flex gap-1">
+                          <dt>{rot}:</dt>
+                          <dd className="tabular-nums text-foreground">{val}</dd>
+                        </div>
+                      ))}
+                      {/* O MOTIVO do veredito, e por que ele é obrigatório aqui.
 
-      {/* O detalhe por intenção, abaixo da barra e só quando o produtor o publicou. Cada campo é
-          rotulado: `severity` saía como pedaço solto depois de um ponto médio, sem dizer o que era. */}
-      <dl className="mt-3 space-y-2">
-        {ordenadas.map((i) => {
-          const estabilidade = i.response_stability ? valorEscrito(i.response_stability, locale) : null;
-          const variancia = i.response_variance ? valorEscrito(i.response_variance, locale) : null;
-          const deriva = i.semantic_drift ? valorEscrito(i.semantic_drift, locale) : null;
-          const escore = valorEscrito(i.score, locale);
-          const temDetalhe =
-            escore !== null ||
-            estabilidade !== null ||
-            variancia !== null ||
-            deriva !== null ||
-            i.severity ||
-            i.underrepresented;
-          if (!temDetalhe) return null;
-          return (
-            <div key={i.intent_id} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-xs">
-              <dt className="font-mono text-muted-foreground">{i.intent_id}</dt>
-              {/* O SUPORTE vem primeiro porque é o denominador que sustenta tudo o que vem
-                  depois: uma nota sobre uma conversa e uma nota sobre duzentas não são a mesma
-                  afirmação, e a ordem de leitura diz isso sem precisar de frase. */}
-              <dd className="text-muted-foreground">
-                {t("canonicalAnalysis.argos.support")}:{" "}
-                <span className="tabular-nums text-foreground">{i.support}</span>
-              </dd>
-              {escore !== null ? (
-                <dd className="text-muted-foreground">
-                  {t("canonicalAnalysis.argos.intentScore")}:{" "}
-                  <span className="tabular-nums text-foreground">{escore}</span>
-                </dd>
-              ) : null}
-              {estabilidade !== null ? (
-                <dd className="text-muted-foreground">
-                  {t("canonicalAnalysis.argos.output.response_stability")}:{" "}
-                  <span className="tabular-nums text-foreground">{estabilidade}</span>
-                </dd>
-              ) : null}
-              {/* NUNCA lido até aqui. É VARIÂNCIA: valor maior significa mais dispersão, não mais
-                  qualidade — e o rótulo diz isso, para não virar "consistência" na leitura. */}
-              {variancia !== null ? (
-                <dd className="text-muted-foreground">
-                  {t("canonicalAnalysis.argos.responseVariance")}:{" "}
-                  <span className="tabular-nums text-foreground">{variancia}</span>
-                </dd>
-              ) : null}
-              {/* MAIOR E PIOR, como a variancia acima — e por isso o rotulo e o nome oficial da
-                  metrica, nao uma parafrase que sugira qualidade. Mede quao diferentes sao as
-                  respostas dadas DENTRO desta intencao, ou seja, a perguntas parecidas. */}
-              {deriva !== null ? (
-                <dd className="text-muted-foreground">
-                  {t("canonicalAnalysis.argos.output.semantic_drift")}:{" "}
-                  <span className="tabular-nums text-foreground">{deriva}</span>
-                </dd>
-              ) : null}
-              {i.severity ? (
-                <dd className="text-muted-foreground">
-                  {t("canonicalAnalysis.argos.severity")}:{" "}
-                  <span className="text-foreground">{i.severity}</span>
-                </dd>
-              ) : null}
-              {/* O MOTIVO do veredito, e por que ele é obrigatório aqui.
+                          `severity` NÃO é o limiar aplicado ao escore: o motor a escala para
+                          `WARN` por evidência de mismatch semântico sem olhar a nota. Medido com
+                          o motor real, uma intenção com `governance_score = 100` sai `WARN` — e
+                          com o limiar publicado, 100 cai na zona VERDE. Sem esta linha a tela
+                          mostra atenção ao lado de um número bom e não tem o que dizer.
 
-                  `severity` NÃO é o limiar aplicado ao escore: o motor a escala para `WARN`
-                  por evidência de mismatch semântico sem olhar a nota. Medido com o motor
-                  real, uma intenção com `governance_score = 100` sai `WARN` — e com o
-                  limiar publicado, 100 cai na zona VERDE. Sem esta linha a tela mostra
-                  atenção ao lado de um número bom e não tem o que dizer.
+                          TRÊS estados. `null` = o produtor não declarou, e a tela DIZ isso em vez
+                          de calar: veredito sem explicação é o defeito, e "não sabemos por quê" é
+                          honesto onde o silêncio não é. `[]` = declarou e não há motivo.
 
-                  TRÊS estados. `null` = o produtor não declarou (motor anterior à fatia), e
-                  a tela DIZ isso em vez de calar: veredito sem explicação é o defeito, e
-                  "não sabemos por quê" é honesto onde o silêncio não é. `[]` = declarou e
-                  não há motivo, e aí não há o que mostrar.
-
-                  Os códigos saem CRUS quando não há tradução. Sumir com um código que o
-                  produtor mandou é pior que exibi-lo sem rótulo. */}
-              {i.severity && (i.severity || "").toUpperCase() !== "OK" ? (
-                <dd className="text-muted-foreground">
-                  {t("canonicalAnalysis.argos.severityReason")}:{" "}
-                  <span className="text-foreground">
-                    {i.severity_reason === null || i.severity_reason === undefined
-                      ? t("canonicalAnalysis.argos.severityReasonAbsent")
-                      : i.severity_reason
-                          .map((c) => rotuloDoMotivo(t, c))
-                          .join(" · ")}
-                  </span>
-                </dd>
-              ) : null}
-              {/* Dado do produtor, não conclusão minha sobre o piso. */}
-              {i.underrepresented ? (
-                <dd className="rounded border border-border px-1.5 py-0.5 text-muted-foreground">
-                  {t("canonicalAnalysis.argos.underrepresented")}
-                </dd>
-              ) : null}
-            </div>
-          );
-        })}
-      </dl>
+                          Os códigos saem CRUS quando não há tradução: sumir com um código que o
+                          produtor mandou é pior que exibi-lo sem rótulo. */}
+                      {i.severity && (i.severity || "").toUpperCase() !== "OK" ? (
+                        <div className="flex gap-1">
+                          <dt>{t("canonicalAnalysis.argos.severityReason")}:</dt>
+                          <dd className="text-foreground">
+                            {i.severity_reason === null || i.severity_reason === undefined
+                              ? t("canonicalAnalysis.argos.severityReasonAbsent")
+                              : i.severity_reason
+                                  .map((c) => rotuloDoMotivo(t, c))
+                                  .join(" · ")}
+                          </dd>
+                        </div>
+                      ) : null}
+                    </dl>
+                  </td>
+                  <td className="py-2 pl-4 align-top text-right">
+                    <span className="tabular-nums">
+                      {escore ?? t("canonicalAnalysis.argos.availability.unavailable")}
+                    </span>
+                    {/* A barra mede o que a coluna diz, e fica sob o número.
+                        NÃO é o primitivo `Bar`: ele é um `<li>` com rótulo e valor próprios, e
+                        dentro de `<td>` seria HTML inválido e um `listitem` sem lista.
+                        Sem escore não há barra: largura zero e ausência são indistinguíveis, e
+                        afirmam coisas opostas. */}
+                    {escore === null ? null : (
+                      <span
+                        aria-hidden="true"
+                        className="mt-1 block h-1.5 w-full min-w-[4rem] overflow-hidden rounded-full bg-muted"
+                      >
+                        <span
+                          className="block h-full rounded-full bg-primary"
+                          style={{ width: larguras[idx] }}
+                        />
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-2 pl-4 align-top text-right tabular-nums text-muted-foreground">
+                    {corte === null ? "—" : corte}
+                  </td>
+                  <td className="py-2 pl-4 align-top text-right">
+                    {i.severity ? (
+                      // O veredito como CHIP, e não como pedaço de frase no fim de uma linha
+                      // corrida. O valor vem do produtor e é exibido como veio — a tela não
+                      // decide gravidade, e por isso o chip não ganha cor por valor: colorir
+                      // exigiria um vocabulário fechado que o contrato não publica.
+                      <span className="whitespace-nowrap rounded-full border border-border px-2 py-0.5 text-xs">
+                        {i.severity}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

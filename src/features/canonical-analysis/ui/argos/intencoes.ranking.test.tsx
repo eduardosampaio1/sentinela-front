@@ -49,28 +49,40 @@ function montar(massa = REAIS) {
 describe("Intenções na tela · o pior primeiro", () => {
   it("a BARRA sai ordenada: `cancelamento` sai do meio para o topo", () => {
     const { container } = montar();
-    const nomes = [...container.querySelectorAll("ul > li span[title]")].map((e) =>
+    // A consulta mudou de `ul > li` para a primeira célula de cada linha: a apresentação virou
+    // TABELA no port do Molde V4. A afirmação é a mesma — pior primeiro.
+    const nomes = [...container.querySelectorAll("tbody tr td:first-child > span")].map((e) =>
       e.textContent?.trim(),
     );
     expect(nomes).toEqual(["cancelamento", "suporte.tecnico", "cobranca.segunda_via"]);
   });
 
-  it("a lista de DETALHE segue a MESMA ordem da barra", () => {
-    // Duas listas em ordens diferentes seriam pior que nenhuma ordem: o leitor casaria a
-    // primeira barra com o primeiro detalhe, e eles seriam de intenções distintas.
+  it("o detalhe de cada intenção está NA LINHA dela", () => {
+    // Antes eram duas listas paralelas — barras em cima, detalhes embaixo — e o risco era elas
+    // saírem em ordens diferentes: o leitor casaria a primeira barra com o primeiro detalhe, e
+    // seriam de intenções distintas.
+    //
+    // A tabela elimina o risco pela estrutura, e este caso passa a prová-lo: o suporte de cada
+    // intenção está dentro da MESMA linha que leva o nome dela.
     const { container } = montar();
-    const detalhe = [...container.querySelectorAll("dl > div > dt")].map((e) =>
-      e.textContent?.trim(),
-    );
-    expect(detalhe).toEqual(["cancelamento", "suporte.tecnico", "cobranca.segunda_via"]);
+    const linhas = [...container.querySelectorAll("tbody tr")];
+    expect(linhas).toHaveLength(3);
+    const primeira = linhas[0] as HTMLElement;
+    expect(primeira.textContent).toContain("cancelamento");
+    // `cancelamento` tem suporte 1 na massa.
+    expect(within(primeira).getByText("1")).toBeInTheDocument();
   });
 
   it("o número ao lado da barra é o ESCORE — o que a barra mede", () => {
     const { container } = montar();
-    const primeira = container.querySelector("ul > li") as HTMLElement;
-    // `cancelamento` tem escore 10 e suporte 1. Se o `1` aparecesse aqui, a barra estaria
+    // A COLUNA do escore, e não a linha inteira: o suporte também mora na linha, e procurar
+    // nela toda deixaria de distinguir uma coisa da outra — que é justamente o que este caso
+    // existe para distinguir.
+    const celula = container.querySelector("tbody tr td:nth-child(2)") as HTMLElement;
+    // `cancelamento` tem escore 10 e suporte 1. Se o `1` aparecesse aqui, a coluna estaria
     // medindo uma coisa e escrevendo outra.
-    expect(within(primeira).getByText("10")).toBeInTheDocument();
+    expect(within(celula).getByText("10")).toBeInTheDocument();
+    expect(within(celula).queryByText("1")).toBeNull();
   });
 
   it("o SUPORTE continua na tela, na linha de detalhe", () => {
@@ -93,7 +105,7 @@ describe("Intenções na tela · o pior primeiro", () => {
         />
       </LanguageProvider>,
     );
-    const nomes = [...container.querySelectorAll("ul > li span[title]")].map((e) =>
+    const nomes = [...container.querySelectorAll("tbody tr td:first-child > span")].map((e) =>
       e.textContent?.trim(),
     );
     expect(nomes).toEqual(["medida", "sem_amostra"]);

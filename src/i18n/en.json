@@ -353,7 +353,9 @@
         "projected_token_cost": "Projected token cost for the given horizon. Extrapolation, not measurement.",
         "projected_handoff_cost": "Projected handoff cost for the given horizon. Extrapolation, not measurement."
       },
-      "explainMetric": "What is {{rotulo}}?"
+      "explainMetric": "What is {{rotulo}}?",
+      "intentColumn": "Intent",
+      "thresholdColumn": "Cut"
     },
     "compare": {
       "absentSide": "not published",
