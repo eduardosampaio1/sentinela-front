@@ -30,6 +30,21 @@ const DOC = () =>
   JSON.parse(readFileSync(resolve(AQUI, "../src/test/fixtures/canonical-result/argos-v3-homol.json"), "utf-8"));
 const SAIDA = resolve(AQUI, "../docs/v4");
 
+/**
+ * MOVIMENTO DESLIGADO na captura, e nao e economia de tempo.
+ *
+ * As barras revelam com `scaleX(0) -> scaleX(1)`, e a captura as pegava a meio caminho: numa
+ * leitura a distribuicao aparecia INVERTIDA — `web 60` com barra curta e `app 30` com barra
+ * longa —, porque cada uma estava num ponto diferente da propria animacao.
+ *
+ * A imagem mentia sobre o dado, e nenhuma asercao pegaria: elas leem texto, e o texto estava
+ * certo. Com `reducedMotion: reduce` o produto entrega o estado final direto — a mesma
+ * preferencia que ele ja respeita para quem a declara no sistema.
+ */
+async function semMovimento(page: Page) {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+}
+
 async function semear(page: Page, id: string, v3: unknown, anl: unknown = null) {
   await page.addInitScript(([i, d, a]) => {
     (window as unknown as Record<string, unknown>).__SENTINELA_E2E_AUTH__ = true;
@@ -57,6 +72,7 @@ async function semear(page: Page, id: string, v3: unknown, anl: unknown = null) 
 for (const [vp, w, h] of [["desktop", 1440, 2600], ["tablet", 768, 3200], ["mobile", 375, 4200]] as const) {
   test(`diagnostico-v4 @ ${vp}`, async ({ page }) => {
     await page.setViewportSize({ width: w, height: h });
+    await semMovimento(page);
     await semear(page, "an-v4", DOC());
     await page.goto("/analyses/an-v4/argos");
     const main = page.locator("main");

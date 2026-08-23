@@ -59,11 +59,20 @@ function Secao({
   readonly children: React.ReactNode;
 }) {
   return (
-    <section data-revelar aria-labelledby={id} className="space-y-1">
-      <h2 id={id} className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-        {titulo}
-      </h2>
-      {children}
+    /* `painel reg` — a regiao é um PAINEL, e não um titulo com conteudo solto embaixo.
+
+       Antes cada regiao era um `<h2>` seguido de itens sem moldura: sete titulos numa coluna, e
+       nada dizendo onde uma acaba e a outra comeca. Numa tela de sete regioes com blocos
+       repetidos dentro, a moldura E a fronteira — sem ela a pessoa rola sem saber em qual
+       familia esta.
+
+       `data-revelar` fica: ele e o gancho da revelacao por rolagem, e nao tem nada a ver com o
+       desenho. */
+    <section data-revelar aria-labelledby={id} className="painel reg">
+      <header>
+        <h2 id={id}>{titulo}</h2>
+      </header>
+      <div className="corpo">{children}</div>
     </section>
   );
 }
@@ -75,13 +84,13 @@ function Contagens({
   readonly itens: readonly { rotulo: string; valor: number | null }[];
 }) {
   return (
-    <dl className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+    <dl className="contagens">
       {itens
         .filter((i) => i.valor !== null)
         .map((i) => (
-          <div key={i.rotulo} className="flex gap-1">
-            <dt>{i.rotulo}:</dt>
-            <dd className="tabular-nums">{i.valor}</dd>
+          <div key={i.rotulo}>
+            <dt>{i.rotulo}</dt>
+            <dd>{i.valor}</dd>
           </div>
         ))}
     </dl>
@@ -287,10 +296,7 @@ function Estatisticas({
 function Suprimido() {
   const { t } = useLanguage();
   return (
-    <span
-      className="inline-flex items-center rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground"
-      data-suprimido="true"
-    >
+    <span className="selo-supr" data-suprimido="true">
       {t("canonicalAnalysis.analyticsView.suppressed")}
     </span>
   );
@@ -301,10 +307,10 @@ export function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }
   return (
     <div>
       {snapshot.numeric.map((m) => (
-        <div key={m.measure_id} className="border-b border-border/60 py-3 last:border-b-0">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="text-sm font-medium">{m.measure_id}</span>
-            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+        <article key={m.measure_id} className="bloco-med">
+          <div className="cabeca">
+            <h3>{m.measure_id}</h3>
+            <span className="un">
               {/* `semantic_role` diz o que a medida É — soma, contagem, média. Sem ele, quem lê
                   "total 8,96" não sabe se somar com outro total faz sentido. Está publicado e
                   não era renderizado. */}
@@ -312,8 +318,8 @@ export function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }
                 {m.unit}
                 {m.semantic_role ? ` · ${m.semantic_role}` : ""}
               </span>
-              {m.suppression_applied ? <Suprimido /> : null}
             </span>
+            {m.suppression_applied ? <Suprimido /> : null}
           </div>
           <Estatisticas medida={m} />
           <Contagens
@@ -331,7 +337,7 @@ export function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }
           {/* A linha inteira vem do dicionário, com interpolação: o `· v` entre o id e a versão é
               copy, e o gate de texto literal reprovou — com razão. Prefixo de versão muda por
               idioma tanto quanto qualquer outra palavra. */}
-          <p className="mt-1 font-mono text-[0.7rem] text-muted-foreground">
+          <p className="metodo-linha">
             {t("canonicalAnalysis.analyticsView.methodLine", {
               id: m.method_id,
               version: String(m.method_version),
@@ -344,12 +350,12 @@ export function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }
               contagem, que é o fato de primeira leitura, some no meio.
               Mesma regra da procedência em RES-01: marginália, não corpo. */}
           <Disclosure
-            className="mt-2"
+            className="desdobra"
             gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}
           >
             <MapaDeProcedencia bloco={{ tipo: "numerico", dado: m }} denominador={snapshot.record_count} />
           </Disclosure>
-        </div>
+        </article>
       ))}
     </div>
   );
@@ -370,16 +376,16 @@ function Distribuicoes({
   return (
     <div>
       {itens.map((d, iBloco) => (
-        <div key={d.measure_id} className="border-b border-border/60 py-3 last:border-b-0">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="text-sm">{d.measure_id}</span>
+        <article key={d.measure_id} className="bloco-med">
+          <div className="cabeca">
+            <h3>{d.measure_id}</h3>
             {d.suppression_applied || d.high_cardinality_suppressed ? <Suprimido /> : null}
           </div>
           {/* O PISO DE PRIVACIDADE é a origem da supressão, e estava publicado sem aparecer.
               Sem ele, "suprimido" é uma conclusão sem causa: com ele, a pessoa sabe que grupos
               abaixo de N não podem ser publicados, e para de procurar um erro de carga.
               `value_type` diz sobre que TIPO de valor a distribuição foi montada. */}
-          <p className="mt-0.5 font-mono text-[0.7rem] text-muted-foreground">
+          <p className="regra-priv">
             {t("canonicalAnalysis.analyticsView.valueType")}: {d.value_type}
             {" · "}
             {t("canonicalAnalysis.analyticsView.minGroup")}: {d.min_group_size}
@@ -387,7 +393,7 @@ function Distribuicoes({
           {/* A contagem continua em texto, ao lado da barra. A barra é REDUNDÂNCIA: quem não
               distingue comprimento lê o número, e quem lê rápido vê a forma. Nenhum fato desta
               lista existe só na barra — é a regra que proíbe informação por cor ou forma sozinha. */}
-          <ul className="mt-1 space-y-1">
+          <ul className="grupos">
             {d.groups.map((g, i) => (
               <Bar
                 key={g.label}
@@ -405,10 +411,10 @@ function Distribuicoes({
               {t("canonicalAnalysis.analyticsView.other")}: {d.other_count}
             </p>
           ) : null}
-          <Disclosure className="mt-2" gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}>
+          <Disclosure className="desdobra" gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}>
             <MapaDeProcedencia bloco={{ tipo: "distribuicao", dado: d }} denominador={denominador} />
           </Disclosure>
-        </div>
+        </article>
       ))}
     </div>
   );
@@ -426,7 +432,7 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
   return (
     <div>
       {snapshot.concentrations.map((c, iBloco) => (
-        <div key={c.measure_id} className="border-b border-border/60 py-3 last:border-b-0">
+        <div key={c.measure_id} className="bloco-med">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="text-sm">{c.measure_id}</span>
             {c.suppression_applied || c.coarsening_applied ? <Suprimido /> : null}
@@ -494,7 +500,7 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
               recusas distintas — grosseirização, supressão e cardinalidade alta. Cada uma vira seu
               próprio nó no mapa: agrupá-las num "suprimido" único apagaria por que o número não
               veio, que é justamente o que alguém abre o mapa para descobrir. */}
-          <Disclosure className="mt-2" gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}>
+          <Disclosure className="desdobra" gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}>
             <MapaDeProcedencia
               bloco={{ tipo: "concentracao", dado: c }}
               denominador={snapshot.record_count}
@@ -562,7 +568,7 @@ function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
   return (
     <div>
       {snapshot.time_series.map((s, iBloco) => (
-        <div key={s.dimension_id} className="border-b border-border/60 py-3 last:border-b-0">
+        <div key={s.dimension_id} className="bloco-med">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="text-sm">{s.dimension_id}</span>
             <span className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -582,7 +588,7 @@ function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
               pelo outro apagaria a diferença entre "não houve" e "não podemos dizer". O `Bar` já
               sabe disso: com `suprimida` ele não desenha barra alguma, porque barra de largura
               zero e barra de valor zero são indistinguíveis e afirmam o oposto. */}
-          <ul className="mt-1 space-y-1">
+          <ul className="grupos">
             {s.windows.map((j, i) => (
               <Bar
                 key={j.window_start}
@@ -596,7 +602,7 @@ function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
           </ul>
           {/* A série desdobra em JANELAS, e a janela suprimida entra no mapa com a hachura —
               `count: null` acontece apenas em `suppressed`, e zero é valor. */}
-          <Disclosure className="mt-2" gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}>
+          <Disclosure className="desdobra" gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}>
             <MapaDeProcedencia
               bloco={{ tipo: "serie", dado: s }}
               denominador={snapshot.record_count}

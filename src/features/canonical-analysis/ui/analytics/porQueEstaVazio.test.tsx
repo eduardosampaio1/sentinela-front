@@ -70,7 +70,20 @@ async function faixa(snapshot: SnapshotAnalitico) {
 }
 
 describe("a tela diz por que está vazia", () => {
-  it("sem nada aberto por campo, explica e mostra o caminho", async () => {
+  // ORÇAMENTO PRÓPRIO para o primeiro caso, e ele não é conveniência.
+  //
+  // Ele monta a `AnalyticsView` inteira contra MSW — a montagem mais cara desta suíte — e mede
+  // ~2,3s isolado. O teto padrão de 5s cabia com folga aparente, e sob a carga da suíte inteira
+  // (145 arquivos em paralelo) ele estourou DUAS vezes em execuções diferentes, sempre neste
+  // caso e sempre no primeiro `it` do arquivo, que é quem paga o custo de subir o servidor de
+  // mock.
+  //
+  // Um caso que falha por CONCORRÊNCIA e passa isolado ensina a suíte a ser ignorada: quem vê o
+  // vermelho reroda, fica verde, e da terceira vez para de olhar. O orçamento sobe uma vez, com
+  // a medição escrita, em vez de o vermelho virar folclore.
+  //
+  // 15s e não 10: o teto tem de ficar longe do pior caso medido, não colado nele.
+  it("sem nada aberto por campo, explica e mostra o caminho", { timeout: 15_000 }, async () => {
     const { unmount } = await faixa(vazio());
 
     expect(screen.getByText("Nothing is broken down by field")).toBeTruthy();

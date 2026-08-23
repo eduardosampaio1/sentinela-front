@@ -32,11 +32,14 @@ export function Bar({
   rotuloSuprimido: string;
 }) {
   return (
+    /* Os tres nomes (`rot`, `barra-g`, `qtd`) sao o vocabulario da folha portada do Molde.
+       Eles NAO substituem os utilitarios: convivem, e a folha so os alcanca dentro do
+       escopo dela. Fora dele a barra continua exatamente como era. */
     <li className="grid grid-cols-[minmax(6rem,10rem)_1fr_auto] items-center gap-3 text-sm">
-      <span className="truncate text-muted-foreground" title={rotulo}>
+      <span className="rot truncate text-muted-foreground" title={rotulo}>
         {rotulo}
       </span>
-      <span className="h-2 w-full overflow-hidden rounded-full bg-muted" aria-hidden="true">
+      <span className="barra-g h-2 w-full overflow-hidden rounded-full bg-muted" aria-hidden="true">
         {/* Suprimida NÃO desenha barra de largura zero: uma barra vazia e uma barra de valor zero
             são indistinguíveis, e as duas afirmam coisas opostas. */}
         {!suprimida && (
@@ -56,7 +59,11 @@ export function Bar({
           />
         )}
       </span>
-      <span className={suprimida ? "text-muted-foreground" : "font-medium tabular-nums text-foreground"}>
+      <span
+        className={
+          suprimida ? "qtd text-muted-foreground" : "qtd font-medium tabular-nums text-foreground"
+        }
+      >
         {valor ?? rotuloSuprimido}
       </span>
     </li>
