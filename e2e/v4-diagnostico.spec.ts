@@ -21,21 +21,25 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
+// A projecao vem da fixture compartilhada: uma massa, duas capturas. NAO do spec irmao —
+// importar de um `.spec` registra os testes dele junto.
+import { vistaAnalytics } from "../src/test/fixtures/canonical-result/analyticsSnapshot";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const DOC = () =>
   JSON.parse(readFileSync(resolve(AQUI, "../src/test/fixtures/canonical-result/argos-v3-homol.json"), "utf-8"));
 const SAIDA = resolve(AQUI, "../docs/v4");
 
-async function semear(page: Page, id: string, v3: unknown) {
-  await page.addInitScript(([i, d]) => {
+async function semear(page: Page, id: string, v3: unknown, anl: unknown = null) {
+  await page.addInitScript(([i, d, a]) => {
     (window as unknown as Record<string, unknown>).__SENTINELA_E2E_AUTH__ = true;
     sessionStorage.setItem(
       "__sentinela_journey__",
       JSON.stringify({ [i as string]: { seq: ["completed"], idx: 0, retryAllowed: false } }),
     );
     sessionStorage.setItem("__sentinela_result_v3__", JSON.stringify({ [i as string]: d }));
-  }, [id, v3] as const);
+    if (a !== null) sessionStorage.setItem("__sentinela_analytics__", JSON.stringify({ [i as string]: a }));
+  }, [id, v3, anl] as const);
 }
 
 // A ALTURA NAO E A DA JANELA REAL, e a razao e o instrumento.
@@ -63,3 +67,16 @@ for (const [vp, w, h] of [["desktop", 1440, 2600], ["tablet", 768, 3200], ["mobi
     await page.screenshot({ path: `${SAIDA}/diagnostico-${vp}.png`, fullPage: true });
   });
 }
+
+// A segunda visao, sobre a MESMA analise. Ela le outro documento (a projecao analitica) e por
+// isso precisa da propria semente — o `__sentinela_analytics__`, que e o que o irmao
+// `shots.spec.ts` ja usava.
+test("medidas-v4 @ desktop", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 2600 });
+  await semear(page, "an-v4", DOC(), vistaAnalytics("an-v4"));
+  await page.goto("/analyses/an-v4/analytics");
+  const main = page.locator("main");
+  await expect(main.getByText(/^Delivered\.$/).first()).toBeVisible({ timeout: 15_000 });
+  await expect(main.getByText(/Numeric measures/i).first()).toBeVisible();
+  await page.screenshot({ path: `${SAIDA}/medidas-desktop.png`, fullPage: true });
+});

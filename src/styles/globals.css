@@ -589,8 +589,24 @@
 
 .v4-painel .conf-g .barra { width:64px; }
 
+/* Só a MOLDURA de `.painel` nomeia os dois escopos.
+
+   A primeira versao compartilhou tambem `.corpo`, `> header` e `.rodape`, e isso foi longe
+   demais: elas sao regioes do desenho do PAINEL, e Medidas define `.denom .corpo` com outra
+   grade. Duas regras de mesma especificidade brigando por ordem de arquivo e exatamente o
+   defeito que manter os escopos irmaos existe para evitar. Medido: o denominador saiu em coluna,
+   com o digest embaixo em vez de a direita.
+
+
+   `.painel` e uma primitiva da V4, e no molde as duas telas vivem sob o mesmo `.v4`, entao ela
+   as alcanca de graca. Aqui os escopos sao irmaos de proposito — aninha-los faria uma visao
+   herdar em silencio as regras de regiao da outra, e as duas tem `.corpo`, `.rot` e `.painel`
+   com desenhos diferentes.
+
+   Entao o seletor nomeia os dois. E o unico lugar onde eles se cruzam, e o cruzamento e
+   explicito. */
 /* ── painel base ─────────────────────────────────────────────────────────────────────── */
-.v4-painel .painel { border:1px solid hsl(var(--ds-border-subtle)); border-radius:var(--ds-radius-panel);
+.v4-painel .painel, .v4-medidas .painel { border:1px solid hsl(var(--ds-border-subtle)); border-radius:var(--ds-radius-panel);
   background:linear-gradient(180deg, rgba(255,255,255,.026), rgba(255,255,255,.006)),
              hsl(var(--ds-surface-raised));
   box-shadow:0 18px 46px -30px rgba(0,0,0,.9); }
@@ -969,3 +985,209 @@
    porque a grade do trio estica os tres; aqui a mesma grade existe e o painel precisa declarar
    que e um contexto de coluna. */
 .v4-painel .trio > .painel { display:flex; flex-direction:column; }
+
+/* ── A BARRA DA ANALISE, portada do `.topo` da V4 ────────────────────────────────────────
+
+   Uma linha so: titulo, selo de estado, e os fatos de identidade. Antes eram tres alturas de
+   linha para dizer a mesma coisa, e numa tela que existe para ser varrida isso empurra o
+   conteudo para baixo da dobra.
+
+   ## `sticky`, e o degrade nao e enfeite
+
+   O cabecalho gruda no topo enquanto o conteudo rola por baixo. Sem o degrade, o texto passaria
+   NITIDO por tras dele e a leitura ficaria embaralhada por um instante a cada rolagem. O
+   gradiente e opaco em 68% e some depois: o texto some ANTES de encostar, em vez de ser cortado
+   por uma borda.
+
+   O escopo e `.v4-topo` e nao `.v4-painel .topo`: esta barra vive no cabecalho compartilhado
+   das duas visoes, fora do container que a folha do painel escopa.
+
+   ## `top:0` funciona porque quem rola e o `main`
+
+   `PageFrame` renderiza `<main class="overflow-y-auto">`. O `sticky` se ancora no ancestral que
+   rola, que e ele — nao a janela. Se um dia o `main` deixar de rolar, esta barra para de grudar
+   e ninguem fica sabendo; e a mesma fiacao que fez a captura de tela cortar. */
+.v4-topo {
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  padding:2px 0 14px; position:sticky; top:0; z-index:20;
+  margin-inline:-1.5rem; padding-inline:1.5rem;
+  background:linear-gradient(180deg,
+    hsl(var(--ds-surface-base) / 0.96) 68%, hsl(var(--ds-surface-base) / 0));
+}
+.v4-topo h1 { margin:0; font-size:20px; font-weight:600; letter-spacing:-.017em; }
+.v4-topo .meta {
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  font-size:13px; color:hsl(var(--ds-text-muted));
+}
+.v4-topo .meta i {
+  width:3px; height:3px; border-radius:50%; background:hsl(var(--ds-text-muted));
+  display:block; flex:none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   MEDIDAS DA V4 — a segunda visao, portada
+
+   Mesma traducao da folha do painel (ver a nota dela): cor de marca vira token, branco e preto
+   translucidos ficam literais, e os tempos usam os tokens de movimento.
+
+   Escopo `.v4-medidas`, posto pela propria visao. Ela e irma do `.v4-painel` e nao filha: as
+   duas visoes tem regioes com o mesmo nome (`.painel`, `.corpo`, `.rot`) e desenhos diferentes,
+   e aninhar os escopos faria uma herdar as regras da outra em silencio.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+.v4-medidas { display:flex; flex-direction:column; gap:14px; padding-bottom:26px; }
+
+/* ── o denominador ─────────────────────────────────────────────────────────────────────── */
+.v4-medidas .denom .corpo { display:flex; align-items:flex-start; gap:26px; flex-wrap:wrap;
+  padding:16px 20px 18px; }
+.v4-medidas .denom .esq { min-width:0; }
+.v4-medidas .denom .rot { display:flex; align-items:center; font-size:12px; color:hsl(var(--ds-text-muted)); }
+/* SEM background-clip:text no número principal.
+   O truque do gradiente exige color:transparent, e a cor transparente é a cor de verdade: em
+   modo de cores forçadas, em impressão e em qualquer motor que não componha o recorte, o
+   número da tela inteira some. O auditor mediu 1,00 de contraste aqui — ele estava certo.
+   (E crase dentro de template literal fecha a string: já custou três builds neste laboratório.) */
+.v4-medidas .denom .n { display:block; font-size:44px; font-weight:600; letter-spacing:-.035em;
+  line-height:1.05; margin-top:4px; font-variant-numeric:tabular-nums; color:hsl(var(--ds-text-primary)); }
+.v4-medidas .denom .sub { margin:8px 0 0; font-size:12.5px; color:hsl(var(--ds-text-muted)); line-height:1.55; }
+.v4-medidas .denom .dir { margin-left:auto; max-width:340px; min-width:0; }
+.v4-medidas .denom .digest { display:block; margin-top:6px; font-family:ui-monospace,monospace;
+  font-size:11px; line-height:1.5; color:hsl(var(--ds-text-muted)); word-break:break-all; }
+.v4-medidas code { font-family:ui-monospace,monospace; font-size:11.5px; color:hsl(var(--ds-accent-ink)); }
+
+/* ── índice das regiões ────────────────────────────────────────────────────────────────── */
+.v4-medidas .indice-reg { display:flex; align-items:baseline; gap:16px; flex-wrap:wrap;
+  padding:7px 4px 8px; position:sticky; top:70px; z-index:18;
+  background:linear-gradient(180deg, rgba(5,8,20,.97) 74%, rgba(5,8,20,0)); }
+.v4-medidas .indice-reg .rot { font-size:10.5px; letter-spacing:.15em; text-transform:uppercase;
+  color:hsl(var(--ds-text-muted)); }
+.v4-medidas .indice-reg ul { display:flex; flex-wrap:wrap; gap:4px 16px; list-style:none;
+  margin:0; padding:0; }
+/* py de 6px leva o alvo a ~30px. Como texto puro o link tinha ~20, abaixo dos 24×24 da
+   WCAG 2.2 AA (2.5.8). */
+.v4-medidas .indice-reg a { display:inline-block; padding:6px 0; font-size:13px; color:hsl(var(--ds-text-muted));
+  text-decoration:none; text-underline-offset:4px; }
+.v4-medidas .indice-reg a:hover { color:hsl(var(--ds-text-primary)); text-decoration:underline; }
+
+/* ── região ────────────────────────────────────────────────────────────────────────────── */
+/* O cabeçalho é sticky e tem 70px. Sem esta margem, o salto do índice deixa o título da região
+   EMBAIXO dele: a âncora funciona e a pessoa vê o meio da seção, sem o nome dela. */
+.v4-medidas .reg { scroll-margin-top:82px; }
+.v4-medidas h2 { scroll-margin-top:82px; }
+.v4-medidas .reg > .corpo { display:flex; flex-direction:column; gap:14px; padding:12px 20px 18px; }
+.v4-medidas .bloco-med { border:1px solid hsl(var(--ds-border-subtle)); border-radius:var(--ds-radius-card);
+  background:rgba(255,255,255,.018); padding:14px 16px 15px; }
+.v4-medidas .bloco-med + .bloco-med { margin-top:0; }
+.v4-medidas .bloco-med .cabeca { display:flex; align-items:baseline; gap:11px; flex-wrap:wrap; }
+.v4-medidas .bloco-med h3 { margin:0; font-size:14.5px; font-weight:600; letter-spacing:-.008em;
+  font-family:ui-monospace,monospace; }
+.v4-medidas .bloco-med .un { font-size:11.5px; color:hsl(var(--ds-text-muted)); }
+.v4-medidas .selo-supr { display:inline-flex; align-items:center; height:19px; padding:0 8px;
+  border-radius:6px; font-size:10.5px; font-weight:600; letter-spacing:.05em;
+  color:hsl(var(--ds-warning)); background:hsl(var(--ds-warning) / 0.12);
+  box-shadow:inset 0 0 0 1px hsl(var(--ds-warning) / 0.30); }
+
+.v4-medidas .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px;
+  margin-top:12px; }
+@media (max-width:760px){ .v4-medidas .stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.v4-medidas .stats .r { display:block; font-size:11px; color:hsl(var(--ds-text-muted)); }
+.v4-medidas .stats .v { display:block; margin-top:3px; font-size:19px; font-weight:600;
+  letter-spacing:-.025em; font-variant-numeric:tabular-nums; }
+.v4-medidas .nao-pub { font-size:12px; font-style:italic; font-weight:400; color:hsl(var(--ds-text-muted)); }
+
+.v4-medidas .contagens { display:flex; flex-wrap:wrap; gap:4px 18px; margin:12px 0 0; }
+.v4-medidas .contagens div { display:flex; gap:6px; }
+.v4-medidas .contagens dt { font-size:11.5px; color:hsl(var(--ds-text-muted)); }
+.v4-medidas .contagens dd { margin:0; font-size:11.5px; color:hsl(var(--ds-text-secondary));
+  font-variant-numeric:tabular-nums; }
+
+.v4-medidas .metodo-linha { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:10px 0 0;
+  font-family:ui-monospace,monospace; font-size:11px; color:hsl(var(--ds-text-muted)); }
+.v4-medidas .metodo-linha .par { padding:1px 7px; border-radius:5px; background:rgba(255,255,255,.05);
+  color:hsl(var(--ds-text-muted)); }
+.v4-medidas .metodo-linha .dig { color:hsl(var(--ds-text-muted)); opacity:.75; cursor:help; }
+
+.v4-medidas .regra-priv { margin:9px 0 0; font-size:11px; color:hsl(var(--ds-text-muted)); display:flex;
+  flex-wrap:wrap; align-items:center; gap:0 8px; }
+.v4-medidas .regra-priv b { color:hsl(var(--ds-warning)); font-weight:600; }
+.v4-medidas .regra-priv .pv { margin-left:auto; font-family:ui-monospace,monospace; opacity:.7; }
+
+/* ── grupos e faixas ───────────────────────────────────────────────────────────────────── */
+.v4-medidas .grupos, .v4-medidas .faixas { list-style:none; margin:12px 0 0; padding:0; display:grid;
+  gap:6px; }
+.v4-medidas .grupos li, .v4-medidas .faixas li { display:grid; grid-template-columns:132px minmax(0,1fr) 62px;
+  align-items:center; gap:12px; }
+@media (max-width:700px){ .v4-medidas .grupos li, .v4-medidas .faixas li {
+  grid-template-columns:96px minmax(0,1fr) 54px; } }
+.v4-medidas .grupos .rot, .v4-medidas .faixas .rot { font-size:12.5px; color:hsl(var(--ds-text-secondary)); overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.v4-medidas .faixas .rot small { color:hsl(var(--ds-text-muted)); font-size:10.5px; margin-left:5px; }
+.v4-medidas .barra-g { height:9px; border-radius:9px; background:rgba(255,255,255,.055);
+  overflow:hidden; }
+.v4-medidas .barra-g i { display:block; height:100%; border-radius:9px;
+  background:linear-gradient(90deg, hsl(var(--ds-accent)), hsl(var(--ds-accent-ink))); }
+.v4-medidas .grupos .qtd, .v4-medidas .faixas .qtd { text-align:right; font-size:12.5px; font-weight:600;
+  font-variant-numeric:tabular-nums; }
+.v4-medidas .grupos .outros .rot { color:hsl(var(--ds-text-muted)); }
+.v4-medidas .grupos .outros.vazio { grid-template-columns:132px minmax(0,1fr); }
+.v4-medidas .grupos .explica { font-size:11.5px; font-style:italic; color:hsl(var(--ds-warning)); }
+
+/* ── Pareto ────────────────────────────────────────────────────────────────────────────── */
+.v4-medidas .pareto { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px;
+  margin-top:12px; }
+@media (max-width:700px){ .v4-medidas .pareto { grid-template-columns:1fr; } }
+.v4-medidas .pq { border:1px solid hsl(var(--ds-border-default)); border-radius:var(--ds-radius-mini); padding:11px 13px;
+  background:hsl(var(--ds-accent) / 0.045); }
+.v4-medidas .pq .r { display:block; font-size:11.5px; color:hsl(var(--ds-text-muted)); line-height:1.4; }
+.v4-medidas .pq .v { display:block; margin-top:6px; font-size:25px; font-weight:600;
+  letter-spacing:-.03em; color:hsl(var(--ds-accent-ink)); font-variant-numeric:tabular-nums; }
+.v4-medidas .pq .v.vazio { font-size:12.5px; font-weight:400; font-style:italic; color:hsl(var(--ds-text-muted)); }
+.v4-medidas .pq .p { display:block; margin-top:4px; font-size:10.5px; letter-spacing:.05em;
+  text-transform:uppercase; color:hsl(var(--ds-text-muted)); }
+
+/* ── escada da série ───────────────────────────────────────────────────────────────────── */
+.v4-medidas .escada { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:9px;
+  align-items:end; margin-top:14px; }
+.v4-medidas .escada .col { display:grid; justify-items:center; gap:6px; }
+.v4-medidas .escada .q { font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; }
+.v4-medidas .escada .tr { width:100%; height:76px; display:flex; align-items:flex-end;
+  border-radius:8px; background:rgba(255,255,255,.045); overflow:hidden; }
+.v4-medidas .escada .tr i { display:block; width:100%; border-radius:8px;
+  background:linear-gradient(180deg, hsl(var(--ds-accent-ink)), hsl(var(--ds-accent) / 0.55)); }
+.v4-medidas .escada .j { font-size:10.5px; color:hsl(var(--ds-text-muted)); }
+.v4-medidas .escada .vazia .q { color:hsl(var(--ds-text-muted)); }
+.v4-medidas .escada .vazia .tr i { background:repeating-linear-gradient(135deg,
+  hsl(var(--ds-warning) / 0.16) 0 5px, transparent 5px 10px); }
+
+/* ── desdobrar ─────────────────────────────────────────────────────────────────────────── */
+.v4-medidas .desdobra { margin-top:12px; }
+.v4-medidas .desdobra > button { display:inline-flex; align-items:center; gap:8px; height:32px;
+  padding:0 12px; border-radius:9px; border:1px solid hsl(var(--ds-border-default));
+  background:rgba(255,255,255,.028); color:hsl(var(--ds-text-secondary)); font:inherit; font-size:12.5px;
+  cursor:pointer; transition:background var(--ds-duration-base) var(--ds-easing-standard), color var(--ds-duration-base) var(--ds-easing-standard); }
+.v4-medidas .desdobra > button:hover { background:hsl(var(--ds-accent) / 0.14); color:hsl(var(--ds-text-primary)); }
+.v4-medidas .desdobra > button[aria-expanded="true"] { color:hsl(var(--ds-accent-ink));
+  border-color:hsl(var(--ds-accent) / 0.34); }
+.v4-medidas .desdobra .gira { transform:rotate(180deg); }
+
+/* ── procedência ───────────────────────────────────────────────────────────────────────── */
+.v4-medidas .proc-grade { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+@media (max-width:760px){ .v4-medidas .proc-grade { grid-template-columns:1fr; } }
+.v4-medidas .proc-grade .r { display:block; font-size:11px; color:hsl(var(--ds-text-muted)); }
+.v4-medidas .proc-grade .v { display:block; margin-top:4px; font-size:16px; font-weight:600;
+  font-variant-numeric:tabular-nums; }
+.v4-medidas .proc-grade .v.mono { font-family:ui-monospace,monospace; font-size:12.5px;
+  font-weight:500; color:hsl(var(--ds-text-secondary)); }
+
+.v4-medidas table.retido { margin-top:6px; }
+.v4-medidas table.retido caption { text-align:left; font-size:11.5px; color:hsl(var(--ds-text-muted));
+  padding:0 0 8px; line-height:1.5; }
+.v4-medidas table.retido th[scope="row"] { font-weight:400; font-size:12.5px; color:hsl(var(--ds-text-secondary));
+  text-align:left; padding:7px 0; border-top:1px solid hsl(var(--ds-border-subtle)); }
+.v4-medidas table.retido td { padding:7px 0; border-top:1px solid hsl(var(--ds-border-subtle)); font-size:12.5px;
+  color:hsl(var(--ds-text-muted)); }
+.v4-medidas table.retido td.num { text-align:right; width:74px; font-weight:600; color:hsl(var(--ds-text-muted));
+  font-variant-numeric:tabular-nums; }
+.v4-medidas table.retido tr.tem td.num { color:hsl(var(--ds-warning)); }
+.v4-medidas table.retido td.q { padding-left:18px; font-size:11.5px; }
+.v4-medidas .nota-retido { margin:12px 0 0; font-size:12px; line-height:1.6; color:hsl(var(--ds-text-muted)); }
+.v4-medidas .nota-retido b { color:hsl(var(--ds-text-primary)); font-weight:600; }

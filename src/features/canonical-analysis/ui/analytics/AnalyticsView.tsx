@@ -130,13 +130,22 @@ export function Cabeca({
       })
     : null;
   return (
-    <div className="flex flex-wrap items-start justify-between gap-6 rounded-lg border border-border bg-muted/30 p-4">
-      <div>
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+    /* O DENOMINADOR, no desenho da V4.
+
+       A ancora desta tela nao e um escore: e o numero sobre o qual todo o resto e contado. O
+       contrato o chama exatamente assim — *«o denominador verdadeiro»* — e por isso ele nao e
+       um cartao entre cartoes: ele e a faixa que abre a pagina.
+
+       As classes vem da folha portada (`.painel.denom`). O que era `bg-muted/30` com borda
+       generica passa a ter o gradiente e o raio de painel da V4. */
+    <section className="painel denom">
+      <div className="corpo">
+      <div className="esq">
+        <span className="rot">
           {t("canonicalAnalysis.analyticsView.records")}
-        </p>
-        <p className="text-4xl font-semibold tabular-nums">{snapshot.record_count}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
+        </span>
+        <b className="n">{snapshot.record_count}</b>
+        <p className="sub">
           <span className="font-mono">{vista.snapshot_contract_version ?? "—"}</span>
           {" · "}
           {vista.component_status}
@@ -144,18 +153,19 @@ export function Cabeca({
         </p>
       </div>
       {vista.projection_digest ? (
-        <div className="max-w-full">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+        <div className="dir">
+          <span className="rot">
             {t("canonicalAnalysis.analyticsView.projectionDigest")}
-          </p>
+          </span>
           {/* Inteiro, e quebrando: um digest truncado não serve para conferir nada, que é a
               única coisa para a qual ele existe. */}
-          <p className="break-all font-mono text-[0.7rem] text-muted-foreground">
+          <p className="digest">
             {vista.projection_digest}
           </p>
         </div>
       ) : null}
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -778,8 +788,14 @@ export function AnalyticsView() {
 
   return (
     <AppShell topBarTitle={titulo}>
-      <PageFrame maxWidth="lg">
-        <div ref={raiz} className="space-y-6" data-testid="analytics-view">
+      {/* LARGURA INTEIRA, pela mesma razao do Diagnostico: esta tela e uma GRADE — distribuicoes,
+          series, concentracao, procedencia —, e nao prosa. Medida de linha importa onde se le
+          texto corrido; aqui se varre. */}
+      <PageFrame maxWidth="full">
+        {/* `v4-medidas` e o escopo da folha portada do Molde (ver `globals.css`). Ele e IRMAO
+            do `v4-painel`, nao filho: as duas visoes tem regioes com o mesmo nome (`.painel`,
+            `.corpo`, `.rot`) e desenhos diferentes. */}
+        <div ref={raiz} className="v4-medidas space-y-6" data-testid="analytics-view">
           <AnalysisShell
             analysisId={analysisId ?? ""}
             estado={status.data?.status as EstadoPublico | undefined}

@@ -66,8 +66,10 @@ export function AnalysisShell({ analysisId, estado, titulo, contexto = [] }: Ana
 
   return (
     <header className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-semibold tracking-tight">{titulo}</h1>
+      {/* UMA LINHA: titulo, estado e identidade. Ver `.v4-topo` no `globals.css` para o porque
+          de ela ser fixa e do degrade. */}
+      <div className="v4-topo">
+        <h1>{titulo}</h1>
         {/* Só aparece quando o estado chegou. Um badge de "carregando" inventaria um nono estado
             público, e o vocabulário é fechado. */}
         {estado ? (
@@ -80,27 +82,27 @@ export function AnalysisShell({ analysisId, estado, titulo, contexto = [] }: Ana
             rotulo={t(`estadoPublico.${estado}`)}
           />
         ) : null}
+
+        {/* A identidade é o que torna a Analysis retomável por deep link — e é ela que a
+            pessoa cola num chamado. Fica legível, não escondida num atributo, e na mesma linha
+            do título: os três fatos são identificação — de qual análise, de quando, sobre
+            quanto. */}
+        <p className="meta">
+          <span className="sr-only">{t("canonicalAnalysis.shell.identity")}</span>{" "}
+          <code className="font-mono text-xs">{analysisId}</code>
+          {contexto.map((fato) => (
+            /* `key` pelo próprio texto: são fatos distintos por construção (data, contagem), e
+               índice como chave reordenaria o DOM se a visão publicar um fato a mais no meio.
+
+               O separador é um PONTO desenhado (`<i>`), como na V4, e não o caractere `·`: em
+               13px o caractere fica maior que o vao entre os fatos e compete com eles. */
+            <span key={fato} className="flex items-center gap-2">
+              <i aria-hidden />
+              {fato}
+            </span>
+          ))}
+        </p>
       </div>
-
-      {/* A identidade é o que torna a Analysis retomável por deep link — e é ela que a pessoa
-          cola num chamado. Fica legível, não escondida num atributo.
-
-          Ela e os fatos de contexto moram na MESMA linha, separados por `·`: são todos
-          identificação — de qual análise, de quando, sobre quanto. Empilhados em parágrafos
-          consecutivos, ocupavam três alturas de linha para dizer uma coisa só, e empurravam o
-          conteúdo para baixo da dobra numa tela que existe para ser varrida. */}
-      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-        <span className="sr-only">{t("canonicalAnalysis.shell.identity")}</span>{" "}
-        <code className="font-mono text-xs">{analysisId}</code>
-        {contexto.map((fato) => (
-          /* `key` pelo próprio texto: são fatos distintos por construção (data, contagem), e
-             índice como chave reordenaria o DOM se a visão publicar um fato a mais no meio. */
-          <span key={fato} className="flex items-center gap-2">
-            <span aria-hidden className="text-border">·</span>
-            {fato}
-          </span>
-        ))}
-      </p>
 
       {/* SEGMENTO, e nao dois botoes soltos.
 
