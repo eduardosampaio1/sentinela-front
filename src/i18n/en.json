@@ -181,7 +181,11 @@
       },
       "emptyTitle": "Nothing is broken down by field",
       "emptyBody": "Measures open by channel, model or date only when the dataset declares those fields for grouping. The reading itself is complete.",
-      "emptyHow": "You pick them under “Group the results by” when you confirm a dataset’s mapping."
+      "emptyHow": "You pick them under “Group the results by” when you confirm a dataset’s mapping.",
+      "minimum": "minimum",
+      "maximum": "maximum",
+      "totalStat": "total",
+      "mean": "mean"
     },
     "argos": {
       "alerts": "Alerts",

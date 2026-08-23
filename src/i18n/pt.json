@@ -181,7 +181,11 @@
       },
       "emptyTitle": "Nada está aberto por campo",
       "emptyBody": "As medidas se abrem por canal, modelo ou data só quando a base declara esses campos para agrupamento. A leitura em si está completa.",
-      "emptyHow": "Você escolhe em “Agrupar os resultados por”, ao confirmar o mapeamento de uma base."
+      "emptyHow": "Você escolhe em “Agrupar os resultados por”, ao confirmar o mapeamento de uma base.",
+      "minimum": "mínimo",
+      "maximum": "máximo",
+      "totalStat": "total",
+      "mean": "média"
     },
     "argos": {
       "alerts": "Alertas",

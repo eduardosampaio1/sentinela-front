@@ -88,6 +88,65 @@ function Contagens({
   );
 }
 
+/**
+ * As quatro estatísticas da medida — o número em si.
+ *
+ * ## O que faltava
+ *
+ * O contrato publica `minimum`, `maximum`, `total` e `mean`, e esta tela lia o objeto inteiro
+ * sem renderizar nenhum. Ela mostrava a CONTABILIDADE da medida (quantos válidos, quantos
+ * nulos, qual método) e escondia a medida.
+ *
+ * A tela legada RES-01 já os renderiza há ondas. Dois renderizadores do mesmo dado, e o mais
+ * novo mostrava menos — o desenho vem do Molde V4, que lê este mesmo contrato.
+ *
+ * ## Cada uma sozinha, e `null` dito por extenso
+ *
+ * A ausência de uma não contamina a leitura das outras. `null` vira "não publicado" e nunca
+ * `0`: zero é um fato sobre a massa, ausência é a falta dele. Confundir os dois foi o defeito
+ * que este produto vem fechando em todo lugar.
+ *
+ * **Nada é calculado aqui.** A média vem publicada; ninguém a divide nesta tela.
+ */
+function Estatisticas({
+  medida,
+}: {
+  readonly medida: {
+    minimum: number | null;
+    maximum: number | null;
+    total: number | null;
+    mean: number | null;
+  };
+}) {
+  const { t } = useLanguage();
+  const itens = [
+    { rotulo: t("canonicalAnalysis.analyticsView.minimum"), valor: medida.minimum },
+    { rotulo: t("canonicalAnalysis.analyticsView.maximum"), valor: medida.maximum },
+    { rotulo: t("canonicalAnalysis.analyticsView.totalStat"), valor: medida.total },
+    { rotulo: t("canonicalAnalysis.analyticsView.mean"), valor: medida.mean },
+  ];
+  return (
+    <dl className="mt-2 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
+      {itens.map((i) => (
+        <div key={i.rotulo} className="flex flex-col gap-0.5">
+          <dt className="text-[0.7rem] uppercase tracking-wide text-muted-foreground">
+            {i.rotulo}
+          </dt>
+          <dd className="text-lg tabular-nums">
+            {i.valor === null ? (
+              <span className="text-sm italic text-muted-foreground">
+                {t("canonicalAnalysis.analyticsView.notPublished")}
+              </span>
+            ) : (
+              i.valor
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 /** "Houve supressão por privacidade" — conclusão do produtor, dita e não explicada. */
 function Suprimido() {
   const { t } = useLanguage();
@@ -101,19 +160,26 @@ function Suprimido() {
   );
 }
 
-function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
+export function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
   const { t } = useLanguage();
   return (
     <div>
       {snapshot.numeric.map((m) => (
         <div key={m.measure_id} className="border-b border-border/60 py-3 last:border-b-0">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="text-sm">{m.measure_id}</span>
+            <span className="text-sm font-medium">{m.measure_id}</span>
             <span className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{m.unit}</span>
+              {/* `semantic_role` diz o que a medida É — soma, contagem, média. Sem ele, quem lê
+                  "total 8,96" não sabe se somar com outro total faz sentido. Está publicado e
+                  não era renderizado. */}
+              <span>
+                {m.unit}
+                {m.semantic_role ? ` · ${m.semantic_role}` : ""}
+              </span>
               {m.suppression_applied ? <Suprimido /> : null}
             </span>
           </div>
+          <Estatisticas medida={m} />
           <Contagens
             itens={[
               { rotulo: t("canonicalAnalysis.analyticsView.valid"), valor: m.valid_count },
