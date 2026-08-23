@@ -38,7 +38,19 @@ async function semear(page: Page, id: string, v3: unknown) {
   }, [id, v3] as const);
 }
 
-for (const [vp, w, h] of [["desktop", 1440, 900], ["tablet", 768, 1024], ["mobile", 375, 812]] as const) {
+// A ALTURA NAO E A DA JANELA REAL, e a razao e o instrumento.
+//
+// `PageFrame` renderiza `<main class="flex-1 overflow-y-auto">`: quem rola e o MAIN, nao o
+// documento. E `fullPage: true` captura a altura do DOCUMENTO — que nesta casca tem sempre a
+// altura da janela. Resultado medido: a imagem saia cortada logo abaixo da faixa de KPIs, e
+// tudo que vem depois (trio, familias, procedencia) ficava fora sem nada indicar isso.
+//
+// As asercoes NAO se enganavam — `toBeVisible` alcanca o conteudo dentro do container que rola.
+// So a imagem mentia, que e o pior dos dois: o teste passava e a captura parecia dizer que a
+// pagina acabava ali.
+//
+// A altura abaixo e a do CONTEUDO, para que a janela nao precise rolar. Largura continua a real.
+for (const [vp, w, h] of [["desktop", 1440, 2600], ["tablet", 768, 3200], ["mobile", 375, 4200]] as const) {
   test(`diagnostico-v4 @ ${vp}`, async ({ page }) => {
     await page.setViewportSize({ width: w, height: h });
     await semear(page, "an-v4", DOC());

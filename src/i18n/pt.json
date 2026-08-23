@@ -362,7 +362,22 @@
       },
       "explainMetric": "O que é {{rotulo}}?",
       "intentColumn": "Intenção",
-      "thresholdColumn": "Corte"
+      "thresholdColumn": "Corte",
+      "intentPerformance": "Desempenho por intenção",
+      "scoreColumn": "Score",
+      "deltaColumn": "Δ até o corte ({{corte}})",
+      "actionColumn": "Ação",
+      "action": {
+        "saudavel": "Saudável",
+        "monitorar": "Monitorar",
+        "exige_acao": "Exige ação",
+        "sem_base": "Sem base"
+      },
+      "intentCounts": "{{detectadas}} detectadas · {{comEscore}} com escore · {{cobertas}} com amostra suficiente",
+      "mainEvidence": "Evidências principais",
+      "observedCount": "{{n}} ocorrências",
+      "engineAlerts": "Alertas do motor",
+      "familyAbsent": "Esta capacidade não foi publicada nesta análise."
     },
     "compare": {
       "absentSide": "não publicada",

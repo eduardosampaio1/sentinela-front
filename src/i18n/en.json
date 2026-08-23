@@ -362,7 +362,22 @@
       },
       "explainMetric": "What is {{rotulo}}?",
       "intentColumn": "Intent",
-      "thresholdColumn": "Cut"
+      "thresholdColumn": "Cut",
+      "intentPerformance": "Performance by intent",
+      "scoreColumn": "Score",
+      "deltaColumn": "Δ to the cut ({{corte}})",
+      "actionColumn": "Action",
+      "action": {
+        "saudavel": "Healthy",
+        "monitorar": "Monitor",
+        "exige_acao": "Needs action",
+        "sem_base": "No basis"
+      },
+      "intentCounts": "{{detectadas}} detected · {{comEscore}} scored · {{cobertas}} with enough sample",
+      "mainEvidence": "Main evidence found",
+      "observedCount": "{{n}} occurrences",
+      "engineAlerts": "Engine alerts",
+      "familyAbsent": "This capability was not published in this analysis."
     },
     "compare": {
       "absentSide": "not published",

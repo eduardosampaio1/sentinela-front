@@ -511,8 +511,461 @@
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 16px rgba(79,90,232, 0.1); }
   50% { box-shadow: 0 0 32px rgba(79,90,232, 0.25); }
+
 }
 
 .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 .animate-slide-in-right { animation: slideInRight 0.3s ease-out forwards; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   POR QUE ESTE BLOCO NAO MORA EM `@layer components`
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+
+   Ele morou, e nao funcionou. O Tailwind PODA o conteudo de `@layer` pelo que encontra na
+   varredura de fontes; um seletor descendente escrito a mao — `.v4-painel .trio table th` — nao
+   e uma classe que ele reconheca, e a regra sai do bundle sem aviso nenhum.
+
+   O sintoma foi exatamente o que se espera disso, e por isso vale registrar: a tela renderizava
+   a ESTRUTURA certa (tabela, tres colunas, cabecalhos) e nao tinha estilo nenhum. Nada quebrou;
+   nada avisou. So a captura mostrou.
+
+   Fora da camada e CSS comum, e nada poda. A ordem da cascata continua certa porque o bloco vem
+   depois de `@tailwind utilities`.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   O PAINEL DA V4 — a folha do Molde, portada.
+
+   ## O que e isto
+
+   As regras do painel do Diagnostico da V4, trazidas do molde (`versoes/Painel.tsx`) e
+   reescritas contra o vocabulario de tokens desta casa. O desenho e o da V4; os VALORES sao
+   os tokens, para que uma proxima troca de paleta continue propagando por aqui.
+
+   ## O que mudou na traducao, e por que
+
+   Os tokens da V4 (superficie, borda, tinta, roxo, verde, rosa, ambar) viraram --ds-*. Tres pontos onde a V4
+   tem mais degraus que este vocabulario:
+
+     t3 e t4  colapsam em `--ds-text-muted`. A escolha ja foi medida quando a paleta entrou:
+              com o `--t3`, o tom neutro e o negativo ficam a 1,05 de separacao em escala de
+              cinza — colidem para quem nao distingue cor.
+     roxo2    vira `--ds-accent-ink`. Os usos dele sao gradientes, e mapear os dois extremos
+              para o mesmo token achataria o gradiente.
+     ciano    vira `--ds-accent-ink`. A recusa do ciano como token esta escrita no tokens.css:
+              cor de serie precisa de prova de contraste entre series, e este produto
+              distingue serie por ROTULO. Um matiz a menos, nenhuma leitura a menos.
+
+   Branco e preto translucidos ficam literais. Eles nao sao valor de marca — sao translucidez
+   sobre qualquer superficie, e e assim que este arquivo ja escreve scrollbar e selecao.
+
+   ## Por que dentro de `globals.css`
+
+   O gate `design-tokens-unico` afirma, com lista literal, que o repositorio tem exatamente
+   DOIS arquivos .css. Um terceiro reprova, e a regra e boa: foi a existencia de tres
+   vocabularios visuais que motivou o gate.
+
+   ## Escopo
+
+   Tudo sob `.v4-painel`, que a superficie poe no proprio container. A V4 escopa em `.v4`, que
+   la e a raiz da aplicacao inteira e carrega a grade do shell; aqui o shell e outro, e herdar
+   a grade dela quebraria a lateral que ja existe.
+   ═══════════════════════════════════════════════════════════════════════════════════════ */
+
+.v4-painel .barra { height:5px; border-radius:5px; background:rgba(255,255,255,.07);
+  overflow:hidden; }
+
+.v4-painel .barra i { display:block; height:100%; border-radius:5px;
+  background:linear-gradient(90deg, hsl(var(--ds-accent)), hsl(var(--ds-accent-ink))); }
+
+/* ── a confiabilidade global, na faixa da parcialidade ────────────────────────── */
+.v4-painel .conf-g { display:flex; align-items:center; gap:9px; margin-left:18px;
+  padding-left:18px; border-left:1px solid hsl(var(--ds-border-default)); white-space:nowrap; }
+
+.v4-painel .conf-g .r { display:flex; align-items:center; font-size:11.5px; color:hsl(var(--ds-text-muted)); }
+
+.v4-painel .conf-g b { font-size:15px; font-weight:600; letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums; }
+
+.v4-painel .conf-g .barra { width:64px; }
+
+/* ── painel base ─────────────────────────────────────────────────────────────────────── */
+.v4-painel .painel { border:1px solid hsl(var(--ds-border-subtle)); border-radius:var(--ds-radius-panel);
+  background:linear-gradient(180deg, rgba(255,255,255,.026), rgba(255,255,255,.006)),
+             hsl(var(--ds-surface-raised));
+  box-shadow:0 18px 46px -30px rgba(0,0,0,.9); }
+
+.v4-painel .painel > header { display:flex; align-items:center; gap:9px; padding:13px 18px 0; }
+
+.v4-painel .painel > header h2 { margin:0; font-size:15.5px; font-weight:600; letter-spacing:-.008em; }
+
+.v4-painel .painel > header .ic { color:hsl(var(--ds-text-muted)); display:flex; }
+
+/* ══ HERO ════════════════════════════════════════════════════════════════════════════════ */
+.v4-painel .hero { display:grid; grid-template-columns:352px minmax(0,1fr) 372px; gap:0;
+  align-items:stretch; }
+
+.v4-painel .hero .estado { padding:16px 20px 16px; display:flex; flex-direction:column; }
+
+.v4-painel .nucleo { display:flex; align-items:center; gap:20px; }
+
+.v4-painel .nucleo .anel { position:relative; width:104px; height:104px; flex:none; }
+
+.v4-painel .nucleo .anel .halo { position:absolute; inset:12px; border-radius:50%;
+  background:radial-gradient(circle, hsl(var(--ds-accent) / 0.55), hsl(var(--ds-accent) / 0.12) 58%, transparent 72%);
+  filter:blur(9px); }
+
+.v4-painel .nucleo .anel .miolo { position:absolute; inset:29px; border-radius:50%;
+  background:radial-gradient(circle at 40% 34%, hsl(var(--ds-accent-ink)), hsl(var(--ds-accent)) 62%, hsl(var(--ds-accent) / 0.35));
+  display:flex; align-items:center; justify-content:center; color:#fff;
+  box-shadow:0 0 26px hsl(var(--ds-accent) / 0.72), inset 0 0 14px rgba(255,255,255,.28); }
+
+.v4-painel .nucleo .anel svg.orb { position:absolute; inset:0; }
+
+.v4-painel .nucleo .txt .rot { font-size:13px; color:hsl(var(--ds-text-secondary)); }
+
+.v4-painel .nucleo .txt .grande { display:flex; align-items:baseline; gap:9px; margin:2px 0 12px; }
+
+.v4-painel .nucleo .txt .grande b { font-size:33px; font-weight:600; letter-spacing:-.035em;
+  line-height:1.05; }
+
+.v4-painel .nucleo .txt .grande span { font-size:20px; color:hsl(var(--ds-text-secondary)); font-weight:500; }
+
+.v4-painel .nucleo .txt .sub { font-size:13px; color:hsl(var(--ds-text-muted)); margin:0 0 9px; }
+
+.v4-painel .pill { display:inline-flex; align-items:center; height:26px; padding:0 11px;
+  border-radius:8px; font-size:12.5px; font-weight:500; white-space:nowrap; }
+
+.v4-painel .pill.roxo { background:hsl(var(--ds-accent) / 0.20); color:hsl(var(--ds-accent-ink));
+  box-shadow:inset 0 0 0 1px hsl(var(--ds-accent) / 0.32); }
+
+.v4-painel .pill.ciano { background:hsl(var(--ds-accent-ink) / 0.15); color:hsl(var(--ds-accent-ink));
+  box-shadow:inset 0 0 0 1px hsl(var(--ds-accent-ink) / 0.28); }
+
+.v4-painel .pill.azul { background:hsl(var(--ds-accent-ink) / 0.14); color:hsl(var(--ds-accent-ink));
+  box-shadow:inset 0 0 0 1px hsl(var(--ds-accent-ink) / 0.26); }
+
+.v4-painel .pill.cinza { background:rgba(255,255,255,.055); color:hsl(var(--ds-text-muted));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08); }
+
+.v4-painel .pill.forte { background:hsl(var(--ds-accent) / 0.30); color:hsl(var(--ds-accent-ink));
+  box-shadow:inset 0 0 0 1px hsl(var(--ds-accent-ink) / 0.44); }
+
+.v4-painel .duplas { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:auto;
+  padding-top:16px; }
+
+.v4-painel .dupla { border:1px solid hsl(var(--ds-border-subtle)); border-radius:var(--ds-radius-card); padding:10px 13px;
+  background:rgba(255,255,255,.022); display:flex; align-items:center; gap:11px; }
+
+.v4-painel .dupla .ic { color:hsl(var(--ds-accent-ink)); display:flex; }
+
+.v4-painel .dupla .ic.c { color:hsl(var(--ds-accent-ink)); }
+
+.v4-painel .dupla b { display:block; font-size:19px; font-weight:600; letter-spacing:-.022em;
+  line-height:1.15; }
+
+.v4-painel .dupla span { font-size:11.5px; color:hsl(var(--ds-text-muted)); }
+
+.v4-painel .hero .grafico { border-left:1px solid hsl(var(--ds-border-subtle)); padding:15px 20px 14px;
+  display:flex; flex-direction:column; min-width:0; }
+
+.v4-painel .grafico .pe { display:flex; align-items:baseline; gap:16px; margin-top:8px;
+  flex-wrap:wrap; }
+
+.v4-painel .grafico .base { font-size:12px; color:hsl(var(--ds-text-muted)); }
+
+/* O valor final e LEGENDA DA LINHA, nao um terceiro KPI: bolinha + "fecha em" amarram o
+   numero a serie em vez de o deixar boiando como metrica independente. */
+.v4-painel .grafico .fim { font-size:12px; color:hsl(var(--ds-text-muted)); display:inline-flex; align-items:center;
+  gap:6px; }
+
+.v4-painel .grafico .fim i { width:7px; height:7px; border-radius:50%; background:hsl(var(--ds-accent-ink));
+  display:block; }
+
+.v4-painel .grafico .fim b { color:hsl(var(--ds-accent-ink)); font-weight:600; font-size:13px; }
+
+.v4-painel .grafico svg { width:100%; flex:1; min-height:150px; display:block; }
+
+.v4-painel .hero .recomenda { border-left:1px solid hsl(var(--ds-border-subtle)); padding:14px 19px 15px;
+  display:flex; flex-direction:column;
+  background:linear-gradient(200deg, hsl(var(--ds-accent) / 0.075), transparent 58%); }
+
+/* ══ KPIs ════════════════════════════════════════════════════════════════════════════════ */
+.v4-painel .kpis { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:13px;
+  margin-top:11px; }
+
+.v4-painel .kpi { border:1px solid hsl(var(--ds-border-subtle)); border-radius:var(--ds-radius-panel); padding:13px 14px 0;
+  background:linear-gradient(180deg, rgba(255,255,255,.026), rgba(255,255,255,.004)),
+             hsl(var(--ds-surface-raised)); display:flex; flex-direction:column; min-height:118px;
+  transition:border-color var(--ds-duration-base) var(--ds-easing-standard),
+             transform var(--ds-duration-base) var(--ds-easing-standard); }
+
+.v4-painel .kpi:hover { border-color:hsl(var(--ds-border-default)); transform:translateY(-2px); }
+
+.v4-painel .kpi .rot { display:flex; align-items:center; gap:6px; font-size:12.5px; color:hsl(var(--ds-text-secondary));
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.v4-painel .kpi .rot svg { flex:none; color:hsl(var(--ds-text-muted)); }
+
+.v4-painel .kpi .v { display:flex; align-items:baseline; gap:6px; margin:9px 0 0;
+  line-height:1; flex-wrap:wrap; }
+
+.v4-painel .kpi .v b { font-size:25px; font-weight:600; letter-spacing:-.032em; line-height:1; }
+
+.v4-painel .kpi .v b.roxo { color:hsl(var(--ds-accent-ink)); }
+
+.v4-painel .kpi .v b.ciano { color:hsl(var(--ds-accent-ink)); }
+
+.v4-painel .kpi .v small { font-size:12.5px; color:hsl(var(--ds-text-muted)); font-weight:400; }
+
+.v4-painel .kpi .d { font-size:12.5px; margin-top:7px; line-height:16px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.v4-painel .kpi .d.sobe { color:hsl(var(--ds-accent-ink)); }
+
+.v4-painel .kpi .d.desce { color:hsl(var(--ds-success)); }
+
+.v4-painel .kpi .d.neutro { color:hsl(var(--ds-text-muted)); }
+
+/* a caixa herda as margens negativas; a sparkline dentro dela fica neutra, senao o
+   card inchava de 146 para 170px. */
+.v4-painel .kpi .spark-caixa { position:relative; display:block; margin:auto -14px 0;
+  width:calc(100% + 28px); }
+
+.v4-painel .kpi .spark-mk { position:absolute; right:14px; top:-14px; z-index:2; }
+
+.v4-painel .kpi .spark { margin:0; height:34px; display:block; width:100%; }
+
+/* ══ TRÊS PAINÉIS ════════════════════════════════════════════════════════════════════════ */
+.v4-painel .trio { display:grid; grid-template-columns:1.52fr 1fr .97fr; gap:13px; margin-top:11px;
+  align-items:stretch; }
+
+.v4-painel .painel .corpo { padding:10px 18px 13px; display:flex; flex-direction:column; height:100%; }
+
+.v4-painel .painel .rodape { margin-top:auto; padding-top:12px; }
+
+.v4-painel thead th.num { text-align:right; }
+
+.v4-painel tbody td.num { text-align:right; font-weight:600; letter-spacing:-.012em; }
+
+.v4-painel tbody td.num.roxo { color:hsl(var(--ds-accent-ink)); }
+
+.v4-painel tbody td.num.ciano { color:hsl(var(--ds-accent-ink)); }
+
+.v4-painel tbody td.num.rosa { color:hsl(var(--ds-danger)); }
+
+.v4-painel tbody td.num.verde { color:hsl(var(--ds-success)); }
+
+.v4-painel tbody td.acao { text-align:right; }
+
+/* seletor de estado do laboratorio -- marcado, e nao disfarcado de recurso do produto */
+/* A etiqueta NAO pode deformar o que ela mede: margin-block negativo faz ela ocupar a
+   entrelinha em vez de esticar a caixa de linha. Sem isso os cards de KPI inchavam 21px e o
+   instrumento passava a mudar o objeto medido. */
+.v4-painel .kpi .base { font-size:11.5px; line-height:1.4; color:hsl(var(--ds-text-muted)); margin-top:6px;
+  min-height:30px; padding-bottom:10px; }
+
+.v4-painel .kpi .estado-sel { display:inline-flex; align-items:center; height:16px;
+  margin-block:-4px; padding:0 6px;
+  border-radius:5px; font-size:10px; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; margin-left:7px; vertical-align:2px; }
+
+.v4-painel .kpi .estado-sel.parcial { color:hsl(var(--ds-warning)); background:hsl(var(--ds-warning) / 0.13);
+  box-shadow:inset 0 0 0 1px hsl(var(--ds-warning) / 0.30); }
+
+.v4-painel .kpi .estado-sel.naomedido { color:hsl(var(--ds-text-secondary)); background:rgba(255,255,255,.06);
+  box-shadow:inset 0 0 0 1px hsl(var(--ds-border-default)); }
+
+.v4-painel .kpi .v b.vazio { color:hsl(var(--ds-text-muted)); }
+
+/* ── a régua dos cortes: a âncora do hero na primeira análise ───────────────────────────
+   Substitui a série histórica por um fato de AGORA — onde o escore cai contra os cortes do
+   método, com as intenções na mesma régua. É o que faz o 75 ser lido como corte. */
+.v4-painel .regua { display:flex; flex-direction:column; justify-content:center; flex:1;
+  min-height:0; padding:2px 0 0; }
+
+.v4-painel .regua .faixa { position:relative; height:34px; border-radius:8px; overflow:hidden;
+  background:hsl(var(--ds-surface-overlay)); }
+
+.v4-painel .regua .zona { position:absolute; top:0; bottom:0; }
+
+.v4-painel .regua .corte { position:absolute; top:-4px; bottom:-4px; width:1px;
+  background:rgba(255,255,255,.34); }
+
+.v4-painel .regua .agulha { position:absolute; top:-6px; bottom:-6px; width:3px; margin-left:-1.5px;
+  border-radius:2px; background:#fff; box-shadow:0 0 12px rgba(255,255,255,.55); }
+
+.v4-painel .regua .rot-zona { position:absolute; top:9px; font-size:10.5px; letter-spacing:.08em;
+  text-transform:uppercase; white-space:nowrap; }
+
+.v4-painel .regua .cortes { display:flex; justify-content:space-between; margin-top:9px;
+  font-size:11.5px; color:hsl(var(--ds-text-muted)); }
+
+.v4-painel .regua .cortes b { color:hsl(var(--ds-text-secondary)); font-weight:500; }
+
+/* A cabeça da régua: o número mora na barra que o julga. As quatro intenções saíram daqui —
+   elas já têm a tabela inteira embaixo, e repetir a posição delas era ruído. */
+.v4-painel .regua .cabeca-regua { display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;
+  margin-bottom:14px; }
+
+.v4-painel .regua .cabeca-regua b { font-size:38px; font-weight:600; letter-spacing:-.035em;
+  line-height:1; }
+
+.v4-painel .regua .cabeca-regua .un { font-size:15px; color:hsl(var(--ds-text-muted)); font-weight:500; }
+
+.v4-painel .regua .cabeca-regua .sust { font-size:12.5px; color:hsl(var(--ds-text-muted)); margin-left:6px; }
+
+/* ── parcialidade: o fato mais importante que a V4 não dizia ───────────────────────────── */
+.v4-painel .parcial-strip { display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  margin-top:11px; padding:9px 15px; border-radius:14px;
+  border:1px solid hsl(var(--ds-warning) / 0.26); background:hsl(var(--ds-warning) / 0.055); }
+
+.v4-painel .parcial-strip .ic { color:hsl(var(--ds-warning)); display:flex; flex:none; }
+
+.v4-painel .parcial-strip b { font-size:13.5px; font-weight:600; color:hsl(var(--ds-warning)); }
+
+.v4-painel .parcial-strip .motivos { display:flex; gap:8px; flex-wrap:wrap; margin-left:auto; }
+
+.v4-painel .parcial-strip code { font-size:11.5px; padding:3px 8px; border-radius:6px;
+  background:rgba(255,255,255,.06); color:hsl(var(--ds-text-secondary)); font-family:ui-monospace,monospace; }
+
+.v4-painel .parcial-strip span.legenda { font-size:12.5px; color:hsl(var(--ds-text-secondary)); }
+
+.v4-painel .confianca .n .pill { font-size:9px; height:16px; padding:0 4px; }
+
+.v4-painel .barra { height:4px; }
+
+/* Os TEMPOS da folha portada usam os tokens de movimento, e nao os 200/220ms da V4.
+
+   A Constituicao congela cinco duracoes e quatro curvas, e o gate `motion-tokens` mede a divida
+   de timing literal por arquivo — ela so pode encolher. A folha da V4 chegou com `220ms ease` e
+   `200ms ease` e empurrou este arquivo de 13 para 16.
+
+   Os dois papeis sao o MESMO: transicao de estado, que e `--ds-duration-base` (200ms). Os 220
+   nao carregam intencao nenhuma que os 200 nao carreguem — sao o numero que o molde digitou. */
+
+/* -- o trio: evidencias, alertas e a tabela de intencoes ------------------------- */
+/* ── a confiabilidade global, na faixa da parcialidade ────────────────────────── */
+.v4-painel .conf-g { display:flex; align-items:center; gap:9px; margin-left:18px;
+  padding-left:18px; border-left:1px solid hsl(var(--ds-border-default)); white-space:nowrap; }
+
+.v4-painel .conf-g .r { display:flex; align-items:center; font-size:11.5px; color:hsl(var(--ds-text-muted)); }
+
+.v4-painel .conf-g b { font-size:15px; font-weight:600; letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums; }
+
+.v4-painel .conf-g .barra { width:64px; }
+
+.v4-painel .selo-n { margin-left:2px; min-width:20px; height:20px; padding:0 6px; border-radius:6px;
+  display:inline-flex; align-items:center; justify-content:center; font-size:11.5px;
+  font-weight:600; background:rgba(255,255,255,.07); color:hsl(var(--ds-text-secondary)); }
+
+.v4-painel .evid { display:flex; align-items:baseline; justify-content:space-between; gap:16px;
+  padding:9.5px 0; border-top:1px solid hsl(var(--ds-border-subtle)); }
+
+.v4-painel .evid:first-of-type { border-top:none; }
+
+.v4-painel .evid p { margin:0; font-size:13.5px; line-height:1.45; color:hsl(var(--ds-text-primary)); max-width:32ch; }
+
+.v4-painel .evid span { font-size:12.5px; color:hsl(var(--ds-text-muted)); white-space:nowrap; }
+
+.v4-painel .alerta { display:grid; grid-template-columns:22px minmax(0,1fr) 16px; gap:11px;
+  align-items:start; padding:10.5px 0; border-top:1px solid hsl(var(--ds-border-subtle)); width:100%;
+  background:none; border-left:none; border-right:none; border-bottom:none; text-align:left;
+  color:inherit; font:inherit; cursor:pointer; transition:opacity var(--ds-duration-base) var(--ds-easing-standard); }
+
+.v4-painel .alerta:first-of-type { border-top:none; }
+
+.v4-painel .alerta:hover { opacity:.82; }
+
+.v4-painel .alerta .ic { color:hsl(var(--ds-accent-ink)); display:flex; padding-top:1px; }
+
+.v4-painel .alerta b { display:block; font-size:13.5px; font-weight:500; color:hsl(var(--ds-accent-ink)); }
+
+.v4-painel .alerta span { display:block; font-size:12.5px; line-height:1.45; color:hsl(var(--ds-text-secondary));
+  margin-top:3px; }
+
+.v4-painel .alerta .seta { color:hsl(var(--ds-text-muted)); display:flex; align-self:center; }
+
+.v4-painel .marca b, .v4-painel .grupo-rot, .v4-painel .item .rotulo, .v4-painel .confianca p,
+  .v4-painel .confianca .rot { display:none; }
+
+.v4-painel .confianca { padding:11px 8px 12px; width:48px; text-align:center; }
+
+.v4-painel .confianca .n { flex-direction:column; gap:5px; margin:0 0 8px; align-items:center; }
+
+.v4-painel .confianca .n b { font-size:15px; letter-spacing:-.02em; }
+
+.v4-painel .confianca .n .pill { font-size:9px; height:16px; padding:0 4px; }
+
+/* a celula da intencao: ponto de estado, nome e o suporte amostral colado nele */
+.v4-painel .intencao { display:flex; align-items:center; gap:10px; }
+.v4-painel .intencao .ponto { width:7px; height:7px; border-radius:50%; flex:none; }
+.v4-painel .intencao b { font-weight:400; font-size:13.5px; display:block; line-height:1.28; }
+.v4-painel .intencao small { font-size:11.5px; color:hsl(var(--ds-text-muted)); line-height:1.25; }
+
+/* As CORES das tres zonas.
+
+   Na V4 elas sao `style` inline em cada `<span>`. Aqui viram classe por duas razoes: cor
+   literal em componente e o que o gate `design-tokens-unico` proibe, e uma zona que carrega
+   a propria cor no atributo torna impossivel trocar a paleta sem editar o TSX.
+
+   O tom da faixa CONFORME e o acento e nao o verde: a V4 usa ciano ali, e ciano nao tem token
+   nesta casa — a recusa esta escrita no `tokens.css`. Verde tambem nao serve: ele e o sinal
+   semantico de sucesso, e a faixa nao afirma sucesso, afirma «dentro do esperado». */
+.v4-painel .regua .zona.critico {
+  background:linear-gradient(90deg, hsl(var(--ds-danger) / 0.22), hsl(var(--ds-danger) / 0.10)); }
+.v4-painel .regua .zona.atencao { background:hsl(var(--ds-warning) / 0.16); }
+.v4-painel .regua .zona.ok {
+  background:linear-gradient(90deg, hsl(var(--ds-accent) / 0.14), hsl(var(--ds-accent) / 0.24)); }
+
+.v4-painel .regua .rot-zona.critico { color:hsl(var(--ds-danger)); }
+.v4-painel .regua .rot-zona.atencao { color:hsl(var(--ds-warning)); }
+.v4-painel .regua .rot-zona.ok { color:hsl(var(--ds-accent-ink)); }
+
+/* O ponto da intencao e a cor da coluna de escore, por ZONA e por ACAO.
+
+   Na V4 os dois sao `style` inline com um tom fixo por linha — decoracao. Aqui carregam o que
+   os cortes e a severidade publicados dizem, e por isso viram classe: cor literal em componente
+   e o que o gate `design-tokens-unico` proibe. */
+.v4-painel .intencao .ponto.exige_acao { background:hsl(var(--ds-danger)); }
+.v4-painel .intencao .ponto.monitorar  { background:hsl(var(--ds-warning)); }
+.v4-painel .intencao .ponto.saudavel   { background:hsl(var(--ds-accent-ink)); }
+.v4-painel .intencao .ponto.sem_base   { background:hsl(var(--ds-text-muted)); }
+
+.v4-painel .trio tbody td.num.critico { color:hsl(var(--ds-danger)); }
+.v4-painel .trio tbody td.num.atencao { color:hsl(var(--ds-warning)); }
+.v4-painel .trio tbody td.num.ok      { color:hsl(var(--ds-accent-ink)); }
+.v4-painel .trio tbody td.num.abaixo  { color:hsl(var(--ds-danger)); }
+.v4-painel .trio tbody td.num.acima   { color:hsl(var(--ds-success)); }
+
+/* O numero dentro da regua ganha PORTE DE HEROI.
+
+   A V4 escreve 30px ali porque naquela tela o numero divide a dobra com um orbe e dois cartoes
+   de evidencia. Aqui ele e o unico numero da coluna — saiu de 104px logo acima, e substitui-lo
+   por 30px seria trocar a manchete por uma legenda.
+
+   `clamp` e nao valor fixo pelo mesmo motivo que o papel `heroi` do sistema e fluido: 56px nao
+   cabe em 375px de viewport. */
+.v4-painel .regua .cabeca-regua b { font-size:clamp(2rem, 4.4vw, 3.5rem); line-height:1; }
+.v4-painel .regua .cabeca-regua .un { font-size:1rem; }
+
+/* O alerta perdeu a TERCEIRA coluna, e com ela o texto parou de vazar.
+
+   A grade da V4 e `22px minmax(0,1fr) 16px`: icone, conteudo e a seta do gatilho. A seta saiu
+   do DOM porque o destino dela nao existe neste produto — nao ha rota de alerta —, mas a coluna
+   dela continuava reservada, e o texto do detalhe transbordava o painel para caber no que
+   sobrou. Medido na captura: `(agendamento,cancelamento,duvida_fatura,segu` cortado na borda.
+
+   `overflow-wrap` porque o detalhe traz listas coladas por virgula, sem espaco onde quebrar. */
+.v4-painel .alerta { grid-template-columns:22px minmax(0,1fr); cursor:default; }
+.v4-painel .alerta:hover { opacity:1; }
+.v4-painel .alerta span { overflow-wrap:anywhere; }
+
+/* O rodape do painel so vai para o fundo se o painel FOR uma coluna que estica.
+
+   `.corpo` ja e `flex-direction:column; height:100%`, e o `.rodape` ja tem `margin-top:auto` —
+   mas nada disso opera se o proprio painel nao tiver altura para distribuir. No molde ele tem,
+   porque a grade do trio estica os tres; aqui a mesma grade existe e o painel precisa declarar
+   que e um contexto de coluna. */
+.v4-painel .trio > .painel { display:flex; flex-direction:column; }

@@ -199,3 +199,103 @@ export function limiarEscrito(
   const fmt = (v: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(v);
   return `${rotuloWarn} ${fmt(t.warn)} · ${rotuloCritical} ${fmt(t.critical)}`;
 }
+
+
+/**
+ * A DISTANCIA ate o corte de atencao — `score - warn`.
+ *
+ * ## Por que isto nao viola "o front nao produz dado"
+ *
+ * Os dois operandos sao PUBLICADOS: `intents[].score.value` e `thresholds.warn`, ambos do mesmo
+ * documento e do mesmo produtor. A subtracao nao cria uma medida nova; ela poupa quem le de
+ * fazer a conta de cabeca em cada linha da tabela.
+ *
+ * A fronteira que importa e outra, e continua fechada: nada aqui INVENTA um corte, nem estima,
+ * nem normaliza escala. Sem `thresholds` publicado o resultado e `null`, e a coluna some — a
+ * tela nao escolhe um corte padrao para ter o que mostrar.
+ *
+ * ## O que ela NAO e
+ *
+ * Nao e comparacao com a analise anterior. O rotulo diz o corte no proprio cabecalho
+ * (`Delta ate o corte (75)`) exatamente para impedir essa leitura: e a distancia ate o corte do
+ * METODO, e vale ja na primeira analise, quando nao existe anterior nenhuma.
+ *
+ * ## Por que aqui e nao no componente
+ *
+ * O gate `backend-first-result` proibe aritmetica em `canonical-analysis/ui`. A subtracao nao
+ * casa com nenhum dos padroes que ele varre, mas escrever conta dentro de componente e
+ * exatamente o habito que o gate existe para nao deixar nascer.
+ */
+export function deltaAteOCorte(
+  valor: number | null | undefined,
+  limiar: { readonly warn: number } | null | undefined,
+): number | null {
+  if (valor === null || valor === undefined || !Number.isFinite(valor)) return null;
+  if (!limiar || !Number.isFinite(limiar.warn)) return null;
+  return valor - limiar.warn;
+}
+
+/** O que a tela pode dizer sobre uma intencao. Nenhum destes e decidido aqui — ver abaixo. */
+export type AcaoDaIntencao = "sem_base" | "exige_acao" | "monitorar" | "saudavel";
+
+/**
+ * A ACAO de uma intencao: o veredito PUBLICADO, cruzado com o piso de amostra PUBLICADO.
+ *
+ * ## Isto nao e fabricar severidade
+ *
+ * `severity` vem de `intents[].severity` e `piso` vem de `method.min_samples_per_intent`. Esta
+ * funcao nao decide se algo e critico — ela TRADUZ o que o produtor decidiu para a palavra que
+ * a pessoa le, e acrescenta uma unica distincao que o produtor tambem publica: quando o veredito
+ * nao e OK mas o suporte esta abaixo do piso, o numero existe e nao sustenta decisao.
+ *
+ * Essa distincao e o caso `sem_base`, e ela e a razao de a funcao existir. Sem ela a tela diria
+ * "exige acao" sobre uma intencao com n=1 — que e pedir uma decisao sobre ruido.
+ *
+ * ## `null` quando nao da para dizer
+ *
+ * Sem severidade publicada nao ha acao. A tela mostra ausencia, nao "saudavel" — a #24 vale aqui
+ * como em todo lugar: ausencia nao e o valor bom.
+ */
+export function acaoDaIntencao(
+  severity: string | null | undefined,
+  suporte: number | null | undefined,
+  piso: number | null | undefined,
+): AcaoDaIntencao | null {
+  const s = (severity ?? "").trim().toLowerCase();
+  if (!s) return null;
+  const semBase =
+    s !== "ok" &&
+    typeof suporte === "number" &&
+    typeof piso === "number" &&
+    suporte < piso;
+  if (semBase) return "sem_base";
+  if (s === "ok") return "saudavel";
+  // `critical` e `warn` sao os dois degraus que o contrato usa em `intents[]`. Qualquer outro
+  // valor cai em `monitorar` — o degrau conservador —, e nunca em `saudavel`: um veredito que
+  // esta tela nao reconhece nao pode virar "esta tudo bem".
+  if (s === "critical") return "exige_acao";
+  return "monitorar";
+}
+
+
+/**
+ * O SUFIXO da escala — `/100` para escore centesimal, nada para as demais.
+ *
+ * ## Por que aqui e nao no componente
+ *
+ * O gate `backend-first-result` varre `/ 100` em componentes para pegar divisao por cem. O
+ * literal de TEXTO `"/100"` casa com o mesmo padrao, e um regex nao tem como distinguir uma
+ * barra de divisao de uma barra de escrita.
+ *
+ * Afrouxar o matcher para deixar o sufixo passar abriria a porta para a divisao de verdade —
+ * que e o unico motivo de o gate existir. Entao quem muda de lugar e o sufixo, nao o gate.
+ *
+ * ## Por que so `score_100`
+ *
+ * As outras escalas ou ja carregam a unidade na escrita do valor (`ratio_unit` sai como `%`,
+ * `currency` sai com a divisa) ou nao tem maximo declarado. Escrever um denominador para elas
+ * afirmaria um teto que o produtor nao publicou.
+ */
+export function sufixoDaEscala(scale: Pick<Scale, "kind">): string | null {
+  return scale.kind === "score_100" ? "/" + String(100) : null;
+}

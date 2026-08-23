@@ -54,7 +54,7 @@ import { AbasDePorta } from "./AbasDePorta";
 import { BarraDeComposicao } from "@/design/primitives";
 import { Heroi } from "./Heroi";
 import { Intencoes } from "./Intencoes";
-import { Portas } from "./Portas";
+import { TrioDoPainel } from "./TrioDoPainel";
 import { Satelites } from "./Satelites";
 import { CartaoDeAlertas } from "./CartaoDeAlertas";
 import { BarraDeReferencia } from "./BarraDeReferencia";
@@ -432,7 +432,10 @@ export function ArgosView() {
         ? (completo.scores ?? []).find((s) => s.measurement.id === ID_DO_HEROI) ?? null
         : null;
     return (
-      <div className="space-y-8">
+      /* `v4-painel` e o escopo da folha portada do Molde (ver `globals.css`). A V4 escopa
+         em `.v4`, que la e a raiz da aplicacao e carrega a grade do shell inteiro; aqui o
+         shell e outro, e herdar aquela grade quebraria a lateral que ja existe. */
+      <div className="v4-painel space-y-8">
         {/* Parcialidade é declaração do produtor sobre o documento inteiro. Vem primeiro porque
             é ela que explica por que o resto pode estar incompleto.
 
@@ -572,9 +575,31 @@ export function ArgosView() {
           </section>
         )}
 
-        {/* AS PORTAS — o "onde investigar" do protótipo, e só na Visão geral.
-            Dentro de uma aba de domínio elas seriam um menu apontando para onde a pessoa já está. */}
-        {porta === null ? <Portas agrupamento={agrupamento} rotuloDe={rotuloDe} /> : null}
+        {/* O TRIO DA V4, no lugar das PORTAS.
+
+            As portas eram o «onde investigar» do protótipo de 17/08: três cartões que
+            apontavam para os mesmos três recortes que as abas logo acima já oferecem. Elas
+            respondiam «para onde ir» duas vezes e não respondiam nada sobre a análise.
+
+            A V4 usa esse espaço para três perguntas com resposta: onde está pior e o que fazer,
+            o que o motor observou, e o que ele escalou sozinho. E só na Visão geral, pela mesma
+            razão que valia para as portas — intent, evidência e alerta não publicam `domain`, e
+            recortá-los por domínio seria a tela inventando um pertencimento. */}
+        {porta === null ? (
+          <TrioDoPainel
+            intents={completo.intents ?? null}
+            evidence={completo.evidence ?? null}
+            alerts={completo.alerts ?? null}
+            pisoDeAmostra={completo.method?.min_samples_per_intent ?? null}
+            detectadas={
+              (completo.indicators ?? []).find((i) => i.id === "intents_detected_count") ?? null
+            }
+            cobertas={
+              (completo.indicators ?? []).find((i) => i.id === "covered_intents_count") ?? null
+            }
+            locale={locale}
+          />
+        ) : null}
 
         {temConclusao ? (
           <Grupo

@@ -35,15 +35,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Explicacao, ReguaDeFaixas, Text, zonaDoValor } from "@/design/primitives";
 import { explicacaoDe } from "../../result/catalogoArgos";
 import type { PublicScore } from "@/lib/v1/contract/public-v3.types";
-import {
-  apresentacaoDaMedicao,
-  coberturaEscrita,
-  confiancaEscrita,
-  escalaEscrita,
-  motivoRelevante,
-  unidadeInforma,
-  valorEscrito,
-} from "../../result/medicaoV3";
+import { apresentacaoDaMedicao, coberturaEscrita, confiancaEscrita, escalaEscrita, limiarEscrito, motivoRelevante, sufixoDaEscala, unidadeInforma, valorEscrito } from "../../result/medicaoV3";
 
 // `ID_DO_HEROI` MUDOU para `catalogoArgos.ts`.
 //
@@ -164,25 +156,40 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
         </span>
       </h3>
 
-      <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
-        {valor !== null ? (
-          // O papel `heroi` mora no sistema, não aqui. Ele é fluido de propósito — 104px do
-          // protótipo não cabe em 375px de viewport — e traz peso médio e numerais tabulares:
-          // número grande em peso pesado vira cartaz, e dígito de largura variável destrói leitura.
-          <Text papel="heroi" numerico>
-            {valor}
-          </Text>
-        ) : (
-          // Sem valor, o ESTADO ocupa o lugar do número, no tamanho do texto — nunca um zero
-          // grande, nunca um travessão do tamanho de um número.
-          <span className="text-lg font-medium text-muted-foreground" data-sem-valor="true">
-            {t(`canonicalAnalysis.argos.availability.${m.availability}`)}
-          </span>
-        )}
-        {valor !== null && unidadeInforma(m.unit, m.scale) ? (
-          <span className="pb-2 text-sm text-muted-foreground">{m.unit}</span>
-        ) : null}
-      </div>
+      {/* O NÚMERO SAIU DAQUI — e saiu para dentro da régua, logo abaixo.
+
+          Medido na captura: com a régua da V4 ele passou a aparecer DUAS vezes na mesma dobra,
+          em 104px aqui e em 34px lá. Dois pesos para o mesmo fato é exatamente o que a lista de
+          satélites já evitava ao excluir o herói dela.
+
+          Entre os dois lugares, o de baixo ganha, e a razão está escrita no molde: *«o número
+          mora na barra que o julga»*. Separado dela, ele era um número e uma figura que a pessoa
+          tinha de associar; dentro, o veredito é uma coisa só.
+
+          SEM régua (as outras 36 saídas não publicam `thresholds`) não há onde o número morar, e
+          ele CONTINUA aqui — no tamanho do herói. É o ramo abaixo. */}
+      {m.thresholds ? null : (
+        <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
+          {valor !== null ? (
+            // O papel `heroi` mora no sistema, não aqui. Ele é fluido de propósito — 104px do
+            // protótipo não cabe em 375px de viewport — e traz peso médio e numerais tabulares:
+            // número grande em peso pesado vira cartaz, e dígito de largura variável destrói
+            // leitura.
+            <Text papel="heroi" numerico>
+              {valor}
+            </Text>
+          ) : (
+            // Sem valor, o ESTADO ocupa o lugar do número, no tamanho do texto — nunca um zero
+            // grande, nunca um travessão do tamanho de um número.
+            <span className="text-lg font-medium text-muted-foreground" data-sem-valor="true">
+              {t(`canonicalAnalysis.argos.availability.${m.availability}`)}
+            </span>
+          )}
+          {valor !== null && unidadeInforma(m.unit, m.scale) ? (
+            <span className="pb-2 text-sm text-muted-foreground">{m.unit}</span>
+          ) : null}
+        </div>
+      )}
       {/* O VEREDITO EM DESTAQUE — dois pedidos do owner, e o segundo mudou a hierarquia.
 
           Primeiro: a tela mostrava `80,36` em 104px, com uma barra de três cores embaixo, e
@@ -237,6 +244,30 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
               atencao: t("canonicalAnalysis.argos.thresholdWarn"),
               ok: t("canonicalAnalysis.argos.zoneOk"),
             }}
+            /* O NÚMERO desce para DENTRO da régua — decisão da V4, com razão escrita no molde:
+               *«o número mora aqui, na barra que o julga»*. Ele ficava acima, e a barra abaixo;
+               os dois se liam como dois blocos e a pessoa tinha de associá-los. */
+            valorEscrito={valor}
+            sufixo={sufixoDaEscala(m.scale)}
+            /* A SUSTENTACAO — confiança e corte, na mesma linha do número.
+
+               A V4 escreve *«confiança 64,3% · corte de atenção 75»*. As duas partes são
+               opcionais e independentes: `confidence` é nulo na maioria das medições, e
+               `thresholds` só existe em duas das trinta e sete. `filter` + `join` monta a frase
+               com o que houver, sem separador solto quando falta uma. */
+            sustentacao={
+              [
+                confianca,
+                limiarEscrito(
+                  m.thresholds,
+                  locale,
+                  t("canonicalAnalysis.argos.thresholdWarn"),
+                  t("canonicalAnalysis.argos.thresholdCritical"),
+                ),
+              ]
+                .filter((x): x is string => Boolean(x))
+                .join(" · ") || null
+            }
           />
         </div>
       ) : null}

@@ -1,53 +1,37 @@
-// A RÉGUA DE FAIXAS — as três zonas NOMEADAS, e os cortes na posição deles.
+// A RÉGUA DE FAIXAS — o desenho da V4, com a matemática lida da escala.
 //
 // ## Por que ela mora em `design/primitives` e não ao lado de quem a usa
 //
 // Ela nasceu em `ui/argos/` e o cadeado `backend-first-result` a reprovou na hora: nenhum
 // componente de `canonical-analysis/ui` pode conter `Math.*`, `* 100` ou `reduce`. A regra
-// existe para impedir que a tela FABRIQUE número analítico, e ela estava certa em apontar —
-// mesmo que aqui a conta seja só GEOMETRIA (onde cai o marcador na barra), a distinção entre
-// «conta de desenho» e «conta de medida» não é visível para um grep, e não deve ser: seria
-// exatamente a brecha por onde a primeira conta de verdade entraria.
+// existe para impedir que a tela FABRIQUE número analítico, e estava certa em apontar — mesmo
+// que aqui a conta seja só GEOMETRIA (onde cai o marcador na barra), a distinção entre «conta de
+// desenho» e «conta de medida» não é visível para um grep, e não deve ser: seria exatamente a
+// brecha por onde a primeira conta de verdade entraria.
 //
-// A saída é a mesma do `Bullet`, que faz a mesma aritmética e sempre morou aqui: geometria
-// de desenho pertence à camada de desenho. O produto passa números e palavras; esta camada
-// decide pixels.
+// A saída é a mesma do `Bullet`, que faz a mesma aritmética e sempre morou aqui: geometria de
+// desenho pertence à camada de desenho. O produto passa números e palavras; esta decide pixels.
 //
-// ## O que ela corrige, sem desfazer a correção anterior
+// ## O NÚMERO mora dentro da régua
 //
-// O `Bullet` desenha as mesmas três zonas em 8px de altura e escreve só as PONTAS da régua
-// (`0` e `100`). Isso veio de uma correção do owner: escrever `60 · 75` nas extremidades dizia
-// que a régua terminava em 75, quando o `behavior_score` vive em 0..100.
+// Essa é a decisão da V4, e ela tem razão escrita no molde: *«o número mora aqui, na barra que
+// o julga — e leva junto a sustentação»*. Antes ele ficava acima, e a barra abaixo; os dois se
+// liam como dois blocos, e a pessoa tinha de associá-los. Juntos, o veredito é uma coisa só.
 //
-// A correção estava certa e continua valendo aqui: as pontas seguem sendo `0` e `100`. O que
-// muda é que os cortes deixam de ser invisíveis — eles aparecem **na fração em que estão**, e
-// não numa extremidade. Um número embaixo da barra, alinhado com a fronteira que ele nomeia,
-// não pode ser lido como fim de eixo: ele está visivelmente no meio.
+// ## As zonas são posicionadas, não empilhadas
 //
-// E as zonas ganham NOME dentro da própria faixa. Sem isso, três cores dizem "há três coisas"
-// e deixam para o leitor adivinhar quais — e adivinhar cor é justamente o que a #24 e o
-// requisito de contraste existem para evitar.
+// Cada faixa é um `span` absoluto com `left`/`width` em porcentagem da régua, e os NOMES delas
+// são `span`s separados, também posicionados. Nome dentro da faixa (que é como eu tinha feito)
+// some quando a faixa é estreita — em 0..100 com cortes 60/75, a de atenção tem 15% da largura.
+// Fora, ele começa na fronteira e vaza para a faixa vizinha sem sumir.
 //
-// ## Zona é REGIÃO, veredito é sobre o VALOR
+// ## Nada é calculado a partir dos cortes
 //
-// `verdictOk` diz *"Within the expected range"* — uma frase sobre onde o número caiu. O nome da
-// faixa é outra coisa: identifica um trecho da régua, exista valor nele ou não. Por isso os
-// rótulos aqui são substantivos curtos, e dois deles reusam as MESMAS palavras dos cortes
-// (`thresholdCritical`, `thresholdWarn`): a faixa abaixo do corte crítico é a faixa crítica.
-// Só a terceira precisou de palavra nova.
-//
-// ## Nada é calculado aqui
-//
-// `warn`, `critical` e o valor vêm do documento. A régua (`piso`/`teto`) vem da ESCALA, não do
-// limiar — deduzir extremos a partir dos cortes inventaria um máximo que ninguém publicou.
+// `warn`, `critical` e o valor vêm do documento. A régua (`piso`/`teto`) vem da ESCALA — deduzir
+// os extremos a partir dos cortes inventaria um máximo que ninguém publicou, e faria o marcador
+// exagerar toda variação.
 
 import { fracao, zonaDoValor, type ZonaDoBullet } from "./zonaDoBullet";
-
-const TOM: Record<ZonaDoBullet, string> = {
-  ok: "hsl(var(--ds-success))",
-  atencao: "hsl(var(--ds-warning))",
-  critico: "hsl(var(--ds-danger))",
-};
 
 /** Sem casas quando inteiro; no máximo duas quando não. Igual ao `Bullet`, pela mesma razão. */
 function escrito(v: number): string {
@@ -55,7 +39,7 @@ function escrito(v: number): string {
 }
 
 export interface ReguaDeFaixasProps {
-  /** O número medido. `null` desenha as zonas SEM marcador — o vão com referência. */
+  /** O número medido. `null` desenha as zonas SEM agulha — o vão com referência. */
   readonly valor: number | null;
   readonly warn: number;
   readonly critical: number;
@@ -66,10 +50,16 @@ export interface ReguaDeFaixasProps {
   readonly descricao: string;
   /**
    * O nome de cada faixa. Vem PRONTO, pelo mesmo motivo que `descricao`: esta camada desenha,
-   * nao traduz. Ela escolhe QUAL nome vai em cada posicao (a orientacao depende dos cortes);
-   * QUAIS sao as palavras e conhecimento de produto.
+   * não traduz. Ela escolhe QUAL nome vai em cada posição (a orientação depende dos cortes);
+   * QUAIS são as palavras é conhecimento de produto.
    */
   readonly nomes: Record<ZonaDoBullet, string>;
+  /** O valor JÁ ESCRITO, com a unidade e as casas que o contrato declara. */
+  readonly valorEscrito?: string | null;
+  /** O que sustenta o número — confiança, corte. Frase pronta. */
+  readonly sustentacao?: string | null;
+  /** O sufixo da escala (`/100`). Ausente quando a escala não tem máximo declarado. */
+  readonly sufixo?: string | null;
 }
 
 export function ReguaDeFaixas({
@@ -80,88 +70,86 @@ export function ReguaDeFaixas({
   teto,
   descricao,
   nomes,
+  valorEscrito,
+  sustentacao,
+  sufixo,
 }: ReguaDeFaixasProps) {
   const menorEPior = critical < warn;
   const baixo = Math.min(warn, critical);
   const alto = Math.max(warn, critical);
   const a = fracao(baixo, piso, teto);
   const b = fracao(alto, piso, teto);
-
-  const faixas = menorEPior
-    ? ([
-        { de: 0, ate: a, zona: "critico" as const },
-        { de: a, ate: b, zona: "atencao" as const },
-        { de: b, ate: 1, zona: "ok" as const },
-      ] as const)
-    : ([
-        { de: 0, ate: a, zona: "ok" as const },
-        { de: a, ate: b, zona: "atencao" as const },
-        { de: b, ate: 1, zona: "critico" as const },
-      ] as const);
-
   const posicao = valor === null ? null : fracao(valor, piso, teto);
   const zona = valor === null ? null : zonaDoValor(valor, warn, critical);
 
   return (
-    <div className="flex w-full flex-col gap-1.5">
-      <div
-        role="img"
-        aria-label={descricao}
-        className="relative h-7 w-full overflow-hidden rounded-sm"
-      >
-        {faixas.map((f) => (
-          <span
-            key={f.zona}
-            aria-hidden="true"
-            className="absolute inset-y-0 flex items-center overflow-hidden px-2"
-            style={{
-              left: `${f.de * 100}%`,
-              width: `${Math.max(0, f.ate - f.de) * 100}%`,
-              backgroundColor: TOM[f.zona],
-              // Mesma opacidade do `Bullet`, pela mesma razão medida: abaixo disto, sobre
-              // superfície escura, as três zonas deixam de se distinguir entre si.
-              opacity: 0.85,
-            }}
-          >
-            {/* `truncate` para a faixa estreita: em 0..100 com cortes 60/75, a de atenção tem
-                15% da largura. Ela pode não caber, e o que não cabe é CORTADO — nunca empurra
-                a faixa vizinha nem quebra a linha. */}
-            <span className="truncate text-[0.625rem] font-semibold uppercase tracking-wider text-background/90">
-              {nomes[f.zona]}
-            </span>
-          </span>
-        ))}
+    <div className="regua">
+      {valorEscrito ? (
+        <div className="cabeca-regua">
+          <b>{valorEscrito}</b>
+          {sufixo ? <span className="un">{sufixo}</span> : null}
+          {sustentacao ? <span className="sust">{sustentacao}</span> : null}
+        </div>
+      ) : null}
+
+      <div className="faixa" role="img" aria-label={descricao}>
+        {/* A ZONA CRÍTICA e a CONFORME trocam de lado conforme a direção dos cortes. Escrever
+            «a primeira é a crítica» valeria só para as medidas em que menor é pior — e o
+            contrato publica as duas orientações. */}
+        <span
+          className={`zona ${menorEPior ? "critico" : "ok"}`}
+          style={{ left: 0, width: `${a * 100}%` }}
+        />
+        <span
+          className="zona atencao"
+          style={{ left: `${a * 100}%`, width: `${(b - a) * 100}%` }}
+        />
+        <span
+          className={`zona ${menorEPior ? "ok" : "critico"}`}
+          style={{ left: `${b * 100}%`, right: 0 }}
+        />
+
+        {/* Os NOMES começam na fronteira e vazam para dentro. Dentro da faixa eles sumiriam na
+            estreita; aqui a estreita ainda mostra a primeira palavra. */}
+        <span
+          className={`rot-zona ${menorEPior ? "critico" : "ok"}`}
+          style={{ left: 10 }}
+        >
+          {menorEPior ? nomes.critico : nomes.ok}
+        </span>
+        <span className="rot-zona atencao" style={{ left: `calc(${a * 100}% + 8px)` }}>
+          {nomes.atencao}
+        </span>
+        <span
+          className={`rot-zona ${menorEPior ? "ok" : "critico"}`}
+          style={{ left: `calc(${b * 100}% + 8px)` }}
+        >
+          {menorEPior ? nomes.ok : nomes.critico}
+        </span>
+
+        <span className="corte" style={{ left: `${a * 100}%` }} />
+        <span className="corte" style={{ left: `${b * 100}%` }} />
         {posicao !== null && zona !== null ? (
-          <span
-            aria-hidden="true"
-            /* NOME, e nao so estilo. O gate do heroi identificava o marcador por
-               `span[style*='left']:not([style*='opacity'])` — um proxy da FORMA do CSS. Ele
-               funcionava enquanto o marcador era o unico elemento posicionado da regua; os
-               rotulos dos cortes tambem sao, e o proxy passou a contar tres onde ha um.
-               Atributo proprio nao envelhece com o desenho. */
-            data-marcador="valor"
-            className="absolute inset-y-0 w-[3px] -translate-x-1/2 rounded-sm bg-foreground"
-            style={{ left: `${posicao * 100}%` }}
-          />
+          /* NOME, e não só estilo. O gate do herói identificava a agulha por
+             `span[style*='left']:not([style*='opacity'])` — um proxy da FORMA do CSS, que
+             funcionava enquanto ela fosse o único elemento posicionado da régua. Ela não é.
+             Atributo próprio não envelhece com o desenho. */
+          <span data-marcador="valor" className="agulha" style={{ left: `${posicao * 100}%` }} />
         ) : null}
       </div>
 
-      {/* Os cortes NA FRAÇÃO em que estão. `relative` + `left:%` porque `justify-between`
-          distribuiria por igual e mentiria sobre onde cada fronteira fica. */}
-      <div className="relative h-4 text-[0.6875rem] tabular-nums text-muted-foreground">
-        <span className="absolute left-0">{escrito(piso)}</span>
-        {/* O rótulo nomeia o CORTE, não a zona à esquerda dele. Quando MENOR é pior o corte
-            baixo é o crítico; quando MAIOR é pior a ordem inverte, e é o de atenção que fica
-            embaixo. Escrever a zona aqui trocaria os dois nomes em metade das medidas. */}
-        <span className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${a * 100}%` }}>
-          {menorEPior ? nomes.critico : nomes.atencao}{" "}
-          <b className="font-semibold">{escrito(baixo)}</b>
+      {/* Os cortes NOMEADOS, embaixo. As pontas são a RÉGUA (`0` e `100`) e não os cortes:
+          número na extremidade de uma barra se lê como fim do eixo, e escrever `60 · 75` ali
+          diria que a régua termina em 75. Correção do owner, e ela continua valendo. */}
+      <div className="cortes">
+        <span>{escrito(piso)}</span>
+        <span>
+          {menorEPior ? nomes.critico : nomes.atencao} <b>{escrito(baixo)}</b>
         </span>
-        <span className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${b * 100}%` }}>
-          {menorEPior ? nomes.atencao : nomes.critico}{" "}
-          <b className="font-semibold">{escrito(alto)}</b>
+        <span>
+          {menorEPior ? nomes.atencao : nomes.critico} <b>{escrito(alto)}</b>
         </span>
-        <span className="absolute right-0">{escrito(teto)}</span>
+        <span>{escrito(teto)}</span>
       </div>
     </div>
   );
