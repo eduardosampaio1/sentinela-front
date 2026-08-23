@@ -304,6 +304,56 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
   );
 }
 
+/**
+ * Diz por que a tela está sem conteúdo — quando ela está.
+ *
+ * ## O defeito que este bloco fecha
+ *
+ * Medido com print em homologação: a pessoa sobe a base, confirma o mapeamento, espera o motor
+ * e chega aqui para ver seis títulos com nada embaixo. A tela está CERTA — sem dimensão
+ * declarada não há o que abrir — e ainda assim parece defeituosa. O custo não é técnico, é de
+ * confiança.
+ *
+ * O Diagnóstico já faz isso na faixa de parcialidade: diz o que não foi medido e por quê. Esta
+ * é a irmã dela.
+ *
+ * ## O que a faixa afirma, e o que ela se recusa a afirmar
+ *
+ * Ela afirma o que a tela OBSERVA: nada está aberto por campo.
+ *
+ * Ela **não** afirma "ninguém declarou dimensão". Uma dimensão declarada cujos grupos ficassem
+ * todos abaixo do piso de supressão poderia chegar aqui vazia do mesmo jeito — e a frase
+ * acusaria a pessoa de não ter feito algo que ela fez. Afirmar causa interna a partir de
+ * ausência é a mesma família do defeito que pôs todo dataset em quarentena por silêncio do
+ * store.
+ *
+ * O que ela acrescenta é o CAMINHO — onde se escolhe agrupar. Isso é verdade em qualquer caso.
+ */
+export function PorQueEstaVazio({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
+  const { t } = useLanguage();
+
+  // As duas regiões que dependem de dimensão declarada. Se qualquer uma tem conteúdo, a tela
+  // não está sem resposta e a faixa seria ruído.
+  if (snapshot.dimensions.length > 0 || snapshot.time_series.length > 0) return null;
+
+  // Sem NENHUM registro não é o caso desta faixa: aí o problema é outro, e o estado do
+  // componente acima já fala dele.
+  if (snapshot.record_count <= 0) return null;
+
+  return (
+    <div role="status" className="rounded-md border border-border bg-muted/40 p-3 text-sm">
+      <p className="font-medium">{t("canonicalAnalysis.analyticsView.emptyTitle")}</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {t("canonicalAnalysis.analyticsView.emptyBody")}
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {t("canonicalAnalysis.analyticsView.emptyHow")}
+      </p>
+    </div>
+  );
+}
+
+
 function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
   const { t } = useLanguage();
   const larguras = snapshot.time_series.map(largurasDeSerie);
@@ -460,6 +510,10 @@ export function AnalyticsView() {
           </p>
         ) : (
           <>
+            {/* Vem antes das seções pela mesma razão da parcialidade no Diagnóstico: é ela que
+                explica por que o resto pode estar vazio. Depois das seções, a pessoa já teria
+                rolado seis títulos em branco antes de encontrar a explicação. */}
+            <PorQueEstaVazio snapshot={snapshot} />
             <Secao id="anl-numericos" titulo={t("canonicalAnalysis.analyticsView.numeric")}>
               <Numericos snapshot={snapshot} />
             </Secao>
