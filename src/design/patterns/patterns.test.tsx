@@ -331,6 +331,17 @@ describe("M13 · o legado de `shared/` é dívida congelada", () => {
     };
     varrer(SRC);
 
+    // O CONTEUDO E LIDO UMA VEZ POR ARQUIVO, e nao uma vez por modulo congelado.
+    //
+    // A versao anterior chamava `readFileSync` DENTRO do laco de modulos: a arvore inteira era
+    // relida a cada entrada de `CONGELADO`. Sozinho o caso levava 2,8s; sob a carga da suite
+    // cheia estourava os 5s e reprovava — por TEMPO, nunca por consumidor novo.
+    //
+    // Dar mais relogio adiaria: o custo cresce com a arvore e com a lista. Ler uma vez, nao.
+    const conteudo = new Map<string, string>(
+      arquivos.map((a) => [a, readFileSync(a, "utf-8")]),
+    );
+
     const cresceram: string[] = [];
     for (const [modulo, teto] of Object.entries(CONGELADO)) {
       const n = arquivos.filter(
@@ -340,7 +351,7 @@ describe("M13 · o legado de `shared/` é dívida congelada", () => {
           // ...e ESTE arquivo também não: ele cita os caminhos na própria declaração da dívida,
           // e contar a si mesmo faria o gate acusar um consumidor que não existe.
           !a.endsWith("patterns.test.tsx") &&
-          readFileSync(a, "utf-8").includes(modulo),
+          (conteudo.get(a) ?? "").includes(modulo),
       ).length;
       if (n > teto) cresceram.push(`${modulo}: ${teto} → ${n}`);
     }

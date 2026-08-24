@@ -35,11 +35,26 @@ beforeAll(() => {
 
 const SRC = path.resolve(__dirname, "../..");
 
+/** Cache por caminho — a mesma arvore era lida uma vez POR SIMBOLO.
+ *
+ * O gate de simbolos legados percorre 11 nomes e chamava `semComentarios` dentro do laco: cada
+ * arquivo de `src/` era lido e limpo 11 vezes. Sozinho ele levava 3,1s; sob a carga da suite
+ * cheia estourava os 5s e o arquivo inteiro reprovava — por TEMPO, nunca por achado.
+ *
+ * Dar mais relogio resolveria hoje e voltaria a estourar quando a base crescesse. O custo era
+ * trabalho repetido, e e ele que sai.
+ */
+const _semComentariosCache = new Map<string, string>();
+
 function semComentarios(caminho: string): string {
-  return fs
+  const guardado = _semComentariosCache.get(caminho);
+  if (guardado !== undefined) return guardado;
+  const limpo = fs
     .readFileSync(caminho, "utf-8")
     .replace(/\/\*[\s\S]*?\*\//g, " ")
     .replace(/(^|[^:])\/\/.*$/gm, "$1");
+  _semComentariosCache.set(caminho, limpo);
+  return limpo;
 }
 
 function arquivosDeCodigo(dir: string): string[] {

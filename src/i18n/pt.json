@@ -774,7 +774,12 @@
       "loading": "Lendo as colunas do arquivo…",
       "noCandidate": "Não reconhecemos nenhuma coluna para este campo. Escolha você.",
       "groupTitle": "Agrupar os resultados por",
-      "groupExplain": "Escolha os campos pelos quais quer abrir as medidas. Só dá para usar campos que você mapeou."
+      "groupExplain": "Escolha os campos pelos quais quer abrir as medidas. Só dá para usar campos que você mapeou.",
+      "implausible": {
+        "repete_demais": "Esta coluna se repete demais para ser data e hora. Confira a escolha.",
+        "poucos_valores": "Esta coluna tem valores distintos de menos para ser texto de conversa.",
+        "tipo_incompativel": "O tipo desta coluna não corresponde ao que este campo espera."
+      }
     }
   },
   "common": {

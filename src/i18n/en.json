@@ -774,7 +774,12 @@
       "loading": "Reading the file's columns…",
       "noCandidate": "We did not recognize any column for this field. Pick it yourself.",
       "groupTitle": "Group the results by",
-      "groupExplain": "Pick the fields you want to break the measures down by. Only fields you mapped can be used."
+      "groupExplain": "Pick the fields you want to break the measures down by. Only fields you mapped can be used.",
+      "implausible": {
+        "repete_demais": "This column repeats too much to be a date and time. Check the choice.",
+        "poucos_valores": "This column has too few distinct values to be conversation text.",
+        "tipo_incompativel": "This column's type doesn't match what this field expects."
+      }
     }
   },
   "common": {

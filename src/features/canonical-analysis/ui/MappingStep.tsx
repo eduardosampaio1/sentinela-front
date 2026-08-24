@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Panel, Stack, Text } from "@/design/primitives";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { ColunaDoArquivo, MappingView } from "@/lib/v1";
+import { motivoDeImplausibilidade } from "./plausibilidadeDoMapeamento";
 import { cn } from "@/lib/utils";
 
 /**
@@ -207,6 +208,23 @@ export function MappingStep({
     const reprovado = aguardando && tentou;
     const idCampo = `mapping-${campo}`;
 
+    // A DÚVIDA sobre a escolha, no instante em que corrigi-la é barato.
+    //
+    // Medido em homologação: a coluna `canal` foi mapeada em "Date and time" e a ingestão
+    // recusou os 360 registros com `invalid_field_type` — a tela disse só "Couldn't complete".
+    // O erro custou um ciclo inteiro, e a mensagem não ajudava a consertá-lo.
+    //
+    // AVISO, e nunca bloqueio: o perfil da Ingestão é "descrição, nunca julgamento" por decisão
+    // registrada. Barrar com base nele impediria um dataset legítimo de forma incomum.
+    const motivo = escolhido
+      ? motivoDeImplausibilidade(
+          campo,
+          mapa.columns.find((c) => c.name === escolhido),
+          mapa.records_observed,
+        )
+      : null;
+    const idAviso = `${idCampo}-aviso`;
+
     return (
       <div key={campo} className="flex flex-col gap-1.5">
         <label htmlFor={idCampo} className="flex items-center gap-2 text-sm font-medium">
@@ -225,6 +243,8 @@ export function MappingStep({
           // A borda vermelha só existe para quem enxerga. Sem isto, o resumo de erro nomeia
           // o campo e o campo não se assume.
           aria-invalid={reprovado || undefined}
+          // O aviso é LIDO junto do campo, não só visto ao lado dele.
+          aria-describedby={motivo ? idAviso : undefined}
           onChange={(e) => {
             setEscolhas((atual) => ({ ...atual, [campo]: e.target.value }));
             setErro(null);
@@ -235,7 +255,11 @@ export function MappingStep({
             "h-11 rounded-md border bg-background px-3 text-sm text-foreground",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             "disabled:opacity-60",
-            reprovado ? "border-destructive" : "border-border",
+            reprovado ? "border-destructive" : "",
+            // Âmbar, e não vermelho: a escolha é suspeita, não inválida. Vermelho aqui diria
+            // "isto está errado" sobre algo que pode estar certo.
+            !reprovado && motivo ? "border-warning" : "",
+            !reprovado && !motivo ? "border-border" : "",
           )}
         >
           <option value="">{t("canonicalAnalysis.mapping.chooseColumn")}</option>
@@ -271,6 +295,20 @@ export function MappingStep({
         ) : (
           <Evidencia coluna={porNome.get(escolhido)} />
         )}
+
+        {/* A DÚVIDA fica ABAIXO da evidência, e a ordem importa.
+
+            A evidência é o material de reconhecimento — "string · 3 valores distintos". O aviso
+            é a leitura dela: "3 valores é pouco para data e hora". Invertidos, a tela acusaria
+            antes de mostrar em quê se baseia.
+
+            `role="status"` e não `alert`: alerta interrompe, e isto não é urgente nem bloqueia.
+            É uma dúvida oferecida a quem sabe a resposta. */}
+        {motivo ? (
+          <p id={idAviso} role="status" className="text-xs text-warning">
+            {t(`canonicalAnalysis.mapping.implausible.${motivo}`)}
+          </p>
+        ) : null}
       </div>
     );
   };
