@@ -380,7 +380,16 @@ export function makeJourneyHandlers(base: string) {
     }),
     http.post(`${b}/v1/analyses/:id/data`, ({ params }) => {
       const id = String(params.id);
-      putEntry(id, { seq: ["receiving"], idx: 0, retryAllowed: false });
+      // `["receiving", "ready_to_submit"]`, e nao `["receiving"]` sozinho.
+      //
+      // O mock parava em `receiving` — sequencia de UM, beco sem saida. O produto anda:
+      // `AnalysisPage` diz, no proprio comentario do caso `receiving`, que "esta tela anda
+      // sozinha ate `ready_to_submit`". O botao de submeter so existe nesse estado.
+      //
+      // Consequencia medida: `canonical-responsive.spec.ts` ficou VERMELHO nos tres viewports,
+      // com timeout esperando "Submit for analysis" — um botao que a jornada mockada nunca
+      // alcancava. O mock e que estava atras do produto, nao a tela.
+      putEntry(id, { seq: ["receiving", "ready_to_submit"], idx: 0, retryAllowed: false });
       return HttpResponse.json(view(id, "receiving"));
     }),
     http.post(`${b}/v1/analyses/:id/submit`, ({ params }) => {
