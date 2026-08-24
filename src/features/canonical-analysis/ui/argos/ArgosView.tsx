@@ -851,9 +851,17 @@ export function ArgosView() {
           {(itens) => (
             <ul className="space-y-1">
               {itens.map((e) => (
-                <li key={e.id} className="flex justify-between gap-3 py-1 text-sm">
-                  <span>{e.label ?? e.kind}</span>
-                  <span className="tabular-nums text-muted-foreground">{e.observed_count}</span>
+                // `min-w-0` + `break-words` no rotulo, e `shrink-0` na contagem.
+                //
+                // O rotulo da evidencia e a lista de intencoes do grupo, junta por virgula — ela
+                // e longa POR DESENHO (o produtor a corta em 96 caracteres, nao menos). Sem
+                // `min-w-0` um filho de flex nao encolhe abaixo do conteudo, entao a linha
+                // empurrava a contagem 47px para fora do `main` a 375px. Medido, nao suposto.
+                <li key={e.id} className="flex items-start justify-between gap-3 py-1 text-sm">
+                  <span className="min-w-0 break-words">{e.label ?? e.kind}</span>
+                  <span className="shrink-0 tabular-nums text-muted-foreground">
+                    {e.observed_count}
+                  </span>
                 </li>
               ))}
             </ul>

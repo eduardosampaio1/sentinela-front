@@ -21,11 +21,35 @@ async function enableAuth(page: Page) {
 }
 
 async function semOverflowHorizontal(page: Page) {
-  const excesso = await page.evaluate(() => {
-    const el = document.scrollingElement ?? document.documentElement;
-    return el.scrollWidth - el.clientWidth;
+  // MEDE O `main` TAMBÉM, e a razão é que só o documento era CEGO.
+  //
+  // `PageFrame` renderiza `<main class="flex-1 overflow-y-auto">`: quem rola é o `main`, e o
+  // documento tem sempre a largura da janela. Medido no Diagnóstico V4 quebrado, a 375px:
+  //
+  //     document.scrollWidth - clientWidth = 0        <- esta função dizia "sem overflow"
+  //     main.scrollWidth      - clientWidth = 493     <- a tela rolava meia largura de lado
+  //
+  // A versão anterior olhava só `document.scrollingElement`, então passava verde sobre 493px de
+  // transbordo real. Ela media a casca; o defeito estava no que rola dentro dela.
+  const { doc, main, culpados } = await page.evaluate(() => {
+    const raiz = document.scrollingElement ?? document.documentElement;
+    const m = document.querySelector("main");
+    const nomes: string[] = [];
+    if (m) {
+      const caixa = m.getBoundingClientRect();
+      m.querySelectorAll("*").forEach((el) => {
+        const excede = Math.round(el.getBoundingClientRect().right - caixa.right);
+        if (excede > 4) nomes.push(`${el.tagName.toLowerCase()} (+${excede}px)`);
+      });
+    }
+    return {
+      doc: raiz.scrollWidth - raiz.clientWidth,
+      main: m ? m.scrollWidth - m.clientWidth : 0,
+      culpados: [...new Set(nomes)].slice(0, 5),
+    };
   });
-  expect(excesso, "sem overflow horizontal (scrollWidth ≤ clientWidth)").toBeLessThanOrEqual(1);
+  expect(doc, "sem overflow horizontal no documento").toBeLessThanOrEqual(1);
+  expect(main, `sem overflow horizontal no <main> — ${culpados.join(", ")}`).toBeLessThanOrEqual(1);
 }
 
 for (const vp of VIEWPORTS) {

@@ -1214,7 +1214,22 @@
 
    Escopo `.v4-lateral`, posto no proprio `aside`.
    ═══════════════════════════════════════════════════════════════════════════════════════════ */
-.v4-lateral { display:flex; flex-direction:column; padding:22px 14px 12px;
+/* A LATERAL NAO DECLARA `display`, e a ausencia e o conserto.
+ *
+ * `Sidebar.tsx` ja declara `hidden md:flex`: o componente decide QUANDO ela aparece, e esta
+ * folha decide COMO ela parece. A versao anterior escrevia `display:flex` aqui e, como este
+ * bloco mora DEPOIS de `@tailwind utilities` (ver a nota grande acima, sobre a poda do
+ * `@layer`), ele vencia o `.hidden` do Tailwind por ordem de cascata — mesma especificidade,
+ * declarado por ultimo.
+ *
+ * Efeito medido a 375px: a lateral ficava com 232px, `main` sobrava com 143px, e o Diagnostico
+ * transbordava 493px. O porte da V4 desligou a casca responsiva em silencio — o `hidden`
+ * continuava no HTML e nao valia nada.
+ *
+ * REGRA para este bloco inteiro: ele nao declara `display`, `position` nem `width` em seletor
+ * que o componente tambem controla por utilitario. Aparencia aqui; layout e visibilidade la.
+ */
+.v4-lateral { flex-direction:column; padding:22px 14px 12px;
   border-right:1px solid hsl(var(--ds-border-subtle)); background:hsl(var(--ds-surface-base) / 0.55); overflow:visible;
   min-width:0; }
 .v4-lateral[data-recolhida="true"] { padding-left:10px; padding-right:10px; }
@@ -1352,4 +1367,61 @@
 .v4-painel .evid p {
   max-width:none; overflow-wrap:anywhere;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+
+
+/* ── OS CORTES RESPONSIVOS DO PAINEL ──────────────────────────────────────────────────────
+ *
+ * O `.v4-painel` foi portado do Molde sem NENHUM `@media`. O molde era um desenho de desktop, e
+ * o porte trouxe a geometria dele inteira: `.hero` com 352px + 372px de colunas FIXAS (724px so
+ * de laterais), `.kpis` com seis colunas e `.trio` com tres.
+ *
+ * Medido, com `main` ja recebendo a largura toda:
+ *
+ *     Diagnostico @ 375px  ->  261px de transbordo horizontal
+ *     Diagnostico @ 768px  ->  100px
+ *
+ * Os cortes abaixo sao por LARGURA DO CONTEUDO, nao por dispositivo: o `main` encolhe quando a
+ * lateral esta aberta, entao um desktop de 1280px com a lateral expandida tem menos espaco util
+ * que um tablet de 1024px sem ela. Por isso o primeiro corte e alto.
+ */
+
+/* O heroi perde as colunas fixas antes de tudo: 724px de lateral fixa e o que estoura primeiro. */
+@media (max-width:1180px) {
+  .v4-painel .hero { grid-template-columns:minmax(0,1fr); }
+}
+
+/* Seis KPIs nao cabem em meia tela; tres continuam legiveis. E o trio vira pilha. */
+@media (max-width:980px) {
+  .v4-painel .kpis { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .v4-painel .trio { grid-template-columns:minmax(0,1fr); }
+}
+
+/* No telefone: dois KPIs por linha, e o resto em coluna unica. */
+@media (max-width:620px) {
+  .v4-painel .kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .v4-painel .duplas { grid-template-columns:minmax(0,1fr); }
+}
+
+/* OS ROTULOS DAS ZONAS SOMEM quando as zonas nao cabem neles.
+ *
+ * `.rot-zona` e `position:absolute` com `white-space:nowrap`: as zonas encolhem com a regua, os
+ * rotulos nao. A 375px "WARNING" e "EXPECTED" se sobrepoem e viram um borrao — medido na captura.
+ *
+ * Sumir nao perde informacao: as cores continuam, e os CORTES logo abaixo da regua ja nomeiam as
+ * zonas com o numero (`critical 60`, `warning 75`). Texto sobreposto e estritamente pior que
+ * texto ausente — um mente sobre o que diz, o outro nao diz.
+ */
+@media (max-width:520px) {
+  .v4-painel .regua .rot-zona { display:none; }
+}
+
+/* Conteudo largo por natureza rola DENTRO da propria caixa, e nao empurra a pagina.
+ *
+ * Tabela de intencoes e mapa de procedencia tem largura minima real — espremer nao os torna
+ * legiveis, so ilegiveis. Rolagem local preserva a leitura e mantem o corpo sem rolagem
+ * horizontal, que e a regra que importa. */
+@media (max-width:980px) {
+  .v4-painel .tabela-rolavel,
+  .v4-painel table { display:block; max-width:100%; overflow-x:auto; }
 }
