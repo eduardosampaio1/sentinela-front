@@ -85,8 +85,15 @@ export interface PublicEvidenceSummaryV3 {
   /**
    * O trecho observado, já sanitizado na origem pelo Privacy Gate e varrido na saída.
    *
-   * `null` quando a evidência não é textual — e isso é comum. Ausência aqui não é "não
-   * achamos"; é "esta evidência não é texto".
+   * `null` cobre DOIS casos, e o documento não os distingue:
+   *
+   * 1. a evidência não é textual — o caso comum;
+   * 2. o montador DESCARTOU o trecho por conteúdo não publicável (montador ≥ 0.9.1). Raro por
+   *    construção: depois do estreitamento dos padrões, só dispara em vazamento do nosso lado,
+   *    que é defeito e não rotina. O motivo fica no log do montador.
+   *
+   * Nos dois casos, ausência aqui não é "não achamos" — a evidência existe e `observed_count`
+   * continua valendo. Não pinte o cartão como vazio por falta de trecho.
    */
   excerpt?: string | null;
 }
