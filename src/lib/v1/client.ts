@@ -232,6 +232,17 @@ export interface V1Client {
      * chave não existir. A Ingestão distingue os dois.
      */
     groupBy: string[],
+    /**
+     * Quantos registros invalidos o conjunto tolera antes de ser recusado inteiro, em [0,1].
+     *
+     * `undefined` omite o campo e mantem o comportamento anterior byte a byte: quem decide o
+     * default e a Ingestao, e mandar o valor dela daqui criaria uma segunda fonte para a mesma
+     * decisao.
+     *
+     * `1` significa "so aceito se 100% forem validos" — a regra estrita, que o Gateway traduz
+     * de volta para a politica nomeada em vez de registrar como excecao tolerando zero perda.
+     */
+    minValidRatio: number | undefined,
     opts?: RequestOptions,
   ): Promise<MappingConfirmedView>;
 
@@ -527,14 +538,21 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         { workspace_id: scope.workspaceId },
         opts,
       ),
-    confirmAnalysisMapping: (analysisId, scope, rules, groupBy, opts) =>
+    confirmAnalysisMapping: (analysisId, scope, rules, groupBy, minValidRatio, opts) =>
       pedir<MappingConfirmedView>(
         "POST",
         `/v1/analyses/${encodeAnalysisId(analysisId)}/mapping`,
         { workspace_id: scope.workspaceId },
         opts,
         {
-          body: JSON.stringify({ rules, group_by: groupBy }),
+          // A chave SO existe quando ha escolha. `min_valid_ratio: null` seria uma terceira
+          // coisa para o Gateway distinguir, e omitir e o que preserva o comportamento de quem
+          // nunca escolheu.
+          body: JSON.stringify({
+            rules,
+            group_by: groupBy,
+            ...(minValidRatio === undefined ? {} : { min_valid_ratio: minValidRatio }),
+          }),
           contentType: "application/json",
         },
       ),

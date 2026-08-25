@@ -779,7 +779,19 @@
         "repete_demais": "This column repeats too much to be a date and time. Check the choice.",
         "poucos_valores": "This column has too few distinct values to be conversation text.",
         "tipo_incompativel": "This column's type doesn't match what this field expects."
+      },
+      "acceptance": {
+        "legend": "If some records can't be used",
+        "help": "Conversations with no reply, or messages that contained only personal data, can't become analyzable records.",
+        "strict": "Reject the whole file",
+        "tolerate": "Analyze anyway, if at least 95% are usable"
       }
+    },
+    "intake": {
+      "title": "Some records couldn't be used",
+      "summary": "{{accepted}} of {{total}} records were valid. {{rejected}} were rejected.",
+      "strictNote": "The current setting rejects the whole dataset when any record is invalid.",
+      "allGood": "All {{total}} records were accepted."
     }
   },
   "common": {

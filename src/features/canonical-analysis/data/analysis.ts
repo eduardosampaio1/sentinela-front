@@ -129,13 +129,15 @@ export function useConfirmMapping(): UseMutationResult<
     scope: CanonicalScope;
     rules: Record<string, { source: string }>;
     groupBy: string[];
+    /** Proporcao minima de registros validos, em [0,1]. `undefined` = nao escolhido. */
+    minValidRatio?: number;
   }
 > {
   const client = useV1Client();
   return useMutation({
     retry: false,
-    mutationFn: ({ analysisId, scope, rules, groupBy }) =>
-      client.confirmAnalysisMapping(analysisId, scope, rules, groupBy),
+    mutationFn: ({ analysisId, scope, rules, groupBy, minValidRatio }) =>
+      client.confirmAnalysisMapping(analysisId, scope, rules, groupBy, minValidRatio),
   });
 }
 

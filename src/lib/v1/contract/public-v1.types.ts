@@ -67,6 +67,31 @@ export interface AnalysisStatusView {
    * de um refresh. Nunca inferida, nunca preenchida por Default.
    */
   instance_id: string | null;
+  /**
+   * O que aconteceu com o ARQUIVO: quantos registros entraram, quantos viraram dataset e
+   * quantos foram recusados. `null` quando ainda nao ha o que contar.
+   *
+   * Medido em homologacao em 2026-08-24, com base real de atendimento: 61.423 turnos entraram,
+   * 100 foram recusados (0,16%) e o dataset inteiro foi rejeitado pela politica estrita. A tela
+   * mostrava apenas "Couldn't complete" — o sistema tinha o numero e nao o contava.
+   *
+   * Os TRES contadores viajam separados porque e assim que o Ingestion os publica. Junta-los
+   * num numero so e o que faz uma tela dividir por "recebidos" o que so vale sobre "canonicos".
+   */
+  intake: AnalysisIntake | null;
+}
+
+/** Os tres denominadores do arquivo, juntos e nomeados. */
+export interface AnalysisIntake {
+  /** Registros lidos do arquivo do cliente. Para conversas, ja EXPANDIDOS em turnos. */
+  source_record_count: number | null;
+  /** Registros que viraram dataset canonico. */
+  canonical_record_count: number | null;
+  /**
+   * Registros recusados. `0` afirma "nada foi recusado"; `null` diz "ainda nao medimos" — e a
+   * tela precisa distinguir para nao anunciar um dataset perfeito antes de ele existir.
+   */
+  rejected_record_count: number | null;
 }
 
 /** Item de listagem (GET /v1/analyses). */

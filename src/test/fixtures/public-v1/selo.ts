@@ -149,8 +149,24 @@
 // arquivo -- as que comparam fixture contra schema -- rodaram verdes na mesma passagem, e o
 // `Record<AnalysisStatus, ...>` de `analyses.ts` cobrou a fixture do estado novo.
 // Selo anterior: 18eeb06740b0d24de9eaba5222517cf1aca9375f4501ffe958765ef138f75458
+//
+// Selo anterior: f1b35dba5d86761c0eb788c5c6d331acf21cf870b7d551228a4f81a5197bd543
+// Reselado ao acrescentar `intake` ao status publico -- os tres denominadores do arquivo
+// (`source_record_count`, `canonical_record_count`, `rejected_record_count`).
+//
+// O caso que cobrou o campo, medido em homologacao em 2026-08-24 com base real de atendimento:
+// 61.423 turnos entraram, 61.323 eram validos, 100 foram recusados (0,16%), e a politica estrita
+// rejeitou o dataset inteiro. A tela mostrava "Couldn't complete. The analysis couldn't be
+// completed." O numero existia no Ingestion, atravessava o Gateway, e morria na projecao.
+//
+// ADITIVA: nenhum campo saiu e nenhum mudou de significado. `intake` e `null` quando nao ha
+// medicao, e a chave existe sempre -- mesma disciplina de `instance_id`.
+//
+// A reconferencia que o teste exige nao foi presumida. `statusView` ganhou `intake: null` e as
+// asercoes que comparam fixture contra schema rodaram verdes na mesma passagem; o caso do
+// campo com valor esta em `AvisoDeIntake.test.tsx`, com os numeros do incidente.
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "f1b35dba5d86761c0eb788c5c6d331acf21cf870b7d551228a4f81a5197bd543";
+  "cecf9112c9473ec25d6aa2d6f7534554e9741f0653c77cbf23c2db5f2f9f913e";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.

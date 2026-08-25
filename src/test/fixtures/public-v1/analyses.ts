@@ -29,6 +29,13 @@ export function statusView(status: AnalysisStatus, over: Partial<AnalysisStatusV
     // faria a fixture treinar o Front a ler um payload que o backend não emite.
     // Quem quiser uma amostra associada passa `instance_id` em `over`.
     instance_id: null,
+    // O que aconteceu com o ARQUIVO. `null` = nao medido, que e o caso destas amostras: elas
+    // servem aos testes de TRANSPORTE, e inventar contagem aqui treinaria o Front a esperar
+    // numero onde o backend manda ausencia.
+    //
+    // Quem exercita a recusa passa `intake` em `over` — e o caso real que originou o campo esta
+    // em `AvisoDeIntake.test.tsx`: 61.423 turnos, 61.323 validos, 100 recusados.
+    intake: null,
     ...over,
   };
 }

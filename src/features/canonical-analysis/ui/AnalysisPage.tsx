@@ -3,6 +3,7 @@
 // recuperação) → terminal (completed/failed). Sem indicador analítico, sem % inventado.
 
 import { useQueryClient } from "@tanstack/react-query";
+import { AvisoDeIntake } from "./AvisoDeIntake";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -215,12 +216,13 @@ export function AnalysisPage() {
             <StateBanner view={view} />
             <MappingStep
               mapa={mapeamento.data}
-              aoConfirmar={async (regras, agrupamento) => {
+              aoConfirmar={async (regras, agrupamento, minimoDeValidos) => {
                 await confirmar.mutateAsync({
                   analysisId,
                   scope,
                   rules: regras,
                   groupBy: agrupamento,
+                  minValidRatio: minimoDeValidos,
                 });
                 // Revalida o ESTADO, não o mapeamento: a partir daqui a ingestão anda sozinha,
                 // e o que a tela precisa saber é para onde a análise foi.
@@ -278,6 +280,16 @@ export function AnalysisPage() {
         return (
           <div className="space-y-6">
             <StateBanner view={view} />
+            {/* O QUE ACONTECEU COM O ARQUIVO, em numeros.
+
+                Medido em homologacao (2026-08-24) com base real: 100 de 61.423 registros
+                recusados derrubaram o dataset inteiro, e esta tela dizia apenas "Couldn't
+                complete". O numero existia no Ingestion, atravessava o Gateway, e morria aqui.
+
+                Fica ANTES dos eixos de proposito: quando a analise falhou por causa do dado, a
+                pergunta de quem olha e "o que houve com meu arquivo?", e nao "qual componente
+                interno falhou?". */}
+            <AvisoDeIntake intake={view.intake} />
             {/* M35 — falha é GRANULAR enquanto o contrato permitir granularidade.
                 Antes, o ramo terminal mostrava só o banner: uma análise que falhou não dizia QUAL
                 componente falhou nem qual continuava pronto. Os scenarios 13 e 14 existem
