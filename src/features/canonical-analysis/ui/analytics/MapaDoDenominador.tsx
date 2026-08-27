@@ -24,6 +24,17 @@ const PONTOS = [
 
 type Papel = "principal" | "aceito" | "publicado" | "fora";
 
+interface DesvioDoDenominador {
+  id: string;
+  valor: number | null | undefined;
+  rotulo: string;
+  de: string;
+}
+
+interface DesvioComValor extends DesvioDoDenominador {
+  valor: number;
+}
+
 interface DadoDoNo extends Record<string, unknown> {
   papel: Papel;
   rotulo: string;
@@ -53,9 +64,7 @@ function totalRetido(snapshot: SnapshotAnalitico) {
   );
 }
 
-function temDesvio(
-  desvio: { valor: number | null | undefined },
-): desvio is { valor: number } {
+function temDesvio(desvio: DesvioDoDenominador): desvio is DesvioComValor {
   return typeof desvio.valor === "number" && desvio.valor > 0;
 }
 
@@ -102,7 +111,7 @@ export function MapaDoDenominador({
       "base",
       "principal",
       t("canonicalAnalysis.analyticsView.traceReceived"),
-      intake ? formatar(intake.source_record_count) : "—",
+      typeof intake?.source_record_count === "number" ? formatar(intake.source_record_count) : "—",
       0,
       58,
     );
@@ -125,7 +134,7 @@ export function MapaDoDenominador({
       "aceitas",
     );
 
-    const desvios = [
+    const desvios: DesvioComValor[] = [
       {
         id: "contagem",
         valor: intake?.rejected_record_count,

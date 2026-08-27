@@ -15,12 +15,48 @@ import {
   type AnalysisStatusView,
   type AnalysisTimelineView,
   type CanonicalScope,
+  ProblemError,
+  TransportError,
 } from "@/lib/v1";
 import { useV1Client } from "./client";
 
 // ── Polling por estado (E3, item 13). Encerra em terminal; ativo em fila/execução/recuperação. ──
 const POLL_ATIVO = 2500;
 const POLL_MODERADO = 4000;
+const LIMIAR_UPLOAD_MULTIPARTE = 100 * 1024 * 1024;
+const TAMANHO_MINIMO_PARTE = 5 * 1024 * 1024;
+const TENTATIVAS_POR_PARTE = 3;
+const ATRASO_BASE_TENTATIVA_MS = 1200;
+
+export interface UploadProgress {
+  sentBytes: number;
+  totalBytes: number;
+  percent: number;
+  currentPart?: number;
+  totalParts?: number;
+  attempt?: number;
+  state: "opening" | "uploading" | "retrying" | "completing";
+}
+
+function esperar(ms: number, signal?: AbortSignal): Promise<void> {
+  if (signal?.aborted) return Promise.reject(new DOMException("Aborted", "AbortError"));
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(resolve, ms);
+    signal?.addEventListener(
+      "abort",
+      () => {
+        window.clearTimeout(timer);
+        reject(new DOMException("Aborted", "AbortError"));
+      },
+      { once: true },
+    );
+  });
+}
+
+function erroTemRetentativa(error: unknown): boolean {
+  if (error instanceof TransportError) return true;
+  return error instanceof ProblemError && error.problem.retryable === true;
+}
 
 export function intervaloDePolling(status: AnalysisStatus | undefined): number | false {
   switch (status) {
@@ -84,47 +120,103 @@ export function useUploadData(): UseMutationResult<
     scope: CanonicalScope;
     body: BodyInit;
     signal?: AbortSignal;
-    onProgress?: (progress: { sentBytes: number; totalBytes: number; percent: number }) => void;
+    onProgress?: (progress: UploadProgress) => void;
   }
 > {
   const client = useV1Client();
   return useMutation({
     retry: false,
     mutationFn: async ({ analysisId, scope, body, signal, onProgress }) => {
-      if (!(body instanceof File) || body.size < 100 * 1024 * 1024) {
+      if (!(body instanceof File) || body.size < LIMIAR_UPLOAD_MULTIPARTE) {
         return client.uploadData(analysisId, scope, body, { signal });
       }
 
+      onProgress?.({
+        sentBytes: 0,
+        totalBytes: body.size,
+        percent: 0,
+        state: "opening",
+      });
       const aberta = await client.openDataUpload(analysisId, scope, { signal });
-      const partSize = Math.max(aberta.part_size_bytes || 0, 5 * 1024 * 1024);
+      const partSize = Math.max(aberta.part_size_bytes || 0, TAMANHO_MINIMO_PARTE);
       const totalParts = Math.ceil(body.size / partSize);
-      const parts: Array<{ part_number: number; etag: string }> = [];
+      const parts = new Map<number, { part_number: number; etag: string }>();
+      for (const parte of aberta.uploaded_parts ?? []) {
+        if (parte.part_number > 0 && parte.etag) parts.set(parte.part_number, parte);
+      }
 
       for (let index = 0; index < totalParts; index += 1) {
         const partNumber = index + 1;
         const start = index * partSize;
         const end = Math.min(body.size, start + partSize);
-        const sent = await client.uploadDataPart(
-          analysisId,
-          scope,
-          aberta.upload_session_id,
-          partNumber,
-          body.slice(start, end),
-          { signal },
-        );
-        parts.push({ part_number: sent.part_number, etag: sent.etag });
-        onProgress?.({
-          sentBytes: end,
-          totalBytes: body.size,
-          percent: Math.round((end / body.size) * 100),
-        });
+        if (parts.has(partNumber)) {
+          onProgress?.({
+            sentBytes: end,
+            totalBytes: body.size,
+            percent: Math.round((end / body.size) * 100),
+            currentPart: partNumber,
+            totalParts,
+            state: "uploading",
+          });
+          continue;
+        }
+
+        let lastError: unknown = null;
+        for (let attempt = 1; attempt <= TENTATIVAS_POR_PARTE; attempt += 1) {
+          try {
+            onProgress?.({
+              sentBytes: start,
+              totalBytes: body.size,
+              percent: Math.round((start / body.size) * 100),
+              currentPart: partNumber,
+              totalParts,
+              attempt,
+              state: attempt === 1 ? "uploading" : "retrying",
+            });
+            const sent = await client.uploadDataPart(
+              analysisId,
+              scope,
+              aberta.upload_session_id,
+              partNumber,
+              body.slice(start, end),
+              { signal },
+            );
+            parts.set(sent.part_number, { part_number: sent.part_number, etag: sent.etag });
+            onProgress?.({
+              sentBytes: end,
+              totalBytes: body.size,
+              percent: Math.round((end / body.size) * 100),
+              currentPart: partNumber,
+              totalParts,
+              attempt,
+              state: "uploading",
+            });
+            lastError = null;
+            break;
+          } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") throw error;
+            lastError = error;
+            if (attempt >= TENTATIVAS_POR_PARTE || !erroTemRetentativa(error)) throw error;
+            await esperar(ATRASO_BASE_TENTATIVA_MS * attempt, signal);
+          }
+        }
+        if (lastError) throw lastError;
       }
 
+      const partesConcluidas = Array.from(parts.values()).sort((a, b) => a.part_number - b.part_number);
+      onProgress?.({
+        sentBytes: body.size,
+        totalBytes: body.size,
+        percent: 100,
+        currentPart: totalParts,
+        totalParts,
+        state: "completing",
+      });
       return client.completeDataUpload(
         analysisId,
         scope,
         aberta.upload_session_id,
-        parts,
+        partesConcluidas,
         { signal },
       );
     },

@@ -91,6 +91,7 @@ describe("V1 client — as 7 operações canônicas", () => {
         status: "receiving",
         upload_session_id: "up-1",
         part_size_bytes: 8388608,
+        uploaded_parts: [{ part_number: 1, etag: "\"etag-ja-recebido\"" }],
       }),
       jsonResponse({
         analysis_id: "an-abc",
@@ -103,6 +104,7 @@ describe("V1 client — as 7 operações canônicas", () => {
     const { client, fetchImpl } = makeClient(() => respostas.shift()!);
 
     const aberta = await client.openDataUpload("an-abc", SCOPE);
+    expect(aberta.uploaded_parts).toEqual([{ part_number: 1, etag: "\"etag-ja-recebido\"" }]);
     const parte = await client.uploadDataPart(
       "an-abc",
       SCOPE,

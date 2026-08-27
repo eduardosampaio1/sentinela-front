@@ -60,7 +60,7 @@ function BasePequenaDemais({ total }: { total: number }) {
   return (
     <Panel como="section" titulo={t("canonicalAnalysis.datasetTooSmall.title")}>
       <Stack espaco="md">
-        <Text as="p" papel="body">
+        <Text as="p" papel="corpo">
           {t("canonicalAnalysis.datasetTooSmall.message", {
             count: numero(total, language),
             min: numero(MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS, language),

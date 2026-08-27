@@ -196,10 +196,12 @@ export function MappingStep({
   const faltando = mapa.required_fields.filter((c) => !nomesDeColunas.has(escolhas[c] ?? ""));
   const jaResolvidos = mapa.required_fields.length - faltando.length;
   const baseCompletaFoiObservada = !mapa.sample_truncated;
+  const conversasObservadas =
+    typeof mapa.records_observed === "number" ? mapa.records_observed : null;
   const basePequenaDemais =
     baseCompletaFoiObservada &&
-    typeof mapa.records_observed === "number" &&
-    mapa.records_observed < MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS;
+    conversasObservadas !== null &&
+    conversasObservadas < MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS;
 
   // Agrupável E mapeado. A interseção muda enquanto a pessoa escolhe colunas, e é por isso que
   // ela é derivada a cada render em vez de guardada: um campo desmapeado depois de marcado
@@ -221,7 +223,7 @@ export function MappingStep({
     if (basePequenaDemais) {
       setErro(
         t("canonicalAnalysis.mapping.tooSmall", {
-          count: numero(mapa.records_observed, language),
+          count: numero(conversasObservadas ?? 0, language),
           min: numero(MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS, language),
         }),
       );
@@ -446,7 +448,7 @@ export function MappingStep({
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               {t("canonicalAnalysis.mapping.tooSmallHelp", {
-                count: numero(mapa.records_observed, language),
+                count: numero(conversasObservadas ?? 0, language),
                 min: numero(MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS, language),
               })}
             </p>

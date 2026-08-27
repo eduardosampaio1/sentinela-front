@@ -4,6 +4,8 @@ import type { AuthClient, AuthSession } from "./types";
 interface OidcUserLike {
   access_token: string;
   expired?: boolean;
+  /** Segundos desde epoch, formato exposto pelo oidc-client-ts. */
+  expires_at?: number;
   profile: {
     sub: string;
     email?: string | null;
@@ -11,6 +13,8 @@ interface OidcUserLike {
     preferred_username?: string | null;
   };
 }
+
+const RENOVAR_ANTES_DE_EXPIRAR_S = 120;
 interface UserManagerLike {
   getUser(): Promise<OidcUserLike | null>;
   /**
@@ -48,6 +52,16 @@ function toSession(user: OidcUserLike | null): AuthSession | null {
       created_at: null,
     },
   };
+}
+
+function usuarioTemTokenUsavel(user: OidcUserLike | null): user is OidcUserLike {
+  return Boolean(user && !user.expired && user.access_token);
+}
+
+function tokenExpiraEmBreve(user: OidcUserLike): boolean {
+  if (!user.expires_at) return false;
+  const agoraS = Math.floor(Date.now() / 1000);
+  return user.expires_at - agoraS <= RENOVAR_ANTES_DE_EXPIRAR_S;
 }
 
 export function createKeycloakAuthClient(opts: {
@@ -118,9 +132,15 @@ export function createKeycloakAuthClient(opts: {
      * antes de declarar a sessão perdida.
      */
     async getAccessToken() {
-      const atual = await getSession();
-      if (atual) return atual.accessToken;
-      return (await renovar())?.accessToken ?? null;
+      const user = await userManager.getUser();
+      const atual = toSession(user);
+      if (usuarioTemTokenUsavel(user) && !tokenExpiraEmBreve(user)) return user.access_token;
+      const renovada = await renovar();
+      if (renovada) return renovada.accessToken;
+      // Se o IdP oscilou, mas o token antigo AINDA é válido por alguns segundos/minutos, não
+      // derrubamos a tela no meio de um upload grande. A próxima requisição tentará renovar de
+      // novo; só devolvemos `null` quando não há token usável.
+      return atual?.accessToken ?? null;
     },
     onAuthStateChange(cb) {
       const onLoaded = (u: OidcUserLike) => cb(toSession(u));

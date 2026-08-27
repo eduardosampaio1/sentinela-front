@@ -17,16 +17,17 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createKeycloakAuthClient } from "./keycloakAuthClient";
 
-function usuario(over: Partial<{ expired: boolean; access_token: string }> = {}) {
+function usuario(over: Partial<{ expired: boolean; access_token: string; expires_at: number }> = {}) {
   return {
     access_token: over.access_token ?? "tok-valido",
     expired: over.expired ?? false,
+    expires_at: over.expires_at,
     profile: { sub: "u-1", email: "u@x", name: "U" },
   };
 }
 
 function gerente(over: Partial<Record<string, unknown>> = {}) {
-  return {
+  const base = {
     getUser: vi.fn(async () => usuario()),
     signinSilent: vi.fn(async () => usuario()),
     signinRedirect: vi.fn(),
@@ -38,8 +39,8 @@ function gerente(over: Partial<Record<string, unknown>> = {}) {
       addUserUnloaded: vi.fn(),
       removeUserUnloaded: vi.fn(),
     },
-    ...over,
-  } as never;
+  };
+  return { ...base, ...over };
 }
 
 describe("keycloakAuthClient · renovação sob demanda", () => {
@@ -51,6 +52,36 @@ describe("keycloakAuthClient · renovação sob demanda", () => {
 
     expect(await cliente.getAccessToken()).toBe("tok-valido");
     expect(gm.signinSilent).not.toHaveBeenCalled();
+  });
+
+  it("token perto de expirar renova antes do upload bater no limite", async () => {
+    // Upload grande não pode esperar a expiração acontecer: quando ela acontece, algum GET
+    // acessório pode navegar para /session-expired e matar a requisição em voo.
+    const agoraS = Math.floor(Date.now() / 1000);
+    const gm = gerente({
+      getUser: vi.fn(async () => usuario({ expires_at: agoraS + 30 })),
+      signinSilent: vi.fn(async () => usuario({ access_token: "tok-renovado", expires_at: agoraS + 3600 })),
+    });
+    const cliente = createKeycloakAuthClient({ userManager: gm, issuer: "https://kc.test" });
+
+    expect(await cliente.getAccessToken()).toBe("tok-renovado");
+    expect(gm.signinSilent).toHaveBeenCalledTimes(1);
+  });
+
+  it("se a renovação antecipada oscila, usa o token ainda válido e tenta de novo depois", async () => {
+    // Este é o caso que evita expulsar o usuário durante arquivos longos: IdP indisponível por
+    // instantes, mas o access token atual ainda serve para a próxima parte do multipart.
+    const agoraS = Math.floor(Date.now() / 1000);
+    const gm = gerente({
+      getUser: vi.fn(async () => usuario({ access_token: "tok-ainda-valido", expires_at: agoraS + 30 })),
+      signinSilent: vi.fn(async () => {
+        throw new Error("keycloak oscilou");
+      }),
+    });
+    const cliente = createKeycloakAuthClient({ userManager: gm, issuer: "https://kc.test" });
+
+    expect(await cliente.getAccessToken()).toBe("tok-ainda-valido");
+    expect(gm.signinSilent).toHaveBeenCalledTimes(1);
   });
 
   it("token expirado renova em vez de devolver null", async () => {

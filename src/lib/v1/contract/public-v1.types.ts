@@ -190,6 +190,10 @@ export interface UploadAbertoView {
   status: "receiving";
   upload_session_id: string;
   part_size_bytes: number;
+  uploaded_parts?: Array<{
+    part_number: number;
+    etag: string;
+  }>;
 }
 
 /** Confirmação pública de uma parte recebida. */

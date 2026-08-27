@@ -23,7 +23,7 @@ import { Check, Loader2, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { CanonicalScope } from "@/lib/v1";
-import { useUploadData } from "../data/analysis";
+import { useUploadData, type UploadProgress } from "../data/analysis";
 import { ProblemFeedback } from "./notices";
 import { ehFalhaDeTransporte } from "./falhaDeTransporte";
 import { AvisoDaJornada } from "./AvisoDaJornada";
@@ -54,6 +54,7 @@ export function UploadStep({
 }) {
   const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
+  const [progress, setProgress] = useState<UploadProgress | null>(null);
   const upload = useUploadData();
   const enviando = upload.isPending;
   const enviado = upload.isSuccess;
@@ -71,12 +72,14 @@ export function UploadStep({
 
   function enviar() {
     if (!file || bloqueado) return;
+    setProgress(null);
     // File direto — sem leitura/cópia no navegador. O backend valida a base canonicamente.
     upload.mutate(
       {
         analysisId,
         scope,
         body: file,
+        onProgress: setProgress,
       },
       { onSuccess: onUploaded },
     );
@@ -85,6 +88,21 @@ export function UploadStep({
   // O erro do upload tem DOIS desfechos, e a tela não pode colapsá-los: o backend respondeu e
   // recusou (envelope público), ou a requisição não chegou a ter resposta (transporte).
   const transporte = ehFalhaDeTransporte(upload.error);
+  const percentual = enviado ? 100 : Math.max(0, Math.min(100, progress?.percent ?? (enviando ? 1 : 0)));
+  const detalheDoProgresso =
+    progress?.state === "retrying"
+      ? t("canonicalAnalysis.upload.retryingPart", {
+          current: progress.currentPart ?? 0,
+          total: progress.totalParts ?? 0,
+        })
+      : progress?.state === "completing"
+        ? t("canonicalAnalysis.upload.completing")
+        : progress?.currentPart && progress?.totalParts
+          ? t("canonicalAnalysis.upload.uploadingPart", {
+              current: progress.currentPart,
+              total: progress.totalParts,
+            })
+          : t("canonicalAnalysis.upload.progressHint");
 
   return (
     <section aria-labelledby="canonical-upload-title" className="space-y-4">
@@ -129,6 +147,8 @@ export function UploadStep({
         disabled={enviando}
         onChange={(e) => {
           setFile(e.target.files?.[0] ?? null);
+          setProgress(null);
+          upload.reset();
         }}
       />
 
@@ -162,20 +182,26 @@ export function UploadStep({
               <div
                 role="progressbar"
                 aria-label={t("canonicalAnalysis.upload.progressLabel")}
-                aria-valuetext={t("canonicalAnalysis.upload.progressValue")}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={percentual}
+                aria-valuetext={t("canonicalAnalysis.upload.progressValue", {
+                  percent: percentual,
+                })}
                 className="h-2 overflow-hidden rounded-full bg-muted"
               >
                 <span
                   aria-hidden="true"
-                  className="block h-full w-full origin-left rounded-full bg-primary/70 transition-transform motion-safe:animate-pulse"
+                  className="block h-full w-full origin-left rounded-full bg-primary/80 transition-transform motion-reduce:transition-none"
                   style={{
+                    transform: `scaleX(${percentual / 100})`,
                     transitionDuration: "var(--ds-duration-base)",
                     transitionTimingFunction: "var(--ds-easing-standard)",
                   }}
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                {t("canonicalAnalysis.upload.progressHint")}
+                {detalheDoProgresso}
               </p>
             </div>
           )}
