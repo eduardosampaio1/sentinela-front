@@ -587,6 +587,30 @@
       "title": "What is happening",
       "loading": "Reading what each part is doing…"
     },
+    "viewsAvailability": {
+      "title": "Results from this analysis",
+      "help": "Each result opens as soon as its own calculation is ready.",
+      "state": {
+        "available": "Available",
+        "preparing": "In preparation",
+        "unavailable": "Unavailable"
+      },
+      "argos": {
+        "available": "The assessment is ready to view.",
+        "preparing": "The assessment appears after the final result is assembled.",
+        "unavailable": "The assessment could not be prepared for this run."
+      },
+      "analytics": {
+        "available": "The measures are ready to explore and export.",
+        "preparing": "Measures appear as soon as their calculation is published.",
+        "unavailable": "Measures were not published for this run."
+      },
+      "open": {
+        "argos": "Open assessment",
+        "analytics": "Open measures"
+      },
+      "automatic": "This status updates automatically."
+    },
     "liveProgress": {
       "title": "Analysis progress",
       "help": "This area updates automatically as each step responds.",

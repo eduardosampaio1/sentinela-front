@@ -587,6 +587,30 @@
       "title": "O que está acontecendo",
       "loading": "Lendo o que cada parte está fazendo…"
     },
+    "viewsAvailability": {
+      "title": "Resultados desta análise",
+      "help": "Cada resultado abre assim que o próprio cálculo fica pronto.",
+      "state": {
+        "available": "Disponível",
+        "preparing": "Em preparação",
+        "unavailable": "Indisponível"
+      },
+      "argos": {
+        "available": "O diagnóstico está pronto para consulta.",
+        "preparing": "O diagnóstico aparece depois que o resultado final é montado.",
+        "unavailable": "O diagnóstico não pôde ser preparado nesta rodada."
+      },
+      "analytics": {
+        "available": "As medidas estão prontas para consulta e exportação.",
+        "preparing": "As medidas aparecem assim que o cálculo é publicado.",
+        "unavailable": "As medidas não foram publicadas nesta rodada."
+      },
+      "open": {
+        "argos": "Abrir diagnóstico",
+        "analytics": "Abrir medidas"
+      },
+      "automatic": "Este estado é atualizado automaticamente."
+    },
     "liveProgress": {
       "title": "Progresso",
       "help": "Esta área atualiza sozinha conforme cada etapa responde.",

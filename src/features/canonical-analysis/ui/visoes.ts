@@ -8,9 +8,11 @@
 //      só, essa correspondência fica visível — e há gate provando que ela vale.
 
 /** Uma visão alcançável a partir do shell da Analysis. */
+export type CaminhoDaVisao = "argos" | "analytics";
+
 export interface VisaoDaAnalise {
   /** Sufixo da subrota (`argos`, `analytics`) — e também a identidade do rótulo em i18n. */
-  readonly caminho: string;
+  readonly caminho: CaminhoDaVisao;
 }
 
 /** As visões que EXISTEM. A ordem é a da leitura: a inteligência antes da exploração. */

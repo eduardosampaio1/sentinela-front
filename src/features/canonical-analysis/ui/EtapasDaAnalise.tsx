@@ -46,6 +46,16 @@ function estadoDaProtecao(view: AnalysisStatusView): EstadoDaEtapa {
   if (view.status === "needs_mapping") return "attention";
   if (view.status === "preparing") return "waiting";
   if (view.status === "receiving") return "active";
+  // Estes estados só são alcançados depois que a ingestão liberou o artefato. `intake` é um
+  // detalhe opcional da visão pública; sua ausência não faz uma etapa já vencida voltar a
+  // "aguardando". A ordem do lifecycle é a evidência pública disponível aqui.
+  if (
+    view.status === "ready_to_submit" ||
+    view.status === "queued" ||
+    view.status === "running" ||
+    view.status === "recovering" ||
+    view.status === "completed"
+  ) return "done";
   if (view.intake) return "done";
   return "waiting";
 }

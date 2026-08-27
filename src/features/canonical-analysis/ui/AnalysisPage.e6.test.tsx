@@ -99,10 +99,11 @@ describe("E6 — retry canônico e falha não recuperável", () => {
 });
 
 describe("E6 — apresentação por código (capacity/result/idempotency)", () => {
-  it("completed + result_available=false: 'em preparação', SEM dashboard", async () => {
+  it("completed + result_available=false: explica a preparação sem esconder as visões", async () => {
     server.use(http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("completed", { analysis_id: "an-abc", result_available: false }))));
     renderAt();
-    expect(await screen.findByText(/still being prepared|ainda está sendo preparado/i)).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /results from this analysis/i })).toBeTruthy();
+    expect(screen.getByText(/assessment appears after the final result/i)).toBeTruthy();
     expect(screen.queryByRole("button", { name: /view result|ver resultado/i })).toBeNull();
   });
 

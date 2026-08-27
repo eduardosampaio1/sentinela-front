@@ -8,7 +8,7 @@ import { AvisoDeIntake } from "./AvisoDeIntake";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { workspaceKeys } from "@/lib/v1";
+import { workspaceKeys, type AnalysisStatusView } from "@/lib/v1";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/shared/states/LoadingState";
@@ -31,10 +31,11 @@ import { EtapasDaAnalise } from "./EtapasDaAnalise";
 import { IdentidadeDaAnalise } from "./IdentidadeDaAnalise";
 import type { EstadoPublico } from "@/design/patterns/estados";
 import { useRevelacao } from "@/design/motion";
-import { VISOES_DA_ANALISE } from "./visoes";
 import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
 import { analyticsUtilizavel, lerEixos } from "../result/eixos";
 import { ProblemFeedback, StateBanner } from "./notices";
+import { DisponibilidadeDasVisoes, type DisponibilidadeDaVisao } from "./DisponibilidadeDasVisoes";
+import { VISOES_DA_ANALISE } from "./visoes";
 
 export function AnalysisPage() {
   const { t } = useLanguage();
@@ -91,6 +92,16 @@ export function AnalysisPage() {
   function dispararRetry() {
     if (!scope || !analysisId || retryBloqueado) return;
     retry.mutate({ analysisId, scope, idempotencyKey: retryIntent.ensure() }, { onSuccess: revalidar });
+  }
+
+  function disponibilidadeDasVisoes(view: AnalysisStatusView) {
+    const indisponivelOuPreparando: DisponibilidadeDaVisao =
+      view.status === "failed" ? "unavailable" : "preparing";
+    const resultadoCompleto = view.status === "completed" && view.result_available;
+    return {
+      argos: view.result_available ? "available" : indisponivelOuPreparando,
+      analytics: analyticsPronto || resultadoCompleto ? "available" : indisponivelOuPreparando,
+    } as const;
   }
 
   function corpo() {
@@ -266,35 +277,11 @@ export function AnalysisPage() {
                 justamente no estado terminal que a diferença fica cara: é dali que a pessoa sai
                 para ler o resultado. */}
             <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
-            {view.result_available ? (
-              // Two-View Recovery: a jornada passa a oferecer as DUAS visões, e não mais a rota
-              // legada. `/analyses/:id/result` continua funcionando para todo link já salvo —
-              // o que ela deixa de ser é o destino ANUNCIADO, agora que existe a visão certa
-              // para cada leitura.
-              //
-              // A lista vem de `VISOES_DA_ANALISE`, a mesma que o shell usa: duas listas
-              // independentes divergiriam no primeiro ajuste, e a jornada passaria a oferecer
-              // uma visão que o shell não conhece (ou o contrário).
-              <nav aria-label={t("canonicalAnalysis.shell.viewsNavLabel")}>
-                <ul className="flex flex-wrap gap-2">
-                  {VISOES_DA_ANALISE.map((visao) => (
-                    <li key={visao.caminho}>
-                      <Button variant="outline" asChild>
-                        <Link to={`/analyses/${encodeURIComponent(analysisId)}/${visao.caminho}`}>
-                          {t(`canonicalAnalysis.shell.view.${visao.caminho}`)}
-                        </Link>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            ) : (
-              // result_not_available: concluída mas resultado em preparação — NÃO é falha analítica,
-              // NÃO renderiza dashboard (E5). Apresentação neutra de espera.
-              <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
-                {t("canonicalAnalysis.action.resultPreparing")}
-              </p>
-            )}
+            <DisponibilidadeDasVisoes
+              analysisId={analysisId}
+              estados={disponibilidadeDasVisoes(view)}
+              visoes={VISOES_DA_ANALISE}
+            />
           </div>
         );
       case "failed":
@@ -321,6 +308,11 @@ export function AnalysisPage() {
                 O eixo `failed` também NÃO autoriza retry: quem autoriza é `retry_allowed`, e são
                 dimensões diferentes. */}
             <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
+            <DisponibilidadeDasVisoes
+              analysisId={analysisId}
+              estados={disponibilidadeDasVisoes(view)}
+              visoes={VISOES_DA_ANALISE}
+            />
             {/* O que já estava disponível continua disponível. Uma falha em outro eixo não
                 desfaz o que o componente analítico entregou. */}
             {analyticsPronto && analytics.data && <RegiaoDeAnalyticsAoVivo vista={analytics.data} />}
@@ -356,6 +348,11 @@ export function AnalysisPage() {
             <StateBanner view={view} />
             <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
             <EtapasDaAnalise view={view} eixos={eixos} />
+            <DisponibilidadeDasVisoes
+              analysisId={analysisId}
+              estados={disponibilidadeDasVisoes(view)}
+              visoes={VISOES_DA_ANALISE}
+            />
             {/* Disponibilidade progressiva: o que já está pronto NÃO espera o resultado final.
                 Reusa o portador canônico da M27 — nenhuma segunda interpretação de
                 `ready`/`partial`/`withheld`. E isto não é "resultado parcial": `partial` pertence
