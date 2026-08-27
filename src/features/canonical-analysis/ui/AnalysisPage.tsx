@@ -7,7 +7,6 @@ import { AvisoDeIntake } from "./AvisoDeIntake";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Panel, Stack, Text } from "@/design/primitives";
 import { workspaceKeys } from "@/lib/v1";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
@@ -35,52 +34,7 @@ import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
 import { analyticsUtilizavel, lerEixos } from "../result/eixos";
 import { ProblemFeedback, StateBanner } from "./notices";
 
-const MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS = 100;
-
-function numero(valor: number, idioma: string): string {
-  return new Intl.NumberFormat(idioma === "pt" ? "pt-BR" : "en-US").format(valor);
-}
-
-function baseCompletaPequenaDemais(mapa: {
-  records_observed: number | null;
-  sample_truncated: boolean;
-}): mapa is {
-  records_observed: number;
-  sample_truncated: boolean;
-} {
-  return (
-    !mapa.sample_truncated &&
-    typeof mapa.records_observed === "number" &&
-    mapa.records_observed < MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS
-  );
-}
-
-function BasePequenaDemais({ total }: { total: number }) {
-  const { t, language } = useLanguage();
-  return (
-    <Panel como="section" titulo={t("canonicalAnalysis.datasetTooSmall.title")}>
-      <Stack espaco="md">
-        <Text as="p" papel="corpo">
-          {t("canonicalAnalysis.datasetTooSmall.message", {
-            count: numero(total, language),
-            min: numero(MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS, language),
-          })}
-        </Text>
-        <Text as="p" papel="corpo" tom="discreto">
-          {t("canonicalAnalysis.datasetTooSmall.reason")}
-        </Text>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild>
-            <Link to="/analyses/new">{t("canonicalAnalysis.action.newAnalysis")}</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/analyses">{t("canonicalAnalysis.action.back")}</Link>
-          </Button>
-        </div>
-      </Stack>
-    </Panel>
-  );
-}
+const MINIMO_DE_CONVERSAS_VALIDAS_PARA_ANALISE = 100;
 
 export function AnalysisPage() {
   const { t } = useLanguage();
@@ -264,9 +218,6 @@ export function AnalysisPage() {
             </div>
           );
         }
-        if (baseCompletaPequenaDemais(mapeamento.data)) {
-          return <BasePequenaDemais total={mapeamento.data.records_observed} />;
-        }
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
@@ -348,7 +299,10 @@ export function AnalysisPage() {
                 Fica ANTES dos eixos de proposito: quando a analise falhou por causa do dado, a
                 pergunta de quem olha e "o que houve com meu arquivo?", e nao "qual componente
                 interno falhou?". */}
-            <AvisoDeIntake intake={view.intake} />
+            <AvisoDeIntake
+              intake={view.intake}
+              minimoViavelDeConversas={MINIMO_DE_CONVERSAS_VALIDAS_PARA_ANALISE}
+            />
             {/* M35 — falha é GRANULAR enquanto o contrato permitir granularidade.
                 Antes, o ramo terminal mostrava só o banner: uma análise que falhou não dizia QUAL
                 componente falhou nem qual continuava pronto. Os scenarios 13 e 14 existem

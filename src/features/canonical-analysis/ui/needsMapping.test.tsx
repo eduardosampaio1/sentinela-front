@@ -201,10 +201,10 @@ describe("a parada de mapping chega na tela", () => {
     unmount();
   });
 
-  it("não joga base completa com menos de 100 conversas na tela de confirmação", async () => {
-    // O produto aprendeu algo importante na homologação: pedir confirmação de campos quando a
-    // própria leitura já sabe que há só 29 conversas é uma promessa falsa. Não há escolha que
-    // faça a análise ganhar precisão; a ação correta é enviar uma amostra maior.
+  it("não bloqueia a confirmação por contagem pequena do perfil", async () => {
+    // `records_observed` vem do perfil de mapping, não da contagem final da base inteira. A
+    // trava de volume mínimo mora depois que a Ingestão mede tudo; antes disso, bloquear aqui
+    // penaliza base grande por uma leitura parcial/inicial.
     server.use(
       http.get(`${MSW_BASE}/v1/analyses/an-small`, () =>
         HttpResponse.json(statusView("needs_mapping", { analysis_id: "an-small" })),
@@ -232,13 +232,12 @@ describe("a parada de mapping chega na tela", () => {
     );
     const { unmount } = renderAt("an-small");
 
-    await waitFor(() => expect(screen.getByText("We need a larger dataset")).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByText("Tell us which column is which")).toBeTruthy(),
+    );
 
-    expect(screen.getByText(/29 conversations/)).toBeTruthy();
-    expect(screen.getByText(/at least 100 conversations/)).toBeTruthy();
-    expect(screen.queryByText("Tell us which column is which")).toBeNull();
-    expect(screen.queryByText("Confirmation needed")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Confirm and continue" })).toBeNull();
+    expect(screen.queryByText("We need a larger dataset")).toBeNull();
+    expect(screen.getByRole("button", { name: "Confirm and continue" })).toBeEnabled();
     unmount();
   });
 

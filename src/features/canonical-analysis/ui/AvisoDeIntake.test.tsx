@@ -18,6 +18,20 @@ function montar(intake: Parameters<typeof AvisoDeIntake>[0]["intake"]) {
   );
 }
 
+function montarComMinimo(
+  intake: Parameters<typeof AvisoDeIntake>[0]["intake"],
+  minimoViavelDeConversas: number,
+) {
+  return render(
+    <LanguageProvider>
+      <AvisoDeIntake
+        intake={intake}
+        minimoViavelDeConversas={minimoViavelDeConversas}
+      />
+    </LanguageProvider>,
+  );
+}
+
 describe("AvisoDeIntake", () => {
   it("conta quantos de quantos quando houve recusa", () => {
     montar({
@@ -92,6 +106,30 @@ describe("AvisoDeIntake", () => {
 
     expect(screen.getByTestId("intake-politica-bloqueada")).toHaveTextContent(/25/);
     expect(screen.getByTestId("intake-politica-bloqueada")).toHaveTextContent(/100/);
+    expect(screen.queryByTestId("intake-tudo-aceito")).not.toBeInTheDocument();
+  });
+
+  it("mostra base pequena quando a contagem real aceita é insuficiente na falha final", () => {
+    montarComMinimo(
+      {
+        source_record_count: 25,
+        canonical_record_count: 25,
+        rejected_record_count: 0,
+        rejected_record_reasons: [],
+        acceptance_policy: "threshold",
+        acceptance_rule: {
+          policy: "threshold",
+          min_valid_ratio: 0.95,
+          min_valid_records: null,
+        },
+        accepted: true,
+        privacy_clearance: "passed",
+      },
+      100,
+    );
+
+    expect(screen.getByTestId("intake-base-pequena")).toHaveTextContent(/25/);
+    expect(screen.getByTestId("intake-base-pequena")).toHaveTextContent(/100/);
     expect(screen.queryByTestId("intake-tudo-aceito")).not.toBeInTheDocument();
   });
 

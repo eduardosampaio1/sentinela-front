@@ -36,7 +36,13 @@ function percentual(valor: number, idioma: string): string {
   }).format(valor);
 }
 
-export function AvisoDeIntake({ intake }: { intake: AnalysisIntake | null }): JSX.Element | null {
+export function AvisoDeIntake({
+  intake,
+  minimoViavelDeConversas = null,
+}: {
+  intake: AnalysisIntake | null;
+  minimoViavelDeConversas?: number | null;
+}): JSX.Element | null {
   const { t, language } = useLanguage();
 
   // Sem medição não há o que contar, e inventar zero afirmaria "nada foi recusado" sobre um
@@ -51,9 +57,37 @@ export function AvisoDeIntake({ intake }: { intake: AnalysisIntake | null }): JS
   // comparação, e comparação com ausência não é frase.
   if (total === null || aceitos === null || recusados === null) return null;
 
-  // Zero recusados é notícia boa — exceto quando a política bloqueou por volume mínimo. Foi o
-  // caso medido em homologação: 25 de 25 registros aceitos, mas o produto exige 100 conversas
-  // válidas para iniciar. Dizer "tudo aceito" sozinho esconde a causa real da parada.
+  if (
+    typeof minimoViavelDeConversas === "number" &&
+    intake.accepted === true &&
+    aceitos < minimoViavelDeConversas
+  ) {
+    return (
+      <div
+        role="status"
+        aria-live="polite"
+        data-testid="intake-base-pequena"
+        className="rounded-md border border-warning bg-warning/10 p-4 space-y-1"
+      >
+        <p className="text-sm font-medium">
+          {t("canonicalAnalysis.datasetTooSmall.title")}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {t("canonicalAnalysis.datasetTooSmall.message", {
+            count: numero(aceitos, language),
+            min: numero(minimoViavelDeConversas, language),
+          })}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {t("canonicalAnalysis.datasetTooSmall.reason")}
+        </p>
+      </div>
+    );
+  }
+
+  // Zero recusados é notícia boa depois que a suficiência analítica foi resolvida. Antes disso,
+  // "25 de 25 entraram" não significa "pronto para analisar"; significa "a base foi lida, mas
+  // pequena demais para produzir sinal confiável".
   if (recusados === 0 && intake.accepted !== false) {
     return (
       <p className="text-sm text-muted-foreground" data-testid="intake-tudo-aceito">

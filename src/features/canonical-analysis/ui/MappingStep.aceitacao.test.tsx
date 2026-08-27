@@ -97,7 +97,8 @@ describe("MappingStep · qualidade da base não vira decisão agressiva", () => 
     expect(screen.queryByText(/analyze anyway/i)).not.toBeInTheDocument();
   });
 
-  it("não tenta confirmar quando a base completa tem menos de 100 conversas", async () => {
+  it("não bloqueia confirmação por contagem observada no perfil", async () => {
+    const usuario = userEvent.setup();
     const aoConfirmar = vi.fn();
     montarComMapa(
       {
@@ -108,10 +109,9 @@ describe("MappingStep · qualidade da base não vira decisão agressiva", () => 
       aoConfirmar,
     );
 
-    expect(screen.getByTestId("mapping-base-pequena")).toHaveTextContent(/25/);
-    expect(screen.getByTestId("mapping-base-pequena")).toHaveTextContent(/100/);
-    expect(screen.getByRole("button", { name: /confirm/i })).toBeDisabled();
-    expect(aoConfirmar).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("mapping-base-pequena")).not.toBeInTheDocument();
+    await usuario.click(screen.getByRole("button", { name: /confirm/i }));
+    expect(aoConfirmar).toHaveBeenCalledTimes(1);
   });
 
   it("recusa de entrada na confirmação orienta revisar campos, não esperar", async () => {

@@ -40,11 +40,6 @@ import { motivoDeImplausibilidade } from "./plausibilidadeDoMapeamento";
 import { cn } from "@/lib/utils";
 
 const PROPORCAO_MINIMA_DE_REGISTROS_ANALISAVEIS = 0.95;
-const MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS = 100;
-
-function numero(valor: number, idioma: string): string {
-  return new Intl.NumberFormat(idioma === "pt" ? "pt-BR" : "en-US").format(valor);
-}
 
 /**
  * O rótulo humano de cada campo canônico, em chave de texto LITERAL.
@@ -137,7 +132,7 @@ export function MappingStep({
     minimoDeValidos: number | undefined,
   ) => Promise<void>;
 }) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   // O QUE FAZER COM REGISTROS QUE NAO SERVEM.
   //
@@ -195,14 +190,6 @@ export function MappingStep({
 
   const faltando = mapa.required_fields.filter((c) => !nomesDeColunas.has(escolhas[c] ?? ""));
   const jaResolvidos = mapa.required_fields.length - faltando.length;
-  const baseCompletaFoiObservada = !mapa.sample_truncated;
-  const conversasObservadas =
-    typeof mapa.records_observed === "number" ? mapa.records_observed : null;
-  const basePequenaDemais =
-    baseCompletaFoiObservada &&
-    conversasObservadas !== null &&
-    conversasObservadas < MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS;
-
   // Agrupável E mapeado. A interseção muda enquanto a pessoa escolhe colunas, e é por isso que
   // ela é derivada a cada render em vez de guardada: um campo desmapeado depois de marcado
   // desapareceria da lista mas continuaria no envio.
@@ -216,15 +203,6 @@ export function MappingStep({
       setErro(
         t("canonicalAnalysis.mapping.missing", {
           fields: faltando.map((c) => rotuloDoCampo(c, t)).join(", "),
-        }),
-      );
-      return;
-    }
-    if (basePequenaDemais) {
-      setErro(
-        t("canonicalAnalysis.mapping.tooSmall", {
-          count: numero(conversasObservadas ?? 0, language),
-          min: numero(MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS, language),
         }),
       );
       return;
@@ -437,24 +415,6 @@ export function MappingStep({
           </p>
         ) : null}
 
-        {basePequenaDemais ? (
-          <div
-            role="status"
-            data-testid="mapping-base-pequena"
-            className="rounded-md border border-warning bg-warning/10 p-4"
-          >
-            <p className="text-sm font-medium">
-              {t("canonicalAnalysis.mapping.tooSmallTitle")}
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {t("canonicalAnalysis.mapping.tooSmallHelp", {
-                count: numero(conversasObservadas ?? 0, language),
-                min: numero(MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS, language),
-              })}
-            </p>
-          </div>
-        ) : null}
-
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <div className="max-w-xl rounded-md border border-border p-4">
             <p className="text-sm font-medium">
@@ -472,7 +432,7 @@ export function MappingStep({
           </div>
           <Button
             onClick={() => void confirmar()}
-            disabled={enviando || basePequenaDemais}
+            disabled={enviando}
             aria-busy={enviando}
           >
             {enviando
