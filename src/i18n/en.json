@@ -90,7 +90,7 @@
   },
   "baseline": {
     "candidateCreated": "Created on {{date}}",
-    "candidateRecords": "{{n}} records",
+    "candidateRecords": "{{n}} conversations",
     "chooseTitle": "Analyses that can be the reference",
     "currentBadge": "Current reference",
     "currentLabel": "Current reference",
@@ -129,7 +129,7 @@
     "analyticsView": {
       "title": "Measures",
       "mapTitle": "Where this number came from",
-      "mapDenominator": "Records read",
+      "mapDenominator": "Conversations read",
       "mapMeasure": "Measure",
       "mapValid": "Valid",
       "mapNull": "Null",
@@ -155,7 +155,122 @@
       "minGroup": "Minimum group",
       "valueType": "Type",
       "loading": "Loading the analytical projection…",
+      "summaryTitle": "What this analysis published",
+      "summaryBody": "This screen only shows blocks published by Analytics. When a family does not exist yet, it appears here with a reason, not as an empty card.",
+      "summaryFamilies": "Families published in this analysis",
+      "published": "Published",
+      "notConfigured": "Not published yet",
+      "traceTitle": "Why this number?",
+      "traceReceived": "Dataset received",
+      "traceAccepted": "Conversations accepted",
+      "tracePublished": "Snapshot published",
+      "traceCountedOnly": "Kept as count only",
+      "summary": {
+        "conversations": {
+          "label": "Conversations",
+          "ready": "This is the denominator used by Analytics.",
+          "empty": "No conversation entered the projection."
+        },
+        "numeric": {
+          "label": "Numeric measures",
+          "ready": "Numeric values published by Analytics.",
+          "empty": "No column was configured as a numeric measure."
+        },
+        "distributions": {
+          "label": "Distributions",
+          "ready": "Counts by published values.",
+          "empty": "No categorical or boolean measure was configured."
+        },
+        "dimensions": {
+          "label": "Breakdowns by field",
+          "ready": "Breakdowns by fields selected during mapping.",
+          "empty": "No grouping field produced a publishable distribution."
+        },
+        "concentrations": {
+          "label": "Concentration",
+          "ready": "Published concentration bands and statistics.",
+          "empty": "Appears when there is a whole, additive numeric measure."
+        },
+        "series": {
+          "label": "Time series",
+          "ready": "Published time windows.",
+          "empty": "Appears when there is a publishable date and time field."
+        }
+      },
       "numeric": "Numeric measures",
+      "intakeQuality": "Dataset quality",
+      "intakeQualitySummary": "{{canonical}} of {{source}} conversations entered the analysis. {{rejected}} stayed as a count only.",
+      "intakeQualityEngineBoundary": "This usually happens when a conversation has no AI answer or when text was removed for safety. These cases do not enter the calculation, but remain visible here.",
+      "intakeQualityReasons": {
+        "invalidEncoding": {
+          "label": "File could not be read",
+          "meaning": "the text came in a format we could not safely open"
+        },
+        "recordNotObject": {
+          "label": "Line in an unexpected format",
+          "meaning": "the line did not look like a complete conversation"
+        },
+        "missingAssistantText": {
+          "label": "Questions without an AI answer",
+          "meaning": "the person asked, but there was no AI answer to evaluate"
+        },
+        "assistantTextEmpty": {
+          "label": "Empty answer",
+          "meaning": "there was an answer field, but it was empty"
+        },
+        "assistantTextTooLarge": {
+          "label": "Answer too long",
+          "meaning": "the answer was too large to process safely"
+        },
+        "missingRequiredField": {
+          "label": "Missing required fields",
+          "meaning": "a minimum required piece of information was missing"
+        },
+        "invalidFieldType": {
+          "label": "Field in the wrong format",
+          "meaning": "a column had a type of value different from what was expected"
+        },
+        "fieldTooLarge": {
+          "label": "Field too long",
+          "meaning": "one piece of information was too large to use safely"
+        },
+        "tooManyKeys": {
+          "label": "Line with too much information",
+          "meaning": "the line had more fields than we can accept"
+        },
+        "recordTooLarge": {
+          "label": "Line too long",
+          "meaning": "the full line was too large to process safely"
+        },
+        "duplicateConversationId": {
+          "label": "Duplicate conversation ID",
+          "meaning": "more than one line looked like the same conversation"
+        },
+        "mappingIncomplete": {
+          "label": "Incomplete mapping",
+          "meaning": "a required column still needed to be chosen"
+        },
+        "mappingAmbiguous": {
+          "label": "Ambiguous mapping",
+          "meaning": "more than one column seemed to mean the same thing"
+        },
+        "sanitizedToEmpty": {
+          "label": "Content removed for privacy",
+          "meaning": "the content was removed for safety and no text was left to evaluate"
+        },
+        "canonicalContractValidationFailed": {
+          "label": "Line outside the expected pattern",
+          "meaning": "the assembled conversation was still outside the accepted format"
+        },
+        "internalError": {
+          "label": "We could not prepare the line",
+          "meaning": "there was a failure while turning this line into a conversation"
+        },
+        "other": {
+          "label": "Lines without enough material",
+          "meaning": "there was not enough material to produce a safe measure"
+        }
+      },
       "distributions": "Distributions",
       "dimensions": "Distributions by Analytics dimension",
       "concentrations": "Concentration",
@@ -169,7 +284,7 @@
       "nulls": "Nulls",
       "invalid": "Invalid",
       "absent": "Absent",
-      "records": "Records",
+      "records": "Conversations",
       "snapshotVersion": "Snapshot version",
       "disclosureRule": "Disclosure rule",
       "notPresented": "Blocks not presented",
@@ -179,9 +294,6 @@
         "top_20_percent_volume_share": "Share held by the top 20%",
         "population_share_required_for_80_percent_volume": "Share of entities that make up 80% of volume"
       },
-      "emptyTitle": "Nothing is broken down by field",
-      "emptyBody": "Measures open by channel, model or date only when the dataset declares those fields for grouping. The reading itself is complete.",
-      "emptyHow": "You pick them under “Group the results by” when you confirm a dataset’s mapping.",
       "minimum": "minimum",
       "maximum": "maximum",
       "totalStat": "total",
@@ -286,7 +398,7 @@
         "computation_error": "Calculation error"
       },
       "recommendations": "Recommendations",
-      "records": "Records analysed",
+      "records": "Conversations analyzed",
       "refused": {
         "missing_schema": "What came back did not say which kind of reading it carries.",
         "unknown_schema": "What came back is a different kind of reading, and this view only shows ARGOS.",
@@ -434,11 +546,11 @@
       "next": "Next",
       "colStatus": "Status",
       "colCreated": "Created",
-      "colRecords": "Records",
+      "colRecords": "Conversations",
       "resultReady": "Result ready",
       "open": "Open analysis {{id}}",
-      "records": "{{count}} records",
-      "recordsUnknown": "Record count not published",
+      "records": "{{count}} conversations",
+      "recordsUnknown": "Conversation count not published",
       "lastChange": "Last change",
       "belongsTo": "Instance",
       "conversations": "conversations",
@@ -475,13 +587,58 @@
       "title": "What is happening",
       "loading": "Reading what each part is doing…"
     },
+    "liveProgress": {
+      "title": "Analysis progress",
+      "help": "This area updates automatically as each step responds.",
+      "state": {
+        "waiting": "Waiting",
+        "active": "Now",
+        "done": "Done",
+        "attention": "Action needed",
+        "failed": "Failed"
+      },
+      "steps": {
+        "upload": {
+          "title": "Dataset upload",
+          "waiting": "Choose and send a file to begin.",
+          "active": "The file is on its way to Sentinela. Keep this page open.",
+          "done": "The dataset arrived and can move to validation.",
+          "attention": "The dataset needs a decision before it can continue.",
+          "failed": "The dataset did not arrive completely. Send it again."
+        },
+        "privacy": {
+          "title": "Data protection",
+          "waiting": "Starts as soon as the dataset arrives.",
+          "active": "Safety check before any calculation.",
+          "done": "Only safe, usable text moves to the measures.",
+          "attention": "Review the columns so the dataset can continue safely.",
+          "failed": "The dataset needs review before calculation."
+        },
+        "measures": {
+          "title": "Measure calculation",
+          "waiting": "Waiting for the dataset to be ready.",
+          "active": "Sentinela calculates the analysis measures.",
+          "done": "The main measures are already available.",
+          "attention": "Some measures are restricted to protect small groups.",
+          "failed": "The measure calculation stopped before completion."
+        },
+        "result": {
+          "title": "Final result",
+          "waiting": "Prepared after the calculations.",
+          "active": "Final package assembly.",
+          "done": "The result is ready to view.",
+          "attention": "The result needs a decision before it appears.",
+          "failed": "The final result could not be assembled."
+        }
+      }
+    },
     "result": {
       "title": "Analysis result",
       "regionIndexLabel": "On this page",
       "loading": "Loading result…",
       "backToHistory": "Back to history",
       "summaryTitle": "Summary",
-      "totalRecords": "Records analyzed",
+      "totalRecords": "Conversations analyzed",
       "analyzedAt": "Analyzed at",
       "indicatorsTitle": "Indicators",
       "recommendationsTitle": "Recommendations",
@@ -500,7 +657,7 @@
         },
         "outcome_field_coverage_rate": {
           "label": "Outcome field coverage rate",
-          "description": "Share of records that carried an outcome field at all. Low coverage limits every outcome-based number below."
+          "description": "Share of conversations that carried an outcome field at all. Low coverage limits every outcome-based number below."
         },
         "conversion_rate": {
           "label": "Conversion rate",
@@ -520,7 +677,7 @@
         },
         "handoff_count": {
           "label": "Handoff count",
-          "description": "How many conversations were handed off, as observed in the records."
+          "description": "How many conversations were handed off, as observed in the dataset."
         },
         "conversion_count": {
           "label": "Conversion count",
@@ -528,7 +685,7 @@
         },
         "total_estimated_cost": {
           "label": "Observed total cost",
-          "description": "Sum of the per-record cost estimates provided by the source. It is an estimate, not billing."
+          "description": "Sum of the per-conversation cost estimates provided by the source. It is an estimate, not billing."
         },
         "token_cost_total": {
           "label": "Observed token cost",
@@ -559,7 +716,7 @@
         "title": "Analytics",
         "subtitle": "Produced by the analytics component over the same dataset.",
         "recordCount": "Conversations in the projection",
-        "engineWindow": "Records analyzed",
+        "engineWindow": "Conversations analyzed",
         "partialNotice": "Part of the analytics output was omitted to avoid revealing small groups. What is shown is complete and was not recalculated.",
         "withheldTitle": "Analytics results were not released",
         "withheldBody": "The analysis finished. Nothing from the analytics component could be released without risking the identification of small groups.",
@@ -577,11 +734,11 @@
         "maximum": "Maximum",
         "total": "Total",
         "mean": "Mean",
-        "suppressedStats": "Statistics were withheld: too few records for them to be published without identifying someone.",
+        "suppressedStats": "Statistics were withheld: too few conversations for them to be published without identifying someone.",
         "distinctObserved": "Distinct labels observed",
         "otherCount": "Other",
         "otherWithheld": "Labels below the floor were not grouped either — their total is also too small to publish.",
-        "minGroupSize": "Labels are published only from {{n}} records upwards.",
+        "minGroupSize": "Labels are published only from {{n}} conversations upwards.",
         "highCardinality": "Too many distinct labels to publish them: this is a decision, not missing data.",
         "suppressedGroups": "Some labels were not published.",
         "totalVolume": "Total volume",
@@ -729,6 +886,9 @@
       "noFile": "No file selected",
       "invalid": "This file type isn't accepted.",
       "sending": "Sending your dataset…",
+      "progressLabel": "Dataset upload",
+      "progressValue": "Receiving file",
+      "progressHint": "Keep this page open while we receive the dataset.",
       "retry": "Try again",
       "submit": "Submit for analysis",
       "selectedFile": "Selected file",
@@ -752,7 +912,11 @@
       "confirming": "Confirming…",
       "afterConfirm": "After this the analysis is ready to start.",
       "missing": "Choose a column for: {{fields}}.",
+      "invalid": "We could not confirm these choices. Check the selected fields and try again.",
       "failed": "We could not confirm. Try again in a moment.",
+      "tooSmall": "This file has {{count}} conversations. Send at least {{min}} to run an analysis.",
+      "tooSmallTitle": "This file is too small to analyze",
+      "tooSmallHelp": "We found {{count}} conversations. Send at least {{min}} conversations so the analysis has enough signal.",
       "evidence": {
         "coverage": "present in {{pct}}",
         "distinct": "{{n}} distinct values",
@@ -781,17 +945,27 @@
         "tipo_incompativel": "This column's type doesn't match what this field expects."
       },
       "acceptance": {
-        "legend": "If some records can't be used",
-        "help": "Conversations with no reply, or messages that contained only personal data, can't become analyzable records.",
-        "strict": "Reject the whole file",
-        "tolerate": "Analyze anyway, if at least 95% are usable"
+        "legend": "Conversations outside the analysis are still counted",
+        "help": "If a conversation has no AI answer, there is nothing to evaluate in it. It stays out of the calculation and appears in Measures as dataset quality.",
+        "tolerateSummary": "We will continue if almost all of the dataset is usable: at least 95% of conversations and 100 valid conversations.",
+        "policy": "Anything left out will be named and counted in the result."
       }
     },
     "intake": {
-      "title": "Some records couldn't be used",
-      "summary": "{{accepted}} of {{total}} records were valid. {{rejected}} were rejected.",
-      "strictNote": "The current setting rejects the whole dataset when any record is invalid.",
-      "allGood": "All {{total}} records were accepted."
+      "title": "Some conversations couldn't be used",
+      "policyTitle": "The analysis did not start",
+      "summary": "{{accepted}} of {{total}} conversations were valid. {{rejected}} stayed out of the analysis.",
+      "acceptedButTooSmall": "The file had {{accepted}} valid conversations, but we need at least {{min}} to analyze it.",
+      "strictNote": "The analysis stopped before it started because this setting requires every conversation to be perfect.",
+      "thresholdNote": "The analysis stopped before it started because the dataset did not have enough usable conversations: we need 95% usable conversations and at least 100 valid conversations.",
+      "thresholdNoteWithRule": "The analysis stopped before it started because the dataset did not have enough usable conversations: we need {{ratio}} usable conversations and at least {{min}} valid conversations.",
+      "privacyBlocked": "The dataset passed the count check, but had content that could not be used safely.",
+      "allGood": "All {{total}} conversations were accepted."
+    },
+    "datasetTooSmall": {
+      "title": "We need a larger dataset",
+      "message": "We found {{count}} conversations in this file. To analyze it with confidence, send a sample with at least {{min}} conversations.",
+      "reason": "With fewer conversations, the measures are too unstable to guide a decision."
     }
   },
   "common": {
@@ -937,25 +1111,42 @@
     "failed": "Failed"
   },
   "home": {
-    "subtitle": "What needs you in this workspace.",
+    "eyebrow": "Workspace",
+    "title": "Your starting point",
+    "subtitle": "Start a new analysis, continue a reserved dataset, or open a recent result.",
     "newAnalysis": "New analysis",
     "openAnalysis": "Open analysis",
     "followAnalysis": "Follow progress",
     "openResult": "Open result",
     "resultUnavailable": "Result unavailable",
-    "recordCount": "{{n}} records",
-    "recordCountAbsent": "record count not informed",
+    "recordCount": "{{n}} conversations",
+    "recordCountAbsent": "conversation count not informed",
     "loading": "Loading this workspace's analyses",
     "unknownState": "State not recognized by this version of the interface",
+    "sectionOverflow": "Only the most recent items in this section are shown.",
     "actions": {
-      "title": "Actions needed",
-      "none": "Nothing in this workspace is waiting on you right now."
+      "title": "Continue from here",
+      "explain": "Analyses that still need a choice from you before they can move on.",
+      "none": "No analysis is waiting for your choice right now.",
+      "sendDataset": "Send dataset",
+      "resolve": "Review fields",
+      "submit": "Start analysis",
+      "preparingNote": "The space is reserved. The next step is to send the dataset.",
+      "readyNote": "The dataset was received. The analysis still needs to start."
     },
     "running": {
-      "title": "In progress"
+      "title": "Sentinela is working",
+      "explain": "These analyses have left your hands and update by themselves."
     },
     "recent": {
-      "title": "Most recent results"
+      "title": "Results to open",
+      "explain": "The shortest path back to a completed analysis."
+    },
+    "failed": {
+      "title": "Need review",
+      "explain": "Failures stay visible, but the safe correction lives inside each analysis.",
+      "inspect": "View reason",
+      "note": "Open it to see which step stopped."
     },
     "instances": {
       "empty": "No instances in this workspace yet.",

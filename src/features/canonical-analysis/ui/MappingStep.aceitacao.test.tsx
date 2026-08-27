@@ -1,4 +1,4 @@
-// A escolha da política chega a quem confirma — ou não chega.
+// A política de qualidade chega a quem confirma.
 //
 // ## Por que este arquivo existe
 //
@@ -6,9 +6,10 @@
 // `MappingView`, ele quebrou em runtime, e eu o troquei por um teste no nível do cliente — que
 // prova o body que o cliente monta, e NÃO que a tela entrega a escolha ao cliente.
 //
-// O elo sem cobertura é exatamente onde a prova em homologação falhou: a análise
+// O elo sem cobertura é exatamente onde a prova em homologação falhou primeiro: a análise
 // `ad8acf59-b69f-4fc0-aa35-564a3592d056` foi confirmada com o rádio de 95% marcado, e o Ingestion
-// registrou `requested_policy = strict`.
+// registrou `requested_policy = strict`. Depois, o produto decidiu que esses registros viram
+// métrica de qualidade da base, não escolha agressiva no mapping.
 //
 // Este arquivo existe para responder de quem é a culpa, com a forma REAL do contrato.
 
@@ -17,7 +18,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import type { MappingView } from "@/lib/v1";
+import { ProblemError, type MappingView } from "@/lib/v1";
 
 import { MappingStep } from "./MappingStep";
 
@@ -43,46 +44,40 @@ function mapa(): MappingView {
   };
 }
 
-function montar(aoConfirmar: (r: unknown, g: unknown, m: number | undefined) => Promise<void>) {
+function montarComMapa(
+  mapaDaTela: MappingView,
+  aoConfirmar: (r: unknown, g: unknown, m: number | undefined) => Promise<void>,
+) {
   return render(
     <LanguageProvider>
-      <MappingStep mapa={mapa()} aoConfirmar={aoConfirmar} />
+      <MappingStep mapa={mapaDaTela} aoConfirmar={aoConfirmar} />
     </LanguageProvider>,
   );
 }
 
-describe("MappingStep · a escolha da política chega a quem confirma", () => {
-  it("escolher 95% entrega 0.95 ao confirmar", async () => {
-    // O caso que a prova em homologação deixou em dúvida. Com `userEvent`, o clique passa pelo
-    // React como um clique de gente passa — se ele falhar aqui, o defeito é do produto.
+function montar(aoConfirmar: (r: unknown, g: unknown, m: number | undefined) => Promise<void>) {
+  return montarComMapa(mapa(), aoConfirmar);
+}
+
+describe("MappingStep · qualidade da base não vira decisão agressiva", () => {
+  it("confirmar entrega 0.95 sem pedir escolha de rejeição", async () => {
     const usuario = userEvent.setup();
     const recebido: Array<number | undefined> = [];
     montar(async (_r, _g, m) => {
       recebido.push(m);
     });
 
-    await usuario.click(screen.getByRole("radio", { name: /95%/i }));
+    expect(screen.queryByRole("radio", { name: /reject the whole file/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: /95%/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/outside the analysis/i)).toBeInTheDocument();
+    expect(screen.getByText(/named and counted/i)).toBeInTheDocument();
+
     await usuario.click(screen.getByRole("button", { name: /confirm/i }));
 
     expect(recebido).toEqual([0.95]);
   });
 
-  it("escolher o estrito entrega 1, e não ausência", async () => {
-    // O conserto do achado MÉDIO da revisão: quem escolhe o estrito ENVIA essa escolha, em vez
-    // de delegar a um default que não viu.
-    const usuario = userEvent.setup();
-    const recebido: Array<number | undefined> = [];
-    montar(async (_r, _g, m) => {
-      recebido.push(m);
-    });
-
-    await usuario.click(screen.getByRole("radio", { name: /reject the whole file/i }));
-    await usuario.click(screen.getByRole("button", { name: /confirm/i }));
-
-    expect(recebido).toEqual([1]);
-  });
-
-  it("não escolher entrega `undefined`, e a chave nem viaja", async () => {
+  it("a ausência de interação não omite mais a política", async () => {
     const usuario = userEvent.setup();
     const recebido: Array<number | undefined> = [];
     montar(async (_r, _g, m) => {
@@ -91,20 +86,52 @@ describe("MappingStep · a escolha da política chega a quem confirma", () => {
 
     await usuario.click(screen.getByRole("button", { name: /confirm/i }));
 
-    expect(recebido).toEqual([undefined]);
+    expect(recebido).toEqual([0.95]);
   });
 
-  it("os dois rádios têm NOME ACESSÍVEL, e não `on`", async () => {
-    // Medido em homologação: a árvore de acessibilidade expunha UM nó chamado "on" onde há dois
-    // rádios. Um leitor de tela anuncia "on", que não diz nada — WCAG 4.1.2.
-    //
-    // `getByRole("radio", { name: ... })` falha se o nome acessível não for o texto visível, o
-    // que faz deste caso o gate da correção.
+  it("não há mais controle de rádio para rejeitar o arquivo inteiro", async () => {
     montar(vi.fn());
 
-    expect(screen.getByRole("radio", { name: /reject the whole file/i })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: /95%/i })).toBeInTheDocument();
-    expect(screen.getAllByRole("radio")).toHaveLength(2);
+    expect(screen.queryByRole("radio")).not.toBeInTheDocument();
+    expect(screen.queryByText(/reject the whole file/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/analyze anyway/i)).not.toBeInTheDocument();
+  });
+
+  it("não tenta confirmar quando a base completa tem menos de 100 conversas", async () => {
+    const aoConfirmar = vi.fn();
+    montarComMapa(
+      {
+        ...mapa(),
+        records_observed: 25,
+        sample_truncated: false,
+      },
+      aoConfirmar,
+    );
+
+    expect(screen.getByTestId("mapping-base-pequena")).toHaveTextContent(/25/);
+    expect(screen.getByTestId("mapping-base-pequena")).toHaveTextContent(/100/);
+    expect(screen.getByRole("button", { name: /confirm/i })).toBeDisabled();
+    expect(aoConfirmar).not.toHaveBeenCalled();
+  });
+
+  it("recusa de entrada na confirmação orienta revisar campos, não esperar", async () => {
+    const usuario = userEvent.setup();
+    montar(async () => {
+      throw new ProblemError({
+        type: "urn:sentinela:error:invalid_input",
+        title: "Entrada inválida",
+        status: 400,
+        code: "invalid_input",
+        detail: "mapping_rejected",
+        instance: "corr-1",
+        retryable: false,
+      });
+    });
+
+    await usuario.click(screen.getByRole("button", { name: /confirm/i }));
+
+    expect(await screen.findByText(/check the selected fields/i)).toBeInTheDocument();
+    expect(screen.queryByText(/try again in a moment/i)).not.toBeInTheDocument();
   });
 });
 

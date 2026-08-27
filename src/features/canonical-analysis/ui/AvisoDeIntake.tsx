@@ -29,6 +29,13 @@ function numero(valor: number, idioma: string): string {
   return new Intl.NumberFormat(idioma).format(valor);
 }
 
+function percentual(valor: number, idioma: string): string {
+  return new Intl.NumberFormat(idioma, {
+    style: "percent",
+    maximumFractionDigits: 0,
+  }).format(valor);
+}
+
 export function AvisoDeIntake({ intake }: { intake: AnalysisIntake | null }): JSX.Element | null {
   const { t, language } = useLanguage();
 
@@ -44,9 +51,10 @@ export function AvisoDeIntake({ intake }: { intake: AnalysisIntake | null }): JS
   // comparação, e comparação com ausência não é frase.
   if (total === null || aceitos === null || recusados === null) return null;
 
-  // Zero recusados é notícia boa e também é notícia. Dizer nada aqui faria a ausência do aviso
-  // significar duas coisas — "não medimos" e "deu tudo certo" —, e ninguém consegue distinguir.
-  if (recusados === 0) {
+  // Zero recusados é notícia boa — exceto quando a política bloqueou por volume mínimo. Foi o
+  // caso medido em homologação: 25 de 25 registros aceitos, mas o produto exige 100 conversas
+  // válidas para iniciar. Dizer "tudo aceito" sozinho esconde a causa real da parada.
+  if (recusados === 0 && intake.accepted !== false) {
     return (
       <p className="text-sm text-muted-foreground" data-testid="intake-tudo-aceito">
         {t("canonicalAnalysis.intake.allGood", { total: numero(total, language) })}
@@ -58,20 +66,47 @@ export function AvisoDeIntake({ intake }: { intake: AnalysisIntake | null }): JS
     <div
       role="status"
       aria-live="polite"
-      data-testid="intake-com-recusa"
+      data-testid={recusados === 0 ? "intake-politica-bloqueada" : "intake-com-recusa"}
       className="rounded-md border border-border bg-muted/40 p-4 space-y-1"
     >
-      <p className="text-sm font-medium">{t("canonicalAnalysis.intake.title")}</p>
-      <p className="text-sm text-muted-foreground">
-        {t("canonicalAnalysis.intake.summary", {
-          accepted: numero(aceitos, language),
-          total: numero(total, language),
-          rejected: numero(recusados, language),
-        })}
+      <p className="text-sm font-medium">
+        {recusados === 0
+          ? t("canonicalAnalysis.intake.policyTitle")
+          : t("canonicalAnalysis.intake.title")}
       </p>
       <p className="text-sm text-muted-foreground">
-        {t("canonicalAnalysis.intake.strictNote")}
+        {recusados === 0
+          ? t("canonicalAnalysis.intake.acceptedButTooSmall", {
+              accepted: numero(aceitos, language),
+              min:
+                typeof intake.acceptance_rule?.min_valid_records === "number"
+                  ? numero(intake.acceptance_rule.min_valid_records, language)
+                  : numero(100, language),
+            })
+          : t("canonicalAnalysis.intake.summary", {
+              accepted: numero(aceitos, language),
+              total: numero(total, language),
+              rejected: numero(recusados, language),
+            })}
       </p>
+      {intake.privacy_clearance && intake.privacy_clearance !== "passed" ? (
+        <p className="text-sm text-muted-foreground" data-testid="intake-privacy-blocked">
+          {t("canonicalAnalysis.intake.privacyBlocked")}
+        </p>
+      ) : intake.accepted === false ? (
+        <p className="text-sm text-muted-foreground" data-testid="intake-policy-blocked">
+          {intake.acceptance_rule?.policy === "threshold" &&
+          typeof intake.acceptance_rule.min_valid_ratio === "number" &&
+          typeof intake.acceptance_rule.min_valid_records === "number"
+            ? t("canonicalAnalysis.intake.thresholdNoteWithRule", {
+                ratio: percentual(intake.acceptance_rule.min_valid_ratio, language),
+                min: numero(intake.acceptance_rule.min_valid_records, language),
+              })
+            : intake.acceptance_policy === "threshold"
+              ? t("canonicalAnalysis.intake.thresholdNote")
+              : t("canonicalAnalysis.intake.strictNote")}
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -30,13 +30,21 @@
 // Botão desabilitado não diz por quê — quem clica recebe silêncio. Habilitado, ele responde com
 // a frase que nomeia o que falta. É a mesma decisão de `CriarPorNome`, pelo mesmo motivo.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Panel, Stack, Text } from "@/design/primitives";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ProblemError } from "@/lib/v1";
 import type { ColunaDoArquivo, MappingView } from "@/lib/v1";
 import { motivoDeImplausibilidade } from "./plausibilidadeDoMapeamento";
 import { cn } from "@/lib/utils";
+
+const PROPORCAO_MINIMA_DE_REGISTROS_ANALISAVEIS = 0.95;
+const MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS = 100;
+
+function numero(valor: number, idioma: string): string {
+  return new Intl.NumberFormat(idioma === "pt" ? "pt-BR" : "en-US").format(valor);
+}
 
 /**
  * O rótulo humano de cada campo canônico, em chave de texto LITERAL.
@@ -129,21 +137,15 @@ export function MappingStep({
     minimoDeValidos: number | undefined,
   ) => Promise<void>;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // O QUE FAZER COM REGISTROS QUE NAO SERVEM.
   //
-  // Comeca em `undefined`, que significa "nao escolhi" — e nao "escolhi o estrito". A
-  // diferenca importa: sem escolha, o Gateway omite o campo e quem decide o default continua
-  // sendo a Ingestao. Nascer marcado no estrito replicaria o default aqui, e no dia em que ele
-  // mudasse esta tela continuaria impondo o antigo.
-  //
-  // Medido em homologacao em 2026-08-24, com base real de atendimento: 100 registros invalidos
-  // em 61.423 (0,16%) recusaram o arquivo inteiro. Os 100 eram 71 conversas em que ninguem
-  // respondeu e 29 mensagens que continham apenas um documento — nenhum deles corrigivel por
-  // quem enviou o arquivo. A politica estrita nao era a ausencia de uma escolha; era a escolha
-  // que recusa toda base real.
-  const [minimoDeValidos, setMinimoDeValidos] = useState<number | undefined>(undefined);
+  // A pergunta deixou de ser configuracao da pessoa. Depois que `missing_assistant_text` virou
+  // metrica em Medidas, "recusar o arquivo inteiro" deixou de ser uma escolha util no fluxo:
+  // conversa sem resposta nao vai para o motor, mas tambem nao deve sumir. O front confirma o
+  // limite de produto e explica o destino: motor recebe o canonico; Medidas recebe a qualidade
+  // da base.
 
   // A escolha começa na SUGESTÃO, não vazia. A máquina já decidiu quase tudo, e obrigar a
   // pessoa a reconfirmar o que ela acertou transformaria confirmação em digitação.
@@ -174,13 +176,30 @@ export function MappingStep({
   // seguir e não dá.
   const [tentou, setTentou] = useState(false);
 
+  useEffect(() => {
+    setEscolhas(inicial);
+    setAgrupar([]);
+    setErro(null);
+    setTentou(false);
+  }, [inicial]);
+
   const porNome = useMemo(
     () => new Map(mapa.columns.map((c) => [c.name, c])),
     [mapa.columns],
   );
+  const nomesDeColunas = useMemo(() => new Set(mapa.columns.map((c) => c.name)), [mapa.columns]);
+  const camposPermitidos = useMemo(
+    () => new Set([...mapa.required_fields, ...mapa.optional_fields]),
+    [mapa.required_fields, mapa.optional_fields],
+  );
 
-  const faltando = mapa.required_fields.filter((c) => !escolhas[c]);
+  const faltando = mapa.required_fields.filter((c) => !nomesDeColunas.has(escolhas[c] ?? ""));
   const jaResolvidos = mapa.required_fields.length - faltando.length;
+  const baseCompletaFoiObservada = !mapa.sample_truncated;
+  const basePequenaDemais =
+    baseCompletaFoiObservada &&
+    typeof mapa.records_observed === "number" &&
+    mapa.records_observed < MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS;
 
   // Agrupável E mapeado. A interseção muda enquanto a pessoa escolhe colunas, e é por isso que
   // ela é derivada a cada render em vez de guardada: um campo desmapeado depois de marcado
@@ -199,25 +218,41 @@ export function MappingStep({
       );
       return;
     }
+    if (basePequenaDemais) {
+      setErro(
+        t("canonicalAnalysis.mapping.tooSmall", {
+          count: numero(mapa.records_observed, language),
+          min: numero(MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS, language),
+        }),
+      );
+      return;
+    }
     setEnviando(true);
     setErro(null);
     try {
       const regras: Record<string, { source: string }> = {};
       for (const [campo, origem] of Object.entries(escolhas)) {
-        if (origem) regras[campo] = { source: origem };
+        if (camposPermitidos.has(campo) && nomesDeColunas.has(origem)) {
+          regras[campo] = { source: origem };
+        }
       }
-      await aoConfirmar(regras, agrupamentoEfetivo, minimoDeValidos);
-    } catch {
+      await aoConfirmar(regras, agrupamentoEfetivo, PROPORCAO_MINIMA_DE_REGISTROS_ANALISAVEIS);
+    } catch (falha) {
       // A mensagem é NOSSA. O corpo do servidor pode carregar detalhe interno, e ecoá-lo faria
       // a tela repetir vocabulário que ninguém escreveu para ser lido.
-      setErro(t("canonicalAnalysis.mapping.failed"));
+      setErro(
+        falha instanceof ProblemError && falha.problem.code === "invalid_input"
+          ? t("canonicalAnalysis.mapping.invalid")
+          : t("canonicalAnalysis.mapping.failed"),
+      );
       setEnviando(false);
     }
   }
 
   const linha = (campo: string, obrigatorio: boolean) => {
     const empatados = mapa.ambiguous[campo] ?? [];
-    const escolhido = escolhas[campo] ?? "";
+    const escolhidoBruto = escolhas[campo] ?? "";
+    const escolhido = nomesDeColunas.has(escolhidoBruto) ? escolhidoBruto : "";
     // Duas coisas diferentes, e o vermelho só pertence à segunda.
     const aguardando = obrigatorio && !escolhido;
     const reprovado = aguardando && tentou;
@@ -400,51 +435,44 @@ export function MappingStep({
           </p>
         ) : null}
 
-        <div className="flex items-center gap-3">
-          <fieldset className="space-y-2 rounded-md border border-border p-4">
-            <legend className="px-1 text-sm font-medium">
-              {t("canonicalAnalysis.mapping.acceptance.legend")}
-            </legend>
-            {/* A ajuda vem ANTES das opcoes, e nao depois.
+        {basePequenaDemais ? (
+          <div
+            role="status"
+            data-testid="mapping-base-pequena"
+            className="rounded-md border border-warning bg-warning/10 p-4"
+          >
+            <p className="text-sm font-medium">
+              {t("canonicalAnalysis.mapping.tooSmallTitle")}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t("canonicalAnalysis.mapping.tooSmallHelp", {
+                count: numero(mapa.records_observed, language),
+                min: numero(MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS, language),
+              })}
+            </p>
+          </div>
+        ) : null}
 
-                Quem le "recusar o arquivo inteiro" sem saber o que torna um registro inutil nao
-                tem como escolher: a frase soa como protecao contra dado ruim, quando o caso real
-                e conversa sem resposta — que e justamente um dos dados mais valiosos da base. */}
-            <p className="text-sm text-muted-foreground">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <div className="max-w-xl rounded-md border border-border p-4">
+            <p className="text-sm font-medium">
+              {t("canonicalAnalysis.mapping.acceptance.legend")}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
               {t("canonicalAnalysis.mapping.acceptance.help")}
             </p>
-            {/* NENHUM radio nasce marcado, e isso e o conserto de um achado da revisao.
-
-                Antes, o radio "recusar o arquivo inteiro" aparecia marcado enquanto o estado era
-                `undefined` — e `undefined` nao envia nada. A tela afirmava uma escolha que o
-                payload nao carregava. Enquanto o default do Ingestion for estrito os dois
-                coincidem por acidente; no dia em que ele mudar, a tela mente sem nada ficar
-                vermelho.
-
-                Sem marca inicial, "nao escolhi" fica visivelmente distinto de "escolhi o
-                estrito" — e quem escolhe o estrito agora ENVIA essa escolha (1 vira
-                `acceptance_policy: strict` no Gateway), em vez de delegar a um default que ela
-                nao viu. */}
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="aceitacao"
-                checked={minimoDeValidos === 1}
-                onChange={() => setMinimoDeValidos(1)}
-              />
-              {t("canonicalAnalysis.mapping.acceptance.strict")}
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="aceitacao"
-                checked={minimoDeValidos !== undefined && minimoDeValidos < 1}
-                onChange={() => setMinimoDeValidos(0.95)}
-              />
-              {t("canonicalAnalysis.mapping.acceptance.tolerate")}
-            </label>
-          </fieldset>
-          <Button onClick={() => void confirmar()} disabled={enviando} aria-busy={enviando}>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t("canonicalAnalysis.mapping.acceptance.tolerateSummary")}
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("canonicalAnalysis.mapping.acceptance.policy")}
+            </p>
+          </div>
+          <Button
+            onClick={() => void confirmar()}
+            disabled={enviando || basePequenaDemais}
+            aria-busy={enviando}
+          >
             {enviando
               ? t("canonicalAnalysis.mapping.confirming")
               : t("canonicalAnalysis.mapping.confirm")}
@@ -457,4 +485,3 @@ export function MappingStep({
     </Panel>
   );
 }
-

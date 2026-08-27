@@ -11,7 +11,7 @@ interface AppShellProps {
 
 export function AppShell({ children, topBarTitle, topBarActions }: AppShellProps) {
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen h-dvh bg-background overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopBar title={topBarTitle} actions={topBarActions} />

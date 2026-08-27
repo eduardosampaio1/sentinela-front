@@ -134,7 +134,7 @@ describe("prova 5 — não se abre resultado de outro workspace", () => {
     );
 
     const { unmount } = montarResultado("an-de-outro-workspace");
-    await waitFor(() => expect(screen.queryByText("Records analyzed")).toBeNull());
+    await waitFor(() => expect(screen.queryByText("Conversations analyzed")).toBeNull());
     // E nenhum indicador aparece — a recusa não vaza dado nem finge resultado.
     expect(screen.queryByText(/Intent coverage/i)).toBeNull();
     unmount();

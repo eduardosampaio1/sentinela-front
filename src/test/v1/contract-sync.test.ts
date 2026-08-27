@@ -109,6 +109,12 @@ describe("cópia local de public-v1 × origem", () => {
     expect(daCopia).toEqual([...(snapshot.status_read_model_fields as string[])].sort());
   });
 
+  it.runIf(ORIGEM)("o detalhe de intake casa com o contrato da origem", () => {
+    const snapshot = JSON.parse(readFileSync(resolve(ORIGEM!, "public-v1.json"), "utf-8"));
+    const daCopia = camposDaInterface(readFileSync(COPIA, "utf-8"), "AnalysisIntake");
+    expect(daCopia).toEqual([...(snapshot.intake_read_model_fields as string[])].sort());
+  });
+
   it.runIf(ORIGEM)("o read-model da LISTAGEM casa com o contrato da origem", () => {
     // Faltava. `AnalysisResultView` e `AnalysisStatusView` eram comparados; a listagem não —
     // e foi por ela que `engine_version` entrou na cópia e na tela sem gate nenhum reagir.

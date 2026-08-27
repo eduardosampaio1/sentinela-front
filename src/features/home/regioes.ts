@@ -47,7 +47,7 @@
 import { PUBLIC_STATES, type AnalysisListItem, type AnalysisStatus } from "@/lib/v1";
 
 /** As três regiões que têm conteúdo canônico. Instâncias não está aqui — ver `INSTANCIAS`. */
-export type RegiaoDaHome = "acoes_necessarias" | "em_andamento" | "resultados_recentes";
+export type RegiaoDaHome = "continuar" | "em_andamento" | "resultados_recentes" | "falhas";
 
 /**
  * A região de Instâncias de D9 é **inalcançável** até BD02.
@@ -62,12 +62,14 @@ export type RegiaoDaHome = "acoes_necessarias" | "em_andamento" | "resultados_re
 export const INSTANCIAS_INALCANCAVEL = true as const;
 
 export interface RegioesDaHome {
-  /** `needs_mapping` e `failed` — parada que espera uma pessoa. */
-  acoesNecessarias: readonly AnalysisListItem[];
-  /** `preparing`, `receiving`, `queued`, `running`, `recovering` — o sistema está trabalhando. */
+  /** Estados que uma pessoa consegue destravar agora. */
+  continuar: readonly AnalysisListItem[];
+  /** `receiving`, `queued`, `running`, `recovering` — o sistema está trabalhando. */
   emAndamento: readonly AnalysisListItem[];
   /** `completed` **com** `result_available`. */
   resultadosRecentes: readonly AnalysisListItem[];
+  /** `failed`: precisa ser visto, mas a lista não sabe se há retry seguro. */
+  falhas: readonly AnalysisListItem[];
   /** `completed` **sem** `result_available`: nenhuma região do §4.3 a comporta, e ela não some. */
   concluidasSemResultado: readonly AnalysisListItem[];
   /** `status` fora de `PUBLIC_STATES`. Incidente de fronteira, nunca silêncio. */
@@ -75,9 +77,8 @@ export interface RegioesDaHome {
 }
 
 /** Os estados de cada região, declarados — e não espalhados por `if` pela tela afora. */
-const ACAO: readonly AnalysisStatus[] = ["needs_mapping", "failed"];
+const CONTINUAR: readonly AnalysisStatus[] = ["preparing", "needs_mapping", "ready_to_submit"];
 const ANDAMENTO: readonly AnalysisStatus[] = [
-  "preparing",
   "receiving",
   "queued",
   "running",
@@ -85,9 +86,10 @@ const ANDAMENTO: readonly AnalysisStatus[] = [
 ];
 
 export function classificarRegioes(itens: readonly AnalysisListItem[]): RegioesDaHome {
-  const acoesNecessarias: AnalysisListItem[] = [];
+  const continuar: AnalysisListItem[] = [];
   const emAndamento: AnalysisListItem[] = [];
   const resultadosRecentes: AnalysisListItem[] = [];
+  const falhas: AnalysisListItem[] = [];
   const concluidasSemResultado: AnalysisListItem[] = [];
   const estadoNaoReconhecido: AnalysisListItem[] = [];
 
@@ -96,10 +98,12 @@ export function classificarRegioes(itens: readonly AnalysisListItem[]): RegioesD
     // que nenhuma análise aparece em duas regiões ao mesmo tempo.
     if (!PUBLIC_STATES.includes(item.status)) {
       estadoNaoReconhecido.push(item);
-    } else if (ACAO.includes(item.status)) {
-      acoesNecessarias.push(item);
+    } else if (CONTINUAR.includes(item.status)) {
+      continuar.push(item);
     } else if (ANDAMENTO.includes(item.status)) {
       emAndamento.push(item);
+    } else if (item.status === "failed") {
+      falhas.push(item);
     } else if (item.result_available) {
       // Sobrou `completed`, e só ele: a lista de estados públicos tem oito, e sete já saíram.
       resultadosRecentes.push(item);
@@ -109,9 +113,10 @@ export function classificarRegioes(itens: readonly AnalysisListItem[]): RegioesD
   }
 
   return {
-    acoesNecessarias,
+    continuar,
     emAndamento,
     resultadosRecentes,
+    falhas,
     concluidasSemResultado,
     estadoNaoReconhecido,
   };

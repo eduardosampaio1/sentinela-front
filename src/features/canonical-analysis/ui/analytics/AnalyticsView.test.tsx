@@ -129,7 +129,7 @@ function vistaAnalytics(over: Record<string, unknown> = {}) {
   };
 }
 
-function montar(vista: unknown) {
+function montar(vista: unknown, statusOver: Record<string, unknown> = {}) {
   chamadas.length = 0;
   return {
     getAnalytics: vi.fn(async () => {
@@ -142,7 +142,13 @@ function montar(vista: unknown) {
     }),
     getStatus: vi.fn(async () => {
       chamadas.push("getStatus");
-      return { analysis_id: "an-abc", status: "running", result_available: false };
+      return {
+        analysis_id: "an-abc",
+        status: "running",
+        result_available: false,
+        intake: null,
+        ...statusOver,
+      };
     }),
     getProgress: vi.fn(async () => {
       chamadas.push("getProgress");
@@ -168,9 +174,9 @@ let clienteAtual: ReturnType<typeof montar>;
 vi.mock("../../data/client", () => ({ useV1Client: () => clienteAtual }));
 vi.mock("../scope", () => ({ useCanonicalScope: () => ({ workspaceId: "ws-1" }) }));
 
-function renderizar(vista: unknown = vistaAnalytics()) {
+function renderizar(vista: unknown = vistaAnalytics(), statusOver: Record<string, unknown> = {}) {
   window.localStorage.setItem("sentinela:language", "pt");
-  clienteAtual = montar(vista);
+  clienteAtual = montar(vista, statusOver);
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <LanguageProvider>
@@ -203,6 +209,69 @@ describe("F4 · fonte ÚNICA", () => {
     renderizar();
     expect(
       await screen.findByRole("region", { name: pt.canonicalAnalysis.analyticsView.numeric }),
+    ).toBeInTheDocument();
+  });
+
+  it("não desenha famílias vazias como cartões em branco", async () => {
+    renderizar(
+      vistaAnalytics({
+        snapshot: {
+          ...SNAPSHOT,
+          numeric: [],
+          distributions: [],
+          dimensions: [],
+          concentrations: [],
+          time_series: [],
+        },
+      }),
+    );
+
+    expect(
+      await screen.findByRole("region", { name: pt.canonicalAnalysis.analyticsView.summaryTitle }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("region", { name: pt.canonicalAnalysis.analyticsView.numeric }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(pt.canonicalAnalysis.analyticsView.summary.numeric.empty),
+    ).toBeInTheDocument();
+  });
+
+  it("mostra rejeições da ingestão como métrica de qualidade, sem mandar ao motor", async () => {
+    renderizar(vistaAnalytics(), {
+      intake: {
+        source_record_count: 61423,
+        canonical_record_count: 61323,
+        rejected_record_count: 100,
+        rejected_record_reasons: [
+          { code: "missing_assistant_text", count: 71 },
+          { code: "invalid_field_type", count: 3 },
+          { code: "sanitized_to_empty", count: 29 },
+        ],
+        acceptance_policy: "threshold",
+        acceptance_rule: {
+          policy: "threshold",
+          min_valid_ratio: 0.95,
+          min_valid_records: 100,
+        },
+        accepted: true,
+        privacy_clearance: "passed",
+      },
+    });
+
+    const secao = await screen.findByRole("region", {
+      name: pt.canonicalAnalysis.analyticsView.intakeQuality,
+    });
+    expect(
+      within(secao).getByText(pt.canonicalAnalysis.analyticsView.intakeQualityReasons.missingAssistantText.label),
+    ).toBeInTheDocument();
+    expect(within(secao).getByText("71")).toBeInTheDocument();
+    expect(
+      within(secao).getByText(pt.canonicalAnalysis.analyticsView.intakeQualityReasons.invalidFieldType.label),
+    ).toBeInTheDocument();
+    expect(within(secao).getByText("3")).toBeInTheDocument();
+    expect(
+      within(secao).getByText(pt.canonicalAnalysis.analyticsView.intakeQualityEngineBoundary),
     ).toBeInTheDocument();
   });
 });
@@ -317,7 +386,14 @@ describe("F4 · as duas 'dimensões' não se confundem", () => {
     // As dimensões de saúde do ARGOS (`semantic`/`behavioral`/`structural`/`economic`) são outro
     // conceito, de outro motor. Um rótulo "Dimensões" seco faria as duas telas parecerem falar
     // da mesma coisa.
-    renderizar();
+    renderizar(
+      vistaAnalytics({
+        snapshot: {
+          ...SNAPSHOT,
+          dimensions: [SNAPSHOT.distributions[0]],
+        },
+      }),
+    );
     const secao = await screen.findByRole("region", {
       name: pt.canonicalAnalysis.analyticsView.dimensions,
     });

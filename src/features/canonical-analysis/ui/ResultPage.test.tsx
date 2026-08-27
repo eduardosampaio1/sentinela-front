@@ -66,7 +66,7 @@ describe("ResultPage — renderização canônica dos indicadores (massa A)", ()
     montar();
 
     // resumo do backend
-    const rotuloRegistros = await screen.findByText("Records analyzed");
+    const rotuloRegistros = await screen.findByText("Conversations analyzed");
     expect(rotuloRegistros.parentElement?.textContent).toContain("100");
 
     // `Useful outcomes observed` NAO esta mais no resumo: no contrato canonico ele e um INDICADOR, com

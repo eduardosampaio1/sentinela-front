@@ -51,6 +51,20 @@ export interface RequestOptions {
   idempotencyKey?: string;
 }
 
+export interface UploadAbertoView {
+  analysis_id: string;
+  status: "receiving";
+  upload_session_id: string;
+  part_size_bytes: number;
+}
+
+export interface UploadParteView {
+  analysis_id: string;
+  upload_session_id: string;
+  part_number: number;
+  etag: string;
+}
+
 /** Fronteira pública tipada — identidade + as 7 operações canônicas. */
 export interface V1Client {
   /** Sessão e workspaces permitidos. Única operação SEM escopo de tenant, por definição. */
@@ -101,6 +115,22 @@ export interface V1Client {
    */
   getTimeline(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisTimelineView>;
   uploadData(analysisId: string, scope: CanonicalScope, body: BodyInit, opts?: RequestOptions): Promise<AnalysisStatusView>;
+  openDataUpload(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<UploadAbertoView>;
+  uploadDataPart(
+    analysisId: string,
+    scope: CanonicalScope,
+    uploadSessionId: string,
+    partNumber: number,
+    body: BodyInit,
+    opts?: RequestOptions,
+  ): Promise<UploadParteView>;
+  completeDataUpload(
+    analysisId: string,
+    scope: CanonicalScope,
+    uploadSessionId: string,
+    parts: Array<{ part_number: number; etag: string }>,
+    opts?: RequestOptions,
+  ): Promise<AnalysisStatusView>;
   submit(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
   getStatus(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisStatusView>;
   /**
@@ -484,6 +514,32 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         { workspace_id: scope.workspaceId },
         opts,
         { body, contentType: "application/x-ndjson" },
+      ),
+    openDataUpload: (analysisId, scope, opts) =>
+      pedir<UploadAbertoView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/data/uploads`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
+    uploadDataPart: (analysisId, scope, uploadSessionId, partNumber, body, opts) =>
+      pedir<UploadParteView>(
+        "PUT",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/data/uploads/${encodeURIComponent(uploadSessionId)}/parts/${partNumber}`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body, contentType: "application/octet-stream" },
+      ),
+    completeDataUpload: (analysisId, scope, uploadSessionId, parts, opts) =>
+      pedir<AnalysisStatusView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/data/uploads/${encodeURIComponent(uploadSessionId)}/complete`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        {
+          body: JSON.stringify({ parts }),
+          contentType: "application/json",
+        },
       ),
     submit: (analysisId, scope, opts) =>
       pedir<AnalysisHandle>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/submit`, { workspace_id: scope.workspaceId }, opts, undefined, true),

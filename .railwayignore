@@ -1,0 +1,8 @@
+# Railway deploy artifact only needs source/runtime inputs.
+docs/
+test-results/
+playwright-report/
+coverage/
+dist/
+node_modules/
+*.log

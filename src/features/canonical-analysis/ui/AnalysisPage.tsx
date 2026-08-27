@@ -7,6 +7,7 @@ import { AvisoDeIntake } from "./AvisoDeIntake";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Panel, Stack, Text } from "@/design/primitives";
 import { workspaceKeys } from "@/lib/v1";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
@@ -25,6 +26,7 @@ import { useCanonicalScope } from "./scope";
 import { UploadStep } from "./UploadStep";
 import { MappingStep } from "./MappingStep";
 import { PainelDeEixos } from "./PainelDeEixos";
+import { EtapasDaAnalise } from "./EtapasDaAnalise";
 import { IdentidadeDaAnalise } from "./IdentidadeDaAnalise";
 import type { EstadoPublico } from "@/design/patterns/estados";
 import { useRevelacao } from "@/design/motion";
@@ -32,6 +34,53 @@ import { VISOES_DA_ANALISE } from "./visoes";
 import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
 import { analyticsUtilizavel, lerEixos } from "../result/eixos";
 import { ProblemFeedback, StateBanner } from "./notices";
+
+const MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS = 100;
+
+function numero(valor: number, idioma: string): string {
+  return new Intl.NumberFormat(idioma === "pt" ? "pt-BR" : "en-US").format(valor);
+}
+
+function baseCompletaPequenaDemais(mapa: {
+  records_observed: number | null;
+  sample_truncated: boolean;
+}): mapa is {
+  records_observed: number;
+  sample_truncated: boolean;
+} {
+  return (
+    !mapa.sample_truncated &&
+    typeof mapa.records_observed === "number" &&
+    mapa.records_observed < MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS
+  );
+}
+
+function BasePequenaDemais({ total }: { total: number }) {
+  const { t, language } = useLanguage();
+  return (
+    <Panel como="section" titulo={t("canonicalAnalysis.datasetTooSmall.title")}>
+      <Stack espaco="md">
+        <Text as="p" papel="body">
+          {t("canonicalAnalysis.datasetTooSmall.message", {
+            count: numero(total, language),
+            min: numero(MINIMO_ABSOLUTO_DE_CONVERSAS_ANALISAVEIS, language),
+          })}
+        </Text>
+        <Text as="p" papel="corpo" tom="discreto">
+          {t("canonicalAnalysis.datasetTooSmall.reason")}
+        </Text>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild>
+            <Link to="/analyses/new">{t("canonicalAnalysis.action.newAnalysis")}</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/analyses">{t("canonicalAnalysis.action.back")}</Link>
+          </Button>
+        </div>
+      </Stack>
+    </Panel>
+  );
+}
 
 export function AnalysisPage() {
   const { t } = useLanguage();
@@ -144,6 +193,7 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
+            <EtapasDaAnalise view={view} eixos={eixos} />
           </div>
         );
       case "ready_to_submit":
@@ -154,6 +204,7 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
+            <EtapasDaAnalise view={view} eixos={eixos} />
             <Button onClick={dispararSubmit} disabled={submitBloqueado} aria-busy={submit.isPending}>
               {t("canonicalAnalysis.upload.submit")}
             </Button>
@@ -187,6 +238,7 @@ export function AnalysisPage() {
           return (
             <div className="space-y-4">
               <StateBanner view={view} />
+              <EtapasDaAnalise view={view} eixos={eixos} />
               {/* Rotulo PROPRIO, e nao o titulo do editor: dizer *Diga qual coluna e qual* enquanto
                   ainda se le o arquivo pede uma decisao que nao esta disponivel -- e faz o
                   carregando ser indistinguivel do editor para quem mede a tela. */}
@@ -198,6 +250,7 @@ export function AnalysisPage() {
           return (
             <div className="space-y-4">
               <StateBanner view={view} />
+              <EtapasDaAnalise view={view} eixos={eixos} />
               <p className="text-sm text-muted-foreground">
                 {t("canonicalAnalysis.needsMapping.loadFailed")}
               </p>
@@ -211,9 +264,13 @@ export function AnalysisPage() {
             </div>
           );
         }
+        if (baseCompletaPequenaDemais(mapeamento.data)) {
+          return <BasePequenaDemais total={mapeamento.data.records_observed} />;
+        }
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
+            <EtapasDaAnalise view={view} eixos={eixos} />
             <MappingStep
               mapa={mapeamento.data}
               aoConfirmar={async (regras, agrupamento, minimoDeValidos) => {
@@ -236,6 +293,7 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
+            <EtapasDaAnalise view={view} eixos={eixos} />
             {/* OS EIXOS ENTRAM AQUI TAMBÉM, pela mesma simetria que a M35 usou em `failed`.
                 Lá o argumento foi: apagar os eixos transformaria "um componente falhou" em "tudo
                 falhou", que é afirmação que o produtor não fez. O reverso vale igual — sem eles,
@@ -280,6 +338,7 @@ export function AnalysisPage() {
         return (
           <div className="space-y-6">
             <StateBanner view={view} />
+            <EtapasDaAnalise view={view} eixos={eixos} />
             {/* O QUE ACONTECEU COM O ARQUIVO, em numeros.
 
                 Medido em homologacao (2026-08-24) com base real: 100 de 61.423 registros
@@ -333,6 +392,7 @@ export function AnalysisPage() {
                 `StateBanner` já o distingue por palavra e forma, nunca só por cor. */}
             <StateBanner view={view} />
             <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
+            <EtapasDaAnalise view={view} eixos={eixos} />
             {/* Disponibilidade progressiva: o que já está pronto NÃO espera o resultado final.
                 Reusa o portador canônico da M27 — nenhuma segunda interpretação de
                 `ready`/`partial`/`withheld`. E isto não é "resultado parcial": `partial` pertence

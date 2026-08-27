@@ -48,6 +48,8 @@ import { useCanonicalScope } from "../scope";
 import { AcaoDeExport } from "./AcaoDeExport";
 import { AnalyticsRetido } from "./Retido";
 import { IndiceDeRegioes, type RegiaoIndexada } from "./IndiceDeRegioes";
+import { ResumoDaPublicacao } from "./ResumoDaPublicacao";
+import type { AnalysisIntake } from "@/lib/v1";
 
 function Secao({
   id,
@@ -230,6 +232,108 @@ export function Retido({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
         ))}
       </tbody>
     </table>
+  );
+}
+
+function motivosDoIntake(intake: AnalysisIntake | null | undefined) {
+  return (intake?.rejected_record_reasons ?? []).filter((m) => m.count > 0);
+}
+
+function mostrarQualidadeDaBase(intake: AnalysisIntake | null | undefined) {
+  const rejeitados = intake?.rejected_record_count;
+  return Boolean(
+    intake &&
+      ((typeof rejeitados === "number" && rejeitados > 0) || motivosDoIntake(intake).length > 0),
+  );
+}
+
+function formatarContagemIntake(valor: number | null | undefined, numero: Intl.NumberFormat) {
+  return typeof valor === "number" ? numero.format(valor) : "—";
+}
+
+function chaveDoMotivo(codigo: string) {
+  switch (codigo) {
+    case "invalid_encoding":
+      return "invalidEncoding";
+    case "record_not_object":
+      return "recordNotObject";
+    case "missing_assistant_text":
+      return "missingAssistantText";
+    case "assistant_text_empty":
+      return "assistantTextEmpty";
+    case "assistant_text_too_large":
+      return "assistantTextTooLarge";
+    case "missing_required_field":
+      return "missingRequiredField";
+    case "invalid_field_type":
+      return "invalidFieldType";
+    case "field_too_large":
+      return "fieldTooLarge";
+    case "too_many_keys":
+      return "tooManyKeys";
+    case "record_too_large":
+      return "recordTooLarge";
+    case "duplicate_conversation_id":
+      return "duplicateConversationId";
+    case "mapping_incomplete":
+      return "mappingIncomplete";
+    case "mapping_ambiguous":
+      return "mappingAmbiguous";
+    case "sanitized_to_empty":
+      return "sanitizedToEmpty";
+    case "canonical_contract_validation_failed":
+      return "canonicalContractValidationFailed";
+    case "internal_error":
+      return "internalError";
+    default:
+      return "other";
+  }
+}
+
+export function QualidadeDaBase({ intake }: { readonly intake: AnalysisIntake | null | undefined }) {
+  const { t, language } = useLanguage();
+  if (!mostrarQualidadeDaBase(intake)) return null;
+
+  const numero = new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US");
+  const motivos = motivosDoIntake(intake);
+  const rejeitados = intake?.rejected_record_count;
+  const linhas =
+    motivos.length > 0
+      ? motivos
+      : typeof rejeitados === "number"
+        ? [{ code: "record_not_usable", count: rejeitados }]
+        : [];
+
+  return (
+    <Secao id="anl-intake" titulo={t("canonicalAnalysis.analyticsView.intakeQuality")}>
+      <p className="text-sm text-muted-foreground">
+        {t("canonicalAnalysis.analyticsView.intakeQualitySummary", {
+          canonical: formatarContagemIntake(intake?.canonical_record_count, numero),
+          rejected: formatarContagemIntake(intake?.rejected_record_count, numero),
+          source: formatarContagemIntake(intake?.source_record_count, numero),
+        })}
+      </p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        {t("canonicalAnalysis.analyticsView.intakeQualityEngineBoundary")}
+      </p>
+      <table className="mt-4 w-full text-xs" data-testid="intake-quality-measures">
+        <tbody>
+          {linhas.map((motivo) => (
+            <tr key={motivo.code} className="border-b border-border/40 last:border-b-0">
+              <th scope="row" className="py-1.5 text-left font-normal">
+                {t(`canonicalAnalysis.analyticsView.intakeQualityReasons.${chaveDoMotivo(motivo.code)}.label`)}
+              </th>
+              <td className="py-1.5 pl-4 text-right font-semibold tabular-nums">
+                {numero.format(motivo.count)}
+              </td>
+              <td className="py-1.5 pl-6 text-muted-foreground">
+                {t(`canonicalAnalysis.analyticsView.intakeQualityReasons.${chaveDoMotivo(motivo.code)}.meaning`)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Secao>
   );
 }
 
@@ -512,56 +616,6 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
   );
 }
 
-/**
- * Diz por que a tela está sem conteúdo — quando ela está.
- *
- * ## O defeito que este bloco fecha
- *
- * Medido com print em homologação: a pessoa sobe a base, confirma o mapeamento, espera o motor
- * e chega aqui para ver seis títulos com nada embaixo. A tela está CERTA — sem dimensão
- * declarada não há o que abrir — e ainda assim parece defeituosa. O custo não é técnico, é de
- * confiança.
- *
- * O Diagnóstico já faz isso na faixa de parcialidade: diz o que não foi medido e por quê. Esta
- * é a irmã dela.
- *
- * ## O que a faixa afirma, e o que ela se recusa a afirmar
- *
- * Ela afirma o que a tela OBSERVA: nada está aberto por campo.
- *
- * Ela **não** afirma "ninguém declarou dimensão". Uma dimensão declarada cujos grupos ficassem
- * todos abaixo do piso de supressão poderia chegar aqui vazia do mesmo jeito — e a frase
- * acusaria a pessoa de não ter feito algo que ela fez. Afirmar causa interna a partir de
- * ausência é a mesma família do defeito que pôs todo dataset em quarentena por silêncio do
- * store.
- *
- * O que ela acrescenta é o CAMINHO — onde se escolhe agrupar. Isso é verdade em qualquer caso.
- */
-export function PorQueEstaVazio({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
-  const { t } = useLanguage();
-
-  // As duas regiões que dependem de dimensão declarada. Se qualquer uma tem conteúdo, a tela
-  // não está sem resposta e a faixa seria ruído.
-  if (snapshot.dimensions.length > 0 || snapshot.time_series.length > 0) return null;
-
-  // Sem NENHUM registro não é o caso desta faixa: aí o problema é outro, e o estado do
-  // componente acima já fala dele.
-  if (snapshot.record_count <= 0) return null;
-
-  return (
-    <div role="status" className="rounded-md border border-border bg-muted/40 p-3 text-sm">
-      <p className="font-medium">{t("canonicalAnalysis.analyticsView.emptyTitle")}</p>
-      <p className="mt-1 text-xs text-muted-foreground">
-        {t("canonicalAnalysis.analyticsView.emptyBody")}
-      </p>
-      <p className="mt-1 text-xs text-muted-foreground">
-        {t("canonicalAnalysis.analyticsView.emptyHow")}
-      </p>
-    </div>
-  );
-}
-
-
 function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
   const { t } = useLanguage();
   const larguras = snapshot.time_series.map(largurasDeSerie);
@@ -675,6 +729,13 @@ export function AnalyticsView() {
     }
 
     const snapshot = lerSnapshot(vista.snapshot);
+    const intake = status.data?.intake ?? null;
+    const temSnapshot = snapshot !== null;
+    const temNumericos = temSnapshot && snapshot.numeric.length > 0;
+    const temDistribuicoes = temSnapshot && snapshot.distributions.length > 0;
+    const temDimensoes = temSnapshot && snapshot.dimensions.length > 0;
+    const temConcentracoes = temSnapshot && snapshot.concentrations.length > 0;
+    const temSeries = temSnapshot && snapshot.time_series.length > 0;
 
     // ÍNDICE DE REGIÕES — M31, e ele chega aqui com três anos de atraso conceitual.
     //
@@ -690,11 +751,40 @@ export function AnalyticsView() {
     const regioes: RegiaoIndexada[] = [
       ...(snapshot !== null
         ? [
-            { ancora: "anl-numericos", rotulo: t("canonicalAnalysis.analyticsView.numeric") },
-            { ancora: "anl-distribuicoes", rotulo: t("canonicalAnalysis.analyticsView.distributions") },
-            { ancora: "anl-dimensoes", rotulo: t("canonicalAnalysis.analyticsView.dimensions") },
-            { ancora: "anl-concentracoes", rotulo: t("canonicalAnalysis.analyticsView.concentrations") },
-            { ancora: "anl-series", rotulo: t("canonicalAnalysis.analyticsView.series") },
+            ...(mostrarQualidadeDaBase(intake)
+              ? [
+                  {
+                    ancora: "anl-intake",
+                    rotulo: t("canonicalAnalysis.analyticsView.intakeQuality"),
+                  },
+                ]
+              : []),
+            { ancora: "anl-resumo", rotulo: t("canonicalAnalysis.analyticsView.summaryTitle") },
+            ...(temNumericos
+              ? [{ ancora: "anl-numericos", rotulo: t("canonicalAnalysis.analyticsView.numeric") }]
+              : []),
+            ...(temDistribuicoes
+              ? [
+                  {
+                    ancora: "anl-distribuicoes",
+                    rotulo: t("canonicalAnalysis.analyticsView.distributions"),
+                  },
+                ]
+              : []),
+            ...(temDimensoes
+              ? [{ ancora: "anl-dimensoes", rotulo: t("canonicalAnalysis.analyticsView.dimensions") }]
+              : []),
+            ...(temConcentracoes
+              ? [
+                  {
+                    ancora: "anl-concentracoes",
+                    rotulo: t("canonicalAnalysis.analyticsView.concentrations"),
+                  },
+                ]
+              : []),
+            ...(temSeries
+              ? [{ ancora: "anl-series", rotulo: t("canonicalAnalysis.analyticsView.series") }]
+              : []),
             { ancora: "anl-procedencia", rotulo: t("canonicalAnalysis.analyticsView.disclosure") },
           ]
         : []),
@@ -722,34 +812,45 @@ export function AnalyticsView() {
                 explica por que o resto pode estar vazio. Depois das seções, a pessoa já teria
                 rolado seis títulos em branco antes de encontrar a explicação. */}
             {/* O denominador antes de tudo que é contado sobre ele. */}
+            <QualidadeDaBase intake={intake} />
             <Cabeca snapshot={snapshot} vista={vista} />
-            <PorQueEstaVazio snapshot={snapshot} />
-            <Secao id="anl-numericos" titulo={t("canonicalAnalysis.analyticsView.numeric")}>
-              <Numericos snapshot={snapshot} />
-            </Secao>
+            <ResumoDaPublicacao snapshot={snapshot} intake={intake} />
+            {temNumericos ? (
+              <Secao id="anl-numericos" titulo={t("canonicalAnalysis.analyticsView.numeric")}>
+                <Numericos snapshot={snapshot} />
+              </Secao>
+            ) : null}
 
-            <Secao
-              id="anl-distribuicoes"
-              titulo={t("canonicalAnalysis.analyticsView.distributions")}
-            >
-              <Distribuicoes itens={snapshot.distributions} denominador={snapshot.record_count} />
-            </Secao>
+            {temDistribuicoes ? (
+              <Secao
+                id="anl-distribuicoes"
+                titulo={t("canonicalAnalysis.analyticsView.distributions")}
+              >
+                <Distribuicoes itens={snapshot.distributions} denominador={snapshot.record_count} />
+              </Secao>
+            ) : null}
 
             {/* Rótulo explícito: estas NÃO são as dimensões de saúde do ARGOS. */}
-            <Secao id="anl-dimensoes" titulo={t("canonicalAnalysis.analyticsView.dimensions")}>
-              <Distribuicoes itens={snapshot.dimensions} denominador={snapshot.record_count} />
-            </Secao>
+            {temDimensoes ? (
+              <Secao id="anl-dimensoes" titulo={t("canonicalAnalysis.analyticsView.dimensions")}>
+                <Distribuicoes itens={snapshot.dimensions} denominador={snapshot.record_count} />
+              </Secao>
+            ) : null}
 
-            <Secao
-              id="anl-concentracoes"
-              titulo={t("canonicalAnalysis.analyticsView.concentrations")}
-            >
-              <Concentracoes snapshot={snapshot} />
-            </Secao>
+            {temConcentracoes ? (
+              <Secao
+                id="anl-concentracoes"
+                titulo={t("canonicalAnalysis.analyticsView.concentrations")}
+              >
+                <Concentracoes snapshot={snapshot} />
+              </Secao>
+            ) : null}
 
-            <Secao id="anl-series" titulo={t("canonicalAnalysis.analyticsView.series")}>
-              <Series snapshot={snapshot} />
-            </Secao>
+            {temSeries ? (
+              <Secao id="anl-series" titulo={t("canonicalAnalysis.analyticsView.series")}>
+                <Series snapshot={snapshot} />
+              </Secao>
+            ) : null}
 
             <Secao id="anl-procedencia" titulo={t("canonicalAnalysis.analyticsView.disclosure")}>
               <dl className="grid gap-x-6 gap-y-1 py-2 text-xs text-muted-foreground sm:grid-cols-2">

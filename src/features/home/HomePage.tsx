@@ -38,16 +38,17 @@ import { useCanonicalScope } from "@/features/canonical-analysis/ui/scope";
 import { classificarRegioes, homeVazia } from "./regioes";
 import {
   RegiaoDeAcoes,
+  RegiaoDeFalhas,
   RegiaoDeInstancias,
   RegiaoDeResultados,
   RegiaoEmAndamento,
 } from "./RegioesDaHome";
 
 /** CTA principal de §4.3. Rota canônica — nada de caminho inline nesta superfície. */
-function NovaAnalise() {
+function NovaAnalise({ className }: { className?: string }) {
   const { t } = useLanguage();
   return (
-    <Button asChild>
+    <Button asChild className={className}>
       <Link to="/analyses/new">{t("canonicalAnalysis.action.newAnalysis")}</Link>
     </Button>
   );
@@ -122,17 +123,22 @@ export function HomePage() {
     // inteiro entrar de uma vez POR CIMA do escalonamento das quatro — perdendo justamente a
     // ordem que o comentário abaixo diz ser a hierarquia.
     return (
-      <div className="space-y-8">
-        {/* A ordem É a hierarquia: primeiro quem espera por alguém, depois o que está em curso,
-            depois o que já pode ser lido. Instâncias fica por último porque é CONTEXTO, não fila:
-            ela não pede ação de ninguém — antes da BD02 ficava ali por ser inalcançável, e agora
-            fica pelo mesmo lugar na hierarquia, com outra razão.. */}
-        <RegiaoDeAcoes itens={r.acoesNecessarias} />
-        <RegiaoEmAndamento itens={r.emAndamento} />
-        <RegiaoDeResultados itens={r.resultadosRecentes} semResultado={r.concluidasSemResultado} />
-        <RegiaoDeInstancias itens={instancias.data?.items ?? []} />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(22rem,0.8fr)]">
+        {/* A ordem agora acompanha a intenção do usuário: continuar o que está pronto para uma
+            decisão, observar o que o sistema já assumiu, ler resultado e só então revisar falhas.
+            Falha continua visível, mas sem sequestrar a primeira dobra quando não há retry seguro
+            publicado na listagem. */}
+        <div className="space-y-6">
+          <RegiaoDeAcoes itens={r.continuar} />
+          <RegiaoEmAndamento itens={r.emAndamento} />
+        </div>
+        <aside className="space-y-6 xl:sticky xl:top-24 xl:self-start">
+          <RegiaoDeResultados itens={r.resultadosRecentes} semResultado={r.concluidasSemResultado} />
+          <RegiaoDeFalhas itens={r.falhas} />
+          <RegiaoDeInstancias itens={instancias.data?.items ?? []} />
+        </aside>
         {truncada && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground xl:col-span-2">
             {t("home.truncated")}{" "}
             <Link to="/analyses" className="inline-block py-1 text-foreground underline-offset-4 hover:underline">
               {t("home.seeAll")}
@@ -142,7 +148,7 @@ export function HomePage() {
         {/* Estado que a fronteira deveria ter recusado. Visível, com o valor bruto, porque um
             estado novo engolido em silêncio é a tela mentindo sobre o que existe. */}
         {r.estadoNaoReconhecido.length > 0 && (
-          <p role="status" className="text-sm text-muted-foreground">
+          <p role="status" className="text-sm text-muted-foreground xl:col-span-2">
             {t("home.unknownState")}:{" "}
             {r.estadoNaoReconhecido.map((i) => `${i.analysis_id} (${i.status})`).join(", ")}
           </p>
@@ -153,17 +159,32 @@ export function HomePage() {
 
   return (
     <AppShell topBarTitle={t("shell.nav.home")}>
-      <PageFrame maxWidth="lg">
+      <PageFrame maxWidth="xl" className="px-4 py-5 sm:px-6 sm:py-8">
         {/* `v4-superficie` da a esta rota a MOLDURA da V4 — nao um layout dela. Ver a nota
             do escopo no `globals.css`: o Molde desenhou apenas a analise. */}
         <div ref={raiz} className="v4-superficie space-y-6" data-testid="home-page">
-          <div data-revelar className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="text-2xl font-semibold text-foreground">{t("shell.nav.home")}</h1>
+          <div
+            data-revelar
+            className="rounded-[var(--ds-radius-panel)] border border-border bg-card/80 p-4 sm:p-5"
+          >
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="min-w-0">
+                <p className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-muted-foreground">
+                  {t("home.eyebrow")}
+                </p>
+                <h1 className="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">
+                  {t("home.title")}
+                </h1>
               {/* A subida de subtítulo diz o que a tela É, não o que o produto promete. */}
-              <p className="mt-1 text-muted-foreground">{t("home.subtitle")}</p>
+                <p className="mt-2 max-w-2xl text-muted-foreground">{t("home.subtitle")}</p>
+              </div>
+              <div className="grid w-full gap-2 sm:grid-cols-2 md:w-auto md:min-w-72">
+                <NovaAnalise className="min-h-11 w-full" />
+                <Button asChild variant="outline" className="min-h-11 w-full">
+                  <Link to="/analyses">{t("home.seeAll")}</Link>
+                </Button>
+              </div>
             </div>
-            <NovaAnalise />
           </div>
           {corpo()}
         </div>

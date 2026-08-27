@@ -15,6 +15,7 @@ import en from "@/i18n/en.json";
 import { PUBLIC_STATES, type AnalysisListItem } from "@/lib/v1";
 import {
   RegiaoDeAcoes,
+  RegiaoDeFalhas,
   RegiaoDeInstancias,
   RegiaoDeResultados,
   RegiaoEmAndamento,
@@ -75,18 +76,17 @@ describe("M32 · 1. um só vocabulário de estados", () => {
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M32 · 2. Ações necessárias", () => {
-  it("`needs_mapping` aparece com o motivo do bloqueio e SEM operação", () => {
+  it("`needs_mapping` aparece com o motivo do bloqueio e leva para revisar campos", () => {
     montar(<RegiaoDeAcoes itens={[item({ analysis_id: "an-nm", status: "needs_mapping" })]} />);
     // A nota deixou de explicar impedimento e passou a apontar o caminho: a operacao que
     // resolve existe agora, e resolver e assunto da analise -- nao da fila.
     expect(screen.getByText(pt.canonicalAnalysis.needsMapping.goConfirm)).toBeTruthy();
     // Nenhum "Confirmar" funcional e nenhum estado local fingindo resolução.
     expect(screen.queryByRole("button")).toBeNull();
-    // O único caminho oferecido é ABRIR a análise — rota que existe. Isto não é deep link para
-    // fluxo inexistente: o que não existe é a operação que RESOLVE, e ela não é oferecida.
+    // O único caminho oferecido é abrir a análise no ponto certo do fluxo.
     const links = screen.getAllByRole("link");
     expect(links).toHaveLength(1);
-    expect(links[0].textContent).toBe(pt.home.openAnalysis);
+    expect(links[0].textContent).toBe(pt.home.actions.resolve);
     expect(links[0].getAttribute("href")).toBe("/analyses/an-nm");
     // E a linha do `needs_mapping` NÃO desenha moldura própria dentro da fila: na mesma região,
     // um item em cartão e outro em linha afirmaria uma urgência entre eles que ninguém mediu.
@@ -95,11 +95,11 @@ describe("M32 · 2. Ações necessárias", () => {
     expect(linha.querySelectorAll("[class*='rounded-lg']")).toHaveLength(0);
   });
 
-  it("`failed` NÃO oferece `Tentar novamente` — a listagem não publica `retry_allowed`", () => {
-    montar(<RegiaoDeAcoes itens={[item({ analysis_id: "an-f", status: "failed", result_available: false })]} />);
+  it("`failed` NÃO entra na primeira fila e oferece só inspeção", () => {
+    montar(<RegiaoDeFalhas itens={[item({ analysis_id: "an-f", status: "failed", result_available: false })]} />);
     expect(screen.queryByText(pt.canonicalAnalysis.action.retry)).toBeNull();
-    // O que existe é abrir a análise, onde o estado individual vive.
-    const link = screen.getByRole("link", { name: pt.home.openAnalysis });
+    // O que existe é abrir a análise para ver a causa.
+    const link = screen.getByRole("link", { name: pt.home.failed.inspect });
     expect(link.getAttribute("href")).toBe("/analyses/an-f");
   });
 
@@ -217,6 +217,22 @@ describe("M32 · 4. o que a Home se proíbe", () => {
     expect(FONTES()).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(FONTES()).not.toContain("rgba(");
   });
+
+  it("mobile é empilhado de verdade, não tabela comprimida", () => {
+    const regioes = semComentarios(ler("src/features/home/RegioesDaHome.tsx"));
+    expect(regioes).not.toContain("sm:contents");
+    expect(regioes).not.toContain("sm:flex-wrap");
+    expect(regioes).toContain("md:grid-cols-[auto_minmax(0,1fr)_auto_auto]");
+    expect(regioes).toContain("[&_a]:w-full");
+    expect(regioes).toContain("[&_a]:min-h-11");
+  });
+
+  it("a moldura da Home reduz padding no celular", () => {
+    const pagina = semComentarios(ler("src/features/home/HomePage.tsx"));
+    expect(pagina).toContain('className="px-4 py-5 sm:px-6 sm:py-8"');
+    expect(pagina).toContain("flex flex-col gap-4 md:flex-row");
+    expect(pagina).toContain("grid w-full gap-2 sm:grid-cols-2");
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -272,6 +288,7 @@ describe("M32 · 6. a composição da HomePage", () => {
       "<RegiaoDeAcoes",
       "<RegiaoEmAndamento",
       "<RegiaoDeResultados",
+      "<RegiaoDeFalhas",
       "<RegiaoDeInstancias",
     ]) {
       expect(f, `região ausente da composição: ${regiao}`).toContain(regiao);

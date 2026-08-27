@@ -72,7 +72,14 @@ export function UploadStep({
   function enviar() {
     if (!file || bloqueado) return;
     // File direto — sem leitura/cópia no navegador. O backend valida a base canonicamente.
-    upload.mutate({ analysisId, scope, body: file }, { onSuccess: onUploaded });
+    upload.mutate(
+      {
+        analysisId,
+        scope,
+        body: file,
+      },
+      { onSuccess: onUploaded },
+    );
   }
 
   // O erro do upload tem DOIS desfechos, e a tela não pode colapsá-los: o backend respondeu e
@@ -120,33 +127,59 @@ export function UploadStep({
         className="sr-only"
         aria-describedby="canonical-upload-help"
         disabled={enviando}
-        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        onChange={(e) => {
+          setFile(e.target.files?.[0] ?? null);
+        }}
       />
 
       {bloqueado && (
-        <p
+        <div
           role="status"
           aria-live="polite"
           // `aria-busy` só enquanto algo de fato corre. Mantê-lo depois do envio faria o leitor
           // de tela anunciar trabalho em curso sobre uma operação que terminou.
           aria-busy={enviando}
-          className="flex items-center gap-2 text-sm text-muted-foreground"
+          className="space-y-2 text-sm text-muted-foreground"
         >
-          {/* Duas chaves LITERAIS, e nao `t(condicao ? a : b)`: chamada opaca cega o rastreador
-              de orfandade do i18n, que deixa de saber se a chave ainda tem consumidor. O gate da
-              M14 conta essas chamadas justamente para que elas nao cresçam sem decisao. */}
-          {enviando ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              {t("canonicalAnalysis.upload.sending")}
-            </>
-          ) : (
-            <>
-              <Check className="h-4 w-4 text-success" aria-hidden="true" />
-              {t("canonicalAnalysis.upload.sent")}
-            </>
+          <p className="flex items-center gap-2">
+            {/* Duas chaves LITERAIS, e nao `t(condicao ? a : b)`: chamada opaca cega o rastreador
+                de orfandade do i18n, que deixa de saber se a chave ainda tem consumidor. O gate da
+                M14 conta essas chamadas justamente para que elas nao cresçam sem decisao. */}
+            {enviando ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                {t("canonicalAnalysis.upload.sending")}
+              </>
+            ) : (
+              <>
+                <Check className="h-4 w-4 text-success" aria-hidden="true" />
+                {t("canonicalAnalysis.upload.sent")}
+              </>
+            )}
+          </p>
+          {enviando && (
+            <div className="space-y-1">
+              <div
+                role="progressbar"
+                aria-label={t("canonicalAnalysis.upload.progressLabel")}
+                aria-valuetext={t("canonicalAnalysis.upload.progressValue")}
+                className="h-2 overflow-hidden rounded-full bg-muted"
+              >
+                <span
+                  aria-hidden="true"
+                  className="block h-full w-full origin-left rounded-full bg-primary/70 transition-transform motion-safe:animate-pulse"
+                  style={{
+                    transitionDuration: "var(--ds-duration-base)",
+                    transitionTimingFunction: "var(--ds-easing-standard)",
+                  }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("canonicalAnalysis.upload.progressHint")}
+              </p>
+            </div>
           )}
-        </p>
+        </div>
       )}
 
       {transporte ? (
@@ -180,7 +213,7 @@ export function UploadStep({
           oferecê-la com o mesmo peso da consulta convidaria justamente a ela. Depois de verificar,
           o erro é limpo e o envio volta, se a análise ainda estiver esperando base. */}
       <div className="flex flex-wrap gap-2">
-        {!enviando && !transporte && (
+        {!transporte && (
           <Button onClick={enviar} disabled={!file || bloqueado}>
             {upload.isError ? t("canonicalAnalysis.upload.retry") : t("canonicalAnalysis.upload.send")}
           </Button>

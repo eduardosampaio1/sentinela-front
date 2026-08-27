@@ -85,6 +85,31 @@ describe("Jornada canônica — upload SEM materialização (E2 item 5)", () => 
     await waitFor(() => expect((botao as HTMLButtonElement).disabled).toBe(true));
     expect(dataCalls).toBe(1); // janela de refetch: bloqueado, não reenvia
   });
+
+  it("mostra barra de progresso enquanto a base está sendo recebida", async () => {
+    let liberarUpload!: () => void;
+    const uploadPendente = new Promise<void>((resolve) => {
+      liberarUpload = resolve;
+    });
+    server.use(
+      http.post(`${MSW_BASE}/v1/analyses/:id/data`, async () => {
+        await uploadPendente;
+        return HttpResponse.json(statusView("receiving"));
+      }),
+    );
+    render(wrap(<UploadStep analysisId="an-abc" scope={{ workspaceId: "ws-1" }} onUploaded={vi.fn()} />));
+
+    const input = document.getElementById("canonical-file") as HTMLInputElement;
+    await userEvent.upload(input, new File(["{}\n"], "base.jsonl", { type: "application/x-ndjson" }));
+    await userEvent.click(screen.getByRole("button", { name: /send dataset|enviar base/i }));
+
+    const barra = await screen.findByRole("progressbar", { name: /dataset upload|envio da base/i });
+    expect(barra).toHaveAttribute("aria-valuetext");
+    expect(screen.getByText(/keep this page open|mantenha esta página aberta/i)).toBeTruthy();
+
+    liberarUpload();
+    await waitFor(() => expect(screen.queryByRole("progressbar")).not.toBeInTheDocument());
+  });
 });
 
 describe("Jornada canônica — prepare cria a identidade durável (E2 itens 3-4)", () => {

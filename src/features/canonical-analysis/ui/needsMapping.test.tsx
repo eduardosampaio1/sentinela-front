@@ -42,6 +42,7 @@ interface BundlePt {
     state: { needs_mapping: { message: string } };
     action: { checkAgain: string };
     mapping: { title: string };
+    datasetTooSmall: { title: string; message: string; reason: string };
   };
 }
 
@@ -200,6 +201,80 @@ describe("a parada de mapping chega na tela", () => {
     unmount();
   });
 
+  it("não joga base completa com menos de 100 conversas na tela de confirmação", async () => {
+    // O produto aprendeu algo importante na homologação: pedir confirmação de campos quando a
+    // própria leitura já sabe que há só 29 conversas é uma promessa falsa. Não há escolha que
+    // faça a análise ganhar precisão; a ação correta é enviar uma amostra maior.
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses/an-small`, () =>
+        HttpResponse.json(statusView("needs_mapping", { analysis_id: "an-small" })),
+      ),
+      http.get(`${MSW_BASE}/v1/analyses/an-small/mapping`, () =>
+        HttpResponse.json({
+          requires_decision: true,
+          records_observed: 29,
+          sample_truncated: false,
+          format_id: "jsonl",
+          columns: [
+            { name: "assistant_text", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 21 },
+            { name: "conversation_id", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 29 },
+          ],
+          suggestion: {
+            assistant_text: { source: "assistant_text" },
+            conversation_id: { source: "conversation_id" },
+          },
+          ambiguous: {},
+          required_fields: ["assistant_text"],
+          optional_fields: ["conversation_id"],
+          groupable_fields: ["timestamp"],
+        }),
+      ),
+    );
+    const { unmount } = renderAt("an-small");
+
+    await waitFor(() => expect(screen.getByText("We need a larger dataset")).toBeTruthy());
+
+    expect(screen.getByText(/29 conversations/)).toBeTruthy();
+    expect(screen.getByText(/at least 100 conversations/)).toBeTruthy();
+    expect(screen.queryByText("Tell us which column is which")).toBeNull();
+    expect(screen.queryByText("Confirmation needed")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Confirm and continue" })).toBeNull();
+    unmount();
+  });
+
+  it("mantém o editor quando a amostra foi truncada, porque 29 observadas não é o total", async () => {
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses/an-sample`, () =>
+        HttpResponse.json(statusView("needs_mapping", { analysis_id: "an-sample" })),
+      ),
+      http.get(`${MSW_BASE}/v1/analyses/an-sample/mapping`, () =>
+        HttpResponse.json({
+          requires_decision: true,
+          records_observed: 29,
+          sample_truncated: true,
+          format_id: "jsonl",
+          columns: [
+            { name: "assistant_text", name_redacted: false, types: ["string"], coverage: 1, distinct_values: 21 },
+          ],
+          suggestion: {
+            assistant_text: { source: "assistant_text" },
+          },
+          ambiguous: {},
+          required_fields: ["assistant_text"],
+          optional_fields: [],
+          groupable_fields: [],
+        }),
+      ),
+    );
+    const { unmount } = renderAt("an-sample");
+
+    await waitFor(() =>
+      expect(screen.getByText("Tell us which column is which")).toBeTruthy(),
+    );
+    expect(screen.queryByText("We need a larger dataset")).toBeNull();
+    unmount();
+  });
+
   it("não acusa antes da tentativa, e acusa depois dela", async () => {
     // ## O defeito que este caso trava
     //
@@ -282,6 +357,8 @@ describe("a parada de mapping chega na tela", () => {
     // O editor tem título próprio em PT: sem ele a tela renderizaria a chave crua.
     expect((pt as unknown as BundlePt).canonicalAnalysis.mapping.title)
       .toBe("Diga qual coluna \u00e9 qual");
+    expect((pt as unknown as BundlePt).canonicalAnalysis.datasetTooSmall.title)
+      .toBe("Precisamos de uma base maior");
   });
 
   it("a página tem um `case` PRÓPRIO para needs_mapping, não o `default`", () => {

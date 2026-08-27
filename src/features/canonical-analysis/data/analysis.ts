@@ -79,13 +79,55 @@ export function useCreateAnalysis(): UseMutationResult<
 export function useUploadData(): UseMutationResult<
   AnalysisStatusView,
   unknown,
-  { analysisId: string; scope: CanonicalScope; body: BodyInit; signal?: AbortSignal }
+  {
+    analysisId: string;
+    scope: CanonicalScope;
+    body: BodyInit;
+    signal?: AbortSignal;
+    onProgress?: (progress: { sentBytes: number; totalBytes: number; percent: number }) => void;
+  }
 > {
   const client = useV1Client();
   return useMutation({
     retry: false,
-    mutationFn: ({ analysisId, scope, body, signal }) =>
-      client.uploadData(analysisId, scope, body, { signal }),
+    mutationFn: async ({ analysisId, scope, body, signal, onProgress }) => {
+      if (!(body instanceof File) || body.size < 100 * 1024 * 1024) {
+        return client.uploadData(analysisId, scope, body, { signal });
+      }
+
+      const aberta = await client.openDataUpload(analysisId, scope, { signal });
+      const partSize = Math.max(aberta.part_size_bytes || 0, 5 * 1024 * 1024);
+      const totalParts = Math.ceil(body.size / partSize);
+      const parts: Array<{ part_number: number; etag: string }> = [];
+
+      for (let index = 0; index < totalParts; index += 1) {
+        const partNumber = index + 1;
+        const start = index * partSize;
+        const end = Math.min(body.size, start + partSize);
+        const sent = await client.uploadDataPart(
+          analysisId,
+          scope,
+          aberta.upload_session_id,
+          partNumber,
+          body.slice(start, end),
+          { signal },
+        );
+        parts.push({ part_number: sent.part_number, etag: sent.etag });
+        onProgress?.({
+          sentBytes: end,
+          totalBytes: body.size,
+          percent: Math.round((end / body.size) * 100),
+        });
+      }
+
+      return client.completeDataUpload(
+        analysisId,
+        scope,
+        aberta.upload_session_id,
+        parts,
+        { signal },
+      );
+    },
   });
 }
 

@@ -37,17 +37,20 @@ const item = (over: Partial<AnalysisListItem> = {}): AnalysisListItem => ({
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M32 · 1. o mapa estado → região", () => {
-  it("Ações necessárias recebe `needs_mapping` e `failed`, e mais nada", () => {
+  it("Continue daqui recebe o que uma pessoa destrava agora, e falha fica em revisão", () => {
     const r = classificarRegioes([
       item({ analysis_id: "a", status: "needs_mapping" }),
       item({ analysis_id: "b", status: "failed", result_available: false }),
+      item({ analysis_id: "c", status: "preparing", result_available: false }),
+      item({ analysis_id: "d", status: "ready_to_submit", result_available: false }),
     ]);
-    expect(r.acoesNecessarias.map((i) => i.analysis_id)).toEqual(["a", "b"]);
+    expect(r.continuar.map((i) => i.analysis_id)).toEqual(["a", "c", "d"]);
+    expect(r.falhas.map((i) => i.analysis_id)).toEqual(["b"]);
     expect(r.emAndamento).toEqual([]);
     expect(r.resultadosRecentes).toEqual([]);
   });
 
-  it("`failed` entra INDEPENDENTE de `retry_allowed` — que a listagem não publica", () => {
+  it("`failed` fica visível INDEPENDENTE de `retry_allowed` — que a listagem não publica", () => {
     // Contradição resolvida pela autoridade mais forte: o Blueprint §4.3 manda filtrar por
     // `retry_allowed` tendo a listagem como fonte, e `AnalysisListItem` não tem o campo. Esconder
     // a falha por não saber se é recuperável esconderia exatamente o que precisa de alguém.
@@ -56,16 +59,17 @@ describe("M32 · 1. o mapa estado → região", () => {
       "retry_allowed",
     );
     const r = classificarRegioes([item({ status: "failed", result_available: false })]);
-    expect(r.acoesNecessarias).toHaveLength(1);
+    expect(r.falhas).toHaveLength(1);
+    expect(r.continuar).toEqual([]);
   });
 
-  it("Em andamento recebe os cinco estados de trabalho em curso", () => {
-    const emCurso: AnalysisStatus[] = ["preparing", "receiving", "queued", "running", "recovering"];
+  it("Em andamento recebe os quatro estados que não pedem ação humana", () => {
+    const emCurso: AnalysisStatus[] = ["receiving", "queued", "running", "recovering"];
     const r = classificarRegioes(
       emCurso.map((s, i) => item({ analysis_id: `x${i}`, status: s, result_available: false })),
     );
-    expect(r.emAndamento).toHaveLength(5);
-    expect(r.acoesNecessarias).toEqual([]);
+    expect(r.emAndamento).toHaveLength(4);
+    expect(r.continuar).toEqual([]);
     expect(r.resultadosRecentes).toEqual([]);
   });
 
@@ -86,7 +90,7 @@ describe("M32 · 1. o mapa estado → região", () => {
       PUBLIC_STATES.map((s, i) => item({ analysis_id: `s${i}`, status: s, result_available: true })),
     );
     const classificados =
-      r.acoesNecessarias.length + r.emAndamento.length + r.resultadosRecentes.length;
+      r.continuar.length + r.emAndamento.length + r.resultadosRecentes.length + r.falhas.length;
     expect(classificados).toBe(PUBLIC_STATES.length);
     expect(r.concluidasSemResultado).toEqual([]);
     expect(r.estadoNaoReconhecido).toEqual([]);
@@ -107,9 +111,10 @@ describe("M32 · 2. cada análise em exatamente uma região", () => {
 
     const r = classificarRegioes(todos);
     const baldes = [
-      r.acoesNecessarias,
+      r.continuar,
       r.emAndamento,
       r.resultadosRecentes,
+      r.falhas,
       r.concluidasSemResultado,
       r.estadoNaoReconhecido,
     ];
@@ -138,8 +143,9 @@ describe("M32 · 3. sem recálculo, sem prioridade inventada, sem cópia", () =>
       item({ analysis_id: "n1", status: "needs_mapping" }),
       item({ analysis_id: "f2", status: "failed", result_available: false }),
     ]);
-    // Nada de "falha antes de mapeamento" nem "mais antigo primeiro": a ordem do cursor é a ordem.
-    expect(r.acoesNecessarias.map((i) => i.analysis_id)).toEqual(["f1", "n1", "f2"]);
+    // Nada de "mais antigo primeiro": cada balde preserva a ordem que veio no cursor.
+    expect(r.continuar.map((i) => i.analysis_id)).toEqual(["n1"]);
+    expect(r.falhas.map((i) => i.analysis_id)).toEqual(["f1", "f2"]);
   });
 
   it("devolve os MESMOS objetos em TODOS os baldes, sem cópia e sem campo derivado", () => {
@@ -154,9 +160,10 @@ describe("M32 · 3. sem recálculo, sem prioridade inventada, sem cópia", () =>
     ];
     const r = classificarRegioes(entrada);
     const saida = [
-      ...r.acoesNecessarias,
+      ...r.continuar,
       ...r.emAndamento,
       ...r.resultadosRecentes,
+      ...r.falhas,
       ...r.concluidasSemResultado,
       ...r.estadoNaoReconhecido,
     ];
@@ -209,9 +216,10 @@ describe("M32 · 4. vazio e Instâncias", () => {
     expect(INSTANCIAS_INALCANCAVEL).toBe(true);
     const r = classificarRegioes([item()]);
     expect(Object.keys(r)).toEqual([
-      "acoesNecessarias",
+      "continuar",
       "emAndamento",
       "resultadosRecentes",
+      "falhas",
       "concluidasSemResultado",
       "estadoNaoReconhecido",
     ]);

@@ -31,7 +31,10 @@
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { StatusBadge } from "@/design/patterns";
+import { Button } from "@/components/ui/button";
 import type { AnalysisListItem, AnalysisStatus, InstanceView } from "@/lib/v1";
+
+const LIMITE_DA_HOME = 4;
 
 /**
  * O rótulo publicado de cada estado.
@@ -71,8 +74,8 @@ function LinhaDeAnalise({
 }) {
   const { t } = useLanguage();
   return (
-    <li className="border-b border-border/60 py-2 last:border-b-0 sm:flex sm:flex-wrap sm:items-baseline sm:gap-x-3">
-      <div className="flex min-w-0 items-baseline gap-x-3 sm:contents">
+    <li className="border-b border-border/60 py-4 last:border-b-0">
+      <div className="grid min-w-0 gap-2 md:grid-cols-[auto_minmax(0,1fr)_auto_auto] md:items-center md:gap-x-3">
         {/* `rotulo` é obrigatório por design da M11: o badge não conhece i18n de produto. A chave
             vive na RAIZ (`estadoPublico.*`), e não sob `home.*`, porque o critério 17 exige UMA
             semântica pública de estados — um segundo conjunto por superfície seria exatamente o
@@ -81,21 +84,22 @@ function LinhaDeAnalise({
           vocabulario="publico"
           estado={item.status}
           rotulo={rotuloDeEstado(item.status, t)}
+          className="w-fit"
         />
-        <span className="min-w-0 flex-1 truncate font-mono text-sm text-foreground">
+        <span className="min-w-0 break-all font-mono text-sm text-foreground md:truncate md:break-normal">
           {item.analysis_id}
         </span>
-      </div>
-      <div className="mt-1 flex flex-wrap items-baseline gap-x-3 sm:mt-0 sm:contents">
         {/* `record_count` é `null` quando ausente, e ausência NUNCA vira zero. */}
         <span className="tabular-nums text-sm text-muted-foreground">
           {item.record_count === null
             ? t("home.recordCountAbsent")
             : t("home.recordCount", { n: String(item.record_count) })}
         </span>
-        {acao}
+        <span className="w-full md:w-auto [&_a]:min-h-11 [&_a]:w-full [&_button]:min-h-11 [&_button]:w-full md:[&_a]:min-h-9 md:[&_a]:w-auto md:[&_button]:min-h-9 md:[&_button]:w-auto">
+          {acao}
+        </span>
       </div>
-      {nota}
+      {nota ? <div className="mt-2 md:pl-[calc(5.75rem+0.75rem)]">{nota}</div> : null}
     </li>
   );
 }
@@ -108,12 +112,28 @@ function TituloDaRegiao({ id, texto }: { id: string; texto: string }) {
   );
 }
 
+function itensDaHome(itens: readonly AnalysisListItem[]): readonly AnalysisListItem[] {
+  return itens.slice(0, LIMITE_DA_HOME);
+}
+
+function AvisoDeRecorte({ mostrar }: { mostrar: boolean }) {
+  const { t } = useLanguage();
+  if (!mostrar) return null;
+  return (
+    <p className="pt-2 text-sm text-muted-foreground">
+      {t("home.sectionOverflow")}{" "}
+      <Link to="/analyses" className="inline-block py-1 text-foreground underline-offset-4 hover:underline">
+        {t("home.seeAll")}
+      </Link>
+    </p>
+  );
+}
+
 /**
- * 1 · Ações necessárias — a fila.
+ * 1 · Continue daqui — a fila acionável.
  *
- * `needs_mapping` e `failed`. Sobre `failed`: a Home **não** oferece "Tentar novamente", porque
- * `retry_allowed` não é publicado na listagem (ver `regioes.ts`). A ação daqui é abrir a análise,
- * que é onde o estado individual — e o botão, se houver — vivem.
+ * `preparing`, `needs_mapping` e `ready_to_submit` têm uma próxima ação concreta dentro da análise.
+ * A Home mostra a porta certa, não tenta resolver o fluxo inteiro na lista.
  */
 export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] }) {
   const { t } = useLanguage();
@@ -123,29 +143,38 @@ export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] })
     return (
       <section data-revelar aria-labelledby="home-acoes" className="space-y-3">
         <TituloDaRegiao id="home-acoes" texto={t("home.actions.title")} />
-        <p className="painel px-4 py-3 text-sm text-muted-foreground">
-          {t("home.actions.none")}
-        </p>
+        <div className="rounded-[var(--ds-radius-panel)] border border-border bg-card p-4">
+          <p className="max-w-prose text-sm text-muted-foreground">{t("home.actions.none")}</p>
+        </div>
       </section>
     );
   }
   return (
     <section data-revelar aria-labelledby="home-acoes" className="space-y-3">
-      <TituloDaRegiao id="home-acoes" texto={t("home.actions.title")} />
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <TituloDaRegiao id="home-acoes" texto={t("home.actions.title")} />
+          <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("home.actions.explain")}</p>
+        </div>
+      </div>
       {/* A ÚNICA região com moldura. O peso é a mensagem: é aqui que alguém é esperado. */}
-      <ul className="painel px-4">
-        {itens.map((item) => (
+      <ul className="rounded-[var(--ds-radius-panel)] border border-primary/45 bg-card/95 px-3 shadow-[0_18px_60px_hsl(var(--primary)/0.08)] sm:px-4">
+        {itensDaHome(itens).map((item) => (
           <LinhaDeAnalise
             key={item.analysis_id}
             item={item}
-            // `failed` NAO oferece "Tentar novamente": `retry_allowed` nao vem na listagem.
             acao={
-              <Link
-                to={`/analyses/${encodeURIComponent(item.analysis_id)}`}
-                className="inline-block py-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-              >
-                {t("home.openAnalysis")}
-              </Link>
+                  <Button asChild size="sm" className="w-full md:w-auto">
+                <Link to={`/analyses/${encodeURIComponent(item.analysis_id)}`}>
+                  {item.status === "preparing"
+                    ? t("home.actions.sendDataset")
+                    : item.status === "ready_to_submit"
+                      ? t("home.actions.submit")
+                      : item.status === "needs_mapping"
+                        ? t("home.actions.resolve")
+                        : t("home.openAnalysis")}
+                </Link>
+              </Button>
             }
             nota={
               // Estado publico COM operacao publica, e isto mudou. O catalogo declarava o
@@ -169,11 +198,20 @@ export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] })
                     {t("canonicalAnalysis.needsMapping.goConfirm")}
                   </span>
                 </p>
+              ) : item.status === "preparing" ? (
+                <p className="mt-1 text-xs text-muted-foreground sm:w-full">
+                  {t("home.actions.preparingNote")}
+                </p>
+              ) : item.status === "ready_to_submit" ? (
+                <p className="mt-1 text-xs text-muted-foreground sm:w-full">
+                  {t("home.actions.readyNote")}
+                </p>
               ) : undefined
             }
           />
         ))}
       </ul>
+      <AvisoDeRecorte mostrar={itens.length > LIMITE_DA_HOME} />
     </section>
   );
 }
@@ -183,26 +221,29 @@ export function RegiaoEmAndamento({ itens }: { itens: readonly AnalysisListItem[
   const { t } = useLanguage();
   if (itens.length === 0) return null;
   return (
-    <section data-revelar aria-labelledby="home-andamento" className="space-y-2">
-      <TituloDaRegiao id="home-andamento" texto={t("home.running.title")} />
+    <section data-revelar aria-labelledby="home-andamento" className="space-y-3">
+      <div>
+        <TituloDaRegiao id="home-andamento" texto={t("home.running.title")} />
+        <p className="mt-1 text-sm text-muted-foreground">{t("home.running.explain")}</p>
+      </div>
       {/* Sem moldura: peso menor que a fila, de propósito. Nenhuma barra de progresso agregada —
           o detalhe por eixo é de AN-03, e um "%" somado aqui seria número inventado. */}
-      <ul>
-        {itens.map((item) => (
+      <ul className="rounded-[var(--ds-radius-panel)] border border-border bg-card/70 px-3 sm:px-4">
+        {itensDaHome(itens).map((item) => (
           <LinhaDeAnalise
             key={item.analysis_id}
             item={item}
             acao={
-              <Link
-                to={`/analyses/${encodeURIComponent(item.analysis_id)}`}
-                className="inline-block py-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-              >
-                {t("home.followAnalysis")}
-              </Link>
+              <Button asChild variant="outline" size="sm" className="w-full md:w-auto">
+                <Link to={`/analyses/${encodeURIComponent(item.analysis_id)}`}>
+                  {t("home.followAnalysis")}
+                </Link>
+              </Button>
             }
           />
         ))}
       </ul>
+      <AvisoDeRecorte mostrar={itens.length > LIMITE_DA_HOME} />
     </section>
   );
 }
@@ -219,27 +260,29 @@ export function RegiaoDeResultados({
   const { t } = useLanguage();
   if (itens.length === 0 && semResultado.length === 0) return null;
   return (
-    <section data-revelar aria-labelledby="home-resultados" className="space-y-2">
-      <TituloDaRegiao id="home-resultados" texto={t("home.recent.title")} />
-      <ul>
-        {itens.map((item) => (
+    <section data-revelar aria-labelledby="home-resultados" className="space-y-3">
+      <div>
+        <TituloDaRegiao id="home-resultados" texto={t("home.recent.title")} />
+        <p className="mt-1 text-sm text-muted-foreground">{t("home.recent.explain")}</p>
+      </div>
+      <ul className="rounded-[var(--ds-radius-panel)] border border-border bg-card/70 px-3 sm:px-4">
+        {itensDaHome(itens).map((item) => (
           <LinhaDeAnalise
             key={item.analysis_id}
             item={item}
             acao={
-              <Link
-                to={`/analyses/${encodeURIComponent(item.analysis_id)}/result`}
-                className="inline-block py-1 text-sm text-foreground underline-offset-4 hover:underline"
-              >
-                {t("home.openResult")}
-              </Link>
+              <Button asChild variant="secondary" size="sm" className="w-full md:w-auto">
+                <Link to={`/analyses/${encodeURIComponent(item.analysis_id)}/result`}>
+                  {t("home.openResult")}
+                </Link>
+              </Button>
             }
           />
         ))}
         {/* Concluída sem documento disponível. Aparece com o motivo escrito e SEM link para o
             resultado: oferecer "Abrir resultado" para algo que o contrato diz não estar
             disponível seria CTA que quebra no clique. */}
-        {semResultado.map((item) => (
+        {itensDaHome(semResultado).map((item) => (
           <LinhaDeAnalise
             key={item.analysis_id}
             item={item}
@@ -247,6 +290,42 @@ export function RegiaoDeResultados({
           />
         ))}
       </ul>
+      <AvisoDeRecorte mostrar={itens.length + semResultado.length > LIMITE_DA_HOME} />
+    </section>
+  );
+}
+
+/** 4 · Falhas — visíveis, mas sem dominar a primeira decisão do usuário. */
+export function RegiaoDeFalhas({ itens }: { itens: readonly AnalysisListItem[] }) {
+  const { t } = useLanguage();
+  if (itens.length === 0) return null;
+  return (
+    <section data-revelar aria-labelledby="home-falhas" className="space-y-3">
+      <div>
+        <TituloDaRegiao id="home-falhas" texto={t("home.failed.title")} />
+        <p className="mt-1 text-sm text-muted-foreground">{t("home.failed.explain")}</p>
+      </div>
+      <ul className="rounded-[var(--ds-radius-panel)] border border-border bg-card/60 px-3 sm:px-4">
+        {itensDaHome(itens).map((item) => (
+          <LinhaDeAnalise
+            key={item.analysis_id}
+            item={item}
+            acao={
+              <Button asChild variant="outline" size="sm" className="w-full md:w-auto">
+                <Link to={`/analyses/${encodeURIComponent(item.analysis_id)}`}>
+                  {t("home.failed.inspect")}
+                </Link>
+              </Button>
+            }
+            nota={
+              <p className="mt-1 text-xs text-muted-foreground sm:w-full">
+                {t("home.failed.note")}
+              </p>
+            }
+          />
+        ))}
+      </ul>
+      <AvisoDeRecorte mostrar={itens.length > LIMITE_DA_HOME} />
     </section>
   );
 }
@@ -282,15 +361,15 @@ export function RegiaoDeResultados({
 export function RegiaoDeInstancias({ itens }: { itens: readonly InstanceView[] }) {
   const { t } = useLanguage();
   return (
-    <section data-revelar aria-labelledby="home-instancias" className="space-y-2">
+    <section data-revelar aria-labelledby="home-instancias" className="space-y-3 rounded-[var(--ds-radius-panel)] border border-border bg-card/45 p-3 sm:p-4">
       <TituloDaRegiao id="home-instancias" texto={t("home.instances.title")} />
       {itens.length === 0 ? (
         <p role="note" className="text-sm text-muted-foreground">
           {t("home.instances.empty")}
         </p>
       ) : (
-        <ul>
-          {itens.map((inst) => (
+        <ul className="space-y-1">
+          {itens.slice(0, LIMITE_DA_HOME).map((inst) => (
             <li key={inst.instance_id}>
               <Link
                 to={`/instances/${encodeURIComponent(inst.instance_id)}`}

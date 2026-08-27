@@ -79,7 +79,7 @@ describe("v2 ready — a tela mostra a Engine E o bloco analítico", () => {
     montar();
 
     // A janela da Engine, no resumo de sempre.
-    const janela = await screen.findByText("Records analyzed");
+    const janela = await screen.findByText("Conversations analyzed");
     expect(janela.parentElement?.textContent).toContain("100");
     // O denominador analítico, em cartão próprio e com outro nome. No v1 os dois dividiam o
     // mesmo rótulo — e é isso que a MF6.3 separou.
@@ -187,7 +187,7 @@ describe("v2 withheld — conclusão de privacidade, não falha", () => {
     servirV2(V2_WITHHELD);
     montar();
 
-    const janela = await screen.findByText("Records analyzed");
+    const janela = await screen.findByText("Conversations analyzed");
     expect(janela.parentElement?.textContent).toContain("100");
     expect(await screen.findByRole("heading", { name: "Indicators" })).toBeInTheDocument();
     // E nenhuma área analítica aparece: não há conteúdo para elas.
@@ -231,7 +231,7 @@ describe("contrato que não serve vira estado seguro — nunca uma tela parcial"
     );
     montar();
 
-    const janela = await screen.findByText("Records analyzed");
+    const janela = await screen.findByText("Conversations analyzed");
     expect(janela.parentElement?.textContent).toContain("100");
     expect(await screen.findByRole("heading", { name: "Indicators" })).toBeInTheDocument();
     // E NENHUM bloco analítico: o v1 não tem um, e inventá-lo vazio afirmaria uma ausência.

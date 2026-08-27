@@ -83,6 +83,44 @@ describe("V1 client — as 7 operações canônicas", () => {
     expect((init!.headers as Record<string, string>)["Content-Type"]).toContain("ndjson");
     expect(init!.body).toBe("{}\n");
   });
+
+  it("upload multipart: abre, envia parte e conclui sem expor rota interna", async () => {
+    const respostas = [
+      jsonResponse({
+        analysis_id: "an-abc",
+        status: "receiving",
+        upload_session_id: "up-1",
+        part_size_bytes: 8388608,
+      }),
+      jsonResponse({
+        analysis_id: "an-abc",
+        upload_session_id: "up-1",
+        part_number: 1,
+        etag: "\"etag-1\"",
+      }),
+      jsonResponse(STATUS_VIEWS.preparing),
+    ];
+    const { client, fetchImpl } = makeClient(() => respostas.shift()!);
+
+    const aberta = await client.openDataUpload("an-abc", SCOPE);
+    const parte = await client.uploadDataPart(
+      "an-abc",
+      SCOPE,
+      aberta.upload_session_id,
+      1,
+      new Blob(["abc"]),
+    );
+    await client.completeDataUpload("an-abc", SCOPE, aberta.upload_session_id, [
+      { part_number: parte.part_number, etag: parte.etag },
+    ]);
+
+    expect(fetchImpl.mock.calls.map(([url]) => String(url))).toEqual([
+      "https://gw.test/v1/analyses/an-abc/data/uploads?workspace_id=ws-1",
+      "https://gw.test/v1/analyses/an-abc/data/uploads/up-1/parts/1?workspace_id=ws-1",
+      "https://gw.test/v1/analyses/an-abc/data/uploads/up-1/complete?workspace_id=ws-1",
+    ]);
+    expect(String(fetchImpl.mock.calls[1]![0])).not.toContain("/internal");
+  });
 });
 
 describe("V1 client — auth, erros, cancelamento, sem-fallback", () => {

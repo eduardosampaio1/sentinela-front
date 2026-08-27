@@ -25,7 +25,7 @@ import { describe, expect, it } from "vitest";
 
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import type { SnapshotAnalitico } from "../../result/analyticsProjection";
-import { Cabeca, PorQueEstaVazio, Retido } from "./AnalyticsView";
+import { Cabeca, Retido } from "./AnalyticsView";
 
 /** Uma medida publicada, na forma que a tela lê. */
 function medida(troca: Record<string, unknown> = {}) {
@@ -126,19 +126,6 @@ describe("a medida numérica mostra o número", () => {
 
     expect(screen.getByText("8.96")).toBeTruthy();
     expect(screen.getAllByText(/not published/i).length).toBe(1);
-    unmount();
-  });
-});
-
-/** O bloco irmão continua intacto — a faixa do vazio não pode ter sido afetada. */
-describe("a faixa do vazio segue funcionando", () => {
-  it("aparece quando nada está aberto por campo", () => {
-    const { unmount } = render(
-      <LanguageProvider>
-        <PorQueEstaVazio snapshot={snapshot([])} />
-      </LanguageProvider>,
-    );
-    expect(screen.getByText("Nothing is broken down by field")).toBeTruthy();
     unmount();
   });
 });

@@ -92,6 +92,27 @@ export interface AnalysisIntake {
    * tela precisa distinguir para nao anunciar um dataset perfeito antes de ele existir.
    */
   rejected_record_count: number | null;
+  /** Motivos agregados dos registros que ficaram fora do dataset canonico. Sem conteúdo. */
+  rejected_record_reasons: AnalysisRejectedRecordReason[];
+  /** Política efetivamente avaliada pelo Ingestion; nunca inferida pela tela. */
+  acceptance_policy: "strict" | "threshold" | null;
+  /** Regra efetiva, em números públicos para a tela explicar sem hardcode. */
+  acceptance_rule: AnalysisAcceptanceRule | null;
+  /** Resultado da política de aceitação, separado da conclusão de privacidade. */
+  accepted: boolean | null;
+  /** Resultado seguro do Privacy Gate; não inclui conteúdo, campo nem regra detectada. */
+  privacy_clearance: "passed" | "review_required" | "rejected" | "policy_violation" | "scanner_failed" | null;
+}
+
+export interface AnalysisRejectedRecordReason {
+  code: string;
+  count: number;
+}
+
+export interface AnalysisAcceptanceRule {
+  policy: "strict" | "threshold";
+  min_valid_ratio: number | null;
+  min_valid_records: number | null;
 }
 
 /** Item de listagem (GET /v1/analyses). */
@@ -161,6 +182,22 @@ export interface AnalysisResultView {
 export interface AnalysisHandle {
   analysis_id: string;
   status: AnalysisStatus;
+}
+
+/** Sessão pública de recebimento em partes. Não expõe storage nem URL interna. */
+export interface UploadAbertoView {
+  analysis_id: string;
+  status: "receiving";
+  upload_session_id: string;
+  part_size_bytes: number;
+}
+
+/** Confirmação pública de uma parte recebida. */
+export interface UploadParteView {
+  analysis_id: string;
+  upload_session_id: string;
+  part_number: number;
+  etag: string;
 }
 
 /** Código estável de erro público. `type` = `urn:sentinela:error:<code>`. */

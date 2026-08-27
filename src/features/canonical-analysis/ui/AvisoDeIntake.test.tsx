@@ -24,6 +24,11 @@ describe("AvisoDeIntake", () => {
       source_record_count: 61423,
       canonical_record_count: 61323,
       rejected_record_count: 100,
+      rejected_record_reasons: [],
+      acceptance_policy: "threshold",
+      acceptance_rule: null,
+      accepted: false,
+      privacy_clearance: "rejected",
     });
 
     const aviso = screen.getByTestId("intake-com-recusa");
@@ -39,6 +44,11 @@ describe("AvisoDeIntake", () => {
       source_record_count: 100,
       canonical_record_count: 90,
       rejected_record_count: 10,
+      rejected_record_reasons: [],
+      acceptance_policy: "strict",
+      acceptance_rule: null,
+      accepted: false,
+      privacy_clearance: null,
     });
 
     const aviso = screen.getByTestId("intake-com-recusa");
@@ -53,10 +63,36 @@ describe("AvisoDeIntake", () => {
       source_record_count: 61423,
       canonical_record_count: 61423,
       rejected_record_count: 0,
+      rejected_record_reasons: [],
+      acceptance_policy: "threshold",
+      acceptance_rule: null,
+      accepted: true,
+      privacy_clearance: "passed",
     });
 
     expect(screen.getByTestId("intake-tudo-aceito")).toBeInTheDocument();
     expect(screen.queryByTestId("intake-com-recusa")).not.toBeInTheDocument();
+  });
+
+  it("não chama base pequena de tudo aceito quando a política bloqueou por mínimo absoluto", () => {
+    montar({
+      source_record_count: 25,
+      canonical_record_count: 25,
+      rejected_record_count: 0,
+      rejected_record_reasons: [],
+      acceptance_policy: "threshold",
+      acceptance_rule: {
+        policy: "threshold",
+        min_valid_ratio: 0.95,
+        min_valid_records: 100,
+      },
+      accepted: false,
+      privacy_clearance: "passed",
+    });
+
+    expect(screen.getByTestId("intake-politica-bloqueada")).toHaveTextContent(/25/);
+    expect(screen.getByTestId("intake-politica-bloqueada")).toHaveTextContent(/100/);
+    expect(screen.queryByTestId("intake-tudo-aceito")).not.toBeInTheDocument();
   });
 
   it("não renderiza nada sem medição", () => {
@@ -71,6 +107,11 @@ describe("AvisoDeIntake", () => {
       source_record_count: null,
       canonical_record_count: 61323,
       rejected_record_count: 100,
+      rejected_record_reasons: [],
+      acceptance_policy: null,
+      acceptance_rule: null,
+      accepted: null,
+      privacy_clearance: null,
     });
     expect(container).toBeEmptyDOMElement();
   });
@@ -82,6 +123,11 @@ describe("AvisoDeIntake", () => {
       source_record_count: 10,
       canonical_record_count: 10,
       rejected_record_count: 0,
+      rejected_record_reasons: [],
+      acceptance_policy: "strict",
+      acceptance_rule: null,
+      accepted: true,
+      privacy_clearance: "passed",
     });
     expect(screen.getByTestId("intake-tudo-aceito")).toBeInTheDocument();
     zero.unmount();
@@ -90,7 +136,48 @@ describe("AvisoDeIntake", () => {
       source_record_count: 10,
       canonical_record_count: 10,
       rejected_record_count: null,
+      rejected_record_reasons: [],
+      acceptance_policy: null,
+      acceptance_rule: null,
+      accepted: null,
+      privacy_clearance: null,
     });
     expect(naoMedido.container).toBeEmptyDOMElement();
+  });
+
+  it("prioriza o Privacy Gate quando ele bloqueia o resultado, mesmo com accepted=false", () => {
+    montar({
+      source_record_count: 61423,
+      canonical_record_count: 61323,
+      rejected_record_count: 100,
+      rejected_record_reasons: [],
+      acceptance_policy: "threshold",
+      acceptance_rule: null,
+      accepted: false,
+      privacy_clearance: "rejected",
+    });
+
+    expect(screen.getByTestId("intake-privacy-blocked")).toBeInTheDocument();
+    expect(screen.queryByTestId("intake-policy-blocked")).not.toBeInTheDocument();
+  });
+
+  it("usa a regra numérica publicada pelo backend quando threshold barra antes do motor", () => {
+    montar({
+      source_record_count: 120,
+      canonical_record_count: 90,
+      rejected_record_count: 30,
+      rejected_record_reasons: [],
+      acceptance_policy: "threshold",
+      acceptance_rule: {
+        policy: "threshold",
+        min_valid_ratio: 0.8,
+        min_valid_records: 100,
+      },
+      accepted: false,
+      privacy_clearance: "passed",
+    });
+
+    expect(screen.getByTestId("intake-policy-blocked").textContent).toContain("80%");
+    expect(screen.getByTestId("intake-policy-blocked").textContent).toContain("100");
   });
 });

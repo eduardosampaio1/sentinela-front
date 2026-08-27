@@ -148,7 +148,7 @@ describe("prova 1+2 — o resultado recebido não é escrito em storage nenhum",
   it("nenhuma chave é criada em sessionStorage nem em localStorage", async () => {
     servirResultado();
     const { unmount } = montar();
-    await waitFor(() => expect(screen.getByText("Records analyzed")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("Conversations analyzed")).toBeTruthy());
 
     // Asserção sobre o CONJUNTO de chaves, não sobre uma chave nomeada: um cache novo com
     // outro nome passaria por uma verificação de nome e é exatamente o mesmo defeito.
@@ -159,7 +159,7 @@ describe("prova 1+2 — o resultado recebido não é escrito em storage nenhum",
   it("as chaves do cache antigo não voltam a existir", async () => {
     servirResultado();
     const { unmount } = montar();
-    await waitFor(() => expect(screen.getByText("Records analyzed")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("Conversations analyzed")).toBeTruthy());
 
     const todas = chavesDeTodosOsStorages();
     for (const prefixo of ["sentinela:analysis:", "sentinela:last_cache_key"]) {
@@ -173,7 +173,7 @@ describe("prova 6 — nenhum dado do cliente em nenhum storage", () => {
   it("texto, e-mail, telefone e identificador sintético não aparecem", async () => {
     servirResultado();
     const { unmount } = montar();
-    await waitFor(() => expect(screen.getByText("Records analyzed")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("Conversations analyzed")).toBeTruthy());
 
     const despejo = conteudoDeTodosOsStorages();
     for (const [nome, marcador] of Object.entries(MARCADORES)) {
@@ -197,7 +197,7 @@ describe("prova 3 — o refresh recupera o resultado pelo Gateway", () => {
     servirResultado();
 
     const primeira = montar();
-    await waitFor(() => expect(screen.getByText("Records analyzed")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("Conversations analyzed")).toBeTruthy());
     expect(chamadasAoResultado).toBe(1);
     primeira.unmount();
 
@@ -205,7 +205,7 @@ describe("prova 3 — o refresh recupera o resultado pelo Gateway", () => {
     expect(chavesNaoJustificadas()).toEqual([]);
 
     const segunda = montar();
-    await waitFor(() => expect(screen.getByText("Records analyzed")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("Conversations analyzed")).toBeTruthy());
     // 2, não 1: a tela voltou porque PERGUNTOU, não porque leu uma cópia local.
     expect(chamadasAoResultado).toBe(2);
     expect(chavesNaoJustificadas()).toEqual([]);
@@ -215,7 +215,7 @@ describe("prova 3 — o refresh recupera o resultado pelo Gateway", () => {
   it("sem backend não há resultado — a tela não inventa a partir de cópia local", async () => {
     servirResultado();
     const primeira = montar();
-    await waitFor(() => expect(screen.getByText("Records analyzed")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("Conversations analyzed")).toBeTruthy());
     primeira.unmount();
 
     // O backend some. Se existisse cópia local, a tela renderizaria assim mesmo — e é
@@ -228,7 +228,7 @@ describe("prova 3 — o refresh recupera o resultado pelo Gateway", () => {
     );
 
     const segunda = montar();
-    await waitFor(() => expect(screen.queryByText("Records analyzed")).toBeNull());
+    await waitFor(() => expect(screen.queryByText("Conversations analyzed")).toBeNull());
     expect(screen.queryByText(MARCADORES.texto)).toBeNull();
     segunda.unmount();
   });

@@ -90,7 +90,7 @@
   },
   "baseline": {
     "candidateCreated": "Criada em {{date}}",
-    "candidateRecords": "{{n}} registros",
+    "candidateRecords": "{{n}} conversas",
     "chooseTitle": "Análises que podem ser referência",
     "currentBadge": "Referência atual",
     "currentLabel": "Referência atual",
@@ -129,7 +129,7 @@
     "analyticsView": {
       "title": "Medidas",
       "mapTitle": "De onde veio este número",
-      "mapDenominator": "Registros lidos",
+      "mapDenominator": "Conversas lidas",
       "mapMeasure": "Medida",
       "mapValid": "Válido",
       "mapNull": "Nulo",
@@ -155,7 +155,122 @@
       "minGroup": "Grupo mínimo",
       "valueType": "Tipo",
       "loading": "Carregando a projeção analítica…",
+      "summaryTitle": "O que esta análise publicou",
+      "summaryBody": "Esta tela só mostra blocos que o Analytics publicou. Quando uma família ainda não existe, ela aparece aqui com motivo, não como cartão em branco.",
+      "summaryFamilies": "Famílias publicadas nesta análise",
+      "published": "Publicado",
+      "notConfigured": "Ainda não publicado",
+      "traceTitle": "Por que este número?",
+      "traceReceived": "Base recebida",
+      "traceAccepted": "Conversas aceitas",
+      "tracePublished": "Snapshot publicado",
+      "traceCountedOnly": "Só como contagem",
+      "summary": {
+        "conversations": {
+          "label": "Conversas",
+          "ready": "É o denominador usado pelo Analytics.",
+          "empty": "Nenhuma conversa entrou na projeção."
+        },
+        "numeric": {
+          "label": "Medidas numéricas",
+          "ready": "Valores numéricos publicados pelo Analytics.",
+          "empty": "Nenhuma coluna foi configurada como métrica numérica."
+        },
+        "distributions": {
+          "label": "Distribuições",
+          "ready": "Contagens por valores publicados.",
+          "empty": "Nenhuma métrica categórica ou booleana foi configurada."
+        },
+        "dimensions": {
+          "label": "Aberturas por campo",
+          "ready": "Quebras por campos escolhidos no mapeamento.",
+          "empty": "Nenhum campo de agrupamento gerou uma distribuição publicável."
+        },
+        "concentrations": {
+          "label": "Concentração",
+          "ready": "Faixas e estatísticas de concentração publicadas.",
+          "empty": "Aparece quando há uma métrica numérica inteira e somável."
+        },
+        "series": {
+          "label": "Séries",
+          "ready": "Janelas de tempo publicadas.",
+          "empty": "Aparece quando há campo de data e hora publicável."
+        }
+      },
       "numeric": "Medidas numéricas",
+      "intakeQuality": "Qualidade da base",
+      "intakeQualitySummary": "{{canonical}} de {{source}} conversas entraram na análise. {{rejected}} ficaram só como contagem.",
+      "intakeQualityEngineBoundary": "Isso costuma acontecer quando a conversa não tem resposta da IA ou quando o texto foi removido por segurança. Esses casos não entram no cálculo, mas continuam visíveis aqui.",
+      "intakeQualityReasons": {
+        "invalidEncoding": {
+          "label": "Arquivo não pôde ser lido",
+          "meaning": "o texto veio em formato que não abrimos com segurança"
+        },
+        "recordNotObject": {
+          "label": "Linha em formato inesperado",
+          "meaning": "a linha não parecia uma conversa completa"
+        },
+        "missingAssistantText": {
+          "label": "Perguntas sem resposta da IA",
+          "meaning": "a pessoa perguntou, mas não havia resposta da IA para avaliar"
+        },
+        "assistantTextEmpty": {
+          "label": "Resposta vazia",
+          "meaning": "havia um campo de resposta, mas ele estava vazio"
+        },
+        "assistantTextTooLarge": {
+          "label": "Resposta longa",
+          "meaning": "a resposta era grande demais para usar com segurança"
+        },
+        "missingRequiredField": {
+          "label": "Campos obrigatórios ausentes",
+          "meaning": "faltava uma informação mínima para montar a conversa"
+        },
+        "invalidFieldType": {
+          "label": "Campo em formato errado",
+          "meaning": "uma coluna veio com um tipo de valor diferente do esperado"
+        },
+        "fieldTooLarge": {
+          "label": "Campo longo demais",
+          "meaning": "uma informação estava grande demais para ser usada com segurança"
+        },
+        "tooManyKeys": {
+          "label": "Linha com informações demais",
+          "meaning": "a linha tinha mais campos do que conseguimos aceitar"
+        },
+        "recordTooLarge": {
+          "label": "Linha longa",
+          "meaning": "a linha era grande demais para usar com segurança"
+        },
+        "duplicateConversationId": {
+          "label": "ID de conversa duplicado",
+          "meaning": "mais de uma linha parecia ser a mesma conversa"
+        },
+        "mappingIncomplete": {
+          "label": "Mapeamento incompleto",
+          "meaning": "faltou escolher alguma coluna necessária"
+        },
+        "mappingAmbiguous": {
+          "label": "Mapeamento ambíguo",
+          "meaning": "mais de uma coluna parecia servir para a mesma coisa"
+        },
+        "sanitizedToEmpty": {
+          "label": "Conteúdo removido por privacidade",
+          "meaning": "o conteúdo foi removido por segurança e não sobrou texto para avaliar"
+        },
+        "canonicalContractValidationFailed": {
+          "label": "Linha fora do padrão esperado",
+          "meaning": "a conversa montada ainda ficou fora do formato aceito"
+        },
+        "internalError": {
+          "label": "Não conseguimos preparar a linha",
+          "meaning": "houve uma falha ao transformar esta linha em conversa"
+        },
+        "other": {
+          "label": "Linhas sem material suficiente",
+          "meaning": "não havia material suficiente para gerar uma medida segura"
+        }
+      },
       "distributions": "Distribuições",
       "dimensions": "Distribuições por dimensão do Analytics",
       "concentrations": "Concentração",
@@ -169,7 +284,7 @@
       "nulls": "Nulos",
       "invalid": "Inválidos",
       "absent": "Ausentes",
-      "records": "Registros",
+      "records": "Conversas",
       "snapshotVersion": "Versão do snapshot",
       "disclosureRule": "Regra de divulgação",
       "notPresented": "Blocos não apresentados",
@@ -179,9 +294,6 @@
         "top_20_percent_volume_share": "Volume dos 20% maiores",
         "population_share_required_for_80_percent_volume": "Entidades que somam 80% do volume"
       },
-      "emptyTitle": "Nada está aberto por campo",
-      "emptyBody": "As medidas se abrem por canal, modelo ou data só quando a base declara esses campos para agrupamento. A leitura em si está completa.",
-      "emptyHow": "Você escolhe em “Agrupar os resultados por”, ao confirmar o mapeamento de uma base.",
       "minimum": "mínimo",
       "maximum": "máximo",
       "totalStat": "total",
@@ -286,7 +398,7 @@
         "computation_error": "Erro no cálculo"
       },
       "recommendations": "Recomendações",
-      "records": "Registros analisados",
+      "records": "Conversas analisadas",
       "refused": {
         "missing_schema": "O que voltou não disse que tipo de leitura ele traz.",
         "unknown_schema": "O que voltou é outro tipo de leitura, e esta visão só mostra o ARGOS.",
@@ -434,11 +546,11 @@
       "next": "Próxima",
       "colStatus": "Estado",
       "colCreated": "Criada em",
-      "colRecords": "Registros",
+      "colRecords": "Conversas",
       "resultReady": "Resultado pronto",
       "open": "Abrir análise {{id}}",
-      "records": "{{count}} registros",
-      "recordsUnknown": "Contagem não publicada",
+      "records": "{{count}} conversas",
+      "recordsUnknown": "Contagem de conversas não publicada",
       "lastChange": "Última mudança",
       "belongsTo": "Instância",
       "conversations": "conversas",
@@ -475,13 +587,58 @@
       "title": "O que está acontecendo",
       "loading": "Lendo o que cada parte está fazendo…"
     },
+    "liveProgress": {
+      "title": "Progresso",
+      "help": "Esta área atualiza sozinha conforme cada etapa responde.",
+      "state": {
+        "waiting": "Em espera",
+        "active": "Agora",
+        "done": "Concluído",
+        "attention": "Ação necessária",
+        "failed": "Falha"
+      },
+      "steps": {
+        "upload": {
+          "title": "Envio da base",
+          "waiting": "Escolha e envie um arquivo para começar.",
+          "active": "Arquivo a caminho do Sentinela. Mantenha esta página aberta.",
+          "done": "A base chegou e já pode seguir para validação.",
+          "attention": "A base precisa de uma decisão antes de seguir.",
+          "failed": "A base não chegou completa. Envie novamente."
+        },
+        "privacy": {
+          "title": "Proteção dos dados",
+          "waiting": "Começa assim que a base chega.",
+          "active": "Checagem antes dos cálculos.",
+          "done": "Apenas texto seguro e aproveitável segue para as medidas.",
+          "attention": "Revise as colunas para a base seguir com segurança.",
+          "failed": "A base precisa de revisão antes dos cálculos."
+        },
+        "measures": {
+          "title": "Cálculo das medidas",
+          "waiting": "Aguardando a base ficar pronta.",
+          "active": "O Sentinela calcula as medidas da análise.",
+          "done": "As medidas principais já estão disponíveis.",
+          "attention": "Algumas medidas ficaram restritas para proteger grupos pequenos.",
+          "failed": "O cálculo das medidas parou antes de concluir."
+        },
+        "result": {
+          "title": "Resultado final",
+          "waiting": "Será preparado após os cálculos.",
+          "active": "Montagem do pacote final.",
+          "done": "Resultado pronto para consulta.",
+          "attention": "O resultado precisa de uma decisão antes de aparecer.",
+          "failed": "Não foi possível montar o resultado final."
+        }
+      }
+    },
     "result": {
       "title": "Resultado da análise",
       "regionIndexLabel": "Nesta página",
       "loading": "Carregando resultado…",
       "backToHistory": "Voltar ao histórico",
       "summaryTitle": "Resumo",
-      "totalRecords": "Registros analisados",
+      "totalRecords": "Conversas analisadas",
       "analyzedAt": "Analisado em",
       "indicatorsTitle": "Indicadores",
       "recommendationsTitle": "Recomendações",
@@ -500,7 +657,7 @@
         },
         "outcome_field_coverage_rate": {
           "label": "Outcome field coverage rate",
-          "description": "Fração dos registros que trouxeram campo de desfecho. Cobertura baixa limita todos os números baseados em desfecho."
+          "description": "Fração das conversas que trouxeram campo de desfecho. Cobertura baixa limita todos os números baseados em desfecho."
         },
         "conversion_rate": {
           "label": "Taxa de conversão",
@@ -520,7 +677,7 @@
         },
         "handoff_count": {
           "label": "Handoff count",
-          "description": "Quantas conversas foram transferidas, conforme observado nos registros."
+          "description": "Quantas conversas foram transferidas, conforme observado na base."
         },
         "conversion_count": {
           "label": "Conversões",
@@ -528,7 +685,7 @@
         },
         "total_estimated_cost": {
           "label": "Observed total cost",
-          "description": "Soma das estimativas de custo por registro fornecidas pela origem. É estimativa, não fatura."
+          "description": "Soma das estimativas de custo por conversa fornecidas pela origem. É estimativa, não fatura."
         },
         "token_cost_total": {
           "label": "Observed token cost",
@@ -559,7 +716,7 @@
         "title": "Analytics",
         "subtitle": "Produzido pelo componente analítico sobre o mesmo dataset.",
         "recordCount": "Conversas na projeção",
-        "engineWindow": "Registros analisados",
+        "engineWindow": "Conversas analisadas",
         "partialNotice": "Parte do resultado analítico foi omitida para evitar revelar grupos pequenos. O que está sendo mostrado é completo e não foi recalculado.",
         "withheldTitle": "Os resultados analíticos não foram liberados",
         "withheldBody": "A análise terminou. Nada do componente analítico pôde ser liberado sem risco de identificar grupos pequenos.",
@@ -577,11 +734,11 @@
         "maximum": "Máximo",
         "total": "Total",
         "mean": "Média",
-        "suppressedStats": "As estatísticas foram retidas: registros de menos para publicá-las sem identificar alguém.",
+        "suppressedStats": "As estatísticas foram retidas: conversas de menos para publicá-las sem identificar alguém.",
         "distinctObserved": "Rótulos distintos observados",
         "otherCount": "Demais",
         "otherWithheld": "Os rótulos abaixo do piso também não foram agrupados — a soma deles é pequena demais para publicar.",
-        "minGroupSize": "Rótulos só são publicados a partir de {{n}} registros.",
+        "minGroupSize": "Rótulos só são publicados a partir de {{n}} conversas.",
         "highCardinality": "Rótulos distintos demais para publicar: é uma decisão, não falta de dado.",
         "suppressedGroups": "Alguns rótulos não foram publicados.",
         "totalVolume": "Volume total",
@@ -729,6 +886,9 @@
       "noFile": "Nenhum arquivo selecionado",
       "invalid": "Este tipo de arquivo não é aceito.",
       "sending": "Enviando sua base…",
+      "progressLabel": "Envio da base",
+      "progressValue": "Recebendo arquivo",
+      "progressHint": "Mantenha esta página aberta enquanto recebemos a base.",
       "retry": "Tentar novamente",
       "submit": "Enviar para análise",
       "selectedFile": "Arquivo selecionado",
@@ -752,7 +912,11 @@
       "confirming": "Confirmando…",
       "afterConfirm": "Depois disso a análise fica pronta para começar.",
       "missing": "Escolha uma coluna para: {{fields}}.",
+      "invalid": "Não conseguimos confirmar essas escolhas. Revise os campos selecionados e tente novamente.",
       "failed": "Não foi possível confirmar. Tente novamente em instantes.",
+      "tooSmall": "Esta base tem {{count}} conversas. Envie pelo menos {{min}} para rodar a análise.",
+      "tooSmallTitle": "Esta base é pequena demais para analisar",
+      "tooSmallHelp": "Encontramos {{count}} conversas. Envie pelo menos {{min}} conversas para a análise ter sinal suficiente.",
       "evidence": {
         "coverage": "presente em {{pct}}",
         "distinct": "{{n}} valores distintos",
@@ -781,17 +945,27 @@
         "tipo_incompativel": "O tipo desta coluna não corresponde ao que este campo espera."
       },
       "acceptance": {
-        "legend": "Se alguns registros não servirem",
-        "help": "Conversas sem resposta, ou mensagens que continham apenas dados pessoais, não viram registros analisáveis.",
-        "strict": "Recusar o arquivo inteiro",
-        "tolerate": "Analisar mesmo assim, se ao menos 95% servirem"
+        "legend": "Conversas fora da análise continuam contadas",
+        "help": "Se uma conversa não tem resposta da IA, não há o que avaliar nela. Ela fica fora do cálculo e aparece em Medidas como qualidade da base.",
+        "tolerateSummary": "Vamos seguir se quase toda a base estiver aproveitável: pelo menos 95% das conversas e 100 conversas válidas.",
+        "policy": "O que ficar de fora será nomeado e contado no resultado."
       }
     },
     "intake": {
-      "title": "Alguns registros não foram usados",
-      "summary": "{{accepted}} de {{total}} registros eram válidos. {{rejected}} foram recusados.",
-      "strictNote": "A configuração atual recusa o conjunto inteiro quando há qualquer registro inválido.",
-      "allGood": "Todos os {{total}} registros foram aceitos."
+      "title": "Algumas conversas não foram usadas",
+      "policyTitle": "A análise não começou",
+      "summary": "{{accepted}} de {{total}} conversas eram válidas. {{rejected}} ficaram fora da análise.",
+      "acceptedButTooSmall": "A base tinha {{accepted}} conversas válidas, mas precisamos de pelo menos {{min}} para analisar.",
+      "strictNote": "A análise parou antes de começar porque esta configuração exige que todas as conversas estejam perfeitas.",
+      "thresholdNote": "A análise parou antes de começar porque a base não tinha conversas aproveitáveis suficientes: precisamos de 95% utilizáveis e pelo menos 100 conversas válidas.",
+      "thresholdNoteWithRule": "A análise parou antes de começar porque a base não tinha conversas aproveitáveis suficientes: precisamos de {{ratio}} utilizáveis e pelo menos {{min}} conversas válidas.",
+      "privacyBlocked": "A base passou na contagem, mas tinha conteúdo que não pôde ser usado com segurança.",
+      "allGood": "Todas as {{total}} conversas foram aceitas."
+    },
+    "datasetTooSmall": {
+      "title": "Precisamos de uma base maior",
+      "message": "Encontramos {{count}} conversas nesta base. Para o Sentinela analisar com precisão, envie uma amostra com pelo menos {{min}} conversas.",
+      "reason": "Com menos conversas, qualquer medida fica instável demais para orientar uma decisão."
     }
   },
   "common": {
@@ -937,25 +1111,42 @@
     "failed": "Falha"
   },
   "home": {
-    "subtitle": "O que precisa de você neste workspace.",
+    "eyebrow": "Workspace",
+    "title": "Seu ponto de partida",
+    "subtitle": "Comece uma análise nova, continue uma base já reservada ou abra um resultado recente.",
     "newAnalysis": "Nova análise",
     "openAnalysis": "Abrir análise",
     "followAnalysis": "Acompanhar",
     "openResult": "Ver resultado",
     "resultUnavailable": "Resultado indisponível",
-    "recordCount": "{{n}} registros",
-    "recordCountAbsent": "registros não informados",
+    "recordCount": "{{n}} conversas",
+    "recordCountAbsent": "contagem de conversas não informada",
     "loading": "Carregando as análises deste workspace",
     "unknownState": "Estado não reconhecido nesta versão da interface",
+    "sectionOverflow": "Mostramos só os itens mais recentes desta seção.",
     "actions": {
-      "title": "Ações necessárias",
-      "none": "Nada neste workspace espera por você agora."
+      "title": "Continue daqui",
+      "explain": "Análises que ainda dependem de uma escolha sua para seguir.",
+      "none": "Nenhuma análise espera uma escolha sua agora.",
+      "sendDataset": "Enviar base",
+      "resolve": "Revisar campos",
+      "submit": "Iniciar análise",
+      "preparingNote": "O espaço está reservado. O próximo passo é enviar a base.",
+      "readyNote": "A base já foi recebida. Falta iniciar a análise."
     },
     "running": {
-      "title": "Em andamento"
+      "title": "Em curso",
+      "explain": "Essas análises já saíram da sua mão e atualizam sozinhas."
     },
     "recent": {
-      "title": "Resultados recentes"
+      "title": "Resultados",
+      "explain": "O caminho mais curto para voltar a uma análise concluída."
+    },
+    "failed": {
+      "title": "Revisão",
+      "explain": "Falhas continuam visíveis, mas a correção segura fica dentro de cada análise.",
+      "inspect": "Ver motivo",
+      "note": "Abra para entender em qual etapa parou."
     },
     "instances": {
       "empty": "Nenhuma instância neste workspace ainda.",

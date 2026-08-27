@@ -159,14 +159,17 @@
 // rejeitou o dataset inteiro. A tela mostrava "Couldn't complete. The analysis couldn't be
 // completed." O numero existia no Ingestion, atravessava o Gateway, e morria na projecao.
 //
-// ADITIVA: nenhum campo saiu e nenhum mudou de significado. `intake` e `null` quando nao ha
-// medicao, e a chave existe sempre -- mesma disciplina de `instance_id`.
+// Aditiva: a decisao de aceitacao e a conclusao segura do Privacy Gate agora tambem pertencem a
+// `intake`. As fixtures de status continuam a exercer `intake: null`; o caso materializado
+// (contagens e os novos campos) esta em `AvisoDeIntake.test.tsx`. Nenhum detalhe de rejeicao,
+// dado sensivel ou diagnostico interno faz parte do contrato publico.
 //
-// A reconferencia que o teste exige nao foi presumida. `statusView` ganhou `intake: null` e as
-// asercoes que comparam fixture contra schema rodaram verdes na mesma passagem; o caso do
-// campo com valor esta em `AvisoDeIntake.test.tsx`, com os numeros do incidente.
+// Selo anterior: e3a9847e4c919ad1b3cb7eefe50108cf2e5351768602a0460464045b37b0637b
+// Reselado ao acrescentar `rejected_record_reasons` ao `intake`: os registros que ficaram fora
+// do motor agora têm nome e contagem na aba Medidas, sem carregar texto, linha ou amostra do
+// dataset. O caso materializado está em `AnalyticsView.test.tsx`.
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "cecf9112c9473ec25d6aa2d6f7534554e9741f0653c77cbf23c2db5f2f9f913e";
+  "451f33a153b0a77d2c7521ece70e80c75593658e22c0e9fe8f244a39c118c907";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.
