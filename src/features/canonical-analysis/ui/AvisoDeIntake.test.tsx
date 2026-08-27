@@ -18,20 +18,6 @@ function montar(intake: Parameters<typeof AvisoDeIntake>[0]["intake"]) {
   );
 }
 
-function montarComMinimo(
-  intake: Parameters<typeof AvisoDeIntake>[0]["intake"],
-  minimoViavelDeConversas: number,
-) {
-  return render(
-    <LanguageProvider>
-      <AvisoDeIntake
-        intake={intake}
-        minimoViavelDeConversas={minimoViavelDeConversas}
-      />
-    </LanguageProvider>,
-  );
-}
-
 describe("AvisoDeIntake", () => {
   it("conta quantos de quantos quando houve recusa", () => {
     montar({
@@ -88,7 +74,7 @@ describe("AvisoDeIntake", () => {
     expect(screen.queryByTestId("intake-com-recusa")).not.toBeInTheDocument();
   });
 
-  it("não chama base pequena de tudo aceito quando a política bloqueou por mínimo absoluto", () => {
+  it("não chama de tudo aceito quando a política bloqueou sem recusas", () => {
     montar({
       source_record_count: 25,
       canonical_record_count: 25,
@@ -104,33 +90,30 @@ describe("AvisoDeIntake", () => {
       privacy_clearance: "passed",
     });
 
-    expect(screen.getByTestId("intake-politica-bloqueada")).toHaveTextContent(/25/);
-    expect(screen.getByTestId("intake-politica-bloqueada")).toHaveTextContent(/100/);
+    expect(screen.getByTestId("intake-politica-bloqueada")).toHaveTextContent(
+      /policy|política/i,
+    );
     expect(screen.queryByTestId("intake-tudo-aceito")).not.toBeInTheDocument();
   });
 
-  it("mostra base pequena quando a contagem real aceita é insuficiente na falha final", () => {
-    montarComMinimo(
-      {
-        source_record_count: 25,
-        canonical_record_count: 25,
-        rejected_record_count: 0,
-        rejected_record_reasons: [],
-        acceptance_policy: "threshold",
-        acceptance_rule: {
-          policy: "threshold",
-          min_valid_ratio: 0.95,
-          min_valid_records: null,
-        },
-        accepted: true,
-        privacy_clearance: "passed",
+  it("não bloqueia por mínimo absoluto quando ninguém foi recusado", () => {
+    montar({
+      source_record_count: 25,
+      canonical_record_count: 25,
+      rejected_record_count: 0,
+      rejected_record_reasons: [],
+      acceptance_policy: "threshold",
+      acceptance_rule: {
+        policy: "threshold",
+        min_valid_ratio: 0.95,
+        min_valid_records: null,
       },
-      100,
-    );
+      accepted: true,
+      privacy_clearance: "passed",
+    });
 
-    expect(screen.getByTestId("intake-base-pequena")).toHaveTextContent(/25/);
-    expect(screen.getByTestId("intake-base-pequena")).toHaveTextContent(/100/);
-    expect(screen.queryByTestId("intake-tudo-aceito")).not.toBeInTheDocument();
+    expect(screen.getByTestId("intake-tudo-aceito")).toHaveTextContent(/25/);
+    expect(screen.queryByTestId("intake-base-pequena")).not.toBeInTheDocument();
   });
 
   it("não renderiza nada sem medição", () => {
@@ -199,7 +182,7 @@ describe("AvisoDeIntake", () => {
     expect(screen.queryByTestId("intake-policy-blocked")).not.toBeInTheDocument();
   });
 
-  it("usa a regra numérica publicada pelo backend quando threshold barra antes do motor", () => {
+  it("quando threshold barra antes do motor, explica só a proporção aproveitável", () => {
     montar({
       source_record_count: 120,
       canonical_record_count: 90,
@@ -216,6 +199,6 @@ describe("AvisoDeIntake", () => {
     });
 
     expect(screen.getByTestId("intake-policy-blocked").textContent).toContain("80%");
-    expect(screen.getByTestId("intake-policy-blocked").textContent).toContain("100");
+    expect(screen.getByTestId("intake-policy-blocked").textContent).not.toContain("100");
   });
 });

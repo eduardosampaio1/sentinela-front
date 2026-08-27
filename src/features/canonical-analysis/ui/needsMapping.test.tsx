@@ -42,7 +42,6 @@ interface BundlePt {
     state: { needs_mapping: { message: string } };
     action: { checkAgain: string };
     mapping: { title: string };
-    datasetTooSmall: { title: string; message: string; reason: string };
   };
 }
 
@@ -356,8 +355,6 @@ describe("a parada de mapping chega na tela", () => {
     // O editor tem título próprio em PT: sem ele a tela renderizaria a chave crua.
     expect((pt as unknown as BundlePt).canonicalAnalysis.mapping.title)
       .toBe("Diga qual coluna \u00e9 qual");
-    expect((pt as unknown as BundlePt).canonicalAnalysis.datasetTooSmall.title)
-      .toBe("Precisamos de uma base maior");
   });
 
   it("a página tem um `case` PRÓPRIO para needs_mapping, não o `default`", () => {

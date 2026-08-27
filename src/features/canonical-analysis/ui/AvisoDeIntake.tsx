@@ -38,10 +38,8 @@ function percentual(valor: number, idioma: string): string {
 
 export function AvisoDeIntake({
   intake,
-  minimoViavelDeConversas = null,
 }: {
   intake: AnalysisIntake | null;
-  minimoViavelDeConversas?: number | null;
 }): JSX.Element | null {
   const { t, language } = useLanguage();
 
@@ -57,37 +55,11 @@ export function AvisoDeIntake({
   // comparação, e comparação com ausência não é frase.
   if (total === null || aceitos === null || recusados === null) return null;
 
-  if (
-    typeof minimoViavelDeConversas === "number" &&
-    intake.accepted === true &&
-    aceitos < minimoViavelDeConversas
-  ) {
-    return (
-      <div
-        role="status"
-        aria-live="polite"
-        data-testid="intake-base-pequena"
-        className="rounded-md border border-warning bg-warning/10 p-4 space-y-1"
-      >
-        <p className="text-sm font-medium">
-          {t("canonicalAnalysis.datasetTooSmall.title")}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {t("canonicalAnalysis.datasetTooSmall.message", {
-            count: numero(aceitos, language),
-            min: numero(minimoViavelDeConversas, language),
-          })}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {t("canonicalAnalysis.datasetTooSmall.reason")}
-        </p>
-      </div>
-    );
-  }
-
-  // Zero recusados é notícia boa depois que a suficiência analítica foi resolvida. Antes disso,
-  // "25 de 25 entraram" não significa "pronto para analisar"; significa "a base foi lida, mas
-  // pequena demais para produzir sinal confiável".
+  // Zero recusados é notícia boa. A tela não aplica mínimo absoluto de conversas: a contagem do
+  // intake pode vir de uma leitura parcial ou de uma transformação intermediária, e usá-la para
+  // bloquear uma base grande faz o produto mentir ("encontramos 29 conversas" num arquivo de
+  // 1.6GB). Quem decide se há sinal suficiente é a etapa de cálculo, com os denominadores que ela
+  // efetivamente mediu; aqui só contamos o que a ingestão publicou.
   if (recusados === 0 && intake.accepted !== false) {
     return (
       <p className="text-sm text-muted-foreground" data-testid="intake-tudo-aceito">
@@ -110,13 +82,7 @@ export function AvisoDeIntake({
       </p>
       <p className="text-sm text-muted-foreground">
         {recusados === 0
-          ? t("canonicalAnalysis.intake.acceptedButTooSmall", {
-              accepted: numero(aceitos, language),
-              min:
-                typeof intake.acceptance_rule?.min_valid_records === "number"
-                  ? numero(intake.acceptance_rule.min_valid_records, language)
-                  : numero(100, language),
-            })
+          ? t("canonicalAnalysis.intake.acceptedButTooSmall")
           : t("canonicalAnalysis.intake.summary", {
               accepted: numero(aceitos, language),
               total: numero(total, language),

@@ -34,8 +34,6 @@ import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
 import { analyticsUtilizavel, lerEixos } from "../result/eixos";
 import { ProblemFeedback, StateBanner } from "./notices";
 
-const MINIMO_DE_CONVERSAS_VALIDAS_PARA_ANALISE = 100;
-
 export function AnalysisPage() {
   const { t } = useLanguage();
   const params = useParams();
@@ -299,10 +297,7 @@ export function AnalysisPage() {
                 Fica ANTES dos eixos de proposito: quando a analise falhou por causa do dado, a
                 pergunta de quem olha e "o que houve com meu arquivo?", e nao "qual componente
                 interno falhou?". */}
-            <AvisoDeIntake
-              intake={view.intake}
-              minimoViavelDeConversas={MINIMO_DE_CONVERSAS_VALIDAS_PARA_ANALISE}
-            />
+            <AvisoDeIntake intake={view.intake} />
             {/* M35 — falha é GRANULAR enquanto o contrato permitir granularidade.
                 Antes, o ramo terminal mostrava só o banner: uma análise que falhou não dizia QUAL
                 componente falhou nem qual continuava pronto. Os scenarios 13 e 14 existem

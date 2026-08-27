@@ -950,7 +950,7 @@
       "acceptance": {
         "legend": "Conversations outside the analysis are still counted",
         "help": "If a conversation has no AI answer, there is nothing to evaluate in it. It stays out of the calculation and appears in Measures as dataset quality.",
-        "tolerateSummary": "We will continue if almost all of the dataset is usable: at least 95% of conversations and 100 valid conversations.",
+        "tolerateSummary": "We will continue if almost all of the dataset is usable: at least 95% of conversations.",
         "policy": "Anything left out will be named and counted in the result."
       }
     },
@@ -958,17 +958,12 @@
       "title": "Some conversations couldn't be used",
       "policyTitle": "The analysis did not start",
       "summary": "{{accepted}} of {{total}} conversations were valid. {{rejected}} stayed out of the analysis.",
-      "acceptedButTooSmall": "The file had {{accepted}} valid conversations, but we need at least {{min}} to analyze it.",
+      "acceptedButTooSmall": "The file was read, but the acceptance policy did not release it for analysis.",
       "strictNote": "The analysis stopped before it started because this setting requires every conversation to be perfect.",
-      "thresholdNote": "The analysis stopped before it started because the dataset did not have enough usable conversations: we need 95% usable conversations and at least 100 valid conversations.",
-      "thresholdNoteWithRule": "The analysis stopped before it started because the dataset did not have enough usable conversations: we need {{ratio}} usable conversations and at least {{min}} valid conversations.",
+      "thresholdNote": "The analysis stopped before it started because too much of the dataset could not be used.",
+      "thresholdNoteWithRule": "The analysis stopped before it started because too much of the dataset could not be used: we need {{ratio}} usable conversations.",
       "privacyBlocked": "The dataset passed the count check, but had content that could not be used safely.",
       "allGood": "All {{total}} conversations were accepted."
-    },
-    "datasetTooSmall": {
-      "title": "We need a larger dataset",
-      "message": "We found {{count}} conversations in this file. To analyze it with confidence, send a sample with at least {{min}} conversations.",
-      "reason": "With fewer conversations, the measures are too unstable to guide a decision."
     }
   },
   "common": {

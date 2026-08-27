@@ -950,7 +950,7 @@
       "acceptance": {
         "legend": "Conversas fora da análise continuam contadas",
         "help": "Se uma conversa não tem resposta da IA, não há o que avaliar nela. Ela fica fora do cálculo e aparece em Medidas como qualidade da base.",
-        "tolerateSummary": "Vamos seguir se quase toda a base estiver aproveitável: pelo menos 95% das conversas e 100 conversas válidas.",
+        "tolerateSummary": "Vamos seguir se quase toda a base estiver aproveitável: pelo menos 95% das conversas.",
         "policy": "O que ficar de fora será nomeado e contado no resultado."
       }
     },
@@ -958,17 +958,12 @@
       "title": "Algumas conversas não foram usadas",
       "policyTitle": "A análise não começou",
       "summary": "{{accepted}} de {{total}} conversas eram válidas. {{rejected}} ficaram fora da análise.",
-      "acceptedButTooSmall": "A base tinha {{accepted}} conversas válidas, mas precisamos de pelo menos {{min}} para analisar.",
+      "acceptedButTooSmall": "A base foi lida, mas a política de aceite não liberou a análise.",
       "strictNote": "A análise parou antes de começar porque esta configuração exige que todas as conversas estejam perfeitas.",
-      "thresholdNote": "A análise parou antes de começar porque a base não tinha conversas aproveitáveis suficientes: precisamos de 95% utilizáveis e pelo menos 100 conversas válidas.",
-      "thresholdNoteWithRule": "A análise parou antes de começar porque a base não tinha conversas aproveitáveis suficientes: precisamos de {{ratio}} utilizáveis e pelo menos {{min}} conversas válidas.",
+      "thresholdNote": "A análise parou antes de começar porque uma parte grande demais da base não pôde ser usada.",
+      "thresholdNoteWithRule": "A análise parou antes de começar porque uma parte grande demais da base não pôde ser usada: precisamos de {{ratio}} de conversas aproveitáveis.",
       "privacyBlocked": "A base passou na contagem, mas tinha conteúdo que não pôde ser usado com segurança.",
       "allGood": "Todas as {{total}} conversas foram aceitas."
-    },
-    "datasetTooSmall": {
-      "title": "Precisamos de uma base maior",
-      "message": "Encontramos {{count}} conversas nesta base. Para o Sentinela analisar com precisão, envie uma amostra com pelo menos {{min}} conversas.",
-      "reason": "Com menos conversas, qualquer medida fica instável demais para orientar uma decisão."
     }
   },
   "common": {
