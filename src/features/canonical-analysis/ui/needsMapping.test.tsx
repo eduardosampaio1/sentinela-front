@@ -127,6 +127,9 @@ describe("a parada de mapping chega na tela", () => {
     await waitFor(() =>
       expect(screen.getByText("Tell us which column is which")).toBeTruthy(),
     );
+    expect(
+      screen.getByRole("progressbar", { name: /analysis stage progress/i }),
+    ).toHaveAttribute("aria-valuetext", expect.stringMatching(/Step 2 of 4.*Data protection/i));
 
     // A sugestão vem PREENCHIDA: obrigar a reconfirmar o que a máquina acertou transformaria
     // confirmação em digitação.

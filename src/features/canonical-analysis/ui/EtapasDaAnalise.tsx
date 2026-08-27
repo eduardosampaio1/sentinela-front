@@ -74,7 +74,14 @@ function estadoDoResultado(eixos: readonly EixoLido[], status: AnalysisStatusVie
   if (status === "completed") return "done";
   if (eixoFinal?.state === "failed" || status === "failed") return "failed";
   if (eixoFinal?.state === "ready") return "done";
-  if (eixoFinal?.state === "pending") return "active";
+  // `pending` quer dizer que o eixo existe, não que ele seja a etapa atual. Durante mapping,
+  // recebimento e fila, fazê-lo piscar como ativo saltava visualmente para a etapa 4 enquanto a
+  // pessoa ainda precisava resolver a etapa 2.
+  const calculoPronto = eixos.slice(0, 2).some((eixo) => {
+    const estado = eixo.entrada?.state;
+    return estado === "ready" || estado === "partial" || estado === "withheld";
+  });
+  if (eixoFinal?.state === "pending" && calculoPronto) return "active";
   if (status === "queued" || status === "running" || status === "recovering") return "waiting";
   return "waiting";
 }
@@ -140,8 +147,16 @@ export function EtapasDaAnalise({
     etapas.map((etapa) => `${etapa.chave}:${etapa.estado}`).join("|"),
   );
   const concluidas = etapas.filter((etapa) => etapa.estado === "done").length;
+  const indiceDeAtencao = etapas.findIndex(
+    (etapa) => etapa.estado === "attention" || etapa.estado === "failed",
+  );
   const indiceAtual = etapas.findIndex((etapa) => etapa.estado === "active");
-  const indiceDaLeitura = indiceAtual >= 0 ? indiceAtual : Math.min(concluidas, etapas.length - 1);
+  const indiceDaLeitura =
+    indiceDeAtencao >= 0
+      ? indiceDeAtencao
+      : indiceAtual >= 0
+        ? indiceAtual
+        : Math.min(concluidas, etapas.length - 1);
   const etapaDaLeitura = etapas[indiceDaLeitura];
   const progressoConcluido = concluidas === etapas.length;
 
