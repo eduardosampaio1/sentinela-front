@@ -590,6 +590,9 @@
     "liveProgress": {
       "title": "Progresso",
       "help": "Esta área atualiza sozinha conforme cada etapa responde.",
+      "stageProgressLabel": "Progresso das etapas da análise",
+      "stageProgressValue": "Etapa {{current}} de {{total}} · {{title}}",
+      "stageProgressComplete": "As 4 etapas foram concluídas",
       "state": {
         "waiting": "Em espera",
         "active": "Agora",
@@ -609,7 +612,7 @@
         "privacy": {
           "title": "Proteção dos dados",
           "waiting": "Começa assim que a base chega.",
-          "active": "Checagem antes dos cálculos.",
+          "active": "Dados sensíveis permanecem protegidos antes dos cálculos.",
           "done": "Apenas texto seguro e aproveitável segue para as medidas.",
           "attention": "Revise as colunas para a base seguir com segurança.",
           "failed": "A base precisa de revisão antes dos cálculos."
@@ -617,7 +620,7 @@
         "measures": {
           "title": "Cálculo das medidas",
           "waiting": "Aguardando a base ficar pronta.",
-          "active": "O Sentinela calcula as medidas da análise.",
+          "active": "O Sentinela calcula as medidas desta análise.",
           "done": "As medidas principais já estão disponíveis.",
           "attention": "Algumas medidas ficaram restritas para proteger grupos pequenos.",
           "failed": "O cálculo das medidas parou antes de concluir."
@@ -625,7 +628,7 @@
         "result": {
           "title": "Resultado final",
           "waiting": "Será preparado após os cálculos.",
-          "active": "Montagem do pacote final.",
+          "active": "O resultado toma forma para consulta.",
           "done": "Resultado pronto para consulta.",
           "attention": "O resultado precisa de uma decisão antes de aparecer.",
           "failed": "Não foi possível montar o resultado final."

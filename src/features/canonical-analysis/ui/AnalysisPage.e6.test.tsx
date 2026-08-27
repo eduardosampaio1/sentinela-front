@@ -117,7 +117,11 @@ describe("E6 — apresentação por código (capacity/result/idempotency)", () =
     await waitFor(() => expect(screen.getByText(/at capacity|em capacidade|capacidade/i)).toBeTruthy());
     const alerts = screen.queryAllByRole("alert");
     expect(alerts.length, "capacity_wait não é erro vermelho").toBe(0);
-    expect(screen.queryByRole("progressbar")).toBeNull();
+    // A barra de ETAPAS continua honesta durante espera de capacidade; o que não pode existir
+    // é uma porcentagem inventada de upload ou motor.
+    expect(screen.getByRole("progressbar", { name: /analysis stage progress|progresso das etapas/i }))
+      .toHaveAttribute("aria-valuemax", "4");
+    expect(screen.queryByRole("progressbar", { name: /dataset upload|envio da base/i })).toBeNull();
   });
 
   it("submit idempotency_conflict: mensagem, SEM oferecer retry (não força nova chave)", async () => {

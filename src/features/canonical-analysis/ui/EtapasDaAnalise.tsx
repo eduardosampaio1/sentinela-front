@@ -3,6 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useRevelacao } from "@/design/motion";
 import { cn } from "@/lib/utils";
 import type { AnalysisStatusView } from "@/lib/v1";
+import type { UploadProgress } from "../data/analysis";
 import type { EixoLido } from "../result/eixos";
 
 type EstadoDaEtapa = "waiting" | "active" | "done" | "attention" | "failed";
@@ -29,10 +30,13 @@ const TOM: Record<EstadoDaEtapa, string> = {
   failed: "border-destructive/40 bg-destructive/10 text-foreground",
 };
 
-function estadoDoUpload(status: AnalysisStatusView["status"]): EstadoDaEtapa {
-  if (status === "preparing") return "waiting";
-  if (status === "receiving") return "active";
-  if (status === "failed") return "failed";
+function estadoDoUpload(
+  status: AnalysisStatusView["status"],
+  progresso: UploadProgress | null,
+): EstadoDaEtapa {
+  if (status === "preparing") return progresso ? "active" : "waiting";
+  // `receiving` só é publicado depois que o POST simples respondeu ou o multipart concluiu.
+  // A partir daqui o arquivo chegou; quem está ativo é a preparação/proteção no backend.
   return "done";
 }
 
@@ -119,13 +123,15 @@ function textoDaEtapa(t: (chave: string) => string, etapa: Etapa): string {
 export function EtapasDaAnalise({
   view,
   eixos,
+  uploadProgress = null,
 }: {
   view: AnalysisStatusView;
   eixos: readonly EixoLido[];
+  uploadProgress?: UploadProgress | null;
 }) {
   const { t } = useLanguage();
   const etapas: Etapa[] = [
-    { chave: "upload", estado: estadoDoUpload(view.status) },
+    { chave: "upload", estado: estadoDoUpload(view.status, uploadProgress) },
     { chave: "privacy", estado: estadoDaProtecao(view) },
     { chave: "measures", estado: estadoDasMedidas(eixos, view.status) },
     { chave: "result", estado: estadoDoResultado(eixos, view.status) },
@@ -133,13 +139,18 @@ export function EtapasDaAnalise({
   const raiz = useRevelacao<HTMLElement>(
     etapas.map((etapa) => `${etapa.chave}:${etapa.estado}`).join("|"),
   );
+  const concluidas = etapas.filter((etapa) => etapa.estado === "done").length;
+  const indiceAtual = etapas.findIndex((etapa) => etapa.estado === "active");
+  const indiceDaLeitura = indiceAtual >= 0 ? indiceAtual : Math.min(concluidas, etapas.length - 1);
+  const etapaDaLeitura = etapas[indiceDaLeitura];
+  const progressoConcluido = concluidas === etapas.length;
 
   return (
     <section
       ref={raiz}
       aria-labelledby="analysis-live-steps"
       aria-live="polite"
-      className="rounded-lg border border-border bg-card p-4"
+      className="min-w-0 rounded-lg border border-border bg-card p-4 sm:p-5"
     >
       <div className="space-y-1">
         <h2 id="analysis-live-steps" className="text-base font-semibold text-foreground">
@@ -148,6 +159,64 @@ export function EtapasDaAnalise({
         <p className="text-sm text-muted-foreground">
           {t("canonicalAnalysis.liveProgress.help")}
         </p>
+      </div>
+      <div className="mt-4 space-y-2">
+        <div
+          role="progressbar"
+          aria-label={t("canonicalAnalysis.liveProgress.stageProgressLabel")}
+          aria-valuemin={0}
+          aria-valuemax={etapas.length}
+          aria-valuenow={concluidas}
+          aria-valuetext={
+            progressoConcluido
+              ? t("canonicalAnalysis.liveProgress.stageProgressComplete")
+              : t("canonicalAnalysis.liveProgress.stageProgressValue", {
+                  current: indiceDaLeitura + 1,
+                  total: etapas.length,
+                  title: tituloDaEtapa(t, etapaDaLeitura.chave),
+                })
+          }
+          className="grid grid-cols-4 gap-1.5"
+        >
+          {etapas.map((etapa) => (
+            <span
+              key={etapa.chave}
+              aria-hidden="true"
+              className={cn(
+                "h-1.5 overflow-hidden rounded-full bg-muted",
+                etapa.estado === "done" && "bg-success/80",
+                etapa.estado === "attention" && "bg-warning/60",
+                etapa.estado === "failed" && "bg-destructive/70",
+              )}
+            >
+              {etapa.estado === "active" && (
+                <span
+                  className={cn(
+                    "block h-full origin-left rounded-full bg-primary/80 transition-transform motion-reduce:transition-none",
+                    etapa.chave !== "upload" && "motion-safe:animate-pulse",
+                  )}
+                  style={{
+                    transform:
+                      etapa.chave === "upload" && uploadProgress
+                        ? `scaleX(${Math.max(0, Math.min(100, uploadProgress.percent)) / 100})`
+                        : "scaleX(1)",
+                    transitionDuration: "var(--ds-duration-base)",
+                    transitionTimingFunction: "var(--ds-easing-standard)",
+                  }}
+                />
+              )}
+            </span>
+          ))}
+        </div>
+        {!progressoConcluido && (
+          <p className="break-words text-xs tabular-nums text-muted-foreground">
+            {t("canonicalAnalysis.liveProgress.stageProgressValue", {
+              current: indiceDaLeitura + 1,
+              total: etapas.length,
+              title: tituloDaEtapa(t, etapaDaLeitura.chave),
+            })}
+          </p>
+        )}
       </div>
       <ol className="mt-4 space-y-3">
         {etapas.map((etapa, indice) => {
@@ -193,6 +262,17 @@ export function EtapasDaAnalise({
                 <p className="mt-1 text-sm text-muted-foreground">
                   {textoDaEtapa(t, etapa)}
                 </p>
+                {etapa.chave === "upload" &&
+                etapa.estado === "active" &&
+                uploadProgress?.currentPart &&
+                uploadProgress.totalParts ? (
+                  <p className="mt-1 break-words text-xs tabular-nums text-muted-foreground">
+                    {t("canonicalAnalysis.upload.uploadingPart", {
+                      current: uploadProgress.currentPart,
+                      total: uploadProgress.totalParts,
+                    })} · {uploadProgress.percent}%
+                  </p>
+                ) : null}
               </div>
             </li>
           );

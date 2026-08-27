@@ -2,6 +2,7 @@
 // Renderiza por ESTADO PÚBLICO — upload (preparing) → submit (receiving) → banner (fila/execução/
 // recuperação) → terminal (completed/failed). Sem indicador analítico, sem % inventado.
 
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AvisoDeIntake } from "./AvisoDeIntake";
 import { Link, useParams } from "react-router-dom";
@@ -19,6 +20,7 @@ import {
   useAnalysisStatus,
   useRetryAnalysis,
   useSubmitAnalysis,
+  type UploadProgress,
 } from "../data/analysis";
 import { useIdempotencyIntent } from "../data/intent";
 import { useCanonicalScope } from "./scope";
@@ -62,6 +64,8 @@ export function AnalysisPage() {
   // reset no sucesso — o backend nunca vê a mesma intenção como submits distintos (Codex E2 R1).
   const submitIntent = useIdempotencyIntent();
   const retryIntent = useIdempotencyIntent();
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
+  useEffect(() => setUploadProgress(null), [analysisId]);
   // A chave junta status e progresso: os dois chegam por caminhos diferentes, e o painel de eixos
   // que resolver depois precisa entrar com movimento em vez de aparecer pronto no meio de uma
   // tela que já se moveu.
@@ -130,7 +134,17 @@ export function AnalysisPage() {
 
     switch (view.status) {
       case "preparing":
-        return <UploadStep analysisId={analysisId} scope={scope} onUploaded={revalidar} />;
+        return (
+          <div className="space-y-4">
+            <UploadStep
+              analysisId={analysisId}
+              scope={scope}
+              onUploaded={revalidar}
+              onProgressChange={setUploadProgress}
+            />
+            <EtapasDaAnalise view={view} eixos={eixos} uploadProgress={uploadProgress} />
+          </div>
+        );
       case "receiving":
         // Os bytes ainda estão chegando. NÃO há botão aqui, e a ausência é a correção.
         //
@@ -145,7 +159,7 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
-            <EtapasDaAnalise view={view} eixos={eixos} />
+            <EtapasDaAnalise view={view} eixos={eixos} uploadProgress={uploadProgress} />
           </div>
         );
       case "ready_to_submit":

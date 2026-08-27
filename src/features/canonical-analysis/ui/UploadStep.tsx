@@ -47,10 +47,12 @@ export function UploadStep({
   analysisId,
   scope,
   onUploaded,
+  onProgressChange,
 }: {
   analysisId: string;
   scope: CanonicalScope;
   onUploaded: () => void;
+  onProgressChange?: (progress: UploadProgress | null) => void;
 }) {
   const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
@@ -70,18 +72,37 @@ export function UploadStep({
   // Duas verdades diferentes, dois textos.
   const bloqueado = enviando || enviado;
 
+  function publicarProgresso(proximo: UploadProgress | null) {
+    setProgress(proximo);
+    onProgressChange?.(proximo);
+  }
+
   function enviar() {
     if (!file || bloqueado) return;
-    setProgress(null);
+    publicarProgresso(null);
     // File direto — sem leitura/cópia no navegador. O backend valida a base canonicamente.
     upload.mutate(
       {
         analysisId,
         scope,
         body: file,
-        onProgress: setProgress,
+        onProgress: publicarProgresso,
       },
-      { onSuccess: onUploaded },
+      {
+        onSuccess: () => {
+          // O POST simples (<5 MB) não oferece eventos intermediários, mas sua resposta confirma
+          // que todos os bytes chegaram. O multipart já terá publicado este mesmo 100%.
+          publicarProgresso({
+            sentBytes: file.size,
+            totalBytes: file.size,
+            percent: 100,
+            currentPart: progress?.totalParts,
+            totalParts: progress?.totalParts,
+            state: "completing",
+          });
+          onUploaded();
+        },
+      },
     );
   }
 
@@ -147,7 +168,7 @@ export function UploadStep({
         disabled={enviando}
         onChange={(e) => {
           setFile(e.target.files?.[0] ?? null);
-          setProgress(null);
+          publicarProgresso(null);
           upload.reset();
         }}
       />

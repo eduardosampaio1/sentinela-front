@@ -590,6 +590,9 @@
     "liveProgress": {
       "title": "Analysis progress",
       "help": "This area updates automatically as each step responds.",
+      "stageProgressLabel": "Analysis stage progress",
+      "stageProgressValue": "Step {{current}} of {{total}} · {{title}}",
+      "stageProgressComplete": "All 4 steps are complete",
       "state": {
         "waiting": "Waiting",
         "active": "Now",
@@ -609,7 +612,7 @@
         "privacy": {
           "title": "Data protection",
           "waiting": "Starts as soon as the dataset arrives.",
-          "active": "Safety check before any calculation.",
+          "active": "Sensitive data stays protected before any calculation.",
           "done": "Only safe, usable text moves to the measures.",
           "attention": "Review the columns so the dataset can continue safely.",
           "failed": "The dataset needs review before calculation."
@@ -617,7 +620,7 @@
         "measures": {
           "title": "Measure calculation",
           "waiting": "Waiting for the dataset to be ready.",
-          "active": "Sentinela calculates the analysis measures.",
+          "active": "Sentinela calculates the measures for this analysis.",
           "done": "The main measures are already available.",
           "attention": "Some measures are restricted to protect small groups.",
           "failed": "The measure calculation stopped before completion."
@@ -625,7 +628,7 @@
         "result": {
           "title": "Final result",
           "waiting": "Prepared after the calculations.",
-          "active": "Final package assembly.",
+          "active": "The result is taking shape for consultation.",
           "done": "The result is ready to view.",
           "attention": "The result needs a decision before it appears.",
           "failed": "The final result could not be assembled."

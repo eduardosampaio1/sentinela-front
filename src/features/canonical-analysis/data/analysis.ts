@@ -23,8 +23,11 @@ import { useV1Client } from "./client";
 // ── Polling por estado (E3, item 13). Encerra em terminal; ativo em fila/execução/recuperação. ──
 const POLL_ATIVO = 2500;
 const POLL_MODERADO = 4000;
-const LIMIAR_UPLOAD_MULTIPARTE = 100 * 1024 * 1024;
 const TAMANHO_MINIMO_PARTE = 5 * 1024 * 1024;
+// Acima de 5 MB usamos o protocolo multipart, que publica progresso real por parte. O limite
+// antigo de 100 MB deixava bases perfeitamente perceptíveis presas num POST opaco: a interface
+// sabia que estava enviando, mas não tinha como dizer quanto já havia chegado.
+const LIMIAR_UPLOAD_MULTIPARTE = TAMANHO_MINIMO_PARTE;
 const TENTATIVAS_POR_PARTE = 3;
 const ATRASO_BASE_TENTATIVA_MS = 1200;
 
