@@ -168,8 +168,10 @@
 // Reselado ao acrescentar `rejected_record_reasons` ao `intake`: os registros que ficaram fora
 // do motor agora têm nome e contagem na aba Medidas, sem carregar texto, linha ou amostra do
 // dataset. O caso materializado está em `AnalyticsView.test.tsx`.
+// Reselado ao acrescentar `rename_analysis` e `display_name`. A reconferência materializou o
+// campo opcional nas fixtures de status e lista; nenhum campo existente foi removido ou mudou.
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "451f33a153b0a77d2c7521ece70e80c75593658e22c0e9fe8f244a39c118c907";
+  "992cb0641d2bfe125662cc1a2515b8680354a096f734db81a8f1d18b316e8656";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.

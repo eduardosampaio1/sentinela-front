@@ -52,6 +52,8 @@ export const PUBLIC_STATES: readonly AnalysisStatus[] = [
 /** Projeção pública de leitura de status (GET /v1/analyses/{id}). */
 export interface AnalysisStatusView {
   analysis_id: string;
+  /** Rotulo humano opcional. A identidade tecnica continua sendo `analysis_id`. */
+  display_name?: string | null;
   status: AnalysisStatus;
   record_count: number | null;
   result_available: boolean;
@@ -118,6 +120,7 @@ export interface AnalysisAcceptanceRule {
 /** Item de listagem (GET /v1/analyses). */
 export interface AnalysisListItem {
   analysis_id: string;
+  display_name?: string | null;
   status: AnalysisStatus;
   record_count: number | null;
   result_available: boolean;
@@ -182,6 +185,12 @@ export interface AnalysisResultView {
 export interface AnalysisHandle {
   analysis_id: string;
   status: AnalysisStatus;
+}
+
+/** Confirmação do rótulo humano; a identidade técnica não muda. */
+export interface RenameAnalysisView {
+  analysis_id: string;
+  display_name: string;
 }
 
 /** Sessão pública de recebimento em partes. Não expõe storage nem URL interna. */

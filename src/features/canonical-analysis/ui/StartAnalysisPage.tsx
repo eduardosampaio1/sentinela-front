@@ -1,6 +1,7 @@
 // Entrada da jornada (Onda 6 E2, itens 2-4). Auth → workspace ativo → prepare com Idempotency-Key
 // da INTENÇÃO → recebe analysis_id → navega para a identidade durável /canonical/analyses/:id.
 
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -10,6 +11,7 @@ import { useRevelacao } from "@/design/motion";
 import { useIniciarAnalise } from "./useIniciarAnalise";
 import { ProblemNotice } from "./notices";
 import { AvisoDaJornada } from "./AvisoDaJornada";
+import { LoadingState } from "@/design/patterns";
 
 export function StartAnalysisPage() {
   const { t } = useLanguage();
@@ -17,6 +19,15 @@ export function StartAnalysisPage() {
   // GERAL, e ela precisa continuar exatamente igual. O 409, a chave por intenção e a navegação
   // para a identidade durável vivem lá agora, num lugar só.
   const { iniciar, escopo: scope, conflito, pendente, erro } = useIniciarAnalise();
+  const iniciou = useRef(false);
+
+  // `/analyses/new` e uma intencao, nao uma etapa para a pessoa confirmar de novo. A reserva
+  // continua existindo no backend, mas acontece ao entrar e desemboca direto na tela de upload.
+  useEffect(() => {
+    if (!scope || iniciou.current) return;
+    iniciou.current = true;
+    iniciar();
+  }, [scope, iniciar]);
 
   // Esta tela NÃO recebeu o arquétipo de composição, e o motivo é que não há o que compor: a
   // jornada canônica cria a intenção primeiro e recebe os dados depois, então aqui existem um
@@ -50,12 +61,16 @@ export function StartAnalysisPage() {
                 </Button>
               }
             />
+          ) : erro ? (
+            <div className="space-y-3">
+              <ProblemNotice error={erro} />
+              <Button onClick={() => { iniciou.current = true; iniciar(); }} disabled={!scope || pendente}>
+                {t("canonicalAnalysis.entry.retry")}
+              </Button>
+            </div>
           ) : (
-            <ProblemNotice error={erro} />
+            <LoadingState rotulo={t("canonicalAnalysis.entry.starting")} linhas={2} />
           )}
-          <Button onClick={iniciar} disabled={!scope || pendente} aria-busy={pendente}>
-            {pendente ? t("canonicalAnalysis.entry.starting") : t("canonicalAnalysis.entry.start")}
-          </Button>
         </div>
       </PageFrame>
     </AppShell>

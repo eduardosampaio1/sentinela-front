@@ -75,13 +75,44 @@ describe("useCreateAnalysis — prepare com Idempotency-Key da intenção", () =
   });
 });
 
-describe("useUploadData — File/Blob direto, sem retry automático", () => {
+describe("useUploadData — multipart retomável para arquivos do navegador", () => {
   it("envia o Blob e devolve status público", async () => {
     server.use(http.post(`${MSW_BASE}/v1/analyses/:id/data`, () => HttpResponse.json(statusView("receiving"))));
     const { result } = renderHook(() => useUploadData(), { wrapper: makeWrapper(client) });
     const body = new Blob(["{}\n"], { type: "application/x-ndjson" });
     const view = await result.current.mutateAsync({ analysisId: "an-abc", scope: SCOPE, body });
     expect(view.status).toBe("receiving");
+  });
+
+  it("retoma a sessão e envia somente as partes ainda não confirmadas", async () => {
+    const partesEnviadas: number[] = [];
+    server.use(
+      http.post(`${MSW_BASE}/v1/analyses/:id/data/uploads`, () => HttpResponse.json({
+        analysis_id: "an-abc",
+        status: "receiving",
+        upload_session_id: "up-1",
+        part_size_bytes: 5 * 1024 * 1024,
+        uploaded_parts: [{ part_number: 1, etag: '"etag-1"' }],
+      })),
+      http.put(`${MSW_BASE}/v1/analyses/:id/data/uploads/:upload/parts/:part`, ({ params }) => {
+        partesEnviadas.push(Number(params.part));
+        return HttpResponse.json({
+          analysis_id: "an-abc",
+          upload_session_id: "up-1",
+          part_number: Number(params.part),
+          etag: `"etag-${params.part}"`,
+        });
+      }),
+      http.post(`${MSW_BASE}/v1/analyses/:id/data/uploads/:upload/complete`, () =>
+        HttpResponse.json(statusView("receiving")),
+      ),
+    );
+    const { result } = renderHook(() => useUploadData(), { wrapper: makeWrapper(client) });
+    const file = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "grande.jsonl");
+    const view = await result.current.mutateAsync({ analysisId: "an-abc", scope: SCOPE, body: file });
+
+    expect(view.status).toBe("receiving");
+    expect(partesEnviadas).toEqual([2]);
   });
 });
 

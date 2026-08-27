@@ -18,12 +18,12 @@
 // upload falhava sem uma frase sequer. Agora transporte tem estado próprio — ver
 // `falhaDeTransporte.ts` para por que ele não pode afirmar que o dado não chegou.
 
-import { useState } from "react";
-import { Check, Loader2, UploadCloud } from "lucide-react";
+import { useRef, useState } from "react";
+import { Check, Loader2, Pause, Play, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { CanonicalScope } from "@/lib/v1";
-import { useUploadData, type UploadProgress } from "../data/analysis";
+import { useRenameAnalysis, useUploadData, type UploadProgress } from "../data/analysis";
 import { ProblemFeedback } from "./notices";
 import { ehFalhaDeTransporte } from "./falhaDeTransporte";
 import { AvisoDaJornada } from "./AvisoDaJornada";
@@ -56,9 +56,13 @@ export function UploadStep({
 }) {
   const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
+  const [name, setName] = useState("");
   const [progress, setProgress] = useState<UploadProgress | null>(null);
+  const [pausado, setPausado] = useState(false);
+  const controller = useRef<AbortController | null>(null);
   const upload = useUploadData();
-  const enviando = upload.isPending;
+  const rename = useRenameAnalysis();
+  const enviando = upload.isPending || rename.isPending;
   const enviado = upload.isSuccess;
   // O botão fica bloqueado nas DUAS situações — enviando e já enviado —, e isso continua certo:
   // reenviar o mesmo dataset duplicaria a ingestão (Codex R5).
@@ -77,15 +81,29 @@ export function UploadStep({
     onProgressChange?.(proximo);
   }
 
-  function enviar() {
-    if (!file || bloqueado) return;
-    publicarProgresso(null);
+  async function enviar() {
+    if (!file || enviando || enviado) return;
+    const retomando = pausado || upload.isError;
+    if (!retomando) publicarProgresso(null);
+    setPausado(false);
+    upload.reset();
+    const proximoController = new AbortController();
+    controller.current = proximoController;
+    if (name.trim()) {
+      try {
+        await rename.mutateAsync({ analysisId, scope, name: name.trim() });
+      } catch {
+        controller.current = null;
+        return;
+      }
+    }
     // File direto — sem leitura/cópia no navegador. O backend valida a base canonicamente.
     upload.mutate(
       {
         analysisId,
         scope,
         body: file,
+        signal: proximoController.signal,
         onProgress: publicarProgresso,
       },
       {
@@ -98,24 +116,39 @@ export function UploadStep({
             percent: 100,
             currentPart: progress?.totalParts,
             totalParts: progress?.totalParts,
-            state: "completing",
+            state: "done",
           });
+          controller.current = null;
           onUploaded();
+        },
+        onError: (error) => {
+          controller.current = null;
+          if (error instanceof DOMException && error.name === "AbortError") upload.reset();
         },
       },
     );
   }
 
+  function pausar() {
+    if (!enviando || !progress || progress.state === "completing") return;
+    controller.current?.abort();
+    setPausado(true);
+    publicarProgresso({ ...progress, state: "paused" });
+  }
+
   // O erro do upload tem DOIS desfechos, e a tela não pode colapsá-los: o backend respondeu e
   // recusou (envelope público), ou a requisição não chegou a ter resposta (transporte).
   const transporte = ehFalhaDeTransporte(upload.error);
-  const percentual = enviado ? 100 : Math.max(0, Math.min(100, progress?.percent ?? (enviando ? 1 : 0)));
+  const percentualBruto = enviado ? 100 : (progress?.percent ?? 0);
+  const percentual = percentualBruto < 0 ? 0 : percentualBruto > 100 ? 100 : percentualBruto;
   const detalheDoProgresso =
     progress?.state === "retrying"
       ? t("canonicalAnalysis.upload.retryingPart", {
           current: progress.currentPart ?? 0,
           total: progress.totalParts ?? 0,
         })
+      : progress?.state === "paused"
+        ? t("canonicalAnalysis.upload.pausedAt", { percent: percentual })
       : progress?.state === "completing"
         ? t("canonicalAnalysis.upload.completing")
         : progress?.currentPart && progress?.totalParts
@@ -167,13 +200,33 @@ export function UploadStep({
         aria-describedby="canonical-upload-help"
         disabled={enviando}
         onChange={(e) => {
-          setFile(e.target.files?.[0] ?? null);
+          const escolhido = e.target.files?.[0] ?? null;
+          setFile(escolhido);
+          if (escolhido && !name.trim()) {
+            setName(escolhido.name.replace(/\.[^.]+$/, "").slice(0, 120));
+          }
           publicarProgresso(null);
           upload.reset();
         }}
       />
 
-      {bloqueado && (
+      <div className="space-y-1.5">
+        <label htmlFor="canonical-analysis-name" className="text-sm font-medium text-foreground">
+          {t("canonicalAnalysis.upload.nameLabel")}
+        </label>
+        <input
+          id="canonical-analysis-name"
+          value={name}
+          maxLength={120}
+          disabled={enviando || enviado}
+          onChange={(event) => setName(event.target.value)}
+          placeholder={t("canonicalAnalysis.upload.namePlaceholder")}
+          className="min-h-11 w-full rounded-md border border-border bg-background px-3 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/25"
+        />
+        <p className="text-xs text-muted-foreground">{t("canonicalAnalysis.upload.nameHint")}</p>
+      </div>
+
+      {(enviando || pausado || enviado || Boolean(progress)) && (
         <div
           role="status"
           aria-live="polite"
@@ -191,6 +244,11 @@ export function UploadStep({
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 {t("canonicalAnalysis.upload.sending")}
               </>
+            ) : pausado ? (
+              <>
+                <Pause className="h-4 w-4" aria-hidden="true" />
+                {t("canonicalAnalysis.upload.paused")}
+              </>
             ) : (
               <>
                 <Check className="h-4 w-4 text-success" aria-hidden="true" />
@@ -198,8 +256,12 @@ export function UploadStep({
               </>
             )}
           </p>
-          {enviando && (
+          {(enviando || pausado) && (
             <div className="space-y-1">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-xs text-muted-foreground">{detalheDoProgresso}</span>
+                <strong className="tabular-nums text-lg font-semibold text-foreground">{percentual}%</strong>
+              </div>
               <div
                 role="progressbar"
                 aria-label={t("canonicalAnalysis.upload.progressLabel")}
@@ -213,16 +275,16 @@ export function UploadStep({
               >
                 <span
                   aria-hidden="true"
-                  className="block h-full w-full origin-left rounded-full bg-primary/80 transition-transform motion-reduce:transition-none"
+                  className="block h-full rounded-full bg-primary/80 transition-[width] motion-reduce:transition-none"
                   style={{
-                    transform: `scaleX(${percentual / 100})`,
+                    width: `${percentual}%`,
                     transitionDuration: "var(--ds-duration-base)",
                     transitionTimingFunction: "var(--ds-easing-standard)",
                   }}
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                {detalheDoProgresso}
+                {t("canonicalAnalysis.upload.progressHint")}
               </p>
             </div>
           )}
@@ -235,33 +297,41 @@ export function UploadStep({
           // `POST /data` não exige `Idempotency-Key` no contrato: sem repetição segura publicada,
           // não afirmamos que o dado não chegou — nem que chegou.
           significado={t("canonicalAnalysis.upload.transport.meaning")}
-          acao={
-            // Verificar LIMPA o erro além de revalidar: sem isso o botão seguiria rotulado
-            // "tentar de novo" depois da consulta, e a pessoa reenviaria sem ler a resposta.
-            <Button
-              variant="outline"
-              onClick={() => {
-                upload.reset();
-                onUploaded();
-              }}
-            >
+          acao={<div className="flex flex-wrap gap-2">
+            <Button className="min-h-11 w-full sm:w-auto" variant="outline" onClick={() => { upload.reset(); onUploaded(); }}>
               {t("canonicalAnalysis.upload.transport.check")}
             </Button>
-          }
+            <Button className="min-h-11 w-full sm:w-auto" onClick={enviar} disabled={!file}>
+              <Play className="mr-2 h-4 w-4" aria-hidden="true" />
+              {t("canonicalAnalysis.upload.continue")}
+            </Button>
+          </div>}
         />
       ) : (
         // Envelope público: o backend viu a base e respondeu. `invalid_input` não consome a
         // operação — a análise segue em `preparing`, e escolher outro arquivo continua possível.
         <ProblemFeedback error={upload.error} />
       )}
+      <ProblemFeedback error={rename.error} />
 
-      {/* Durante o estado de transporte o envio NÃO é oferecido ao lado da consulta. Reenviar sem
-          saber se a base chegou é a ação arriscada — `POST /data` não publica repetição segura —, e
-          oferecê-la com o mesmo peso da consulta convidaria justamente a ela. Depois de verificar,
-          o erro é limpo e o envio volta, se a análise ainda estiver esperando base. */}
+      {/* No multipart, continuar reabre a sessão e envia somente as partes que o backend ainda não
+          confirmou. Pausar aborta apenas a transferência ativa do navegador: não é cancelamento da
+          Analysis e não apaga partes já recebidas. */}
       <div className="flex flex-wrap gap-2">
+        {enviando && progress?.state !== "completing" ? (
+          <Button className="min-h-11 w-full sm:w-auto" type="button" variant="outline" onClick={pausar}>
+            <Pause className="mr-2 h-4 w-4" aria-hidden="true" />
+            {t("canonicalAnalysis.upload.pause")}
+          </Button>
+        ) : null}
+        {pausado ? (
+          <Button className="min-h-11 w-full sm:w-auto" type="button" onClick={enviar}>
+            <Play className="mr-2 h-4 w-4" aria-hidden="true" />
+            {t("canonicalAnalysis.upload.continue")}
+          </Button>
+        ) : null}
         {!transporte && (
-          <Button onClick={enviar} disabled={!file || bloqueado}>
+          <Button className="min-h-11 w-full sm:w-auto" onClick={enviar} disabled={!file || bloqueado || pausado}>
             {upload.isError ? t("canonicalAnalysis.upload.retry") : t("canonicalAnalysis.upload.send")}
           </Button>
         )}

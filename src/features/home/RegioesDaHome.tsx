@@ -86,8 +86,13 @@ function LinhaDeAnalise({
           rotulo={rotuloDeEstado(item.status, t)}
           className="w-fit"
         />
-        <span className="min-w-0 break-all font-mono text-sm text-foreground md:truncate md:break-normal">
-          {item.analysis_id}
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-medium text-foreground">
+            {item.display_name ?? t("home.unnamedAnalysis")}
+          </span>
+          <span className="mt-0.5 block break-all font-mono text-xs text-muted-foreground md:truncate md:break-normal">
+            {item.analysis_id}
+          </span>
         </span>
         {/* `record_count` é `null` quando ausente, e ausência NUNCA vira zero. */}
         <span className="tabular-nums text-sm text-muted-foreground">

@@ -66,7 +66,11 @@ export function AnalysisPage() {
   const submitIntent = useIdempotencyIntent();
   const retryIntent = useIdempotencyIntent();
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
-  useEffect(() => setUploadProgress(null), [analysisId]);
+  const [retomarUpload, setRetomarUpload] = useState(false);
+  useEffect(() => {
+    setUploadProgress(null);
+    setRetomarUpload(false);
+  }, [analysisId]);
   // A chave junta status e progresso: os dois chegam por caminhos diferentes, e o painel de eixos
   // que resolver depois precisa entrar com movimento em vez de aparecer pronto no meio de uma
   // tela que já se moveu.
@@ -143,19 +147,31 @@ export function AnalysisPage() {
     const view = status.data;
     if (!view || !analysisId) return null;
 
+    // Abrir a sessao multipart faz o backend publicar `receiving` antes da ultima parte. A
+    // transferencia, porem, continua pertencendo a esta pagina. Manter o componente montado e
+    // uma garantia funcional: preserva o File, o AbortController e os controles de pausa. Sem
+    // isto a primeira consulta de status trocava a tela, escondia a porcentagem e removia a
+    // unica forma de continuar um envio em 197/198.
+    const uploadAindaNoNavegador =
+      uploadProgress !== null && uploadProgress.state !== "done";
+    if (
+      view.status === "preparing"
+      || (view.status === "receiving" && (uploadAindaNoNavegador || retomarUpload))
+    ) {
+      return (
+        <div className="space-y-4">
+          <UploadStep
+            analysisId={analysisId}
+            scope={scope}
+            onUploaded={revalidar}
+            onProgressChange={setUploadProgress}
+          />
+          <EtapasDaAnalise view={view} eixos={eixos} uploadProgress={uploadProgress} />
+        </div>
+      );
+    }
+
     switch (view.status) {
-      case "preparing":
-        return (
-          <div className="space-y-4">
-            <UploadStep
-              analysisId={analysisId}
-              scope={scope}
-              onUploaded={revalidar}
-              onProgressChange={setUploadProgress}
-            />
-            <EtapasDaAnalise view={view} eixos={eixos} uploadProgress={uploadProgress} />
-          </div>
-        );
       case "receiving":
         // Os bytes ainda estão chegando. NÃO há botão aqui, e a ausência é a correção.
         //
@@ -171,6 +187,22 @@ export function AnalysisPage() {
           <div className="space-y-4">
             <StateBanner view={view} />
             <EtapasDaAnalise view={view} eixos={eixos} uploadProgress={uploadProgress} />
+            <section className="rounded-[var(--ds-radius-panel)] border border-border bg-card/70 p-4">
+              <h2 className="text-sm font-semibold text-foreground">
+                {t("canonicalAnalysis.upload.resumeQuestion")}
+              </h2>
+              <p className="mt-1 max-w-prose text-sm text-muted-foreground">
+                {t("canonicalAnalysis.upload.resumeExplanation")}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-3 min-h-11 w-full sm:w-auto"
+                onClick={() => setRetomarUpload(true)}
+              >
+                {t("canonicalAnalysis.upload.continue")}
+              </Button>
+            </section>
           </div>
         );
       case "ready_to_submit":

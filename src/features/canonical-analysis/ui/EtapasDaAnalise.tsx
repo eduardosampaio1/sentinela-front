@@ -34,13 +34,17 @@ function estadoDoUpload(
   status: AnalysisStatusView["status"],
   progresso: UploadProgress | null,
 ): EstadoDaEtapa {
+  if (progresso && progresso.state !== "done") return "active";
   if (status === "preparing") return progresso ? "active" : "waiting";
   // `receiving` só é publicado depois que o POST simples respondeu ou o multipart concluiu.
   // A partir daqui o arquivo chegou; quem está ativo é a preparação/proteção no backend.
   return "done";
 }
 
-function estadoDaProtecao(view: AnalysisStatusView): EstadoDaEtapa {
+function estadoDaProtecao(view: AnalysisStatusView, progresso: UploadProgress | null): EstadoDaEtapa {
+  // `receiving` tambem e o estado da sessao multipart ABERTA. Enquanto o browser ainda publica
+  // partes, a protecao nao pode aparecer ativa em paralelo como se ja tivesse a base inteira.
+  if (progresso && progresso.state !== "done") return "waiting";
   const clearance = view.intake?.privacy_clearance ?? null;
   if (clearance && clearance !== "passed") return "failed";
   if (view.status === "needs_mapping") return "attention";
@@ -149,7 +153,7 @@ export function EtapasDaAnalise({
   const { t } = useLanguage();
   const etapas: Etapa[] = [
     { chave: "upload", estado: estadoDoUpload(view.status, uploadProgress) },
-    { chave: "privacy", estado: estadoDaProtecao(view) },
+    { chave: "privacy", estado: estadoDaProtecao(view, uploadProgress) },
     { chave: "measures", estado: estadoDasMedidas(eixos, view.status) },
     { chave: "result", estado: estadoDoResultado(eixos, view.status) },
   ];
@@ -166,7 +170,9 @@ export function EtapasDaAnalise({
       ? indiceDeAtencao
       : indiceAtual >= 0
         ? indiceAtual
-        : Math.min(concluidas, etapas.length - 1);
+        : concluidas < etapas.length - 1
+          ? concluidas
+          : etapas.length - 1;
   const etapaDaLeitura = etapas[indiceDaLeitura];
   const progressoConcluido = concluidas === etapas.length;
 
@@ -217,14 +223,20 @@ export function EtapasDaAnalise({
               {etapa.estado === "active" && (
                 <span
                   className={cn(
-                    "block h-full origin-left rounded-full bg-primary/80 transition-transform motion-reduce:transition-none",
+                    "block h-full rounded-full bg-primary/80 transition-[width] motion-reduce:transition-none",
                     etapa.chave !== "upload" && "motion-safe:animate-pulse",
                   )}
                   style={{
-                    transform:
+                    width:
                       etapa.chave === "upload" && uploadProgress
-                        ? `scaleX(${Math.max(0, Math.min(100, uploadProgress.percent)) / 100})`
-                        : "scaleX(1)",
+                        ? `${
+                            uploadProgress.percent < 0
+                              ? 0
+                              : uploadProgress.percent > 100
+                                ? 100
+                                : uploadProgress.percent
+                          }%`
+                        : "100%",
                     transitionDuration: "var(--ds-duration-base)",
                     transitionTimingFunction: "var(--ds-easing-standard)",
                   }}

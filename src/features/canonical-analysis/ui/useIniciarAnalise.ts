@@ -20,6 +20,7 @@
 // `instanceId` é opcional de propósito. Ausente, a requisição sai byte a byte igual à de antes: o
 // contrato publica o campo como opcional e aditivo, e a jornada geral não pode passar a exigi-lo.
 
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CanonicalScope } from "@/lib/v1";
 import { useCreateAnalysis } from "../data/analysis";
@@ -48,7 +49,7 @@ export function useIniciarAnalise(instanceId?: string): IniciarAnalise {
   // repetida, então a tela não a adivinha nem navega para lugar nenhum.
   const conflito = problemCodeOf(create.error) === "idempotency_conflict";
 
-  function iniciar() {
+  const iniciar = useCallback(() => {
     if (!escopo || create.isPending) return;
     // Chave por INTENÇÃO explícita: gerada aqui, reusada em retry da mesma intenção; reset no
     // desfecho definitivo. Sucesso é um desfecho; recusa por repetição é outro — insistir com a
@@ -67,7 +68,7 @@ export function useIniciarAnalise(instanceId?: string): IniciarAnalise {
         },
       },
     );
-  }
+  }, [create, escopo, instanceId, intent, navigate]);
 
   return { iniciar, escopo, conflito, pendente: create.isPending, erro: create.error };
 }

@@ -31,6 +31,7 @@ import type {
   SubscriptionDisabledView,
   SubscriptionListPage,
   SubscriptionSecretView,
+  RenameAnalysisView,
 } from "./contract/public-v1.types";
 import { normalizeProblem, PROBLEM_MEDIA_TYPE, ProblemError, TransportError } from "./problem";
 
@@ -134,6 +135,12 @@ export interface V1Client {
   ): Promise<AnalysisStatusView>;
   submit(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
   getStatus(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisStatusView>;
+  renameAnalysis(
+    analysisId: string,
+    scope: CanonicalScope,
+    name: string,
+    opts?: RequestOptions,
+  ): Promise<RenameAnalysisView>;
   /**
    * O resultado canônico. **Quem escolhe a versão é quem pede.**
    *
@@ -546,6 +553,14 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       pedir<AnalysisHandle>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/submit`, { workspace_id: scope.workspaceId }, opts, undefined, true),
     getStatus: (analysisId, scope, opts) =>
       pedir<AnalysisStatusView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}`, { workspace_id: scope.workspaceId }, opts),
+    renameAnalysis: (analysisId, scope, name, opts) =>
+      pedir<RenameAnalysisView>(
+        "PATCH",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify({ name }), contentType: "application/json" },
+      ),
     getAnalytics: (analysisId, scope, opts) =>
       pedir<AnalysisAnalyticsView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics`, { workspace_id: scope.workspaceId }, opts),
     getProgress: (analysisId, scope, opts) =>

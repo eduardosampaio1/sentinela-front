@@ -18,6 +18,7 @@ export const HANDLE: AnalysisHandle = { analysis_id: "an-abc", status: "preparin
 export function statusView(status: AnalysisStatus, over: Partial<AnalysisStatusView> = {}): AnalysisStatusView {
   return {
     analysis_id: "an-abc",
+    display_name: null,
     status,
     record_count: status === "preparing" || status === "receiving" ? null : 1240,
     result_available: status === "completed",
@@ -68,15 +69,15 @@ export const RESULT_VIEW: AnalysisResultView = {
 
 export const LIST_PAGE_1: AnalysisListPage = {
   items: [
-    { analysis_id: "an-abc", status: "completed", record_count: 1240, result_available: true, created_at: "2026-07-31T10:00:00Z", instance_id: null },
-    { analysis_id: "an-def", status: "running", record_count: 300, result_available: false, created_at: "2026-07-31T09:00:00Z", instance_id: null },
+    { analysis_id: "an-abc", display_name: "Atendimento de julho", status: "completed", record_count: 1240, result_available: true, created_at: "2026-07-31T10:00:00Z", instance_id: null },
+    { analysis_id: "an-def", display_name: null, status: "running", record_count: 300, result_available: false, created_at: "2026-07-31T09:00:00Z", instance_id: null },
   ],
   next_cursor: "cursor-2",
 };
 
 export const LIST_PAGE_2: AnalysisListPage = {
   items: [
-    { analysis_id: "an-ghi", status: "failed", record_count: 50, result_available: false, created_at: "2026-07-31T08:00:00Z", instance_id: null },
+    { analysis_id: "an-ghi", display_name: "Teste interrompido", status: "failed", record_count: 50, result_available: false, created_at: "2026-07-31T08:00:00Z", instance_id: null },
   ],
   next_cursor: null,
 };

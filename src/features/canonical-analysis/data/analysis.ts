@@ -11,6 +11,7 @@ import {
   type AnalysisExportDownloadView,
   type AnalysisProgressView,
   type AnalysisResultView,
+  type RenameAnalysisView,
   type AnalysisStatus,
   type AnalysisStatusView,
   type AnalysisTimelineView,
@@ -24,10 +25,10 @@ import { useV1Client } from "./client";
 const POLL_ATIVO = 2500;
 const POLL_MODERADO = 4000;
 const TAMANHO_MINIMO_PARTE = 5 * 1024 * 1024;
-// Acima de 5 MB usamos o protocolo multipart, que publica progresso real por parte. O limite
-// antigo de 100 MB deixava bases perfeitamente perceptíveis presas num POST opaco: a interface
-// sabia que estava enviando, mas não tinha como dizer quanto já havia chegado.
-const LIMIAR_UPLOAD_MULTIPARTE = TAMANHO_MINIMO_PARTE;
+// Todo `File` usa a sessao multipart. Alem de tornar a porcentagem honesta tambem torna a
+// recuperacao uniforme: abrir novamente a mesma Analysis devolve as partes ja recebidas e o
+// navegador envia somente o que falta. `BodyInit` nao-File permanece no POST simples para os
+// consumidores programaticos e testes de contrato.
 const TENTATIVAS_POR_PARTE = 3;
 const ATRASO_BASE_TENTATIVA_MS = 1200;
 
@@ -38,7 +39,7 @@ export interface UploadProgress {
   currentPart?: number;
   totalParts?: number;
   attempt?: number;
-  state: "opening" | "uploading" | "retrying" | "completing";
+  state: "opening" | "uploading" | "retrying" | "paused" | "completing" | "done";
 }
 
 function esperar(ms: number, signal?: AbortSignal): Promise<void> {
@@ -114,7 +115,19 @@ export function useCreateAnalysis(): UseMutationResult<
   });
 }
 
-// ── upload (POST /{id}/data). File/Blob DIRETO; SEM retry automático (efeitos parciais/ARGOS-062-R). ──
+export function useRenameAnalysis(): UseMutationResult<
+  RenameAnalysisView,
+  unknown,
+  { analysisId: string; scope: CanonicalScope; name: string }
+> {
+  const client = useV1Client();
+  return useMutation({
+    retry: false,
+    mutationFn: ({ analysisId, scope, name }) => client.renameAnalysis(analysisId, scope, name),
+  });
+}
+
+// ── upload. File usa multipart retomavel; BodyInit não-File preserva o POST simples. ──
 export function useUploadData(): UseMutationResult<
   AnalysisStatusView,
   unknown,
@@ -130,7 +143,7 @@ export function useUploadData(): UseMutationResult<
   return useMutation({
     retry: false,
     mutationFn: async ({ analysisId, scope, body, signal, onProgress }) => {
-      if (!(body instanceof File) || body.size < LIMIAR_UPLOAD_MULTIPARTE) {
+      if (!(body instanceof File)) {
         return client.uploadData(analysisId, scope, body, { signal });
       }
 
@@ -206,7 +219,12 @@ export function useUploadData(): UseMutationResult<
         if (lastError) throw lastError;
       }
 
-      const partesConcluidas = Array.from(parts.values()).sort((a, b) => a.part_number - b.part_number);
+      const partesConcluidas: Array<{ part_number: number; etag: string }> = [];
+      for (let partNumber = 1; partNumber <= totalParts; partNumber += 1) {
+        const parte = parts.get(partNumber);
+        if (!parte) throw new Error("multipart_part_not_confirmed");
+        partesConcluidas.push(parte);
+      }
       onProgress?.({
         sentBytes: body.size,
         totalBytes: body.size,

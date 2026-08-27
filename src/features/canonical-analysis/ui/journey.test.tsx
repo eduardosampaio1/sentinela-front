@@ -40,6 +40,41 @@ function wrap(children: ReactNode) {
   );
 }
 
+function multipartHandlers({
+  onPart,
+}: {
+  onPart?: (request: Request) => Promise<Response> | Response;
+} = {}) {
+  return [
+    http.patch(`${MSW_BASE}/v1/analyses/:id`, async ({ params, request }) => {
+      const body = (await request.json()) as { name: string };
+      return HttpResponse.json({ analysis_id: String(params.id), display_name: body.name });
+    }),
+    http.post(`${MSW_BASE}/v1/analyses/:id/data/uploads`, () =>
+      HttpResponse.json({
+        analysis_id: "an-abc",
+        status: "receiving",
+        upload_session_id: "up-1",
+        part_size_bytes: 5 * 1024 * 1024,
+        uploaded_parts: [],
+      }),
+    ),
+    http.put(`${MSW_BASE}/v1/analyses/:id/data/uploads/:upload/parts/:part`, ({ request }) =>
+      onPart
+        ? onPart(request)
+        : HttpResponse.json({
+            analysis_id: "an-abc",
+            upload_session_id: "up-1",
+            part_number: 1,
+            etag: '"etag-1"',
+          }),
+    ),
+    http.post(`${MSW_BASE}/v1/analyses/:id/data/uploads/:upload/complete`, () =>
+      HttpResponse.json(statusView("receiving")),
+    ),
+  ];
+}
+
 describe("Jornada canônica — upload SEM materialização (E2 item 5)", () => {
   it("envia o File direto; NÃO usa FileReader/.text()/.arrayBuffer()", async () => {
     // Spia só os métodos que existem neste runtime (jsdom); os ausentes não podem ser chamados.
@@ -53,7 +88,7 @@ describe("Jornada canônica — upload SEM materialização (E2 item 5)", () => 
     const spies = alvos
       .filter(([proto, m]) => typeof (proto as Record<string, unknown>)[m] === "function")
       .map(([proto, m]) => vi.spyOn(proto as never, m as never));
-    server.use(http.post(`${MSW_BASE}/v1/analyses/:id/data`, () => HttpResponse.json(statusView("receiving"))));
+    server.use(...multipartHandlers());
     const onUploaded = vi.fn();
 
     render(wrap(<UploadStep analysisId="an-abc" scope={{ workspaceId: "ws-1" }} onUploaded={onUploaded} />));
@@ -70,12 +105,12 @@ describe("Jornada canônica — upload SEM materialização (E2 item 5)", () => 
 
   it("após enviar com sucesso, o botão fica bloqueado (sem 2º POST /data — Codex R5)", async () => {
     let dataCalls = 0;
-    server.use(
-      http.post(`${MSW_BASE}/v1/analyses/:id/data`, () => {
-        dataCalls += 1;
-        return HttpResponse.json(statusView("receiving"));
-      }),
-    );
+    server.use(...multipartHandlers({ onPart: () => {
+      dataCalls += 1;
+      return HttpResponse.json({
+        analysis_id: "an-abc", upload_session_id: "up-1", part_number: 1, etag: '"etag-1"',
+      });
+    } }));
     render(wrap(<UploadStep analysisId="an-abc" scope={{ workspaceId: "ws-1" }} onUploaded={vi.fn()} />));
     const input = document.getElementById("canonical-file") as HTMLInputElement;
     await userEvent.upload(input, new File(["{}\n"], "base.jsonl", { type: "application/x-ndjson" }));
@@ -88,15 +123,13 @@ describe("Jornada canônica — upload SEM materialização (E2 item 5)", () => 
 
   it("mostra barra de progresso enquanto a base está sendo recebida", async () => {
     let liberarUpload!: () => void;
-    const uploadPendente = new Promise<void>((resolve) => {
-      liberarUpload = resolve;
-    });
-    server.use(
-      http.post(`${MSW_BASE}/v1/analyses/:id/data`, async () => {
-        await uploadPendente;
-        return HttpResponse.json(statusView("receiving"));
-      }),
-    );
+    const uploadPendente = new Promise<void>((resolve) => { liberarUpload = resolve; });
+    server.use(...multipartHandlers({ onPart: async () => {
+      await uploadPendente;
+      return HttpResponse.json({
+        analysis_id: "an-abc", upload_session_id: "up-1", part_number: 1, etag: '"etag-1"',
+      });
+    } }));
     render(wrap(<UploadStep analysisId="an-abc" scope={{ workspaceId: "ws-1" }} onUploaded={vi.fn()} />));
 
     const input = document.getElementById("canonical-file") as HTMLInputElement;
@@ -110,10 +143,37 @@ describe("Jornada canônica — upload SEM materialização (E2 item 5)", () => 
     liberarUpload();
     await waitFor(() => expect(screen.queryByRole("progressbar")).not.toBeInTheDocument());
   });
+
+  it("pausa só a transferência e permite continuar sem perder a Analysis", async () => {
+    let chamadasDeParte = 0;
+    server.use(...multipartHandlers({ onPart: async (request) => {
+      chamadasDeParte += 1;
+      if (chamadasDeParte === 1) {
+        await new Promise<void>((resolve) => request.signal.addEventListener("abort", () => resolve(), { once: true }));
+      }
+      return HttpResponse.json({
+        analysis_id: "an-abc", upload_session_id: "up-1", part_number: 1, etag: '"etag-1"',
+      });
+    } }));
+    const onUploaded = vi.fn();
+    render(wrap(<UploadStep analysisId="an-abc" scope={{ workspaceId: "ws-1" }} onUploaded={onUploaded} />));
+
+    await userEvent.upload(
+      document.getElementById("canonical-file") as HTMLInputElement,
+      new File(["{}\n"], "base.jsonl", { type: "application/x-ndjson" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: /send dataset|enviar base/i }));
+    await userEvent.click(await screen.findByRole("button", { name: /pause upload|pausar envio/i }));
+
+    expect(await screen.findByText(/received parts are safe|partes recebidas estão seguras/i)).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: /continue upload|continuar envio/i }));
+    await waitFor(() => expect(onUploaded).toHaveBeenCalledTimes(1));
+    expect(chamadasDeParte).toBe(2);
+  });
 });
 
 describe("Jornada canônica — prepare cria a identidade durável (E2 itens 3-4)", () => {
-  it("clicar iniciar → prepare → navega para /analyses/:analysis_id", async () => {
+  it("entrar na rota → prepare automático → navega para /analyses/:analysis_id", async () => {
     let idem: string | null = null;
     server.use(
       http.post(`${MSW_BASE}/v1/analyses`, ({ request }) => {
@@ -122,7 +182,6 @@ describe("Jornada canônica — prepare cria a identidade durável (E2 itens 3-4
       }),
     );
     render(wrap(<StartAnalysisPage />));
-    await userEvent.click(screen.getByRole("button", { name: /start analysis|iniciar análise/i }));
     await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith("/analyses/an-abc"));
     expect(idem).toBeTruthy(); // Idempotency-Key da intenção foi enviada
   });

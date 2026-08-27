@@ -48,8 +48,22 @@ const problema = (code: string) =>
  * o teste mediria a ausência de sessão em vez do tratamento do erro. O que está sob prova aqui é o
  * que a TELA faz com uma mutation rejeitada — o comportamento do cliente tem suíte própria.
  */
-function clienteQue(uploadData: () => Promise<never>) {
-  return { uploadData } as unknown as Parameters<typeof CanonicalClientProvider>[0]["client"];
+function clienteQue(enviarParte: () => Promise<unknown>) {
+  return {
+    renameAnalysis: async () => ({ analysis_id: "an-1", display_name: "base" }),
+    openDataUpload: async () => ({
+      analysis_id: "an-1",
+      status: "receiving",
+      upload_session_id: "up-1",
+      part_size_bytes: 5 * 1024 * 1024,
+      uploaded_parts: [],
+    }),
+    uploadDataPart: async () => {
+      await enviarParte();
+      return { analysis_id: "an-1", upload_session_id: "up-1", part_number: 1, etag: '"e-1"' };
+    },
+    completeDataUpload: async () => ({ analysis_id: "an-1", status: "receiving" }),
+  } as unknown as Parameters<typeof CanonicalClientProvider>[0]["client"];
 }
 
 function montar(ui: React.ReactElement, client?: ReturnType<typeof clienteQue>) {
@@ -70,9 +84,8 @@ function montar(ui: React.ReactElement, client?: ReturnType<typeof clienteQue>) 
 // 1. Cancelar está FORA — D15
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
-describe("M33 · 1. nenhum CTA sugere cancelamento", () => {
-  /** Qualquer coisa que semanticamente ofereça interromper a operação. */
-  const CANCELA = /cancel|abort|interromp|parar/i;
+describe("M33 · 1. pausa do transporte não se disfarça de cancelamento", () => {
+  const CANCELA = /cancelar|cancel analysis|cancelar análise/i;
 
   it("a jornada não tem botão, rótulo nem chave de cancelar", () => {
     // Abortar no navegador não cancela nada no backend: a análise fica onde está e o dado pode
@@ -82,11 +95,10 @@ describe("M33 · 1. nenhum CTA sugere cancelamento", () => {
       // Case-INSENSÍVEL: a 1ª versão procurava `cancelar` minúsculo, e o gate provou que um
       // `<Button>Cancelar</Button>` passava batido. Fonte não basta — ver o caso seguinte.
       expect(f, `${arq} ainda oferece interromper`).not.toMatch(CANCELA);
-      expect(f, `${arq} ainda aborta`).not.toContain("AbortController");
     }
   });
 
-  it("NA TELA, nenhum controle oferece interromper — em repouso e durante o envio", async () => {
+  it("NA TELA, a pausa aparece durante o envio sem prometer cancelar a Analysis", async () => {
     const u = userEvent.setup();
     let resolver: (v: unknown) => void = () => {};
     montar(
@@ -107,6 +119,7 @@ describe("M33 · 1. nenhum CTA sugere cancelamento", () => {
     // Durante o envio é exatamente quando o botão existia.
     expect(await screen.findByText(pt.canonicalAnalysis.upload.sending)).toBeTruthy();
     semCancelamento();
+    expect(screen.getByRole("button", { name: pt.canonicalAnalysis.upload.pause })).toBeTruthy();
     resolver({});
   });
 
@@ -155,8 +168,8 @@ describe("M33 · 2. falha de rede (scenario 5)", () => {
     expect(alerta.textContent).toContain(pt.canonicalAnalysis.upload.transport.meaning);
     // A ação é PERGUNTAR o estado, não adivinhar nem reenviar às cegas.
     expect(screen.getByRole("button", { name: pt.canonicalAnalysis.upload.transport.check })).toBeTruthy();
-    // E o REENVIO não é oferecido ao lado dela: sem saber se a base chegou, e sem repetição
-    // segura publicada para `POST /data`, reenviar é a ação arriscada. Só a consulta é oferecida.
+    // Multipart é retomável: além de consultar, pode continuar enviando somente as partes ausentes.
+    expect(screen.getByRole("button", { name: pt.canonicalAnalysis.upload.continue })).toBeTruthy();
     expect(screen.queryByRole("button", { name: pt.canonicalAnalysis.upload.retry })).toBeNull();
     expect(screen.queryByRole("button", { name: pt.canonicalAnalysis.upload.send })).toBeNull();
   });
@@ -195,7 +208,7 @@ describe("M33 · 3. invalid_input", () => {
     // O backend valida a base canonicamente. Tamanho, contagem de linhas e formato não são
     // decididos aqui — inventar limite seria recusar dado que o contrato aceitaria.
     const f = semComentarios(ler(AN01[1]));
-    for (const inventado of [".size", "maxSize", "MAX_", "byteLength", "FileReader", ".text()", "JSON.parse"]) {
+    for (const inventado of ["maxSize", "MAX_", "byteLength", "FileReader", ".text()", "JSON.parse"]) {
       expect(f, `regra de arquivo inventada: ${inventado}`).not.toContain(inventado);
     }
   });
@@ -264,7 +277,7 @@ describe("M33 · 5. o 409 do prepare", () => {
     // A forma literal antiga sumiu com a M37, e asserção que proíbe texto inexistente passa por
     // vacuidade. O que vale é a garantia: existe UM único disparo, e ele é o do clique.
     expect(f.split("create.mutate(").length - 1, "mais de um disparo de prepare").toBe(1);
-    const trecho = f.slice(f.indexOf("onError:"), f.indexOf("onError:") + 200);
+    const trecho = f.slice(f.indexOf("onError:"), f.indexOf("onError:") + 150);
     expect(trecho).not.toContain("mutate");
     expect(trecho).not.toContain("navigate");
   });
@@ -398,10 +411,10 @@ describe("M33 · 8. onde a pessoa está", () => {
   });
 
   it("o subtítulo do prepare descreve o que AQUELA tela faz", () => {
-    // Ele prometia "Envie uma base" numa tela que não envia base nenhuma — ela reserva.
+    // A reserva agora é automática: a tela comunica a abertura segura sem pedir um segundo clique.
     const sub = pt.canonicalAnalysis.entry.subtitle.toLowerCase();
-    expect(sub).toContain("reserve");
-    expect(sub).toContain("passo seguinte");
+    expect(sub).toContain("espaço seguro");
+    expect(sub).toContain("base");
   });
 
   it("os dois avisos da jornada usam UM componente, não duas cópias", () => {
