@@ -397,10 +397,11 @@ export function makeJourneyHandlers(base: string) {
       putEntry(id, { seq: ROTEIRO_PADRAO, idx: 0, retryAllowed: false });
       return HttpResponse.json({ analysis_id: id, status: "queued" });
     }),
-    http.post(`${b}/v1/analyses/:id/retry`, ({ params }) => {
-      const id = String(params.id);
-      putEntry(id, { seq: ["recovering", "running", "completed"], idx: 0, retryAllowed: false });
-      return HttpResponse.json({ analysis_id: id, status: "recovering" });
+    http.post(`${b}/v1/analyses/:id/reprocess`, ({ params }) => {
+      const sourceId = String(params.id);
+      const id = `${sourceId}-reprocessed`;
+      putEntry(id, { seq: ["queued", "running", "completed"], idx: 0, retryAllowed: false });
+      return HttpResponse.json({ analysis_id: id, source_analysis_id: sourceId, status: "queued" });
     }),
     http.get(`${b}/v1/analyses/:id/analytics`, ({ params }) => {
       const id = String(params.id);

@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AvisoDeIntake } from "./AvisoDeIntake";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { workspaceKeys, type AnalysisStatusView } from "@/lib/v1";
@@ -41,6 +41,7 @@ export function AnalysisPage() {
   const { t } = useLanguage();
   const params = useParams();
   const analysisId = params.analysisId ?? null;
+  const navigate = useNavigate();
   const scope = useCanonicalScope();
   const queryClient = useQueryClient();
   const status = useAnalysisStatus(scope, analysisId);
@@ -61,7 +62,7 @@ export function AnalysisPage() {
   const analytics = useAnalysisAnalytics(scope, analysisId, analyticsPronto);
   const submit = useSubmitAnalysis();
   const retry = useRetryAnalysis();
-  // Idempotency-Key por INTENÇÃO também no submit/retry: reusada em retry de falha transitória,
+  // Idempotency-Key por INTENÇÃO também no submit/reprocess: reusada em falha transitória,
   // reset no sucesso — o backend nunca vê a mesma intenção como submits distintos (Codex E2 R1).
   const submitIntent = useIdempotencyIntent();
   const retryIntent = useIdempotencyIntent();
@@ -84,9 +85,9 @@ export function AnalysisPage() {
     }
   }
 
-  // Submit/retry SEMPRE reusam o MESMO analysis_id e a Idempotency-Key da INTENÇÃO — nunca prepare,
-  // nunca upload, nunca nova chave p/ mascarar conflito. O bloqueio (isPending||isSuccess) impede
-  // duplo-clique e retries concorrentes; NENHUMA mutation re-tenta sozinha.
+  // Submit reutiliza esta Analysis. Reprocess cria outra Analysis sobre o MESMO artefato pronto:
+  // nunca prepare/upload, nunca apaga a falha anterior. O bloqueio impede duplo-clique e execuções
+  // concorrentes; a Idempotency-Key permanece ligada a uma intenção e mutation não re-tenta sozinha.
   const submitBloqueado = submit.isPending || submit.isSuccess;
   const retryBloqueado = retry.isPending || retry.isSuccess;
   function dispararSubmit() {
@@ -95,7 +96,18 @@ export function AnalysisPage() {
   }
   function dispararRetry() {
     if (!scope || !analysisId || retryBloqueado) return;
-    retry.mutate({ analysisId, scope, idempotencyKey: retryIntent.ensure() }, { onSuccess: revalidar });
+    retry.mutate(
+      { analysisId, scope, idempotencyKey: retryIntent.ensure() },
+      {
+        onSuccess: (nova) => {
+          retryIntent.reset();
+          navigate(`/analyses/${encodeURIComponent(nova.analysis_id)}`);
+          // O hook vive enquanto apenas o parâmetro da rota muda. Sem reset, uma falha futura
+          // da nova Analysis herdaria `isSuccess` e deixaria seu próprio botão bloqueado.
+          retry.reset();
+        },
+      },
+    );
   }
 
   function disponibilidadeDasVisoes(view: AnalysisStatusView) {
@@ -359,9 +371,9 @@ export function AnalysisPage() {
                 desfaz o que o componente analítico entregou. */}
             {analyticsPronto && analytics.data && <RegiaoDeAnalyticsAoVivo vista={analytics.data} />}
             {view.retry_allowed ? (
-              // Recuperável: retry canônico (mesmo analysis_id, sem prepare/upload).
+              // Recuperável: nova execução sobre o artefato já recebido, sem novo upload.
               <Button onClick={dispararRetry} disabled={retryBloqueado} aria-busy={retry.isPending}>
-                {t("canonicalAnalysis.action.retry")}
+                {t("canonicalAnalysis.action.reprocess")}
               </Button>
             ) : (
               // Não recuperável: NÃO oferecer "tentar novamente". Nova análise = nova INTENÇÃO

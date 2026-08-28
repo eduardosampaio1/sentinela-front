@@ -310,7 +310,7 @@ export function useSubmitAnalysis(): UseMutationResult<
   });
 }
 
-// ── retry público (POST /{id}/retry). Mesma análise; nunca prepare/data. Idempotency-Key da intenção. ──
+// ── reprocess público. Nova Analysis sobre o mesmo artefato; nunca prepare/data/upload. ──
 export function useRetryAnalysis(): UseMutationResult<
   AnalysisHandle,
   unknown,
@@ -320,7 +320,7 @@ export function useRetryAnalysis(): UseMutationResult<
   return useMutation({
     retry: false,
     mutationFn: ({ analysisId, scope, idempotencyKey }) =>
-      client.retry(analysisId, scope, idempotencyKey ? { idempotencyKey } : undefined),
+      client.reprocess(analysisId, scope, idempotencyKey ? { idempotencyKey } : undefined),
   });
 }
 

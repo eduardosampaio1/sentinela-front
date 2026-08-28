@@ -115,6 +115,7 @@
       "viewResult": "View result",
       "checkAgain": "Check again",
       "retry": "Try again",
+      "reprocess": "Run again",
       "back": "Back",
       "newAnalysis": "New analysis",
       "resultPreparing": "The analysis is complete. The result is still being prepared."

@@ -343,7 +343,7 @@ INST-07** são delta declarado por falta de produtor. O contrato de Instance pub
 | **AN-01** | **Preparo + upload** | `/analyses/new` | `/canonical/analyses/new` | "Enviar conversas" | idle · `preparing` · `receiving` · **upload inválido** · **falha de rede** · `idempotency_conflict` | **REAL** (`prepare`, `data`, `submit`) |
 | **AN-02** | **Ação necessária** (`needs_mapping`) | `/analyses/{id}` | `/canonical/analyses/:id` | "Confirmar interpretação" | `needs_mapping` | 🔶 **APPROVED DELTA** — estado REAL; operação **existe no Ingestion**, **não** na fronteira pública |
 | **AN-03** | **Processamento** | `/analyses/{id}` | `/canonical/analyses/:id` | — (acompanhar) | `queued · running · recovering` + 4 eixos | **REAL** (`/progress` sem cliente) |
-| **AN-04** | **Falha** | `/analyses/{id}` | `/canonical/analyses/:id` | "Tentar novamente" se `retry_allowed` | `failed` retryable / não-retryable · `capacity_wait` | **REAL** (`retry`) |
+| **AN-04** | **Falha** | `/analyses/{id}` | `/v1/analyses/:id/reprocess` | "Analisar novamente" se `retry_allowed`; cria nova Analysis sobre o artefato pronto | `failed` retryable / não-retryable · `capacity_wait` | **REAL** (`reprocess`; `retry` é alias compatível) |
 
 > 🔴 **AN-02 — corrigido em 2026-08-09 após verificação exigida pelo owner.** A afirmação
 > anterior (*"não há operação para resolvê-lo"*) estava **errada**. A operação **existe**, e o par

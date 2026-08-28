@@ -40,7 +40,7 @@ test.describe("E6 — resiliência da jornada (browser real)", () => {
   test("resposta perdida: retry aceito → reload → reconstrói por analysis_id, SEM 2ª mutation", async ({ page }) => {
     let retryPosts = 0;
     page.on("request", (req) => {
-      if (req.method() === "POST" && new URL(req.url()).pathname.endsWith("/retry")) retryPosts += 1;
+      if (req.method() === "POST" && new URL(req.url()).pathname.endsWith("/reprocess")) retryPosts += 1;
     });
     await seedAuthAnd(page, { "an-lost": { seq: ["failed"], idx: 0, retryAllowed: true } });
     await page.goto("/canonical/analyses/an-lost");

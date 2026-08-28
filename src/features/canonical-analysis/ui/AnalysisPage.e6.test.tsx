@@ -55,35 +55,36 @@ const problem = (code: string, status: number) =>
   });
 
 describe("E6 — retry canônico e falha não recuperável", () => {
-  it("failed+retry_allowed: retry usa o MESMO analysis_id, 0 prepare, 0 upload", async () => {
+  it("failed+retry_allowed: cria nova Analysis sobre o artefato, 0 prepare, 0 upload", async () => {
     const posts: string[] = [];
     server.events.on("request:start", ({ request }) => {
       if (request.method === "POST") posts.push(new URL(request.url).pathname);
     });
     server.use(
       http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(failed(true))),
-      http.post(`${MSW_BASE}/v1/analyses/:id/retry`, () => HttpResponse.json({ analysis_id: "an-abc", status: "recovering" as AnalysisStatus })),
+      http.post(`${MSW_BASE}/v1/analyses/:id/reprocess`, () => HttpResponse.json({ analysis_id: "an-new", status: "queued" as AnalysisStatus })),
     );
     renderAt();
-    const botao = await screen.findByRole("button", { name: /try again|tentar de novo/i });
+    const botao = await screen.findByRole("button", { name: /run again|analisar novamente/i });
     await userEvent.click(botao);
 
-    await waitFor(() => expect(posts).toContain("/v1/analyses/an-abc/retry"));
+    await waitFor(() => expect(posts).toContain("/v1/analyses/an-abc/reprocess"));
+    await screen.findByText("an-new");
     expect(posts.filter((p) => p === "/v1/analyses").length, "0 prepare").toBe(0);
     expect(posts.filter((p) => p.endsWith("/data")).length, "0 upload").toBe(0);
   });
 
-  it("duplo-clique no retry: só UM POST /retry (bloqueio isPending||isSuccess)", async () => {
+  it("duplo-clique no reprocessamento: só UM POST (bloqueio isPending||isSuccess)", async () => {
     let retries = 0;
     server.use(
       http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(failed(true))),
-      http.post(`${MSW_BASE}/v1/analyses/:id/retry`, async () => {
+      http.post(`${MSW_BASE}/v1/analyses/:id/reprocess`, async () => {
         retries += 1;
-        return HttpResponse.json({ analysis_id: "an-abc", status: "recovering" as AnalysisStatus });
+        return HttpResponse.json({ analysis_id: "an-new", status: "queued" as AnalysisStatus });
       }),
     );
     renderAt();
-    const botao = await screen.findByRole("button", { name: /try again|tentar de novo/i });
+    const botao = await screen.findByRole("button", { name: /run again|analisar novamente/i });
     await userEvent.dblClick(botao);
     await new Promise((r) => setTimeout(r, 40));
     expect(retries).toBe(1);
@@ -93,7 +94,7 @@ describe("E6 — retry canônico e falha não recuperável", () => {
     server.use(http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(failed(false))));
     renderAt();
     await screen.findByText(/couldn't complete|não foi possível/i);
-    expect(screen.queryByRole("button", { name: /try again|tentar de novo/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /run again|analisar novamente/i })).toBeNull();
     expect(screen.getByRole("link", { name: /new analysis|nova análise/i })).toBeTruthy();
   });
 });
@@ -147,7 +148,7 @@ describe("E6 — acessibilidade (axe) dos estados de erro/retry/espera", () => {
   it("failed+retry (alert + botão nomeado): sem violações", async () => {
     server.use(http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(failed(true))));
     const { container } = renderAt();
-    await screen.findByRole("button", { name: /try again/i });
+    await screen.findByRole("button", { name: /run again/i });
     expect(await violacoes(container)).toEqual([]);
   });
   it("não recuperável (links nomeados): sem violações", async () => {

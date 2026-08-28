@@ -170,8 +170,11 @@
 // dataset. O caso materializado está em `AnalyticsView.test.tsx`.
 // Reselado ao acrescentar `rename_analysis` e `display_name`. A reconferência materializou o
 // campo opcional nas fixtures de status e lista; nenhum campo existente foi removido ou mudou.
+// Reselado ao publicar `reprocess_analysis` e manter `retry_analysis` como alias compatível.
+// Ambas as operações criam uma nova Analysis a partir do artefato imutável já validado; os read
+// models e todas as fixtures abaixo permanecem estruturalmente inalterados.
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "992cb0641d2bfe125662cc1a2515b8680354a096f734db81a8f1d18b316e8656";
+  "e670c87011655a7d95ee15731eb4afda69c4d17af51925cc9ed196c0c84ef972";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.

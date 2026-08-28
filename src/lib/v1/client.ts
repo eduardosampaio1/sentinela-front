@@ -47,7 +47,7 @@ export interface V1ClientConfig {
 
 export interface RequestOptions {
   signal?: AbortSignal;
-  /** Chave de idempotência escolhida pelo chamador (prepare/submit/retry). Se ausente, o cliente
+  /** Chave de idempotência escolhida pelo chamador (prepare/submit/reprocess). Se ausente, o cliente
    *  gera uma — mas a MESMA chave deve ser reusada num retry de rede para não duplicar. */
   idempotencyKey?: string;
 }
@@ -158,6 +158,8 @@ export interface V1Client {
     resultSchemaVersion?: string,
   ): Promise<AnalysisResultView>;
   list(params: ListParams, opts?: RequestOptions): Promise<AnalysisListPage>;
+  reprocess(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
+  /** Alias contratual legado. Também cria nova Analysis; não reabre a anterior. */
   retry(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
   /**
    * As Instances do workspace (BD02). Lista vazia é sucesso, não erro: workspace autorizado
@@ -594,6 +596,8 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         // poluiria a query de toda listagem com uma opção que ninguém escolheu.
         baseline_eligible: params.baselineEligible ? "true" : undefined,
       }, opts),
+    reprocess: (analysisId, scope, opts) =>
+      pedir<AnalysisHandle>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/reprocess`, { workspace_id: scope.workspaceId }, opts, undefined, true),
     retry: (analysisId, scope, opts) =>
       pedir<AnalysisHandle>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/retry`, { workspace_id: scope.workspaceId }, opts, undefined, true),
     listInstances: (params, opts) =>

@@ -181,7 +181,7 @@ export interface AnalysisResultView {
   result: unknown;
 }
 
-/** Resposta de prepare (POST /v1/analyses) e submit/retry. */
+/** Resposta de prepare, submit e reprocess; reprocess devolve a identidade da nova Analysis. */
 export interface AnalysisHandle {
   analysis_id: string;
   status: AnalysisStatus;
