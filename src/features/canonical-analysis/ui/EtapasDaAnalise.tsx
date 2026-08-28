@@ -2,7 +2,7 @@ import { Check, CircleDashed, Loader2, TriangleAlert, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRevelacao } from "@/design/motion";
 import { cn } from "@/lib/utils";
-import type { AnalysisStatusView } from "@/lib/v1";
+import type { AnalysisStatusView, IntakeProgressView } from "@/lib/v1";
 import type { UploadProgress } from "../data/analysis";
 import type { EixoLido } from "../result/eixos";
 
@@ -145,12 +145,14 @@ export function EtapasDaAnalise({
   view,
   eixos,
   uploadProgress = null,
+  intakeProgress,
 }: {
   view: AnalysisStatusView;
   eixos: readonly EixoLido[];
   uploadProgress?: UploadProgress | null;
+  intakeProgress?: IntakeProgressView;
 }) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const etapas: Etapa[] = [
     { chave: "upload", estado: estadoDoUpload(view.status, uploadProgress) },
     { chave: "privacy", estado: estadoDaProtecao(view, uploadProgress) },
@@ -175,6 +177,19 @@ export function EtapasDaAnalise({
           : etapas.length - 1;
   const etapaDaLeitura = etapas[indiceDaLeitura];
   const progressoConcluido = concluidas === etapas.length;
+  const percentualDoIntake =
+    intakeProgress?.percent === null || intakeProgress?.percent === undefined
+      ? null
+      : Math.max(0, Math.min(100, intakeProgress.percent));
+  const formatarBytes = (valor: number) => {
+    const emGigabytes = valor >= 1_000_000_000;
+    return new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US", {
+      style: "unit",
+      unit: emGigabytes ? "gigabyte" : "megabyte",
+      unitDisplay: "short",
+      maximumFractionDigits: 1,
+    }).format(valor / (emGigabytes ? 1_000_000_000 : 1_000_000));
+  };
 
   return (
     <section
@@ -236,6 +251,8 @@ export function EtapasDaAnalise({
                                 ? 100
                                 : uploadProgress.percent
                           }%`
+                        : etapa.chave === "privacy" && percentualDoIntake !== null
+                          ? `${percentualDoIntake}%`
                         : "100%",
                     transitionDuration: "var(--ds-duration-base)",
                     transitionTimingFunction: "var(--ds-easing-standard)",
@@ -309,6 +326,51 @@ export function EtapasDaAnalise({
                       total: uploadProgress.totalParts,
                     })} · {uploadProgress.percent}%
                   </p>
+                ) : null}
+                {etapa.chave === "privacy" &&
+                etapa.estado === "active" &&
+                intakeProgress ? (
+                  <div className="mt-3 max-w-xl space-y-2">
+                    {percentualDoIntake !== null ? (
+                      <div
+                        role="progressbar"
+                        aria-label={t("canonicalAnalysis.liveProgress.intakeProgressLabel")}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={percentualDoIntake}
+                        aria-valuetext={t("canonicalAnalysis.liveProgress.intakePercent", {
+                          percent: percentualDoIntake,
+                        })}
+                        className="h-2 overflow-hidden rounded-full bg-muted"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="block h-full rounded-full bg-primary transition-transform motion-reduce:transition-none"
+                          style={{
+                            transform: `scaleX(${percentualDoIntake / 100})`,
+                            transformOrigin: "left",
+                            transitionDuration: "var(--ds-duration-base)",
+                            transitionTimingFunction: "var(--ds-easing-standard)",
+                          }}
+                        />
+                      </div>
+                    ) : null}
+                    <p className="break-words text-xs tabular-nums text-muted-foreground">
+                      {intakeProgress.total_bytes
+                        ? t("canonicalAnalysis.liveProgress.intakeBytes", {
+                            processed: formatarBytes(intakeProgress.processed_bytes),
+                            total: formatarBytes(intakeProgress.total_bytes),
+                          })
+                        : t("canonicalAnalysis.liveProgress.intakeBytesUnknown", {
+                            processed: formatarBytes(intakeProgress.processed_bytes),
+                          })}
+                      {` · ${t("canonicalAnalysis.liveProgress.intakeConversations", {
+                        count: new Intl.NumberFormat(
+                          language === "pt" ? "pt-BR" : "en-US",
+                        ).format(intakeProgress.conversations_seen),
+                      })}`}
+                    </p>
+                  </div>
                 ) : null}
               </div>
             </li>

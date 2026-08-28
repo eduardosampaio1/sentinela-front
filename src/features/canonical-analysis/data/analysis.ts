@@ -346,9 +346,8 @@ export function useAnalysisStatus(
 /**
  * Progresso por EIXO (`GET /{id}/progress`) — M20.
  *
- * Devolve os eixos como chegam. Nenhuma agregação: um percentual único inventaria uma média entre
- * eixos que medem coisas incomparáveis, e a pessoa leria como medida o que seria opinião do front.
- * O plano põe isso fora de escopo, e a Constituição já dizia que eixo nunca vira barra única.
+ * Devolve os eixos como chegam, sem agregá-los. O bloco opcional de intake é uma medida diferente:
+ * bytes lidos pelo próprio Ingestion, não uma média entre componentes.
  */
 export function useAnalysisProgress(
   scope: CanonicalScope | null,

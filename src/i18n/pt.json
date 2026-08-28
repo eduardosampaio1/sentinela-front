@@ -618,6 +618,11 @@
       "stageProgressLabel": "Progresso das etapas da análise",
       "stageProgressValue": "Etapa {{current}} de {{total}} · {{title}}",
       "stageProgressComplete": "As 4 etapas foram concluídas",
+      "intakeProgressLabel": "Progresso da proteção da base",
+      "intakePercent": "{{percent}}% da base revisada",
+      "intakeBytes": "{{processed}} de {{total}} revisados",
+      "intakeBytesUnknown": "{{processed}} revisados",
+      "intakeConversations": "{{count}} conversas encontradas",
       "state": {
         "waiting": "Em espera",
         "active": "Agora",

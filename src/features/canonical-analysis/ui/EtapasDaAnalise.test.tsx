@@ -6,6 +6,33 @@ import { lerEixos } from "../result/eixos";
 import { EtapasDaAnalise } from "./EtapasDaAnalise";
 
 describe("etapas públicas da análise", () => {
+  it("mostra o percentual medido pelo backend durante a proteção", () => {
+    window.localStorage.setItem("sentinela:language", "pt");
+    render(
+      <LanguageProvider>
+        <EtapasDaAnalise
+          view={statusView("receiving")}
+          eixos={lerEixos({ analysis_id: "an-abc", axes: [] })}
+          intakeProgress={{
+            stage: "protecting",
+            processed_bytes: 750_000_000,
+            total_bytes: 1_000_000_000,
+            percent: 75,
+            conversations_seen: 300,
+            conversations_ready: 294,
+            conversations_outside_analysis: 6,
+            last_activity_at: "2026-08-28T01:00:00+00:00",
+          }}
+        />
+      </LanguageProvider>,
+    );
+
+    expect(screen.getByRole("progressbar", { name: "Progresso da proteção da base" }))
+      .toHaveAttribute("aria-valuenow", "75");
+    expect(screen.getByText(/750 MB de 1 GB revisados/)).toBeInTheDocument();
+    expect(screen.getByText(/300 conversas encontradas/)).toBeInTheDocument();
+  });
+
   it("não faz a proteção voltar a Waiting depois que a análise já está rodando", () => {
     window.localStorage.setItem("sentinela:language", "en");
     render(

@@ -560,13 +560,25 @@ export type ProgressEntry =
 /**
  * `GET /v1/analyses/{analysis_id}/progress`.
  *
- * **Não há percentual, e não haverá.** O plano põe agregação fora de escopo, e o motivo é de
- * produto: um número único inventaria uma média entre eixos que medem coisas incomparáveis, e a
- * pessoa leria "63%" como se fosse uma medida quando é uma opinião do front.
+ * Os quatro eixos não têm percentual agregado: uma média entre componentes incomparáveis seria
+ * opinião do front. ``intake`` é diferente — traz bytes medidos por um único produtor durante a
+ * passagem pelo arquivo e, por isso, pode publicar percentual sem inventar uma medida.
  */
+export interface IntakeProgressView {
+  stage: string;
+  processed_bytes: number;
+  total_bytes: number | null;
+  percent: number | null;
+  conversations_seen: number;
+  conversations_ready: number;
+  conversations_outside_analysis: number;
+  last_activity_at: string | null;
+}
+
 export interface AnalysisProgressView {
   analysis_id: string;
   axes: readonly ProgressEntry[];
+  intake?: IntakeProgressView;
 }
 
 // ── Projeção analítica pública (M21) ────────────────────────────────────────────────────────

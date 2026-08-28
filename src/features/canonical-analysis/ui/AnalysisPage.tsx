@@ -166,7 +166,12 @@ export function AnalysisPage() {
             onUploaded={revalidar}
             onProgressChange={setUploadProgress}
           />
-          <EtapasDaAnalise view={view} eixos={eixos} uploadProgress={uploadProgress} />
+          <EtapasDaAnalise
+            view={view}
+            eixos={eixos}
+            uploadProgress={uploadProgress}
+            intakeProgress={progresso.data?.intake}
+          />
         </div>
       );
     }
@@ -186,7 +191,12 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
-            <EtapasDaAnalise view={view} eixos={eixos} uploadProgress={uploadProgress} />
+            <EtapasDaAnalise
+              view={view}
+              eixos={eixos}
+              uploadProgress={uploadProgress}
+              intakeProgress={progresso.data?.intake}
+            />
             <section className="rounded-[var(--ds-radius-panel)] border border-border bg-card/70 p-4">
               <h2 className="text-sm font-semibold text-foreground">
                 {t("canonicalAnalysis.upload.resumeQuestion")}
@@ -213,7 +223,7 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
-            <EtapasDaAnalise view={view} eixos={eixos} />
+            <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
             <Button onClick={dispararSubmit} disabled={submitBloqueado} aria-busy={submit.isPending}>
               {t("canonicalAnalysis.upload.submit")}
             </Button>
@@ -247,7 +257,7 @@ export function AnalysisPage() {
           return (
             <div className="space-y-4">
               <StateBanner view={view} />
-              <EtapasDaAnalise view={view} eixos={eixos} />
+              <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
               {/* Rotulo PROPRIO, e nao o titulo do editor: dizer *Diga qual coluna e qual* enquanto
                   ainda se le o arquivo pede uma decisao que nao esta disponivel -- e faz o
                   carregando ser indistinguivel do editor para quem mede a tela. */}
@@ -259,7 +269,7 @@ export function AnalysisPage() {
           return (
             <div className="space-y-4">
               <StateBanner view={view} />
-              <EtapasDaAnalise view={view} eixos={eixos} />
+              <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
               <p className="text-sm text-muted-foreground">
                 {t("canonicalAnalysis.needsMapping.loadFailed")}
               </p>
@@ -276,7 +286,7 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
-            <EtapasDaAnalise view={view} eixos={eixos} />
+            <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
             <MappingStep
               mapa={mapeamento.data}
               aoConfirmar={async (regras, agrupamento, minimoDeValidos) => {
@@ -299,7 +309,7 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
-            <EtapasDaAnalise view={view} eixos={eixos} />
+            <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
             {/* OS EIXOS ENTRAM AQUI TAMBÉM, pela mesma simetria que a M35 usou em `failed`.
                 Lá o argumento foi: apagar os eixos transformaria "um componente falhou" em "tudo
                 falhou", que é afirmação que o produtor não fez. O reverso vale igual — sem eles,
@@ -320,7 +330,7 @@ export function AnalysisPage() {
         return (
           <div className="space-y-6">
             <StateBanner view={view} />
-            <EtapasDaAnalise view={view} eixos={eixos} />
+            <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
             {/* O QUE ACONTECEU COM O ARQUIVO, em numeros.
 
                 Medido em homologacao (2026-08-24) com base real: 100 de 61.423 registros
@@ -379,7 +389,7 @@ export function AnalysisPage() {
                 `StateBanner` já o distingue por palavra e forma, nunca só por cor. */}
             <StateBanner view={view} />
             <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
-            <EtapasDaAnalise view={view} eixos={eixos} />
+            <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
             <DisponibilidadeDasVisoes
               analysisId={analysisId}
               estados={disponibilidadeDasVisoes(view)}
