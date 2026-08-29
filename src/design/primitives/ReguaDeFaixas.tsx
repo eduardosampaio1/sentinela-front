@@ -92,7 +92,14 @@ export function ReguaDeFaixas({
         </div>
       ) : null}
 
-      <div className="faixa" role="img" aria-label={descricao}>
+      <div
+        className="faixa"
+        role="meter"
+        aria-label={descricao}
+        aria-valuemin={piso}
+        aria-valuemax={teto}
+        aria-valuenow={valor ?? undefined}
+      >
         {/* A ZONA CRÍTICA e a CONFORME trocam de lado conforme a direção dos cortes. Escrever
             «a primeira é a crítica» valeria só para as medidas em que menor é pior — e o
             contrato publica as duas orientações. */}
@@ -130,11 +137,25 @@ export function ReguaDeFaixas({
         <span className="corte" style={{ left: `${a * 100}%` }} />
         <span className="corte" style={{ left: `${b * 100}%` }} />
         {posicao !== null && zona !== null ? (
+          <span
+            aria-hidden="true"
+            data-revelar="barra"
+            data-preenchimento="valor"
+            className={`progresso ${zona}`}
+            style={{ width: `${posicao * 100}%` }}
+          />
+        ) : null}
+        {posicao !== null && zona !== null ? (
           /* NOME, e não só estilo. O gate do herói identificava a agulha por
              `span[style*='left']:not([style*='opacity'])` — um proxy da FORMA do CSS, que
              funcionava enquanto ela fosse o único elemento posicionado da régua. Ela não é.
              Atributo próprio não envelhece com o desenho. */
-          <span data-marcador="valor" className="agulha" style={{ left: `${posicao * 100}%` }} />
+          <span
+            aria-hidden="true"
+            data-marcador="valor"
+            className={`agulha ${zona}`}
+            style={{ left: `${posicao * 100}%` }}
+          />
         ) : null}
       </div>
 

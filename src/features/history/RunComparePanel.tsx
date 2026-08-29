@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useAnalysisResult } from "@/features/canonical-analysis/data/analysis";
 import { adaptAnalysisResult, type IndicatorView } from "@/features/canonical-analysis/result/adapter";
+import { rotuloDoIndicador } from "@/features/canonical-analysis/result/indicadores";
 import type { LinhaHistorico } from "@/features/canonical-analysis/data/historicoView";
 import type { CanonicalScope } from "@/lib/v1";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -60,8 +61,8 @@ function parear(a: IndicatorView[], b: IndicatorView[], t: (chave: string) => st
 
   const pares: Par[] = [];
   for (const [id, { a: ia, b: ib }] of porId) {
-    const chave = ia?.descriptor.labelKey ?? ib?.descriptor.labelKey;
-    const rotulo = chave ? t(chave) : id;
+    const indicador = ia ?? ib;
+    const rotulo = indicador ? rotuloDoIndicador(indicador, t) : id;
     // `measured` dos DOIS lados é a condição. Um indicador `unavailable` tem `rawValue` que não
     // é medição; subtraí-lo produziria um delta que parece fato e não é.
     const medidoA = ia?.state === "measured" && ia.rawValue !== null;

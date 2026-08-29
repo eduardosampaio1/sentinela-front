@@ -41,19 +41,22 @@ function montar(measurement: Record<string, unknown>) {
 describe("Herói · o bullet só existe quando o produtor declarou os cortes", () => {
   it("COM `thresholds`, o medidor aparece e diz o que mostra", () => {
     montar({ ...MEDIDA, thresholds: { warn: 75, critical: 60 } });
-    const fig = screen.getByRole("img");
+    const fig = screen.getByRole("meter");
     // A frase é interpolada: sem isto a tela mostraria `{{warn}}` cru e o teste passaria.
     expect(fig.getAttribute("aria-label")).toMatch(/Behavior score/);
     expect(fig.getAttribute("aria-label")).toMatch(/75/);
     expect(fig.getAttribute("aria-label")).toMatch(/60/);
     expect(fig.getAttribute("aria-label")).not.toMatch(/\{\{/);
+    expect(fig).toHaveAttribute("aria-valuemin", "0");
+    expect(fig).toHaveAttribute("aria-valuemax", "100");
+    expect(fig).toHaveAttribute("aria-valuenow", "80.36");
   });
 
   it("SEM `thresholds`, NÃO há medidor — é o caso das outras 36 saídas", () => {
     // O cadeado que impede a régua cinza "só para mostrar a escala": uma barra sem zonas
     // convida a leitura de posição que nada sustenta.
     montar(MEDIDA);
-    expect(screen.queryByRole("img")).toBeNull();
+    expect(screen.queryByRole("meter")).toBeNull();
   });
 
   // Os tres casos abaixo pedem o marcador por `[data-marcador]`. Os dois primeiros passavam
@@ -70,6 +73,14 @@ describe("Herói · o bullet só existe quando o produtor declarou os cortes", (
     const esquerda = parseFloat(marcador.style.left);
     expect(esquerda).toBeGreaterThan(78);
     expect(esquerda).toBeLessThan(82);
+  });
+
+  it("o preenchimento comunica a magnitude e usa o motor de movimento acessível", () => {
+    const { container } = montar({ ...MEDIDA, thresholds: { warn: 75, critical: 60 } });
+    const preenchimento = container.querySelector("[data-preenchimento='valor']") as HTMLElement;
+    expect(preenchimento).toBeTruthy();
+    expect(preenchimento).toHaveAttribute("data-revelar", "barra");
+    expect(parseFloat(preenchimento.style.width)).toBeCloseTo(80.36, 2);
   });
 
   it("`ratio_unit` usa régua 0..1, e o mesmo número cairia noutro lugar", () => {
@@ -95,7 +106,7 @@ describe("Herói · o bullet só existe quando o produtor declarou os cortes", (
       reason: "no_input_data",
       thresholds: { warn: 75, critical: 60 },
     });
-    expect(screen.getByRole("img")).toBeInTheDocument();
+    expect(screen.getByRole("meter")).toBeInTheDocument();
     // Pergunta pelo MARCADOR, nao pela forma do CSS dele. A versao anterior contava
     // `span[style*='left']:not([style*='opacity'])`, que era o marcador enquanto ele fosse o
     // unico elemento posicionado da regua. Quando os cortes passaram a ser escritos na fracao

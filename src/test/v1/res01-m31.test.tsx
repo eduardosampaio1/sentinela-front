@@ -128,6 +128,55 @@ describe("M31 · 1. a margem aparece onde há o que mostrar", () => {
   });
 });
 
+describe("M31 · zero medido não esconde ausência do campo de resultado", () => {
+  it("explica os zeros quando a cobertura de resultado publicada é 0%", () => {
+    montar(
+      <SecaoDeIndicadores
+        indicators={[
+          ind(),
+          ind({
+            id: "outcome_field_coverage_rate",
+            descriptor: {
+              id: "outcome_field_coverage_rate",
+              labelKey: "canonicalAnalysis.result.indicator.outcome_field_coverage_rate.label",
+              descriptionKey:
+                "canonicalAnalysis.result.indicator.outcome_field_coverage_rate.description",
+              sourceField: "outcome_field_coverage_rate",
+            },
+            display: "0",
+            rawValue: 0,
+          }),
+        ]}
+        partial
+        partialityReasons={["indicator_not_measured"]}
+        unsupportedIndicatorIds={[]}
+      />,
+    );
+
+    const nota = screen.getByRole("note");
+    expect(nota.textContent).toContain(pt.canonicalAnalysis.result.outcomeCoverageMissingTitle);
+    expect(nota.textContent).toContain(pt.canonicalAnalysis.result.outcomeCoverageMissingBody);
+  });
+
+  it("não acrescenta a explicação quando a origem trouxe algum resultado", () => {
+    montar(
+      <SecaoDeIndicadores
+        indicators={[
+          ind({
+            id: "outcome_field_coverage_rate",
+            rawValue: 0.8,
+            display: "80",
+          }),
+        ]}
+        partial={false}
+        partialityReasons={[]}
+        unsupportedIndicatorIds={[]}
+      />,
+    );
+    expect(screen.queryByText(pt.canonicalAnalysis.result.outcomeCoverageMissingTitle)).toBeNull();
+  });
+});
+
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // 2. Painel, não cartão — a borda passa a representar a REGIÃO
 // ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -530,14 +579,11 @@ describe("M31 · 7. o locale PT está em PT", () => {
       [
         "cost_per_useful_outcome",
         "handoff_count",
-        "intent_coverage_rate",
         "mean_response_variance_per_intent",
-        "outcome_field_coverage_rate",
         "token_cost_total",
         "total_estimated_cost",
         "handoff_cost_total",
         "useful_outcome_count",
-        "useful_outcome_rate",
       ].sort(),
     );
   });

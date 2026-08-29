@@ -130,6 +130,18 @@ export function apresentarIndicadores(
 }
 
 /**
+ * A origem declarou que nenhuma conversa trouxe o campo de desfecho.
+ *
+ * Isto NÃO muda o estado nem o valor de indicador algum. O resultado histórico continua sendo
+ * apresentado byte por byte como o produtor o publicou; a UI ganha apenas a informação necessária
+ * para explicar por que zeros baseados em desfecho não provam desempenho nulo.
+ */
+export function semCoberturaDeDesfecho(indicadores: readonly IndicatorView[]): boolean {
+  const cobertura = indicadores.find((item) => item.id === "outcome_field_coverage_rate");
+  return cobertura?.state === "measured" && cobertura.rawValue === 0;
+}
+
+/**
  * Uma recomendação como a TELA a recebe.
  *
  * Estruturalmente igual à do documento, e mesmo assim um tipo próprio — porque o view model

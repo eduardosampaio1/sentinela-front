@@ -12,7 +12,7 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProvenanceMargin, type ItemDeProcedencia } from "@/design/patterns/ProvenanceMargin";
-import { rotuloDoIndicador } from "../../result/indicadores";
+import { rotuloDoIndicador, semCoberturaDeDesfecho } from "../../result/indicadores";
 import type { IndicatorView, RecommendationView } from "../../result/indicadores";
 
 /**
@@ -238,6 +238,19 @@ export function SecaoDeIndicadores({
           ))}
         </ul>
       )}
+      {semCoberturaDeDesfecho(indicators) ? (
+        <aside
+          role="note"
+          className="rounded-lg border border-[hsl(var(--ds-warning)/0.3)] bg-[hsl(var(--ds-warning)/0.07)] p-4"
+        >
+          <p className="text-sm font-semibold text-foreground">
+            {t("canonicalAnalysis.result.outcomeCoverageMissingTitle")}
+          </p>
+          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            {t("canonicalAnalysis.result.outcomeCoverageMissingBody")}
+          </p>
+        </aside>
+      ) : null}
       {/* Parcialidade DECLARADA pela origem, com os motivos dela. A E5 inferia isto contando
           indicadores que sobreviveram a filtragem do frontend — o que media a cobertura do
           PROPRIO frontend, nao a da analise. */}

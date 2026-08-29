@@ -96,6 +96,32 @@ momento do upload; nenhuma linha ou identificador pessoal deve entrar neste rela
 - Gateway: 49 testes relevantes aprovados e Ruff aprovado.
 - Front: 27 testes do fluxo/projeção, 28 testes de Analytics e 51 testes de conta aprovados;
   ESLint dos arquivos alterados e typecheck dos 489 arquivos aprovados.
-- O gate global de i18n continua registrando dívida anterior ao teste: um uso opaco adicional e
-  três frases além do contador congelado. Os limites não foram aumentados para mascarar a dívida;
-  paridade de chaves e orçamento agregado PT/EN seguem aprovados.
+- O gate global de i18n foi fechado sem aumentar limites: o rótulo dinâmico da comparação passou
+  a usar o helper canônico e três textos foram simplificados honestamente em PT-BR. Paridade,
+  chamadas opacas e orçamento individual/agregado PT/EN estão aprovados.
+
+## Por que alguns indicadores da análise Boss aparecem como zero
+
+Na análise `09c8666a-854b-4b92-aea5-daa317dcd2d1`, a própria publicação informa
+`outcome_field_coverage_rate = 0`. Nenhuma das 1.017.122 conversas carregou um campo de desfecho.
+Por isso `useful_outcome_rate`, `useful_outcome_count`, `conversion_rate` e `conversion_count`
+aparecem como zero: o denominador da execução existe, mas o fato de resultado não veio na origem.
+
+Esse zero não prova desempenho ruim nem bom. Ele significa “não havia dado de resultado para
+medir”. A interface agora explica isso junto aos indicadores, sem reclassificar o estado publicado
+e sem fabricar valor histórico. Uma nova execução só poderá medir esses indicadores quando o
+mapping ativar um campo real de resultado ou conversão. Da mesma forma, `100%` de cobertura de
+intenção nesta base representa um catálogo observado de `1/1`, cuja única intenção é `UNKNOWN`; não
+é evidência de boa qualidade taxonômica. Custos continuam indisponíveis quando a origem não traz
+tokens ou custo.
+
+## Behavior Score e notificações
+
+- O Behavior Score passou a ser um `meter` acessível, com valor, mínimo e máximo publicados.
+- A régua ganhou preenchimento proporcional com cor de estado, marcador de maior contraste e
+  superfície menos escura. O movimento revela a magnitude por `scaleX`, usa o token deliberado do
+  design system e fica estático sob `prefers-reduced-motion`.
+- A indisponibilidade de notificações tinha duas causas operacionais: faltava a credencial dedicada
+  Gateway → Dispatcher e a API de assinaturas existia no código, mas não tinha processo publicado
+  em homologação. A correção mantém worker e API em serviços separados, compartilhando o mesmo
+  domínio e a mesma tabela canônica de assinaturas.

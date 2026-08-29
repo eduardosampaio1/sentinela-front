@@ -808,18 +808,31 @@
 .v4-painel .regua { display:flex; flex-direction:column; justify-content:center; flex:1;
   min-height:0; padding:2px 0 0; }
 
-.v4-painel .regua .faixa { position:relative; height:34px; border-radius:8px; overflow:hidden;
-  background:hsl(var(--ds-surface-overlay)); }
+.v4-painel .behavior-hero { background:hsl(var(--ds-surface-selected));
+  border-color:hsl(var(--ds-accent) / .34); box-shadow:inset 0 1px 0 hsl(var(--ds-text-primary) / .05); }
+
+.v4-painel .regua .faixa { position:relative; height:46px; border-radius:12px; overflow:hidden;
+  background:hsl(var(--ds-surface-overlay)); border:1px solid hsl(var(--ds-border-strong)); }
 
 .v4-painel .regua .zona { position:absolute; top:0; bottom:0; }
 
-.v4-painel .regua .corte { position:absolute; top:-4px; bottom:-4px; width:1px;
-  background:rgba(255,255,255,.34); }
+.v4-painel .regua .corte { position:absolute; top:0; bottom:0; width:1px;
+  background:hsl(var(--ds-text-primary) / .42); z-index:3; }
 
-.v4-painel .regua .agulha { position:absolute; top:-6px; bottom:-6px; width:3px; margin-left:-1.5px;
-  border-radius:2px; background:#fff; box-shadow:0 0 12px rgba(255,255,255,.55); }
+.v4-painel .regua .progresso { position:absolute; inset:0 auto 0 0; z-index:2;
+  border-right:3px solid currentColor; transform-origin:left center; }
+.v4-painel .regua .progresso.critico { color:hsl(var(--ds-danger)); background:hsl(var(--ds-danger) / .2); }
+.v4-painel .regua .progresso.atencao { color:hsl(var(--ds-warning)); background:hsl(var(--ds-warning) / .18); }
+.v4-painel .regua .progresso.ok { color:hsl(var(--ds-accent-ink)); background:hsl(var(--ds-accent) / .18); }
 
-.v4-painel .regua .rot-zona { position:absolute; top:9px; font-size:10.5px; letter-spacing:.08em;
+.v4-painel .regua .agulha { position:absolute; top:5px; bottom:5px; z-index:4; width:4px;
+  margin-left:-2px; border-radius:999px; background:hsl(var(--ds-text-primary));
+  box-shadow:0 0 0 3px hsl(var(--ds-surface-base) / .7), 0 0 16px currentColor; }
+.v4-painel .regua .agulha.critico { color:hsl(var(--ds-danger)); }
+.v4-painel .regua .agulha.atencao { color:hsl(var(--ds-warning)); }
+.v4-painel .regua .agulha.ok { color:hsl(var(--ds-accent-ink)); }
+
+.v4-painel .regua .rot-zona { position:absolute; top:14px; z-index:3; font-size:10.5px; letter-spacing:.08em;
   text-transform:uppercase; white-space:nowrap; }
 
 .v4-painel .regua .cortes { display:flex; justify-content:space-between; margin-top:9px;

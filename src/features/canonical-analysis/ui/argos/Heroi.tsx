@@ -131,13 +131,18 @@ export function Heroi({ escore, rotulo }: { readonly escore: PublicScore; readon
   // analise inteira. Dois numeros com o mesmo nome na mesma tela seria a confusao que o campo
   // foi criado para desfazer.
   const confianca = confiancaEscrita(m.confidence, locale);
+  const zona =
+    m.value !== null && m.value !== undefined && m.thresholds
+      ? zonaDoValor(m.value, m.thresholds.warn, m.thresholds.critical)
+      : "sem-faixa";
 
   return (
     <section
       data-revelar
       data-heroi="true"
+      data-zona={zona}
       aria-labelledby="argos-heroi"
-      className="rounded-lg border border-border bg-card p-6"
+      className="behavior-hero rounded-xl border p-5 sm:p-6"
     >
       <h3
         id="argos-heroi"
