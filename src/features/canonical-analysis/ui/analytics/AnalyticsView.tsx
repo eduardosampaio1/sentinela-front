@@ -53,6 +53,7 @@ import { PaletaDeComandos } from "../PaletaDeComandos";
 import { ProblemFeedback } from "../notices";
 import { useCanonicalScope } from "../scope";
 import { AcaoDeExport } from "./AcaoDeExport";
+import { CatalogoDeMedidas } from "./CatalogoDeMedidas";
 import { AnalyticsRetido } from "./Retido";
 import { Cruzamentos, SeriesDeMedida } from "./CruzamentosESeries";
 import { IndiceDeRegioes, type RegiaoIndexada } from "./IndiceDeRegioes";
@@ -874,6 +875,9 @@ export function AnalyticsView() {
               ancora: "anl-resumo",
               rotulo: t("canonicalAnalysis.analyticsView.summaryTitle"),
             },
+            ...(snapshot.measure_definitions.length > 0
+              ? [{ ancora: "anl-catalogo", rotulo: t("canonicalAnalysis.analyticsView.catalog.title") }]
+              : []),
             ...(temNumericos
               ? [
                   {
@@ -970,6 +974,14 @@ export function AnalyticsView() {
             <QualidadeDaBase intake={intake} />
             <Cabeca snapshot={snapshot} vista={vista} />
             <ResumoDaPublicacao snapshot={snapshot} intake={intake} />
+            {snapshot.measure_definitions.length > 0 ? (
+              <Secao id="anl-catalogo" titulo={t("canonicalAnalysis.analyticsView.catalog.title")}>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  {t("canonicalAnalysis.analyticsView.catalog.subtitle")}
+                </p>
+                <CatalogoDeMedidas medidas={snapshot.measure_definitions} />
+              </Secao>
+            ) : null}
             {temNumericos ? (
               <Secao
                 id="anl-numericos"

@@ -131,6 +131,45 @@
     },
     "analyticsView": {
       "title": "Medidas",
+      "catalog": {
+        "title": "Catálogo de medidas",
+        "subtitle": "O Analytics separa o que mede volume, eficiência operacional e qualidade detectada. Bases personalizadas permanecem identificadas como personalizadas.",
+        "groups": {
+          "volume": "Volume",
+          "operational_efficiency": "Eficiência operacional",
+          "detected_quality": "Qualidade detectada",
+          "custom": "Medidas personalizadas"
+        },
+        "coverage": "Cobertura",
+        "population": "População elegível",
+        "technical": "Ver contrato técnico",
+        "savedViews": "Visão salva por objetivo",
+        "goals": {
+          "all": "Tudo",
+          "operation": "Operação",
+          "journey": "Jornada",
+          "risk": "Risco",
+          "quality": "Qualidade"
+        },
+        "origin": "Origem",
+        "direction": "Direção",
+        "version": "Versão do catálogo",
+        "detector": "Detector",
+        "owner": "Responsável",
+        "detectorVersion": "Versão do detector",
+        "origins": { "canonical": "Canônica", "custom": "Personalizada" },
+        "directions": {
+          "higher_is_worse": "Maior é pior",
+          "higher_is_better": "Maior é melhor",
+          "context_only": "Somente contexto"
+        },
+        "availability": {
+          "available": "Disponível",
+          "no_eligible_population": "Sem população elegível",
+          "privacy_suppressed": "Retida por privacidade",
+          "high_cardinality_suppressed": "Retida por cardinalidade"
+        }
+      },
       "mapTitle": "De onde veio este número",
       "mapDenominator": "Conversas lidas",
       "mapMeasure": "Medida",

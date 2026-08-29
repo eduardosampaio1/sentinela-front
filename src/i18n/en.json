@@ -131,6 +131,45 @@
     },
     "analyticsView": {
       "title": "Measures",
+      "catalog": {
+        "title": "Measure catalog",
+        "subtitle": "Analytics separates volume, operational efficiency, and detected quality. Custom datasets remain explicitly labeled as custom.",
+        "groups": {
+          "volume": "Volume",
+          "operational_efficiency": "Operational efficiency",
+          "detected_quality": "Detected quality",
+          "custom": "Custom measures"
+        },
+        "coverage": "Coverage",
+        "population": "Eligible population",
+        "technical": "View technical contract",
+        "savedViews": "Saved view by goal",
+        "goals": {
+          "all": "All",
+          "operation": "Operations",
+          "journey": "Journey",
+          "risk": "Risk",
+          "quality": "Quality"
+        },
+        "origin": "Origin",
+        "direction": "Direction",
+        "version": "Catalog version",
+        "detector": "Detector",
+        "owner": "Owner",
+        "detectorVersion": "Detector version",
+        "origins": { "canonical": "Canonical", "custom": "Custom" },
+        "directions": {
+          "higher_is_worse": "Higher is worse",
+          "higher_is_better": "Higher is better",
+          "context_only": "Context only"
+        },
+        "availability": {
+          "available": "Available",
+          "no_eligible_population": "No eligible population",
+          "privacy_suppressed": "Withheld for privacy",
+          "high_cardinality_suppressed": "Withheld for cardinality"
+        }
+      },
       "mapTitle": "Where this number came from",
       "mapDenominator": "Conversations read",
       "mapMeasure": "Measure",

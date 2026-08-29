@@ -223,6 +223,7 @@ export interface SnapshotAnalitico {
   snapshot_contract_version: string;
   /** O denominador verdadeiro. Todo o resto é contado sobre ele. */
   record_count: number;
+  measure_definitions: DefinicaoDeMedida[];
   numeric: ResumoNumerico[];
   distributions: ResumoDeDistribuicao[];
   dimensions: ResumoDeDistribuicao[];
@@ -239,6 +240,23 @@ export interface SnapshotAnalitico {
   medidasNaoAutorizadas: number;
   /** Blocos que não correspondiam ao contrato e foram descartados. */
   blocosIlegiveis: number;
+}
+
+export interface DefinicaoDeMedida {
+  measure_id: string;
+  catalog_origin: "canonical" | "custom";
+  metric_catalog_version: string | null;
+  metric_group: string;
+  presentation_group: "volume" | "operational_efficiency" | "detected_quality" | "custom";
+  quality_direction: "higher_is_worse" | "higher_is_better" | "context_only";
+  eligible_population: string;
+  eligible_count: number;
+  denominator: number;
+  coverage: number | null;
+  availability: "available" | "no_eligible_population" | "privacy_suppressed" | "high_cardinality_suppressed";
+  detector_id: string | null;
+  detector_contract_version: string | null;
+  detector_owner: string | null;
 }
 
 
@@ -668,6 +686,57 @@ function tamanho(v: unknown): number {
   return Array.isArray(v) ? v.length : 0;
 }
 
+function lerDefinicaoDeMedida(bruto: unknown): DefinicaoDeMedida | null {
+  if (!ehObjeto(bruto)) return null;
+  const measure_id = textoOuNulo(bruto.measure_id);
+  const catalog_origin = textoOuNulo(bruto.catalog_origin);
+  const metric_group = textoOuNulo(bruto.metric_group);
+  const presentation_group = textoOuNulo(bruto.presentation_group);
+  const quality_direction = textoOuNulo(bruto.quality_direction);
+  const eligible_population = textoOuNulo(bruto.eligible_population);
+  const eligible_count = contagem(bruto.eligible_count);
+  const denominator = contagem(bruto.denominator);
+  const coverage = numeroOuNulo(bruto.coverage);
+  const availability = textoOuNulo(bruto.availability);
+  if (
+    !measure_id ||
+    !["canonical", "custom"].includes(catalog_origin ?? "") ||
+    !metric_group ||
+    !["volume", "operational_efficiency", "detected_quality", "custom"].includes(
+      presentation_group ?? "",
+    ) ||
+    !["higher_is_worse", "higher_is_better", "context_only"].includes(
+      quality_direction ?? "",
+    ) ||
+    !eligible_population ||
+    eligible_count === null ||
+    denominator === null ||
+    (coverage !== null && (coverage < 0 || coverage > 1)) ||
+    ![
+      "available",
+      "no_eligible_population",
+      "privacy_suppressed",
+      "high_cardinality_suppressed",
+    ].includes(availability ?? "")
+  ) return null;
+  return {
+    measure_id,
+    catalog_origin: catalog_origin as DefinicaoDeMedida["catalog_origin"],
+    metric_catalog_version: textoOuNulo(bruto.metric_catalog_version),
+    metric_group,
+    presentation_group: presentation_group as DefinicaoDeMedida["presentation_group"],
+    quality_direction: quality_direction as DefinicaoDeMedida["quality_direction"],
+    eligible_population,
+    eligible_count,
+    denominator,
+    coverage,
+    availability: availability as DefinicaoDeMedida["availability"],
+    detector_id: textoOuNulo(bruto.detector_id),
+    detector_contract_version: textoOuNulo(bruto.detector_contract_version),
+    detector_owner: textoOuNulo(bruto.detector_owner),
+  };
+}
+
 /**
  * O snapshot inteiro, ou `null` quando ele não corresponde ao contrato.
  *
@@ -682,6 +751,7 @@ export function lerSnapshot(bruto: unknown): SnapshotAnalitico | null {
   if (!versao || registros === null) return null;
 
   const numeric = lista(bruto.numeric, lerNumerico);
+  const measureDefinitions = lista(bruto.measure_definitions, lerDefinicaoDeMedida);
   const distributions = lista(bruto.distributions, lerDistribuicao);
   const dimensions = lista(bruto.dimensions, lerDistribuicao);
   const concentrations = lista(bruto.concentrations, lerConcentracao);
@@ -694,6 +764,7 @@ export function lerSnapshot(bruto: unknown): SnapshotAnalitico | null {
   const ilegiveis =
     tamanho(bruto.numeric) -
     numeric.length +
+    (tamanho(bruto.measure_definitions) - measureDefinitions.length) +
     (tamanho(bruto.distributions) - distributions.length) +
     (tamanho(bruto.dimensions) - dimensions.length) +
     (tamanho(bruto.concentrations) - concentrations.length) +
@@ -706,6 +777,7 @@ export function lerSnapshot(bruto: unknown): SnapshotAnalitico | null {
   return {
     snapshot_contract_version: versao,
     record_count: registros,
+    measure_definitions: measureDefinitions,
     numeric,
     distributions,
     dimensions,
