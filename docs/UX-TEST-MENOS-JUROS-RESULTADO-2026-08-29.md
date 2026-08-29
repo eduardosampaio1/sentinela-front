@@ -125,3 +125,9 @@ tokens ou custo.
   Gateway → Dispatcher e a API de assinaturas existia no código, mas não tinha processo publicado
   em homologação. A correção mantém worker e API em serviços separados, compartilhando o mesmo
   domínio e a mesma tabela canônica de assinaturas.
+
+Validação publicada: Front `8bf2201`; Dispatcher API `8508249`; deployments
+`690b8914-0615-4ea8-a481-41ed6a3de4bf` (API) e
+`9e858c89-58e0-49bc-a4bc-46e0e3514f2b` (Gateway). No Chrome autenticado, a tela de notificações
+passou de erro para lista vazia legítima, com formulário disponível. O aviso de cobertura foi
+conferido em inglês e PT-BR; a régua foi conferida em desktop e 375 px, sem overflow horizontal.
