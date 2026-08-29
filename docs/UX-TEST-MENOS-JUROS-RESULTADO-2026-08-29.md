@@ -48,3 +48,54 @@ Arquivo preparado: `menos_juros_amostra_100mb.jsonl`, com 104.855.088 bytes. O t
 
 O arquivo contém dados reais de conversas. O envio para homologação exige confirmação explícita no
 momento do upload; nenhuma linha ou identificador pessoal deve entrar neste relatório.
+
+## Execução ponta a ponta confirmada
+
+**Análise:** `1c76aac7-f7f3-41ef-bfa9-d6f74c2af99a`  
+**Ingestão:** `3e81a1e3-3481-475a-9f15-aa6b9061520c`
+
+- Multipart concluído em 13 partes, sem repetir upload após a recuperação operacional.
+- 61.423 conversas recebidas; 61.323 aceitas e publicadas; 100 preservadas como contagem.
+- Das 100 não analisadas, 71 não tinham resposta da IA e 29 ficaram sem texto após a proteção de
+  privacidade. Nenhum conteúdo de conversa foi copiado para este documento.
+- A Engine iniciou o cálculo às `15:45:52Z` e terminou às `15:50:24Z`: cerca de 272 segundos,
+  225,463 conversas/s e aproximadamente 814 MB de RSS máximo observado.
+- O perfil atribuiu 90,315% do tempo medido a embeddings; vizinhança e índice somaram menos de 2%.
+- Diagnóstico, facts, resultado integrado e Medidas concluíram e permaneceram acessíveis após
+  refresh.
+
+## Falhas encontradas e fechadas durante o teste
+
+1. O Promotor rejeitava `dataset-dimensions-v3`, embora a Ingestão o publicasse. O Orchestrator
+   passou a aceitar v2 e v3 no commit `ec35323`; a mensagem original foi reprocessada de modo
+   auditável, sem editar banco e sem novo upload.
+2. A página principal encerrava o polling de status antes de reler `/progress`, deixando eixos
+   antigos na tela. O Front agora invalida o progresso uma única vez na transição terminal
+   (`ce65fc2`).
+3. O status terminal descartava as contagens do intake. O Gateway agora enriquece apenas a leitura
+   terminal pronta (ou falha), sem adicionar um hop a cada polling (`6d30450`).
+4. Medidas exibiam decimais extensos e datas ISO. Resumos, concentração, cruzamentos e séries agora
+   respeitam locale, arredondamento de apresentação e UTC (`56aaf3c`). O dado publicado não mudou.
+5. O deep link `/dashboard/settings` quebrava enquanto o workspace ainda era reidratado. A página
+   agora aceita escopo temporariamente ausente e cada seção conserva seu próprio estado
+   (`1191fcc`).
+
+## Validação final no Chrome autenticado
+
+- EN: quatro eixos em `Done/Ready`; denominadores completos no React Flow; `786,791`, média
+  `12.83`, concentração `60.43% / 43.02%` e datas legíveis.
+- PT-BR: `61.423 → 61.323 → 100`, média `12,83`, concentração `60,43% / 43,02%`, textos de
+  qualidade da base e procedência traduzidos. A preferência original em inglês foi restaurada.
+- O React Flow foi preservado e continua respondendo “Por que este número?” com uma cadeia e uma
+  lista textual equivalente para acessibilidade.
+- A rota histórica indicada continua breve e agora orienta a sequência: Diagnóstico primeiro,
+  Medidas depois. Ela não replica cálculos nem cria uma terceira fonte de verdade.
+
+## Evidência de engenharia
+
+- Gateway: 49 testes relevantes aprovados e Ruff aprovado.
+- Front: 27 testes do fluxo/projeção, 28 testes de Analytics e 51 testes de conta aprovados;
+  ESLint dos arquivos alterados e typecheck dos 489 arquivos aprovados.
+- O gate global de i18n continua registrando dívida anterior ao teste: um uso opaco adicional e
+  três frases além do contador congelado. Os limites não foram aumentados para mascarar a dívida;
+  paridade de chaves e orçamento agregado PT/EN seguem aprovados.
