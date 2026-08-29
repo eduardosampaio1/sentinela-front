@@ -91,7 +91,7 @@ describe("a medida numérica mostra o número", () => {
     expect(screen.getByText("0.05")).toBeTruthy();
     expect(screen.getByText("0.13")).toBeTruthy();
     expect(screen.getByText("8.96")).toBeTruthy();
-    expect(screen.getByText("0.0896")).toBeTruthy();
+    expect(screen.getByText("0.09")).toBeTruthy();
     unmount();
   });
 
@@ -111,15 +111,20 @@ describe("a medida numérica mostra o número", () => {
     // "0" em qualquer lugar da tela e reprovava por motivo errado: o zero das contagens
     // (`null_count: 0`) é um fato legítimo — zero nulos é uma medição, não uma ausência.
     const { unmount } = await numericas(
-      snapshot([medida({ minimum: null, maximum: null, total: null, mean: null })]),
+      snapshot([
+        medida({ minimum: null, maximum: null, total: null, mean: null }),
+      ]),
     );
 
     for (const rotulo of ["minimum", "maximum", "total", "mean"]) {
       const par = screen.getByText(rotulo).closest("div");
-      expect(par?.textContent ?? "", `\`${rotulo}\` não disse "não publicado"`).toMatch(
-        /not published/i,
+      expect(
+        par?.textContent ?? "",
+        `\`${rotulo}\` não disse "não publicado"`,
+      ).toMatch(/not published/i);
+      expect(par?.textContent ?? "", `\`${rotulo}\` virou zero`).not.toMatch(
+        /\b0\b/,
       );
-      expect(par?.textContent ?? "", `\`${rotulo}\` virou zero`).not.toMatch(/\b0\b/);
     }
     unmount();
   });
@@ -145,7 +150,8 @@ function envelope(troca: Record<string, unknown> = {}) {
   return {
     component_status: "ready",
     snapshot_contract_version: "analytics-snapshot-v9",
-    projection_digest: "2a4b544c3a3e1aeb2787398d4bb6ff6d64cccfe46058e038112d6da21789bafa",
+    projection_digest:
+      "2a4b544c3a3e1aeb2787398d4bb6ff6d64cccfe46058e038112d6da21789bafa",
     generated_at: "2026-08-23T12:08:18.100734+00:00",
     ...troca,
   };
@@ -167,7 +173,8 @@ describe("o denominador vem primeiro, e o digest existe", () => {
     // Um digest truncado não serve para conferir nada — e conferir é a única coisa para a qual
     // ele existe. Se a tela cortar, duas pessoas comparando projeções diferentes podem ver o
     // mesmo prefixo e concluir que falam do mesmo documento.
-    const dig = "2a4b544c3a3e1aeb2787398d4bb6ff6d64cccfe46058e038112d6da21789bafa";
+    const dig =
+      "2a4b544c3a3e1aeb2787398d4bb6ff6d64cccfe46058e038112d6da21789bafa";
     const { unmount } = render(
       <LanguageProvider>
         <Cabeca snapshot={snapshot([])} vista={envelope()} />
@@ -180,7 +187,10 @@ describe("o denominador vem primeiro, e o digest existe", () => {
   it("sem digest publicado, o bloco não aparece — e nada é inventado", () => {
     const { unmount } = render(
       <LanguageProvider>
-        <Cabeca snapshot={snapshot([])} vista={envelope({ projection_digest: null })} />
+        <Cabeca
+          snapshot={snapshot([])}
+          vista={envelope({ projection_digest: null })}
+        />
       </LanguageProvider>,
     );
     expect(screen.queryByText(/Projection digest/i)).toBeNull();

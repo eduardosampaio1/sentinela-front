@@ -376,10 +376,16 @@ describe("F4 · privacidade é conclusão do produtor, não interpretação da t
     expect(linhas.length, "sem janelas — a prova seria vazia").toBeGreaterThan(
       0,
     );
-    const suprimida = linhas.find((l) => l.includes("2026-08-02")) ?? "";
+    const janelaSuprimida = new Intl.DateTimeFormat("pt-BR", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      timeZone: "UTC",
+    }).format(new Date("2026-08-02"));
+    const suprimida = linhas.find((l) => l.includes(janelaSuprimida)) ?? "";
     expect(suprimida, "a janela suprimida não chegou à tela").not.toBe("");
     expect(suprimida).toContain(pt.canonicalAnalysis.analyticsView.suppressed);
-    expect(suprimida).not.toMatch(/2026-08-02\s*0$/);
+    expect(suprimida).not.toMatch(new RegExp(`${janelaSuprimida}\\s*0$`));
   });
 
   // Decisão de owner (2026-08-15): o padrão do ARGOS para os ids de estatística.
@@ -529,9 +535,16 @@ describe("F4 · a contagem publicada também é dita por comprimento", () => {
     const secao = await screen.findByRole("region", {
       name: pt.canonicalAnalysis.analyticsView.series,
     });
-    expect(preenchimento(linhaCom(secao, "2026-08-01"))).not.toBeNull();
-    expect(preenchimento(linhaCom(secao, "2026-08-02"))).toBeNull();
-    expect(linhaCom(secao, "2026-08-02").textContent).toContain(
+    const data = (iso: string) =>
+      new Intl.DateTimeFormat("pt-BR", {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        timeZone: "UTC",
+      }).format(new Date(iso));
+    expect(preenchimento(linhaCom(secao, data("2026-08-01")))).not.toBeNull();
+    expect(preenchimento(linhaCom(secao, data("2026-08-02")))).toBeNull();
+    expect(linhaCom(secao, data("2026-08-02")).textContent).toContain(
       pt.canonicalAnalysis.analyticsView.suppressed,
     );
   });

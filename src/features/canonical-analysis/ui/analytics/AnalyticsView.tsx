@@ -258,8 +258,8 @@ function mostrarQualidadeDaBase(intake: AnalysisIntake | null | undefined) {
   const rejeitados = intake?.rejected_record_count;
   return Boolean(
     intake &&
-      ((typeof rejeitados === "number" && rejeitados > 0) ||
-        motivosDoIntake(intake).length > 0),
+    ((typeof rejeitados === "number" && rejeitados > 0) ||
+      motivosDoIntake(intake).length > 0),
   );
 }
 
@@ -409,7 +409,10 @@ function Estatisticas({
     mean: number | null;
   };
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const numero = new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US", {
+    maximumFractionDigits: 2,
+  });
   const itens = [
     {
       rotulo: t("canonicalAnalysis.analyticsView.minimum"),
@@ -438,7 +441,7 @@ function Estatisticas({
                 {t("canonicalAnalysis.analyticsView.notPublished")}
               </span>
             ) : (
-              i.valor
+              numero.format(i.valor)
             )}
           </dd>
         </div>
@@ -606,6 +609,12 @@ function Distribuicoes({
 
 function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
   const { t, language } = useLanguage();
+  const locale = language === "pt" ? "pt-BR" : "en-US";
+  const numero = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+  const percentual = new Intl.NumberFormat(locale, {
+    style: "percent",
+    maximumFractionDigits: 2,
+  });
   const larguras = snapshot.concentrations.map(largurasDeConcentracao);
   // A faixa é um INTERVALO, e o rótulo precisa dizer isso. Formatar é trabalho da tela — o
   // módulo de largura não conhece locale de propósito.
@@ -644,9 +653,13 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
                   {/* Três formas, impostas pela ORIGEM: exata, limitada por faixa, ou não
                       publicada com motivo. Nenhuma é derivada da outra aqui. */}
                   {s.value !== null ? (
-                    s.value
+                    s.statistic_id.includes("share") ? (
+                      percentual.format(s.value)
+                    ) : (
+                      numero.format(s.value)
+                    )
                   ) : s.lower_bound !== null && s.upper_bound !== null ? (
-                    `${s.lower_bound}–${s.upper_bound}`
+                    `${numero.format(s.lower_bound)}–${numero.format(s.upper_bound)}`
                   ) : (
                     // M45.4 — ESTAVA INVERTIDO. O `reason_code` cru era impresso justamente
                     // quando havia motivo a explicar, e a frase humana só aparecia quando não
@@ -711,7 +724,19 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
 }
 
 function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = language === "pt" ? "pt-BR" : "en-US";
+  const formatarJanela = (valor: string) => {
+    const data = new Date(valor);
+    return Number.isNaN(data.getTime())
+      ? valor
+      : data.toLocaleDateString(locale, {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+          timeZone: "UTC",
+        });
+  };
   const larguras = snapshot.time_series.map(largurasDeSerie);
   return (
     <div>
@@ -742,7 +767,7 @@ function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
             {s.windows.map((j, i) => (
               <Bar
                 key={j.window_start}
-                rotulo={j.window_start}
+                rotulo={formatarJanela(j.window_start)}
                 valor={j.count !== null ? String(j.count) : null}
                 largura={larguras[iBloco][i]}
                 suprimida={j.count === null}
@@ -876,7 +901,12 @@ export function AnalyticsView() {
               rotulo: t("canonicalAnalysis.analyticsView.summaryTitle"),
             },
             ...(snapshot.measure_definitions.length > 0
-              ? [{ ancora: "anl-catalogo", rotulo: t("canonicalAnalysis.analyticsView.catalog.title") }]
+              ? [
+                  {
+                    ancora: "anl-catalogo",
+                    rotulo: t("canonicalAnalysis.analyticsView.catalog.title"),
+                  },
+                ]
               : []),
             ...(temNumericos
               ? [
@@ -975,7 +1005,10 @@ export function AnalyticsView() {
             <Cabeca snapshot={snapshot} vista={vista} />
             <ResumoDaPublicacao snapshot={snapshot} intake={intake} />
             {snapshot.measure_definitions.length > 0 ? (
-              <Secao id="anl-catalogo" titulo={t("canonicalAnalysis.analyticsView.catalog.title")}>
+              <Secao
+                id="anl-catalogo"
+                titulo={t("canonicalAnalysis.analyticsView.catalog.title")}
+              >
                 <p className="mb-4 text-sm text-muted-foreground">
                   {t("canonicalAnalysis.analyticsView.catalog.subtitle")}
                 </p>
