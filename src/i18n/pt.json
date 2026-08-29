@@ -874,6 +874,7 @@
       },
       "attentionTitle": "O que merece atenção",
       "attentionNone": "Nada neste resultado foi assinalado pela análise.",
+      "attentionNonePartial": "Nenhum alerta foi publicado. Como algumas medidas não puderam ser calculadas, isso não significa que todas as dimensões estejam saudáveis.",
       "attentionOrderNote": "Ordem de leitura, vinda do documento — nada foi recalculado aqui.",
       "provenanceLabel": "Procedência",
       "provenanceAbsent": "não informado",
@@ -918,7 +919,15 @@
       "compareOnlyHere": "Só nesta análise.",
       "compareOnlyThere": "Só na anterior.",
       "compareBrokenShort": "série diferente",
-      "newerViews": "Esta análise também tem leituras mais novas:"
+      "currentViews": {
+        "eyebrow": "Leitura recomendada",
+        "title": "Comece pelo diagnóstico; aprofunde nas medidas",
+        "intro": "Este resumo histórico continua disponível, mas as visões atuais explicam o que aconteceu e mostram as evidências sem misturar conclusão com cálculo.",
+        "recommended": "Comece aqui",
+        "argosDescription": "Entenda o estado da análise, o que merece ação e por que cada conclusão foi apresentada.",
+        "analyticsDescription": "Explore contagens, distribuições, cobertura e a procedência dos números publicados.",
+        "open": "Abrir visão"
+      }
     },
     "shell": {
       "identity": "Identificador da análise",

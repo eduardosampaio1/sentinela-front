@@ -140,6 +140,12 @@ describe("M26 · 2. o que merece atenção", () => {
     expect(screen.getByText(pt.canonicalAnalysis.result.attentionNone)).toBeTruthy();
   });
 
+  it("não chama uma leitura parcial de saudável quando não há alerta publicado", () => {
+    montar(<SecaoDeAtencao itens={[]} partial />);
+    expect(screen.getByText(pt.canonicalAnalysis.result.attentionNonePartial)).toBeTruthy();
+    expect(screen.queryByText(pt.canonicalAnalysis.result.attentionNone)).toBeNull();
+  });
+
   it("o motivo é TEXTO, não cor — legível em escala de cinza e por leitor de tela", () => {
     const { container } = montar(
       <SecaoDeAtencao itens={ordenarPorAtencao([ind({ outOfRange: true })])} />,

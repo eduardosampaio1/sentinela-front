@@ -25,7 +25,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { rotuloDoIndicador } from "../../result/indicadores";
 import type { ItemDeAtencao } from "../../result/atencao";
 
-export function SecaoDeAtencao({ itens }: { itens: readonly ItemDeAtencao[] }) {
+export function SecaoDeAtencao({
+  itens,
+  partial = false,
+}: {
+  itens: readonly ItemDeAtencao[];
+  partial?: boolean;
+}) {
   const { t } = useLanguage();
 
   return (
@@ -41,7 +47,11 @@ export function SecaoDeAtencao({ itens }: { itens: readonly ItemDeAtencao[] }) {
       {itens.length === 0 ? (
         <div className="rounded-lg border border-border bg-card px-4 py-3">
           <p className="text-sm text-muted-foreground">
-            {t("canonicalAnalysis.result.attentionNone")}
+            {t(
+              partial
+                ? "canonicalAnalysis.result.attentionNonePartial"
+                : "canonicalAnalysis.result.attentionNone",
+            )}
           </p>
         </div>
       ) : (

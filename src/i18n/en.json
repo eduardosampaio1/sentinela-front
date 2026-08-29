@@ -874,6 +874,7 @@
       },
       "attentionTitle": "What deserves attention",
       "attentionNone": "Nothing in this result was flagged by the analysis.",
+      "attentionNonePartial": "No alert was published. Because some measures could not be calculated, this does not mean every dimension is healthy.",
       "attentionOrderNote": "Reading order, from the document — nothing was recalculated here.",
       "provenanceLabel": "Provenance",
       "provenanceAbsent": "not informed",
@@ -918,7 +919,15 @@
       "compareOnlyHere": "Only in this analysis.",
       "compareOnlyThere": "Only in the previous one.",
       "compareBrokenShort": "not the same series",
-      "newerViews": "This analysis also has newer readings:"
+      "currentViews": {
+        "eyebrow": "Recommended reading",
+        "title": "Start with the assessment; explore the measures next",
+        "intro": "This historical summary remains available, while the current views explain what happened and show the evidence without mixing conclusions with calculations.",
+        "recommended": "Start here",
+        "argosDescription": "Understand the analysis state, what needs action, and why each conclusion was presented.",
+        "analyticsDescription": "Explore counts, distributions, coverage, and the provenance of the published numbers.",
+        "open": "Open view"
+      }
     },
     "shell": {
       "identity": "Analysis identifier",

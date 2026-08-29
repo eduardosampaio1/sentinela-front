@@ -48,7 +48,7 @@ import { SecaoDeAtencao } from "./analytics/SecaoDeAtencao";
 import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
 import { PainelDeProcedencia } from "./analytics/PainelDeProcedencia";
 import { LinhaDoTempo } from "./analytics/LinhaDoTempo";
-import { VISOES_DA_ANALISE } from "./visoes";
+import { PonteParaLeiturasAtuais } from "./analytics/PonteParaLeiturasAtuais";
 import { ComparacaoComAnterior } from "./analytics/ComparacaoComAnterior";
 import { AcaoDeExport } from "./analytics/AcaoDeExport";
 import { IndiceDeRegioes, type RegiaoIndexada } from "./analytics/IndiceDeRegioes";
@@ -141,7 +141,7 @@ export function ResultPage() {
         {/* M26 — atenção ANTES dos indicadores. A ordem da página é a ordem da leitura: primeiro
             o que o documento assinalou, depois o conjunto completo. Inverter faria a pessoa
             varrer a grade inteira para descobrir se havia algo a conferir. */}
-        <SecaoDeAtencao itens={ordenarPorAtencao(v.indicators)} />
+        <SecaoDeAtencao itens={ordenarPorAtencao(v.indicators)} partial={v.partial} />
 
         <SecaoDeIndicadores
           indicators={v.indicators}
@@ -289,27 +289,7 @@ export function ResultPage() {
               A lista vem de `VISOES_DA_ANALISE`, a mesma que o shell e a jornada usam: uma segunda
               lista divergiria no primeiro ajuste e esta tela passaria a oferecer visão que o
               router não conhece. */}
-          {analysisId && (
-            <nav
-              aria-label={t("canonicalAnalysis.shell.viewsNavLabel")}
-              className="rounded-lg border border-border bg-card p-4"
-            >
-              <p className="text-sm text-muted-foreground">
-                {t("canonicalAnalysis.result.newerViews")}
-              </p>
-              <ul className="mt-2 flex flex-wrap gap-2">
-                {VISOES_DA_ANALISE.map((visao) => (
-                  <li key={visao.caminho}>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to={`/analyses/${encodeURIComponent(analysisId)}/${visao.caminho}`}>
-                        {t(`canonicalAnalysis.shell.view.${visao.caminho}`)}
-                      </Link>
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          )}
+          {analysisId ? <PonteParaLeiturasAtuais analysisId={analysisId} /> : null}
 
           {corpo()}
         </div>
