@@ -768,7 +768,11 @@ export interface CatalogActivationItem {
   status: "eligible" | "rejected_type";
   expected_value_type: string;
   observed_types: string[];
-  reason_code: "exact_contract_match" | "canonical_field_mapped" | "incompatible_type";
+  reason_code:
+    | "exact_contract_match"
+    | "canonical_field_mapped"
+    | "catalog_measure_promoted"
+    | "incompatible_type";
   group: string;
   direction: "higher_is_worse" | "higher_is_better" | "context_only";
   detector_id: string | null;
