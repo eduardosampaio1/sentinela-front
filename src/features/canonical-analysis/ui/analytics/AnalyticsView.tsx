@@ -39,14 +39,22 @@ import {
   largurasDeSerie,
 } from "../../result/barrasDaProjecao";
 import { MapaDeProcedencia } from "./MapaDeProcedencia";
-import { useAnalysisAnalytics, useAnalysisProgress, useAnalysisStatus } from "../../data/analysis";
-import { lerSnapshot, type SnapshotAnalitico } from "../../result/analyticsProjection";
+import {
+  useAnalysisAnalytics,
+  useAnalysisProgress,
+  useAnalysisStatus,
+} from "../../data/analysis";
+import {
+  lerSnapshot,
+  type SnapshotAnalitico,
+} from "../../result/analyticsProjection";
 import { AnalysisShell } from "../AnalysisShell";
 import { PaletaDeComandos } from "../PaletaDeComandos";
 import { ProblemFeedback } from "../notices";
 import { useCanonicalScope } from "../scope";
 import { AcaoDeExport } from "./AcaoDeExport";
 import { AnalyticsRetido } from "./Retido";
+import { Cruzamentos, SeriesDeMedida } from "./CruzamentosESeries";
 import { IndiceDeRegioes, type RegiaoIndexada } from "./IndiceDeRegioes";
 import { ResumoDaPublicacao } from "./ResumoDaPublicacao";
 import type { AnalysisIntake } from "@/lib/v1";
@@ -134,11 +142,14 @@ export function Cabeca({
 }) {
   const { t, language } = useLanguage();
   const quando = vista.generated_at
-    ? new Date(vista.generated_at).toLocaleDateString(language === "pt" ? "pt-BR" : "en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
+    ? new Date(vista.generated_at).toLocaleDateString(
+        language === "pt" ? "pt-BR" : "en-US",
+        {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        },
+      )
     : null;
   return (
     /* O DENOMINADOR, no desenho da V4.
@@ -151,30 +162,30 @@ export function Cabeca({
        generica passa a ter o gradiente e o raio de painel da V4. */
     <section className="painel denom">
       <div className="corpo">
-      <div className="esq">
-        <span className="rot">
-          {t("canonicalAnalysis.analyticsView.records")}
-        </span>
-        <b className="n">{snapshot.record_count}</b>
-        <p className="sub">
-          <span className="font-mono">{vista.snapshot_contract_version ?? "—"}</span>
-          {" · "}
-          {vista.component_status}
-          {quando ? ` · ${quando}` : ""}
-        </p>
-      </div>
-      {vista.projection_digest ? (
-        <div className="dir">
+        <div className="esq">
           <span className="rot">
-            {t("canonicalAnalysis.analyticsView.projectionDigest")}
+            {t("canonicalAnalysis.analyticsView.records")}
           </span>
-          {/* Inteiro, e quebrando: um digest truncado não serve para conferir nada, que é a
-              única coisa para a qual ele existe. */}
-          <p className="digest">
-            {vista.projection_digest}
+          <b className="n">{snapshot.record_count}</b>
+          <p className="sub">
+            <span className="font-mono">
+              {vista.snapshot_contract_version ?? "—"}
+            </span>
+            {" · "}
+            {vista.component_status}
+            {quando ? ` · ${quando}` : ""}
           </p>
         </div>
-      ) : null}
+        {vista.projection_digest ? (
+          <div className="dir">
+            <span className="rot">
+              {t("canonicalAnalysis.analyticsView.projectionDigest")}
+            </span>
+            {/* Inteiro, e quebrando: um digest truncado não serve para conferir nada, que é a
+              única coisa para a qual ele existe. */}
+            <p className="digest">{vista.projection_digest}</p>
+          </div>
+        ) : null}
       </div>
     </section>
   );
@@ -214,7 +225,10 @@ export function Retido({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
       </caption>
       <tbody>
         {linhas.map((l) => (
-          <tr key={l.chave} className="border-b border-border/40 last:border-b-0">
+          <tr
+            key={l.chave}
+            className="border-b border-border/40 last:border-b-0"
+          >
             <th scope="row" className="py-1.5 text-left font-normal">
               {t(`canonicalAnalysis.analyticsView.${l.chave}`)}
             </th>
@@ -243,11 +257,15 @@ function mostrarQualidadeDaBase(intake: AnalysisIntake | null | undefined) {
   const rejeitados = intake?.rejected_record_count;
   return Boolean(
     intake &&
-      ((typeof rejeitados === "number" && rejeitados > 0) || motivosDoIntake(intake).length > 0),
+      ((typeof rejeitados === "number" && rejeitados > 0) ||
+        motivosDoIntake(intake).length > 0),
   );
 }
 
-function formatarContagemIntake(valor: number | null | undefined, numero: Intl.NumberFormat) {
+function formatarContagemIntake(
+  valor: number | null | undefined,
+  numero: Intl.NumberFormat,
+) {
   return typeof valor === "number" ? numero.format(valor) : "—";
 }
 
@@ -290,7 +308,11 @@ function chaveDoMotivo(codigo: string) {
   }
 }
 
-export function QualidadeDaBase({ intake }: { readonly intake: AnalysisIntake | null | undefined }) {
+export function QualidadeDaBase({
+  intake,
+}: {
+  readonly intake: AnalysisIntake | null | undefined;
+}) {
   const { t, language } = useLanguage();
   if (!mostrarQualidadeDaBase(intake)) return null;
 
@@ -305,29 +327,48 @@ export function QualidadeDaBase({ intake }: { readonly intake: AnalysisIntake | 
         : [];
 
   return (
-    <Secao id="anl-intake" titulo={t("canonicalAnalysis.analyticsView.intakeQuality")}>
+    <Secao
+      id="anl-intake"
+      titulo={t("canonicalAnalysis.analyticsView.intakeQuality")}
+    >
       <p className="text-sm text-muted-foreground">
         {t("canonicalAnalysis.analyticsView.intakeQualitySummary", {
-          canonical: formatarContagemIntake(intake?.canonical_record_count, numero),
-          rejected: formatarContagemIntake(intake?.rejected_record_count, numero),
+          canonical: formatarContagemIntake(
+            intake?.canonical_record_count,
+            numero,
+          ),
+          rejected: formatarContagemIntake(
+            intake?.rejected_record_count,
+            numero,
+          ),
           source: formatarContagemIntake(intake?.source_record_count, numero),
         })}
       </p>
       <p className="mt-2 text-sm text-muted-foreground">
         {t("canonicalAnalysis.analyticsView.intakeQualityEngineBoundary")}
       </p>
-      <table className="mt-4 w-full text-xs" data-testid="intake-quality-measures">
+      <table
+        className="mt-4 w-full text-xs"
+        data-testid="intake-quality-measures"
+      >
         <tbody>
           {linhas.map((motivo) => (
-            <tr key={motivo.code} className="border-b border-border/40 last:border-b-0">
+            <tr
+              key={motivo.code}
+              className="border-b border-border/40 last:border-b-0"
+            >
               <th scope="row" className="py-1.5 text-left font-normal">
-                {t(`canonicalAnalysis.analyticsView.intakeQualityReasons.${chaveDoMotivo(motivo.code)}.label`)}
+                {t(
+                  `canonicalAnalysis.analyticsView.intakeQualityReasons.${chaveDoMotivo(motivo.code)}.label`,
+                )}
               </th>
               <td className="py-1.5 pl-4 text-right font-semibold tabular-nums">
                 {numero.format(motivo.count)}
               </td>
               <td className="py-1.5 pl-6 text-muted-foreground">
-                {t(`canonicalAnalysis.analyticsView.intakeQualityReasons.${chaveDoMotivo(motivo.code)}.meaning`)}
+                {t(
+                  `canonicalAnalysis.analyticsView.intakeQualityReasons.${chaveDoMotivo(motivo.code)}.meaning`,
+                )}
               </td>
             </tr>
           ))}
@@ -369,9 +410,18 @@ function Estatisticas({
 }) {
   const { t } = useLanguage();
   const itens = [
-    { rotulo: t("canonicalAnalysis.analyticsView.minimum"), valor: medida.minimum },
-    { rotulo: t("canonicalAnalysis.analyticsView.maximum"), valor: medida.maximum },
-    { rotulo: t("canonicalAnalysis.analyticsView.totalStat"), valor: medida.total },
+    {
+      rotulo: t("canonicalAnalysis.analyticsView.minimum"),
+      valor: medida.minimum,
+    },
+    {
+      rotulo: t("canonicalAnalysis.analyticsView.maximum"),
+      valor: medida.maximum,
+    },
+    {
+      rotulo: t("canonicalAnalysis.analyticsView.totalStat"),
+      valor: medida.total,
+    },
     { rotulo: t("canonicalAnalysis.analyticsView.mean"), valor: medida.mean },
   ];
   return (
@@ -406,7 +456,11 @@ function Suprimido() {
   );
 }
 
-export function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
+export function Numericos({
+  snapshot,
+}: {
+  readonly snapshot: SnapshotAnalitico;
+}) {
   const { t } = useLanguage();
   return (
     <div>
@@ -428,10 +482,22 @@ export function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }
           <Estatisticas medida={m} />
           <Contagens
             itens={[
-              { rotulo: t("canonicalAnalysis.analyticsView.valid"), valor: m.valid_count },
-              { rotulo: t("canonicalAnalysis.analyticsView.nulls"), valor: m.null_count },
-              { rotulo: t("canonicalAnalysis.analyticsView.invalid"), valor: m.invalid_count },
-              { rotulo: t("canonicalAnalysis.analyticsView.absent"), valor: m.absent_count },
+              {
+                rotulo: t("canonicalAnalysis.analyticsView.valid"),
+                valor: m.valid_count,
+              },
+              {
+                rotulo: t("canonicalAnalysis.analyticsView.nulls"),
+                valor: m.null_count,
+              },
+              {
+                rotulo: t("canonicalAnalysis.analyticsView.invalid"),
+                valor: m.invalid_count,
+              },
+              {
+                rotulo: t("canonicalAnalysis.analyticsView.absent"),
+                valor: m.absent_count,
+              },
             ]}
           />
           {/* O MÉTODO na linha, não só dentro do mapa.
@@ -457,7 +523,10 @@ export function Numericos({ snapshot }: { readonly snapshot: SnapshotAnalitico }
             className="desdobra"
             gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}
           >
-            <MapaDeProcedencia bloco={{ tipo: "numerico", dado: m }} denominador={snapshot.record_count} />
+            <MapaDeProcedencia
+              bloco={{ tipo: "numerico", dado: m }}
+              denominador={snapshot.record_count}
+            />
           </Disclosure>
         </article>
       ))}
@@ -483,7 +552,9 @@ function Distribuicoes({
         <article key={d.measure_id} className="bloco-med">
           <div className="cabeca">
             <h3>{d.measure_id}</h3>
-            {d.suppression_applied || d.high_cardinality_suppressed ? <Suprimido /> : null}
+            {d.suppression_applied || d.high_cardinality_suppressed ? (
+              <Suprimido />
+            ) : null}
           </div>
           {/* O PISO DE PRIVACIDADE é a origem da supressão, e estava publicado sem aparecer.
               Sem ele, "suprimido" é uma conclusão sem causa: com ele, a pessoa sabe que grupos
@@ -504,7 +575,9 @@ function Distribuicoes({
                 rotulo={g.label}
                 valor={String(g.count)}
                 largura={larguras[iBloco][i]}
-                rotuloSuprimido={t("canonicalAnalysis.analyticsView.suppressed")}
+                rotuloSuprimido={t(
+                  "canonicalAnalysis.analyticsView.suppressed",
+                )}
               />
             ))}
           </ul>
@@ -515,8 +588,14 @@ function Distribuicoes({
               {t("canonicalAnalysis.analyticsView.other")}: {d.other_count}
             </p>
           ) : null}
-          <Disclosure className="desdobra" gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}>
-            <MapaDeProcedencia bloco={{ tipo: "distribuicao", dado: d }} denominador={denominador} />
+          <Disclosure
+            className="desdobra"
+            gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}
+          >
+            <MapaDeProcedencia
+              bloco={{ tipo: "distribuicao", dado: d }}
+              denominador={denominador}
+            />
           </Disclosure>
         </article>
       ))}
@@ -539,18 +618,25 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
         <div key={c.measure_id} className="bloco-med">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="text-sm">{c.measure_id}</span>
-            {c.suppression_applied || c.coarsening_applied ? <Suprimido /> : null}
+            {c.suppression_applied || c.coarsening_applied ? (
+              <Suprimido />
+            ) : null}
           </div>
           <ul className="mt-1 space-y-0.5">
             {c.statistics.map((s) => (
-              <li key={s.statistic_id} className="flex justify-between gap-3 text-xs">
+              <li
+                key={s.statistic_id}
+                className="flex justify-between gap-3 text-xs"
+              >
                 {/* Decisão de owner (2026-08-15): o padrão do ARGOS, e não uma tradução geral.
                     `statistic_id` é vocabulário ABERTO no contrato; traduzir tudo obrigaria a
                     adivinhar nomes que o backend ainda pode criar. Quem o registro conhece ganha
                     rótulo; quem não conhece continua aparecendo como o id. */}
                 <span>
                   {estatisticaConhecida(s.statistic_id)
-                    ? t(`canonicalAnalysis.analyticsView.statistic.${s.statistic_id}`)
+                    ? t(
+                        `canonicalAnalysis.analyticsView.statistic.${s.statistic_id}`,
+                      )
                     : s.statistic_id}
                 </span>
                 <span className="tabular-nums text-muted-foreground">
@@ -573,7 +659,9 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
                     <>
                       {t("canonicalAnalysis.analyticsView.notPublished")}
                       {s.reason_code ? (
-                        <span className="ml-2 font-mono opacity-70">{s.reason_code}</span>
+                        <span className="ml-2 font-mono opacity-70">
+                          {s.reason_code}
+                        </span>
                       ) : null}
                     </>
                   )}
@@ -594,7 +682,9 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
                   rotulo={faixa(b.lower_value, b.upper_value)}
                   valor={String(b.entity_count)}
                   largura={larguras[iBloco][i]}
-                  rotuloSuprimido={t("canonicalAnalysis.analyticsView.suppressed")}
+                  rotuloSuprimido={t(
+                    "canonicalAnalysis.analyticsView.suppressed",
+                  )}
                 />
               ))}
             </ul>
@@ -604,7 +694,10 @@ function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
               recusas distintas — grosseirização, supressão e cardinalidade alta. Cada uma vira seu
               próprio nó no mapa: agrupá-las num "suprimido" único apagaria por que o número não
               veio, que é justamente o que alguém abre o mapa para descobrir. */}
-          <Disclosure className="desdobra" gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}>
+          <Disclosure
+            className="desdobra"
+            gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}
+          >
             <MapaDeProcedencia
               bloco={{ tipo: "concentracao", dado: c }}
               denominador={snapshot.record_count}
@@ -628,7 +721,9 @@ function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
             <span className="flex items-center gap-2 text-xs text-muted-foreground">
               <span>{s.effective_granularity}</span>
               <span>{s.timezone}</span>
-              {s.suppression_applied || s.temporal_series_suppressed ? <Suprimido /> : null}
+              {s.suppression_applied || s.temporal_series_suppressed ? (
+                <Suprimido />
+              ) : null}
             </span>
           </div>
           {/* A série também publica método e versão, e pela mesma razão eles ficam na linha. */}
@@ -650,13 +745,18 @@ function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
                 valor={j.count !== null ? String(j.count) : null}
                 largura={larguras[iBloco][i]}
                 suprimida={j.count === null}
-                rotuloSuprimido={t("canonicalAnalysis.analyticsView.suppressed")}
+                rotuloSuprimido={t(
+                  "canonicalAnalysis.analyticsView.suppressed",
+                )}
               />
             ))}
           </ul>
           {/* A série desdobra em JANELAS, e a janela suprimida entra no mapa com a hachura —
               `count: null` acontece apenas em `suppressed`, e zero é valor. */}
-          <Disclosure className="desdobra" gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}>
+          <Disclosure
+            className="desdobra"
+            gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}
+          >
             <MapaDeProcedencia
               bloco={{ tipo: "serie", dado: s }}
               denominador={snapshot.record_count}
@@ -708,7 +808,12 @@ export function AnalyticsView() {
       );
     }
     if (analytics.isLoading) {
-      return <LoadingState message={t("canonicalAnalysis.analyticsView.loading")} size="md" />;
+      return (
+        <LoadingState
+          message={t("canonicalAnalysis.analyticsView.loading")}
+          size="md"
+        />
+      );
     }
     if (analytics.isError) {
       return (
@@ -736,6 +841,12 @@ export function AnalyticsView() {
     const temDimensoes = temSnapshot && snapshot.dimensions.length > 0;
     const temConcentracoes = temSnapshot && snapshot.concentrations.length > 0;
     const temSeries = temSnapshot && snapshot.time_series.length > 0;
+    const temCruzamentos =
+      temSnapshot &&
+      (snapshot.flag_crosses.length > 0 || snapshot.numeric_crosses.length > 0);
+    const temSeriesDeMedida =
+      temSnapshot &&
+      (snapshot.flag_series.length > 0 || snapshot.numeric_series.length > 0);
 
     // ÍNDICE DE REGIÕES — M31, e ele chega aqui com três anos de atraso conceitual.
     //
@@ -759,9 +870,17 @@ export function AnalyticsView() {
                   },
                 ]
               : []),
-            { ancora: "anl-resumo", rotulo: t("canonicalAnalysis.analyticsView.summaryTitle") },
+            {
+              ancora: "anl-resumo",
+              rotulo: t("canonicalAnalysis.analyticsView.summaryTitle"),
+            },
             ...(temNumericos
-              ? [{ ancora: "anl-numericos", rotulo: t("canonicalAnalysis.analyticsView.numeric") }]
+              ? [
+                  {
+                    ancora: "anl-numericos",
+                    rotulo: t("canonicalAnalysis.analyticsView.numeric"),
+                  },
+                ]
               : []),
             ...(temDistribuicoes
               ? [
@@ -772,7 +891,12 @@ export function AnalyticsView() {
                 ]
               : []),
             ...(temDimensoes
-              ? [{ ancora: "anl-dimensoes", rotulo: t("canonicalAnalysis.analyticsView.dimensions") }]
+              ? [
+                  {
+                    ancora: "anl-dimensoes",
+                    rotulo: t("canonicalAnalysis.analyticsView.dimensions"),
+                  },
+                ]
               : []),
             ...(temConcentracoes
               ? [
@@ -783,13 +907,42 @@ export function AnalyticsView() {
                 ]
               : []),
             ...(temSeries
-              ? [{ ancora: "anl-series", rotulo: t("canonicalAnalysis.analyticsView.series") }]
+              ? [
+                  {
+                    ancora: "anl-series",
+                    rotulo: t("canonicalAnalysis.analyticsView.series"),
+                  },
+                ]
               : []),
-            { ancora: "anl-procedencia", rotulo: t("canonicalAnalysis.analyticsView.disclosure") },
+            ...(temCruzamentos
+              ? [
+                  {
+                    ancora: "anl-cruzamentos",
+                    rotulo: t("canonicalAnalysis.analyticsView.crosses"),
+                  },
+                ]
+              : []),
+            ...(temSeriesDeMedida
+              ? [
+                  {
+                    ancora: "anl-series-medidas",
+                    rotulo: t("canonicalAnalysis.analyticsView.measureSeries"),
+                  },
+                ]
+              : []),
+            {
+              ancora: "anl-procedencia",
+              rotulo: t("canonicalAnalysis.analyticsView.disclosure"),
+            },
           ]
         : []),
       ...(analysisId
-        ? [{ ancora: "anl-export", rotulo: t("canonicalAnalysis.analyticsView.export") }]
+        ? [
+            {
+              ancora: "anl-export",
+              rotulo: t("canonicalAnalysis.analyticsView.export"),
+            },
+          ]
         : []),
     ];
 
@@ -799,7 +952,9 @@ export function AnalyticsView() {
         {/* O estado do componente é TEXTO, e vem antes de tudo: é ele que explica por que o
             resto pode estar incompleto — ou ausente. */}
         <p role="status" className="text-sm text-muted-foreground">
-          {t(`canonicalAnalysis.result.analytics.state.${vista.component_status}`)}
+          {t(
+            `canonicalAnalysis.result.analytics.state.${vista.component_status}`,
+          )}
         </p>
 
         {snapshot === null ? (
@@ -816,7 +971,10 @@ export function AnalyticsView() {
             <Cabeca snapshot={snapshot} vista={vista} />
             <ResumoDaPublicacao snapshot={snapshot} intake={intake} />
             {temNumericos ? (
-              <Secao id="anl-numericos" titulo={t("canonicalAnalysis.analyticsView.numeric")}>
+              <Secao
+                id="anl-numericos"
+                titulo={t("canonicalAnalysis.analyticsView.numeric")}
+              >
                 <Numericos snapshot={snapshot} />
               </Secao>
             ) : null}
@@ -826,14 +984,23 @@ export function AnalyticsView() {
                 id="anl-distribuicoes"
                 titulo={t("canonicalAnalysis.analyticsView.distributions")}
               >
-                <Distribuicoes itens={snapshot.distributions} denominador={snapshot.record_count} />
+                <Distribuicoes
+                  itens={snapshot.distributions}
+                  denominador={snapshot.record_count}
+                />
               </Secao>
             ) : null}
 
             {/* Rótulo explícito: estas NÃO são as dimensões de saúde do ARGOS. */}
             {temDimensoes ? (
-              <Secao id="anl-dimensoes" titulo={t("canonicalAnalysis.analyticsView.dimensions")}>
-                <Distribuicoes itens={snapshot.dimensions} denominador={snapshot.record_count} />
+              <Secao
+                id="anl-dimensoes"
+                titulo={t("canonicalAnalysis.analyticsView.dimensions")}
+              >
+                <Distribuicoes
+                  itens={snapshot.dimensions}
+                  denominador={snapshot.record_count}
+                />
               </Secao>
             ) : null}
 
@@ -847,24 +1014,60 @@ export function AnalyticsView() {
             ) : null}
 
             {temSeries ? (
-              <Secao id="anl-series" titulo={t("canonicalAnalysis.analyticsView.series")}>
+              <Secao
+                id="anl-series"
+                titulo={t("canonicalAnalysis.analyticsView.series")}
+              >
                 <Series snapshot={snapshot} />
               </Secao>
             ) : null}
 
-            <Secao id="anl-procedencia" titulo={t("canonicalAnalysis.analyticsView.disclosure")}>
+            {temCruzamentos ? (
+              <Secao
+                id="anl-cruzamentos"
+                titulo={t("canonicalAnalysis.analyticsView.crosses")}
+              >
+                <Cruzamentos
+                  flags={snapshot.flag_crosses}
+                  numericos={snapshot.numeric_crosses}
+                  denominador={snapshot.record_count}
+                />
+              </Secao>
+            ) : null}
+
+            {temSeriesDeMedida ? (
+              <Secao
+                id="anl-series-medidas"
+                titulo={t("canonicalAnalysis.analyticsView.measureSeries")}
+              >
+                <SeriesDeMedida
+                  flags={snapshot.flag_series}
+                  numericas={snapshot.numeric_series}
+                  denominador={snapshot.record_count}
+                />
+              </Secao>
+            ) : null}
+
+            <Secao
+              id="anl-procedencia"
+              titulo={t("canonicalAnalysis.analyticsView.disclosure")}
+            >
               <dl className="grid gap-x-6 gap-y-1 py-2 text-xs text-muted-foreground sm:grid-cols-2">
                 <div className="flex gap-1">
                   <dt>{t("canonicalAnalysis.analyticsView.records")}:</dt>
                   <dd className="tabular-nums">{snapshot.record_count}</dd>
                 </div>
                 <div className="flex gap-1">
-                  <dt>{t("canonicalAnalysis.analyticsView.snapshotVersion")}:</dt>
+                  <dt>
+                    {t("canonicalAnalysis.analyticsView.snapshotVersion")}:
+                  </dt>
                   <dd>{snapshot.snapshot_contract_version}</dd>
                 </div>
                 {vista.disclosure_rule_version ? (
                   <div className="flex gap-1">
-                    <dt>{t("canonicalAnalysis.analyticsView.disclosureRule")}:</dt>
+                    <dt>
+                      {t("canonicalAnalysis.analyticsView.disclosureRule")}:
+                    </dt>
                     <dd>{vista.disclosure_rule_version}</dd>
                   </div>
                 ) : null}
@@ -885,7 +1088,10 @@ export function AnalyticsView() {
         {/* O export é do Analytics, e é aqui que a ação canônica mora. O pacote é do backend:
             serializar a tela não é exportar a análise. */}
         {analysisId ? (
-          <Secao id="anl-export" titulo={t("canonicalAnalysis.analyticsView.export")}>
+          <Secao
+            id="anl-export"
+            titulo={t("canonicalAnalysis.analyticsView.export")}
+          >
             <AcaoDeExport analysisId={analysisId} estado={eixoExport} />
           </Secao>
         ) : null}
@@ -902,7 +1108,11 @@ export function AnalyticsView() {
         {/* `v4-medidas` e o escopo da folha portada do Molde (ver `globals.css`). Ele e IRMAO
             do `v4-painel`, nao filho: as duas visoes tem regioes com o mesmo nome (`.painel`,
             `.corpo`, `.rot`) e desenhos diferentes. */}
-        <div ref={raiz} className="v4-medidas space-y-6" data-testid="analytics-view">
+        <div
+          ref={raiz}
+          className="v4-medidas space-y-6"
+          data-testid="analytics-view"
+        >
           <AnalysisShell
             analysisId={analysisId ?? ""}
             estado={status.data?.status as EstadoPublico | undefined}

@@ -516,3 +516,85 @@ describe("Molde V4 · o denominador e o retido chegam à TELA", () => {
     expect(tabela?.querySelectorAll("tbody tr").length).toBe(4);
   });
 });
+
+describe("cruzamentos e séries de medida publicados", () => {
+  it("apresenta a taxa e a média publicadas sem recalculá-las", async () => {
+    const metadados = {
+      privacy_policy_version: "p1",
+      min_group_size: 5,
+      method_id: "published-method",
+      method_version: 1,
+      method_parameters: {},
+      method_definition_digest: "digest",
+    };
+    renderizar(
+      vistaAnalytics({
+        snapshot: {
+          ...SNAPSHOT,
+          flag_crosses: [
+            {
+              ...metadados,
+              dimension_id: "channel",
+              measure_id: "vague_response",
+              top_k: 10,
+              max_tracked_categories: 50,
+              groups_observed: 1,
+              groups_suppressed: 0,
+              suppression_applied: false,
+              high_cardinality_suppressed: false,
+              rows: [
+                { label: "whatsapp", true_count: 3, false_count: 7, null_count: 0, true_rate: 0.3 },
+              ],
+            },
+          ],
+          numeric_crosses: [],
+          flag_series: [],
+          numeric_series: [
+            {
+              ...metadados,
+              dimension_id: "time",
+              measure_id: "input_tokens",
+              series_contract_version: "s1",
+              effective_granularity: "month",
+              timezone: "UTC",
+              max_time_buckets: 400,
+              coarsening_applied: false,
+              value_count: 10,
+              null_count: 0,
+              invalid_count: 0,
+              undated_count: 0,
+              temporal_series_suppressed: false,
+              suppression_applied: false,
+              unit: "token",
+              semantic_role: "sum",
+              windows: [
+                {
+                  window_start: "2026-08-01T00:00:00Z",
+                  count: 10,
+                  null_count: 0,
+                  invalid_count: 0,
+                  minimum: 1,
+                  maximum: 9,
+                  total: 42,
+                  mean: 4.2,
+                  status: "observed",
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    );
+
+    const cruzamentos = await screen.findByRole("region", {
+      name: pt.canonicalAnalysis.analyticsView.crosses,
+    });
+    expect(within(cruzamentos).getByText("whatsapp")).toBeInTheDocument();
+    expect(within(cruzamentos).getByText("30%")).toBeInTheDocument();
+
+    const series = screen.getByRole("region", {
+      name: pt.canonicalAnalysis.analyticsView.measureSeries,
+    });
+    expect(within(series).getByText("4.2")).toBeInTheDocument();
+  });
+});

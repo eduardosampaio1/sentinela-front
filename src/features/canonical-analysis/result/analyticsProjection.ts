@@ -17,12 +17,10 @@
 // silêncio. `blocosIlegiveis` sobe até o view model para a tela poder dizer que recebeu algo que
 // não soube ler — o mesmo tratamento que `unsupportedIndicatorIds` dá ao lado da Engine.
 //
-// ## O que NÃO é lido, e por quê
+// ## Cruzamentos e séries de medida
 //
-// `flag_crosses`, `numeric_crosses`, `flag_series` e `numeric_series` existem no contrato e não
-// são apresentados nesta fatia. Eles são CONTADOS (`blocosNaoApresentados`) em vez de ignorados:
-// a tela declara que o documento trouxe mais do que ela mostra, porque "não recebemos" e "não
-// mostramos" são coisas diferentes para quem lê.
+// `flag_crosses`, `numeric_crosses`, `flag_series` e `numeric_series` são lidos e apresentados.
+// A fronteira continua igual: a tela lê taxas e resumos publicados; não reconstrói nenhum deles.
 //
 // `unsupported_measure_ids` e `unauthorized_measure_ids` são contados, nunca nomeados. Um
 // `measure_id` é chave de saída, e a MF5 congelou que chave de saída não atravessa a fronteira
@@ -30,6 +28,24 @@
 // que o payload decidiu esconder.
 
 import { ehObjeto, lista, listaEstrita, numeroOuNulo, textoOuNulo } from "./leitores";
+import {
+  lerCruzamentoComFlag,
+  lerCruzamentoNumerico,
+  lerSerieComFlag,
+  lerSerieNumerica,
+} from "./analyticsCrossSeriesProjection";
+import type {
+  CruzamentoComFlag,
+  CruzamentoNumerico,
+  SerieComFlag,
+  SerieNumerica,
+} from "./analyticsCrossSeriesProjection";
+export type {
+  CruzamentoComFlag,
+  CruzamentoNumerico,
+  SerieComFlag,
+  SerieNumerica,
+} from "./analyticsCrossSeriesProjection";
 
 // ── medidas numéricas ────────────────────────────────────────────────────────────────────
 
@@ -212,7 +228,11 @@ export interface SnapshotAnalitico {
   dimensions: ResumoDeDistribuicao[];
   concentrations: ResumoDeConcentracao[];
   time_series: SerieTemporal[];
-  /** Blocos que o contrato traz e esta tela não apresenta. Contados, nunca nomeados. */
+  flag_crosses: CruzamentoComFlag[];
+  numeric_crosses: CruzamentoNumerico[];
+  flag_series: SerieComFlag[];
+  numeric_series: SerieNumerica[];
+  /** Reservado para futuras famílias publicadas ainda sem apresentação. */
   blocosNaoApresentados: number;
   /** Medidas que o cálculo não soube resumir ou não pôde publicar. Contadas, nunca nomeadas. */
   medidasNaoResumidas: number;
@@ -666,6 +686,10 @@ export function lerSnapshot(bruto: unknown): SnapshotAnalitico | null {
   const dimensions = lista(bruto.dimensions, lerDistribuicao);
   const concentrations = lista(bruto.concentrations, lerConcentracao);
   const timeSeries = lista(bruto.time_series, lerSerie);
+  const flagCrosses = lista(bruto.flag_crosses, lerCruzamentoComFlag);
+  const numericCrosses = lista(bruto.numeric_crosses, lerCruzamentoNumerico);
+  const flagSeries = lista(bruto.flag_series, lerSerieComFlag);
+  const numericSeries = lista(bruto.numeric_series, lerSerieNumerica);
 
   const ilegiveis =
     tamanho(bruto.numeric) -
@@ -673,7 +697,11 @@ export function lerSnapshot(bruto: unknown): SnapshotAnalitico | null {
     (tamanho(bruto.distributions) - distributions.length) +
     (tamanho(bruto.dimensions) - dimensions.length) +
     (tamanho(bruto.concentrations) - concentrations.length) +
-    (tamanho(bruto.time_series) - timeSeries.length);
+    (tamanho(bruto.time_series) - timeSeries.length) +
+    (tamanho(bruto.flag_crosses) - flagCrosses.length) +
+    (tamanho(bruto.numeric_crosses) - numericCrosses.length) +
+    (tamanho(bruto.flag_series) - flagSeries.length) +
+    (tamanho(bruto.numeric_series) - numericSeries.length);
 
   return {
     snapshot_contract_version: versao,
@@ -683,11 +711,11 @@ export function lerSnapshot(bruto: unknown): SnapshotAnalitico | null {
     dimensions,
     concentrations,
     time_series: timeSeries,
-    blocosNaoApresentados:
-      tamanho(bruto.flag_crosses) +
-      tamanho(bruto.numeric_crosses) +
-      tamanho(bruto.flag_series) +
-      tamanho(bruto.numeric_series),
+    flag_crosses: flagCrosses,
+    numeric_crosses: numericCrosses,
+    flag_series: flagSeries,
+    numeric_series: numericSeries,
+    blocosNaoApresentados: 0,
     medidasNaoResumidas: tamanho(bruto.unsupported_measure_ids),
     medidasNaoAutorizadas: tamanho(bruto.unauthorized_measure_ids),
     blocosIlegiveis: ilegiveis,

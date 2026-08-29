@@ -53,9 +53,13 @@ import "@xyflow/react/dist/style.css";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ALTURA_DO_NO, alturaDoMapa } from "../../result/geometriaDoMapa";
 import type {
+  CruzamentoComFlag,
+  CruzamentoNumerico,
   ResumoDeConcentracao,
   ResumoDeDistribuicao,
   ResumoNumerico,
+  SerieComFlag,
+  SerieNumerica,
   SerieTemporal,
 } from "../../result/analyticsProjection";
 
@@ -85,7 +89,12 @@ const FAIXA = 70;
 /** Entra à esquerda, sai à direita — no meio da altura, nos dois casos. */
 const PONTOS = [
   { type: "target" as const, position: Position.Left, x: 0, y: ALTURA / 2 },
-  { type: "source" as const, position: Position.Right, x: LARGURA, y: ALTURA / 2 },
+  {
+    type: "source" as const,
+    position: Position.Right,
+    x: LARGURA,
+    y: ALTURA / 2,
+  },
 ];
 /** Quantos filhos o desenho mostra antes de dizer quantos sobraram. */
 const TETO_DE_FILHOS = 6;
@@ -103,7 +112,11 @@ export type BlocoDesdobravel =
   | { tipo: "numerico"; dado: ResumoNumerico }
   | { tipo: "distribuicao"; dado: ResumoDeDistribuicao }
   | { tipo: "concentracao"; dado: ResumoDeConcentracao }
-  | { tipo: "serie"; dado: SerieTemporal };
+  | { tipo: "serie"; dado: SerieTemporal }
+  | { tipo: "cruzamento_flag"; dado: CruzamentoComFlag }
+  | { tipo: "cruzamento_numerico"; dado: CruzamentoNumerico }
+  | { tipo: "serie_flag"; dado: SerieComFlag }
+  | { tipo: "serie_numerica"; dado: SerieNumerica };
 
 /**
  * O nó.
@@ -125,12 +138,26 @@ function No({ data }: { data: DadoDoNo }) {
       {/* Invisíveis, não ausentes. Quando a página É desenhada, a medição sobrescreve os
           pontos declarados — e sem elemento no DOM ela devolve lista vazia, derrubando a
           aresta do mesmo jeito. Os dois caminhos precisam chegar ao mesmo lugar. */}
-      <Handle type="target" position={Position.Left} className="!h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent opacity-0" />
-      <Handle type="source" position={Position.Right} className="!h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent opacity-0" />
-      <div className="truncate text-[0.6rem] uppercase tracking-wider text-muted-foreground" title={data.rotulo}>
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="!h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent opacity-0"
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="!h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent opacity-0"
+      />
+      <div
+        className="truncate text-[0.6rem] uppercase tracking-wider text-muted-foreground"
+        title={data.rotulo}
+      >
         {data.rotulo}
       </div>
-      <div className="tabular mt-0.5 truncate text-sm font-medium text-foreground" title={data.valor}>
+      <div
+        className="tabular mt-0.5 truncate text-sm font-medium text-foreground"
+        title={data.valor}
+      >
         {data.valor}
       </div>
     </div>
@@ -154,7 +181,8 @@ export function MapaDeProcedencia({
     const arestas: Edge[] = [];
     const linhas: { rotulo: string; valor: string }[] = [];
     const k = (s: string) => t(`canonicalAnalysis.analyticsView.${s}`);
-    const n = (v: number | null) => (v === null ? k("mapSuppressed") : v.toLocaleString());
+    const n = (v: number | null) =>
+      v === null ? k("mapSuppressed") : v.toLocaleString();
 
     const por = (
       id: string,
@@ -186,15 +214,38 @@ export function MapaDeProcedencia({
       prefixo: string,
     ) => {
       itens.slice(0, TETO_DE_FILHOS).forEach((f, i) => {
-        por(`${prefixo}-${i}`, f.ausente ? "ausente" : "massa", f.rotulo, f.valor, coluna, i, de);
+        por(
+          `${prefixo}-${i}`,
+          f.ausente ? "ausente" : "massa",
+          f.rotulo,
+          f.valor,
+          coluna,
+          i,
+          de,
+        );
       });
       const sobra = itens.length - TETO_DE_FILHOS;
       if (sobra > 0) {
-        por(`${prefixo}-resto`, "resto", k("mapMore"), String(sobra), coluna, TETO_DE_FILHOS, de);
+        por(
+          `${prefixo}-resto`,
+          "resto",
+          k("mapMore"),
+          String(sobra),
+          coluna,
+          TETO_DE_FILHOS,
+          de,
+        );
       }
     };
 
-    por("raiz", "raiz", k("mapDenominator"), denominador.toLocaleString(), 0, 1.5);
+    por(
+      "raiz",
+      "raiz",
+      k("mapDenominator"),
+      denominador.toLocaleString(),
+      0,
+      1.5,
+    );
 
     // ── o bloco, a massa e o desdobramento próprio de cada tipo ───────────────────────────
     if (bloco.tipo === "numerico") {
@@ -207,7 +258,9 @@ export function MapaDeProcedencia({
           // privacidade, não dado que faltou. Por isso troca a FORMA, não um rótulo ao lado.
           {
             rotulo: k("mapNull"),
-            valor: m.suppression_applied ? k("mapSuppressed") : m.null_count.toLocaleString(),
+            valor: m.suppression_applied
+              ? k("mapSuppressed")
+              : m.null_count.toLocaleString(),
             ausente: m.suppression_applied,
           },
           { rotulo: k("mapInvalid"), valor: m.invalid_count.toLocaleString() },
@@ -217,7 +270,15 @@ export function MapaDeProcedencia({
         "bloco",
         "massa",
       );
-      por("metodo", "metodo", k("mapMethod"), `${m.method_id} · v${m.method_version}`, 3, 1.5, "massa-0");
+      por(
+        "metodo",
+        "metodo",
+        k("mapMethod"),
+        `${m.method_id} · v${m.method_version}`,
+        3,
+        1.5,
+        "massa-0",
+      );
       Object.entries(m.method_parameters ?? {}).forEach(([chave, valor], i) => {
         por(`param-${i}`, "metodo", chave, valor, 4, i, "metodo");
       });
@@ -226,7 +287,10 @@ export function MapaDeProcedencia({
     if (bloco.tipo === "distribuicao") {
       const d = bloco.dado;
       por("bloco", "bloco", k("mapDistribution"), d.measure_id, 1, 1.5, "raiz");
-      const grupos = d.groups.map((g) => ({ rotulo: g.label, valor: g.count.toLocaleString() }));
+      const grupos = d.groups.map((g) => ({
+        rotulo: g.label,
+        valor: g.count.toLocaleString(),
+      }));
       // `other_count === null` NÃO é zero: o contrato diz que é "nem a soma dos suprimidos alcança
       // o piso". Vira nó de ausência, com hachura.
       grupos.push({
@@ -235,12 +299,28 @@ export function MapaDeProcedencia({
         ausente: d.other_count === null,
       } as never);
       filhos(grupos, 2, "bloco", "grupo");
-      por("distintos", "massa", k("mapDistinct"), d.distinct_observed.toLocaleString(), 3, 1.5, "bloco");
+      por(
+        "distintos",
+        "massa",
+        k("mapDistinct"),
+        d.distinct_observed.toLocaleString(),
+        3,
+        1.5,
+        "bloco",
+      );
     }
 
     if (bloco.tipo === "concentracao") {
       const c = bloco.dado;
-      por("bloco", "bloco", k("mapConcentration"), c.measure_id, 1, 1.5, "raiz");
+      por(
+        "bloco",
+        "bloco",
+        k("mapConcentration"),
+        c.measure_id,
+        1,
+        1.5,
+        "raiz",
+      );
       filhos(
         c.bands.map((b) => ({
           rotulo: `${b.lower_value.toLocaleString()} – ${b.upper_value.toLocaleString()}`,
@@ -276,13 +356,199 @@ export function MapaDeProcedencia({
         "bloco",
         "janela",
       );
-      por("granularidade", "massa", k("mapGranularity"), s.effective_granularity, 3, 1.5, "bloco");
-      por("metodo", "metodo", k("mapMethod"), `${s.method_id} · v${s.method_version}`, 4, 1.5, "granularidade");
+      por(
+        "granularidade",
+        "massa",
+        k("mapGranularity"),
+        s.effective_granularity,
+        3,
+        1.5,
+        "bloco",
+      );
+      por(
+        "metodo",
+        "metodo",
+        k("mapMethod"),
+        `${s.method_id} · v${s.method_version}`,
+        4,
+        1.5,
+        "granularidade",
+      );
+    }
+
+    if (bloco.tipo === "cruzamento_flag") {
+      const c = bloco.dado;
+      por(
+        "bloco",
+        "bloco",
+        k("mapCross"),
+        `${c.dimension_id} × ${c.measure_id}`,
+        1,
+        1.5,
+        "raiz",
+      );
+      filhos(
+        c.rows.map((linha) => ({
+          rotulo: linha.label,
+          valor: t("canonicalAnalysis.analyticsView.mapFlagBreakdown", {
+            true: String(linha.true_count),
+            false: String(linha.false_count),
+            nulls: String(linha.null_count),
+            rate:
+              linha.true_rate === null
+                ? k("mapSuppressed")
+                : String(linha.true_rate),
+          }),
+        })),
+        2,
+        "bloco",
+        "grupo",
+      );
+      por(
+        "metodo",
+        "metodo",
+        k("mapMethod"),
+        `${c.method_id} · v${c.method_version}`,
+        3,
+        1.5,
+        "bloco",
+      );
+    }
+
+    if (bloco.tipo === "cruzamento_numerico") {
+      const c = bloco.dado;
+      por(
+        "bloco",
+        "bloco",
+        k("mapCross"),
+        `${c.dimension_id} × ${c.measure_id}`,
+        1,
+        1.5,
+        "raiz",
+      );
+      filhos(
+        c.rows.map((linha) => ({
+          rotulo: linha.label,
+          valor: t("canonicalAnalysis.analyticsView.mapNumericBreakdown", {
+            count: String(linha.count),
+            mean: String(linha.mean),
+          }),
+        })),
+        2,
+        "bloco",
+        "grupo",
+      );
+      por(
+        "metodo",
+        "metodo",
+        k("mapMethod"),
+        `${c.method_id} · v${c.method_version}`,
+        3,
+        1.5,
+        "bloco",
+      );
+    }
+
+    if (bloco.tipo === "serie_flag") {
+      const s = bloco.dado;
+      por(
+        "bloco",
+        "bloco",
+        k("mapMeasureSeries"),
+        `${s.dimension_id} × ${s.measure_id}`,
+        1,
+        1.5,
+        "raiz",
+      );
+      filhos(
+        s.windows.map((janela) => ({
+          rotulo: janela.window_start,
+          valor: t("canonicalAnalysis.analyticsView.mapFlagBreakdown", {
+            true: String(janela.true_count),
+            false: String(janela.false_count),
+            nulls: String(janela.null_count),
+            rate:
+              janela.true_rate === null
+                ? k("mapSuppressed")
+                : String(janela.true_rate),
+          }),
+        })),
+        2,
+        "bloco",
+        "janela-medida",
+      );
+      por(
+        "granularidade",
+        "massa",
+        k("mapGranularity"),
+        s.effective_granularity,
+        3,
+        1.5,
+        "bloco",
+      );
+      por(
+        "metodo",
+        "metodo",
+        k("mapMethod"),
+        `${s.method_id} · v${s.method_version}`,
+        4,
+        1.5,
+        "granularidade",
+      );
+    }
+
+    if (bloco.tipo === "serie_numerica") {
+      const s = bloco.dado;
+      por(
+        "bloco",
+        "bloco",
+        k("mapMeasureSeries"),
+        `${s.dimension_id} × ${s.measure_id}`,
+        1,
+        1.5,
+        "raiz",
+      );
+      filhos(
+        s.windows.map((janela) => ({
+          rotulo: janela.window_start,
+          valor: t("canonicalAnalysis.analyticsView.mapNumericBreakdown", {
+            count: String(janela.count),
+            mean:
+              janela.mean === null ? k("mapSuppressed") : String(janela.mean),
+          }),
+        })),
+        2,
+        "bloco",
+        "janela-medida",
+      );
+      por(
+        "granularidade",
+        "massa",
+        k("mapGranularity"),
+        s.effective_granularity,
+        3,
+        1.5,
+        "bloco",
+      );
+      por(
+        "metodo",
+        "metodo",
+        k("mapMethod"),
+        `${s.method_id} · v${s.method_version}`,
+        4,
+        1.5,
+        "granularidade",
+      );
     }
 
     // A altura vem do CONTEÚDO, e a conta mora em `result/geometriaDoMapa.ts` — fora de `ui/`,
     // que é onde o cadeado `backend-first-result` proíbe aritmética. A razão está escrita lá.
-    return { nos, arestas, linhas, altura: alturaDoMapa(nos.map((x) => x.position.y)) };
+    return {
+      nos,
+      arestas,
+      linhas,
+      altura: alturaDoMapa(nos.map((x) => x.position.y)),
+    };
   }, [bloco, denominador, t]);
 
   return (

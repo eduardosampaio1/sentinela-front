@@ -159,9 +159,8 @@ export const SEM_ENTRADA_NO_CONTRATO: readonly string[] = [] as const;
  *
  *   (a) DÍVIDA — trust e parâmetros de privacidade que a tela deveria mostrar e ainda não mostra.
  *       É delta de FRONTEND (ler o que já chega), nunca delta de backend.
- *   (b) DELIBERADO — o que a fatia decidiu não apresentar, e documentou. `flag_crosses`,
- *       `numeric_crosses`, `flag_series` e `numeric_series` são CONTADOS em
- *       `blocosNaoApresentados`; `unsupported_measure_ids` e `unauthorized_measure_ids` são
+ *   (b) DELIBERADO — o que a fatia decidiu não apresentar, e documentou.
+ *       `unsupported_measure_ids` e `unauthorized_measure_ids` são
  *       contados e nunca nomeados, porque `measure_id` é chave de saída e a MF5 congelou que
  *       chave de saída não atravessa a fronteira pública.
  */
@@ -169,21 +168,16 @@ export const PUBLICADO_E_NAO_LIDO: Readonly<Record<string, readonly string[]>> =
   /**
    * (b) DELIBERADO — o que a fatia decidiu não apresentar, e documentou.
    *
-   * `flag_crosses`, `numeric_crosses`, `flag_series` e `numeric_series` são CONTADOS em
-   * `blocosNaoApresentados`; `unsupported_measure_ids` e `unauthorized_measure_ids` são contados e
+   * `unsupported_measure_ids` e `unauthorized_measure_ids` são contados e
    * nunca nomeados, porque `measure_id` é chave de saída e a MF5 congelou que chave de saída não
    * atravessa a fronteira pública. `plan_digest`, `plan_contract_version` e `input_artifact_id`
    * são procedência do PLANO, não da medida — outra superfície, outra missão.
    *
-   * As quatro projeções saíram desta lista na M21: seus campos de trust passaram a ser LIDOS.
-   * Restam só os deliberados, que é o que o DoD pedia.
+   * Cruzamentos e séries de medida também saíram desta lista: agora são lidos e apresentados.
+   * Restam só os deliberados.
    */
   SnapshotAnalitico: [
-    "flag_crosses",
-    "flag_series",
     "input_artifact_id",
-    "numeric_crosses",
-    "numeric_series",
     "plan_contract_version",
     "plan_digest",
     "unauthorized_measure_ids",
