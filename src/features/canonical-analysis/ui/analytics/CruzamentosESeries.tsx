@@ -73,7 +73,10 @@ export function Cruzamentos({
   readonly numericos: readonly CruzamentoNumerico[];
   readonly denominador: number;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const numero = new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US", {
+    maximumFractionDigits: 2,
+  });
   return (
     <div className="space-y-4">
       {flags.map((cruzamento) => (
@@ -211,25 +214,25 @@ export function Cruzamentos({
                       {linha.label}
                     </th>
                     <td className="px-2 text-right tabular-nums">
-                      {linha.count}
+                      {numero.format(linha.count)}
                     </td>
                     <td className="px-2 text-right tabular-nums">
-                      {linha.null_count}
+                      {numero.format(linha.null_count)}
                     </td>
                     <td className="px-2 text-right tabular-nums">
-                      {linha.invalid_count}
+                      {numero.format(linha.invalid_count)}
                     </td>
                     <td className="px-2 text-right tabular-nums">
-                      {linha.minimum}
+                      {numero.format(linha.minimum)}
                     </td>
                     <td className="px-2 text-right tabular-nums">
-                      {linha.maximum}
+                      {numero.format(linha.maximum)}
                     </td>
                     <td className="px-2 text-right tabular-nums">
-                      {linha.total}
+                      {numero.format(linha.total)}
                     </td>
                     <td className="py-2 text-right tabular-nums">
-                      {linha.mean}
+                      {numero.format(linha.mean)}
                     </td>
                   </tr>
                 ))}
@@ -260,7 +263,19 @@ export function SeriesDeMedida({
   readonly numericas: readonly SerieNumerica[];
   readonly denominador: number;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const locale = language === "pt" ? "pt-BR" : "en-US";
+  const numero = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+  const formatarJanela = (valor: string) => {
+    const data = new Date(valor);
+    return Number.isNaN(data.getTime())
+      ? valor
+      : data.toLocaleDateString(locale, {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+        });
+  };
   return (
     <div className="space-y-4">
       {flags.map((serie) => (
@@ -318,7 +333,7 @@ export function SeriesDeMedida({
                     className="border-b border-border/40"
                   >
                     <th scope="row" className="py-2 text-left font-normal">
-                      {janela.window_start}
+                      {formatarJanela(janela.window_start)}
                     </th>
                     <td className="px-2 text-right">{janela.status}</td>
                     <td className="px-2 text-right tabular-nums">
@@ -414,33 +429,37 @@ export function SeriesDeMedida({
                     className="border-b border-border/40"
                   >
                     <th scope="row" className="py-2 text-left font-normal">
-                      {janela.window_start}
+                      {formatarJanela(janela.window_start)}
                     </th>
                     <td className="px-2 text-right">{janela.status}</td>
                     <td className="px-2 text-right tabular-nums">
-                      {janela.count}
+                      {numero.format(janela.count)}
                     </td>
                     <td className="px-2 text-right tabular-nums">
-                      {janela.null_count}
+                      {numero.format(janela.null_count)}
                     </td>
                     <td className="px-2 text-right tabular-nums">
-                      {janela.invalid_count}
+                      {numero.format(janela.invalid_count)}
                     </td>
                     <td className="px-2 text-right tabular-nums">
-                      {janela.minimum ??
-                        t("canonicalAnalysis.analyticsView.notPublished")}
+                      {janela.minimum !== null
+                        ? numero.format(janela.minimum)
+                        : t("canonicalAnalysis.analyticsView.notPublished")}
                     </td>
                     <td className="px-2 text-right tabular-nums">
-                      {janela.maximum ??
-                        t("canonicalAnalysis.analyticsView.notPublished")}
+                      {janela.maximum !== null
+                        ? numero.format(janela.maximum)
+                        : t("canonicalAnalysis.analyticsView.notPublished")}
                     </td>
                     <td className="px-2 text-right tabular-nums">
-                      {janela.total ??
-                        t("canonicalAnalysis.analyticsView.notPublished")}
+                      {janela.total !== null
+                        ? numero.format(janela.total)
+                        : t("canonicalAnalysis.analyticsView.notPublished")}
                     </td>
                     <td className="py-2 text-right tabular-nums">
-                      {janela.mean ??
-                        t("canonicalAnalysis.analyticsView.notPublished")}
+                      {janela.mean !== null
+                        ? numero.format(janela.mean)
+                        : t("canonicalAnalysis.analyticsView.notPublished")}
                     </td>
                   </tr>
                 ))}

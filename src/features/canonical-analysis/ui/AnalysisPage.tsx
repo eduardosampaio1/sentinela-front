@@ -34,7 +34,10 @@ import { useRevelacao } from "@/design/motion";
 import { RegiaoDeAnalyticsAoVivo } from "./analytics/RegiaoDeAnalyticsAoVivo";
 import { analyticsUtilizavel, lerEixos } from "../result/eixos";
 import { ProblemFeedback, StateBanner } from "./notices";
-import { DisponibilidadeDasVisoes, type DisponibilidadeDaVisao } from "./DisponibilidadeDasVisoes";
+import {
+  DisponibilidadeDasVisoes,
+  type DisponibilidadeDaVisao,
+} from "./DisponibilidadeDasVisoes";
 import { VISOES_DA_ANALISE } from "./visoes";
 
 export function AnalysisPage() {
@@ -54,6 +57,22 @@ export function AnalysisPage() {
   // escopo: os eixos existem independentemente do estado da análise, e condicioná-los ao status
   // faria a tela decidir quando o backend tem algo a dizer.
   const progresso = useAnalysisProgress(scope, analysisId);
+  // O status e o progresso sao read models independentes. Na transicao terminal, releia os
+  // eixos uma vez para trocar `running/pending` pelos estados finais. Fazer isso em cada tick
+  // duplicaria o polling enquanto a Engine ainda trabalha.
+  const estadoTerminal = status.data?.status;
+  const workspaceId = scope?.workspaceId;
+  useEffect(() => {
+    if (
+      !workspaceId ||
+      !analysisId ||
+      !["completed", "failed"].includes(estadoTerminal ?? "")
+    )
+      return;
+    void queryClient.invalidateQueries({
+      queryKey: workspaceKeys.progress(workspaceId, analysisId),
+    });
+  }, [analysisId, estadoTerminal, queryClient, workspaceId]);
   const eixos = lerEixos(progresso.data);
   // D13: `analytics` utilizável (`ready|partial`) aparece MESMO com `final_result` pendente. A
   // consulta só é feita quando o eixo autoriza — não se busca projeção de um componente que o
@@ -66,7 +85,9 @@ export function AnalysisPage() {
   // reset no sucesso — o backend nunca vê a mesma intenção como submits distintos (Codex E2 R1).
   const submitIntent = useIdempotencyIntent();
   const retryIntent = useIdempotencyIntent();
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(
+    null,
+  );
   const [retomarUpload, setRetomarUpload] = useState(false);
   useEffect(() => {
     setUploadProgress(null);
@@ -81,7 +102,9 @@ export function AnalysisPage() {
 
   function revalidar() {
     if (scope && analysisId) {
-      void queryClient.invalidateQueries({ queryKey: workspaceKeys.status(scope.workspaceId, analysisId) });
+      void queryClient.invalidateQueries({
+        queryKey: workspaceKeys.status(scope.workspaceId, analysisId),
+      });
     }
   }
 
@@ -92,7 +115,10 @@ export function AnalysisPage() {
   const retryBloqueado = retry.isPending || retry.isSuccess;
   function dispararSubmit() {
     if (!scope || !analysisId || submitBloqueado) return;
-    submit.mutate({ analysisId, scope, idempotencyKey: submitIntent.ensure() }, { onSuccess: revalidar });
+    submit.mutate(
+      { analysisId, scope, idempotencyKey: submitIntent.ensure() },
+      { onSuccess: revalidar },
+    );
   }
   function dispararRetry() {
     if (!scope || !analysisId || retryBloqueado) return;
@@ -113,16 +139,24 @@ export function AnalysisPage() {
   function disponibilidadeDasVisoes(view: AnalysisStatusView) {
     const indisponivelOuPreparando: DisponibilidadeDaVisao =
       view.status === "failed" ? "unavailable" : "preparing";
-    const resultadoCompleto = view.status === "completed" && view.result_available;
+    const resultadoCompleto =
+      view.status === "completed" && view.result_available;
     return {
       argos: view.result_available ? "available" : indisponivelOuPreparando,
-      analytics: analyticsPronto || resultadoCompleto ? "available" : indisponivelOuPreparando,
+      analytics:
+        analyticsPronto || resultadoCompleto
+          ? "available"
+          : indisponivelOuPreparando,
     } as const;
   }
 
   function corpo() {
     if (!scope) {
-      return <p role="alert" className="text-sm text-muted-foreground">{t("canonicalAnalysis.entry.workspaceMissing")}</p>;
+      return (
+        <p role="alert" className="text-sm text-muted-foreground">
+          {t("canonicalAnalysis.entry.workspaceMissing")}
+        </p>
+      );
     }
     if (status.isLoading) {
       // M45.2 — o rótulo de CARREGANDO não pode ser o nome de um ESTADO.
@@ -131,7 +165,9 @@ export function AnalysisPage() {
       // jornada. Enquanto o status era buscado, a tela afirmava que a análise estava naquele
       // estado; e se ela estivesse mesmo, a pessoa veria a mesma palavra pelos dois motivos. É o
       // colapso carregando × estado, irmão do que esta tranche corrigiu no painel de eixos.
-      return <LoadingState message={t("canonicalAnalysis.loading")} size="md" />;
+      return (
+        <LoadingState message={t("canonicalAnalysis.loading")} size="md" />
+      );
     }
     if (status.isError) {
       // M34 — a espera numa parte do lifecycle NÃO apaga o que outra parte já disse.
@@ -147,14 +183,28 @@ export function AnalysisPage() {
       if (algumEixoPublicado) {
         return (
           <div className="space-y-6">
-            <ProblemFeedback error={status.error} onRetry={() => void status.refetch()} retryDisabled={status.isFetching} />
-            <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
+            <ProblemFeedback
+              error={status.error}
+              onRetry={() => void status.refetch()}
+              retryDisabled={status.isFetching}
+            />
+            <PainelDeEixos
+              eixos={eixos}
+              leitura={progresso.error}
+              carregando={progresso.isPending}
+            />
           </div>
         );
       }
       // Erro da LEITURA de status (deep link inválido, 401, indisponível): apresentação pelo código.
       // Leitura PODE re-tentar (limitado) por ação do usuário — item 22 (nunca auto p/ mutation).
-      return <ProblemFeedback error={status.error} onRetry={() => void status.refetch()} retryDisabled={status.isFetching} />;
+      return (
+        <ProblemFeedback
+          error={status.error}
+          onRetry={() => void status.refetch()}
+          retryDisabled={status.isFetching}
+        />
+      );
     }
     const view = status.data;
     if (!view || !analysisId) return null;
@@ -167,8 +217,8 @@ export function AnalysisPage() {
     const uploadAindaNoNavegador =
       uploadProgress !== null && uploadProgress.state !== "done";
     if (
-      view.status === "preparing"
-      || (view.status === "receiving" && (uploadAindaNoNavegador || retomarUpload))
+      view.status === "preparing" ||
+      (view.status === "receiving" && (uploadAindaNoNavegador || retomarUpload))
     ) {
       return (
         <div className="space-y-4">
@@ -235,13 +285,25 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
-            <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
-            <Button onClick={dispararSubmit} disabled={submitBloqueado} aria-busy={submit.isPending}>
+            <EtapasDaAnalise
+              view={view}
+              eixos={eixos}
+              intakeProgress={progresso.data?.intake}
+            />
+            <Button
+              onClick={dispararSubmit}
+              disabled={submitBloqueado}
+              aria-busy={submit.isPending}
+            >
               {t("canonicalAnalysis.upload.submit")}
             </Button>
             {/* Erro de submit pelo CÓDIGO: capacity_wait/analysis_not_ready = espera neutra;
                 temporarily_unavailable/rede = re-submeter; idempotency_conflict = só mensagem. */}
-            <ProblemFeedback error={submit.error} onRetry={dispararSubmit} retryDisabled={submitBloqueado} />
+            <ProblemFeedback
+              error={submit.error}
+              onRetry={dispararSubmit}
+              retryDisabled={submitBloqueado}
+            />
           </div>
         );
       case "needs_mapping": {
@@ -269,11 +331,18 @@ export function AnalysisPage() {
           return (
             <div className="space-y-4">
               <StateBanner view={view} />
-              <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
+              <EtapasDaAnalise
+                view={view}
+                eixos={eixos}
+                intakeProgress={progresso.data?.intake}
+              />
               {/* Rotulo PROPRIO, e nao o titulo do editor: dizer *Diga qual coluna e qual* enquanto
                   ainda se le o arquivo pede uma decisao que nao esta disponivel -- e faz o
                   carregando ser indistinguivel do editor para quem mede a tela. */}
-              <LoadingState message={t("canonicalAnalysis.mapping.loading")} size="md" />
+              <LoadingState
+                message={t("canonicalAnalysis.mapping.loading")}
+                size="md"
+              />
             </div>
           );
         }
@@ -281,7 +350,11 @@ export function AnalysisPage() {
           return (
             <div className="space-y-4">
               <StateBanner view={view} />
-              <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
+              <EtapasDaAnalise
+                view={view}
+                eixos={eixos}
+                intakeProgress={progresso.data?.intake}
+              />
               <p className="text-sm text-muted-foreground">
                 {t("canonicalAnalysis.needsMapping.loadFailed")}
               </p>
@@ -298,7 +371,11 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
-            <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
+            <EtapasDaAnalise
+              view={view}
+              eixos={eixos}
+              intakeProgress={progresso.data?.intake}
+            />
             <MappingStep
               mapa={mapeamento.data}
               aoConfirmar={async (
@@ -328,7 +405,11 @@ export function AnalysisPage() {
         return (
           <div className="space-y-4">
             <StateBanner view={view} />
-            <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
+            <EtapasDaAnalise
+              view={view}
+              eixos={eixos}
+              intakeProgress={progresso.data?.intake}
+            />
             {/* OS EIXOS ENTRAM AQUI TAMBÉM, pela mesma simetria que a M35 usou em `failed`.
                 Lá o argumento foi: apagar os eixos transformaria "um componente falhou" em "tudo
                 falhou", que é afirmação que o produtor não fez. O reverso vale igual — sem eles,
@@ -337,7 +418,11 @@ export function AnalysisPage() {
                 O estado da ANÁLISE e o estado de cada COMPONENTE são vocabulários diferentes, e é
                 justamente no estado terminal que a diferença fica cara: é dali que a pessoa sai
                 para ler o resultado. */}
-            <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
+            <PainelDeEixos
+              eixos={eixos}
+              leitura={progresso.error}
+              carregando={progresso.isPending}
+            />
             <DisponibilidadeDasVisoes
               analysisId={analysisId}
               estados={disponibilidadeDasVisoes(view)}
@@ -368,7 +453,11 @@ export function AnalysisPage() {
         return (
           <div className="space-y-6">
             <StateBanner view={view} />
-            <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
+            <EtapasDaAnalise
+              view={view}
+              eixos={eixos}
+              intakeProgress={progresso.data?.intake}
+            />
             {/* O QUE ACONTECEU COM O ARQUIVO, em numeros.
 
                 Medido em homologacao (2026-08-24) com base real: 100 de 61.423 registros
@@ -387,7 +476,11 @@ export function AnalysisPage() {
                 afirmação que o produtor não fez.
                 O eixo `failed` também NÃO autoriza retry: quem autoriza é `retry_allowed`, e são
                 dimensões diferentes. */}
-            <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
+            <PainelDeEixos
+              eixos={eixos}
+              leitura={progresso.error}
+              carregando={progresso.isPending}
+            />
             <DisponibilidadeDasVisoes
               analysisId={analysisId}
               estados={disponibilidadeDasVisoes(view)}
@@ -395,10 +488,16 @@ export function AnalysisPage() {
             />
             {/* O que já estava disponível continua disponível. Uma falha em outro eixo não
                 desfaz o que o componente analítico entregou. */}
-            {analyticsPronto && analytics.data && <RegiaoDeAnalyticsAoVivo vista={analytics.data} />}
+            {analyticsPronto && analytics.data && (
+              <RegiaoDeAnalyticsAoVivo vista={analytics.data} />
+            )}
             {view.retry_allowed ? (
               // Recuperável: nova execução sobre o artefato já recebido, sem novo upload.
-              <Button onClick={dispararRetry} disabled={retryBloqueado} aria-busy={retry.isPending}>
+              <Button
+                onClick={dispararRetry}
+                disabled={retryBloqueado}
+                aria-busy={retry.isPending}
+              >
                 {t("canonicalAnalysis.action.reprocess")}
               </Button>
             ) : (
@@ -406,10 +505,14 @@ export function AnalysisPage() {
               // explícita (novo prepare + nova Idempotency-Key), não um retry falso da mesma.
               <div className="flex flex-wrap gap-2">
                 <Button asChild>
-                  <Link to="/analyses/new">{t("canonicalAnalysis.action.newAnalysis")}</Link>
+                  <Link to="/analyses/new">
+                    {t("canonicalAnalysis.action.newAnalysis")}
+                  </Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link to="/analyses">{t("canonicalAnalysis.action.back")}</Link>
+                  <Link to="/analyses">
+                    {t("canonicalAnalysis.action.back")}
+                  </Link>
                 </Button>
               </div>
             )}
@@ -426,8 +529,16 @@ export function AnalysisPage() {
                 empurrá-lo para dentro faria "recuperando" parecer um quinto componente. O
                 `StateBanner` já o distingue por palavra e forma, nunca só por cor. */}
             <StateBanner view={view} />
-            <PainelDeEixos eixos={eixos} leitura={progresso.error} carregando={progresso.isPending} />
-            <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
+            <PainelDeEixos
+              eixos={eixos}
+              leitura={progresso.error}
+              carregando={progresso.isPending}
+            />
+            <EtapasDaAnalise
+              view={view}
+              eixos={eixos}
+              intakeProgress={progresso.data?.intake}
+            />
             <DisponibilidadeDasVisoes
               analysisId={analysisId}
               estados={disponibilidadeDasVisoes(view)}
@@ -437,7 +548,9 @@ export function AnalysisPage() {
                 Reusa o portador canônico da M27 — nenhuma segunda interpretação de
                 `ready`/`partial`/`withheld`. E isto não é "resultado parcial": `partial` pertence
                 ao componente analítico, e `final_result` não tem meio-termo no contrato. */}
-            {analyticsPronto && analytics.data && <RegiaoDeAnalyticsAoVivo vista={analytics.data} />}
+            {analyticsPronto && analytics.data && (
+              <RegiaoDeAnalyticsAoVivo vista={analytics.data} />
+            )}
           </div>
         );
     }
@@ -476,7 +589,11 @@ export function AnalysisPage() {
       }
     >
       <PageFrame maxWidth="md">
-        <div ref={raiz} className="space-y-6" data-testid="canonical-analysis-page">
+        <div
+          ref={raiz}
+          className="space-y-6"
+          data-testid="canonical-analysis-page"
+        >
           {/* A identidade fica FORA do `switch`, e é essa a mudança de composição.
               Os oito ramos decidem o que se pode FAZER com a análise; nenhum deles precisava
               decidir de novo qual análise é. Antes, nenhum decidia — e a tela abria dizendo "Em

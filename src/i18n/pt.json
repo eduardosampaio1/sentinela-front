@@ -741,11 +741,11 @@
       "noIndicators": "Nenhum indicador suportado neste resultado.",
       "indicator": {
         "useful_outcome_rate": {
-          "label": "Useful rate",
+          "label": "Taxa útil",
           "description": "Fração das conversas analisadas com desfecho útil, conforme o domínio."
         },
         "outcome_field_coverage_rate": {
-          "label": "Outcome field coverage rate",
+          "label": "Cobertura do resultado",
           "description": "Fração das conversas que trouxeram campo de desfecho. Cobertura baixa limita todos os números baseados em desfecho."
         },
         "conversion_rate": {
@@ -753,7 +753,7 @@
           "description": "Fração das conversas analisadas que atingiram o status de conversão declarado pelo domínio."
         },
         "intent_coverage_rate": {
-          "label": "Intent coverage",
+          "label": "Intenções cobertas",
           "description": "Fração do catálogo de intenções observada neste conjunto de dados."
         },
         "analyzed_conversation_count": {

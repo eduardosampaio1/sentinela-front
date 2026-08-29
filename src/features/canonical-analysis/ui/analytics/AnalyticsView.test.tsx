@@ -74,8 +74,24 @@ const SNAPSHOT = {
       suppression_applied: false,
       high_cardinality_suppressed: false,
       statistics: [
-        { statistic_id: "top_10_share", state: "published", calculation_precision: "exact", value: 0.42, lower_bound: null, upper_bound: null, reason_code: null },
-        { statistic_id: "gini", state: "not_published", calculation_precision: null, value: null, lower_bound: null, upper_bound: null, reason_code: "below_min_group" },
+        {
+          statistic_id: "top_10_share",
+          state: "published",
+          calculation_precision: "exact",
+          value: 0.42,
+          lower_bound: null,
+          upper_bound: null,
+          reason_code: null,
+        },
+        {
+          statistic_id: "gini",
+          state: "not_published",
+          calculation_precision: null,
+          value: null,
+          lower_bound: null,
+          upper_bound: null,
+          reason_code: "below_min_group",
+        },
       ],
       method_id: "m",
       method_version: 1,
@@ -136,10 +152,12 @@ function montar(vista: unknown, statusOver: Record<string, unknown> = {}) {
       chamadas.push("getAnalytics");
       return vista;
     }),
-    getResult: vi.fn(async (_i: string, _s: unknown, _o: unknown, versao?: string) => {
-      chamadas.push(`getResult:${versao ?? "SEM-VERSAO"}`);
-      return {};
-    }),
+    getResult: vi.fn(
+      async (_i: string, _s: unknown, _o: unknown, versao?: string) => {
+        chamadas.push(`getResult:${versao ?? "SEM-VERSAO"}`);
+        return {};
+      },
+    ),
     getStatus: vi.fn(async () => {
       chamadas.push("getStatus");
       return {
@@ -167,14 +185,21 @@ function montar(vista: unknown, statusOver: Record<string, unknown> = {}) {
 }
 
 vi.mock("@/shell/AppShell", () => ({
-  AppShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  AppShell: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 let clienteAtual: ReturnType<typeof montar>;
 vi.mock("../../data/client", () => ({ useV1Client: () => clienteAtual }));
-vi.mock("../scope", () => ({ useCanonicalScope: () => ({ workspaceId: "ws-1" }) }));
+vi.mock("../scope", () => ({
+  useCanonicalScope: () => ({ workspaceId: "ws-1" }),
+}));
 
-function renderizar(vista: unknown = vistaAnalytics(), statusOver: Record<string, unknown> = {}) {
+function renderizar(
+  vista: unknown = vistaAnalytics(),
+  statusOver: Record<string, unknown> = {},
+) {
   window.localStorage.setItem("sentinela:language", "pt");
   clienteAtual = montar(vista, statusOver);
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -183,7 +208,10 @@ function renderizar(vista: unknown = vistaAnalytics(), statusOver: Record<string
       <QueryClientProvider client={qc}>
         <MemoryRouter initialEntries={["/analyses/an-abc/analytics"]}>
           <Routes>
-            <Route path="/analyses/:analysisId/analytics" element={<AnalyticsView />} />
+            <Route
+              path="/analyses/:analysisId/analytics"
+              element={<AnalyticsView />}
+            />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>
@@ -208,7 +236,9 @@ describe("F4 · fonte ÚNICA", () => {
     // `final_result: pending` e `analytics: ready` — a visão precisa renderizar assim mesmo.
     renderizar();
     expect(
-      await screen.findByRole("region", { name: pt.canonicalAnalysis.analyticsView.numeric }),
+      await screen.findByRole("region", {
+        name: pt.canonicalAnalysis.analyticsView.numeric,
+      }),
     ).toBeInTheDocument();
   });
 
@@ -227,13 +257,19 @@ describe("F4 · fonte ÚNICA", () => {
     );
 
     expect(
-      await screen.findByRole("region", { name: pt.canonicalAnalysis.analyticsView.summaryTitle }),
+      await screen.findByRole("region", {
+        name: pt.canonicalAnalysis.analyticsView.summaryTitle,
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("region", { name: pt.canonicalAnalysis.analyticsView.numeric }),
+      screen.queryByRole("region", {
+        name: pt.canonicalAnalysis.analyticsView.numeric,
+      }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText(pt.canonicalAnalysis.analyticsView.summary.numeric.empty),
+      screen.getByText(
+        pt.canonicalAnalysis.analyticsView.summary.numeric.empty,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -263,25 +299,37 @@ describe("F4 · fonte ÚNICA", () => {
       name: pt.canonicalAnalysis.analyticsView.intakeQuality,
     });
     expect(
-      within(secao).getByText(pt.canonicalAnalysis.analyticsView.intakeQualityReasons.missingAssistantText.label),
+      within(secao).getByText(
+        pt.canonicalAnalysis.analyticsView.intakeQualityReasons
+          .missingAssistantText.label,
+      ),
     ).toBeInTheDocument();
     expect(within(secao).getByText("71")).toBeInTheDocument();
     expect(
-      within(secao).getByText(pt.canonicalAnalysis.analyticsView.intakeQualityReasons.invalidFieldType.label),
+      within(secao).getByText(
+        pt.canonicalAnalysis.analyticsView.intakeQualityReasons.invalidFieldType
+          .label,
+      ),
     ).toBeInTheDocument();
     expect(within(secao).getByText("3")).toBeInTheDocument();
     expect(
-      within(secao).getByText(pt.canonicalAnalysis.analyticsView.intakeQualityEngineBoundary),
+      within(secao).getByText(
+        pt.canonicalAnalysis.analyticsView.intakeQualityEngineBoundary,
+      ),
     ).toBeInTheDocument();
   });
 });
 
 describe("F4 · privacidade é conclusão do produtor, não interpretação da tela", () => {
   it("`withheld` é dito, e a razão interna não é impressa", async () => {
-    renderizar(vistaAnalytics({ component_status: "withheld", snapshot: null }));
+    renderizar(
+      vistaAnalytics({ component_status: "withheld", snapshot: null }),
+    );
     await waitFor(() => expect(chamadas).toContain("getAnalytics"));
     expect(
-      screen.queryByRole("region", { name: pt.canonicalAnalysis.analyticsView.numeric }),
+      screen.queryByRole("region", {
+        name: pt.canonicalAnalysis.analyticsView.numeric,
+      }),
     ).not.toBeInTheDocument();
   });
 
@@ -290,8 +338,13 @@ describe("F4 · privacidade é conclusão do produtor, não interpretação da t
     const secao = await screen.findByRole("region", {
       name: pt.canonicalAnalysis.analyticsView.numeric,
     });
-    expect(within(secao).getByText("conversation_cost"), "medida ausente — prova vazia").toBeInTheDocument();
-    expect(within(secao).getByText(pt.canonicalAnalysis.analyticsView.suppressed)).toBeInTheDocument();
+    expect(
+      within(secao).getByText("conversation_cost"),
+      "medida ausente — prova vazia",
+    ).toBeInTheDocument();
+    expect(
+      within(secao).getByText(pt.canonicalAnalysis.analyticsView.suppressed),
+    ).toBeInTheDocument();
   });
 
   it("`other_count: null` não vira zero na tela", async () => {
@@ -306,7 +359,9 @@ describe("F4 · privacidade é conclusão do produtor, não interpretação da t
     // porque não havia nada. Verde por não ter olhado.
     expect(within(secao).getAllByRole("listitem").length).toBeGreaterThan(0);
     expect(
-      within(secao).queryByText(`${pt.canonicalAnalysis.analyticsView.other}: 0`),
+      within(secao).queryByText(
+        `${pt.canonicalAnalysis.analyticsView.other}: 0`,
+      ),
     ).not.toBeInTheDocument();
   });
 
@@ -315,8 +370,12 @@ describe("F4 · privacidade é conclusão do produtor, não interpretação da t
     const secao = await screen.findByRole("region", {
       name: pt.canonicalAnalysis.analyticsView.series,
     });
-    const linhas = within(secao).getAllByRole("listitem").map((li) => li.textContent ?? "");
-    expect(linhas.length, "sem janelas — a prova seria vazia").toBeGreaterThan(0);
+    const linhas = within(secao)
+      .getAllByRole("listitem")
+      .map((li) => li.textContent ?? "");
+    expect(linhas.length, "sem janelas — a prova seria vazia").toBeGreaterThan(
+      0,
+    );
     const suprimida = linhas.find((l) => l.includes("2026-08-02")) ?? "";
     expect(suprimida, "a janela suprimida não chegou à tela").not.toBe("");
     expect(suprimida).toContain(pt.canonicalAnalysis.analyticsView.suppressed);
@@ -338,11 +397,28 @@ describe("F4 · privacidade é conclusão do produtor, não interpretação da t
     // `gini` com `reason_code` que o caso seguinte afirma, e o vizinho reprovava por poluição —
     // um defeito de teste que parece defeito de produto.
     const vista = structuredClone(vistaAnalytics());
-    const conc = (vista as { snapshot: { concentrations: { statistics: unknown[] }[] } }).snapshot
-      .concentrations[0];
+    const conc = (
+      vista as { snapshot: { concentrations: { statistics: unknown[] }[] } }
+    ).snapshot.concentrations[0];
     conc.statistics = [
-      { statistic_id: "top_10_share", state: "published", calculation_precision: "exact", value: 0.42, lower_bound: null, upper_bound: null, reason_code: null },
-      { statistic_id: "estatistica_que_o_backend_inventou", state: "published", calculation_precision: "exact", value: 0.7, lower_bound: null, upper_bound: null, reason_code: null },
+      {
+        statistic_id: "top_10_share",
+        state: "published",
+        calculation_precision: "exact",
+        value: 0.42,
+        lower_bound: null,
+        upper_bound: null,
+        reason_code: null,
+      },
+      {
+        statistic_id: "estatistica_que_o_backend_inventou",
+        state: "published",
+        calculation_precision: "exact",
+        value: 0.7,
+        lower_bound: null,
+        upper_bound: null,
+        reason_code: null,
+      },
     ];
     renderizar(vista);
     const secao = await screen.findByRole("region", {
@@ -350,10 +426,15 @@ describe("F4 · privacidade é conclusão do produtor, não interpretação da t
     });
 
     expect(
-      within(secao).getByText(pt.canonicalAnalysis.analyticsView.statistic.top_10_share),
+      within(secao).getByText(
+        pt.canonicalAnalysis.analyticsView.statistic.top_10_share,
+      ),
       "o id conhecido não recebeu rótulo",
     ).toBeInTheDocument();
-    expect(within(secao).queryByText("top_10_share"), "o id cru sobrou ao lado do rótulo").toBeNull();
+    expect(
+      within(secao).queryByText("top_10_share"),
+      "o id cru sobrou ao lado do rótulo",
+    ).toBeNull();
 
     expect(
       within(secao).getByText("estatistica_que_o_backend_inventou"),
@@ -398,12 +479,16 @@ describe("F4 · as duas 'dimensões' não se confundem", () => {
       name: pt.canonicalAnalysis.analyticsView.dimensions,
     });
     expect(secao).toBeInTheDocument();
-    expect(pt.canonicalAnalysis.analyticsView.dimensions).toContain("Analytics");
+    expect(pt.canonicalAnalysis.analyticsView.dimensions).toContain(
+      "Analytics",
+    );
   });
 
   it("nenhuma dimensão de saúde do ARGOS aparece aqui", async () => {
     renderizar();
-    await screen.findByRole("region", { name: pt.canonicalAnalysis.analyticsView.numeric });
+    await screen.findByRole("region", {
+      name: pt.canonicalAnalysis.analyticsView.numeric,
+    });
     for (const rotulo of Object.values(pt.canonicalAnalysis.argos.dimension)) {
       expect(screen.queryByText(rotulo)).not.toBeInTheDocument();
     }
@@ -414,7 +499,9 @@ describe("F4 · o export canônico mora aqui", () => {
   it("a ação de export é apresentada na visão Analytics", async () => {
     renderizar();
     expect(
-      await screen.findByRole("region", { name: pt.canonicalAnalysis.analyticsView.export }),
+      await screen.findByRole("region", {
+        name: pt.canonicalAnalysis.analyticsView.export,
+      }),
     ).toBeInTheDocument();
   });
 });
@@ -498,9 +585,13 @@ describe("Molde V4 · o denominador e o retido chegam à TELA", () => {
     // O denominador estava no rodapé, depois de sete seções que dependem dele. E o
     // `projection_digest` é publicado e nunca aparecia em lugar nenhum.
     renderizar();
-    await screen.findByRole("region", { name: pt.canonicalAnalysis.analyticsView.numeric });
+    await screen.findByRole("region", {
+      name: pt.canonicalAnalysis.analyticsView.numeric,
+    });
 
-    expect(screen.getByText(pt.canonicalAnalysis.analyticsView.projectionDigest)).toBeTruthy();
+    expect(
+      screen.getByText(pt.canonicalAnalysis.analyticsView.projectionDigest),
+    ).toBeTruthy();
     expect(screen.getByText("pd")).toBeTruthy();
   });
 
@@ -508,9 +599,13 @@ describe("Molde V4 · o denominador e o retido chegam à TELA", () => {
     // Sempre os quatro, inclusive em zero: esconder o zero não distingue "perguntamos e a
     // resposta foi nenhum" de "ninguém perguntou".
     renderizar();
-    await screen.findByRole("region", { name: pt.canonicalAnalysis.analyticsView.numeric });
+    await screen.findByRole("region", {
+      name: pt.canonicalAnalysis.analyticsView.numeric,
+    });
 
-    const legenda = screen.getByText(pt.canonicalAnalysis.analyticsView.retainedCaption);
+    const legenda = screen.getByText(
+      pt.canonicalAnalysis.analyticsView.retainedCaption,
+    );
     const tabela = legenda.closest("table");
     expect(tabela, "a tabela do retido não está na tela").toBeTruthy();
     expect(tabela?.querySelectorAll("tbody tr").length).toBe(4);
@@ -543,7 +638,13 @@ describe("cruzamentos e séries de medida publicados", () => {
               suppression_applied: false,
               high_cardinality_suppressed: false,
               rows: [
-                { label: "whatsapp", true_count: 3, false_count: 7, null_count: 0, true_rate: 0.3 },
+                {
+                  label: "whatsapp",
+                  true_count: 3,
+                  false_count: 7,
+                  null_count: 0,
+                  true_rate: 0.3,
+                },
               ],
             },
           ],
@@ -595,6 +696,12 @@ describe("cruzamentos e séries de medida publicados", () => {
     const series = screen.getByRole("region", {
       name: pt.canonicalAnalysis.analyticsView.measureSeries,
     });
-    expect(within(series).getByText("4.2")).toBeInTheDocument();
+    expect(
+      within(series).getByText(
+        new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(
+          4.2,
+        ),
+      ),
+    ).toBeInTheDocument();
   });
 });
