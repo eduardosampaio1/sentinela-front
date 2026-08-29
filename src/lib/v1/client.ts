@@ -283,6 +283,10 @@ export interface V1Client {
      * de volta para a politica nomeada em vez de registrar como excecao tolerando zero perda.
      */
     minValidRatio: number | undefined,
+    catalogOptOut?: {
+      disabledMeasureIds: string[];
+      disabledDimensionIds: string[];
+    },
     opts?: RequestOptions,
   ): Promise<MappingConfirmedView>;
 
@@ -614,7 +618,15 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         { workspace_id: scope.workspaceId },
         opts,
       ),
-    confirmAnalysisMapping: (analysisId, scope, rules, groupBy, minValidRatio, opts) =>
+    confirmAnalysisMapping: (
+      analysisId,
+      scope,
+      rules,
+      groupBy,
+      minValidRatio,
+      catalogOptOut,
+      opts,
+    ) =>
       pedir<MappingConfirmedView>(
         "POST",
         `/v1/analyses/${encodeAnalysisId(analysisId)}/mapping`,
@@ -627,6 +639,12 @@ export function createV1Client(config: V1ClientConfig): V1Client {
           body: JSON.stringify({
             rules,
             group_by: groupBy,
+            ...(catalogOptOut === undefined
+              ? {}
+              : {
+                  disabled_catalog_measure_ids: catalogOptOut.disabledMeasureIds,
+                  disabled_catalog_dimension_ids: catalogOptOut.disabledDimensionIds,
+                }),
             ...(minValidRatio === undefined ? {} : { min_valid_ratio: minValidRatio }),
           }),
           contentType: "application/json",

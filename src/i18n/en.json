@@ -1001,6 +1001,15 @@
       "noCandidate": "We did not recognize any column for this field. Pick it yourself.",
       "groupTitle": "Group the results by",
       "groupExplain": "Pick the fields you want to break the measures down by. Only fields you mapped can be used.",
+      "catalog": {
+        "title": "Recognized measures and dimensions",
+        "explain": "We automatically enable what matches the catalog and your data types. You can clear an option for this analysis only.",
+        "eligible": "Recognized from {{source}} and ready to use.",
+        "rejectedType": "Will not be enabled: expected {{expected}}, but found {{observed}}.",
+        "measure": "Measure",
+        "dimension": "Dimension",
+        "version": "Catalog {{version}}"
+      },
       "implausible": {
         "repete_demais": "This column repeats too much to be a date and time. Check the choice.",
         "poucos_valores": "This column has too few distinct values to be conversation text.",

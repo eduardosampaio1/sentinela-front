@@ -46,7 +46,12 @@ function mapa(): MappingView {
 
 function montarComMapa(
   mapaDaTela: MappingView,
-  aoConfirmar: (r: unknown, g: unknown, m: number | undefined) => Promise<void>,
+  aoConfirmar: (
+    r: unknown,
+    g: unknown,
+    m: number | undefined,
+    o: { measureIds: string[]; dimensionIds: string[] },
+  ) => Promise<void>,
 ) {
   return render(
     <LanguageProvider>
@@ -55,7 +60,14 @@ function montarComMapa(
   );
 }
 
-function montar(aoConfirmar: (r: unknown, g: unknown, m: number | undefined) => Promise<void>) {
+function montar(
+  aoConfirmar: (
+    r: unknown,
+    g: unknown,
+    m: number | undefined,
+    o: { measureIds: string[]; dimensionIds: string[] },
+  ) => Promise<void>,
+) {
   return montarComMapa(mapa(), aoConfirmar);
 }
 
@@ -152,5 +164,70 @@ describe("MappingStep · acessibilidade da escolha", () => {
 
     const violacoes = resultado.violations.map((v) => `${v.id}: ${v.help}`);
     expect(violacoes).toEqual([]);
+  });
+});
+
+describe("MappingStep · catálogo canônico", () => {
+  it("explica incompatibilidade e envia opt-out local sem alterar o catálogo", async () => {
+    const usuario = userEvent.setup();
+    const aoConfirmar = vi.fn();
+    montarComMapa(
+      {
+        ...mapa(),
+        catalog_version: "2026-08-29",
+        catalog_activation_summary: { eligible: 2, rejected_type: 1 },
+        catalog_activation: [
+          {
+            kind: "measure",
+            catalog_id: "response_time_ms",
+            source: "response_time_ms",
+            status: "eligible",
+            expected_value_type: "numeric",
+            observed_types: ["number"],
+            reason_code: "exact_contract_match",
+            group: "performance",
+            direction: "higher_is_worse",
+            detector_id: "slow_response",
+          },
+          {
+            kind: "dimension",
+            catalog_id: "channel",
+            source: "channel",
+            status: "eligible",
+            expected_value_type: "categorical",
+            observed_types: ["string"],
+            reason_code: "canonical_field_mapped",
+            group: "context",
+            direction: "context_only",
+            detector_id: null,
+          },
+          {
+            kind: "measure",
+            catalog_id: "turn_count",
+            source: "turn_count",
+            status: "rejected_type",
+            expected_value_type: "numeric",
+            observed_types: ["string"],
+            reason_code: "incompatible_type",
+            group: "volume",
+            direction: "context_only",
+            detector_id: null,
+          },
+        ],
+      },
+      aoConfirmar,
+    );
+
+    await usuario.click(screen.getByText(/recognized measures/i));
+    expect(screen.getByText(/expected numeric, but found string/i)).toBeInTheDocument();
+    await usuario.click(screen.getByRole("checkbox", { name: "response_time_ms" }));
+    await usuario.click(screen.getByRole("button", { name: /confirm/i }));
+
+    expect(aoConfirmar).toHaveBeenCalledWith(
+      expect.anything(),
+      [],
+      0.95,
+      { measureIds: ["response_time_ms"], dimensionIds: [] },
+    );
   });
 });

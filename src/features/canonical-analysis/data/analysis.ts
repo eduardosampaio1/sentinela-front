@@ -286,13 +286,26 @@ export function useConfirmMapping(): UseMutationResult<
     groupBy: string[];
     /** Proporcao minima de registros validos, em [0,1]. `undefined` = nao escolhido. */
     minValidRatio?: number;
+    disabledCatalogMeasureIds: string[];
+    disabledCatalogDimensionIds: string[];
   }
 > {
   const client = useV1Client();
   return useMutation({
     retry: false,
-    mutationFn: ({ analysisId, scope, rules, groupBy, minValidRatio }) =>
-      client.confirmAnalysisMapping(analysisId, scope, rules, groupBy, minValidRatio),
+    mutationFn: ({
+      analysisId,
+      scope,
+      rules,
+      groupBy,
+      minValidRatio,
+      disabledCatalogMeasureIds,
+      disabledCatalogDimensionIds,
+    }) =>
+      client.confirmAnalysisMapping(analysisId, scope, rules, groupBy, minValidRatio, {
+        disabledMeasureIds: disabledCatalogMeasureIds,
+        disabledDimensionIds: disabledCatalogDimensionIds,
+      }),
   });
 }
 

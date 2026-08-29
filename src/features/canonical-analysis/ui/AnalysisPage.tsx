@@ -301,13 +301,20 @@ export function AnalysisPage() {
             <EtapasDaAnalise view={view} eixos={eixos} intakeProgress={progresso.data?.intake} />
             <MappingStep
               mapa={mapeamento.data}
-              aoConfirmar={async (regras, agrupamento, minimoDeValidos) => {
+              aoConfirmar={async (
+                regras,
+                agrupamento,
+                minimoDeValidos,
+                optOutDoCatalogo,
+              ) => {
                 await confirmar.mutateAsync({
                   analysisId,
                   scope,
                   rules: regras,
                   groupBy: agrupamento,
                   minValidRatio: minimoDeValidos,
+                  disabledCatalogMeasureIds: optOutDoCatalogo.measureIds,
+                  disabledCatalogDimensionIds: optOutDoCatalogo.dimensionIds,
                 });
                 // Revalida o ESTADO, não o mapeamento: a partir daqui a ingestão anda sozinha,
                 // e o que a tela precisa saber é para onde a análise foi.

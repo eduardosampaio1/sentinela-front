@@ -130,6 +130,7 @@ export function MappingStep({
     regras: Record<string, { source: string }>,
     agrupamento: string[],
     minimoDeValidos: number | undefined,
+    optOutDoCatalogo: { measureIds: string[]; dimensionIds: string[] },
   ) => Promise<void>;
 }) {
   const { t } = useLanguage();
@@ -170,13 +171,25 @@ export function MappingStep({
   // Depois de clicar em confirmar com campo faltando, aí sim é erro: a pessoa pediu para
   // seguir e não dá.
   const [tentou, setTentou] = useState(false);
+  const ativacoesDoCatalogo = mapa.catalog_activation ?? [];
+  const chavesElegiveis = useMemo(
+    () =>
+      new Set(
+        (mapa.catalog_activation ?? [])
+          .filter((item) => item.status === "eligible")
+          .map((item) => `${item.kind}:${item.catalog_id}`),
+      ),
+    [mapa.catalog_activation],
+  );
+  const [catalogoAtivo, setCatalogoAtivo] = useState<Set<string>>(chavesElegiveis);
 
   useEffect(() => {
     setEscolhas(inicial);
     setAgrupar([]);
     setErro(null);
     setTentou(false);
-  }, [inicial]);
+    setCatalogoAtivo(chavesElegiveis);
+  }, [inicial, chavesElegiveis]);
 
   const porNome = useMemo(
     () => new Map(mapa.columns.map((c) => [c.name, c])),
@@ -216,7 +229,24 @@ export function MappingStep({
           regras[campo] = { source: origem };
         }
       }
-      await aoConfirmar(regras, agrupamentoEfetivo, PROPORCAO_MINIMA_DE_REGISTROS_ANALISAVEIS);
+      const desativadas = ativacoesDoCatalogo.filter(
+        (item) =>
+          item.status === "eligible" &&
+          !catalogoAtivo.has(`${item.kind}:${item.catalog_id}`),
+      );
+      await aoConfirmar(
+        regras,
+        agrupamentoEfetivo,
+        PROPORCAO_MINIMA_DE_REGISTROS_ANALISAVEIS,
+        {
+          measureIds: desativadas
+            .filter((item) => item.kind === "measure")
+            .map((item) => item.catalog_id),
+          dimensionIds: desativadas
+            .filter((item) => item.kind === "dimension")
+            .map((item) => item.catalog_id),
+        },
+      );
     } catch (falha) {
       // A mensagem é NOSSA. O corpo do servidor pode carregar detalhe interno, e ecoá-lo faria
       // a tela repetir vocabulário que ninguém escreveu para ser lido.
@@ -369,6 +399,73 @@ export function MappingStep({
             <div className="mt-4 flex flex-col gap-4">
               {mapa.optional_fields.map((campo) => linha(campo, false))}
             </div>
+          </details>
+        ) : null}
+
+        {ativacoesDoCatalogo.length ? (
+          <details className="rounded-lg border border-border p-3">
+            <summary className="cursor-pointer text-sm font-medium">
+              {t("canonicalAnalysis.mapping.catalog.title")}
+            </summary>
+            <Text as="p" papel="micro" className="mt-2">
+              {t("canonicalAnalysis.mapping.catalog.explain")}
+            </Text>
+            <div className="mt-3 flex flex-col gap-2">
+              {ativacoesDoCatalogo.map((item) => {
+                const chave = `${item.kind}:${item.catalog_id}`;
+                const id = `catalog-${item.kind}-${item.catalog_id}`;
+                const elegivel = item.status === "eligible";
+                return (
+                  <div
+                    key={chave}
+                    className="flex flex-col gap-1 rounded-md border border-border p-3 sm:flex-row sm:items-start sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <label htmlFor={id} className="flex items-start gap-2 text-sm font-medium">
+                        {elegivel ? (
+                          <input
+                            id={id}
+                            type="checkbox"
+                            className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+                            checked={catalogoAtivo.has(chave)}
+                            disabled={enviando}
+                            onChange={(evento) =>
+                              setCatalogoAtivo((atual) => {
+                                const proximo = new Set(atual);
+                                if (evento.target.checked) proximo.add(chave);
+                                else proximo.delete(chave);
+                                return proximo;
+                              })
+                            }
+                          />
+                        ) : null}
+                        <span className="break-words">{item.catalog_id}</span>
+                      </label>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {elegivel
+                          ? t("canonicalAnalysis.mapping.catalog.eligible", {
+                              source: item.source,
+                            })
+                          : t("canonicalAnalysis.mapping.catalog.rejectedType", {
+                              expected: item.expected_value_type,
+                              observed: item.observed_types.join(", ") || "—",
+                            })}
+                      </p>
+                    </div>
+                    <span className="self-start rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
+                      {item.kind === "measure"
+                        ? t("canonicalAnalysis.mapping.catalog.measure")
+                        : t("canonicalAnalysis.mapping.catalog.dimension")}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              {t("canonicalAnalysis.mapping.catalog.version", {
+                version: mapa.catalog_version ?? "—",
+              })}
+            </p>
           </details>
         ) : null}
 

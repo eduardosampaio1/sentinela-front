@@ -761,6 +761,19 @@ export interface SugestaoDeCampo {
   source?: string | null;
 }
 
+export interface CatalogActivationItem {
+  kind: "measure" | "dimension";
+  catalog_id: string;
+  source: string;
+  status: "eligible" | "rejected_type";
+  expected_value_type: string;
+  observed_types: string[];
+  reason_code: "exact_contract_match" | "canonical_field_mapped" | "incompatible_type";
+  group: string;
+  direction: "higher_is_worse" | "higher_is_better" | "context_only";
+  detector_id: string | null;
+}
+
 export interface MappingView {
   requires_decision: boolean;
   records_observed: number | null;
@@ -787,6 +800,10 @@ export interface MappingView {
    * que a fronteira mantinha da lista da Ingestão divergiu em silêncio, e nada pegou.
    */
   groupable_fields: string[];
+  /** Decisões do catálogo publicadas pelo owner; o Front só explica e permite opt-out local. */
+  catalog_version?: string | null;
+  catalog_activation?: CatalogActivationItem[];
+  catalog_activation_summary?: { eligible: number; rejected_type: number };
 }
 
 /** O desfecho da confirmação. `ingestion_state` sai de `needs_mapping` quando ela é aceita. */

@@ -1001,6 +1001,15 @@
       "noCandidate": "Não reconhecemos nenhuma coluna para este campo. Escolha você.",
       "groupTitle": "Agrupar os resultados por",
       "groupExplain": "Escolha os campos pelos quais quer abrir as medidas. Só dá para usar campos que você mapeou.",
+      "catalog": {
+        "title": "Medidas e dimensões reconhecidas",
+        "explain": "Ativamos automaticamente o que corresponde ao catálogo e ao tipo dos seus dados. Você pode desmarcar uma opção só para esta análise.",
+        "eligible": "Reconhecido a partir de {{source}} e pronto para usar.",
+        "rejectedType": "Não será ativado: esperávamos {{expected}}, mas encontramos {{observed}}.",
+        "measure": "Medida",
+        "dimension": "Dimensão",
+        "version": "Catálogo {{version}}"
+      },
       "implausible": {
         "repete_demais": "Esta coluna se repete demais para ser data e hora. Confira a escolha.",
         "poucos_valores": "Esta coluna tem valores distintos de menos para ser texto de conversa.",
