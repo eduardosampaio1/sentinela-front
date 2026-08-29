@@ -116,6 +116,8 @@
       "checkAgain": "Verificar novamente",
       "retry": "Tentar novamente",
       "reprocess": "Analisar novamente",
+      "reprocessSameDataset": "Analisar novamente com esta base",
+      "reprocessSameDatasetDescription": "Inicie uma nova análise com a base já recebida. Este resultado continuará disponível.",
       "back": "Voltar",
       "newAnalysis": "Nova análise",
       "resultPreparing": "A análise foi concluída. O resultado ainda está sendo preparado."

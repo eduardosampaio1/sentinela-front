@@ -100,6 +100,25 @@ describe("E6 — retry canônico e falha não recuperável", () => {
 });
 
 describe("E6 — apresentação por código (capacity/result/idempotency)", () => {
+  it("completed: cria nova Analysis com a mesma base, sem prepare nem upload", async () => {
+    const posts: string[] = [];
+    server.events.on("request:start", ({ request }) => {
+      if (request.method === "POST") posts.push(new URL(request.url).pathname);
+    });
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("completed", { analysis_id: "an-abc", result_available: true }))),
+      http.post(`${MSW_BASE}/v1/analyses/:id/reprocess`, () => HttpResponse.json({ analysis_id: "an-new", status: "queued" as AnalysisStatus })),
+    );
+    renderAt();
+
+    await userEvent.click(await screen.findByRole("button", { name: /run again with this dataset|analisar novamente com esta base/i }));
+
+    await waitFor(() => expect(posts).toContain("/v1/analyses/an-abc/reprocess"));
+    await screen.findByText("an-new");
+    expect(posts.filter((p) => p === "/v1/analyses").length, "0 prepare").toBe(0);
+    expect(posts.filter((p) => p.endsWith("/data")).length, "0 upload").toBe(0);
+  });
+
   it("completed + result_available=false: explica a preparação sem esconder as visões", async () => {
     server.use(http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView("completed", { analysis_id: "an-abc", result_available: false }))));
     renderAt();

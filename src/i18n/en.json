@@ -116,6 +116,8 @@
       "checkAgain": "Check again",
       "retry": "Try again",
       "reprocess": "Run again",
+      "reprocessSameDataset": "Run again with this dataset",
+      "reprocessSameDatasetDescription": "Start a new analysis from the dataset already received. This result stays available.",
       "back": "Back",
       "newAnalysis": "New analysis",
       "resultPreparing": "The analysis is complete. The result is still being prepared."

@@ -336,6 +336,25 @@ export function AnalysisPage() {
               estados={disponibilidadeDasVisoes(view)}
               visoes={VISOES_DA_ANALISE}
             />
+            <section className="rounded-[var(--ds-radius-panel)] border border-border bg-card/70 p-4 sm:p-5">
+              <h2 className="text-sm font-semibold text-foreground">
+                {t("canonicalAnalysis.action.reprocessSameDataset")}
+              </h2>
+              <p className="mt-1 max-w-prose text-sm leading-relaxed text-muted-foreground">
+                {t("canonicalAnalysis.action.reprocessSameDatasetDescription")}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4 min-h-11 w-full sm:w-auto"
+                onClick={dispararRetry}
+                disabled={retryBloqueado}
+                aria-busy={retry.isPending}
+              >
+                {t("canonicalAnalysis.action.reprocessSameDataset")}
+              </Button>
+              <ProblemFeedback error={retry.error} />
+            </section>
           </div>
         );
       case "failed":
