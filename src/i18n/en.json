@@ -755,6 +755,38 @@
         "cost_resources": { "title": "Cost and resources", "question": "Which resources were consumed?" }
       }
     },
+    "playground": {
+      "title": "Explore your measures",
+      "subtitle": "Choose a measure and, when available, a breakdown. Sentinela presents only results already published by Analytics.",
+      "safety": "This exploration does not reread the dataset, create formulas, or bypass the analysis privacy rules.",
+      "metric": "What do you want to understand?",
+      "cut": "How do you want to break down the result?",
+      "overall": "Overall view, no breakdown",
+      "run": "Show result",
+      "running": "Querying…",
+      "empty": "Choose the options above to build your first view.",
+      "error": "This combination could not be shown. The projection may have changed; reload the page and try again.",
+      "noMetrics": "This analysis does not have measures available for exploration yet.",
+      "unavailable": "No result was published for the selected combination.",
+      "published": "Published",
+      "suppressed": "Protected",
+      "fields": {
+        "count": "Count",
+        "valid_count": "Valid",
+        "null_count": "Null",
+        "invalid_count": "Invalid",
+        "absent_count": "Absent",
+        "minimum": "Minimum",
+        "maximum": "Maximum",
+        "total": "Total",
+        "mean": "Mean",
+        "label": "Category",
+        "true_count": "Yes",
+        "false_count": "No",
+        "window_start": "Period",
+        "status": "Status"
+      }
+    },
     "result": {
       "title": "Analysis result",
       "regionIndexLabel": "On this page",
@@ -1137,7 +1169,9 @@
     "fresh": "Fresh",
     "cached": "Cached",
     "globalIssue": "Global issue",
-    "notAvailable": "N/A"
+    "notAvailable": "N/A",
+    "yes": "Yes",
+    "no": "No"
   },
   "dashboard": {
     "firstRunBadge": "First run",

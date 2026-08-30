@@ -56,6 +56,7 @@ import { Cruzamentos, SeriesDeMedida } from "./CruzamentosESeries";
 import { IndiceDeRegioes, type RegiaoIndexada } from "./IndiceDeRegioes";
 import { ResumoDaPublicacao } from "./ResumoDaPublicacao";
 import { VisaoUniversalDeMedidas } from "./VisaoUniversalDeMedidas";
+import { PlaygroundDeMedidas } from "./PlaygroundDeMedidas";
 import { Concentracoes, Series } from "./BlocosDeSerieEConcentracao";
 import { Suprimido } from "./EstadoDeSupressao";
 import type { AnalysisIntake } from "@/lib/v1";
@@ -707,6 +708,14 @@ export function AnalyticsView() {
               ancora: "anl-universal",
               rotulo: t("canonicalAnalysis.universal.title"),
             },
+            ...(snapshot.catalogoDeExploracao !== null && vista.projection_digest
+              ? [
+                  {
+                    ancora: "anl-playground",
+                    rotulo: t("canonicalAnalysis.playground.title"),
+                  },
+                ]
+              : []),
             ...(snapshot.measure_definitions.length > 0
               ? [
                   {
@@ -817,6 +826,20 @@ export function AnalyticsView() {
             >
               <VisaoUniversalDeMedidas catalogo={snapshot.catalogoDeExploracao} />
             </Secao>
+            {snapshot.catalogoDeExploracao !== null && vista.projection_digest ? (
+              <Secao
+                id="anl-playground"
+                titulo={t("canonicalAnalysis.playground.title")}
+              >
+                <PlaygroundDeMedidas
+                  key={vista.projection_digest}
+                  analysisId={analysisId ?? vista.analysis_id}
+                  scope={scope}
+                  projectionDigest={vista.projection_digest}
+                  catalogo={snapshot.catalogoDeExploracao}
+                />
+              </Secao>
+            ) : null}
             {snapshot.measure_definitions.length > 0 ? (
               <Secao
                 id="anl-catalogo"

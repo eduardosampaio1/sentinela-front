@@ -1,7 +1,7 @@
 // F4 — as regras da visão Analytics.
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -181,6 +181,21 @@ function montar(vista: unknown, statusOver: Record<string, unknown> = {}) {
         ],
       };
     }),
+    queryAnalytics: vi.fn(async (_id: string, _scope: unknown, query: { metric_ids: string[] }) => ({
+      result_contract_version: "analytics-query-result-v1",
+      query_contract_version: "analytics-query-v1",
+      analysis_id: "an-abc",
+      projection_digest: "a".repeat(64),
+      results: [{
+        metric_id: query.metric_ids[0],
+        availability: "available",
+        reason_code: null,
+        value_kind: "count",
+        block_kind: "dataset_count",
+        dimension_id: null,
+        payload: { count: 100 },
+      }],
+    })),
   };
 }
 
@@ -224,6 +239,46 @@ beforeEach(() => {
 });
 
 describe("F4 · fonte ÚNICA", () => {
+  it("oferece exploração guiada somente quando o catálogo e o digest existem", async () => {
+    renderizar(vistaAnalytics({
+      snapshot_contract_version: "analytics-snapshot-v11",
+      projection_digest: "a".repeat(64),
+      snapshot: {
+        ...SNAPSHOT,
+        snapshot_contract_version: "analytics-snapshot-v11",
+        exploration_catalog: {
+          catalog_contract_version: "analytics-exploration-catalog-v1",
+          query_contract_version: "analytics-query-v1",
+          metric_families: [],
+          dimensions: [],
+          metrics: [{
+            metric_id: "dataset.record_count",
+            family_id: "volume",
+            value_kind: "count",
+            availability: "available",
+            reason_code: null,
+            compatible_dimension_ids: [],
+            compatible_time_dimension_ids: [],
+            not_materialized_dimension_ids: [],
+            not_materialized_time_dimension_ids: [],
+            incompatible_dimension_ids: [],
+            incompatible_time_dimension_ids: [],
+          }],
+        },
+      },
+    }));
+
+    const playground = await screen.findByRole("region", { name: pt.canonicalAnalysis.playground.title });
+    fireEvent.click(within(playground).getByRole("button", { name: pt.canonicalAnalysis.playground.run }));
+
+    expect(await within(playground).findByText("100")).toBeInTheDocument();
+    expect(clienteAtual.queryAnalytics).toHaveBeenCalledWith(
+      "an-abc",
+      { workspaceId: "ws-1" },
+      expect.objectContaining({ metric_ids: ["dataset.record_count"], projection_digest: "a".repeat(64) }),
+    );
+  });
+
   it("lê `/analytics` e NUNCA pede o v3", async () => {
     renderizar();
     await waitFor(() => expect(chamadas).toContain("getAnalytics"));

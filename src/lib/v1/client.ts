@@ -11,6 +11,8 @@ import type {
   AnalysisHandle,
   AnalysisListPage,
   AnalysisAnalyticsView,
+  AnalyticsQueryInput,
+  AnalyticsQueryResultView,
   AnalysisExportDownloadView,
   AnalysisProgressView,
   AnalysisResultView,
@@ -99,6 +101,7 @@ export interface V1Client {
    * `partial` NÃO vira `failed`: as três situações são distintas e a tela precisa distingui-las.
    */
   getAnalytics(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisAnalyticsView>;
+  queryAnalytics(analysisId: string, scope: CanonicalScope, query: AnalyticsQueryInput, opts?: RequestOptions): Promise<AnalyticsQueryResultView>;
   /**
    * Capability de download do pacote de export. **Uma chamada por intenção**, nunca especulativa:
    * a URL devolvida é assinada e curta, e pedi-la "por via das dúvidas" gastaria a validade antes
@@ -569,6 +572,14 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       ),
     getAnalytics: (analysisId, scope, opts) =>
       pedir<AnalysisAnalyticsView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics`, { workspace_id: scope.workspaceId }, opts),
+    queryAnalytics: (analysisId, scope, query, opts) =>
+      pedir<AnalyticsQueryResultView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics/query`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify(query), contentType: "application/json" },
+      ),
     getProgress: (analysisId, scope, opts) =>
       pedir<AnalysisProgressView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/progress`, { workspace_id: scope.workspaceId }, opts),
     getExportDownload: (analysisId, scope, opts) =>

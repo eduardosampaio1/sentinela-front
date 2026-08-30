@@ -616,6 +616,36 @@ export interface AnalysisAnalyticsView {
   generated_at: string | null;
 }
 
+export interface AnalyticsQueryInput {
+  query_contract_version: "analytics-query-v1";
+  projection_digest: string;
+  metric_ids: readonly string[];
+  dimension_id?: string;
+  time_dimension_id?: string;
+  granularity: "auto" | "hour" | "day" | "week" | "month";
+  filters: readonly [];
+  order: readonly [];
+  limit: number;
+}
+
+export interface AnalyticsQueryMetricResult {
+  metric_id: string;
+  availability: string;
+  reason_code: string | null;
+  value_kind: string;
+  block_kind: string;
+  dimension_id: string | null;
+  payload: Record<string, unknown> | null;
+}
+
+export interface AnalyticsQueryResultView {
+  result_contract_version: "analytics-query-result-v1";
+  query_contract_version: "analytics-query-v1";
+  analysis_id: string;
+  projection_digest: string;
+  results: readonly AnalyticsQueryMetricResult[];
+}
+
 // ── Download do pacote de export (M22) ──────────────────────────────────────────────────────
 
 /**

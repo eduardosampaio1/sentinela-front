@@ -71,6 +71,8 @@ export const workspaceKeys = {
   /** M27 — projeção analítica, lida independentemente do documento de resultado. */
   analytics: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "analytics"] as const,
+  analyticsPlayground: (workspaceId: string, analysisId: string) =>
+    ["workspace", workspaceId, "analyses", "detail", analysisId, "analytics", "playground"] as const,
   result: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "result"] as const,
   /**

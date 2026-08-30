@@ -7,6 +7,8 @@ import {
   type MappingView,
   workspaceKeys,
   type AnalysisAnalyticsView,
+  type AnalyticsQueryInput,
+  type AnalyticsQueryResultView,
   type AnalysisHandle,
   type AnalysisExportDownloadView,
   type AnalysisProgressView,
@@ -402,6 +404,21 @@ export function useAnalysisAnalytics(
     enabled: Boolean(scope && analysisId) && habilitado,
     queryFn: ({ signal }) =>
       client.getAnalytics(analysisId as string, scope as CanonicalScope, { signal }),
+  });
+}
+
+export function useAnalyticsPlayground(
+  scope: CanonicalScope | null,
+  analysisId: string | null,
+): UseMutationResult<AnalyticsQueryResultView, Error, AnalyticsQueryInput> {
+  const client = useV1Client();
+  return useMutation({
+    mutationKey:
+      scope && analysisId
+        ? workspaceKeys.analyticsPlayground(scope.workspaceId, analysisId)
+        : IDLE_KEY,
+    mutationFn: (query) =>
+      client.queryAnalytics(analysisId as string, scope as CanonicalScope, query),
   });
 }
 
