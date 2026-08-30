@@ -468,6 +468,7 @@ describe("AnalysesListPage · o léxico de valor na linha", () => {
 
     expect(container.querySelector(".medida-ausente")).toBeNull();
     expect(screen.queryByText(/not published/i)).toBeNull();
+    expect(screen.queryByText(/count not published/i)).toBeNull();
 
     // E o antifato: nenhum `0` aparece como se fosse a contagem observada. Sem este caso, um
     // `?? 0` acidental no futuro passaria — a hachura continuaria lá, desenhada sobre um zero.

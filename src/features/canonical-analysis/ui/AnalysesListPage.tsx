@@ -79,7 +79,7 @@ function ItemLinha({
 
   const registros =
     item.record_count === null
-      ? t("canonicalAnalysis.list.recordsUnknown")
+      ? null
       : t("canonicalAnalysis.list.records", { count: item.record_count });
 
   const titulo =
