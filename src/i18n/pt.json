@@ -749,6 +749,7 @@
     "liveProgress": {
       "title": "Progresso",
       "help": "Esta área atualiza sozinha conforme cada etapa responde.",
+      "emailNotice": "Você pode sair desta página. Enviaremos um e-mail quando a análise terminar ou precisar da sua atenção.",
       "stageProgressLabel": "Progresso das etapas da análise",
       "stageProgressValue": "Etapa {{current}} de {{total}} · {{title}}",
       "stageProgressComplete": "As 4 etapas foram concluídas",

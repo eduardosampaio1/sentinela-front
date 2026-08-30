@@ -749,6 +749,7 @@
     "liveProgress": {
       "title": "Analysis progress",
       "help": "This area updates automatically as each step responds.",
+      "emailNotice": "You can leave this page. We'll email you when the analysis finishes or needs your attention.",
       "stageProgressLabel": "Analysis stage progress",
       "stageProgressValue": "Step {{current}} of {{total}} · {{title}}",
       "stageProgressComplete": "All 4 steps are complete",

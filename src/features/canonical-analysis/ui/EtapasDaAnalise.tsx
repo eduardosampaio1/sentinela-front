@@ -1,4 +1,4 @@
-import { Check, CircleDashed, Loader2, TriangleAlert, X } from "lucide-react";
+import { Check, CircleDashed, Loader2, Mail, TriangleAlert, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRevelacao } from "@/design/motion";
 import { cn } from "@/lib/utils";
@@ -205,6 +205,12 @@ export function EtapasDaAnalise({
         <p className="text-sm text-muted-foreground">
           {t("canonicalAnalysis.liveProgress.help")}
         </p>
+        {!progressoConcluido && view.status !== "failed" ? (
+          <p className="flex items-start gap-2 pt-2 text-sm text-muted-foreground">
+            <Mail aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <span>{t("canonicalAnalysis.liveProgress.emailNotice")}</span>
+          </p>
+        ) : null}
       </div>
       <div className="mt-4 space-y-2">
         <div
