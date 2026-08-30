@@ -1446,9 +1446,18 @@
     },
     "failed": {
       "title": "Need review",
-      "explain": "Failures stay visible, but the safe correction lives inside each analysis.",
+      "explain": "Inspect what stopped or remove failed attempts you no longer need.",
       "inspect": "View reason",
-      "note": "Open it to see which step stopped."
+      "note": "Open it to see which step stopped.",
+      "delete": "Delete",
+      "deleteDialog": {
+        "title": "Delete failed analysis?",
+        "description": "This analysis will disappear from Home and analysis history. This can't be undone.",
+        "cancel": "Keep analysis",
+        "confirm": "Delete analysis",
+        "deleting": "Deleting…",
+        "error": "We couldn't delete this analysis. Try again."
+      }
     },
     "instances": {
       "empty": "No instances in this workspace yet.",

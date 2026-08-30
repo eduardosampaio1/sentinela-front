@@ -62,7 +62,7 @@ export function HomePage() {
    * O que esta tela recebeu do sistema único, e o que ela deliberadamente NÃO recebeu.
    *
    * Recebeu o ritmo: as regiões entram na ordem de leitura, que aqui é a ordem da hierarquia —
-   * primeiro quem espera por alguém, depois o que está em curso, depois o que já pode ser lido.
+   * primeiro o valor já entregue, depois o que está em curso e só então pendências do usuário.
    * O escalonamento diz isso sem precisar numerar as seções.
    *
    * Não recebeu o "número que decide" da linha de COLEÇÃO, e não é omissão: D9 e a decisão de
@@ -124,17 +124,15 @@ export function HomePage() {
     // ordem que o comentário abaixo diz ser a hierarquia.
     return (
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(22rem,0.8fr)]">
-        {/* A ordem agora acompanha a intenção do usuário: continuar o que está pronto para uma
-            decisão, observar o que o sistema já assumiu, ler resultado e só então revisar falhas.
-            Falha continua visível, mas sem sequestrar a primeira dobra quando não há retry seguro
-            publicado na listagem. */}
+        {/* Resultado concluído é o destino principal da Home. Reservas continuam acessíveis,
+            mas não ocupam mais a coluna de maior peso antes do valor já entregue. */}
         <div className="space-y-6">
-          <RegiaoDeAcoes itens={r.continuar} />
+          <RegiaoDeResultados itens={r.resultadosRecentes} semResultado={r.concluidasSemResultado} />
           <RegiaoEmAndamento itens={r.emAndamento} />
         </div>
         <aside className="space-y-6 xl:sticky xl:top-24 xl:self-start">
-          <RegiaoDeResultados itens={r.resultadosRecentes} semResultado={r.concluidasSemResultado} />
-          <RegiaoDeFalhas itens={r.falhas} />
+          <RegiaoDeAcoes itens={r.continuar} />
+          <RegiaoDeFalhas itens={r.falhas} scope={scope} />
           <RegiaoDeInstancias itens={instancias.data?.items ?? []} />
         </aside>
         {truncada && (

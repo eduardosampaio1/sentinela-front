@@ -1446,9 +1446,18 @@
     },
     "failed": {
       "title": "Revisão",
-      "explain": "Falhas continuam visíveis, mas a correção segura fica dentro de cada análise.",
+      "explain": "Veja o que parou ou exclua tentativas com falha que não são mais necessárias.",
       "inspect": "Ver motivo",
-      "note": "Abra para entender em qual etapa parou."
+      "note": "Abra para entender em qual etapa parou.",
+      "delete": "Excluir",
+      "deleteDialog": {
+        "title": "Excluir análise com falha?",
+        "description": "Esta análise desaparecerá da Home e do histórico de análises. Esta ação não pode ser desfeita.",
+        "cancel": "Manter análise",
+        "confirm": "Excluir análise",
+        "deleting": "Excluindo…",
+        "error": "Não foi possível excluir esta análise. Tente novamente."
+      }
     },
     "instances": {
       "empty": "Nenhuma instância neste workspace ainda.",

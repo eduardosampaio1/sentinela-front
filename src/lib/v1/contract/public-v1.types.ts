@@ -199,6 +199,12 @@ export interface RenameAnalysisView {
   display_name: string;
 }
 
+/** Confirmação da remoção pública de uma Analysis terminal falhada. */
+export interface DeleteAnalysisView {
+  analysis_id: string;
+  deleted: true;
+}
+
 /** Sessão pública de recebimento em partes. Não expõe storage nem URL interna. */
 export interface UploadAbertoView {
   analysis_id: string;

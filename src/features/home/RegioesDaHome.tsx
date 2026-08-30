@@ -28,11 +28,24 @@
 // explicitamente a defesa contra `HomeStatus`/`InstanceStatus`/`AnalysisStatus` com três
 // linguagens. Nenhuma região inventa rótulo de estado.
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Trash2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { StatusBadge } from "@/design/patterns";
 import { Button } from "@/components/ui/button";
-import type { AnalysisListItem, AnalysisStatus, InstanceView } from "@/lib/v1";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import type { AnalysisListItem, AnalysisStatus, CanonicalScope, InstanceView } from "@/lib/v1";
+import { useDeleteFailedAnalysis } from "@/features/canonical-analysis/data/list";
 
 const LIMITE_DA_HOME = 4;
 
@@ -162,8 +175,7 @@ export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] })
           <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("home.actions.explain")}</p>
         </div>
       </div>
-      {/* A ÚNICA região com moldura. O peso é a mensagem: é aqui que alguém é esperado. */}
-      <ul className="rounded-[var(--ds-radius-panel)] border border-primary/45 bg-card/95 px-3 shadow-[0_18px_60px_hsl(var(--primary)/0.08)] sm:px-4">
+      <ul className="rounded-[var(--ds-radius-panel)] border border-border bg-card/65 px-3 sm:px-4">
         {itensDaHome(itens).map((item) => (
           <LinhaDeAnalise
             key={item.analysis_id}
@@ -270,7 +282,7 @@ export function RegiaoDeResultados({
         <TituloDaRegiao id="home-resultados" texto={t("home.recent.title")} />
         <p className="mt-1 text-sm text-muted-foreground">{t("home.recent.explain")}</p>
       </div>
-      <ul className="rounded-[var(--ds-radius-panel)] border border-border bg-card/70 px-3 sm:px-4">
+      <ul className="rounded-[var(--ds-radius-panel)] border border-primary/40 bg-card/95 px-3 shadow-[0_18px_60px_hsl(var(--primary)/0.07)] sm:px-4">
         {itensDaHome(itens).map((item) => (
           <LinhaDeAnalise
             key={item.analysis_id}
@@ -300,8 +312,69 @@ export function RegiaoDeResultados({
   );
 }
 
-/** 4 · Falhas — visíveis, mas sem dominar a primeira decisão do usuário. */
-export function RegiaoDeFalhas({ itens }: { itens: readonly AnalysisListItem[] }) {
+function ExcluirAnaliseFalhada({ item, scope }: { item: AnalysisListItem; scope: CanonicalScope }) {
+  const { t } = useLanguage();
+  const excluir = useDeleteFailedAnalysis();
+  const [aberto, setAberto] = useState(false);
+
+  async function confirmar() {
+    try {
+      await excluir.mutateAsync({ analysisId: item.analysis_id, scope });
+      setAberto(false);
+    } catch {
+      // O erro permanece no diálogo: fechar faria a pessoa acreditar que a operação funcionou.
+    }
+  }
+
+  return (
+    <Dialog open={aberto} onOpenChange={(value) => !excluir.isPending && setAberto(value)}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+          <Trash2 aria-hidden="true" />
+          {t("home.failed.delete")}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t("home.failed.deleteDialog.title")}</DialogTitle>
+          <DialogDescription>{t("home.failed.deleteDialog.description")}</DialogDescription>
+        </DialogHeader>
+        <div className="rounded-md border border-border bg-muted/35 p-3">
+          <p className="text-sm font-medium text-foreground">
+            {item.display_name ?? t("home.unnamedAnalysis")}
+          </p>
+          <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{item.analysis_id}</p>
+        </div>
+        {excluir.isError ? (
+          <p role="alert" className="text-sm text-destructive">
+            {t("home.failed.deleteDialog.error")}
+          </p>
+        ) : null}
+        <DialogFooter className="gap-2 sm:gap-0">
+          <DialogClose asChild>
+            <Button variant="outline" disabled={excluir.isPending}>
+              {t("home.failed.deleteDialog.cancel")}
+            </Button>
+          </DialogClose>
+          <Button variant="destructive" disabled={excluir.isPending} onClick={confirmar}>
+            {excluir.isPending
+              ? t("home.failed.deleteDialog.deleting")
+              : t("home.failed.deleteDialog.confirm")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** 4 · Falhas — visíveis, inspecionáveis e removíveis com confirmação explícita. */
+export function RegiaoDeFalhas({
+  itens,
+  scope,
+}: {
+  itens: readonly AnalysisListItem[];
+  scope: CanonicalScope;
+}) {
   const { t } = useLanguage();
   if (itens.length === 0) return null;
   return (
@@ -316,11 +389,14 @@ export function RegiaoDeFalhas({ itens }: { itens: readonly AnalysisListItem[] }
             key={item.analysis_id}
             item={item}
             acao={
-              <Button asChild variant="outline" size="sm" className="w-full md:w-auto">
-                <Link to={`/analyses/${encodeURIComponent(item.analysis_id)}`}>
-                  {t("home.failed.inspect")}
-                </Link>
-              </Button>
+              <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+                <Button asChild variant="outline" size="sm" className="w-full md:w-auto">
+                  <Link to={`/analyses/${encodeURIComponent(item.analysis_id)}`}>
+                    {t("home.failed.inspect")}
+                  </Link>
+                </Button>
+                <ExcluirAnaliseFalhada item={item} scope={scope} />
+              </div>
             }
             nota={
               <p className="mt-1 text-xs text-muted-foreground sm:w-full">

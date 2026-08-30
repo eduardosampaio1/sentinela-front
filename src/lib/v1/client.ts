@@ -34,6 +34,7 @@ import type {
   SubscriptionListPage,
   SubscriptionSecretView,
   RenameAnalysisView,
+  DeleteAnalysisView,
   AnalysisContextView,
   ContextDraftInput,
   ContextSuggestionView,
@@ -230,6 +231,11 @@ export interface V1Client {
     name: string,
     opts?: RequestOptions,
   ): Promise<RenameAnalysisView>;
+  deleteFailedAnalysis(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<DeleteAnalysisView>;
   /**
    * O resultado canônico. **Quem escolhe a versão é quem pede.**
    *
@@ -768,6 +774,13 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         { workspace_id: scope.workspaceId },
         opts,
         { body: JSON.stringify({ name }), contentType: "application/json" },
+      ),
+    deleteFailedAnalysis: (analysisId, scope, opts) =>
+      pedir<DeleteAnalysisView>(
+        "DELETE",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}`,
+        { workspace_id: scope.workspaceId },
+        opts,
       ),
     getAnalytics: (analysisId, scope, opts) =>
       pedir<AnalysisAnalyticsView>(

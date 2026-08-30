@@ -7,12 +7,15 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import pt from "@/i18n/pt.json";
 import en from "@/i18n/en.json";
 import { PUBLIC_STATES, type AnalysisListItem } from "@/lib/v1";
+import { CanonicalQueryProvider, type V1Client } from "@/lib/v1";
+import { CanonicalClientProvider } from "@/features/canonical-analysis/data/client";
 import {
   RegiaoDeAcoes,
   RegiaoDeFalhas,
@@ -41,9 +44,13 @@ const item = (over: Partial<AnalysisListItem> = {}): AnalysisListItem => ({
 const montar = (ui: React.ReactElement) => {
   window.localStorage.setItem("sentinela:language", "pt");
   return render(
-    <MemoryRouter>
-      <LanguageProvider>{ui}</LanguageProvider>
-    </MemoryRouter>,
+    <CanonicalQueryProvider>
+      <CanonicalClientProvider client={{} as V1Client}>
+        <MemoryRouter>
+          <LanguageProvider>{ui}</LanguageProvider>
+        </MemoryRouter>
+      </CanonicalClientProvider>
+    </CanonicalQueryProvider>,
   );
 };
 
@@ -95,12 +102,23 @@ describe("M32 · 2. Ações necessárias", () => {
     expect(linha.querySelectorAll("[class*='rounded-lg']")).toHaveLength(0);
   });
 
-  it("`failed` NÃO entra na primeira fila e oferece só inspeção", () => {
-    montar(<RegiaoDeFalhas itens={[item({ analysis_id: "an-f", status: "failed", result_available: false })]} />);
+  it("`failed` não entra na primeira fila e confirma antes de excluir", async () => {
+    montar(
+      <RegiaoDeFalhas
+        itens={[item({ analysis_id: "an-f", status: "failed", result_available: false })]}
+        scope={{ workspaceId: "ws-1" }}
+      />,
+    );
     expect(screen.queryByText(pt.canonicalAnalysis.action.retry)).toBeNull();
     // O que existe é abrir a análise para ver a causa.
     const link = screen.getByRole("link", { name: pt.home.failed.inspect });
     expect(link.getAttribute("href")).toBe("/analyses/an-f");
+    await userEvent.click(screen.getByRole("button", { name: pt.home.failed.delete }));
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: pt.home.failed.deleteDialog.title })).toBeTruthy();
+    expect(screen.getByText(pt.home.failed.deleteDialog.description)).toBeTruthy();
+    expect(screen.getByRole("button", { name: pt.home.failed.deleteDialog.cancel })).toBeTruthy();
+    expect(screen.getByRole("button", { name: pt.home.failed.deleteDialog.confirm })).toBeTruthy();
   });
 
   it("fila vazia PERMANECE como região, dizendo que está vazia", () => {
