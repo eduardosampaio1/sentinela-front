@@ -78,17 +78,26 @@ function ehLinha(valor: unknown): valor is Record<string, unknown> {
 
 function valorLegivel(
   valor: unknown,
+  campo: string,
   locale: string,
   sim: string,
   nao: string,
   publicado: string,
   suprimido: string,
+  observado: string,
 ): string {
   if (valor === null || valor === undefined) return "—";
   if (typeof valor === "number") return new Intl.NumberFormat(locale).format(valor);
   if (typeof valor === "boolean") return valor ? sim : nao;
+  if (campo === "window_start" && typeof valor === "string") {
+    const instante = new Date(valor);
+    if (!Number.isNaN(instante.getTime())) {
+      return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(instante);
+    }
+  }
   if (valor === "published") return publicado;
   if (valor === "suppressed") return suprimido;
+  if (valor === "observed") return observado;
   return String(valor);
 }
 
@@ -118,7 +127,7 @@ function TabelaDoResultado({ resultado }: { readonly resultado: AnalyticsQueryMe
         <tbody>
           {linhas.map((linha, indice) => (
             <tr key={indice} className="border-t border-border">
-              {campos.map((campo) => <td key={campo} className="px-4 py-3 tabular-nums">{valorLegivel(linha[campo], locale, t("common.yes"), t("common.no"), t("canonicalAnalysis.playground.published"), t("canonicalAnalysis.playground.suppressed"))}</td>)}
+              {campos.map((campo) => <td key={campo} className="px-4 py-3 tabular-nums">{valorLegivel(linha[campo], campo, locale, t("common.yes"), t("common.no"), t("canonicalAnalysis.playground.published"), t("canonicalAnalysis.playground.suppressed"), t("canonicalAnalysis.playground.observed"))}</td>)}
             </tr>
           ))}
         </tbody>

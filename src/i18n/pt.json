@@ -770,6 +770,7 @@
       "unavailable": "Este resultado não foi publicado para a combinação escolhida.",
       "published": "Publicado",
       "suppressed": "Protegido",
+      "observed": "Observado",
       "fields": {
         "count": "Contagem",
         "valid_count": "Válidos",

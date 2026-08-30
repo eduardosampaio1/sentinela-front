@@ -181,7 +181,7 @@ function montar(vista: unknown, statusOver: Record<string, unknown> = {}) {
         ],
       };
     }),
-    queryAnalytics: vi.fn(async (_id: string, _scope: unknown, query: { metric_ids: string[] }) => ({
+    queryAnalytics: vi.fn(async (_id: string, _scope: unknown, query: { metric_ids: string[]; time_dimension_id?: string }) => ({
       result_contract_version: "analytics-query-result-v1",
       query_contract_version: "analytics-query-v1",
       analysis_id: "an-abc",
@@ -191,9 +191,11 @@ function montar(vista: unknown, statusOver: Record<string, unknown> = {}) {
         availability: "available",
         reason_code: null,
         value_kind: "count",
-        block_kind: "dataset_count",
-        dimension_id: null,
-        payload: { count: 100 },
+        block_kind: query.time_dimension_id ? "temporal_count_series" : "dataset_count",
+        dimension_id: query.time_dimension_id ?? null,
+        payload: query.time_dimension_id
+          ? { windows: [{ window_start: "2026-08-21T00:00:00+00:00", count: 100, status: "observed" }] }
+          : { count: 100 },
       }],
     })),
   };
@@ -258,7 +260,7 @@ describe("F4 · fonte ÚNICA", () => {
             availability: "available",
             reason_code: null,
             compatible_dimension_ids: [],
-            compatible_time_dimension_ids: [],
+            compatible_time_dimension_ids: ["time"],
             not_materialized_dimension_ids: [],
             not_materialized_time_dimension_ids: [],
             incompatible_dimension_ids: [],
@@ -277,6 +279,14 @@ describe("F4 · fonte ÚNICA", () => {
       { workspaceId: "ws-1" },
       expect.objectContaining({ metric_ids: ["dataset.record_count"], projection_digest: "a".repeat(64) }),
     );
+
+    fireEvent.change(within(playground).getByRole("combobox", { name: pt.canonicalAnalysis.playground.cut }), { target: { value: "temporal:time" } });
+    fireEvent.click(within(playground).getByRole("button", { name: pt.canonicalAnalysis.playground.run }));
+
+    const dataLocalizada = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeZone: "UTC" }).format(new Date("2026-08-21T00:00:00+00:00"));
+    expect(await within(playground).findByText(dataLocalizada)).toBeInTheDocument();
+    expect(within(playground).getByText(pt.canonicalAnalysis.playground.observed)).toBeInTheDocument();
+    expect(within(playground).queryByText("2026-08-21T00:00:00+00:00")).not.toBeInTheDocument();
   });
 
   it("lê `/analytics` e NUNCA pede o v3", async () => {
