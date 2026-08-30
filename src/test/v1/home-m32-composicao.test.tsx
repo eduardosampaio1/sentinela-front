@@ -133,6 +133,25 @@ describe("M32 · 2. Ações necessárias", () => {
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 
 describe("M32 · 3. andamento, resultados e Instâncias", () => {
+  it("o resultado concluído tem CTA primário e a reserva não disputa esse peso", () => {
+    montar(
+      <>
+        <RegiaoDeResultados itens={[item({ analysis_id: "resultado" })]} semResultado={[]} />
+        <RegiaoDeAcoes
+          itens={[item({ analysis_id: "reserva", status: "preparing", result_available: false })]}
+        />
+      </>,
+    );
+
+    expect(screen.getByRole("link", { name: pt.home.openResult }).className).toContain("bg-primary");
+    expect(screen.getByRole("link", { name: pt.home.actions.sendDataset }).className).not.toContain(
+      "bg-primary",
+    );
+    expect(screen.getByRole("link", { name: pt.home.actions.sendDataset }).className).toContain(
+      "border",
+    );
+  });
+
   it("ausência de `record_count` vira a palavra do produto, nunca `0`", () => {
     const { container } = montar(
       <RegiaoEmAndamento itens={[item({ status: "running", result_available: false, record_count: null })]} />,

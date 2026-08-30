@@ -181,7 +181,12 @@ export function RegiaoDeAcoes({ itens }: { itens: readonly AnalysisListItem[] })
             key={item.analysis_id}
             item={item}
             acao={
-                  <Button asChild size="sm" className="w-full md:w-auto">
+              <Button
+                asChild
+                variant={item.status === "preparing" ? "outline" : "default"}
+                size="sm"
+                className="w-full md:w-auto"
+              >
                 <Link to={`/analyses/${encodeURIComponent(item.analysis_id)}`}>
                   {item.status === "preparing"
                     ? t("home.actions.sendDataset")
@@ -288,7 +293,7 @@ export function RegiaoDeResultados({
             key={item.analysis_id}
             item={item}
             acao={
-              <Button asChild variant="secondary" size="sm" className="w-full md:w-auto">
+              <Button asChild size="sm" className="w-full md:w-auto">
                 <Link to={`/analyses/${encodeURIComponent(item.analysis_id)}/result`}>
                   {t("home.openResult")}
                 </Link>
