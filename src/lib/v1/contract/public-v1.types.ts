@@ -103,7 +103,13 @@ export interface AnalysisIntake {
   /** Resultado da política de aceitação, separado da conclusão de privacidade. */
   accepted: boolean | null;
   /** Resultado seguro do Privacy Gate; não inclui conteúdo, campo nem regra detectada. */
-  privacy_clearance: "passed" | "review_required" | "rejected" | "policy_violation" | "scanner_failed" | null;
+  privacy_clearance:
+    | "passed"
+    | "review_required"
+    | "rejected"
+    | "policy_violation"
+    | "scanner_failed"
+    | null;
 }
 
 export interface AnalysisRejectedRecordReason {
@@ -513,12 +519,7 @@ export type AnalyticsAxisState =
 
 /** Estados do eixo `export`. Único que conhece `expired` e `unavailable`. */
 export type ExportAxisState =
-  | "unavailable"
-  | "preparing"
-  | "ready"
-  | "expired"
-  | "failed"
-  | "unknown";
+  "unavailable" | "preparing" | "ready" | "expired" | "failed" | "unknown";
 
 /** Estados do eixo `final_result`. */
 export type FinalResultAxisState = "pending" | "ready" | "failed";
@@ -584,7 +585,8 @@ export interface AnalysisProgressView {
 // ── Projeção analítica pública (M21) ────────────────────────────────────────────────────────
 
 /** `component_status` — o vocabulário da projeção. `partial` ≠ `failed`, `withheld` ≠ erro. */
-export type AnalyticsComponentStatus = "ready" | "partial" | "withheld" | "failed" | "unknown";
+export type AnalyticsComponentStatus =
+  "ready" | "partial" | "withheld" | "failed" | "unknown";
 
 /**
  * Retenção por privacidade. **Não é erro**: a medida existe e foi RETIDA por regra.
@@ -730,10 +732,22 @@ interface TimelineEventBase {
  * estreita explicitamente, e a estreitagem fica visível.
  */
 export type TimelineEvent =
-  | (TimelineEventBase & { event_type: "analysis.created"; data: Record<string, never> })
-  | (TimelineEventBase & { event_type: "analysis.data_received"; data: { record_count: unknown } })
-  | (TimelineEventBase & { event_type: "analysis.queued"; data: Record<string, never> })
-  | (TimelineEventBase & { event_type: "analysis.started"; data: Record<string, never> })
+  | (TimelineEventBase & {
+      event_type: "analysis.created";
+      data: Record<string, never>;
+    })
+  | (TimelineEventBase & {
+      event_type: "analysis.data_received";
+      data: { record_count: unknown };
+    })
+  | (TimelineEventBase & {
+      event_type: "analysis.queued";
+      data: Record<string, never>;
+    })
+  | (TimelineEventBase & {
+      event_type: "analysis.started";
+      data: Record<string, never>;
+    })
   | (TimelineEventBase & {
       event_type: "analysis.recovering";
       data: { reason: TimelineRecoveringReason };
@@ -746,7 +760,10 @@ export type TimelineEvent =
       event_type: "analysis.failed";
       data: { failure_stage: TimelineFailureStage };
     })
-  | (TimelineEventBase & { event_type: "result.available"; data: Record<string, never> });
+  | (TimelineEventBase & {
+      event_type: "result.available";
+      data: Record<string, never>;
+    });
 
 /**
  * `GET /v1/analyses/{analysis_id}/timeline`.
@@ -866,7 +883,9 @@ export interface ContextItemView {
   source_span?: { start: number; end: number } | null;
 }
 
-export interface ContextStructureView { items: ContextItemView[] }
+export interface ContextStructureView {
+  items: ContextItemView[];
+}
 export interface AnalysisContextView {
   context_contract_version?: string;
   context_id?: string;
@@ -940,10 +959,12 @@ export interface ReviewArtifactView {
   review_contract_version?: string;
   review_id?: string;
   analysis_id: string;
+  language?: "pt" | "en";
   version?: number;
   status: ReviewStatus;
   executive_summary?: string | null;
   what_matters_most?: string[];
+  strengths?: string[];
   investigations?: ReviewInvestigationView[];
   critical_findings?: string[];
   contradictions?: string[];

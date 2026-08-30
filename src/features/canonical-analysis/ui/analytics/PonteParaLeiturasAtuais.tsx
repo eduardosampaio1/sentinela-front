@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart3, ScanSearch } from "lucide-react";
+import { ArrowRight, BarChart3, FileSearch, ScanSearch } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,9 @@ interface PonteParaLeiturasAtuaisProps {
  * deixa explícita a ordem recomendada: primeiro compreender o diagnóstico, depois explorar as
  * medidas que o sustentam.
  */
-export function PonteParaLeiturasAtuais({ analysisId }: PonteParaLeiturasAtuaisProps) {
+export function PonteParaLeiturasAtuais({
+  analysisId,
+}: PonteParaLeiturasAtuaisProps) {
   const { t } = useLanguage();
   const conteudo = {
     argos: {
@@ -24,8 +26,15 @@ export function PonteParaLeiturasAtuais({ analysisId }: PonteParaLeiturasAtuaisP
       recommended: true,
     },
     analytics: {
-      description: t("canonicalAnalysis.result.currentViews.analyticsDescription"),
+      description: t(
+        "canonicalAnalysis.result.currentViews.analyticsDescription",
+      ),
       icon: BarChart3,
+      recommended: false,
+    },
+    review: {
+      description: t("canonicalAnalysis.result.currentViews.reviewDescription"),
+      icon: FileSearch,
       recommended: false,
     },
   } as const;
@@ -43,7 +52,10 @@ export function PonteParaLeiturasAtuais({ analysisId }: PonteParaLeiturasAtuaisP
         <p className="text-xs font-medium uppercase tracking-[0.16em] text-primary">
           {t("canonicalAnalysis.result.currentViews.eyebrow")}
         </p>
-        <h2 id="leituras-atuais-titulo" className="mt-2 text-lg font-semibold text-foreground">
+        <h2
+          id="leituras-atuais-titulo"
+          className="mt-2 text-lg font-semibold text-foreground"
+        >
           {t("canonicalAnalysis.result.currentViews.title")}
         </h2>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">
@@ -51,17 +63,11 @@ export function PonteParaLeiturasAtuais({ analysisId }: PonteParaLeiturasAtuaisP
         </p>
       </div>
 
-      <ul className="mt-4 grid gap-3 md:grid-cols-2">
+      <ul className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {VISOES_DA_ANALISE.map((visao) => {
-          // Esta ponte vive somente na página histórica de resultado. O Review é uma capacidade
-          // nova e não reescreve a promessa desses links já salvos.
-          if (visao.caminho === "review") return null;
           const item = conteudo[visao.caminho];
           const Icon = item.icon;
-          const titulo =
-            visao.caminho === "argos"
-              ? t("canonicalAnalysis.shell.view.argos")
-              : t("canonicalAnalysis.shell.view.analytics");
+          const titulo = t(`canonicalAnalysis.shell.view.${visao.caminho}`);
           return (
             <li key={visao.caminho}>
               <Link
@@ -83,7 +89,9 @@ export function PonteParaLeiturasAtuais({ analysisId }: PonteParaLeiturasAtuaisP
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-foreground">{titulo}</span>
+                    <span className="font-medium text-foreground">
+                      {titulo}
+                    </span>
                     {item.recommended ? (
                       <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary">
                         {t("canonicalAnalysis.result.currentViews.recommended")}

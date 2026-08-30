@@ -156,6 +156,8 @@
       "partial": "Partial Review — see limitations",
       "verified": "Claims traceable to official sources",
       "whatMatters": "What matters most",
+      "strengths": "What is working",
+      "criticalFindings": "Where the operation falls short",
       "crossSignals": "Cross-signal analysis",
       "claims": "Fact, interpretation, and action",
       "contradictions": "Contradictions",
@@ -170,6 +172,8 @@
       "evidenceCount": "Linked evidence",
       "confidence": "confidence",
       "showEvidence": "View evidence and origin",
+      "languageMismatch": "This Review was generated in another language.",
+      "generateInLanguage": "Generate in English",
       "claim": {
         "fact": "Fact",
         "interpretation": "Interpretation",
@@ -197,7 +201,7 @@
     },
     "analyticsView": {
       "title": "Measures",
-    "catalog": {
+      "catalog": {
         "title": "Measure catalog",
         "subtitle": "Analytics separates volume, operational efficiency, and detected quality. Custom datasets remain explicitly labeled as custom.",
         "groups": {
@@ -657,7 +661,7 @@
     },
     "list": {
       "title": "Your analyses",
-      "subtitle": "Analyses in this workspace.",
+      "subtitle": "Most recent first. Identify each run by name, time, volume, and status.",
       "loading": "Loading analyses…",
       "empty": "No analyses yet. Start one to see it here.",
       "errorRecoverable": "We couldn't load your analyses right now. Try again.",
@@ -682,7 +686,9 @@
       "instanceFilter": "Instance",
       "allInstances": "All instances",
       "emptyInstance": "No analyses in this instance yet.",
-      "showAll": "Show every analysis"
+      "showAll": "Show every analysis",
+      "latest": "Latest",
+      "untitled": "Analysis from {{date}}"
     },
     "palette": {
       "count": "{{n}} results",
@@ -815,16 +821,46 @@
         "incompatible": "Incompatible"
       },
       "families": {
-        "volume": { "title": "Volume", "question": "How much material was analyzed?" },
-        "structure": { "title": "Structure", "question": "How are interactions structured?" },
-        "outcomes": { "title": "Outcomes", "question": "How did interactions end?" },
-        "containment": { "title": "Containment", "question": "Was service resolved without a transfer?" },
-        "intent_coverage": { "title": "Coverage of user intents", "question": "How much demand has a recognized intent?" },
-        "response_quality": { "title": "Quality of assistant responses", "question": "Were responses useful and clear?" },
-        "safety_privacy": { "title": "Safety and privacy", "question": "Are there signs of risk or improper exposure?" },
-        "groundedness": { "title": "Groundedness", "question": "Are responses supported by verifiable information?" },
-        "operations": { "title": "Operations", "question": "Where does the operational flow need attention?" },
-        "cost_resources": { "title": "Cost and resources", "question": "Which resources were consumed?" }
+        "volume": {
+          "title": "Volume",
+          "question": "How much material was analyzed?"
+        },
+        "structure": {
+          "title": "Structure",
+          "question": "How are interactions structured?"
+        },
+        "outcomes": {
+          "title": "Outcomes",
+          "question": "How did interactions end?"
+        },
+        "containment": {
+          "title": "Containment",
+          "question": "Was service resolved without a transfer?"
+        },
+        "intent_coverage": {
+          "title": "Coverage of user intents",
+          "question": "How much demand has a recognized intent?"
+        },
+        "response_quality": {
+          "title": "Quality of assistant responses",
+          "question": "Were responses useful and clear?"
+        },
+        "safety_privacy": {
+          "title": "Safety and privacy",
+          "question": "Are there signs of risk or improper exposure?"
+        },
+        "groundedness": {
+          "title": "Groundedness",
+          "question": "Are responses supported by verifiable information?"
+        },
+        "operations": {
+          "title": "Operations",
+          "question": "Where does the operational flow need attention?"
+        },
+        "cost_resources": {
+          "title": "Cost and resources",
+          "question": "Which resources were consumed?"
+        }
       }
     },
     "playground": {
@@ -1068,11 +1104,12 @@
       "compareBrokenShort": "not the same series",
       "currentViews": {
         "eyebrow": "Recommended reading",
-        "title": "Start with the assessment; explore the measures next",
-        "intro": "This historical summary remains available, while the current views explain what happened and show the evidence without mixing conclusions with calculations.",
+        "title": "Read the result in three layers",
+        "intro": "Assessment explains what happened, Measures exposes the numbers, and Review interprets what they mean in this operation.",
         "recommended": "Start here",
         "argosDescription": "Understand the analysis state, what needs action, and why each conclusion was presented.",
         "analyticsDescription": "Explore counts, distributions, coverage, and the provenance of the published numbers.",
+        "reviewDescription": "Connect Assessment and Measures to the operation's context, strengths, failures, and priorities.",
         "open": "Open view"
       }
     },

@@ -20,26 +20,64 @@ function montar(language: "pt" | "en") {
 describe("PonteParaLeiturasAtuais", () => {
   beforeEach(() => window.localStorage.clear());
 
-  it("recomenda Diagnóstico antes de Medidas e explica as duas rotas em PT-BR", () => {
+  it("apresenta Diagnóstico, Medidas e Review como três leituras em PT-BR", () => {
     montar("pt");
     const nav = screen.getByRole("navigation", {
       name: pt.canonicalAnalysis.result.currentViews.title,
     });
     const links = within(nav).getAllByRole("link");
 
-    expect(links).toHaveLength(2);
+    expect(links).toHaveLength(3);
     expect(links[0]).toHaveAttribute("href", "/analyses/analysis-123/argos");
-    expect(links[1]).toHaveAttribute("href", "/analyses/analysis-123/analytics");
-    expect(within(links[0]).getByText(pt.canonicalAnalysis.result.currentViews.recommended)).toBeTruthy();
-    expect(within(links[0]).getByText(pt.canonicalAnalysis.result.currentViews.argosDescription)).toBeTruthy();
-    expect(within(links[1]).getByText(pt.canonicalAnalysis.result.currentViews.analyticsDescription)).toBeTruthy();
+    expect(links[1]).toHaveAttribute(
+      "href",
+      "/analyses/analysis-123/analytics",
+    );
+    expect(links[2]).toHaveAttribute("href", "/analyses/analysis-123/review");
+    expect(
+      within(links[0]).getByText(
+        pt.canonicalAnalysis.result.currentViews.recommended,
+      ),
+    ).toBeTruthy();
+    expect(
+      within(links[0]).getByText(
+        pt.canonicalAnalysis.result.currentViews.argosDescription,
+      ),
+    ).toBeTruthy();
+    expect(
+      within(links[1]).getByText(
+        pt.canonicalAnalysis.result.currentViews.analyticsDescription,
+      ),
+    ).toBeTruthy();
+    expect(
+      within(links[2]).getByText(
+        pt.canonicalAnalysis.result.currentViews.reviewDescription,
+      ),
+    ).toBeTruthy();
   });
 
   it("mantém a mesma orientação em inglês", () => {
     montar("en");
-    expect(screen.getByRole("heading", { name: en.canonicalAnalysis.result.currentViews.title })).toBeTruthy();
-    expect(screen.getByText(en.canonicalAnalysis.result.currentViews.argosDescription)).toBeTruthy();
-    expect(screen.getByText(en.canonicalAnalysis.result.currentViews.analyticsDescription)).toBeTruthy();
+    expect(
+      screen.getByRole("heading", {
+        name: en.canonicalAnalysis.result.currentViews.title,
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        en.canonicalAnalysis.result.currentViews.argosDescription,
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        en.canonicalAnalysis.result.currentViews.analyticsDescription,
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        en.canonicalAnalysis.result.currentViews.reviewDescription,
+      ),
+    ).toBeTruthy();
   });
 
   it("usa Motion sem reflow e oferece desligamento para movimento reduzido", () => {

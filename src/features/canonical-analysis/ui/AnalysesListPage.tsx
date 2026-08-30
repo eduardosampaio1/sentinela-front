@@ -15,9 +15,13 @@ import type { AnalysisListItem, CanonicalScope } from "@/lib/v1";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/shared/states/LoadingState";
-import { EmptyState, LinhaDeColecao, StatusBadge, Toolbar } from "@/design/patterns";
+import {
+  EmptyState,
+  LinhaDeColecao,
+  StatusBadge,
+  Toolbar,
+} from "@/design/patterns";
 import type { EstadoPublico } from "@/design/patterns/estados";
-import type { ValorDaMedida } from "@/design/primitives/valorDaMedida";
 import { useRevelacao } from "@/design/motion";
 import { useAnalysesList } from "../data/list";
 import { useInstancesList } from "@/features/instances/data/instance";
@@ -25,10 +29,22 @@ import { classifyListError } from "../data/listView";
 import { useCanonicalScope } from "./scope";
 import { problemCodeOf } from "./notices";
 
-function formatarData(iso: string | null): string {
+function formatarData(iso: string | null, language: "pt" | "en"): string {
   if (!iso) return "—";
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+  return Number.isNaN(d.getTime())
+    ? "—"
+    : new Intl.DateTimeFormat(language === "pt" ? "pt-BR" : "en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(d);
+}
+
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function idCurto(id: string): string {
+  return UUID.test(id) ? `${id.slice(0, 8)}…${id.slice(-4)}` : id;
 }
 
 /** M39 — a seleção é um controle SEPARADO do link, não o link mudando de comportamento.
@@ -37,63 +53,78 @@ function formatarData(iso: string | null): string {
  *
  *  ## O que a linha passou a mostrar, e de onde veio
  *
- *  **O nome da Instância no lugar do UUID.** O título era `analysis_id` — uma lista de UUIDs é um
- *  corredor de portas fechadas: nada nela ajuda a escolher qual abrir. O nome vem de
- *  `instance_id`, que o contrato publica, resolvido contra a lista de Instâncias que esta tela JÁ
- *  carrega para o filtro. É junção de dois recursos publicados, não cálculo: o Front continua sem
- *  derivar estado nenhum. Análise sem Instância (toda a legada) mantém o identificador no título,
- *  porque aí não há nome que exista.
+ *  **Nome reconhecível no lugar do UUID.** O título prioriza `display_name`, depois a Instância.
+ *  Legados sem ambos recebem um rótulo temporal; o UUID curto continua visível como referência,
+ *  mas deixa de competir com a informação que ajuda a pessoa a escolher qual rodada abrir.
  *
  *  **`observed_conversations`.** O contrato publica este campo e a lista o descartava. Ele é o
  *  número que dá escala à linha — 12.480 conversas e 90 conversas são decisões diferentes sobre
  *  abrir ou não.
  *
- *  E ele entra pelo LÉXICO, não como texto: o próprio contrato diz que `null` aqui significa
- *  **ausente, nunca zero**, e que *"renderizar 0 ou '—' como se fosse medição transformaria
- *  não-medição em fato"*. Ausente recebe a hachura; medido recebe o número. */
+ *  O contrato diz que `null` significa **ausente, nunca zero**. Em uma lista já densa, a ausência
+ *  é omitida: não vira zero, traço, hachura nem uma parede de “não publicado”. */
 function ItemLinha({
   item,
   selecao,
   nomeDaInstancia,
+  maisRecente,
 }: {
   item: AnalysisListItem;
   selecao?: { marcada: boolean; alternar: () => void; bloqueada: boolean };
   /** Nome já resolvido, ou `undefined` quando não há Instância ou ela não está na página. */
   nomeDaInstancia?: string;
+  maisRecente: boolean;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const registros =
     item.record_count === null
       ? t("canonicalAnalysis.list.recordsUnknown")
       : t("canonicalAnalysis.list.records", { count: item.record_count });
 
-  const conversas: ValorDaMedida =
-    item.observed_conversations === null || item.observed_conversations === undefined
-      ? { tipo: "ausente", motivo: t("canonicalAnalysis.list.conversationsAbsent") }
-      : {
-          tipo: "medido",
-          texto: item.observed_conversations.toLocaleString(),
-          // A fração não é escala publicada e não vira julgamento: sem faixa, `Numero` fica
-          // neutro. Ela existe só para o trilho ter comprimento, e por isso não é lida em
-          // lugar nenhum desta linha.
-          fracao: 1,
-        };
+  const titulo =
+    item.display_name?.trim() ||
+    nomeDaInstancia ||
+    (UUID.test(item.analysis_id)
+      ? t("canonicalAnalysis.list.untitled", {
+          date: formatarData(item.created_at, language),
+        })
+      : item.analysis_id);
+  const partes = [
+    maisRecente ? t("canonicalAnalysis.list.latest") : null,
+    registros,
+  ];
+  if (titulo !== item.analysis_id) partes.push(idCurto(item.analysis_id));
 
   const linha = (
     <LinhaDeColecao
       item={{
         chave: item.analysis_id,
-        titulo: nomeDaInstancia ?? item.analysis_id,
-        subtitulo: nomeDaInstancia ? `${item.analysis_id} · ${registros}` : registros,
+        titulo,
+        subtitulo: partes.filter(Boolean).join(" · "),
         destino: `/analyses/${encodeURIComponent(item.analysis_id)}`,
-        numero: { valor: conversas, rotulo: t("canonicalAnalysis.list.conversations") },
+        numero:
+          item.observed_conversations === null ||
+          item.observed_conversations === undefined
+            ? undefined
+            : {
+                valor: {
+                  tipo: "medido",
+                  texto: item.observed_conversations.toLocaleString(
+                    language === "pt" ? "pt-BR" : "en-US",
+                  ),
+                  fracao: 1,
+                },
+                rotulo: t("canonicalAnalysis.list.conversations"),
+              },
         // M38 · o rótulo vem da família já publicada (`estadoPublico.*`) pelo `StatusBadge`, e
         // não de `canonicalAnalysis.state.*` — duas palavras para o MESMO estado (`preparing`
         // era "Preparing" aqui e "Reserved" lá). O Blueprint marca `StatusBadge` 🔴 vinculante
         // para EVO-01 exatamente como defesa contra isso.
         estado: {
-          rotulo: item.result_available ? t("canonicalAnalysis.list.resultReady") : "",
+          rotulo: item.result_available
+            ? t("canonicalAnalysis.list.resultReady")
+            : "",
           sinal: (
             <StatusBadge
               vocabulario="publico"
@@ -102,12 +133,14 @@ function ItemLinha({
             />
           ),
         },
-        quando: formatarData(item.created_at),
+        quando: formatarData(item.created_at, language),
       }}
       Envoltorio={({ destino, children, className }) => (
         <Link
           to={destino ?? "#"}
-          aria-label={t("canonicalAnalysis.list.open", { id: item.analysis_id })}
+          aria-label={t("canonicalAnalysis.list.open", {
+            id: item.analysis_id,
+          })}
           className={className}
         >
           {children}
@@ -132,7 +165,9 @@ function ItemLinha({
       {/* A linha vira `ul` interna de um item só para o `li` dela continuar tendo pai válido:
           `LinhaDeColecao` É um `li`, e um `li` solto dentro de outro `li` é árvore inválida —
           leitor de tela anuncia contagem errada. */}
-      <ul className="min-w-0 flex-1 overflow-hidden rounded-lg border border-border">{linha}</ul>
+      <ul className="min-w-0 flex-1 overflow-hidden rounded-lg border border-border">
+        {linha}
+      </ul>
     </li>
   );
 }
@@ -145,7 +180,13 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
   const [selecionando, setSelecionando] = useState(false);
   const [escolhidas, setEscolhidas] = useState<string[]>([]);
   const alternar = (id: string) =>
-    setEscolhidas((s) => (s.includes(id) ? s.filter((x) => x !== id) : s.length >= 2 ? s : [...s, id]));
+    setEscolhidas((s) =>
+      s.includes(id)
+        ? s.filter((x) => x !== id)
+        : s.length >= 2
+          ? s
+          : [...s, id],
+    );
   const sairDaSelecao = () => {
     setSelecionando(false);
     setEscolhidas([]);
@@ -199,7 +240,9 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
   // A chave inclui o cursor E o filtro: paginar troca as linhas sem desmontar a lista, e um
   // observador preso à página anterior não veria as novas — a próxima página apareceria parada
   // enquanto a primeira teve movimento. É o mesmo motivo de incluir o estado de carga.
-  const raizDaLista = useRevelacao<HTMLDivElement>(`${cursor ?? ""}|${instancia}|${list.isFetching}`);
+  const raizDaLista = useRevelacao<HTMLDivElement>(
+    `${cursor ?? ""}|${instancia}|${list.isFetching}`,
+  );
 
   function irProxima() {
     const next = list.data?.next_cursor ?? null;
@@ -215,7 +258,9 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
   }
 
   if (list.isLoading) {
-    return <LoadingState message={t("canonicalAnalysis.list.loading")} size="md" />;
+    return (
+      <LoadingState message={t("canonicalAnalysis.list.loading")} size="md" />
+    );
   }
   if (list.isError) {
     const classe = classifyListError(problemCodeOf(list.error));
@@ -226,10 +271,17 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
           ? "canonicalAnalysis.list.errorRecoverable"
           : "canonicalAnalysis.list.errorGeneric";
     return (
-      <div role="alert" className="space-y-4 rounded-lg border border-destructive/40 bg-destructive/10 p-6">
+      <div
+        role="alert"
+        className="space-y-4 rounded-lg border border-destructive/40 bg-destructive/10 p-6"
+      >
         <p className="text-sm text-foreground">{t(msgKey)}</p>
         {classe !== "session" && (
-          <Button variant="outline" onClick={() => void list.refetch()} disabled={list.isFetching}>
+          <Button
+            variant="outline"
+            onClick={() => void list.refetch()}
+            disabled={list.isFetching}
+          >
             {t("canonicalAnalysis.list.retry")}
           </Button>
         )}
@@ -292,7 +344,9 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
         explicacao={t("canonicalAnalysis.list.empty")}
         acao={
           <Button asChild>
-            <Link to="/analyses/new">{t("canonicalAnalysis.list.newAnalysis")}</Link>
+            <Link to="/analyses/new">
+              {t("canonicalAnalysis.list.newAnalysis")}
+            </Link>
           </Button>
         }
       />
@@ -326,45 +380,61 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
           E quando não há o que comparar ela não aparece, pela MESMA decisão: passar `primaria`
           vazia deixaria a barra existindo sem função, que é exatamente o que a M38 proibiu. */}
       {(selecionando || podeComparar) && (
-      <Toolbar
-        primaria={
-          selecionando ? (
-            <Button
-              onClick={() => navigate(`/analyses/compare/${encodeURIComponent(escolhidas[0])}/${encodeURIComponent(escolhidas[1])}`)}
-              disabled={escolhidas.length !== 2}
-            >
-              {t("canonicalAnalysis.compare.compareNow")}
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={() => setSelecionando(true)}>
-              {t("canonicalAnalysis.compare.select")}
-            </Button>
-          )
-        }
-        secundarias={
-          selecionando
-            ? [
-                <span key="contador" role="status" className="text-sm text-muted-foreground">
-                  {t("canonicalAnalysis.compare.selected", { n: escolhidas.length })}
-                </span>,
-                <Button key="cancelar" variant="ghost" onClick={sairDaSelecao}>
-                  {t("canonicalAnalysis.compare.cancel")}
-                </Button>,
-              ]
-            : []
-        }
-        menuSecundarias={
-          selecionando ? (
-            <Button variant="ghost" onClick={sairDaSelecao}>
-              {t("canonicalAnalysis.compare.cancel")}
-            </Button>
-          ) : undefined
-        }
-      />
+        <Toolbar
+          primaria={
+            selecionando ? (
+              <Button
+                onClick={() =>
+                  navigate(
+                    `/analyses/compare/${encodeURIComponent(escolhidas[0])}/${encodeURIComponent(escolhidas[1])}`,
+                  )
+                }
+                disabled={escolhidas.length !== 2}
+              >
+                {t("canonicalAnalysis.compare.compareNow")}
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={() => setSelecionando(true)}>
+                {t("canonicalAnalysis.compare.select")}
+              </Button>
+            )
+          }
+          secundarias={
+            selecionando
+              ? [
+                  <span
+                    key="contador"
+                    role="status"
+                    className="text-sm text-muted-foreground"
+                  >
+                    {t("canonicalAnalysis.compare.selected", {
+                      n: escolhidas.length,
+                    })}
+                  </span>,
+                  <Button
+                    key="cancelar"
+                    variant="ghost"
+                    onClick={sairDaSelecao}
+                  >
+                    {t("canonicalAnalysis.compare.cancel")}
+                  </Button>,
+                ]
+              : []
+          }
+          menuSecundarias={
+            selecionando ? (
+              <Button variant="ghost" onClick={sairDaSelecao}>
+                {t("canonicalAnalysis.compare.cancel")}
+              </Button>
+            ) : undefined
+          }
+        />
       )}
       {seletorDeInstancia}
       {selecionando && (
-        <p className="text-sm text-muted-foreground">{t("canonicalAnalysis.compare.selectHint")}</p>
+        <p className="text-sm text-muted-foreground">
+          {t("canonicalAnalysis.compare.selectHint")}
+        </p>
       )}
       <ul
         aria-label={t("canonicalAnalysis.list.title")}
@@ -374,11 +444,16 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
             : "grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border"
         }
       >
-        {items.map((item) => (
+        {items.map((item, index) => (
           <ItemLinha
             key={item.analysis_id}
             item={item}
-            nomeDaInstancia={item.instance_id ? nomeDeInstancia.get(item.instance_id) : undefined}
+            nomeDaInstancia={
+              item.instance_id
+                ? nomeDeInstancia.get(item.instance_id)
+                : undefined
+            }
+            maisRecente={cursor === null && index === 0}
             selecao={
               selecionando
                 ? {
@@ -392,11 +467,22 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
         ))}
       </ul>
       {(podeVoltar || podeAvancar) && (
-        <nav aria-label={t("canonicalAnalysis.list.title")} className="flex items-center justify-between gap-2">
-          <Button variant="outline" onClick={irAnterior} disabled={!podeVoltar || list.isFetching}>
+        <nav
+          aria-label={t("canonicalAnalysis.list.title")}
+          className="flex items-center justify-between gap-2"
+        >
+          <Button
+            variant="outline"
+            onClick={irAnterior}
+            disabled={!podeVoltar || list.isFetching}
+          >
             {t("canonicalAnalysis.list.previous")}
           </Button>
-          <Button variant="outline" onClick={irProxima} disabled={!podeAvancar || list.isFetching}>
+          <Button
+            variant="outline"
+            onClick={irProxima}
+            disabled={!podeAvancar || list.isFetching}
+          >
             {t("canonicalAnalysis.list.next")}
           </Button>
         </nav>
@@ -415,11 +501,17 @@ export function AnalysesListPage() {
         <div className="space-y-6" data-testid="canonical-analyses-list">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-semibold text-foreground">{t("canonicalAnalysis.list.title")}</h1>
-              <p className="mt-1 text-muted-foreground">{t("canonicalAnalysis.list.subtitle")}</p>
+              <h1 className="text-2xl font-semibold text-foreground">
+                {t("canonicalAnalysis.list.title")}
+              </h1>
+              <p className="mt-1 text-muted-foreground">
+                {t("canonicalAnalysis.list.subtitle")}
+              </p>
             </div>
             <Button asChild>
-              <Link to="/analyses/new">{t("canonicalAnalysis.list.newAnalysis")}</Link>
+              <Link to="/analyses/new">
+                {t("canonicalAnalysis.list.newAnalysis")}
+              </Link>
             </Button>
           </div>
           {scope ? (

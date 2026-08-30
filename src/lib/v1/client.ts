@@ -40,7 +40,12 @@ import type {
   ReviewArtifactView,
   ReviewRequestView,
 } from "./contract/public-v1.types";
-import { normalizeProblem, PROBLEM_MEDIA_TYPE, ProblemError, TransportError } from "./problem";
+import {
+  normalizeProblem,
+  PROBLEM_MEDIA_TYPE,
+  ProblemError,
+  TransportError,
+} from "./problem";
 
 export interface V1ClientConfig {
   /** Base URL do Gateway (ex.: VITE_SENTINELA_API_URL). SEM fallback para outra base. */
@@ -89,30 +94,75 @@ export interface V1Client {
    */
   meLanguage(opts?: RequestOptions): Promise<LanguagePreferenceView>;
   /** Persiste a escolha. Aceita exclusivamente `en` e `pt`; não existe operação de limpar. */
-  setMeLanguage(language: EffectiveLanguage, opts?: RequestOptions): Promise<LanguagePreferenceView>;
+  setMeLanguage(
+    language: EffectiveLanguage,
+    opts?: RequestOptions,
+  ): Promise<LanguagePreferenceView>;
   /**
    * Reserva a análise. `params.instanceId` viaja como query OPCIONAL — nunca no corpo, que é onde
    * o Gateway real NÃO lê. `CanonicalScope` continua satisfazendo `PrepareParams` por estrutura,
    * então o chamador da jornada geral não muda.
    */
-  prepare(params: PrepareParams, opts?: RequestOptions): Promise<AnalysisHandle>;
+  prepare(
+    params: PrepareParams,
+    opts?: RequestOptions,
+  ): Promise<AnalysisHandle>;
   /**
    * Progresso por EIXO. Devolve os eixos como o backend os manda — sem agregar, sem ordenar,
    * sem completar os que faltarem. Ausência de um eixo é ausência, não `pending`.
    */
-  getProgress(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisProgressView>;
+  getProgress(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<AnalysisProgressView>;
   /**
    * Projeção analítica pública. Entrega o documento como veio — `withheld` NÃO vira erro, e
    * `partial` NÃO vira `failed`: as três situações são distintas e a tela precisa distingui-las.
    */
-  getAnalytics(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisAnalyticsView>;
-  getAnalysisContext(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisContextView>;
-  putAnalysisContext(analysisId: string, scope: CanonicalScope, input: ContextDraftInput, opts?: RequestOptions): Promise<AnalysisContextView>;
-  suggestAnalysisContext(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<ContextSuggestionView>;
-  sealAnalysisContext(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisContextView>;
-  getReview(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<ReviewArtifactView>;
-  requestReview(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<ReviewRequestView>;
-  queryAnalytics(analysisId: string, scope: CanonicalScope, query: AnalyticsQueryInput, opts?: RequestOptions): Promise<AnalyticsQueryResultView>;
+  getAnalytics(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<AnalysisAnalyticsView>;
+  getAnalysisContext(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<AnalysisContextView>;
+  putAnalysisContext(
+    analysisId: string,
+    scope: CanonicalScope,
+    input: ContextDraftInput,
+    opts?: RequestOptions,
+  ): Promise<AnalysisContextView>;
+  suggestAnalysisContext(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<ContextSuggestionView>;
+  sealAnalysisContext(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<AnalysisContextView>;
+  getReview(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<ReviewArtifactView>;
+  requestReview(
+    analysisId: string,
+    scope: CanonicalScope,
+    language: "pt" | "en",
+    opts?: RequestOptions,
+  ): Promise<ReviewRequestView>;
+  queryAnalytics(
+    analysisId: string,
+    scope: CanonicalScope,
+    query: AnalyticsQueryInput,
+    opts?: RequestOptions,
+  ): Promise<AnalyticsQueryResultView>;
   /**
    * Capability de download do pacote de export. **Uma chamada por intenção**, nunca especulativa:
    * a URL devolvida é assinada e curta, e pedi-la "por via das dúvidas" gastaria a validade antes
@@ -123,15 +173,32 @@ export interface V1Client {
    * causas distintas (inexistente, de outro workspace, expirado, purgado) no mesmo
    * `forbidden_or_not_found` exatamente para impedir isso.
    */
-  getExportDownload(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisExportDownloadView>;
+  getExportDownload(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<AnalysisExportDownloadView>;
   /**
    * Eventos duráveis desta análise, na ordem em que o produtor os entrega. **Lido, nunca
    * remontado**: o front não deriva evento do estado atual, não completa lacuna e não ordena —
    * ordenar aqui seria o cliente opinando sobre a história que o backend gravou.
    */
-  getTimeline(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisTimelineView>;
-  uploadData(analysisId: string, scope: CanonicalScope, body: BodyInit, opts?: RequestOptions): Promise<AnalysisStatusView>;
-  openDataUpload(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<UploadAbertoView>;
+  getTimeline(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<AnalysisTimelineView>;
+  uploadData(
+    analysisId: string,
+    scope: CanonicalScope,
+    body: BodyInit,
+    opts?: RequestOptions,
+  ): Promise<AnalysisStatusView>;
+  openDataUpload(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<UploadAbertoView>;
   uploadDataPart(
     analysisId: string,
     scope: CanonicalScope,
@@ -147,8 +214,16 @@ export interface V1Client {
     parts: Array<{ part_number: number; etag: string }>,
     opts?: RequestOptions,
   ): Promise<AnalysisStatusView>;
-  submit(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
-  getStatus(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisStatusView>;
+  submit(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<AnalysisHandle>;
+  getStatus(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<AnalysisStatusView>;
   renameAnalysis(
     analysisId: string,
     scope: CanonicalScope,
@@ -172,15 +247,26 @@ export interface V1Client {
     resultSchemaVersion?: string,
   ): Promise<AnalysisResultView>;
   list(params: ListParams, opts?: RequestOptions): Promise<AnalysisListPage>;
-  reprocess(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
+  reprocess(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<AnalysisHandle>;
   /** Alias contratual legado. Também cria nova Analysis; não reabre a anterior. */
-  retry(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisHandle>;
+  retry(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<AnalysisHandle>;
   /**
    * As Instances do workspace (BD02). Lista vazia é sucesso, não erro: workspace autorizado
    * ainda sem Instance nenhuma é estado legítimo, e o produtor devolve
    * `{"items": [], "next_cursor": null}`.
    */
-  listInstances(params: InstanceListParams, opts?: RequestOptions): Promise<InstanceListPage>;
+  listInstances(
+    params: InstanceListParams,
+    opts?: RequestOptions,
+  ): Promise<InstanceListPage>;
   /**
    * BD10 — o ponteiro de baseline da Instance.
    *
@@ -189,7 +275,11 @@ export interface V1Client {
    * VALOR. O 404 desta fronteira significa outra coisa (Instance inexistente ou de outro
    * workspace), e tratá-los igual faria o cliente confundir "não é sua" com "não tem".
    */
-  getBaseline(instanceId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<BaselineView>;
+  getBaseline(
+    instanceId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<BaselineView>;
   /**
    * Elege a Analysis como referência. Idempotente; a troca A→B é **atômica** — o cliente NUNCA
    * chama `clearBaseline` antes, porque isso abriria uma janela sem régua que o contrato não tem.
@@ -206,7 +296,11 @@ export interface V1Client {
   ): Promise<BaselineView>;
   /** Remove a régua. Idempotente: sem baseline, continua `NO_BASELINE` — e é 200. Nunca escolhe
    *  substituto e nunca alcança a Analysis. */
-  clearBaseline(instanceId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<BaselineView>;
+  clearBaseline(
+    instanceId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<BaselineView>;
   /**
    * Uma Instance pela identidade durável.
    *
@@ -215,7 +309,11 @@ export interface V1Client {
    * Instance de outro workspace e inexistente colapsam no mesmo `forbidden_or_not_found`; o
    * Front não distingue o que o contrato deliberadamente não distingue.
    */
-  getInstance(instanceId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<InstanceView>;
+  getInstance(
+    instanceId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<InstanceView>;
 
   /**
    * Cria uma Instance no workspace do escopo.
@@ -314,7 +412,10 @@ export interface V1Client {
    * Esta é a leitura que vence a claim. `MeView.workspaces[].name` continua existindo como
    * projeção de bootstrap e pode ficar velho após um rename.
    */
-  getWorkspace(workspaceId: string, opts?: RequestOptions): Promise<WorkspaceView>;
+  getWorkspace(
+    workspaceId: string,
+    opts?: RequestOptions,
+  ): Promise<WorkspaceView>;
 
   /**
    * Cria um Workspace e torna quem pediu o dono dele.
@@ -334,7 +435,11 @@ export interface V1Client {
   createWorkspace(name: string, opts?: RequestOptions): Promise<WorkspaceView>;
 
   /** M42 · CFG-03 — renomear. Corpo com UM campo; o Gateway recusa campo a mais. */
-  renameWorkspace(workspaceId: string, name: string, opts?: RequestOptions): Promise<WorkspaceView>;
+  renameWorkspace(
+    workspaceId: string,
+    name: string,
+    opts?: RequestOptions,
+  ): Promise<WorkspaceView>;
 
   // ── M44 · BD14 — a comunicação autorizada do Workspace ──────────────────────
   //
@@ -345,7 +450,10 @@ export interface V1Client {
   // Todas levam `workspace_id` na QUERY — diferente de Workspace, onde ele é o caminho.
 
   /** As assinaturas DESTE workspace. Lista vazia é ausência legítima, nunca erro. */
-  listSubscriptions(scope: CanonicalScope, opts?: RequestOptions): Promise<SubscriptionListPage>;
+  listSubscriptions(
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<SubscriptionListPage>;
 
   /** Cria. Ação EXPLÍCITA — nada aqui nasce de login nem de primeiro acesso. */
   createSubscription(
@@ -379,10 +487,19 @@ export interface V1Client {
  * chaves iguais colapsariam operações idempotentes distintas. `cripto` é injetável p/ teste do
  * fallback. (Codex E1 R4.)
  */
-export function novoId(cripto: Crypto | undefined = typeof crypto !== "undefined" ? crypto : undefined): string {
+export function novoId(
+  cripto: Crypto | undefined = typeof crypto !== "undefined"
+    ? crypto
+    : undefined,
+): string {
   // O tipo `Crypto` da lib GARANTE randomUUID; na realidade de runtime (browsers antigos) ele pode
   // faltar. Modelamos como opcional p/ não colapsar o ramo getRandomValues em `never`.
-  const c = cripto as { randomUUID?: () => string; getRandomValues?: (a: Uint8Array) => Uint8Array } | undefined;
+  const c = cripto as
+    | {
+        randomUUID?: () => string;
+        getRandomValues?: (a: Uint8Array) => Uint8Array;
+      }
+    | undefined;
   if (c?.randomUUID) return c.randomUUID();
   if (c?.getRandomValues) {
     const bytes = c.getRandomValues(new Uint8Array(16));
@@ -393,7 +510,10 @@ export function novoId(cripto: Crypto | undefined = typeof crypto !== "undefined
 }
 
 function encodeAnalysisId(id: string): string {
-  if (!id || typeof id !== "string") throw new ProblemError(normalizeProblem({ code: "invalid_input" }, 400, novoId()));
+  if (!id || typeof id !== "string")
+    throw new ProblemError(
+      normalizeProblem({ code: "invalid_input" }, 400, novoId()),
+    );
   return encodeURIComponent(id);
 }
 
@@ -406,7 +526,9 @@ export function createV1Client(config: V1ClientConfig): V1Client {
   // legado suporta atrás de um proxy). `new URL("/api/v1/…")` sem origem lança TypeError; passar
   // uma origem de fallback resolve a relativa E é IGNORADA quando a base já é absoluta.
   const origemFallback =
-    typeof window !== "undefined" && window.location ? window.location.origin : "http://localhost";
+    typeof window !== "undefined" && window.location
+      ? window.location.origin
+      : "http://localhost";
 
   const MALFORMADO = Symbol("malformado");
   async function corpoJsonSeguro(resposta: Response): Promise<unknown> {
@@ -437,12 +559,19 @@ export function createV1Client(config: V1ClientConfig): V1Client {
     // 1) auth ANTES da rede: sem token → authentication_required (não vaza, não chama fetch)
     const token = await config.getAccessToken();
     if (!token) {
-      throw new ProblemError(normalizeProblem({ code: "authentication_required" }, 401, correlationId));
+      throw new ProblemError(
+        normalizeProblem(
+          { code: "authentication_required" },
+          401,
+          correlationId,
+        ),
+      );
     }
     // 2) URL + query (workspace_id é a autoridade de tenant; nunca `tenant_id`)
     const url = new URL(`${base}${caminho}`, origemFallback);
     for (const [k, v] of Object.entries(query)) {
-      if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
+      if (v !== undefined && v !== null && v !== "")
+        url.searchParams.set(k, String(v));
     }
     // 3) headers
     const headers: Record<string, string> = {
@@ -450,7 +579,8 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       Accept: `application/json, ${PROBLEM_MEDIA_TYPE}`,
       "X-Correlation-Id": correlationId,
     };
-    if (idempotente) headers["Idempotency-Key"] = opts?.idempotencyKey ?? newIdem();
+    if (idempotente)
+      headers["Idempotency-Key"] = opts?.idempotencyKey ?? newIdem();
     if (corpo?.contentType) headers["Content-Type"] = corpo.contentType;
 
     // 4) fetch — SEM fallback de base. Erro de rede → temporarily_unavailable (seguro).
@@ -463,10 +593,17 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         signal: opts?.signal,
       });
     } catch (erro) {
-      if (erro instanceof DOMException && erro.name === "AbortError") throw erro; // cancelamento propaga
+      if (erro instanceof DOMException && erro.name === "AbortError")
+        throw erro; // cancelamento propaga
       // TRANSPORTE: não houve resposta. Mesmo código público, subclasse distinta — a superfície
       // precisa poder dizer "não sabemos se chegou" em vez de "o serviço está indisponível".
-      throw new TransportError(normalizeProblem({ code: "temporarily_unavailable" }, 503, correlationId));
+      throw new TransportError(
+        normalizeProblem(
+          { code: "temporarily_unavailable" },
+          503,
+          correlationId,
+        ),
+      );
     }
 
     // 5) parsing seguro + validação de content-type
@@ -476,16 +613,30 @@ export function createV1Client(config: V1ClientConfig): V1Client {
     if (!resposta.ok) {
       // erro: se JSON, normaliza o corpo; senão, deriva o código do status (não confia no corpo)
       const corpoErro = ehJson ? await corpoJsonSeguro(resposta) : {};
-      throw new ProblemError(normalizeProblem(corpoErro, resposta.status, correlationId));
+      throw new ProblemError(
+        normalizeProblem(corpoErro, resposta.status, correlationId),
+      );
     }
     // sucesso: 204 = vazio; senão EXIGE JSON válido — 200 não-JSON quebra o contrato → transitório
     if (resposta.status === 204) return {} as T;
     if (!ehJson) {
-      throw new ProblemError(normalizeProblem({ code: "temporarily_unavailable" }, 503, correlationId));
+      throw new ProblemError(
+        normalizeProblem(
+          { code: "temporarily_unavailable" },
+          503,
+          correlationId,
+        ),
+      );
     }
     const dados = await corpoJsonSeguro(resposta);
     if (dados === MALFORMADO) {
-      throw new ProblemError(normalizeProblem({ code: "temporarily_unavailable" }, 503, correlationId));
+      throw new ProblemError(
+        normalizeProblem(
+          { code: "temporarily_unavailable" },
+          503,
+          correlationId,
+        ),
+      );
     }
     return dados as T;
   }
@@ -509,9 +660,19 @@ export function createV1Client(config: V1ClientConfig): V1Client {
     // invalid_input local, SEM tocar a rede — nunca uma requisição canônica sem workspace.
     const ws = query.workspace_id;
     if (typeof ws !== "string" || ws.trim() === "") {
-      throw new ProblemError(normalizeProblem({ code: "invalid_input" }, 400, correlationId));
+      throw new ProblemError(
+        normalizeProblem({ code: "invalid_input" }, 400, correlationId),
+      );
     }
-    return enviar<T>(metodo, caminho, query, opts, corpo, idempotente, correlationId);
+    return enviar<T>(
+      metodo,
+      caminho,
+      query,
+      opts,
+      corpo,
+      idempotente,
+      correlationId,
+    );
   }
 
   return {
@@ -520,7 +681,8 @@ export function createV1Client(config: V1ClientConfig): V1Client {
      * o frontend não mantém lista autoritativa de membership nem a deriva de dado local antigo.
      */
     me: (opts) => enviar<MeView>("GET", "/v1/me", {}, opts),
-    meLanguage: (opts) => enviar<LanguagePreferenceView>("GET", "/v1/me/language", {}, opts),
+    meLanguage: (opts) =>
+      enviar<LanguagePreferenceView>("GET", "/v1/me/language", {}, opts),
     setMeLanguage: (language, opts) =>
       // Corpo com UM campo. `user_subject` não viaja: quem determina o usuário é o contexto
       // autenticado, e o Gateway recusa corpo com campo a mais.
@@ -529,12 +691,19 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         contentType: "application/json",
       }),
     prepare: (params, opts) =>
-      pedir<AnalysisHandle>("POST", "/v1/analyses", {
-        workspace_id: params.workspaceId,
-        // M37: mesmo mecanismo do filtro da listagem — o loop de query descarta vazios, então
-        // omitir mantém a requisição da jornada geral byte a byte igual à de antes.
-        instance_id: params.instanceId,
-      }, opts, undefined, true),
+      pedir<AnalysisHandle>(
+        "POST",
+        "/v1/analyses",
+        {
+          workspace_id: params.workspaceId,
+          // M37: mesmo mecanismo do filtro da listagem — o loop de query descarta vazios, então
+          // omitir mantém a requisição da jornada geral byte a byte igual à de antes.
+          instance_id: params.instanceId,
+        },
+        opts,
+        undefined,
+        true,
+      ),
     uploadData: (analysisId, scope, body, opts) =>
       pedir<AnalysisStatusView>(
         "POST",
@@ -550,7 +719,14 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         { workspace_id: scope.workspaceId },
         opts,
       ),
-    uploadDataPart: (analysisId, scope, uploadSessionId, partNumber, body, opts) =>
+    uploadDataPart: (
+      analysisId,
+      scope,
+      uploadSessionId,
+      partNumber,
+      body,
+      opts,
+    ) =>
       pedir<UploadParteView>(
         "PUT",
         `/v1/analyses/${encodeAnalysisId(analysisId)}/data/uploads/${encodeURIComponent(uploadSessionId)}/parts/${partNumber}`,
@@ -570,9 +746,21 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         },
       ),
     submit: (analysisId, scope, opts) =>
-      pedir<AnalysisHandle>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/submit`, { workspace_id: scope.workspaceId }, opts, undefined, true),
+      pedir<AnalysisHandle>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/submit`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        undefined,
+        true,
+      ),
     getStatus: (analysisId, scope, opts) =>
-      pedir<AnalysisStatusView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}`, { workspace_id: scope.workspaceId }, opts),
+      pedir<AnalysisStatusView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
     renameAnalysis: (analysisId, scope, name, opts) =>
       pedir<RenameAnalysisView>(
         "PATCH",
@@ -582,19 +770,56 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         { body: JSON.stringify({ name }), contentType: "application/json" },
       ),
     getAnalytics: (analysisId, scope, opts) =>
-      pedir<AnalysisAnalyticsView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics`, { workspace_id: scope.workspaceId }, opts),
+      pedir<AnalysisAnalyticsView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
     getAnalysisContext: (analysisId, scope, opts) =>
-      pedir<AnalysisContextView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/context`, { workspace_id: scope.workspaceId }, opts),
+      pedir<AnalysisContextView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/context`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
     putAnalysisContext: (analysisId, scope, input, opts) =>
-      pedir<AnalysisContextView>("PUT", `/v1/analyses/${encodeAnalysisId(analysisId)}/context`, { workspace_id: scope.workspaceId }, opts, { body: JSON.stringify(input), contentType: "application/json" }),
+      pedir<AnalysisContextView>(
+        "PUT",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/context`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify(input), contentType: "application/json" },
+      ),
     suggestAnalysisContext: (analysisId, scope, opts) =>
-      pedir<ContextSuggestionView>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/context/suggestions`, { workspace_id: scope.workspaceId }, opts),
+      pedir<ContextSuggestionView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/context/suggestions`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
     sealAnalysisContext: (analysisId, scope, opts) =>
-      pedir<AnalysisContextView>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/context/seal`, { workspace_id: scope.workspaceId }, opts),
+      pedir<AnalysisContextView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/context/seal`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
     getReview: (analysisId, scope, opts) =>
-      pedir<ReviewArtifactView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/review`, { workspace_id: scope.workspaceId }, opts),
-    requestReview: (analysisId, scope, opts) =>
-      pedir<ReviewRequestView>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/review`, { workspace_id: scope.workspaceId }, opts),
+      pedir<ReviewArtifactView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/review`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
+    requestReview: (analysisId, scope, language, opts) =>
+      pedir<ReviewRequestView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/review`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify({ language }), contentType: "application/json" },
+      ),
     queryAnalytics: (analysisId, scope, query, opts) =>
       pedir<AnalyticsQueryResultView>(
         "POST",
@@ -604,11 +829,26 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         { body: JSON.stringify(query), contentType: "application/json" },
       ),
     getProgress: (analysisId, scope, opts) =>
-      pedir<AnalysisProgressView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/progress`, { workspace_id: scope.workspaceId }, opts),
+      pedir<AnalysisProgressView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/progress`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
     getExportDownload: (analysisId, scope, opts) =>
-      pedir<AnalysisExportDownloadView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics/export/download`, { workspace_id: scope.workspaceId }, opts),
+      pedir<AnalysisExportDownloadView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics/export/download`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
     getTimeline: (analysisId, scope, opts) =>
-      pedir<AnalysisTimelineView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/timeline`, { workspace_id: scope.workspaceId }, opts),
+      pedir<AnalysisTimelineView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/timeline`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
     getResult: (analysisId, scope, opts, resultSchemaVersion) =>
       pedir<AnalysisResultView>(
         "GET",
@@ -623,28 +863,61 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         opts,
       ),
     list: (params, opts) =>
-      pedir<AnalysisListPage>("GET", "/v1/analyses", {
-        workspace_id: params.workspaceId,
-        limit: params.limit,
-        cursor: params.cursor,
-        // BD02: só viaja quando informado. O loop de query descarta vazios, então omitir mantém
-        // a requisição byte a byte igual à de antes — consumidor da listagem geral não muda.
-        instance_id: params.instanceId,
-        // BD10: idem, e por isso `true` vira a string e `false` some. Mandar `false` sempre
-        // poluiria a query de toda listagem com uma opção que ninguém escolheu.
-        baseline_eligible: params.baselineEligible ? "true" : undefined,
-      }, opts),
+      pedir<AnalysisListPage>(
+        "GET",
+        "/v1/analyses",
+        {
+          workspace_id: params.workspaceId,
+          limit: params.limit,
+          cursor: params.cursor,
+          // BD02: só viaja quando informado. O loop de query descarta vazios, então omitir mantém
+          // a requisição byte a byte igual à de antes — consumidor da listagem geral não muda.
+          instance_id: params.instanceId,
+          // BD10: idem, e por isso `true` vira a string e `false` some. Mandar `false` sempre
+          // poluiria a query de toda listagem com uma opção que ninguém escolheu.
+          baseline_eligible: params.baselineEligible ? "true" : undefined,
+        },
+        opts,
+      ),
     reprocess: (analysisId, scope, opts) =>
-      pedir<AnalysisHandle>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/reprocess`, { workspace_id: scope.workspaceId }, opts, undefined, true),
+      pedir<AnalysisHandle>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/reprocess`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        undefined,
+        true,
+      ),
     retry: (analysisId, scope, opts) =>
-      pedir<AnalysisHandle>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/retry`, { workspace_id: scope.workspaceId }, opts, undefined, true),
+      pedir<AnalysisHandle>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/retry`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        undefined,
+        true,
+      ),
     listInstances: (params, opts) =>
-      pedir<InstanceListPage>("GET", "/v1/instances", { workspace_id: params.workspaceId, limit: params.limit, cursor: params.cursor }, opts),
+      pedir<InstanceListPage>(
+        "GET",
+        "/v1/instances",
+        {
+          workspace_id: params.workspaceId,
+          limit: params.limit,
+          cursor: params.cursor,
+        },
+        opts,
+      ),
     getInstance: (instanceId, scope, opts) =>
       // `encodeAnalysisId` é o encoder de segmento de path deste arquivo — o nome é herança de
       // quando só havia análise. Reusá-lo é o certo: um segundo encoder divergiria no primeiro
       // caractere especial, e o nome é dívida de harness, não motivo para duplicar.
-      pedir<InstanceView>("GET", `/v1/instances/${encodeAnalysisId(instanceId)}`, { workspace_id: scope.workspaceId }, opts),
+      pedir<InstanceView>(
+        "GET",
+        `/v1/instances/${encodeAnalysisId(instanceId)}`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
     getAnalysisMapping: (analysisId, scope, opts) =>
       pedir<MappingView>(
         "GET",
@@ -676,10 +949,14 @@ export function createV1Client(config: V1ClientConfig): V1Client {
             ...(catalogOptOut === undefined
               ? {}
               : {
-                  disabled_catalog_measure_ids: catalogOptOut.disabledMeasureIds,
-                  disabled_catalog_dimension_ids: catalogOptOut.disabledDimensionIds,
+                  disabled_catalog_measure_ids:
+                    catalogOptOut.disabledMeasureIds,
+                  disabled_catalog_dimension_ids:
+                    catalogOptOut.disabledDimensionIds,
                 }),
-            ...(minValidRatio === undefined ? {} : { min_valid_ratio: minValidRatio }),
+            ...(minValidRatio === undefined
+              ? {}
+              : { min_valid_ratio: minValidRatio }),
           }),
           contentType: "application/json",
         },
@@ -707,21 +984,37 @@ export function createV1Client(config: V1ClientConfig): V1Client {
     // recurso sem `workspace_id` na query — ele já é o caminho. `pedir` exige o escopo e
     // recusaria a chamada localmente, que é o comportamento certo dele e o errado para estas duas.
     getWorkspace: (workspaceId, opts) =>
-      enviar<WorkspaceView>("GET", `/v1/workspaces/${encodeAnalysisId(workspaceId)}`, {}, opts),
+      enviar<WorkspaceView>(
+        "GET",
+        `/v1/workspaces/${encodeAnalysisId(workspaceId)}`,
+        {},
+        opts,
+      ),
     createWorkspace: (name, opts) =>
       enviar<WorkspaceView>("POST", "/v1/workspaces", {}, opts, {
         body: JSON.stringify({ name }),
         contentType: "application/json",
       }),
     renameWorkspace: (workspaceId, name, opts) =>
-      enviar<WorkspaceView>("PATCH", `/v1/workspaces/${encodeAnalysisId(workspaceId)}`, {}, opts, {
-        body: JSON.stringify({ name }),
-        contentType: "application/json",
-      }),
+      enviar<WorkspaceView>(
+        "PATCH",
+        `/v1/workspaces/${encodeAnalysisId(workspaceId)}`,
+        {},
+        opts,
+        {
+          body: JSON.stringify({ name }),
+          contentType: "application/json",
+        },
+      ),
     // M44 · BD14. `pedir` porque as quatro exigem `workspace_id` na QUERY — e é ele que o dono
     // usa no `where`, então omiti-lo não é economia: é pedir a assinatura de outro escopo.
     listSubscriptions: (scope, opts) =>
-      pedir<SubscriptionListPage>("GET", "/v1/subscriptions", { workspace_id: scope.workspaceId }, opts),
+      pedir<SubscriptionListPage>(
+        "GET",
+        "/v1/subscriptions",
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
     createSubscription: (scope, input, opts) =>
       pedir<SubscriptionSecretView>(
         "POST",
@@ -770,7 +1063,10 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         opts,
         // A identidade viaja no CORPO, que é onde o Gateway real a lê. Mandá-la na query
         // funcionaria contra um mock permissivo e falharia contra o produtor.
-        { body: JSON.stringify({ baseline_analysis_id: analysisId }), contentType: "application/json" },
+        {
+          body: JSON.stringify({ baseline_analysis_id: analysisId }),
+          contentType: "application/json",
+        },
       ),
     clearBaseline: (instanceId, scope, opts) =>
       pedir<BaselineView>(

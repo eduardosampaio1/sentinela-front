@@ -13,21 +13,30 @@ import { server, setupMsw } from "@/test/msw/server";
 import { CanonicalClientProvider } from "../data/client";
 import { AnalysesListPage } from "./AnalysesListPage";
 
-vi.mock("@/shell/AppShell", () => ({ AppShell: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
-const auth = vi.hoisted(() => ({ ws: { id: "ws-1" } as { id: string } | null }));
+vi.mock("@/shell/AppShell", () => ({
+  AppShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+}));
+const auth = vi.hoisted(() => ({
+  ws: { id: "ws-1" } as { id: string } | null,
+}));
 vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ workspace: auth.ws }) }));
 
 setupMsw();
 let client: V1Client;
 beforeAll(() => {
-  client = createV1Client({ baseUrl: MSW_BASE, getAccessToken: async () => "tok" });
+  client = createV1Client({
+    baseUrl: MSW_BASE,
+    getAccessToken: async () => "tok",
+  });
 });
 beforeEach(() => {
   auth.ws = { id: "ws-1" };
 });
 
 function renderList() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   return render(
     <LanguageProvider>
       <QueryClientProvider client={qc}>
@@ -41,23 +50,43 @@ function renderList() {
   );
 }
 
-const item = (id: string, status: AnalysisStatus = "completed", result = true) => ({
+const item = (
+  id: string,
+  status: AnalysisStatus = "completed",
+  result = true,
+) => ({
   analysis_id: id,
   status,
   record_count: 5,
   result_available: result,
   created_at: "2020-01-02T00:00:00Z",
 });
-const page = (items: ReturnType<typeof item>[], next: string | null = null) => ({ items, next_cursor: next });
+const page = (
+  items: ReturnType<typeof item>[],
+  next: string | null = null,
+) => ({ items, next_cursor: next });
 const problem = (code: string, status: number) =>
-  HttpResponse.json({ type: `urn:sentinela:error:${code}`, title: code, status, code, detail: code }, {
-    status,
-    headers: { "content-type": "application/problem+json" },
-  });
+  HttpResponse.json(
+    {
+      type: `urn:sentinela:error:${code}`,
+      title: code,
+      status,
+      code,
+      detail: code,
+    },
+    {
+      status,
+      headers: { "content-type": "application/problem+json" },
+    },
+  );
 
 describe("AnalysesListPage — estados distintos", () => {
   it("dados: lista os itens contratados com o estado público", async () => {
-    server.use(http.get(`${MSW_BASE}/v1/analyses`, () => HttpResponse.json(page([item("an-1"), item("an-2", "running", false)]))));
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses`, () =>
+        HttpResponse.json(page([item("an-1"), item("an-2", "running", false)])),
+      ),
+    );
     renderList();
     expect(await screen.findByText("an-1")).toBeTruthy();
     expect(screen.getByText("an-2")).toBeTruthy();
@@ -65,7 +94,32 @@ describe("AnalysesListPage — estados distintos", () => {
     expect(screen.getByText("Completed")).toBeTruthy();
     expect(screen.getByText("Running")).toBeTruthy();
     // link acessível por analysis_id
-    expect(screen.getByRole("link", { name: /Open analysis an-1/i })).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: /Open analysis an-1/i }),
+    ).toBeTruthy();
+  });
+
+  it("prioriza nome publicado e rebaixa o UUID para referência curta", async () => {
+    const id = "0774667c-017b-4886-a429-cfb8e842f6a6";
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses`, () =>
+        HttpResponse.json(
+          page([
+            {
+              ...item(id),
+              display_name: "Piloto cartão — agosto",
+              instance_id: null,
+            } as never,
+          ]),
+        ),
+      ),
+    );
+    renderList();
+
+    expect(await screen.findByText("Piloto cartão — agosto")).toBeVisible();
+    expect(screen.getByText(/Latest/)).toBeVisible();
+    expect(screen.getByText(/0774667c…f6a6/)).toBeVisible();
+    expect(screen.queryByText(id)).toBeNull();
   });
 
   // M45.4 — comparar só é OFERECIDO quando comparar é possível.
@@ -79,7 +133,11 @@ describe("AnalysesListPage — estados distintos", () => {
   // funcionalidade em vez de protegê-la. É a massa vazia que sempre passa.
   describe("M45.4 · comparar não é oferecido quando é impossível", () => {
     it("uma única análise: sem convite para comparar", async () => {
-      server.use(http.get(`${MSW_BASE}/v1/analyses`, () => HttpResponse.json(page([item("an-só")]))));
+      server.use(
+        http.get(`${MSW_BASE}/v1/analyses`, () =>
+          HttpResponse.json(page([item("an-só")])),
+        ),
+      );
       renderList();
       expect(await screen.findByText("an-só")).toBeTruthy();
       expect(screen.queryByRole("button", { name: /^Compare$/ })).toBeNull();
@@ -88,13 +146,16 @@ describe("AnalysesListPage — estados distintos", () => {
     it("duas análises: o convite existe, e leva ao modo de seleção", async () => {
       server.use(
         http.get(`${MSW_BASE}/v1/analyses`, () =>
-          HttpResponse.json(page([item("an-1"), item("an-2")]))),
+          HttpResponse.json(page([item("an-1"), item("an-2")])),
+        ),
       );
       renderList();
       const convite = await screen.findByRole("button", { name: /^Compare$/ });
       await userEvent.click(convite);
       // A dica de seleção é o estado, e as caixas são o meio: sem elas o convite era decorativo.
-      expect(await screen.findByText(/Pick exactly two analyses/i)).toBeTruthy();
+      expect(
+        await screen.findByText(/Pick exactly two analyses/i),
+      ).toBeTruthy();
       expect(screen.getAllByRole("checkbox")).toHaveLength(2);
     });
 
@@ -102,7 +163,8 @@ describe("AnalysesListPage — estados distintos", () => {
       // A seleção sobrevive à paginação, então uma última página curta não prova ausência de par.
       server.use(
         http.get(`${MSW_BASE}/v1/analyses`, () =>
-          HttpResponse.json(page([item("an-1")], "cur-2"))),
+          HttpResponse.json(page([item("an-1")], "cur-2")),
+        ),
       );
       renderList();
       expect(await screen.findByText("an-1")).toBeTruthy();
@@ -142,7 +204,9 @@ describe("AnalysesListPage — estados distintos", () => {
       await userEvent.selectOptions(await screen.findByRole("combobox"), "i-1");
       // A prova é a REDE: recortar no cliente quebraria o cursor e a contagem da página, e o
       // Front passaria a ter uma segunda opinião sobre o que pertence à Instância.
-      await waitFor(() => expect(pedidos.some((q) => q.includes("instance_id=i-1"))).toBe(true));
+      await waitFor(() =>
+        expect(pedidos.some((q) => q.includes("instance_id=i-1"))).toBe(true),
+      );
     });
 
     it("trocar o filtro ZERA o cursor — token opaco não atravessa consultas", async () => {
@@ -152,21 +216,29 @@ describe("AnalysesListPage — estados distintos", () => {
         http.get(`${MSW_BASE}/v1/analyses`, ({ request }) => {
           const q = new URL(request.url).search;
           pedidos.push(q);
-          return HttpResponse.json(page([item("an-1")], q.includes("cursor=") ? null : "cur-2"));
+          return HttpResponse.json(
+            page([item("an-1")], q.includes("cursor=") ? null : "cur-2"),
+          );
         }),
       );
       renderList();
       expect(await screen.findByText("an-1")).toBeTruthy();
 
-      await userEvent.click(await screen.findByRole("button", { name: /^Next$/ }));
-      await waitFor(() => expect(pedidos.some((q) => q.includes("cursor=cur-2"))).toBe(true));
+      await userEvent.click(
+        await screen.findByRole("button", { name: /^Next$/ }),
+      );
+      await waitFor(() =>
+        expect(pedidos.some((q) => q.includes("cursor=cur-2"))).toBe(true),
+      );
 
       await userEvent.selectOptions(screen.getByRole("combobox"), "i-1");
       // O cursor da listagem GERAL não pode ser enviado à listagem da Instância: ele é opaco e
       // pertence à consulta que o emitiu, e o backend não tem como recusar o próprio token.
       await waitFor(() => {
         const ultimo = pedidos[pedidos.length - 1];
-        expect(ultimo, "o cursor atravessou a troca de filtro").not.toContain("cursor=");
+        expect(ultimo, "o cursor atravessou a troca de filtro").not.toContain(
+          "cursor=",
+        );
         expect(ultimo).toContain("instance_id=i-1");
       });
     });
@@ -187,16 +259,22 @@ describe("AnalysesListPage — estados distintos", () => {
       await userEvent.selectOptions(await screen.findByRole("combobox"), "i-1");
 
       // Há análises — só não nesta Instância. Dizer "nenhuma análise ainda" seria falso.
-      expect(await screen.findByText(/No analyses in this instance yet/i)).toBeTruthy();
+      expect(
+        await screen.findByText(/No analyses in this instance yet/i),
+      ).toBeTruthy();
       expect(screen.queryByText(/No analyses yet\. Start one/i)).toBeNull();
       // E o vazio devolve cedo, antes do seletor: sem uma saída própria isto seria um beco.
-      await userEvent.click(screen.getByRole("button", { name: /Show every analysis/i }));
+      await userEvent.click(
+        screen.getByRole("button", { name: /Show every analysis/i }),
+      );
       expect(await screen.findByText("an-1")).toBeTruthy();
     });
   });
 
   it("vazio REAL: mostra estado vazio (não após falha)", async () => {
-    server.use(http.get(`${MSW_BASE}/v1/analyses`, () => HttpResponse.json(page([]))));
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses`, () => HttpResponse.json(page([]))),
+    );
     renderList();
     expect(await screen.findByText(/No analyses yet/i)).toBeTruthy();
   });
@@ -206,7 +284,9 @@ describe("AnalysesListPage — estados distintos", () => {
     server.use(
       http.get(`${MSW_BASE}/v1/analyses`, () => {
         n += 1;
-        return n === 1 ? problem("temporarily_unavailable", 503) : HttpResponse.json(page([item("an-ok")]));
+        return n === 1
+          ? problem("temporarily_unavailable", 503)
+          : HttpResponse.json(page([item("an-ok")]));
       }),
     );
     renderList();
@@ -217,7 +297,11 @@ describe("AnalysesListPage — estados distintos", () => {
   });
 
   it("sessão expirada (401): mensagem própria, SEM botão de retry", async () => {
-    server.use(http.get(`${MSW_BASE}/v1/analyses`, () => problem("authentication_required", 401)));
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses`, () =>
+        problem("authentication_required", 401),
+      ),
+    );
     renderList();
     const alerta = await screen.findByRole("alert");
     expect(alerta.textContent).toMatch(/session is no longer valid/i);
@@ -232,7 +316,8 @@ describe("AnalysesListPage — paginação por cursor opaco", () => {
       http.get(`${MSW_BASE}/v1/analyses`, ({ request }) => {
         const cur = new URL(request.url).searchParams.get("cursor");
         cursors.push(cur);
-        if (cur === "cur-1") return HttpResponse.json(page([item("an-2")], null));
+        if (cur === "cur-1")
+          return HttpResponse.json(page([item("an-2")], null));
         return HttpResponse.json(page([item("an-1")], "cur-1"));
       }),
     );
@@ -259,7 +344,8 @@ describe("AnalysesListPage — paginação por cursor opaco", () => {
         const ws = u.searchParams.get("workspace_id");
         const cursor = u.searchParams.get("cursor");
         reqs.push({ ws, cursor });
-        if (ws === "ws-1" && cursor === null) return HttpResponse.json(page([item("a1")], "cur-x"));
+        if (ws === "ws-1" && cursor === null)
+          return HttpResponse.json(page([item("a1")], "cur-x"));
         if (ws === "ws-1") return HttpResponse.json(page([item("a2")], null));
         return HttpResponse.json(page([item("b1")], null)); // ws-2
       }),
@@ -273,7 +359,11 @@ describe("AnalysesListPage — paginação por cursor opaco", () => {
     auth.ws = { id: "ws-2" };
     rerender(
       <LanguageProvider>
-        <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <QueryClientProvider
+          client={
+            new QueryClient({ defaultOptions: { queries: { retry: false } } })
+          }
+        >
           <CanonicalClientProvider client={client}>
             <MemoryRouter>
               <AnalysesListPage />
@@ -291,23 +381,37 @@ describe("AnalysesListPage — paginação por cursor opaco", () => {
 
 describe("AnalysesListPage — acessibilidade (axe)", () => {
   async function violacoes(container: HTMLElement) {
-    const r = await axe.run(container, { rules: { "color-contrast": { enabled: false } } });
+    const r = await axe.run(container, {
+      rules: { "color-contrast": { enabled: false } },
+    });
     return r.violations;
   }
   it("dados: hierarquia/lista/links sem violações", async () => {
-    server.use(http.get(`${MSW_BASE}/v1/analyses`, () => HttpResponse.json(page([item("an-1"), item("an-2", "running", false)], "cur-2"))));
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses`, () =>
+        HttpResponse.json(
+          page([item("an-1"), item("an-2", "running", false)], "cur-2"),
+        ),
+      ),
+    );
     const { container } = renderList();
     await screen.findByText("an-1");
     expect(await violacoes(container)).toEqual([]);
   });
   it("vazio: sem violações", async () => {
-    server.use(http.get(`${MSW_BASE}/v1/analyses`, () => HttpResponse.json(page([]))));
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses`, () => HttpResponse.json(page([]))),
+    );
     const { container } = renderList();
     await screen.findByText(/No analyses yet/i);
     expect(await violacoes(container)).toEqual([]);
   });
   it("erro: alert acessível sem violações", async () => {
-    server.use(http.get(`${MSW_BASE}/v1/analyses`, () => problem("temporarily_unavailable", 503)));
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses`, () =>
+        problem("temporarily_unavailable", 503),
+      ),
+    );
     const { container } = renderList();
     await screen.findByRole("alert");
     expect(await violacoes(container)).toEqual([]);
@@ -324,7 +428,7 @@ describe("AnalysesListPage — acessibilidade (axe)", () => {
 // a lista simplesmente descartava o campo, então nenhuma asserção podia falhar.
 //
 // Estes casos existem para que ela passe a ter dentes. O primeiro prova que o número medido
-// chega à tela; o segundo, que a ausência recebe FORMA (a hachura) e não um zero.
+// chega à tela; o segundo, que a ausência é omitida em vez de virar zero ou ruído visual.
 
 describe("AnalysesListPage · o léxico de valor na linha", () => {
   const comConversas = (id: string, observadas: number | null) => ({
@@ -352,7 +456,7 @@ describe("AnalysesListPage · o léxico de valor na linha", () => {
     });
   });
 
-  it("ausência recebe HACHURA, e a tela não inventa um zero", async () => {
+  it("ausência omite a medida ruidosa, e a tela não inventa zero nem 'não publicado'", async () => {
     server.use(
       http.get(`${MSW_BASE}/v1/analyses`, () =>
         HttpResponse.json(page([comConversas("an-ausente", null) as never])),
@@ -362,15 +466,14 @@ describe("AnalysesListPage · o léxico de valor na linha", () => {
 
     await screen.findByText(/an-ausente/);
 
-    // A forma: o trilho da medida ausente carrega a classe da hachura, que é o segundo canal —
-    // o que distingue "não veio" de "veio e é zero" para quem não lê a cor.
-    await waitFor(() => {
-      expect(container.querySelectorAll(".medida-ausente").length).toBeGreaterThan(0);
-    });
+    expect(container.querySelector(".medida-ausente")).toBeNull();
+    expect(screen.queryByText(/not published/i)).toBeNull();
 
     // E o antifato: nenhum `0` aparece como se fosse a contagem observada. Sem este caso, um
     // `?? 0` acidental no futuro passaria — a hachura continuaria lá, desenhada sobre um zero.
-    const numeros = Array.from(container.querySelectorAll(".tabular")).map((n) => n.textContent?.trim());
+    const numeros = Array.from(container.querySelectorAll(".tabular")).map(
+      (n) => n.textContent?.trim(),
+    );
     expect(numeros).not.toContain("0");
   });
 });

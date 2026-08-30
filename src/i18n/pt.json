@@ -156,6 +156,8 @@
       "partial": "Review parcial — consulte as limitações",
       "verified": "Afirmações rastreáveis às fontes oficiais",
       "whatMatters": "O que mais importa",
+      "strengths": "O que está funcionando",
+      "criticalFindings": "Onde a operação está falhando",
       "crossSignals": "Análise cruzada de sinais",
       "claims": "Fato, interpretação e ação",
       "contradictions": "Contradições",
@@ -170,6 +172,8 @@
       "evidenceCount": "Evidências",
       "confidence": "confiança",
       "showEvidence": "Ver evidências e origem",
+      "languageMismatch": "Este Review foi gerado em outro idioma.",
+      "generateInLanguage": "Gerar em português",
       "claim": {
         "fact": "Fato",
         "interpretation": "Interpretação",
@@ -197,7 +201,7 @@
     },
     "analyticsView": {
       "title": "Medidas",
-    "catalog": {
+      "catalog": {
         "title": "Catálogo de medidas",
         "subtitle": "O Analytics separa o que mede volume, eficiência operacional e qualidade detectada. Bases personalizadas permanecem identificadas como personalizadas.",
         "groups": {
@@ -657,7 +661,7 @@
     },
     "list": {
       "title": "Suas análises",
-      "subtitle": "Análises deste workspace.",
+      "subtitle": "Mais recentes primeiro. Reconheça cada rodada por nome, horário, volume e estado.",
       "loading": "Carregando análises…",
       "empty": "Nenhuma análise ainda. Inicie uma para vê-la aqui.",
       "errorRecoverable": "Não foi possível carregar suas análises agora. Tente novamente.",
@@ -682,7 +686,9 @@
       "instanceFilter": "Instância",
       "allInstances": "Todas",
       "emptyInstance": "Nenhuma análise nesta instância ainda.",
-      "showAll": "Ver todas as análises"
+      "showAll": "Ver todas as análises",
+      "latest": "Mais recente",
+      "untitled": "Análise de {{date}}"
     },
     "palette": {
       "count": "{{n}} resultados",
@@ -815,16 +821,46 @@
         "incompatible": "Incompatível"
       },
       "families": {
-        "volume": { "title": "Volume", "question": "Quanto material foi analisado?" },
-        "structure": { "title": "Estrutura", "question": "Como as interações estão estruturadas?" },
-        "outcomes": { "title": "Desfechos", "question": "Como as interações terminaram?" },
-        "containment": { "title": "Contenção", "question": "O atendimento foi resolvido sem transferência?" },
-        "intent_coverage": { "title": "Cobertura de intenções", "question": "Quanto da demanda tem intenção reconhecida?" },
-        "response_quality": { "title": "Qualidade das respostas", "question": "As respostas foram úteis e claras?" },
-        "safety_privacy": { "title": "Segurança e privacidade", "question": "Há sinais de risco ou exposição indevida?" },
-        "groundedness": { "title": "Fundamentação", "question": "As respostas se apoiam em informação verificável?" },
-        "operations": { "title": "Operação", "question": "Onde o fluxo operacional exige atenção?" },
-        "cost_resources": { "title": "Custo e recursos", "question": "Quais recursos foram consumidos?" }
+        "volume": {
+          "title": "Volume",
+          "question": "Quanto material foi analisado?"
+        },
+        "structure": {
+          "title": "Estrutura",
+          "question": "Como as interações estão estruturadas?"
+        },
+        "outcomes": {
+          "title": "Desfechos",
+          "question": "Como as interações terminaram?"
+        },
+        "containment": {
+          "title": "Contenção",
+          "question": "O atendimento foi resolvido sem transferência?"
+        },
+        "intent_coverage": {
+          "title": "Cobertura de intenções",
+          "question": "Quanto da demanda tem intenção reconhecida?"
+        },
+        "response_quality": {
+          "title": "Qualidade das respostas",
+          "question": "As respostas foram úteis e claras?"
+        },
+        "safety_privacy": {
+          "title": "Segurança e privacidade",
+          "question": "Há sinais de risco ou exposição indevida?"
+        },
+        "groundedness": {
+          "title": "Fundamentação",
+          "question": "As respostas se apoiam em informação verificável?"
+        },
+        "operations": {
+          "title": "Operação",
+          "question": "Onde o fluxo operacional exige atenção?"
+        },
+        "cost_resources": {
+          "title": "Custo e recursos",
+          "question": "Quais recursos foram consumidos?"
+        }
       }
     },
     "playground": {
@@ -1068,11 +1104,12 @@
       "compareBrokenShort": "série diferente",
       "currentViews": {
         "eyebrow": "Leitura recomendada",
-        "title": "Comece pelo diagnóstico; aprofunde nas medidas",
-        "intro": "Este resumo histórico continua disponível, mas as visões atuais explicam o que aconteceu e mostram as evidências sem misturar conclusão com cálculo.",
+        "title": "Leia o resultado em três camadas",
+        "intro": "O Diagnóstico explica o que aconteceu, Medidas expõe os números e o Review interpreta o que eles significam nesta operação.",
         "recommended": "Comece aqui",
         "argosDescription": "Entenda o estado da análise, o que merece ação e por que cada conclusão foi apresentada.",
         "analyticsDescription": "Explore contagens, distribuições, cobertura e a procedência dos números publicados.",
+        "reviewDescription": "Conecte Diagnóstico e Medidas ao contexto, aos acertos, às falhas e às prioridades da operação.",
         "open": "Abrir visão"
       }
     },
