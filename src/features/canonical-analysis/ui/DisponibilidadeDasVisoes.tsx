@@ -45,7 +45,7 @@ export function DisponibilidadeDasVisoes({
         </p>
       </div>
 
-      <ul className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+      <ul className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-3">
         {visoes.map((visao) => {
           const estado = estados[visao.caminho];
           const Icone = ICONE[estado];

@@ -111,6 +111,72 @@
     "title": "Reference analysis"
   },
   "canonicalAnalysis": {
+    "context": {
+      "eyebrow": "Analysis context",
+      "title": "Tell Sentinela what this analysis is about",
+      "help": "Describe the business, the AI goal, critical journeys, risks, and what success means. This helps interpret the result, but never changes any ARGOS metric.",
+      "label": "Analysis briefing",
+      "placeholder": "E.g. This chatbot supports card customers. We want fewer human handoffs without increasing complaints. Disputes are a critical journey...",
+      "save": "Save context",
+      "saving": "Saving…",
+      "suggest": "Suggest important points",
+      "suggesting": "Investigating the text…",
+      "privacy": "Text passes through the Privacy Gate before the local model.",
+      "unavailable": "Context is temporarily unavailable. You can still analyze the dataset normally.",
+      "suggestionsTitle": "Suggestions — you decide what is included",
+      "accept": "Accept",
+      "accepted": "Accepted",
+      "ignore": "Ignore",
+      "category": {
+        "objective": "Primary objective",
+        "critical_journey": "Critical journey",
+        "expected_behavior": "Expected behavior",
+        "risk": "Risk",
+        "success_indicator": "Success indicator",
+        "operational_constraint": "Operational constraint"
+      }
+    },
+    "review": {
+      "title": "Sentinela Review",
+      "loading": "Opening the investigation",
+      "notRequestedTitle": "The contextual interpretation has not been generated yet",
+      "notRequestedBody": "ARGOS has already measured this analysis. Review can now investigate relationships between signals using only official metrics and available context.",
+      "generate": "Generate Sentinela Review",
+      "unavailableTitle": "Review temporarily unavailable",
+      "unavailableBody": "Metrics, assessment, and measures remain available. No part of the analysis depends on this service.",
+      "queuedTitle": "Review queued",
+      "queuedBody": "The official analysis was located and is waiting for contextual investigation.",
+      "investigatingTitle": "Investigating evidence",
+      "investigatingBody": "Sentinela is connecting signals, looking for contradictions, and checking what the data allows it to conclude.",
+      "failedTitle": "The investigation was not completed",
+      "failedBody": "The scientific result remains intact. You can retry only the Review.",
+      "retry": "Retry Review",
+      "executiveVerdict": "Executive verdict",
+      "noVerdict": "There is not enough evidence for an executive verdict.",
+      "partial": "Partial Review — see limitations",
+      "verified": "Claims traceable to official sources",
+      "whatMatters": "What matters most",
+      "crossSignals": "Cross-signal analysis",
+      "claims": "Fact, interpretation, and action",
+      "contradictions": "Contradictions",
+      "contradictionsHelp": "Signals that appear to disagree and require a joint reading.",
+      "businessImpact": "Business impact",
+      "recommendations": "Recommendations",
+      "blindSpots": "What Sentinela cannot conclude",
+      "blindSpotsHelp": "Missing coverage is never turned into certainty.",
+      "noBlindSpots": "No additional limitation was identified in the available sources.",
+      "traceability": "Traceability",
+      "version": "Review version",
+      "evidenceCount": "Linked evidence",
+      "confidence": "confidence",
+      "showEvidence": "View evidence and origin",
+      "claim": {
+        "fact": "Fact",
+        "interpretation": "Interpretation",
+        "recommendation": "Recommendation",
+        "limitation": "Limitation"
+      }
+    },
     "action": {
       "viewResult": "View result",
       "checkAgain": "Check again",
@@ -662,9 +728,15 @@
         "preparing": "Measures appear as soon as their calculation is published.",
         "unavailable": "Measures were not published for this run."
       },
+      "review": {
+        "available": "Review can investigate the result and its context.",
+        "preparing": "Review becomes available after the official result is assembled.",
+        "unavailable": "Review cannot be generated without this run's result."
+      },
       "open": {
         "argos": "Open assessment",
-        "analytics": "Open measures"
+        "analytics": "Open measures",
+        "review": "Open Sentinela Review"
       },
       "automatic": "This status updates automatically."
     },
@@ -1009,7 +1081,8 @@
       "viewsNavLabel": "Views of this analysis",
       "view": {
         "argos": "Assessment",
-        "analytics": "Measures"
+        "analytics": "Measures",
+        "review": "Sentinela Review"
       }
     },
     "state": {

@@ -25,6 +25,8 @@ import {
 import { useIdempotencyIntent } from "../data/intent";
 import { useCanonicalScope } from "./scope";
 import { UploadStep } from "./UploadStep";
+import { AnalysisContextPanel } from "./AnalysisContextPanel";
+import { useSealAnalysisContext } from "../data/review";
 import { MappingStep } from "./MappingStep";
 import { PainelDeEixos } from "./PainelDeEixos";
 import { EtapasDaAnalise } from "./EtapasDaAnalise";
@@ -81,6 +83,7 @@ export function AnalysisPage() {
   const analytics = useAnalysisAnalytics(scope, analysisId, analyticsPronto);
   const submit = useSubmitAnalysis();
   const retry = useRetryAnalysis();
+  const sealContext = useSealAnalysisContext(scope, analysisId);
   // Idempotency-Key por INTENÇÃO também no submit/reprocess: reusada em falha transitória,
   // reset no sucesso — o backend nunca vê a mesma intenção como submits distintos (Codex E2 R1).
   const submitIntent = useIdempotencyIntent();
@@ -147,6 +150,7 @@ export function AnalysisPage() {
         analyticsPronto || resultadoCompleto
           ? "available"
           : indisponivelOuPreparando,
+      review: view.result_available ? "available" : indisponivelOuPreparando,
     } as const;
   }
 
@@ -222,10 +226,13 @@ export function AnalysisPage() {
     ) {
       return (
         <div className="space-y-4">
+          {view.status === "preparing" ? <AnalysisContextPanel analysisId={analysisId} scope={scope} /> : null}
           <UploadStep
             analysisId={analysisId}
             scope={scope}
-            onUploaded={revalidar}
+            onUploaded={() => {
+              sealContext.mutate(undefined, { onSettled: revalidar });
+            }}
             onProgressChange={setUploadProgress}
           />
           <EtapasDaAnalise

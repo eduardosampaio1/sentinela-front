@@ -13,7 +13,7 @@ function montar() {
       <MemoryRouter>
         <DisponibilidadeDasVisoes
           analysisId="an-123"
-          estados={{ argos: "preparing", analytics: "available" }}
+          estados={{ argos: "preparing", analytics: "available", review: "preparing" }}
           visoes={VISOES_DA_ANALISE}
         />
       </MemoryRouter>

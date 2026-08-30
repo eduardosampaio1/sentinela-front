@@ -27,9 +27,11 @@ export function StateBanner({ view }: { view: Pick<AnalysisStatusView, "status" 
         {s.indeterminate && <Loader2 className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" />}
         <div className="min-w-0">
           <h2 className={`text-lg font-semibold ${s.isError ? "text-destructive" : "text-foreground"}`}>
-            {t(s.titleKey)}
+            {t(`canonicalAnalysis.state.${view.status}.title`)}
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t(s.messageKey)}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t(`canonicalAnalysis.state.${view.status}.message`)}
+          </p>
         </div>
       </div>
     </div>

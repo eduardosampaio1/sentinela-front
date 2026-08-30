@@ -134,6 +134,9 @@ const CanonicalAnalyticsView = lazy(() =>
 const CanonicalResultPage = lazy(() =>
   import("@/features/canonical-analysis/ui/ResultPage").then((m) => ({ default: m.ResultPage }))
 );
+const CanonicalReviewPage = lazy(() =>
+  import("@/features/canonical-analysis/ui/review/ReviewPage").then((m) => ({ default: m.ReviewPage }))
+);
 
 // AQUI FICAVAM OS 3 PAINÉIS LEGADOS COM ROTA PRÓPRIA (diagnostics/guardrails/optimization).
 //
@@ -352,6 +355,7 @@ const routes: RouteObject[] = [
           // historico do navegador — que a aba perderia.
           { path: "/analyses/:analysisId/argos", element: <PageSuspense><CanonicalArgosView /></PageSuspense> },
           { path: "/analyses/:analysisId/analytics", element: <PageSuspense><CanonicalAnalyticsView /></PageSuspense> },
+          { path: "/analyses/:analysisId/review", element: <PageSuspense><CanonicalReviewPage /></PageSuspense> },
           // LEGACY COMPATIBILITY. Nasceu quando havia UM documento de resultado com o
           // analytics embutido; o `analysis-result-v3` desfez a fusao e a experiencia passou
           // a ter duas visoes. Esta rota continua funcionando para todo link ja salvo e NAO

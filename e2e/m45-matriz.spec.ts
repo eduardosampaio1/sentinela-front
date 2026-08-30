@@ -153,6 +153,25 @@ async function montarProduto(page: Page, idioma: "pt" | "en" = "en") {
       }),
     ),
   );
+  await page.route("**/v1/analyses/*/review**", (r) =>
+    r.fulfill(
+      json({
+        analysis_id: ANALISE,
+        review_id: "review-1",
+        version: 1,
+        status: "completed",
+        executive_summary: "The operation is stable, but one critical journey requires attention.",
+        what_matters_most: ["The main risk is concentrated in the dispute journey."],
+        investigations: [],
+        contradictions: ["Responses are consistent, but consistently misaligned."],
+        business_impact: ["Avoidable transfers may increase service cost."],
+        recommendations: ["Review the dispute journey first."],
+        blind_spots: ["Outcome coverage is insufficient to infer conversion impact."],
+        claims: [],
+        evidence: [],
+      }),
+    ),
+  );
 
   // O progresso entra na montagem BASE desde a M45.2. Sem ele, os estados vivos da jornada
   // renderizam o aviso de leitura indisponível — que é o comportamento certo depois da correção
@@ -593,6 +612,9 @@ const JOURNEYS: readonly Journey[] = [
   { id: "J35", nome: "comparação (v2 → recusa nomeada)",
     rota: `/analyses/compare/${ANALISE}/${ANALISE_B}`,
     terminal: /One side has no ARGOS document|Um dos lados não tem documento ARGOS/ },
+  { id: "J36", nome: "Sentinela Review com interpretação consolidada",
+    rota: `/analyses/${ANALISE}/review`,
+    terminal: /The operation is stable|A operação é estável/ },
 ] as const;
 
 /**

@@ -845,3 +845,119 @@ export interface MappingConfirmedView {
   analysis_id: string;
   ingestion_state: string | null;
 }
+
+// Analysis Context e Sentinela Review são projeções públicas opcionais. Elas interpretam as
+// medições oficiais, sem expor a identidade operacional do processamento assíncrono.
+export type ContextItemState = "suggested" | "accepted" | "edited" | "rejected";
+export type ContextCategory =
+  | "objective"
+  | "critical_journey"
+  | "expected_behavior"
+  | "risk"
+  | "success_indicator"
+  | "operational_constraint";
+
+export interface ContextItemView {
+  item_id: string;
+  category: ContextCategory;
+  text: string;
+  state: ContextItemState;
+  confidence?: number | null;
+  source_span?: { start: number; end: number } | null;
+}
+
+export interface ContextStructureView { items: ContextItemView[] }
+export interface AnalysisContextView {
+  context_contract_version?: string;
+  context_id?: string;
+  analysis_id: string;
+  version?: number;
+  state: "empty" | "unavailable" | "draft" | "sealed";
+  original_text?: string;
+  structured?: ContextStructureView;
+  privacy_clearance?: "passed" | "not_required" | "unavailable";
+  privacy_policy_version?: string | null;
+  context_digest?: string;
+  created_at?: string;
+  updated_at?: string;
+  sealed_at?: string | null;
+}
+
+export interface ContextDraftInput {
+  original_text: string;
+  expected_version?: number;
+  accepted_structure: ContextStructureView;
+}
+
+export interface ContextSuggestionView {
+  context_contract_version: string;
+  suggestions: ContextStructureView;
+  provider: string;
+  model: string;
+  prompt_version: string;
+}
+
+export type ReviewStatus =
+  | "not_requested"
+  | "unavailable"
+  | "queued"
+  | "investigating"
+  | "partial"
+  | "completed"
+  | "failed";
+
+export interface ReviewEvidenceView {
+  evidence_id: string;
+  source: "argos" | "analytics" | "context";
+  pointer: string;
+  label: string;
+  excerpt?: string | null;
+  digest: string;
+}
+
+export interface ReviewClaimView {
+  claim_id: string;
+  kind: "fact" | "interpretation" | "recommendation" | "limitation";
+  statement: string;
+  confidence: number;
+  evidence_refs: string[];
+  metric_refs: string[];
+  intent_refs: string[];
+  issue_refs: string[];
+  context_refs: string[];
+  verification_status: "verified" | "rejected";
+}
+
+export interface ReviewInvestigationView {
+  investigation_id: string;
+  title: string;
+  summary: string;
+  signal_refs: string[];
+  claim_refs: string[];
+}
+
+export interface ReviewArtifactView {
+  review_contract_version?: string;
+  review_id?: string;
+  analysis_id: string;
+  version?: number;
+  status: ReviewStatus;
+  executive_summary?: string | null;
+  what_matters_most?: string[];
+  investigations?: ReviewInvestigationView[];
+  critical_findings?: string[];
+  contradictions?: string[];
+  business_impact?: string[];
+  recommendations?: string[];
+  blind_spots?: string[];
+  claims?: ReviewClaimView[];
+  evidence?: ReviewEvidenceView[];
+  partial_reasons?: string[];
+  created_at?: string;
+  completed_at?: string | null;
+}
+
+export interface ReviewRequestView {
+  review_request_id: string;
+  status: "queued" | "already_queued";
+}

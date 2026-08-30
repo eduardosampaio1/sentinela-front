@@ -111,6 +111,72 @@
     "title": "Análise de referência"
   },
   "canonicalAnalysis": {
+    "context": {
+      "eyebrow": "Contexto da análise",
+      "title": "Conte ao Sentinela sobre esta análise",
+      "help": "Explique o negócio, o objetivo da IA, jornadas críticas, riscos e o que sucesso significa. Isso ajuda a interpretar o resultado, mas nunca altera nenhuma métrica do ARGOS.",
+      "label": "Briefing da análise",
+      "placeholder": "Ex.: Este chatbot atende clientes de cartão. Queremos reduzir transferências para humano sem aumentar reclamações. Contestação é uma jornada crítica...",
+      "save": "Salvar contexto",
+      "saving": "Salvando…",
+      "suggest": "Sugerir pontos importantes",
+      "suggesting": "Investigando o texto…",
+      "privacy": "O texto passa pelo Privacy Gate antes do modelo local.",
+      "unavailable": "O contexto está temporariamente indisponível. Você ainda pode analisar a base normalmente.",
+      "suggestionsTitle": "Sugestões — você decide o que entra",
+      "accept": "Aceitar",
+      "accepted": "Aceito",
+      "ignore": "Ignorar",
+      "category": {
+        "objective": "Objetivo principal",
+        "critical_journey": "Jornada crítica",
+        "expected_behavior": "Comportamento esperado",
+        "risk": "Risco",
+        "success_indicator": "Indicador de sucesso",
+        "operational_constraint": "Restrição operacional"
+      }
+    },
+    "review": {
+      "title": "Sentinela Review",
+      "loading": "Abrindo a investigação",
+      "notRequestedTitle": "A interpretação contextual ainda não foi gerada",
+      "notRequestedBody": "O ARGOS já mediu esta análise. O Review pode agora investigar relações entre os sinais, usando apenas métricas oficiais e o contexto disponível.",
+      "generate": "Gerar Sentinela Review",
+      "unavailableTitle": "Review temporariamente indisponível",
+      "unavailableBody": "As métricas, o diagnóstico e as medidas continuam disponíveis. Nenhuma parte da análise depende deste serviço.",
+      "queuedTitle": "Review na fila",
+      "queuedBody": "A análise oficial foi localizada e aguarda a investigação contextual.",
+      "investigatingTitle": "Investigando evidências",
+      "investigatingBody": "O Sentinela está cruzando sinais, procurando contradições e verificando o que os dados permitem concluir.",
+      "failedTitle": "A investigação não foi concluída",
+      "failedBody": "As métricas permanecem íntegras. Tente gerar só o Review.",
+      "retry": "Tentar de novo",
+      "executiveVerdict": "Veredito executivo",
+      "noVerdict": "Não há evidência suficiente para um veredito executivo.",
+      "partial": "Review parcial — consulte as limitações",
+      "verified": "Afirmações rastreáveis às fontes oficiais",
+      "whatMatters": "O que mais importa",
+      "crossSignals": "Análise cruzada de sinais",
+      "claims": "Fato, interpretação e ação",
+      "contradictions": "Contradições",
+      "contradictionsHelp": "Sinais que parecem discordar e exigem leitura conjunta.",
+      "businessImpact": "Impacto no negócio",
+      "recommendations": "Recomendações",
+      "blindSpots": "O que o Sentinela não pode concluir",
+      "blindSpotsHelp": "Ausência de cobertura não é transformada em certeza.",
+      "noBlindSpots": "Nenhuma limitação adicional foi identificada nas fontes disponíveis.",
+      "traceability": "Rastreabilidade",
+      "version": "Versão do Review",
+      "evidenceCount": "Evidências",
+      "confidence": "confiança",
+      "showEvidence": "Ver evidências e origem",
+      "claim": {
+        "fact": "Fato",
+        "interpretation": "Interpretação",
+        "recommendation": "Recomendação",
+        "limitation": "Limitação"
+      }
+    },
     "action": {
       "viewResult": "Ver resultado",
       "checkAgain": "Verificar novamente",
@@ -662,9 +728,15 @@
         "preparing": "As medidas aparecem assim que o cálculo é publicado.",
         "unavailable": "As medidas não foram publicadas nesta rodada."
       },
+      "review": {
+        "available": "O Review pode investigar o resultado e seu contexto.",
+        "preparing": "O Review fica disponível depois que o resultado oficial é montado.",
+        "unavailable": "O Review não pode ser gerado sem o resultado desta rodada."
+      },
       "open": {
         "argos": "Abrir diagnóstico",
-        "analytics": "Abrir medidas"
+        "analytics": "Abrir medidas",
+        "review": "Abrir Sentinela Review"
       },
       "automatic": "Este estado é atualizado automaticamente."
     },
@@ -1009,7 +1081,8 @@
       "viewsNavLabel": "Visões desta análise",
       "view": {
         "argos": "Diagnóstico",
-        "analytics": "Medidas"
+        "analytics": "Medidas",
+        "review": "Sentinela Review"
       }
     },
     "state": {

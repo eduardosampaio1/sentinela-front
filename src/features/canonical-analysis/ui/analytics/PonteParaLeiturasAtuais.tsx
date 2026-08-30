@@ -53,6 +53,9 @@ export function PonteParaLeiturasAtuais({ analysisId }: PonteParaLeiturasAtuaisP
 
       <ul className="mt-4 grid gap-3 md:grid-cols-2">
         {VISOES_DA_ANALISE.map((visao) => {
+          // Esta ponte vive somente na página histórica de resultado. O Review é uma capacidade
+          // nova e não reescreve a promessa desses links já salvos.
+          if (visao.caminho === "review") return null;
           const item = conteudo[visao.caminho];
           const Icon = item.icon;
           const titulo =

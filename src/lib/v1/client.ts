@@ -34,6 +34,11 @@ import type {
   SubscriptionListPage,
   SubscriptionSecretView,
   RenameAnalysisView,
+  AnalysisContextView,
+  ContextDraftInput,
+  ContextSuggestionView,
+  ReviewArtifactView,
+  ReviewRequestView,
 } from "./contract/public-v1.types";
 import { normalizeProblem, PROBLEM_MEDIA_TYPE, ProblemError, TransportError } from "./problem";
 
@@ -101,6 +106,12 @@ export interface V1Client {
    * `partial` NÃO vira `failed`: as três situações são distintas e a tela precisa distingui-las.
    */
   getAnalytics(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisAnalyticsView>;
+  getAnalysisContext(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisContextView>;
+  putAnalysisContext(analysisId: string, scope: CanonicalScope, input: ContextDraftInput, opts?: RequestOptions): Promise<AnalysisContextView>;
+  suggestAnalysisContext(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<ContextSuggestionView>;
+  sealAnalysisContext(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<AnalysisContextView>;
+  getReview(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<ReviewArtifactView>;
+  requestReview(analysisId: string, scope: CanonicalScope, opts?: RequestOptions): Promise<ReviewRequestView>;
   queryAnalytics(analysisId: string, scope: CanonicalScope, query: AnalyticsQueryInput, opts?: RequestOptions): Promise<AnalyticsQueryResultView>;
   /**
    * Capability de download do pacote de export. **Uma chamada por intenção**, nunca especulativa:
@@ -572,6 +583,18 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       ),
     getAnalytics: (analysisId, scope, opts) =>
       pedir<AnalysisAnalyticsView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics`, { workspace_id: scope.workspaceId }, opts),
+    getAnalysisContext: (analysisId, scope, opts) =>
+      pedir<AnalysisContextView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/context`, { workspace_id: scope.workspaceId }, opts),
+    putAnalysisContext: (analysisId, scope, input, opts) =>
+      pedir<AnalysisContextView>("PUT", `/v1/analyses/${encodeAnalysisId(analysisId)}/context`, { workspace_id: scope.workspaceId }, opts, { body: JSON.stringify(input), contentType: "application/json" }),
+    suggestAnalysisContext: (analysisId, scope, opts) =>
+      pedir<ContextSuggestionView>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/context/suggestions`, { workspace_id: scope.workspaceId }, opts),
+    sealAnalysisContext: (analysisId, scope, opts) =>
+      pedir<AnalysisContextView>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/context/seal`, { workspace_id: scope.workspaceId }, opts),
+    getReview: (analysisId, scope, opts) =>
+      pedir<ReviewArtifactView>("GET", `/v1/analyses/${encodeAnalysisId(analysisId)}/review`, { workspace_id: scope.workspaceId }, opts),
+    requestReview: (analysisId, scope, opts) =>
+      pedir<ReviewRequestView>("POST", `/v1/analyses/${encodeAnalysisId(analysisId)}/review`, { workspace_id: scope.workspaceId }, opts),
     queryAnalytics: (analysisId, scope, query, opts) =>
       pedir<AnalyticsQueryResultView>(
         "POST",
