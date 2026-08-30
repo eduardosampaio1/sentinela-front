@@ -522,6 +522,12 @@ describe("M41 · 9b. a superfície canônica: dois idiomas, e nada além do esco
     }
   });
 
+  it("G15b · o console seguro abre sem desmontar a jornada do Sentinela", () => {
+    const codigo = soCodigo(PAGINA);
+    expect(codigo).toContain('target="_blank"');
+    expect(codigo).toContain('rel="noopener noreferrer"');
+  });
+
   it("G16 · D21 — nenhuma exclusão de conta", () => {
     const codigo = soCodigo(PAGINA).toLowerCase();
     for (const p2 of ["delete account", "deleteaccount", "excluir conta", "showdeleteconfirm"]) {

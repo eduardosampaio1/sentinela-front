@@ -229,7 +229,11 @@ export function SettingsPage() {
                   variant="ghost"
                   className="min-h-11 rounded-xl border border-border text-foreground"
                 >
-                  <a href={urlDoProvedor} rel="noopener noreferrer">
+                  <a
+                    href={urlDoProvedor}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {t("account.signInAction")}
                   </a>
                 </Button>

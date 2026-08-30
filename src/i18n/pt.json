@@ -34,7 +34,7 @@
     "userIdentifier": "Identificador",
     "signInProvider": "Provedor de acesso",
     "signInAction": "Gerenciar acesso",
-    "signInBody": "Ficam com seu provedor de identidade, não aqui.",
+    "signInBody": "Senha e acesso ficam protegidos no console seguro do Sentinela, aberto em uma nova aba.",
     "signInTitle": "Senha e acesso",
     "signOut": "Sair",
     "subtitle": "Seus dados, o idioma em que o produto fala com você e este espaço.",

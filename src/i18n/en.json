@@ -34,7 +34,7 @@
     "userIdentifier": "User identifier",
     "signInProvider": "Sign-in provider",
     "signInAction": "Manage sign-in",
-    "signInBody": "Handled by your identity provider, not here.",
+    "signInBody": "Password and sign-in stay protected in Sentinela's secure console, opened in a new tab.",
     "signInTitle": "Password and sign-in",
     "signOut": "Sign out",
     "subtitle": "Your details, the language the product speaks to you in, and this workspace.",
