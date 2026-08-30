@@ -42,13 +42,13 @@ describe("catálogo público de medidas", () => {
     expect(screen.getByText("View technical contract")).toBeTruthy();
   });
 
-  it("salva o objetivo e filtra somente pelo grupo publicado", () => {
+  it("filtra o objetivo somente pelo grupo publicado, sem persistência paralela", () => {
     window.localStorage.setItem("sentinela:language", "pt");
     render(<LanguageProvider><CatalogoDeMedidas medidas={[BASE, { ...BASE, measure_id: "pii_detected", metric_group: "safety", presentation_group: "detected_quality" }]} /></LanguageProvider>);
 
     fireEvent.click(screen.getByRole("button", { name: "Risco" }));
     expect(screen.queryByText("declared_pairs")).toBeNull();
     expect(screen.getByText("pii_detected")).toBeTruthy();
-    expect(window.localStorage.getItem("sentinela:analytics:goal-view")).toBe("risk");
+    expect(window.localStorage.getItem("sentinela:analytics:goal-view")).toBeNull();
   });
 });

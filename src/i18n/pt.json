@@ -131,7 +131,7 @@
     },
     "analyticsView": {
       "title": "Medidas",
-      "catalog": {
+    "catalog": {
         "title": "Catálogo de medidas",
         "subtitle": "O Analytics separa o que mede volume, eficiência operacional e qualidade detectada. Bases personalizadas permanecem identificadas como personalizadas.",
         "groups": {
@@ -143,7 +143,7 @@
         "coverage": "Cobertura",
         "population": "População elegível",
         "technical": "Ver contrato técnico",
-        "savedViews": "Visão salva por objetivo",
+        "savedViews": "Filtrar por objetivo",
         "goals": {
           "all": "Tudo",
           "operation": "Operação",
@@ -719,6 +719,40 @@
           "attention": "O resultado precisa de uma decisão antes de aparecer.",
           "failed": "Não foi possível montar o resultado final."
         }
+      }
+    },
+    "universal": {
+      "title": "Visão universal de medidas",
+      "subtitle": "As mesmas dez perguntas aparecem em qualquer base. O estado vem do Analytics: ausência de medição não é convertida em zero.",
+      "legacyTitle": "Esta análise é anterior ao catálogo universal",
+      "legacyBody": "Os blocos detalhados disponíveis continuam abaixo. Reprocesse a análise para receber os estados das dez famílias sem refazer o upload.",
+      "catalogEntryMissing": "Contrato incompleto",
+      "catalogEntryMissingBody": "O catálogo recebido não declarou esta família.",
+      "noPublishedMetric": "Nenhuma métrica foi publicada para esta pergunta.",
+      "metricCountOne": "1 métrica publicada nesta análise.",
+      "metricCountMany": "{{count}} métricas publicadas nesta análise.",
+      "technical": "Ver métricas publicadas",
+      "availability": {
+        "available": "Disponível",
+        "partial": "Parcial",
+        "not_measured": "Não medido",
+        "not_materialized": "Não materializado",
+        "privacy_suppressed": "Retido por privacidade",
+        "unauthorized": "Não autorizado",
+        "unsupported": "Não suportado",
+        "incompatible": "Incompatível"
+      },
+      "families": {
+        "volume": { "title": "Volume", "question": "Quanto material foi analisado?" },
+        "structure": { "title": "Estrutura", "question": "Como as interações estão estruturadas?" },
+        "outcomes": { "title": "Desfechos", "question": "Como as interações terminaram?" },
+        "containment": { "title": "Contenção", "question": "O atendimento foi resolvido sem transferência?" },
+        "intent_coverage": { "title": "Cobertura de intenções", "question": "Quanto da demanda tem intenção reconhecida?" },
+        "response_quality": { "title": "Qualidade das respostas", "question": "As respostas foram úteis e claras?" },
+        "safety_privacy": { "title": "Segurança e privacidade", "question": "Há sinais de risco ou exposição indevida?" },
+        "groundedness": { "title": "Fundamentação", "question": "As respostas se apoiam em informação verificável?" },
+        "operations": { "title": "Operação", "question": "Onde o fluxo operacional exige atenção?" },
+        "cost_resources": { "title": "Custo e recursos", "question": "Quais recursos foram consumidos?" }
       }
     },
     "result": {

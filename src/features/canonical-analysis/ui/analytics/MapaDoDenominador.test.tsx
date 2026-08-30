@@ -26,6 +26,7 @@ function snapshot(overrides: Partial<SnapshotAnalitico> = {}): SnapshotAnalitico
     medidasNaoAutorizadas: 0,
     blocosIlegiveis: 0,
     ...overrides,
+    catalogoDeExploracao: overrides.catalogoDeExploracao ?? null,
   };
 }
 

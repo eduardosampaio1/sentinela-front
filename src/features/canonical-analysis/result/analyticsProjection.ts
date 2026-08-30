@@ -40,12 +40,24 @@ import type {
   SerieComFlag,
   SerieNumerica,
 } from "./analyticsCrossSeriesProjection";
+import {
+  lerCatalogoDeExploracao,
+  type CatalogoDeExploracao,
+} from "./analyticsExplorationProjection";
 export type {
   CruzamentoComFlag,
   CruzamentoNumerico,
   SerieComFlag,
   SerieNumerica,
 } from "./analyticsCrossSeriesProjection";
+export type {
+  CapacidadeDeDimensao,
+  CapacidadeDeMetrica,
+  CatalogoDeExploracao,
+  EstadoDeDisponibilidadeAnalitica,
+  EstadoDeFamilia,
+  FamiliaAnalitica,
+} from "./analyticsExplorationProjection";
 
 // ── medidas numéricas ────────────────────────────────────────────────────────────────────
 
@@ -224,6 +236,8 @@ export interface SnapshotAnalitico {
   /** O denominador verdadeiro. Todo o resto é contado sobre ele. */
   record_count: number;
   measure_definitions: DefinicaoDeMedida[];
+  /** Capacidades publicadas pelo Analytics. `null` somente em snapshots anteriores à v11. */
+  catalogoDeExploracao: CatalogoDeExploracao | null;
   numeric: ResumoNumerico[];
   distributions: ResumoDeDistribuicao[];
   dimensions: ResumoDeDistribuicao[];
@@ -750,6 +764,14 @@ export function lerSnapshot(bruto: unknown): SnapshotAnalitico | null {
   const registros = contagem(bruto.record_count);
   if (!versao || registros === null) return null;
 
+  const explorationCatalog = lerCatalogoDeExploracao(bruto.exploration_catalog);
+  const numeroDaVersao = /^analytics-snapshot-v(\d+)$/.exec(versao)?.[1];
+  if (
+    numeroDaVersao !== undefined &&
+    Number(numeroDaVersao) >= 11 &&
+    explorationCatalog === null
+  ) return null;
+
   const numeric = lista(bruto.numeric, lerNumerico);
   const measureDefinitions = lista(bruto.measure_definitions, lerDefinicaoDeMedida);
   const distributions = lista(bruto.distributions, lerDistribuicao);
@@ -778,6 +800,7 @@ export function lerSnapshot(bruto: unknown): SnapshotAnalitico | null {
     snapshot_contract_version: versao,
     record_count: registros,
     measure_definitions: measureDefinitions,
+    catalogoDeExploracao: explorationCatalog,
     numeric,
     distributions,
     dimensions,

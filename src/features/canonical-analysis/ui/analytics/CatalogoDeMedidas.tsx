@@ -6,7 +6,6 @@ import type { DefinicaoDeMedida } from "../../result/analyticsProjection";
 const GRUPOS = ["volume", "operational_efficiency", "detected_quality", "custom"] as const;
 const OBJETIVOS = ["all", "operation", "journey", "risk", "quality"] as const;
 type Objetivo = (typeof OBJETIVOS)[number];
-const CHAVE_DA_VISAO = "sentinela:analytics:goal-view";
 
 function pertenceAoObjetivo(m: DefinicaoDeMedida, objetivo: Objetivo) {
   if (objetivo === "all") return true;
@@ -18,10 +17,9 @@ function pertenceAoObjetivo(m: DefinicaoDeMedida, objetivo: Objetivo) {
 
 export function CatalogoDeMedidas({ medidas }: { readonly medidas: readonly DefinicaoDeMedida[] }) {
   const { t, language } = useLanguage();
-  const [objetivo, setObjetivo] = useState<Objetivo>(() => {
-    const salvo = window.localStorage.getItem(CHAVE_DA_VISAO);
-    return OBJETIVOS.includes(salvo as Objetivo) ? (salvo as Objetivo) : "all";
-  });
+  // É um filtro desta sessão, não uma "visão salva". Persistência auditável pertence ao
+  // Playground futuro; gravar no navegador faria a UI possuir uma preferência sem contrato.
+  const [objetivo, setObjetivo] = useState<Objetivo>("all");
   if (medidas.length === 0) return null;
   const percentual = new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US", {
     style: "percent",
@@ -43,7 +41,6 @@ export function CatalogoDeMedidas({ medidas }: { readonly medidas: readonly Defi
               className="rounded-full border border-border px-3 py-1.5 text-xs aria-pressed:bg-foreground aria-pressed:text-background"
               onClick={() => {
                 setObjetivo(item);
-                window.localStorage.setItem(CHAVE_DA_VISAO, item);
               }}
             >
               {t(`canonicalAnalysis.analyticsView.catalog.goals.${item}`)}

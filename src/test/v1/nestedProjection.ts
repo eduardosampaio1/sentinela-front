@@ -27,7 +27,7 @@ const RAIZ = resolve(__dirname, "../../..");
  */
 export const CONTRATO_ANALYTICS_PUBLICADO = process.env.SENTINELA_ANALYTICS_CONTRATO
   ? resolve(process.env.SENTINELA_ANALYTICS_CONTRATO)
-  : resolve(RAIZ, "../sentinela-analytics-service/docs/contracts/analytics-snapshot-v9.json");
+  : resolve(RAIZ, "../sentinela-analytics-service/docs/contracts/analytics-snapshot-v11.json");
 
 export function analyticsDisponivel(): boolean {
   return existsSync(CONTRATO_ANALYTICS_PUBLICADO);

@@ -177,6 +177,7 @@ export const PUBLICADO_E_NAO_LIDO: Readonly<Record<string, readonly string[]>> =
    * Restam só os deliberados.
    */
   SnapshotAnalitico: [
+    "exploration_catalog",
     "input_artifact_id",
     "plan_contract_version",
     "plan_digest",
@@ -194,6 +195,7 @@ export const PUBLICADO_E_NAO_LIDO: Readonly<Record<string, readonly string[]>> =
  * declarados para que o gate consiga separar derivação legítima de campo inventado.
  */
 export const DERIVADOS_DO_VIEW_MODEL: readonly string[] = [
+  "catalogoDeExploracao",
   "blocosIlegiveis",
   // M21 — `procedencia` AGRUPA campos que o produtor publica soltos (o quarteto do método e os
   // parâmetros de privacidade). Não é campo do fio nem invenção: é a mesma informação, reunida

@@ -28,15 +28,12 @@ import { useParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
-import { estatisticaConhecida } from "../../result/estatisticas";
 import { LoadingState } from "@/shared/states/LoadingState";
 import type { EstadoPublico } from "@/design/patterns/estados";
 import { useRevelacao } from "@/design/motion";
 import { Bar, Disclosure } from "@/design/primitives";
 import {
-  largurasDeConcentracao,
   largurasDeDistribuicao,
-  largurasDeSerie,
 } from "../../result/barrasDaProjecao";
 import { MapaDeProcedencia } from "./MapaDeProcedencia";
 import {
@@ -58,6 +55,9 @@ import { AnalyticsRetido } from "./Retido";
 import { Cruzamentos, SeriesDeMedida } from "./CruzamentosESeries";
 import { IndiceDeRegioes, type RegiaoIndexada } from "./IndiceDeRegioes";
 import { ResumoDaPublicacao } from "./ResumoDaPublicacao";
+import { VisaoUniversalDeMedidas } from "./VisaoUniversalDeMedidas";
+import { Concentracoes, Series } from "./BlocosDeSerieEConcentracao";
+import { Suprimido } from "./EstadoDeSupressao";
 import type { AnalysisIntake } from "@/lib/v1";
 
 function Secao({
@@ -450,16 +450,6 @@ function Estatisticas({
   );
 }
 
-/** "Houve supressão por privacidade" — conclusão do produtor, dita e não explicada. */
-function Suprimido() {
-  const { t } = useLanguage();
-  return (
-    <span className="selo-supr" data-suprimido="true">
-      {t("canonicalAnalysis.analyticsView.suppressed")}
-    </span>
-  );
-}
-
 export function Numericos({
   snapshot,
 }: {
@@ -607,193 +597,6 @@ function Distribuicoes({
   );
 }
 
-function Concentracoes({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
-  const { t, language } = useLanguage();
-  const locale = language === "pt" ? "pt-BR" : "en-US";
-  const numero = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
-  const percentual = new Intl.NumberFormat(locale, {
-    style: "percent",
-    maximumFractionDigits: 2,
-  });
-  const larguras = snapshot.concentrations.map(largurasDeConcentracao);
-  // A faixa é um INTERVALO, e o rótulo precisa dizer isso. Formatar é trabalho da tela — o
-  // módulo de largura não conhece locale de propósito.
-  const faixa = (inferior: number, superior: number) =>
-    `${inferior.toLocaleString(language === "pt" ? "pt-BR" : "en-US")}–${superior.toLocaleString(
-      language === "pt" ? "pt-BR" : "en-US",
-    )}`;
-  return (
-    <div>
-      {snapshot.concentrations.map((c, iBloco) => (
-        <div key={c.measure_id} className="bloco-med">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="text-sm">{c.measure_id}</span>
-            {c.suppression_applied || c.coarsening_applied ? (
-              <Suprimido />
-            ) : null}
-          </div>
-          <ul className="mt-1 space-y-0.5">
-            {c.statistics.map((s) => (
-              <li
-                key={s.statistic_id}
-                className="flex justify-between gap-3 text-xs"
-              >
-                {/* Decisão de owner (2026-08-15): o padrão do ARGOS, e não uma tradução geral.
-                    `statistic_id` é vocabulário ABERTO no contrato; traduzir tudo obrigaria a
-                    adivinhar nomes que o backend ainda pode criar. Quem o registro conhece ganha
-                    rótulo; quem não conhece continua aparecendo como o id. */}
-                <span>
-                  {estatisticaConhecida(s.statistic_id)
-                    ? t(
-                        `canonicalAnalysis.analyticsView.statistic.${s.statistic_id}`,
-                      )
-                    : s.statistic_id}
-                </span>
-                <span className="tabular-nums text-muted-foreground">
-                  {/* Três formas, impostas pela ORIGEM: exata, limitada por faixa, ou não
-                      publicada com motivo. Nenhuma é derivada da outra aqui. */}
-                  {s.value !== null ? (
-                    s.statistic_id.includes("share") ? (
-                      percentual.format(s.value)
-                    ) : (
-                      numero.format(s.value)
-                    )
-                  ) : s.lower_bound !== null && s.upper_bound !== null ? (
-                    `${numero.format(s.lower_bound)}–${numero.format(s.upper_bound)}`
-                  ) : (
-                    // M45.4 — ESTAVA INVERTIDO. O `reason_code` cru era impresso justamente
-                    // quando havia motivo a explicar, e a frase humana só aparecia quando não
-                    // havia motivo nenhum: a tela mostrava `below_min_group` e guardava
-                    // "não publicado" para o caso mudo.
-                    //
-                    // Agora a palavra vem sempre, e o código fica ao lado como detalhe
-                    // correlacionável. Traduzir o código não é opção: `reason_code` é `string`
-                    // aberta no contrato, e inventar rótulo para um código novo do backend é o
-                    // que `rotuloDe` do ARGOS existe para não fazer. Feio e honesto vence.
-                    <>
-                      {t("canonicalAnalysis.analyticsView.notPublished")}
-                      {s.reason_code ? (
-                        <span className="ml-2 font-mono opacity-70">
-                          {s.reason_code}
-                        </span>
-                      ) : null}
-                    </>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-          {/* AS FAIXAS ESTAVAM PUBLICADAS E INVISÍVEIS.
-              Esta visão mostrava só as duas estatísticas de Pareto e mandava as faixas direto
-              para o mapa — quem não abrisse o mapa nunca via a FORMA da concentração, que é a
-              pergunta que a seção existe para responder: onde os valores se acumulam.
-              A superfície congelada já as desenhava; a visão nova nasceu sem. */}
-          {c.bands.length > 0 ? (
-            <ul className="mt-2 space-y-1">
-              {c.bands.map((b, i) => (
-                <Bar
-                  key={`${b.lower_value}-${b.upper_value}`}
-                  rotulo={faixa(b.lower_value, b.upper_value)}
-                  valor={String(b.entity_count)}
-                  largura={larguras[iBloco][i]}
-                  rotuloSuprimido={t(
-                    "canonicalAnalysis.analyticsView.suppressed",
-                  )}
-                />
-              ))}
-            </ul>
-          ) : null}
-
-          {/* A concentração desdobra em FAIXAS de valor com contagem de entidades, e carrega três
-              recusas distintas — grosseirização, supressão e cardinalidade alta. Cada uma vira seu
-              próprio nó no mapa: agrupá-las num "suprimido" único apagaria por que o número não
-              veio, que é justamente o que alguém abre o mapa para descobrir. */}
-          <Disclosure
-            className="desdobra"
-            gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}
-          >
-            <MapaDeProcedencia
-              bloco={{ tipo: "concentracao", dado: c }}
-              denominador={snapshot.record_count}
-            />
-          </Disclosure>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Series({ snapshot }: { readonly snapshot: SnapshotAnalitico }) {
-  const { t, language } = useLanguage();
-  const locale = language === "pt" ? "pt-BR" : "en-US";
-  const formatarJanela = (valor: string) => {
-    const data = new Date(valor);
-    return Number.isNaN(data.getTime())
-      ? valor
-      : data.toLocaleDateString(locale, {
-          year: "numeric",
-          month: "short",
-          day: "2-digit",
-          timeZone: "UTC",
-        });
-  };
-  const larguras = snapshot.time_series.map(largurasDeSerie);
-  return (
-    <div>
-      {snapshot.time_series.map((s, iBloco) => (
-        <div key={s.dimension_id} className="bloco-med">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="text-sm">{s.dimension_id}</span>
-            <span className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{s.effective_granularity}</span>
-              <span>{s.timezone}</span>
-              {s.suppression_applied || s.temporal_series_suppressed ? (
-                <Suprimido />
-              ) : null}
-            </span>
-          </div>
-          {/* A série também publica método e versão, e pela mesma razão eles ficam na linha. */}
-          <p className="mt-0.5 font-mono text-[0.7rem] text-muted-foreground">
-            {t("canonicalAnalysis.analyticsView.methodLine", {
-              id: s.method_id,
-              version: String(s.method_version),
-            })}
-          </p>
-          {/* `count: null` só acontece em `suppressed`. Zero é VALOR, não ausência — trocar um
-              pelo outro apagaria a diferença entre "não houve" e "não podemos dizer". O `Bar` já
-              sabe disso: com `suprimida` ele não desenha barra alguma, porque barra de largura
-              zero e barra de valor zero são indistinguíveis e afirmam o oposto. */}
-          <ul className="grupos">
-            {s.windows.map((j, i) => (
-              <Bar
-                key={j.window_start}
-                rotulo={formatarJanela(j.window_start)}
-                valor={j.count !== null ? String(j.count) : null}
-                largura={larguras[iBloco][i]}
-                suprimida={j.count === null}
-                rotuloSuprimido={t(
-                  "canonicalAnalysis.analyticsView.suppressed",
-                )}
-              />
-            ))}
-          </ul>
-          {/* A série desdobra em JANELAS, e a janela suprimida entra no mapa com a hachura —
-              `count: null` acontece apenas em `suppressed`, e zero é valor. */}
-          <Disclosure
-            className="desdobra"
-            gatilho={t("canonicalAnalysis.analyticsView.mapTitle")}
-          >
-            <MapaDeProcedencia
-              bloco={{ tipo: "serie", dado: s }}
-              denominador={snapshot.record_count}
-            />
-          </Disclosure>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export function AnalyticsView() {
   const { t } = useLanguage();
   const params = useParams();
@@ -900,6 +703,10 @@ export function AnalyticsView() {
               ancora: "anl-resumo",
               rotulo: t("canonicalAnalysis.analyticsView.summaryTitle"),
             },
+            {
+              ancora: "anl-universal",
+              rotulo: t("canonicalAnalysis.universal.title"),
+            },
             ...(snapshot.measure_definitions.length > 0
               ? [
                   {
@@ -1004,6 +811,12 @@ export function AnalyticsView() {
             <QualidadeDaBase intake={intake} />
             <Cabeca snapshot={snapshot} vista={vista} />
             <ResumoDaPublicacao snapshot={snapshot} intake={intake} />
+            <Secao
+              id="anl-universal"
+              titulo={t("canonicalAnalysis.universal.title")}
+            >
+              <VisaoUniversalDeMedidas catalogo={snapshot.catalogoDeExploracao} />
+            </Secao>
             {snapshot.measure_definitions.length > 0 ? (
               <Secao
                 id="anl-catalogo"

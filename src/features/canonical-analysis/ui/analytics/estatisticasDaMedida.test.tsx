@@ -55,6 +55,7 @@ function snapshot(numeric: SnapshotAnalitico["numeric"]): SnapshotAnalitico {
     snapshot_contract_version: "analytics-snapshot-v9",
     record_count: 100,
     measure_definitions: [],
+    catalogoDeExploracao: null,
     numeric,
     distributions: [],
     dimensions: [],

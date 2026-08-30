@@ -23,6 +23,10 @@ import { DERIVADOS_DO_VIEW_MODEL, PUBLICADO_E_NAO_LIDO } from "./divergenciaDecl
 
 const RAIZ = resolve(__dirname, "../../..");
 const PROJECAO_TS = resolve(RAIZ, "src/features/canonical-analysis/result/analyticsProjection.ts");
+const EXPLORACAO_TS = resolve(
+  RAIZ,
+  "src/features/canonical-analysis/result/analyticsExplorationProjection.ts",
+);
 const disponivel = analyticsDisponivel();
 
 /** Campo do fio é `snake_case`; `camelCase` é derivação do view model, fora da comparação. */
@@ -36,7 +40,9 @@ function lados() {
       if (!nome.startsWith("_")) py.set(nome, p);
     }
   }
-  const ts = projecoesTypeScript(readFileSync(PROJECAO_TS, "utf-8"));
+  const ts = projecoesTypeScript(
+    `${readFileSync(PROJECAO_TS, "utf-8")}\n${readFileSync(EXPLORACAO_TS, "utf-8")}`,
+  );
   const comuns = [...ts.keys()].filter((n) => py.has(n)).sort();
   return { py, ts, comuns };
 }

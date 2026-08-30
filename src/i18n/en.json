@@ -131,7 +131,7 @@
     },
     "analyticsView": {
       "title": "Measures",
-      "catalog": {
+    "catalog": {
         "title": "Measure catalog",
         "subtitle": "Analytics separates volume, operational efficiency, and detected quality. Custom datasets remain explicitly labeled as custom.",
         "groups": {
@@ -143,7 +143,7 @@
         "coverage": "Coverage",
         "population": "Eligible population",
         "technical": "View technical contract",
-        "savedViews": "Saved view by goal",
+        "savedViews": "Filter by goal",
         "goals": {
           "all": "All",
           "operation": "Operations",
@@ -719,6 +719,40 @@
           "attention": "The result needs a decision before it appears.",
           "failed": "The final result could not be assembled."
         }
+      }
+    },
+    "universal": {
+      "title": "Universal measure view",
+      "subtitle": "The same ten questions appear for every dataset. Status comes from Analytics: missing measurement is never turned into zero.",
+      "legacyTitle": "This analysis predates the universal catalog",
+      "legacyBody": "The available detailed blocks remain below. Reprocess the analysis to receive all ten family states without uploading the file again.",
+      "catalogEntryMissing": "Incomplete contract",
+      "catalogEntryMissingBody": "The received catalog did not declare this family.",
+      "noPublishedMetric": "No metric was published for this question.",
+      "metricCountOne": "1 metric published in this analysis.",
+      "metricCountMany": "{{count}} metrics published in this analysis.",
+      "technical": "View published metrics",
+      "availability": {
+        "available": "Available",
+        "partial": "Partial",
+        "not_measured": "Not measured",
+        "not_materialized": "Not materialized",
+        "privacy_suppressed": "Withheld for privacy",
+        "unauthorized": "Unauthorized",
+        "unsupported": "Unsupported",
+        "incompatible": "Incompatible"
+      },
+      "families": {
+        "volume": { "title": "Volume", "question": "How much material was analyzed?" },
+        "structure": { "title": "Structure", "question": "How are interactions structured?" },
+        "outcomes": { "title": "Outcomes", "question": "How did interactions end?" },
+        "containment": { "title": "Containment", "question": "Was service resolved without a transfer?" },
+        "intent_coverage": { "title": "Coverage of user intents", "question": "How much demand has a recognized intent?" },
+        "response_quality": { "title": "Quality of assistant responses", "question": "Were responses useful and clear?" },
+        "safety_privacy": { "title": "Safety and privacy", "question": "Are there signs of risk or improper exposure?" },
+        "groundedness": { "title": "Groundedness", "question": "Are responses supported by verifiable information?" },
+        "operations": { "title": "Operations", "question": "Where does the operational flow need attention?" },
+        "cost_resources": { "title": "Cost and resources", "question": "Which resources were consumed?" }
       }
     },
     "result": {
