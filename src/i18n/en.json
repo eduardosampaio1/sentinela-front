@@ -771,6 +771,12 @@
       "published": "Published",
       "suppressed": "Protected",
       "observed": "Observed",
+      "identifiers": {
+        "datasetRecordCount": "Conversations analyzed",
+        "channel": "Channel",
+        "status": "Status",
+        "time": "Time"
+      },
       "fields": {
         "count": "Count",
         "valid_count": "Valid",

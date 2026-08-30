@@ -55,6 +55,18 @@ function humanizar(id: string): string {
   return id.replace(/[._-]+/g, " ").replace(/\b\p{L}/gu, (letra) => letra.toUpperCase());
 }
 
+const ROTULOS_CONHECIDOS: Readonly<Record<string, string>> = {
+  "dataset.record_count": "datasetRecordCount",
+  channel: "channel",
+  status: "status",
+  time: "time",
+};
+
+function rotuloAnalitico(id: string, t: (key: string) => string): string {
+  const conhecido = ROTULOS_CONHECIDOS[id];
+  return conhecido ? t(`canonicalAnalysis.playground.identifiers.${conhecido}`) : humanizar(id);
+}
+
 function linhasDo(resultado: AnalyticsQueryMetricResult): readonly Record<string, unknown>[] {
   const payload = resultado.payload;
   if (!payload) return [];
@@ -120,7 +132,7 @@ function TabelaDoResultado({ resultado }: { readonly resultado: AnalyticsQueryMe
   return (
     <div className="overflow-x-auto rounded-xl border border-border">
       <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
-        <caption className="sr-only">{humanizar(resultado.metric_id)}</caption>
+        <caption className="sr-only">{rotuloAnalitico(resultado.metric_id, t)}</caption>
         <thead className="bg-muted/60 text-xs uppercase tracking-wide text-muted-foreground">
           <tr>{campos.map((campo) => <th key={campo} scope="col" className="px-4 py-3 font-medium">{t(`canonicalAnalysis.playground.fields.${campo}`)}</th>)}</tr>
         </thead>
@@ -192,13 +204,13 @@ export function PlaygroundDeMedidas({
         <label className="grid gap-2 text-sm font-medium">
           {t("canonicalAnalysis.playground.metric")}
           <select className="min-h-11 w-full rounded-lg border border-input bg-background px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" value={metricId} onChange={(event) => { setMetricId(event.target.value); setEixoSerializado("none:"); consulta.reset(); }}>
-            {metricas.map((item) => <option key={item.metric_id} value={item.metric_id}>{humanizar(item.metric_id)}</option>)}
+            {metricas.map((item) => <option key={item.metric_id} value={item.metric_id}>{rotuloAnalitico(item.metric_id, t)}</option>)}
           </select>
         </label>
         <label className="grid gap-2 text-sm font-medium">
           {t("canonicalAnalysis.playground.cut")}
           <select className="min-h-11 w-full rounded-lg border border-input bg-background px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" value={eixoSerializado} onChange={(event) => { setEixoSerializado(event.target.value); consulta.reset(); }}>
-            {eixos.map((item) => <option key={`${item.tipo}:${item.id}`} value={`${item.tipo}:${item.id}`}>{item.tipo === "none" ? t("canonicalAnalysis.playground.overall") : humanizar(item.id)}</option>)}
+            {eixos.map((item) => <option key={`${item.tipo}:${item.id}`} value={`${item.tipo}:${item.id}`}>{item.tipo === "none" ? t("canonicalAnalysis.playground.overall") : rotuloAnalitico(item.id, t)}</option>)}
           </select>
         </label>
         <button type="submit" disabled={consulta.isPending} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-5 font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
@@ -216,8 +228,8 @@ export function PlaygroundDeMedidas({
           {consulta.data.results.map((resultado) => (
             <article key={`${resultado.metric_id}:${resultado.dimension_id ?? "overall"}`} className="space-y-3">
               <div>
-                <h3 className="font-semibold">{humanizar(resultado.metric_id)}</h3>
-                <p className="text-xs text-muted-foreground">{resultado.dimension_id ? humanizar(resultado.dimension_id) : t("canonicalAnalysis.playground.overall")}</p>
+                <h3 className="font-semibold">{rotuloAnalitico(resultado.metric_id, t)}</h3>
+                <p className="text-xs text-muted-foreground">{resultado.dimension_id ? rotuloAnalitico(resultado.dimension_id, t) : t("canonicalAnalysis.playground.overall")}</p>
               </div>
               <TabelaDoResultado resultado={resultado} />
             </article>

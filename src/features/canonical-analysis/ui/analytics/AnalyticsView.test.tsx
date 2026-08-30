@@ -271,6 +271,8 @@ describe("F4 · fonte ÚNICA", () => {
     }));
 
     const playground = await screen.findByRole("region", { name: pt.canonicalAnalysis.playground.title });
+    expect(within(playground).getByRole("option", { name: pt.canonicalAnalysis.playground.identifiers.datasetRecordCount })).toBeInTheDocument();
+    expect(within(playground).getByRole("option", { name: pt.canonicalAnalysis.playground.identifiers.time })).toBeInTheDocument();
     fireEvent.click(within(playground).getByRole("button", { name: pt.canonicalAnalysis.playground.run }));
 
     expect(await within(playground).findByText("100")).toBeInTheDocument();
