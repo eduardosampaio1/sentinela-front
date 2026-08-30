@@ -53,4 +53,20 @@ describe("Sentinela Review", () => {
     const result = await axe.run(container, { rules: { "color-contrast": { enabled: false } } });
     expect(result.violations).toEqual([]);
   });
+
+  it("permite reprocessar somente o Review quando o artefato é parcial", async () => {
+    currentClient.getReview = vi.fn(async () => ({
+      analysis_id: "an-1",
+      review_id: "rev-partial",
+      version: 1,
+      status: "partial",
+      blind_spots: ["O modelo local não concluiu a síntese."],
+      evidence: [],
+    }));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Tentar de novo" }));
+
+    expect(currentClient.requestReview).toHaveBeenCalledTimes(1);
+  });
 });
