@@ -3,6 +3,7 @@ import {
   ArrowRight,
   CheckCircle2,
   EyeOff,
+  Download,
   FileSearch,
   Link2,
   Scale,
@@ -10,15 +11,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { ReviewClaimView, ReviewEvidenceView } from "@/lib/v1";
+import type { ReviewRecommendedActionView } from "@/lib/v1/contract/public-v1.types";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/design/patterns";
 import { useParams } from "react-router-dom";
 import { useAnalysisStatus } from "../../data/analysis";
 import { useAnalysisReview, useRequestReview } from "../../data/review";
+import { useAnalysisEconomics, type CostScenario } from "../../data/economics";
 import { AnalysisShell } from "../AnalysisShell";
 import { useCanonicalScope } from "../scope";
 import type { EstadoPublico } from "@/design/patterns/estados";
+import { useV1Client } from "../../data/client";
+import { useState } from "react";
 
 function Section({
   id,
@@ -106,18 +111,92 @@ function Claim({
   );
 }
 
+function ActionCard({ action }: { action: ReviewRecommendedActionView }) {
+  const { t } = useLanguage();
+  return (
+    <article className="rounded-xl border border-primary/20 bg-primary/[0.035] p-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+          {t(`canonicalAnalysis.review.priority.${action.priority}`)}
+        </span>
+        <span className="text-xs text-muted-foreground">{action.owner}</span>
+      </div>
+      <h3 className="mt-3 text-base font-semibold text-foreground">{action.title}</h3>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">{action.why}</p>
+      <ol className="mt-4 space-y-2 pl-5 text-sm leading-6 text-foreground">
+        {action.how.map((step) => <li className="list-decimal" key={step}>{step}</li>)}
+      </ol>
+      {action.configuration.length > 0 ? (
+        <div className="mt-4 rounded-lg border border-border bg-background/70 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("canonicalAnalysis.review.configuration")}</p>
+          <ul className="mt-2 space-y-1 font-mono text-xs text-foreground">
+            {action.configuration.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </div>
+      ) : null}
+      <p className="mt-4 text-sm"><strong>{t("canonicalAnalysis.review.successCheck")}:</strong> {action.success_check}</p>
+      {action.rollback ? <p className="mt-2 text-xs text-muted-foreground"><strong>{t("canonicalAnalysis.review.rollback")}:</strong> {action.rollback}</p> : null}
+    </article>
+  );
+}
+
+function ScenarioTable({ rows }: { rows: readonly CostScenario[] }) {
+  const { language, t } = useLanguage();
+  const locale = language === "pt" ? "pt-BR" : "en-US";
+  return (
+    <div className="overflow-x-auto rounded-xl border border-border">
+      <table className="w-full min-w-[560px] text-left text-sm">
+        <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+          <tr><th className="px-4 py-3">Provider</th><th className="px-4 py-3">{t("canonicalAnalysis.review.economicsModel")}</th><th className="px-4 py-3 text-right">Dataset</th><th className="px-4 py-3">Status</th></tr>
+        </thead>
+        <tbody>{rows.slice(0, 8).map((row) => (
+          <tr className="border-t border-border" key={row.route_id}>
+            <td className="px-4 py-3">{row.provider ?? "—"}</td>
+            <td className="px-4 py-3 font-mono text-xs">{row.model_id ?? row.route_id}</td>
+            <td className="px-4 py-3 text-right font-mono tabular-nums">{new Intl.NumberFormat(locale, { style: "currency", currency: row.currency ?? "USD", maximumFractionDigits: 4 }).format(row.total_cost)}</td>
+            <td className="px-4 py-3 text-xs text-muted-foreground">{t(`canonicalAnalysis.review.economicsStatus.${row.status}`)}</td>
+          </tr>
+        ))}</tbody>
+      </table>
+    </div>
+  );
+}
+
 export function ReviewPage() {
   const { t, language } = useLanguage();
   const analysisId = useParams().analysisId ?? null;
   const scope = useCanonicalScope();
   const status = useAnalysisStatus(scope, analysisId);
   const review = useAnalysisReview(scope, analysisId);
+  const economics = useAnalysisEconomics(scope, analysisId);
   const request = useRequestReview(scope, analysisId);
+  const client = useV1Client();
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
   const title = t("canonicalAnalysis.review.title");
   const artifact = review.data;
   const evidence = new Map(
     (artifact?.evidence ?? []).map((item) => [item.evidence_id, item]),
   );
+
+  async function exportWorkbook() {
+    if (!analysisId || !scope || exporting) return;
+    setExporting(true);
+    setExportError(false);
+    try {
+      const blob = await client.downloadReview(analysisId, scope);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `sentinela-review-${analysisId}.xlsx`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    } catch {
+      setExportError(true);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   function body() {
     if (review.isPending)
@@ -331,12 +410,38 @@ export function ReviewPage() {
               <TextList items={artifact.business_impact ?? []} />
             </Section>
           ) : null}
+          {economics.data?.availability === "available" ? (
+            <Section id="economics" title={t("canonicalAnalysis.review.economicsTitle")}>
+              <p className="mb-4 max-w-3xl text-sm leading-6 text-muted-foreground">
+                {economics.data.current_model?.status === "unknown"
+                  ? t("canonicalAnalysis.review.economicsUnknownModel")
+                  : t("canonicalAnalysis.review.economicsKnownModel")}
+              </p>
+              <ScenarioTable rows={economics.data.inference_comparisons} />
+              {economics.data.embedding_comparisons.length > 0 ? (
+                <details className="mt-4 rounded-xl border border-border p-4">
+                  <summary className="cursor-pointer font-medium">{t("canonicalAnalysis.review.embeddingScenarios")}</summary>
+                  <div className="mt-4"><ScenarioTable rows={economics.data.embedding_comparisons} /></div>
+                </details>
+              ) : null}
+              <p className="mt-3 text-xs leading-5 text-muted-foreground">{t("canonicalAnalysis.review.economicsDisclaimer")}</p>
+            </Section>
+          ) : null}
           {(artifact.recommendations?.length ?? 0) > 0 ? (
             <Section
               id="recommendations"
               title={t("canonicalAnalysis.review.recommendations")}
             >
               <TextList items={artifact.recommendations ?? []} />
+            </Section>
+          ) : null}
+          {(artifact.recommended_actions?.length ?? 0) > 0 ? (
+            <Section id="action-plan" title={t("canonicalAnalysis.review.actionPlan")}>
+              <div className="space-y-4">
+                {artifact.recommended_actions?.map((action) => (
+                  <ActionCard key={action.action_id} action={action} />
+                ))}
+              </div>
             </Section>
           ) : null}
           <Section
@@ -364,6 +469,20 @@ export function ReviewPage() {
           <h2 className="mt-3 font-semibold text-foreground">
             {t("canonicalAnalysis.review.traceability")}
           </h2>
+          <Button
+            variant="outline"
+            className="mt-4 min-h-11 w-full gap-2"
+            disabled={exporting}
+            onClick={() => void exportWorkbook()}
+          >
+            <Download className="h-4 w-4" aria-hidden />
+            {exporting ? t("canonicalAnalysis.review.exporting") : t("canonicalAnalysis.review.export")}
+          </Button>
+          {exportError ? (
+            <p role="alert" className="mt-3 text-xs leading-5 text-destructive">
+              {t("canonicalAnalysis.review.exportError")}
+            </p>
+          ) : null}
           <dl className="mt-4 space-y-3 text-xs">
             <div>
               <dt className="text-muted-foreground">

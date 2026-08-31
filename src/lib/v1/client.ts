@@ -158,6 +158,11 @@ export interface V1Client {
     language: "pt" | "en",
     opts?: RequestOptions,
   ): Promise<ReviewRequestView>;
+  downloadReview(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<Blob>;
   queryAnalytics(
     analysisId: string,
     scope: CanonicalScope,
@@ -681,6 +686,29 @@ export function createV1Client(config: V1ClientConfig): V1Client {
     );
   }
 
+  async function baixar(
+    caminho: string,
+    query: Record<string, string | undefined>,
+    opts?: RequestOptions,
+  ): Promise<Blob> {
+    const correlationId = newCorr();
+    const ws = query.workspace_id;
+    if (!ws?.trim())
+      throw new ProblemError(normalizeProblem({ code: "invalid_input" }, 400, correlationId));
+    const token = await config.getAccessToken();
+    if (!token)
+      throw new ProblemError(normalizeProblem({ code: "authentication_required" }, 401, correlationId));
+    const url = new URL(`${base}${caminho}`, origemFallback);
+    Object.entries(query).forEach(([key, value]) => value && url.searchParams.set(key, value));
+    const response = await fetchImpl(url.toString(), {
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "X-Correlation-Id": correlationId },
+      signal: opts?.signal,
+    });
+    if (!response.ok)
+      throw new ProblemError(normalizeProblem({}, response.status, correlationId));
+    return response.blob();
+  }
+
   return {
     /**
      * Projeção da sessão: quem sou eu e a que workspaces pertenço. Fonte ÚNICA dessa verdade —
@@ -832,6 +860,12 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         { workspace_id: scope.workspaceId },
         opts,
         { body: JSON.stringify({ language }), contentType: "application/json" },
+      ),
+    downloadReview: (analysisId, scope, opts) =>
+      baixar(
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/review/export.xlsx`,
+        { workspace_id: scope.workspaceId },
+        opts,
       ),
     queryAnalytics: (analysisId, scope, query, opts) =>
       pedir<AnalyticsQueryResultView>(

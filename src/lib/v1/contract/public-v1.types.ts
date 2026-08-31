@@ -961,6 +961,19 @@ export interface ReviewInvestigationView {
   claim_refs: string[];
 }
 
+export interface ReviewRecommendedActionView {
+  action_id: string;
+  priority: "now" | "next" | "later";
+  title: string;
+  why: string;
+  owner: string;
+  how: string[];
+  configuration: string[];
+  success_check: string;
+  rollback?: string | null;
+  evidence_refs: string[];
+}
+
 export interface ReviewArtifactView {
   review_contract_version?: string;
   review_id?: string;
@@ -976,6 +989,7 @@ export interface ReviewArtifactView {
   contradictions?: string[];
   business_impact?: string[];
   recommendations?: string[];
+  recommended_actions?: ReviewRecommendedActionView[];
   blind_spots?: string[];
   claims?: ReviewClaimView[];
   evidence?: ReviewEvidenceView[];

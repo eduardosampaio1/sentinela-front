@@ -134,6 +134,7 @@
         "risk": "Risco",
         "success_indicator": "Indicador de sucesso",
         "operational_constraint": "Restrição operacional"
+        ,"model_configuration": "Configuração do modelo"
       }
     },
     "review": {
@@ -163,7 +164,22 @@
       "contradictions": "Contradições",
       "contradictionsHelp": "Sinais que parecem discordar e exigem leitura conjunta.",
       "businessImpact": "Impacto no negócio",
+      "economicsTitle": "Cenários de custo para esta workload",
+      "economicsUnknownModel": "O modelo atual não foi identificado. Os valores abaixo são simulações de mercado, não uma afirmação sobre quanto você gastou.",
+      "economicsKnownModel": "O modelo foi identificado na fonte. Compare o cenário atual com rotas alternativas sem presumir equivalência de qualidade.",
+      "embeddingScenarios": "Ver cenários de embeddings",
+      "economicsDisclaimer": "Preços do snapshot registrado no resultado. Custos de infraestrutura e equivalência funcional não estão incluídos.",
+      "economicsModel": "Modelo",
+      "economicsStatus": { "exact": "Exato", "estimated": "Estimado", "not_enough_information": "Dados insuficientes", "unsupported_pricing_rule": "Regra não suportada" },
       "recommendations": "Recomendações",
+      "actionPlan": "O que fazer agora",
+      "configuration": "Configuração",
+      "successCheck": "Como validar",
+      "rollback": "Como desfazer",
+      "export": "Baixar Review em Excel",
+      "exporting": "Preparando Excel…",
+      "exportError": "Não foi possível baixar o Excel agora. O Review continua salvo; tente novamente.",
+      "priority": { "now": "Agora", "next": "Próximo", "later": "Depois" },
       "blindSpots": "O que o Sentinela não pode concluir",
       "blindSpotsHelp": "Ausência de cobertura não é transformada em certeza.",
       "noBlindSpots": "Nenhuma limitação adicional foi identificada nas fontes disponíveis.",

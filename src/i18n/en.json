@@ -134,6 +134,7 @@
         "risk": "Risk",
         "success_indicator": "Success indicator",
         "operational_constraint": "Operational constraint"
+        ,"model_configuration": "Model configuration"
       }
     },
     "review": {
@@ -163,7 +164,22 @@
       "contradictions": "Contradictions",
       "contradictionsHelp": "Signals that appear to disagree and require a joint reading.",
       "businessImpact": "Business impact",
+      "economicsTitle": "Cost scenarios for this workload",
+      "economicsUnknownModel": "The current model was not identified. The values below are market simulations, not a claim about what you spent.",
+      "economicsKnownModel": "The model was identified in the source. Compare the current scenario with alternative routes without assuming equivalent quality.",
+      "embeddingScenarios": "View embedding scenarios",
+      "economicsDisclaimer": "Prices come from the snapshot recorded in the result. Infrastructure cost and functional equivalence are not included.",
+      "economicsModel": "Model",
+      "economicsStatus": { "exact": "Exact", "estimated": "Estimated", "not_enough_information": "Not enough data", "unsupported_pricing_rule": "Unsupported rule" },
       "recommendations": "Recommendations",
+      "actionPlan": "What to do now",
+      "configuration": "Configuration",
+      "successCheck": "How to validate",
+      "rollback": "How to roll back",
+      "export": "Download Review as Excel",
+      "exporting": "Preparing Excel…",
+      "exportError": "The Excel file could not be downloaded right now. The Review is still saved; try again.",
+      "priority": { "now": "Now", "next": "Next", "later": "Later" },
       "blindSpots": "What Sentinela cannot conclude",
       "blindSpotsHelp": "Missing coverage is never turned into certainty.",
       "noBlindSpots": "No additional limitation was identified in the available sources.",

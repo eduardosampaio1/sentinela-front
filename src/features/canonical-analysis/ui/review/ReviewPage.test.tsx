@@ -47,6 +47,25 @@ describe("Sentinela Review", () => {
         status: "completed",
         result_available: true,
       })),
+      getResult: vi.fn(async () => ({
+        result_schema_version: "analysis-result-v4",
+        result: {
+          economics_assessment: {
+            availability: "available",
+            current_model: { status: "unknown" },
+            inference_comparisons: [{
+              route_id: "provider/model-a",
+              provider: "provider",
+              model_id: "model-a",
+              status: "estimated",
+              currency: "USD",
+              total_cost: 12.5,
+            }],
+            embedding_comparisons: [],
+          },
+        },
+      })),
+      downloadReview: vi.fn(async () => new Blob(["review"])),
       requestReview: vi.fn(async () => ({
         review_request_id: "request-1",
         status: "queued",
@@ -74,6 +93,18 @@ describe("Sentinela Review", () => {
         contradictions: ["Consistente, porém desalinhada."],
         business_impact: ["Risco de transferência evitável."],
         recommendations: ["Revisar contestação."],
+        recommended_actions: [{
+          action_id: "a-1",
+          priority: "now",
+          title: "Reconfigurar o roteamento de contestação",
+          why: "O comportamento medido está abaixo do esperado.",
+          owner: "Product owner",
+          how: ["Rever a regra", "Executar avaliação controlada"],
+          configuration: ["handoff_threshold=0.72"],
+          success_check: "Behavior Score melhora sem aumentar reclamações.",
+          rollback: "Restaurar a versão anterior.",
+          evidence_refs: ["ev-1"],
+        }],
         blind_spots: [
           "Sem Outcome Coverage não é possível afirmar impacto em conversão.",
         ],
@@ -125,6 +156,16 @@ describe("Sentinela Review", () => {
     await userEvent.click(screen.getByText("Ver evidências e origem"));
     expect(screen.getByText("Behavior Score")).toBeVisible();
     expect(screen.getByText(/\/indicators\/behavior/)).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "O que fazer agora" }),
+    ).toBeVisible();
+    expect(
+      screen.getByText("Reconfigurar o roteamento de contestação"),
+    ).toBeVisible();
+    expect(
+      await screen.findByRole("heading", { name: "Cenários de custo para esta workload" }),
+    ).toBeVisible();
+    expect(screen.getByText("model-a")).toBeVisible();
   });
 
   it("não introduz violações automáticas de acessibilidade", async () => {
