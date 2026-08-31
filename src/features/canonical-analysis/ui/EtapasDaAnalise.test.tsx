@@ -75,6 +75,7 @@ describe("etapas públicas da análise", () => {
             owner: "user",
             next_action: "provide_mapping",
             last_progress_at: null,
+            run_manifest: null,
             stages: [
               { stage: "upload", state: "done" },
               { stage: "privacy", state: "attention" },

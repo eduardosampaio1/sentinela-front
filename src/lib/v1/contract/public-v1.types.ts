@@ -594,6 +594,28 @@ export type OperationalNextAction =
   | "open_result"
   | "inspect_failure";
 
+export interface AnalysisRunManifestSummaryView {
+  contract_version: "analysis-run-manifest-v1";
+  manifest_digest: string;
+  captured_at: string;
+  workload: {
+    records: number;
+    embeddings: number;
+    embedding_dim: number;
+  };
+  execution: {
+    analysis_profile: string;
+    estimated_peak_mb: number;
+    estimated_duration_seconds: number | null;
+    estimator_version: string;
+    required_profile: string;
+    profile_version: number;
+  };
+  contracts: {
+    measurement_contract_version: string;
+  };
+}
+
 export interface AnalysisOperationalTruthView {
   contract_version: "analysis-operational-truth-v1";
   current_stage: OperationalStage;
@@ -601,6 +623,8 @@ export interface AnalysisOperationalTruthView {
   owner: OperationalOwner;
   next_action: OperationalNextAction;
   last_progress_at: string | null;
+  /** `null` em análises legadas: a UI nunca reconstrói o passado com defaults atuais. */
+  run_manifest: AnalysisRunManifestSummaryView | null;
   stages: readonly { stage: OperationalStage; state: OperationalStageState }[];
 }
 
