@@ -790,6 +790,31 @@
         "attention": "Ação necessária",
         "failed": "Falha"
       },
+      "operational": {
+        "title": "Por dentro desta execução",
+        "help": "Fatos confirmados pelos serviços responsáveis. Review e e-mail não bloqueiam o resultado.",
+        "item": {
+          "dispatch": "Trabalho encaminhado",
+          "calculation_output": "Cálculos entregues",
+          "result_assembly": "Resultado montado",
+          "review": "Sentinela Review",
+          "notification": "Aviso por e-mail"
+        },
+        "state": {
+          "not_applicable": "Ainda não se aplica",
+          "not_requested": "Não solicitado",
+          "not_configured": "Não configurado",
+          "waiting": "Aguardando",
+          "active": "Em andamento",
+          "done": "Confirmado",
+          "ready": "Pronto",
+          "partial": "Parcial",
+          "delivered": "Entregue",
+          "failed": "Falhou",
+          "unavailable": "Indisponível",
+          "unknown": "Sem confirmação"
+        }
+      },
       "steps": {
         "upload": {
           "title": "Envio da base",

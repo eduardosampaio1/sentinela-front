@@ -790,6 +790,31 @@
         "attention": "Action needed",
         "failed": "Failed"
       },
+      "operational": {
+        "title": "Inside this run",
+        "help": "Facts confirmed by the responsible services. Review and email never block the result.",
+        "item": {
+          "dispatch": "Work dispatched",
+          "calculation_output": "Calculations delivered",
+          "result_assembly": "Result assembled",
+          "review": "Sentinela Review",
+          "notification": "Email notification"
+        },
+        "state": {
+          "not_applicable": "Not applicable yet",
+          "not_requested": "Not requested",
+          "not_configured": "Not configured",
+          "waiting": "Waiting",
+          "active": "In progress",
+          "done": "Confirmed",
+          "ready": "Ready",
+          "partial": "Partial",
+          "delivered": "Delivered",
+          "failed": "Failed",
+          "unavailable": "Unavailable",
+          "unknown": "Not confirmed"
+        }
+      },
       "steps": {
         "upload": {
           "title": "Dataset upload",

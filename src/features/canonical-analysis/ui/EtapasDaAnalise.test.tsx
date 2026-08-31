@@ -69,13 +69,26 @@ describe("etapas públicas da análise", () => {
           view={statusView("running")}
           eixos={lerEixos({ analysis_id: "an-abc", axes: [] })}
           operationalTruth={{
-            contract_version: "analysis-operational-truth-v1",
+            contract_version: "analysis-operational-truth-v2",
             current_stage: "privacy",
             current_state: "attention",
             owner: "user",
             next_action: "provide_mapping",
             last_progress_at: null,
             run_manifest: null,
+            core_milestones: [
+              { milestone: "dispatch", state: "done", observed_at: "2026-08-31T12:00:00Z" },
+              {
+                milestone: "calculation_output",
+                state: "active",
+                observed_at: null,
+              },
+              { milestone: "result_assembly", state: "waiting", observed_at: null },
+            ],
+            follow_ups: [
+              { capability: "review", state: "not_applicable", observed_at: null },
+              { capability: "notification", state: "not_applicable", observed_at: null },
+            ],
             stages: [
               { stage: "upload", state: "done" },
               { stage: "privacy", state: "attention" },
@@ -93,5 +106,10 @@ describe("etapas públicas da análise", () => {
     expect(screen.getByTestId("operational-next-action")).toHaveTextContent(
       "Sua ação: revise as colunas",
     );
+    expect(screen.getByTestId("operational-milestones")).toHaveTextContent(
+      "Trabalho encaminhado",
+    );
+    expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Em andamento");
+    expect(screen.queryByText("Sentinela Review")).not.toBeInTheDocument();
   });
 });

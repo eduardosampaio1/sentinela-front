@@ -199,6 +199,10 @@ export function EtapasDaAnalise({
     intakeProgress?.percent === null || intakeProgress?.percent === undefined
       ? null
       : Math.max(0, Math.min(100, intakeProgress.percent));
+  const marcosDoNucleo = operationalTruth?.core_milestones ?? [];
+  const acompanhamentos = (operationalTruth?.follow_ups ?? []).filter(
+    (item) => item.state !== "not_applicable",
+  );
   const formatarBytes = (valor: number) => {
     const emGigabytes = valor >= 1_000_000_000;
     return new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US", {
@@ -406,6 +410,34 @@ export function EtapasDaAnalise({
           );
         })}
       </ol>
+      {marcosDoNucleo.length > 0 || acompanhamentos.length > 0 ? (
+        <div className="mt-5 border-t border-border pt-4" data-testid="operational-milestones">
+          <h3 className="text-sm font-semibold text-foreground">
+            {t("canonicalAnalysis.liveProgress.operational.title")}
+          </h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("canonicalAnalysis.liveProgress.operational.help")}
+          </p>
+          <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+            {[...marcosDoNucleo, ...acompanhamentos].map((item) => {
+              const key = "milestone" in item ? item.milestone : item.capability;
+              return (
+                <div
+                  key={key}
+                  className="flex min-w-0 items-center justify-between gap-3 rounded-md border border-border/70 bg-background/40 px-3 py-2"
+                >
+                  <dt className="min-w-0 text-xs font-medium text-foreground">
+                    {t(`canonicalAnalysis.liveProgress.operational.item.${key}`)}
+                  </dt>
+                  <dd className="shrink-0 text-xs text-muted-foreground">
+                    {t(`canonicalAnalysis.liveProgress.operational.state.${item.state}`)}
+                  </dd>
+                </div>
+              );
+            })}
+          </dl>
+        </div>
+      ) : null}
     </section>
   );
 }

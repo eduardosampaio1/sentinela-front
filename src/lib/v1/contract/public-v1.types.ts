@@ -617,7 +617,7 @@ export interface AnalysisRunManifestSummaryView {
 }
 
 export interface AnalysisOperationalTruthView {
-  contract_version: "analysis-operational-truth-v1";
+  contract_version: "analysis-operational-truth-v1" | "analysis-operational-truth-v2";
   current_stage: OperationalStage;
   current_state: OperationalStageState;
   owner: OperationalOwner;
@@ -625,6 +625,27 @@ export interface AnalysisOperationalTruthView {
   last_progress_at: string | null;
   /** `null` em análises legadas: a UI nunca reconstrói o passado com defaults atuais. */
   run_manifest: AnalysisRunManifestSummaryView | null;
+  core_milestones?: readonly {
+    milestone: "dispatch" | "calculation_output" | "result_assembly";
+    state: "waiting" | "active" | "done" | "failed" | "unknown";
+    observed_at: string | null;
+  }[];
+  follow_ups?: readonly {
+    capability: "review" | "notification";
+    state:
+      | "not_applicable"
+      | "not_requested"
+      | "not_configured"
+      | "waiting"
+      | "active"
+      | "ready"
+      | "partial"
+      | "delivered"
+      | "failed"
+      | "unavailable"
+      | "unknown";
+    observed_at: string | null;
+  }[];
   stages: readonly { stage: OperationalStage; state: OperationalStageState }[];
 }
 
