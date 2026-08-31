@@ -766,6 +766,15 @@
       "title": "Analysis progress",
       "help": "This area updates automatically as each step responds.",
       "emailNotice": "You can leave this page. We'll email you when the analysis finishes or needs your attention.",
+      "nextAction": {
+        "upload_dataset": "Next action: upload the dataset to begin.",
+        "continue_upload": "Next action: keep this page open until the upload finishes.",
+        "provide_mapping": "Your action: review the columns so the analysis can continue.",
+        "start_analysis": "Your action: start the calculations with the prepared dataset.",
+        "wait": "Next action: none. Sentinela is working.",
+        "open_result": "Next action: open the completed result.",
+        "inspect_failure": "Sentinela action: investigate the failure before trying again."
+      },
       "stageProgressLabel": "Analysis stage progress",
       "stageProgressValue": "Step {{current}} of {{total}} · {{title}}",
       "stageProgressComplete": "All 4 steps are complete",

@@ -766,6 +766,15 @@
       "title": "Progresso",
       "help": "Esta área atualiza sozinha conforme cada etapa responde.",
       "emailNotice": "Você pode sair desta página. Enviaremos um e-mail quando a análise terminar ou precisar da sua atenção.",
+      "nextAction": {
+        "upload_dataset": "Próxima ação: envie a base para começar.",
+        "continue_upload": "Próxima ação: mantenha esta página aberta até o envio terminar.",
+        "provide_mapping": "Sua ação: revise as colunas para a análise continuar.",
+        "start_analysis": "Sua ação: inicie os cálculos com a base já preparada.",
+        "wait": "Próxima ação: nenhuma. O Sentinela está trabalhando.",
+        "open_result": "Próxima ação: abra o resultado concluído.",
+        "inspect_failure": "Ação do Sentinela: investigar a falha antes de tentar novamente."
+      },
       "stageProgressLabel": "Progresso das etapas da análise",
       "stageProgressValue": "Etapa {{current}} de {{total}} · {{title}}",
       "stageProgressComplete": "As 4 etapas foram concluídas",

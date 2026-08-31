@@ -149,7 +149,9 @@ describe("M34 · 3. AN-03 na AnalysisPage", () => {
   it("disponibilidade progressiva: Analytics utilizável aparece com final pendente", () => {
     const f = PAGINA();
     expect(f).toContain("analyticsUtilizavel(eixos)");
-    expect(f).toContain("analyticsPronto && analytics.data && <RegiaoDeAnalyticsAoVivo");
+    expect(f).toMatch(
+      /analyticsPronto\s*&&\s*analytics\.data\s*&&\s*\(\s*<RegiaoDeAnalyticsAoVivo/,
+    );
     // Reusa o portador canônico da M27 — nenhuma segunda leitura de ready/partial/withheld.
     expect(f).not.toContain('component_status ===');
   });

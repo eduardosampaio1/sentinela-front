@@ -240,6 +240,7 @@ export function AnalysisPage() {
             eixos={eixos}
             uploadProgress={uploadProgress}
             intakeProgress={progresso.data?.intake}
+            operationalTruth={progresso.data?.operational_truth}
           />
         </div>
       );
@@ -265,6 +266,7 @@ export function AnalysisPage() {
               eixos={eixos}
               uploadProgress={uploadProgress}
               intakeProgress={progresso.data?.intake}
+              operationalTruth={progresso.data?.operational_truth}
             />
             <section className="rounded-[var(--ds-radius-panel)] border border-border bg-card/70 p-4">
               <h2 className="text-sm font-semibold text-foreground">
@@ -296,6 +298,7 @@ export function AnalysisPage() {
               view={view}
               eixos={eixos}
               intakeProgress={progresso.data?.intake}
+              operationalTruth={progresso.data?.operational_truth}
             />
             <Button
               onClick={dispararSubmit}
@@ -342,6 +345,7 @@ export function AnalysisPage() {
                 view={view}
                 eixos={eixos}
                 intakeProgress={progresso.data?.intake}
+                operationalTruth={progresso.data?.operational_truth}
               />
               {/* Rotulo PROPRIO, e nao o titulo do editor: dizer *Diga qual coluna e qual* enquanto
                   ainda se le o arquivo pede uma decisao que nao esta disponivel -- e faz o
@@ -361,6 +365,7 @@ export function AnalysisPage() {
                 view={view}
                 eixos={eixos}
                 intakeProgress={progresso.data?.intake}
+                operationalTruth={progresso.data?.operational_truth}
               />
               <p className="text-sm text-muted-foreground">
                 {t("canonicalAnalysis.needsMapping.loadFailed")}
@@ -382,6 +387,7 @@ export function AnalysisPage() {
               view={view}
               eixos={eixos}
               intakeProgress={progresso.data?.intake}
+              operationalTruth={progresso.data?.operational_truth}
             />
             <MappingStep
               mapa={mapeamento.data}
@@ -416,6 +422,7 @@ export function AnalysisPage() {
               view={view}
               eixos={eixos}
               intakeProgress={progresso.data?.intake}
+              operationalTruth={progresso.data?.operational_truth}
             />
             {/* OS EIXOS ENTRAM AQUI TAMBÉM, pela mesma simetria que a M35 usou em `failed`.
                 Lá o argumento foi: apagar os eixos transformaria "um componente falhou" em "tudo
@@ -464,6 +471,7 @@ export function AnalysisPage() {
               view={view}
               eixos={eixos}
               intakeProgress={progresso.data?.intake}
+              operationalTruth={progresso.data?.operational_truth}
             />
             {/* O QUE ACONTECEU COM O ARQUIVO, em numeros.
 
@@ -545,6 +553,7 @@ export function AnalysisPage() {
               view={view}
               eixos={eixos}
               intakeProgress={progresso.data?.intake}
+              operationalTruth={progresso.data?.operational_truth}
             />
             <DisponibilidadeDasVisoes
               analysisId={analysisId}

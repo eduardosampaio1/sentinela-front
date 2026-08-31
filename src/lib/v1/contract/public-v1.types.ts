@@ -582,10 +582,34 @@ export interface IntakeProgressView {
   last_activity_at: string | null;
 }
 
+export type OperationalStage = "upload" | "privacy" | "measures" | "final_result";
+export type OperationalStageState = "waiting" | "active" | "done" | "attention" | "failed";
+export type OperationalOwner = "user" | "sentinela" | "sentinela_support" | "none";
+export type OperationalNextAction =
+  | "upload_dataset"
+  | "continue_upload"
+  | "provide_mapping"
+  | "start_analysis"
+  | "wait"
+  | "open_result"
+  | "inspect_failure";
+
+export interface AnalysisOperationalTruthView {
+  contract_version: "analysis-operational-truth-v1";
+  current_stage: OperationalStage;
+  current_state: OperationalStageState;
+  owner: OperationalOwner;
+  next_action: OperationalNextAction;
+  last_progress_at: string | null;
+  stages: readonly { stage: OperationalStage; state: OperationalStageState }[];
+}
+
 export interface AnalysisProgressView {
   analysis_id: string;
   axes: readonly ProgressEntry[];
   intake?: IntakeProgressView;
+  /** A projeção autoritativa que a tela renderiza sem recompor lifecycle, owner ou ação. */
+  operational_truth?: AnalysisOperationalTruthView;
 }
 
 // ── Projeção analítica pública (M21) ────────────────────────────────────────────────────────

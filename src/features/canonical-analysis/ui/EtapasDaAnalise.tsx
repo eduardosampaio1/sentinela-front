@@ -2,7 +2,11 @@ import { Check, CircleDashed, Loader2, Mail, TriangleAlert, X } from "lucide-rea
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRevelacao } from "@/design/motion";
 import { cn } from "@/lib/utils";
-import type { AnalysisStatusView, IntakeProgressView } from "@/lib/v1";
+import type {
+  AnalysisOperationalTruthView,
+  AnalysisStatusView,
+  IntakeProgressView,
+} from "@/lib/v1";
 import type { UploadProgress } from "../data/analysis";
 import type { EixoLido } from "../result/eixos";
 
@@ -146,19 +150,33 @@ export function EtapasDaAnalise({
   eixos,
   uploadProgress = null,
   intakeProgress,
+  operationalTruth,
 }: {
   view: AnalysisStatusView;
   eixos: readonly EixoLido[];
   uploadProgress?: UploadProgress | null;
   intakeProgress?: IntakeProgressView;
+  operationalTruth?: AnalysisOperationalTruthView;
 }) {
   const { language, t } = useLanguage();
-  const etapas: Etapa[] = [
-    { chave: "upload", estado: estadoDoUpload(view.status, uploadProgress) },
-    { chave: "privacy", estado: estadoDaProtecao(view, uploadProgress) },
-    { chave: "measures", estado: estadoDasMedidas(eixos, view.status) },
-    { chave: "result", estado: estadoDoResultado(eixos, view.status) },
-  ];
+  const estadoAutoritativo = new Map(
+    operationalTruth?.stages.map((entry) => [entry.stage, entry.state] as const) ?? [],
+  );
+  const etapas: Etapa[] = operationalTruth
+    ? [
+        { chave: "upload", estado: estadoAutoritativo.get("upload") ?? "waiting" },
+        { chave: "privacy", estado: estadoAutoritativo.get("privacy") ?? "waiting" },
+        { chave: "measures", estado: estadoAutoritativo.get("measures") ?? "waiting" },
+        { chave: "result", estado: estadoAutoritativo.get("final_result") ?? "waiting" },
+      ]
+    : [
+        // Compatibilidade durante rollout: análises servidas por uma versão anterior continuam
+        // legíveis. Assim que `operational_truth` existe, nenhuma destas regras decide a tela.
+        { chave: "upload", estado: estadoDoUpload(view.status, uploadProgress) },
+        { chave: "privacy", estado: estadoDaProtecao(view, uploadProgress) },
+        { chave: "measures", estado: estadoDasMedidas(eixos, view.status) },
+        { chave: "result", estado: estadoDoResultado(eixos, view.status) },
+      ];
   const raiz = useRevelacao<HTMLElement>(
     etapas.map((etapa) => `${etapa.chave}:${etapa.estado}`).join("|"),
   );
@@ -205,6 +223,11 @@ export function EtapasDaAnalise({
         <p className="text-sm text-muted-foreground">
           {t("canonicalAnalysis.liveProgress.help")}
         </p>
+        {operationalTruth ? (
+          <p className="pt-2 text-sm font-medium text-foreground" data-testid="operational-next-action">
+            {t(`canonicalAnalysis.liveProgress.nextAction.${operationalTruth.next_action}`)}
+          </p>
+        ) : null}
         {!progressoConcluido && view.status !== "failed" ? (
           <p className="flex items-start gap-2 pt-2 text-sm text-muted-foreground">
             <Mail aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
