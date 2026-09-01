@@ -286,6 +286,33 @@
 }
 .ws-system__decision span { color: #c6d1d9; line-height: 1.45; }
 
+.ws-economics {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(290px, 0.72fr) minmax(440px, 1.28fr);
+  grid-template-areas:
+    "intro value"
+    "levers levers"
+    "disclosure disclosure";
+  gap: clamp(48px, 8vw, 110px) clamp(48px, 10vw, 150px);
+  align-items: end;
+  min-height: 110dvh;
+}
+.ws-economics__intro { grid-area: intro; align-self: center; }
+.ws-economics__intro h2 { max-width: 10ch; margin: 0; font-size: clamp(2.8rem, 5.4vw, 6.3rem); font-weight: 500; line-height: 0.96; letter-spacing: -0.07em; }
+.ws-economics__intro p { max-width: 46ch; margin: 32px 0 0; color: var(--ws-muted); font-size: clamp(1.05rem, 1.5vw, 1.35rem); line-height: 1.5; }
+.ws-economics__value { grid-area: value; align-self: center; display: grid; justify-items: start; will-change: transform; }
+.ws-economics__value > span { margin-left: 0.5em; color: var(--ws-accent-bright); font: 500 0.7rem/1 "JetBrains Mono", monospace; letter-spacing: 0.2em; }
+.ws-economics__value strong { color: transparent; font-size: clamp(9rem, 23vw, 22rem); font-weight: 560; line-height: 0.78; letter-spacing: -0.11em; -webkit-text-stroke: 1px rgba(134, 201, 244, 0.72); filter: drop-shadow(0 0 38px rgba(82,168,232,0.12)); }
+.ws-economics__value p { max-width: 24ch; margin: 28px 0 0 8%; color: #d6e2e9; font-size: clamp(1.15rem, 2vw, 1.8rem); line-height: 1.25; }
+.ws-economics__levers { grid-area: levers; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--ws-line); will-change: transform; }
+.ws-economics__lever { display: grid; grid-template-columns: auto 1fr; gap: 24px; padding: 28px clamp(16px, 3vw, 42px) 28px 0; border-right: 1px solid var(--ws-line); }
+.ws-economics__lever + .ws-economics__lever { padding-left: clamp(16px, 3vw, 42px); }
+.ws-economics__lever:last-child { border-right: 0; }
+.ws-economics__lever strong { color: var(--ws-accent-bright); font: 500 0.66rem/1.4 "JetBrains Mono", monospace; letter-spacing: 0.14em; }
+.ws-economics__lever span { color: #c3ced6; line-height: 1.5; }
+.ws-economics__disclosure { grid-area: disclosure; max-width: 88ch; margin: -72px 0 0; color: var(--ws-faint); font-size: 0.76rem; line-height: 1.55; }
+
 .ws-comparison > h2 { margin: 0 0 54px; font-size: clamp(2.8rem, 5vw, 5.8rem); font-weight: 520; letter-spacing: -0.06em; }
 .ws-comparison__stage-shell { will-change: transform; }
 .ws-comparison__stage { position: relative; min-height: 520px; overflow: hidden; border: 1px solid var(--ws-line); border-radius: var(--ws-radius); background: #0a0e14; }

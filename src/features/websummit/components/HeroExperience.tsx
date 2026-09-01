@@ -3,7 +3,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
 import { webSummitCopy } from "../content/copy";
 import { useExperienceState } from "../hooks/useExperienceState";
 import { PromptComposer } from "./PromptComposer";
-import { LivingSentinelaField } from "./LivingSentinelaField";
+import { SentinelaDecisionField } from "./SentinelaDecisionField";
 import { ExperienceResponse } from "./ExperienceResponse";
 import { DecisionTrace } from "./DecisionTrace";
 import { TryToBreak } from "./TryToBreak";
@@ -37,7 +37,7 @@ export function HeroExperience() {
         style={reduceMotion ? undefined : { y: visualY, scale: visualScale }}
       >
         <div className="ws-hero__visual-depth">
-          <LivingSentinelaField state={experience.phase} />
+          <SentinelaDecisionField state={experience.phase} />
           <span className="ws-hero__state" aria-live="polite">{stateLabel(experience.phase)}</span>
         </div>
       </motion.div>

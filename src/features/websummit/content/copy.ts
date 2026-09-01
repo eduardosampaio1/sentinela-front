@@ -7,8 +7,15 @@ export const webSummitCopy = {
   traceCta: "See what happened",
   seedsTitle: "Try to break Sentinela",
   reveal: {
-    statement: "AI is powerful. Blind execution is expensive.",
-    explanation: "Sentinela understands the request, decides what should happen, and keeps every decision visible.",
+    statement: "Your AI is already making thousands of decisions. Can you explain them?",
+    explanation: "Sentinela makes customer-service AI observable before, during and after every interaction.",
+  },
+  economics: {
+    title: "Spend intelligence where it matters.",
+    value: "45%",
+    qualifier: "potential reduction in AI operating cost",
+    explanation: "Sentinela can avoid unnecessary model calls, reduce the context sent and choose the right route for each request.",
+    disclosure: "Up to 45% is a workload-dependent potential, not a guaranteed customer result. Actual savings depend on traffic, models, policies and configuration.",
   },
   comparison: {
     title: "One prompt. Two realities.",

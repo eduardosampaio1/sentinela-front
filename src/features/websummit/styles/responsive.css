@@ -46,6 +46,9 @@
   .ws-hero__content { width: 100%; max-width: none; }
   .ws-hero h1 { max-width: 760px; font-size: clamp(3.3rem, 11vw, 6rem); }
   .ws-system { grid-template-columns: 1fr; gap: 58px; min-height: auto; }
+  .ws-economics { grid-template-columns: 1fr; grid-template-areas: "intro" "value" "levers" "disclosure"; min-height: auto; }
+  .ws-economics__intro h2 { max-width: 13ch; }
+  .ws-economics__disclosure { margin-top: -30px; }
   .ws-hero__visual-depth { transform: translate3d(var(--ws-far-x), var(--ws-far-y), 0); }
 }
 
@@ -64,6 +67,15 @@
   .ws-system__word { top: 4%; font-size: 29vw; }
   .ws-system__content h2 { font-size: clamp(3rem, 14vw, 5rem); }
   .ws-system__decision { grid-template-columns: 96px minmax(0, 1fr); gap: 12px; }
+  .ws-economics__value strong { font-size: clamp(8.5rem, 42vw, 13rem); }
+  .ws-economics__levers { grid-template-columns: 1fr; }
+  .ws-economics__lever,
+  .ws-economics__lever + .ws-economics__lever { padding: 22px 0; border-right: 0; border-bottom: 1px solid var(--ws-line); }
+  .ws-economics__lever:last-child { border-bottom: 0; }
+  .ws-economics__disclosure { margin-top: -54px; }
+  .ws-decision-field__signals span { font-size: 0.46rem; }
+  .ws-decision-field__decision span { display: none; }
+  .ws-decision-field__caption { font-size: 0.48rem; }
   .ws-comparison__stage { min-height: 460px; }
   .ws-comparison__side { padding: 26px 20px; }
   .ws-comparison__side strong { max-width: 7ch; }
@@ -89,7 +101,9 @@
   .ws-hero__brand > *,
   .ws-hero__content-depth,
   .ws-hero__visual-depth { transform: none !important; }
-  .ws-living-field canvas { opacity: 0.82; }
+  .ws-decision-field__packet,
+  .ws-decision-field__pulse,
+  .ws-decision-field__core { animation: none !important; }
 }
 
 @media (prefers-reduced-transparency: reduce) {

@@ -21,19 +21,21 @@ styles/       event-scoped tokens, core, layout and responsive states
 
 - `motion`: state transitions, trace reveals and viewport entry choreography. It is isolated in the lazy Web Summit chunk and does not increase the initial product route bundle.
 
-No Three.js, GSAP, Rive, smooth-scroll library or marketing analytics vendor was added. A small event-only Canvas 2D renderer draws the living decision field without touching React state on animation frames. CSS provides the material surface and the reduced-motion fallback.
+No Three.js, GSAP, Rive, smooth-scroll library or marketing analytics vendor was added. The centerpiece is an event-only semantic SVG and CSS decision field. It communicates the product contract directly and avoids a continuous JavaScript rendering loop.
 
 ## Visual direction
 
 The public event narrative uses only the **Sentinela** name. Internal product names are deliberately absent from this first-contact experience.
 
-The visual centerpiece is a field that changes its coherence, energy, speed and spread with the real experience state:
+The visual centerpiece shows a request entering Sentinela, four decision signals converging (`intent`, `risk`, `context`, `cost`) and one controlled route leaving the system. Route illumination, signal pulses and information packets follow the real experience state:
 
 ```text
 ready -> listening -> understanding -> deciding -> responding -> complete
 ```
 
-Pointer movement bends the field with a low-amplitude response. The page-level parallax system adds four independent depth planes: distant ambient matter, narrative typography, interface content and the living field. Pointer values are smoothed outside React's render cycle; scroll depth is driven by Motion values. Mobile keeps scroll-based depth but removes the 3D pointer tilt, uses fewer canvas loops and segments, caps device pixel ratio and shortens the visual stage so the prompt remains visible in the first viewport. Reduced-motion users receive a composed static frame with all parallax removed.
+The page-level parallax system adds four independent depth planes: distant ambient matter, narrative typography, interface content and the decision field. Pointer values are smoothed outside React's render cycle; scroll depth is driven by Motion values. Mobile keeps scroll-based depth but removes the 3D pointer tilt and shortens the visual stage so the prompt remains visible in the first viewport. Reduced-motion users receive the same decision model as a composed static frame.
+
+The narrative now exposes the complete Sentinela value chain without internal product names: observe real customer-service conversations, control execution before a model runs, investigate evidence and improve the operation. The economic scene explains three mechanisms behind the qualified `up to 45%` potential: avoid unnecessary inference, reduce context and route to the appropriate model. The page explicitly states that this is workload-dependent potential, not a guaranteed customer result.
 
 ## Public environment
 
@@ -69,4 +71,4 @@ Production-preview Lighthouse on 2026-09-01:
 - CLS: 0
 - TBT: 150 ms
 
-The 2026-09-01 living-field revision kept the Web Summit route isolated and added no dependency. The subsequent spatial-parallax revision produced a 54.33 kB gzip JavaScript chunk plus 5.25 kB gzip event CSS. Local production-preview validation covered 1440 x 900 desktop and 390 x 844 mobile, verified independently moving depth planes, found no horizontal overflow and kept the prompt visible in the first mobile viewport.
+The 2026-09-01 living-field revision kept the Web Summit route isolated and added no dependency. The subsequent spatial-parallax revision produced a 54.33 kB gzip JavaScript chunk plus 5.25 kB gzip event CSS. The semantic-decision-field and expanded product narrative revision remains dependency-free; its production bundle is 54.69 kB gzip JavaScript plus 6.40 kB gzip event CSS.

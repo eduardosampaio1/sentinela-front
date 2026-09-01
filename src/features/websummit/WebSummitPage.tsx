@@ -3,6 +3,7 @@ import { AmbientField } from "./components/AmbientField";
 import { HeroExperience } from "./components/HeroExperience";
 import { ProductReveal } from "./components/ProductReveal";
 import { SentinelaSystemSection } from "./components/SentinelaSystemSection";
+import { CostControlSection } from "./components/CostControlSection";
 import { RealityComparison } from "./components/RealityComparison";
 import { EventCTA } from "./components/EventCTA";
 import { EventFooter } from "./components/EventFooter";
@@ -28,6 +29,7 @@ export function WebSummitPage() {
         <HeroExperience />
         <ProductReveal />
         <SentinelaSystemSection />
+        <CostControlSection />
         <RealityComparison />
         <EventCTA />
       </main>
