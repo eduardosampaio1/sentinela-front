@@ -11,7 +11,17 @@
   --ws-danger: #ff8b8b;
   --ws-radius: 16px;
   --ws-pointer-x: 50%;
-  --ws-pointer-y: 30%;
+  --ws-pointer-y: 50%;
+  --ws-far-x: 0px;
+  --ws-far-y: 0px;
+  --ws-mid-x: 0px;
+  --ws-mid-y: 0px;
+  --ws-near-x: 0px;
+  --ws-near-y: 0px;
+  --ws-counter-x: 0px;
+  --ws-counter-y: 0px;
+  --ws-tilt-x: 0deg;
+  --ws-tilt-y: 0deg;
   --ws-z-ambient: 0;
   --ws-z-content: 1;
   --ws-z-dialog: 20;

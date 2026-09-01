@@ -46,6 +46,7 @@
   .ws-hero__content { width: 100%; max-width: none; }
   .ws-hero h1 { max-width: 760px; font-size: clamp(3.3rem, 11vw, 6rem); }
   .ws-system { grid-template-columns: 1fr; gap: 58px; min-height: auto; }
+  .ws-hero__visual-depth { transform: translate3d(var(--ws-far-x), var(--ws-far-y), 0); }
 }
 
 @media (max-width: 600px) {
@@ -83,6 +84,11 @@
     transition-duration: 0.001ms !important;
   }
   .ws-ambient__light { opacity: 0.62; transform: none; }
+  .ws-ambient__depth,
+  .ws-ambient__plane,
+  .ws-hero__brand > *,
+  .ws-hero__content-depth,
+  .ws-hero__visual-depth { transform: none !important; }
   .ws-living-field canvas { opacity: 0.82; }
 }
 

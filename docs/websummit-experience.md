@@ -33,7 +33,7 @@ The visual centerpiece is a field that changes its coherence, energy, speed and 
 ready -> listening -> understanding -> deciding -> responding -> complete
 ```
 
-Pointer movement bends the field with a low-amplitude response. Mobile uses the same renderer with fewer loops and segments, a capped device pixel ratio and a shorter visual stage so the prompt remains visible in the first viewport. Reduced-motion users receive a composed static frame.
+Pointer movement bends the field with a low-amplitude response. The page-level parallax system adds four independent depth planes: distant ambient matter, narrative typography, interface content and the living field. Pointer values are smoothed outside React's render cycle; scroll depth is driven by Motion values. Mobile keeps scroll-based depth but removes the 3D pointer tilt, uses fewer canvas loops and segments, caps device pixel ratio and shortens the visual stage so the prompt remains visible in the first viewport. Reduced-motion users receive a composed static frame with all parallax removed.
 
 ## Public environment
 
@@ -68,4 +68,4 @@ Production-preview Lighthouse on 2026-09-01:
 - CLS: 0
 - TBT: 150 ms
 
-The 2026-09-01 living-field revision kept the Web Summit route isolated, added no dependency and produced a 51.22 kB gzip JavaScript chunk plus 4.69 kB gzip event CSS. Homologation deployment `9317037b-5c8a-4d8a-8935-ce0fe9502c95` (commit `9c5c8ef`) passed desktop and 390 x 844 mobile visual validation, had no horizontal overflow, completed the public experience request and emitted no browser console warnings or errors.
+The 2026-09-01 living-field revision kept the Web Summit route isolated and added no dependency. The subsequent spatial-parallax revision produced a 54.33 kB gzip JavaScript chunk plus 5.25 kB gzip event CSS. Local production-preview validation covered 1440 x 900 desktop and 390 x 844 mobile, verified independently moving depth planes, found no horizontal overflow and kept the prompt visible in the first mobile viewport.

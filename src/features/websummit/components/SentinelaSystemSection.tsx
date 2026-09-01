@@ -1,4 +1,5 @@
-import { motion, useReducedMotion } from "motion/react";
+import { useRef } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 
 const decisions = [
   ["UNDERSTAND", "Read the request and its context."],
@@ -8,16 +9,26 @@ const decisions = [
 ] as const;
 
 export function SentinelaSystemSection() {
+  const sectionRef = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
+  const wordX = useTransform(scrollYProgress, [0, 1], ["-7%", "4%"]);
+  const wordY = useTransform(scrollYProgress, [0, 1], [64, -52]);
+  const contentY = useTransform(scrollYProgress, [0, 1], [54, -34]);
+  const sequenceY = useTransform(scrollYProgress, [0, 1], [-24, 34]);
 
   return (
-    <section className="ws-section ws-system" aria-labelledby="ws-system-title">
-      <div className="ws-system__word" aria-hidden="true">SENTINELA</div>
-      <div className="ws-system__content">
+    <section ref={sectionRef} className="ws-section ws-system" aria-labelledby="ws-system-title">
+      <motion.div
+        className="ws-system__word"
+        aria-hidden="true"
+        style={reduceMotion ? undefined : { x: wordX, y: wordY }}
+      >SENTINELA</motion.div>
+      <motion.div className="ws-system__content" style={reduceMotion ? undefined : { y: contentY }}>
         <h2 id="ws-system-title">One system. Every decision visible.</h2>
         <p>Sentinela sits between intent and execution, deciding how AI should be used before the request moves forward.</p>
-      </div>
-      <div className="ws-system__sequence">
+      </motion.div>
+      <motion.div className="ws-system__sequence" style={reduceMotion ? undefined : { y: sequenceY }}>
         {decisions.map(([label, description], index) => (
           <motion.div
             key={label}
@@ -31,7 +42,7 @@ export function SentinelaSystemSection() {
             <span>{description}</span>
           </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

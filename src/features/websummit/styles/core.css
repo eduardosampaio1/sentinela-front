@@ -17,6 +17,52 @@
   animation: ws-breathe 10s ease-in-out infinite;
 }
 
+.ws-ambient__depth {
+  position: absolute;
+  inset: -18%;
+  will-change: transform;
+}
+
+.ws-ambient__depth--far { transform: translate3d(var(--ws-far-x), var(--ws-far-y), 0); }
+.ws-ambient__depth--mid { transform: translate3d(var(--ws-mid-x), var(--ws-mid-y), 0); }
+.ws-ambient__depth--near { transform: translate3d(var(--ws-near-x), var(--ws-near-y), 0); }
+
+.ws-ambient__plane {
+  position: absolute;
+  border-radius: 48%;
+  filter: blur(2px);
+  opacity: 0.32;
+}
+
+.ws-ambient__plane--far {
+  top: 8%;
+  right: 2%;
+  width: 68vw;
+  height: 68vw;
+  border: 1px solid rgba(112, 184, 232, 0.06);
+  box-shadow: inset 0 0 110px rgba(45, 124, 181, 0.025);
+  animation: ws-orbit-far 34s ease-in-out infinite alternate;
+}
+
+.ws-ambient__plane--mid {
+  top: 28%;
+  left: 18%;
+  width: 42vw;
+  height: 72vw;
+  border: 1px solid rgba(166, 214, 244, 0.045);
+  border-radius: 42% 58% 61% 39%;
+  animation: ws-orbit-mid 28s ease-in-out infinite alternate;
+}
+
+.ws-ambient__plane--near {
+  right: -2%;
+  bottom: 4%;
+  width: 34vw;
+  height: 34vw;
+  background: radial-gradient(circle, rgba(70, 155, 216, 0.04), transparent 68%);
+  animation: ws-orbit-near 22s ease-in-out infinite alternate;
+}
+
 .ws-ambient__grain {
   position: fixed;
   inset: 0;
@@ -77,4 +123,19 @@
 @keyframes ws-breathe {
   0%, 100% { opacity: 0.48; transform: scale(0.97); }
   50% { opacity: 0.9; transform: scale(1.03); }
+}
+
+@keyframes ws-orbit-far {
+  from { transform: rotate(-9deg) scale(0.96); }
+  to { transform: rotate(7deg) scale(1.06); }
+}
+
+@keyframes ws-orbit-mid {
+  from { transform: rotate(12deg) translate3d(-2%, 1%, 0); }
+  to { transform: rotate(-5deg) translate3d(3%, -2%, 0); }
+}
+
+@keyframes ws-orbit-near {
+  from { transform: scale(0.86); opacity: 0.2; }
+  to { transform: scale(1.18); opacity: 0.46; }
 }
