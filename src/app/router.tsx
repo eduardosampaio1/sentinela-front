@@ -70,6 +70,9 @@ const TermsPage = lazy(() =>
 const SecurityPage = lazy(() =>
   import("@/features/legal/SecurityPage").then((m) => ({ default: m.SecurityPage }))
 );
+const WebSummitPage = lazy(() =>
+  import("@/features/websummit/WebSummitPage").then((m) => ({ default: m.WebSummitPage }))
+);
 
 // ── Jornada canônica /v1 ────────────────────────────────────────────────────────────────────────
 /**
@@ -246,6 +249,10 @@ const routes: RouteObject[] = [
   {
     path: "/security",
     element: <PageSuspense><SecurityPage /></PageSuspense>,
+  },
+  {
+    path: "/websummit",
+    element: <PageSuspense><WebSummitPage /></PageSuspense>,
   },
 
   // ── Auth (public-only: redirect to /home if already logged in) ────────────

@@ -7,9 +7,8 @@
    letra por tamanho. E o que faz o numero de 104px do heroi e o micro-rotulo de 10px soarem
    como a mesma voz.
 
-   A familia em si mora em `--ds-font-sans` (tokens.css). Aqui so se CARREGA o arquivo. */
-@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap');
-
+   A familia em si mora em `--ds-font-sans` (tokens.css). `src/main.tsx` carrega o arquivo
+   somente no bootstrap do produto, mantendo a experiencia Web Summit isolada. */
 @tailwind base;
 
 @keyframes marquee {

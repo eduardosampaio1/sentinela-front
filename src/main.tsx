@@ -6,24 +6,16 @@ import "./dev/navegacaoManual";
 import "./dev/massaDeNavegacao";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { Providers } from "./app/providers";
-import { App } from "./app/App";
 import { limparResultadosLegadosDoNavegador } from "./lib/legacyBrowserStorage";
-// Vocabulario canonico PRIMEIRO: `styles/globals.css` so contem apelidos que apontam para
-// estes papeis, e apelido declarado antes do valor nao resolveria.
+// Vocabulário canônico PRIMEIRO: `styles/globals.css` só contém aliases para estes papéis.
 import "./design/tokens/tokens.css";
 import "./styles/globals.css";
 
-// ANTES de qualquer render: apaga as cópias de resultado que a versão anterior deixou no
-// navegador. Remover o código que gravava não apaga o que ele já gravou, e essa cópia é a
-// única que nenhum purge do servidor alcança.
-//
-// Não usa `clear()`: só saem as chaves com os prefixos que este app criou. Ver
-// `lib/legacyBrowserStorage.ts`.
-limparResultadosLegadosDoNavegador();
+const isWebSummitEntry = window.location.pathname.replace(/\/+$/, "") === "/websummit";
 
-// When a new deploy changes chunk hashes, cached HTML references stale filenames.
-// Reload once so the browser fetches the fresh index.html with correct chunk URLs.
+// A limpeza pertence ao produto autenticado. A experiência pública não lê nem altera esse estado.
+if (!isWebSummitEntry) limparResultadosLegadosDoNavegador();
+
 window.addEventListener("vite:preloadError", () => {
   const key = "__chunk_reload__";
   if (!sessionStorage.getItem(key)) {
@@ -34,24 +26,43 @@ window.addEventListener("vite:preloadError", () => {
 
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("Root element not found");
+const root = createRoot(rootEl);
 
-function renderApp() {
-  createRoot(rootEl!).render(
+function loadProductFonts() {
+  const preconnect = document.createElement("link");
+  preconnect.rel = "preconnect";
+  preconnect.href = "https://fonts.gstatic.com";
+  preconnect.crossOrigin = "anonymous";
+
+  const stylesheet = document.createElement("link");
+  stylesheet.rel = "stylesheet";
+  stylesheet.href = "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500&display=swap";
+  document.head.append(preconnect, stylesheet);
+}
+
+async function renderProductApp() {
+  const [{ Providers }, { App }] = await Promise.all([
+    import("./app/providers"),
+    import("./app/App"),
+  ]);
+  root.render(
     <StrictMode>
       <Providers>
         <App />
       </Providers>
-    </StrictMode>
+    </StrictMode>,
   );
 }
 
-// CADEADO fail-closed: o bypass de auth E2E só é carregado sob TRÊS condições simultâneas:
-//   1. `import.meta.env.DEV` — literal `false` em produção → o `import()` é eliminado e
-//      `src/e2e/bypass.ts` (que contém o token fixo) nunca entra no bundle de produção;
-//   2. `VITE_E2E === "true"` — marca explícita do dev server sob Playwright;
-//   3. opt-in por teste (`window.__SENTINELA_E2E_AUTH__`, setado via addInitScript) — cada spec
-//      decide se quer o estado autenticado; sem ele, o caminho real de auth é usado (ex.: o
-//      cenário não-autenticado → /login continua válido no MESMO dev server).
+async function renderWebSummitApp() {
+  const { WebSummitPage } = await import("./features/websummit/WebSummitPage");
+  root.render(
+    <StrictMode>
+      <WebSummitPage />
+    </StrictMode>,
+  );
+}
+
 function e2eAuthRequested(): boolean {
   try {
     return typeof window !== "undefined" && (window as unknown as Record<string, unknown>).__SENTINELA_E2E_AUTH__ === true;
@@ -60,25 +71,21 @@ function e2eAuthRequested(): boolean {
   }
 }
 
-// CADEADO do MSW (M16). Duas condições, e nenhuma delas mora num componente:
-//   1. `import.meta.env.DEV` — literal `false` em produção, então o Rollup elimina este ramo e
-//      nem `src/mocks/**` nem o pacote `msw` entram no bundle do usuário;
-//   2. `VITE_SENTINELA_MOCK=on` — a variável ÚNICA do DoD. Ausente ou diferente disso, o app fala
-//      com o Gateway real, e nada mais precisa mudar.
-//
-// O arranque acontece ANTES do render de propósito: um worker que sobe depois da primeira
-// requisição deixa passar exatamente a chamada que a tela faz ao montar, e o mock pareceria
-// intermitente em vez de desligado.
 async function arrancarMockSePedido(): Promise<void> {
   if (!import.meta.env.DEV) return;
   const { mockLigado, iniciarMockDoBrowser } = await import("./mocks/browser");
   if (mockLigado()) await iniciarMockDoBrowser();
 }
 
-if (import.meta.env.DEV && import.meta.env.VITE_E2E === "true" && e2eAuthRequested()) {
-  import("./e2e/bypass")
-    .then(({ installE2EBypass }) => installE2EBypass())
-    .finally(renderApp);
+if (isWebSummitEntry) {
+  void renderWebSummitApp();
 } else {
-  void arrancarMockSePedido().finally(renderApp);
+  loadProductFonts();
+  if (import.meta.env.DEV && import.meta.env.VITE_E2E === "true" && e2eAuthRequested()) {
+    import("./e2e/bypass")
+      .then(({ installE2EBypass }) => installE2EBypass())
+      .finally(renderProductApp);
+  } else {
+    void arrancarMockSePedido().finally(renderProductApp);
+  }
 }

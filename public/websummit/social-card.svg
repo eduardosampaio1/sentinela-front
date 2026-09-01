@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Sentinela at Web Summit 2026</title>
+  <desc id="desc">AI shouldn't answer everything. Experience how Sentinela controls how AI is used.</desc>
+  <defs>
+    <radialGradient id="field" cx="72%" cy="42%" r="55%">
+      <stop offset="0" stop-color="#285f88" stop-opacity=".58"/>
+      <stop offset=".52" stop-color="#111923" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#07090d"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#field)"/>
+  <g fill="none" stroke="#86c9f4" stroke-opacity=".42">
+    <rect x="782" y="119" width="260" height="390" rx="118" transform="rotate(18 912 314)"/>
+    <rect x="816" y="153" width="192" height="322" rx="82" transform="rotate(10 912 314)"/>
+    <rect x="852" y="189" width="120" height="250" rx="48"/>
+  </g>
+  <text x="78" y="82" fill="#f3f6f8" font-family="Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="7">SENTINELA</text>
+  <text x="78" y="292" fill="#f3f6f8" font-family="Arial, sans-serif" font-size="66" font-weight="500">AI shouldn't answer</text>
+  <text x="78" y="370" fill="#f3f6f8" font-family="Arial, sans-serif" font-size="66" font-weight="500">everything.</text>
+  <text x="78" y="512" fill="#9ca8b5" font-family="Arial, sans-serif" font-size="24">Web Summit Lisbon 2026</text>
+</svg>
