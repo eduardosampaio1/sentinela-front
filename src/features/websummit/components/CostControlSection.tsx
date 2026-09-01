@@ -3,9 +3,9 @@ import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
 import { webSummitCopy } from "../content/copy";
 
 const levers = [
-  ["AVOID", "Do not call a model when AI is not required."],
-  ["REDUCE", "Send only the context needed for the task."],
-  ["ROUTE", "Match complexity and risk to the right model."],
+  ["BYPASS", "Do not call a model when a safe, approved response is enough."],
+  ["SHRINK", "Send only the context the request actually needs."],
+  ["ROUTE", "Match complexity, risk and cost to the right model."],
 ] as const;
 
 export function CostControlSection() {

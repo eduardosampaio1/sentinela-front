@@ -62,14 +62,14 @@ export function LeadCaptureDialog({ open, onOpenChange }: LeadCaptureDialogProps
         {status === "success" ? (
           <div className="ws-lead-success" role="status">
             <Check aria-hidden="true" />
-            <h2 id="ws-lead-title">You're on our Lisbon list.</h2>
-            <p>We'll see you at Web Summit.</p>
+            <h2 id="ws-lead-title">Your meeting request is in.</h2>
+            <p>We'll contact you to arrange a time at Web Summit.</p>
             <button type="button" className="ws-primary-action" onClick={close}>Done</button>
           </div>
         ) : (
           <form onSubmit={submit} noValidate>
             <h2 id="ws-lead-title">Meet Sentinela in Lisbon</h2>
-            <p>Leave one reliable way to reach you.</p>
+            <p>Share your work email and we'll arrange a conversation at Web Summit.</p>
             <div className="ws-lead-grid">
               <Field label="Work email" required error={errors.email}>
                 <input type="email" autoComplete="email" value={form.email} onChange={(e) => update("email", e.target.value)} maxLength={254} />
@@ -92,7 +92,7 @@ export function LeadCaptureDialog({ open, onOpenChange }: LeadCaptureDialogProps
             {errors.consent && <p className="ws-form-error" role="alert">{errors.consent}</p>}
             {status === "error" && <p className="ws-submit-error" role="alert">Something went wrong. Try again in a moment.</p>}
             <button className="ws-primary-action ws-lead-submit" disabled={status === "submitting"}>
-              {status === "submitting" ? <span className="ws-submit-signal">Securing your place</span> : "Join the Lisbon list"}
+              {status === "submitting" ? <span className="ws-submit-signal">Sending your request</span> : "Request a meeting"}
             </button>
           </form>
         )}

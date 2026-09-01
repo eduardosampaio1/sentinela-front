@@ -17,7 +17,7 @@ describe("LeadCaptureDialog", () => {
     render(<LeadCaptureDialog open onOpenChange={vi.fn()} />);
     fireEvent.change(screen.getByLabelText("Work email *"), { target: { value: "person@company.com" } });
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: "Join the Lisbon list" }));
+    fireEvent.click(screen.getByRole("button", { name: "Request a meeting" }));
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Something went wrong"));
     expect(screen.getByLabelText("Work email *")).toHaveValue("person@company.com");
   });

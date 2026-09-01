@@ -6,7 +6,7 @@ export function EventFooter() {
         <a href="/privacy">Privacy</a>
         <a href="mailto:hello@sentinela.ai">Contact</a>
       </nav>
-      <p>Control how AI is used.</p>
+      <p>The steering system for AI customer service.</p>
     </footer>
   );
 }

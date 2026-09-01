@@ -35,7 +35,9 @@ ready -> listening -> understanding -> deciding -> responding -> complete
 
 The page-level parallax system adds four independent depth planes: distant ambient matter, narrative typography, interface content and the decision field. Pointer values are smoothed outside React's render cycle; scroll depth is driven by Motion values. Mobile keeps scroll-based depth but removes the 3D pointer tilt and shortens the visual stage so the prompt remains visible in the first viewport. Reduced-motion users receive the same decision model as a composed static frame.
 
-The narrative now exposes the complete Sentinela value chain without internal product names: observe real customer-service conversations, control execution before a model runs, investigate evidence and improve the operation. The economic scene explains three mechanisms behind the qualified `up to 45%` potential: avoid unnecessary inference, reduce context and route to the appropriate model. The page explicitly states that this is workload-dependent potential, not a guaranteed customer result.
+The narrative follows the pitch deck's customer-service positioning without reproducing slide copy. It first lets the visitor experience a controlled decision, then names the tension between lower operating cost and higher customer expectations. Sentinela is introduced as the steering system between the customer-service stack and its models. The operating loop is expressed as observe, decide, control and improve; the economic scene then explains bypass, context reduction and model routing before the Lisbon meeting request.
+
+Public claims distinguish cost from token consumption. The current proof point is an early deployment result of approximately 40% lower token consumption within 60 days. It is not presented as guaranteed cost savings, and the page states that results depend on workload, providers, policies and deployment configuration.
 
 ## Public environment
 
@@ -72,4 +74,4 @@ Production-preview Lighthouse on 2026-09-01:
 - CLS: 0
 - TBT: 150 ms
 
-The 2026-09-01 living-field revision kept the Web Summit route isolated and added no dependency. The subsequent spatial-parallax revision produced a 54.33 kB gzip JavaScript chunk plus 5.25 kB gzip event CSS. The semantic-decision-field and expanded product narrative revision remains dependency-free; its production bundle is 54.69 kB gzip JavaScript plus 6.40 kB gzip event CSS.
+The 2026-09-01 living-field revision kept the Web Summit route isolated and added no dependency. The subsequent spatial-parallax revision produced a 54.33 kB gzip JavaScript chunk plus 5.25 kB gzip event CSS. The pitch-aligned narrative revision remains dependency-free; its production bundle is 54.83 kB gzip JavaScript plus 6.96 kB gzip event CSS.

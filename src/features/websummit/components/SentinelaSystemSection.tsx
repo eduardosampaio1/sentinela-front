@@ -2,10 +2,10 @@ import { useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 
 const decisions = [
-  ["OBSERVE", "Measure behavior, drift, consistency, handoffs and cost across real conversations."],
-  ["CONTROL", "Choose route, context and policy before the model acts."],
-  ["INVESTIGATE", "Connect signals, contradictions, evidence and business impact."],
-  ["IMPROVE", "Show what to change, why it matters and where to act first."],
+  ["OBSERVE", "Measure quality, drift, consistency, handoffs and cost across real customer conversations."],
+  ["DECIDE", "Determine whether AI is needed, which model should act and what context it needs."],
+  ["CONTROL", "Apply routing, compression, policy and response checks before and after the model acts."],
+  ["IMPROVE", "Turn evidence into prioritized changes across quality, cost and operations."],
 ] as const;
 
 export function SentinelaSystemSection() {
@@ -25,8 +25,8 @@ export function SentinelaSystemSection() {
         style={reduceMotion ? undefined : { x: wordX, y: wordY }}
       >SENTINELA</motion.div>
       <motion.div className="ws-system__content" style={reduceMotion ? undefined : { y: contentY }}>
-        <h2 id="ws-system-title">See the operation. Control the next decision.</h2>
-        <p>For teams already serving customers with AI, Sentinela connects what happened at scale with what should happen now.</p>
+        <h2 id="ws-system-title">See what happened. Steer what happens next.</h2>
+        <p>Sentinela is the observability and control layer between your customer-service stack and the models it uses, designed to keep customer data inside your infrastructure boundary.</p>
       </motion.div>
       <motion.div className="ws-system__sequence" style={reduceMotion ? undefined : { y: sequenceY }}>
         {decisions.map(([label, description], index) => (

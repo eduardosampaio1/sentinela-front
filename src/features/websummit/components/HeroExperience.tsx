@@ -28,7 +28,7 @@ export function HeroExperience() {
     <section ref={heroRef} className="ws-hero" data-state={experience.phase} aria-labelledby="ws-hero-title">
       <motion.div className="ws-hero__brand" style={reduceMotion ? undefined : { y: brandY }}>
         <strong>{webSummitCopy.brand}</strong>
-        <span>CONTROL HOW AI IS USED</span>
+        <span>THE STEERING SYSTEM FOR AI CUSTOMER SERVICE</span>
       </motion.div>
       <motion.div
         className="ws-hero__visual"

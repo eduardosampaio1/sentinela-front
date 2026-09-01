@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 
 const metadata = {
-  title: "Sentinela - Control how AI is used | Web Summit 2026",
-  description: "Experience how Sentinela understands, decides and controls how AI is used.",
+  title: "Sentinela - The steering system for AI customer service | Web Summit 2026",
+  description: "See how Sentinela helps customer-service teams control AI quality, routing and token spend.",
 };
 
 function upsertMeta(selector: string, attributes: Record<string, string>) {

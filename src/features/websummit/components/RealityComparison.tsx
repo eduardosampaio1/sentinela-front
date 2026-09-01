@@ -24,16 +24,16 @@ export function RealityComparison() {
         <div className="ws-comparison__side ws-comparison__without">
           <span>WITHOUT SENTINELA</span>
           <strong>Default route</strong>
-          <p>Full context sent</p>
-          <p>No policy decision</p>
-          <p>No trace</p>
+          <p>Every request reaches a model</p>
+          <p>Full context is sent</p>
+          <p>Cost and quality are discovered later</p>
         </div>
         <div className="ws-comparison__side ws-comparison__with">
           <span>WITH SENTINELA</span>
-          <strong>Intentional route</strong>
-          <p>Context minimized</p>
-          <p>Policy applied</p>
-          <p>Decision trace retained</p>
+          <strong>Controlled route</strong>
+          <p>Bypass, compress or choose a model</p>
+          <p>Policy is checked before the response</p>
+          <p>Every decision remains traceable</p>
         </div>
         <label className="ws-sr-only" htmlFor="ws-reality-slider">Compare without and with Sentinela</label>
         <input
