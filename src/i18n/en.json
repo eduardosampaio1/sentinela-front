@@ -827,6 +827,8 @@
           "ownership": "Execution continuity",
           "outcome": "Outcome",
           "inProgress": "In progress",
+          "legacyCompleted": "Completed",
+          "legacyFinished": "Finished; cause not recorded",
           "ownershipState": {
             "healthy": "Healthy",
             "closed": "Closed safely",

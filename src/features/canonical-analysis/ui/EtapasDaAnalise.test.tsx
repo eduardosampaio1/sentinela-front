@@ -81,12 +81,12 @@ describe("etapas públicas da análise", () => {
             run_manifest: null,
             runtime_evidence: {
               attempt_number: 2,
-              state: "running",
+              state: "succeeded",
               started_at: "2026-08-31T12:00:00Z",
               last_heartbeat_at: "2026-08-31T12:01:00Z",
               finished_at: null,
               duration_ms: null,
-              ownership_state: "healthy",
+              ownership_state: "closed",
               terminal_cause: null,
             },
             core_milestones: [
@@ -134,7 +134,8 @@ describe("etapas públicas da análise", () => {
     expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Trabalho encaminhado");
     expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Em andamento");
     expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Execução observada");
-    expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Saudável");
+    expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Encerrada com segurança");
+    expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Concluída");
     expect(screen.queryByText("Sentinela Review")).not.toBeInTheDocument();
   });
 });

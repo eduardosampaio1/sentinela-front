@@ -827,6 +827,8 @@
           "ownership": "Continuidade da execução",
           "outcome": "Desfecho",
           "inProgress": "Em andamento",
+          "legacyCompleted": "Concluída",
+          "legacyFinished": "Encerrada; causa não registrada",
           "ownershipState": {
             "healthy": "Saudável",
             "closed": "Encerrada com segurança",

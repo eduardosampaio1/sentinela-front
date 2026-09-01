@@ -214,6 +214,21 @@ export function EtapasDaAnalise({
     const remainingSeconds = seconds % 60;
     return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${remainingSeconds}s`;
   };
+  const formatarDesfecho = () => {
+    if (!runtime) return "";
+    if (runtime.terminal_cause) {
+      return t(
+        `canonicalAnalysis.liveProgress.operational.runtime.terminalCause.${runtime.terminal_cause}`,
+      );
+    }
+    if (runtime.state === "succeeded") {
+      return t("canonicalAnalysis.liveProgress.operational.runtime.legacyCompleted");
+    }
+    if (["failed", "abandoned", "cancelled"].includes(runtime.state)) {
+      return t("canonicalAnalysis.liveProgress.operational.runtime.legacyFinished");
+    }
+    return t("canonicalAnalysis.liveProgress.operational.runtime.inProgress");
+  };
   const formatarBytes = (valor: number) => {
     const emGigabytes = valor >= 1_000_000_000;
     return new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US", {
@@ -459,11 +474,7 @@ export function EtapasDaAnalise({
                   <dt className="text-muted-foreground">
                     {t("canonicalAnalysis.liveProgress.operational.runtime.outcome")}
                   </dt>
-                  <dd className="text-foreground">
-                    {runtime.terminal_cause
-                      ? t(`canonicalAnalysis.liveProgress.operational.runtime.terminalCause.${runtime.terminal_cause}`)
-                      : t("canonicalAnalysis.liveProgress.operational.runtime.inProgress")}
-                  </dd>
+                  <dd className="text-foreground">{formatarDesfecho()}</dd>
                 </div>
               </dl>
             </div>
