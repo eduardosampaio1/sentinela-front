@@ -7,12 +7,8 @@ export const webSummitCopy = {
   traceCta: "See what happened",
   seedsTitle: "Try to break Sentinela",
   reveal: {
-    statement: "AI is powerful. Using it blindly is expensive.",
-    explanation: "Sentinela is the control layer between your business and AI.",
-  },
-  systems: {
-    argos: "Understand what happened.",
-    aion: "Control what happens now.",
+    statement: "AI is powerful. Blind execution is expensive.",
+    explanation: "Sentinela understands the request, decides what should happen, and keeps every decision visible.",
   },
   comparison: {
     title: "One prompt. Two realities.",

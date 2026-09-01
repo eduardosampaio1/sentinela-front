@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { AmbientField } from "./components/AmbientField";
 import { HeroExperience } from "./components/HeroExperience";
 import { ProductReveal } from "./components/ProductReveal";
-import { ArgosAionSection } from "./components/ArgosAionSection";
+import { SentinelaSystemSection } from "./components/SentinelaSystemSection";
 import { RealityComparison } from "./components/RealityComparison";
 import { EventCTA } from "./components/EventCTA";
 import { EventFooter } from "./components/EventFooter";
@@ -27,7 +27,7 @@ export function WebSummitPage() {
       <main id="ws-main">
         <HeroExperience />
         <ProductReveal />
-        <ArgosAionSection />
+        <SentinelaSystemSection />
         <RealityComparison />
         <EventCTA />
       </main>

@@ -36,35 +36,33 @@
 @media (max-width: 900px) {
   .ws-hero {
     grid-template-columns: 1fr;
-    grid-template-areas: "brand" "core" "content";
+    grid-template-areas: "brand" "visual" "content";
     align-content: start;
     min-height: auto;
     padding: 26px 24px 74px;
   }
   .ws-hero__brand { min-height: 40px; }
-  .ws-hero__core { min-height: 310px; }
-  .ws-core-wrap { width: min(78vw, 430px); min-width: 260px; }
+  .ws-hero__visual { min-height: min(58dvh, 540px); margin: 4px 0 42px; }
   .ws-hero__content { width: 100%; max-width: none; }
   .ws-hero h1 { max-width: 760px; font-size: clamp(3.3rem, 11vw, 6rem); }
-  .ws-duality { grid-template-columns: 1fr; gap: 52px; min-height: auto; }
-  .ws-duality__system--aion { text-align: left; }
-  .ws-duality__link { justify-content: start; width: 100%; height: 1px; }
-  .ws-duality__link span { width: 100%; height: 1px; background: linear-gradient(90deg, var(--ws-accent), transparent); }
+  .ws-system { grid-template-columns: 1fr; gap: 58px; min-height: auto; }
 }
 
 @media (max-width: 600px) {
   .ws-section { width: min(100% - 36px, 1320px); padding: 92px 0; }
   .ws-hero { padding-inline: 18px; }
-  .ws-hero__core { min-height: 270px; }
-  .ws-core-wrap { width: min(88vw, 340px); }
-  .ws-core__state { margin-top: -24px; }
+  .ws-hero__brand span { display: none; }
+  .ws-hero__visual { min-height: 32dvh; margin-bottom: 28px; }
+  .ws-hero__state { right: 14px; bottom: 13px; font-size: 0.54rem; }
   .ws-hero h1 { font-size: clamp(3rem, 15vw, 4.6rem); }
   .ws-composer__meta { align-items: flex-start; }
   .ws-composer__meta p { max-width: 31ch; }
   .ws-seeds__list { display: grid; justify-items: start; gap: 4px; }
   .ws-reveal { min-height: 76dvh; }
   .ws-reveal h2, .ws-event-cta h2 { font-size: clamp(3rem, 14vw, 5rem); }
-  .ws-duality__system h2 { font-size: clamp(4.2rem, 24vw, 7.2rem); }
+  .ws-system__word { top: 4%; font-size: 29vw; }
+  .ws-system__content h2 { font-size: clamp(3rem, 14vw, 5rem); }
+  .ws-system__decision { grid-template-columns: 96px minmax(0, 1fr); gap: 12px; }
   .ws-comparison__stage { min-height: 460px; }
   .ws-comparison__side { padding: 26px 20px; }
   .ws-comparison__side strong { max-width: 7ch; }
@@ -85,7 +83,7 @@
     transition-duration: 0.001ms !important;
   }
   .ws-ambient__light { opacity: 0.62; transform: none; }
-  .ws-core__layer { transform: rotate(calc(var(--ws-layer) * 4deg)); }
+  .ws-living-field canvas { opacity: 0.82; }
 }
 
 @media (prefers-reduced-transparency: reduce) {
