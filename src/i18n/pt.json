@@ -181,6 +181,26 @@
       "configuration": "Configuração",
       "successCheck": "Como validar",
       "rollback": "Como desfazer",
+      "acceptAction": "Aceitar plano",
+      "actionHistory": "Histórico da ação",
+      "actionUpdateError": "Não foi possível atualizar esta ação. Nada foi perdido; tente novamente.",
+      "actionStatus": {
+        "accepted": "Aceita",
+        "in_progress": "Em andamento",
+        "verifying": "Verificando resultado",
+        "succeeded": "Concluída com sucesso",
+        "failed": "Não atingiu o resultado",
+        "dismissed": "Descartada",
+        "rolled_back": "Revertida"
+      },
+      "actionTransition": {
+        "in_progress": "Iniciar ação",
+        "verifying": "Verificar resultado",
+        "succeeded": "Confirmar sucesso",
+        "failed": "Marcar como não resolvida",
+        "dismissed": "Descartar",
+        "rolled_back": "Registrar reversão"
+      },
       "export": "Baixar Review em Excel",
       "exporting": "Preparando Excel…",
       "exportError": "Não foi possível baixar o Excel agora. O Review continua salvo; tente novamente.",

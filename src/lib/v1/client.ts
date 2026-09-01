@@ -40,6 +40,10 @@ import type {
   ContextSuggestionView,
   ReviewArtifactView,
   ReviewRequestView,
+  ReviewActionListView,
+  ReviewActionRecordView,
+  AcceptReviewActionInput,
+  TransitionReviewActionInput,
 } from "./contract/public-v1.types";
 import {
   normalizeProblem,
@@ -163,6 +167,24 @@ export interface V1Client {
     scope: CanonicalScope,
     opts?: RequestOptions,
   ): Promise<Blob>;
+  getReviewActions(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<ReviewActionListView>;
+  acceptReviewAction(
+    analysisId: string,
+    scope: CanonicalScope,
+    input: AcceptReviewActionInput,
+    opts?: RequestOptions,
+  ): Promise<ReviewActionRecordView>;
+  transitionReviewAction(
+    analysisId: string,
+    actionRecordId: string,
+    scope: CanonicalScope,
+    input: TransitionReviewActionInput,
+    opts?: RequestOptions,
+  ): Promise<ReviewActionRecordView>;
   queryAnalytics(
     analysisId: string,
     scope: CanonicalScope,
@@ -866,6 +888,29 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         `/v1/analyses/${encodeAnalysisId(analysisId)}/review/export.xlsx`,
         { workspace_id: scope.workspaceId },
         opts,
+      ),
+    getReviewActions: (analysisId, scope, opts) =>
+      pedir<ReviewActionListView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/review/actions`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
+    acceptReviewAction: (analysisId, scope, input, opts) =>
+      pedir<ReviewActionRecordView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/review/actions`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify(input), contentType: "application/json" },
+      ),
+    transitionReviewAction: (analysisId, actionRecordId, scope, input, opts) =>
+      pedir<ReviewActionRecordView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/review/actions/${encodeURIComponent(actionRecordId)}/transition`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify(input), contentType: "application/json" },
       ),
     queryAnalytics: (analysisId, scope, query, opts) =>
       pedir<AnalyticsQueryResultView>(

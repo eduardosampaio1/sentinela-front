@@ -181,6 +181,26 @@
       "configuration": "Configuration",
       "successCheck": "How to validate",
       "rollback": "How to roll back",
+      "acceptAction": "Accept plan",
+      "actionHistory": "Action history",
+      "actionUpdateError": "This action could not be updated. Nothing was lost; try again.",
+      "actionStatus": {
+        "accepted": "Accepted",
+        "in_progress": "In progress",
+        "verifying": "Verifying outcome",
+        "succeeded": "Completed successfully",
+        "failed": "Outcome not achieved",
+        "dismissed": "Dismissed",
+        "rolled_back": "Rolled back"
+      },
+      "actionTransition": {
+        "in_progress": "Start action",
+        "verifying": "Verify outcome",
+        "succeeded": "Confirm success",
+        "failed": "Mark unresolved",
+        "dismissed": "Dismiss",
+        "rolled_back": "Record rollback"
+      },
       "export": "Download Review as Excel",
       "exporting": "Preparing Excel…",
       "exportError": "The Excel file could not be downloaded right now. The Review is still saved; try again.",

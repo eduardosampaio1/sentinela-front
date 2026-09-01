@@ -70,6 +70,26 @@ describe("Sentinela Review", () => {
         review_request_id: "request-1",
         status: "queued",
       })),
+      getReviewActions: vi.fn(async () => ({
+        analysis_id: "an-1",
+        items: [],
+      })),
+      acceptReviewAction: vi.fn(async () => ({
+        action_record_id: "record-1",
+        analysis_id: "an-1",
+        source_review_id: "rev-1",
+        source_action_id: "a-1",
+        action_digest: "c".repeat(64),
+        title_snapshot: "Reconfigurar o roteamento de contestação",
+        owner_snapshot: "Product owner",
+        assignee: "Product owner",
+        status: "accepted",
+        version: 1,
+        accepted_at: "2026-09-01T12:00:00Z",
+        updated_at: "2026-09-01T12:00:00Z",
+        events: [],
+      })),
+      transitionReviewAction: vi.fn(),
       getReview: vi.fn(async () => ({
         analysis_id: "an-1",
         review_id: "rev-1",
@@ -201,6 +221,24 @@ describe("Sentinela Review", () => {
       rules: { "color-contrast": { enabled: false } },
     });
     expect(result.violations).toEqual([]);
+  });
+
+  it("aceita exatamente a ação da versão exibida do Review", async () => {
+    renderPage();
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Aceitar plano" }),
+    );
+
+    expect(currentClient.acceptReviewAction).toHaveBeenCalledWith(
+      "an-1",
+      { workspaceId: "ws-1" },
+      expect.objectContaining({
+        command_id: expect.any(String),
+        source_review_id: "rev-1",
+        source_action_id: "a-1",
+        assignee: "Product owner",
+      }),
+    );
   });
 
   it("permite reprocessar somente o Review quando o artefato é parcial", async () => {

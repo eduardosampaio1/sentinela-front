@@ -1019,6 +1019,66 @@ export interface ReviewRecommendedActionView {
   evidence_refs: string[];
 }
 
+export type ReviewActionStatus =
+  | "accepted"
+  | "in_progress"
+  | "verifying"
+  | "succeeded"
+  | "failed"
+  | "dismissed"
+  | "rolled_back";
+
+export interface ReviewActionEventView {
+  event_id: string;
+  command_id: string;
+  sequence: number;
+  from_status: ReviewActionStatus | null;
+  to_status: ReviewActionStatus;
+  actor_id: string;
+  reason?: string | null;
+  occurred_at: string;
+}
+
+export interface ReviewActionRecordView {
+  action_record_id: string;
+  analysis_id: string;
+  source_review_id: string;
+  source_review_version: number;
+  source_action_id: string;
+  source_action_digest: string;
+  snapshot: ReviewRecommendedActionView;
+  status: ReviewActionStatus;
+  assignee: string;
+  due_at?: string | null;
+  version: number;
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+  events: ReviewActionEventView[];
+}
+
+export interface ReviewActionListView {
+  analysis_id: string;
+  state?: "unavailable";
+  items: ReviewActionRecordView[];
+}
+
+export interface AcceptReviewActionInput {
+  command_id: string;
+  source_review_id: string;
+  source_action_id: string;
+  assignee: string;
+  due_at?: string | null;
+}
+
+export interface TransitionReviewActionInput {
+  command_id: string;
+  expected_version: number;
+  target_status: ReviewActionStatus;
+  reason?: string | null;
+}
+
 export interface ReviewRejectedClaimAuditView {
   claim_digest: string;
   kind: ReviewClaimView["kind"];

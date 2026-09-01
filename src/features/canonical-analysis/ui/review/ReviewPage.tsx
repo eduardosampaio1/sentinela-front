@@ -11,13 +11,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { ReviewClaimLineageView, ReviewClaimView, ReviewEvidenceView } from "@/lib/v1";
-import type { ReviewRecommendedActionView } from "@/lib/v1/contract/public-v1.types";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
 import { LoadingState } from "@/design/patterns";
 import { useParams } from "react-router-dom";
 import { useAnalysisStatus } from "../../data/analysis";
-import { useAnalysisReview, useRequestReview } from "../../data/review";
+import {
+  useAcceptReviewAction,
+  useAnalysisReview,
+  useRequestReview,
+  useReviewActions,
+  useTransitionReviewAction,
+} from "../../data/review";
+import { ActionLifecycleCard } from "./ActionLifecycleCard";
 import { useAnalysisEconomics, type CostScenario } from "../../data/economics";
 import { AnalysisShell } from "../AnalysisShell";
 import { useCanonicalScope } from "../scope";
@@ -132,35 +138,6 @@ function Claim({
   );
 }
 
-function ActionCard({ action }: { action: ReviewRecommendedActionView }) {
-  const { t } = useLanguage();
-  return (
-    <article className="rounded-xl border border-primary/20 bg-primary/[0.035] p-5">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-          {t(`canonicalAnalysis.review.priority.${action.priority}`)}
-        </span>
-        <span className="text-xs text-muted-foreground">{action.owner}</span>
-      </div>
-      <h3 className="mt-3 text-base font-semibold text-foreground">{action.title}</h3>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">{action.why}</p>
-      <ol className="mt-4 space-y-2 pl-5 text-sm leading-6 text-foreground">
-        {action.how.map((step) => <li className="list-decimal" key={step}>{step}</li>)}
-      </ol>
-      {action.configuration.length > 0 ? (
-        <div className="mt-4 rounded-lg border border-border bg-background/70 p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("canonicalAnalysis.review.configuration")}</p>
-          <ul className="mt-2 space-y-1 font-mono text-xs text-foreground">
-            {action.configuration.map((item) => <li key={item}>{item}</li>)}
-          </ul>
-        </div>
-      ) : null}
-      <p className="mt-4 text-sm"><strong>{t("canonicalAnalysis.review.successCheck")}:</strong> {action.success_check}</p>
-      {action.rollback ? <p className="mt-2 text-xs text-muted-foreground"><strong>{t("canonicalAnalysis.review.rollback")}:</strong> {action.rollback}</p> : null}
-    </article>
-  );
-}
-
 function ScenarioTable({ rows }: { rows: readonly CostScenario[] }) {
   const { language, t } = useLanguage();
   const locale = language === "pt" ? "pt-BR" : "en-US";
@@ -189,6 +166,9 @@ export function ReviewPage() {
   const scope = useCanonicalScope();
   const status = useAnalysisStatus(scope, analysisId);
   const review = useAnalysisReview(scope, analysisId);
+  const actions = useReviewActions(scope, analysisId);
+  const acceptAction = useAcceptReviewAction(scope, analysisId);
+  const transitionAction = useTransitionReviewAction(scope, analysisId);
   const economics = useAnalysisEconomics(scope, analysisId);
   const request = useRequestReview(scope, analysisId);
   const client = useV1Client();
@@ -462,9 +442,44 @@ export function ReviewPage() {
           ) : null}
           {(artifact.recommended_actions?.length ?? 0) > 0 ? (
             <Section id="action-plan" title={t("canonicalAnalysis.review.actionPlan")}>
+              {acceptAction.isError || transitionAction.isError ? (
+                <p
+                  role="alert"
+                  className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+                >
+                  {t("canonicalAnalysis.review.actionUpdateError")}
+                </p>
+              ) : null}
               <div className="space-y-4">
                 {artifact.recommended_actions?.map((action) => (
-                  <ActionCard key={action.action_id} action={action} />
+                  <ActionLifecycleCard
+                    key={action.action_id}
+                    action={action}
+                    record={actions.data?.items.find(
+                      (item) => item.source_review_id === artifact.review_id && item.source_action_id === action.action_id,
+                    )}
+                    canAccept={Boolean(artifact.review_id)}
+                    pending={acceptAction.isPending || transitionAction.isPending}
+                    onAccept={() => {
+                      if (!artifact.review_id) return;
+                      acceptAction.mutate({
+                        reviewId: artifact.review_id,
+                        actionId: action.action_id,
+                        assignee: action.owner,
+                      });
+                    }}
+                    onTransition={(targetStatus) => {
+                      const record = actions.data?.items.find(
+                        (item) => item.source_review_id === artifact.review_id && item.source_action_id === action.action_id,
+                      );
+                      if (!record) return;
+                      transitionAction.mutate({
+                        actionRecordId: record.action_record_id,
+                        expectedVersion: record.version,
+                        targetStatus,
+                      });
+                    }}
+                  />
                 ))}
               </div>
             </Section>

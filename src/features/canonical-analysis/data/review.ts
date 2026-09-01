@@ -3,6 +3,7 @@ import {
   workspaceKeys,
   type CanonicalScope,
   type ContextDraftInput,
+  type ReviewActionStatus,
 } from "@/lib/v1";
 import { useV1Client } from "./client";
 
@@ -121,6 +122,76 @@ export function useRequestReview(
       if (scope && analysisId)
         void queryClient.invalidateQueries({
           queryKey: workspaceKeys.review(scope.workspaceId, analysisId),
+        });
+    },
+  });
+}
+
+export function useReviewActions(
+  scope: CanonicalScope | null,
+  analysisId: string | null,
+) {
+  const client = useV1Client();
+  return useQuery({
+    queryKey:
+      scope && analysisId
+        ? workspaceKeys.reviewActions(scope.workspaceId, analysisId)
+        : IDLE_KEY,
+    enabled: Boolean(scope && analysisId),
+    queryFn: ({ signal }) =>
+      client.getReviewActions(analysisId as string, scope as CanonicalScope, { signal }),
+  });
+}
+
+export function useAcceptReviewAction(
+  scope: CanonicalScope | null,
+  analysisId: string | null,
+) {
+  const client = useV1Client();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { reviewId: string; actionId: string; assignee: string }) =>
+      client.acceptReviewAction(analysisId as string, scope as CanonicalScope, {
+        command_id: crypto.randomUUID(),
+        source_review_id: input.reviewId,
+        source_action_id: input.actionId,
+        assignee: input.assignee,
+      }),
+    onSuccess: () => {
+      if (scope && analysisId)
+        void queryClient.invalidateQueries({
+          queryKey: workspaceKeys.reviewActions(scope.workspaceId, analysisId),
+        });
+    },
+  });
+}
+
+export function useTransitionReviewAction(
+  scope: CanonicalScope | null,
+  analysisId: string | null,
+) {
+  const client = useV1Client();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      actionRecordId: string;
+      expectedVersion: number;
+      targetStatus: ReviewActionStatus;
+    }) =>
+      client.transitionReviewAction(
+        analysisId as string,
+        input.actionRecordId,
+        scope as CanonicalScope,
+        {
+          command_id: crypto.randomUUID(),
+          expected_version: input.expectedVersion,
+          target_status: input.targetStatus,
+        },
+      ),
+    onSuccess: () => {
+      if (scope && analysisId)
+        void queryClient.invalidateQueries({
+          queryKey: workspaceKeys.reviewActions(scope.workspaceId, analysisId),
         });
     },
   });
