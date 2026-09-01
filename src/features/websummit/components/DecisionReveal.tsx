@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import type { ExperienceResult, ExperienceState } from "../experience/types";
 import { DecisionTrace } from "./DecisionTrace";
@@ -9,7 +9,9 @@ const playbackStates: ExperienceState[] = ["understanding", "deciding", "respond
 
 export function DecisionReveal({ result }: { result: ExperienceResult }) {
   const reduceMotion = useReducedMotion();
+  const revealRef = useRef<HTMLElement>(null);
   const [activeStage, setActiveStage] = useState(reduceMotion ? 3 : 0);
+  const [cycle, setCycle] = useState(0);
   const playbackState = playbackStates[activeStage];
 
   useEffect(() => {
@@ -20,17 +22,28 @@ export function DecisionReveal({ result }: { result: ExperienceResult }) {
 
     setActiveStage(0);
     const timers = [
-      window.setTimeout(() => setActiveStage(1), 900),
-      window.setTimeout(() => setActiveStage(2), 1800),
-      window.setTimeout(() => setActiveStage(3), 2700),
+      window.setTimeout(() => setActiveStage(1), 1000),
+      window.setTimeout(() => setActiveStage(2), 2000),
+      window.setTimeout(() => setActiveStage(3), 3000),
+      window.setTimeout(() => setCycle((current) => current + 1), 4600),
     ];
     return () => timers.forEach(window.clearTimeout);
+  }, [cycle, reduceMotion, result]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (revealRef.current && typeof revealRef.current.scrollIntoView === "function") {
+        revealRef.current.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "nearest" });
+      }
+    }, 180);
+    return () => window.clearTimeout(timer);
   }, [reduceMotion, result]);
 
   const status = useMemo(() => stateLabel(playbackState), [playbackState]);
 
   return (
     <motion.section
+      ref={revealRef}
       className="ws-decision-reveal"
       aria-labelledby="ws-decision-reveal-title"
       initial={reduceMotion ? false : { opacity: 0, y: 42, scale: 0.975 }}
@@ -52,15 +65,17 @@ export function DecisionReveal({ result }: { result: ExperienceResult }) {
           <div className="ws-decision-reveal__stages" aria-label={`Decision replay: ${stages[activeStage].toLowerCase()}`}>
             <div className="ws-decision-reveal__stage-track" aria-hidden="true">
               <motion.span
+                key={`progress-${cycle}`}
                 className="ws-decision-reveal__stage-progress"
-                initial={false}
+                initial={{ width: "0%" }}
                 animate={{ width: `${(activeStage / (stages.length - 1)) * 100}%` }}
                 transition={reduceMotion ? { duration: 0 } : { duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
               />
               <motion.span
+                key={`packet-${cycle}`}
                 className="ws-decision-reveal__stage-packet"
-                initial={false}
-                animate={{ left: `${(activeStage / (stages.length - 1)) * 100}%` }}
+                initial={{ left: "0%", opacity: 0 }}
+                animate={{ left: `${(activeStage / (stages.length - 1)) * 100}%`, opacity: 1 }}
                 transition={reduceMotion ? { duration: 0 } : { duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
               />
             </div>
