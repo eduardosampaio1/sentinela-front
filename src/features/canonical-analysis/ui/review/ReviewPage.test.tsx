@@ -132,6 +132,28 @@ describe("Sentinela Review", () => {
             digest: "a".repeat(64),
           },
         ],
+        verification_report: {
+          gate_version: "scientific-gate-v1",
+          submitted_claim_count: 2,
+          accepted_claim_count: 1,
+          rejected_claim_count: 1,
+          rejected_claims: [{
+            claim_digest: "b".repeat(64),
+            kind: "interpretation",
+            evidence_refs: [],
+            reasons: ["official_evidence_required"],
+          }],
+        },
+        claim_lineage: [{
+          claim_id: "c-1",
+          official_evidence_refs: ["ev-1"],
+          context_refs: [],
+          metric_refs: ["behavior_score"],
+          intent_refs: ["contestacao"],
+          issue_refs: [],
+          coverage_refs: [],
+          source_snapshot_refs: ["result:abc"],
+        }],
       })),
     };
   });
@@ -156,6 +178,10 @@ describe("Sentinela Review", () => {
     await userEvent.click(screen.getByText("Ver evidências e origem"));
     expect(screen.getByText("Behavior Score")).toBeVisible();
     expect(screen.getByText(/\/indicators\/behavior/)).toBeVisible();
+    expect(screen.getByText("scientific-gate-v1")).toBeVisible();
+    expect(screen.getByText("behavior_score")).toBeVisible();
+    expect(screen.getByText("contestacao")).toBeVisible();
+    expect(screen.getByText("Recusadas")).toBeVisible();
     expect(
       screen.getByRole("heading", { name: "O que fazer agora" }),
     ).toBeVisible();

@@ -1019,6 +1019,32 @@ export interface ReviewRecommendedActionView {
   evidence_refs: string[];
 }
 
+export interface ReviewRejectedClaimAuditView {
+  claim_digest: string;
+  kind: ReviewClaimView["kind"];
+  evidence_refs: string[];
+  reasons: string[];
+}
+
+export interface ReviewVerificationReportView {
+  gate_version: string;
+  submitted_claim_count: number;
+  accepted_claim_count: number;
+  rejected_claim_count: number;
+  rejected_claims: ReviewRejectedClaimAuditView[];
+}
+
+export interface ReviewClaimLineageView {
+  claim_id: string;
+  official_evidence_refs: string[];
+  context_refs: string[];
+  metric_refs: string[];
+  intent_refs: string[];
+  issue_refs: string[];
+  coverage_refs: string[];
+  source_snapshot_refs: string[];
+}
+
 export interface ReviewArtifactView {
   review_contract_version?: string;
   review_id?: string;
@@ -1038,6 +1064,8 @@ export interface ReviewArtifactView {
   blind_spots?: string[];
   claims?: ReviewClaimView[];
   evidence?: ReviewEvidenceView[];
+  verification_report?: ReviewVerificationReportView | null;
+  claim_lineage?: ReviewClaimLineageView[];
   partial_reasons?: string[];
   created_at?: string;
   completed_at?: string | null;

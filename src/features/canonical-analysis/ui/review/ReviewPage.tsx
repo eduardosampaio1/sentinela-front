@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import type { ReviewClaimView, ReviewEvidenceView } from "@/lib/v1";
+import type { ReviewClaimLineageView, ReviewClaimView, ReviewEvidenceView } from "@/lib/v1";
 import type { ReviewRecommendedActionView } from "@/lib/v1/contract/public-v1.types";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
@@ -67,9 +67,11 @@ function TextList({ items }: { items: readonly string[] }) {
 function Claim({
   claim,
   evidence,
+  lineage,
 }: {
   claim: ReviewClaimView;
   evidence: Map<string, ReviewEvidenceView>;
+  lineage?: ReviewClaimLineageView;
 }) {
   const { t } = useLanguage();
   return (
@@ -86,6 +88,25 @@ function Claim({
       <p className="mt-2 text-sm leading-6 text-foreground">
         {claim.statement}
       </p>
+      {lineage ? (
+        <div className="mt-3 flex flex-wrap gap-2" aria-label={t("canonicalAnalysis.review.lineage")}>
+          {lineage.metric_refs.map((ref) => (
+            <span key={`metric-${ref}`} className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted-foreground">
+              {t("canonicalAnalysis.review.metric")}: <span className="font-mono text-foreground">{ref}</span>
+            </span>
+          ))}
+          {lineage.intent_refs.map((ref) => (
+            <span key={`intent-${ref}`} className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted-foreground">
+              {t("canonicalAnalysis.review.intent")}: <span className="font-mono text-foreground">{ref}</span>
+            </span>
+          ))}
+          {lineage.issue_refs.map((ref) => (
+            <span key={`issue-${ref}`} className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted-foreground">
+              {t("canonicalAnalysis.review.issue")}: <span className="font-mono text-foreground">{ref}</span>
+            </span>
+          ))}
+        </div>
+      ) : null}
       <details className="mt-3 rounded-lg border border-border bg-background/50 px-3 py-2">
         <summary className="cursor-pointer text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {t("canonicalAnalysis.review.showEvidence")}
@@ -177,6 +198,9 @@ export function ReviewPage() {
   const artifact = review.data;
   const evidence = new Map(
     (artifact?.evidence ?? []).map((item) => [item.evidence_id, item]),
+  );
+  const lineage = new Map(
+    (artifact?.claim_lineage ?? []).map((item) => [item.claim_id, item]),
   );
 
   async function exportWorkbook() {
@@ -385,6 +409,7 @@ export function ReviewPage() {
                     key={claim.claim_id}
                     claim={claim}
                     evidence={evidence}
+                    lineage={lineage.get(claim.claim_id)}
                   />
                 ))}
               </div>
@@ -500,7 +525,33 @@ export function ReviewPage() {
                 {artifact.evidence?.length ?? 0}
               </dd>
             </div>
+            <div>
+              <dt className="text-muted-foreground">
+                {t("canonicalAnalysis.review.contract")}
+              </dt>
+              <dd className="mt-1 break-all font-mono text-foreground">
+                {artifact.review_contract_version ?? "—"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">
+                {t("canonicalAnalysis.review.scientificGate")}
+              </dt>
+              <dd className="mt-1 font-mono text-foreground">
+                {artifact.verification_report?.gate_version ?? "—"}
+              </dd>
+            </div>
           </dl>
+          <div className="mt-3 grid grid-cols-2 gap-3 rounded-lg border border-border bg-background/50 p-3 text-xs">
+            <dl>
+              <dt className="text-muted-foreground">{t("canonicalAnalysis.review.acceptedClaims")}</dt>
+              <dd className="mt-1 tabular-nums text-foreground">{artifact.verification_report?.accepted_claim_count ?? artifact.claims?.length ?? 0}</dd>
+            </dl>
+            <dl>
+              <dt className="text-muted-foreground">{t("canonicalAnalysis.review.rejectedClaims")}</dt>
+              <dd className="mt-1 tabular-nums text-foreground">{artifact.verification_report?.rejected_claim_count ?? 0}</dd>
+            </dl>
+          </div>
         </aside>
       </div>
     );
