@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useLayoutEffect, useRef, useState } from "react";
 import { ArrowUp } from "lucide-react";
 import { webSummitCopy } from "../content/copy";
 import { trackWebSummitEvent } from "../analytics/events";
@@ -12,8 +12,13 @@ interface PromptComposerProps {
 }
 
 export function PromptComposer({ value, onChange, onSubmit, onFocus, disabled }: PromptComposerProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [touched, setTouched] = useState(false);
   const error = touched && !value.trim() ? "Type a question first." : null;
+
+  useLayoutEffect(() => {
+    resizeTextarea(textareaRef.current);
+  }, [value]);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -29,12 +34,16 @@ export function PromptComposer({ value, onChange, onSubmit, onFocus, disabled }:
       <label className="ws-sr-only" htmlFor="ws-prompt">Ask Sentinela anything</label>
       <div className="ws-composer__control" data-invalid={Boolean(error)}>
         <textarea
+          ref={textareaRef}
           id="ws-prompt"
           value={value}
           rows={1}
           maxLength={800}
           placeholder={webSummitCopy.placeholder}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => {
+            resizeTextarea(event.currentTarget);
+            onChange(event.target.value);
+          }}
           onFocus={() => {
             onFocus();
             trackWebSummitEvent("websummit_prompt_focus");
@@ -57,4 +66,14 @@ export function PromptComposer({ value, onChange, onSubmit, onFocus, disabled }:
       <p id="ws-prompt-error" className="ws-form-error" role="alert">{error}</p>
     </form>
   );
+}
+
+const MAX_TEXTAREA_HEIGHT = 176;
+
+function resizeTextarea(textarea: HTMLTextAreaElement | null) {
+  if (!textarea) return;
+  textarea.style.height = "auto";
+  const nextHeight = Math.min(textarea.scrollHeight, MAX_TEXTAREA_HEIGHT);
+  textarea.style.height = `${nextHeight}px`;
+  textarea.style.overflowY = textarea.scrollHeight > MAX_TEXTAREA_HEIGHT ? "auto" : "hidden";
 }

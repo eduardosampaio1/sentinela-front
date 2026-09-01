@@ -50,6 +50,7 @@ The feature dispatches `sentinela:analytics` `CustomEvent` messages. A future ve
 ## Accessibility and degradation
 
 - Native semantics and keyboard navigation.
+- Prompt composer expands with multiline input up to 176 px, then preserves the layout with internal scrolling.
 - Native dialog with Escape handling and focus management.
 - Range input supports pointer, touch and keyboard.
 - `prefers-reduced-motion` keeps a composed static system.

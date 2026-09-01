@@ -133,8 +133,9 @@
 .ws-composer__control[data-invalid="true"] { border-color: rgba(255, 139, 139, 0.7); }
 .ws-composer textarea {
   min-height: 34px;
-  max-height: 130px;
-  resize: vertical;
+  max-height: 176px;
+  resize: none;
+  overflow-y: hidden;
   border: 0;
   outline: 0;
   background: transparent;
