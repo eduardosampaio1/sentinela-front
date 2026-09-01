@@ -21,7 +21,19 @@ styles/       event-scoped tokens, core, layout and responsive states
 
 - `motion`: state transitions, trace reveals and viewport entry choreography. It is isolated in the lazy Web Summit chunk and does not increase the initial product route bundle.
 
-No Three.js, GSAP, Rive, smooth-scroll library or marketing analytics vendor was added. CSS renders the living field and topological core.
+No Three.js, GSAP, Rive, smooth-scroll library or marketing analytics vendor was added. A small event-only Canvas 2D renderer draws the living decision field without touching React state on animation frames. CSS provides the material surface and the reduced-motion fallback.
+
+## Visual direction
+
+The public event narrative uses only the **Sentinela** name. Internal product names are deliberately absent from this first-contact experience.
+
+The visual centerpiece is a field that changes its coherence, energy, speed and spread with the real experience state:
+
+```text
+ready -> listening -> understanding -> deciding -> responding -> complete
+```
+
+Pointer movement bends the field with a low-amplitude response. Mobile uses the same renderer with fewer loops and segments, a capped device pixel ratio and a shorter visual stage so the prompt remains visible in the first viewport. Reduced-motion users receive a composed static frame.
 
 ## Public environment
 
@@ -55,3 +67,5 @@ Production-preview Lighthouse on 2026-09-01:
 - LCP: 2.3 s
 - CLS: 0
 - TBT: 150 ms
+
+The 2026-09-01 living-field revision kept the Web Summit route isolated, added no dependency and produced a 51.22 kB gzip JavaScript chunk plus 4.69 kB gzip event CSS. Homologation deployment `9317037b-5c8a-4d8a-8935-ce0fe9502c95` (commit `9c5c8ef`) passed desktop and 390 x 844 mobile visual validation, had no horizontal overflow, completed the public experience request and emitted no browser console warnings or errors.
