@@ -11,7 +11,6 @@ import { TryToBreak } from "./TryToBreak";
 export function HeroExperience() {
   const heroRef = useRef<HTMLElement>(null);
   const [prompt, setPrompt] = useState("");
-  const [traceOpen, setTraceOpen] = useState(false);
   const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const brandY = useTransform(scrollYProgress, [0, 1], [0, -18]);
@@ -22,7 +21,6 @@ export function HeroExperience() {
   const processing = ["understanding", "deciding", "responding"].includes(experience.phase);
 
   const submit = (value: string) => {
-    setTraceOpen(false);
     experience.submit(value);
   };
 
@@ -53,7 +51,7 @@ export function HeroExperience() {
             disabled={processing}
           />
           <ExperienceResponse phase={experience.phase} result={experience.result} error={experience.error} />
-          {experience.result && <DecisionTrace result={experience.result} open={traceOpen} onOpenChange={setTraceOpen} />}
+          {experience.result && <DecisionTrace result={experience.result} />}
           {!experience.result && !processing && (
             <TryToBreak onSelect={(value) => { setPrompt(value); submit(value); }} />
           )}

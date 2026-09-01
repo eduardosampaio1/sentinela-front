@@ -57,6 +57,7 @@ The feature dispatches `sentinela:analytics` `CustomEvent` messages. A future ve
 - Range input supports pointer, touch and keyboard.
 - `prefers-reduced-motion` keeps a composed static system.
 - API failures preserve user input and the prompt experience falls back locally.
+- The decision trace reveals automatically after the response, preserving the full explanatory payoff without requiring a second user action.
 
 ## Performance baseline
 

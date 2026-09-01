@@ -210,6 +210,7 @@
 .ws-text-action:hover { color: var(--ws-ink); text-decoration-color: var(--ws-accent); }
 
 .ws-trace-shell { margin-top: 22px; }
+.ws-trace__heading { margin: 0; color: #cbd8e1; font-size: 0.92rem; }
 .ws-text-action { display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
 .ws-text-action svg { width: 16px; }
 .ws-trace { max-width: 610px; overflow: hidden; padding-top: 22px; }
