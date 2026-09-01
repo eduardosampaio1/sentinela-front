@@ -3,6 +3,9 @@
 ## Frontend boundary
 
 The public route `/websummit` is lazy-loaded and entirely contained in `src/features/websummit`.
+Direct event visits use a lightweight branch in `src/main.tsx`, so product providers, authentication
+and the dashboard router are not downloaded before the event experience can paint. Normal product
+routes retain their existing provider and router bootstrap.
 
 ```text
 components/   visual and semantic composition
@@ -39,3 +42,16 @@ The feature dispatches `sentinela:analytics` `CustomEvent` messages. A future ve
 - Range input supports pointer, touch and keyboard.
 - `prefers-reduced-motion` keeps a composed static system.
 - API failures preserve user input and the prompt experience falls back locally.
+
+## Performance baseline
+
+Production-preview Lighthouse on 2026-09-01:
+
+- Performance: 96
+- Accessibility: 100
+- Best Practices: 100
+- SEO: 100
+- FCP: 1.5 s
+- LCP: 2.3 s
+- CLS: 0
+- TBT: 150 ms

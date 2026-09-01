@@ -27,9 +27,11 @@ function upsertCanonical(href: string) {
 export function useWebSummitMetadata() {
   useEffect(() => {
     const previousTitle = document.title;
+    const previousLanguage = document.documentElement.lang;
     const previousCanonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href;
     const canonicalUrl = `${window.location.origin}/websummit`;
     document.title = metadata.title;
+    document.documentElement.lang = "en";
     upsertMeta('meta[name="description"]', { name: "description", content: metadata.description });
     upsertMeta('meta[property="og:title"]', { property: "og:title", content: metadata.title });
     upsertMeta('meta[property="og:description"]', { property: "og:description", content: metadata.description });
@@ -42,6 +44,7 @@ export function useWebSummitMetadata() {
 
     return () => {
       document.title = previousTitle;
+      document.documentElement.lang = previousLanguage;
       const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
       if (canonical && previousCanonical) canonical.href = previousCanonical;
       if (canonical && !previousCanonical) canonical.remove();

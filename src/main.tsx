@@ -1,7 +1,5 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { Providers } from "./app/providers";
-import { App } from "./app/App";
 import "./styles/tokens.css";
 import "./styles/globals.css";
 
@@ -18,10 +16,45 @@ window.addEventListener("vite:preloadError", () => {
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("Root element not found");
 
-createRoot(rootEl).render(
-  <StrictMode>
-    <Providers>
-      <App />
-    </Providers>
-  </StrictMode>
-);
+const root = createRoot(rootEl);
+const isWebSummitEntry = window.location.pathname.replace(/\/+$/, "") === "/websummit";
+
+function loadProductFonts() {
+  const preconnect = document.createElement("link");
+  preconnect.rel = "preconnect";
+  preconnect.href = "https://fonts.gstatic.com";
+  preconnect.crossOrigin = "anonymous";
+
+  const stylesheet = document.createElement("link");
+  stylesheet.rel = "stylesheet";
+  stylesheet.href = "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500&display=swap";
+
+  document.head.append(preconnect, stylesheet);
+}
+
+async function bootstrap() {
+  if (isWebSummitEntry) {
+    const { WebSummitPage } = await import("./features/websummit/WebSummitPage");
+    root.render(
+      <StrictMode>
+        <WebSummitPage />
+      </StrictMode>,
+    );
+    return;
+  }
+
+  loadProductFonts();
+  const [{ Providers }, { App }] = await Promise.all([
+    import("./app/providers"),
+    import("./app/App"),
+  ]);
+  root.render(
+    <StrictMode>
+      <Providers>
+        <App />
+      </Providers>
+    </StrictMode>,
+  );
+}
+
+void bootstrap();
