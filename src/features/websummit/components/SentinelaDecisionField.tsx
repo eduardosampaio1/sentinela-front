@@ -1,12 +1,28 @@
 import { memo } from "react";
-import type { ExperienceState } from "../experience/types";
+import type { ExperienceDecision, ExperienceState } from "../experience/types";
 
 const signals = ["INTENT", "RISK", "CONTEXT", "COST"] as const;
-const activities = ["INTENT READ", "RISK CLEAR", "CONTEXT FIT", "ROUTE READY"] as const;
 
-export const SentinelaDecisionField = memo(function SentinelaDecisionField({ state }: { state: ExperienceState }) {
+export const SentinelaDecisionField = memo(function SentinelaDecisionField({ state, decision }: {
+  state: ExperienceState;
+  decision?: ExperienceDecision;
+}) {
+  const activities = [
+    "INTENT READ",
+    `RISK ${decision?.risk.toUpperCase() ?? "CHECK"}`,
+    compactLabel(decision?.contextStrategy ?? "CONTEXT FIT", "CONTEXT"),
+    compactLabel(decision?.route ?? "ROUTE READY", "ROUTE"),
+  ];
+  const primaryRoute = decision?.llmRequired === false ? "SAFE BYPASS" : "AI ROUTE";
+  const secondaryRoute = decision?.risk === "high" ? "HUMAN REVIEW" : "CONTROLLED OUTPUT";
+
   return (
-    <div className="ws-decision-field" data-state={state}>
+    <div
+      className="ws-decision-field"
+      data-state={state}
+      data-risk={decision?.risk ?? "unknown"}
+      data-llm-required={decision?.llmRequired == null ? "unknown" : String(decision.llmRequired)}
+    >
       <p className="ws-sr-only">
         Sentinela receives a request, evaluates intent, risk, context and cost, then releases a controlled action.
       </p>
@@ -46,7 +62,11 @@ export const SentinelaDecisionField = memo(function SentinelaDecisionField({ sta
 
         <g className="ws-decision-field__signal-nodes">
           {[244, 390, 610, 756].map((x, index) => (
-            <g key={signals[index]} transform={`translate(${x} ${index === 0 || index === 3 ? 152 : 112})`}>
+            <g
+              key={signals[index]}
+              style={{ "--ws-signal-index": index } as React.CSSProperties}
+              transform={`translate(${x} ${index === 0 || index === 3 ? 152 : 112})`}
+            >
               <circle r="10" />
               <circle className="ws-decision-field__pulse" r="18" />
             </g>
@@ -73,8 +93,8 @@ export const SentinelaDecisionField = memo(function SentinelaDecisionField({ sta
         {signals.map((signal) => <span key={signal}>{signal}</span>)}
       </div>
       <div className="ws-decision-field__decision" aria-hidden="true">
-        <span>AI ROUTE</span>
-        <span>HUMAN REVIEW</span>
+        <span>{primaryRoute}</span>
+        <span>{secondaryRoute}</span>
       </div>
       <div className="ws-decision-field__activities" aria-hidden="true">
         {activities.map((activity, index) => (
@@ -91,3 +111,10 @@ export const SentinelaDecisionField = memo(function SentinelaDecisionField({ sta
     </div>
   );
 });
+
+function compactLabel(value: string, prefix: string) {
+  const normalized = value.replace(/[-_.]+/g, " ").trim().toUpperCase();
+  const words = normalized.split(/\s+/).filter(Boolean);
+  const suffix = words.slice(0, 2).join(" ");
+  return `${prefix} ${suffix}`;
+}

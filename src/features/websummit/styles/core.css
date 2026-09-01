@@ -242,6 +242,7 @@
 .ws-decision-field[data-state="understanding"] .ws-decision-field__pulse,
 .ws-decision-field[data-state="deciding"] .ws-decision-field__pulse {
   animation: ws-signal-pulse 1.35s ease-in-out infinite;
+  animation-delay: calc(var(--ws-signal-index) * 90ms);
 }
 
 .ws-decision-field[data-state="deciding"] .ws-decision-field__core,
@@ -265,7 +266,16 @@
 
 .ws-decision-field[data-state="error"] .ws-decision-field__route--output { opacity: 0.08; }
 .ws-decision-field[data-state="error"] .ws-decision-field__route--secondary { opacity: 0.88; stroke: #ff8b8b; }
+.ws-decision-field[data-state="complete"][data-risk="high"] .ws-decision-field__route--output { opacity: 0.1; }
+.ws-decision-field[data-state="complete"][data-risk="high"] .ws-decision-field__route--secondary { opacity: 0.96; stroke: #ff9c9c; }
+.ws-decision-field[data-state="complete"]:not([data-risk="high"]) .ws-decision-field__route--output { opacity: 0.96; }
+.ws-decision-field[data-state="complete"]:not([data-risk="high"]) .ws-decision-field__route--secondary { opacity: 0.1; }
 .ws-hero[data-state="deciding"] .ws-decision-field { box-shadow: inset 0 1px rgba(235, 246, 252, 0.13), 0 48px 140px rgba(18, 77, 119, 0.23); }
+
+.ws-decision-reveal .ws-decision-field__activities span {
+  animation: ws-result-activity 1.18s cubic-bezier(0.16, 1, 0.3, 1) 1 both;
+  animation-delay: calc(180ms + var(--ws-activity-index) * 330ms);
+}
 
 @keyframes ws-packet-in { from { offset-distance: 0%; } to { offset-distance: 100%; } }
 @keyframes ws-packet-out { from { offset-distance: 0%; } to { offset-distance: 100%; } }
@@ -276,6 +286,11 @@
   0%, 8% { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.96); }
   13%, 25% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
   32%, 100% { opacity: 0; transform: translate3d(0, -5px, 0) scale(0.98); }
+}
+@keyframes ws-result-activity {
+  0% { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.94); }
+  24%, 68% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  100% { opacity: 0; transform: translate3d(0, -6px, 0) scale(0.98); }
 }
 
 @keyframes ws-breathe {

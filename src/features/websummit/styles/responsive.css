@@ -36,20 +36,20 @@
 @media (max-width: 900px) {
   .ws-hero {
     grid-template-columns: 1fr;
-    grid-template-areas: "brand" "visual" "content";
+    grid-template-areas: "brand" "content" "decision";
     align-content: start;
     min-height: auto;
     padding: 26px 24px 74px;
   }
   .ws-hero__brand { min-height: 40px; }
-  .ws-hero__visual { min-height: min(58dvh, 540px); margin: 4px 0 42px; }
-  .ws-hero__content { width: 100%; max-width: none; }
+  .ws-hero__content { width: 100%; max-width: none; padding: 72px 0 54px; }
   .ws-hero h1 { max-width: 760px; font-size: clamp(3.3rem, 11vw, 6rem); }
+  .ws-decision-reveal__body { grid-template-columns: 1fr; }
+  .ws-decision-reveal__field { min-height: min(68dvh, 620px); transform: translate3d(var(--ws-far-x), var(--ws-far-y), 0); }
   .ws-system { grid-template-columns: 1fr; gap: 58px; min-height: auto; }
   .ws-economics { grid-template-columns: 1fr; grid-template-areas: "intro" "value" "levers" "disclosure"; min-height: auto; }
   .ws-economics__intro h2 { max-width: 13ch; }
   .ws-economics__disclosure { margin-top: -30px; }
-  .ws-hero__visual-depth { transform: translate3d(var(--ws-far-x), var(--ws-far-y), 0); }
 }
 
 @media (min-width: 1600px) {
@@ -60,9 +60,15 @@
   .ws-section { width: min(100% - 36px, 1320px); padding: 92px 0; }
   .ws-hero { padding-inline: 18px; }
   .ws-hero__brand span { display: none; }
-  .ws-hero__visual { min-height: 32dvh; margin-bottom: 28px; }
-  .ws-hero__state { right: 14px; bottom: 13px; font-size: 0.54rem; }
+  .ws-hero__content { padding: 52px 0 36px; }
   .ws-hero h1 { font-size: clamp(3rem, 15vw, 4.6rem); }
+  .ws-decision-reveal { padding-top: 20px; }
+  .ws-decision-reveal__header { grid-template-columns: 1fr; gap: 18px; margin-bottom: 24px; }
+  .ws-decision-reveal__header h2 { font-size: clamp(2.2rem, 10vw, 3.6rem); }
+  .ws-decision-reveal__status { padding: 0; }
+  .ws-decision-reveal__field { min-height: clamp(390px, 118vw, 520px); }
+  .ws-decision-reveal__stages { gap: 4px; }
+  .ws-decision-reveal__stages span { font-size: 0.42rem; letter-spacing: 0.08em; }
   .ws-composer__meta { align-items: flex-start; }
   .ws-composer__meta p { max-width: 31ch; }
   .ws-seeds__list { display: grid; justify-items: start; gap: 4px; }
@@ -109,12 +115,13 @@
   .ws-ambient__plane,
   .ws-hero__brand > *,
   .ws-hero__content-depth,
-  .ws-hero__visual-depth { transform: none !important; }
+  .ws-decision-reveal__field { transform: none !important; }
   .ws-decision-field__packet,
   .ws-decision-field__pulse,
   .ws-decision-field__core,
   .ws-decision-field__sweep,
   .ws-decision-field__activities span { animation: none !important; }
+  .ws-decision-reveal__field::before { animation: none !important; }
   .ws-decision-field__activities span:first-child { opacity: 0.72; transform: none; }
 }
 

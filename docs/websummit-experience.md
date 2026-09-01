@@ -27,7 +27,7 @@ No Three.js, GSAP, Rive, smooth-scroll library or marketing analytics vendor was
 
 The public event narrative uses only the **Sentinela** name. Internal product names are deliberately absent from this first-contact experience.
 
-The visual centerpiece shows a request entering Sentinela, four decision signals converging (`intent`, `risk`, `context`, `cost`) and one controlled route leaving the system. A slow semantic sweep, sequenced activity receipts (`intent read`, `risk clear`, `context fit`, `route ready`), route illumination and information packets keep the system visibly active. Processing states accelerate the sweep and pulses without changing the meaning of the diagram:
+The visual centerpiece appears only after the visitor receives an answer. The initial hero stays focused on the Ask interaction; the completed response then reveals how a request entered Sentinela, how four decision signals converged (`intent`, `risk`, `context`, `cost`) and which controlled route left the system. A short playback moves through understand, decide, control and respond. Signal receipts use the decision's actual risk, context strategy and route instead of repeating generic labels. The field then settles into a slow semantic sweep with information packets, preserving ambient life without competing with the initial action:
 
 ```text
 ready -> listening -> understanding -> deciding -> responding -> complete
@@ -76,4 +76,4 @@ Production-preview Lighthouse on 2026-09-01:
 - CLS: 0
 - TBT: 150 ms
 
-The 2026-09-01 living-field revision kept the Web Summit route isolated and added no dependency. The subsequent spatial-parallax revision produced a 54.33 kB gzip JavaScript chunk plus 5.25 kB gzip event CSS. The pitch-aligned narrative revision remains dependency-free. After the desktop spatial-rhythm adjustment, the production bundle is 54.83 kB gzip JavaScript plus 6.99 kB gzip event CSS.
+The 2026-09-01 living-field revision kept the Web Summit route isolated and added no dependency. The subsequent spatial-parallax revision produced a 54.33 kB gzip JavaScript chunk plus 5.25 kB gzip event CSS. The post-answer decision reveal remains dependency-free. Its production bundle is 55.33 kB gzip JavaScript plus 7.55 kB gzip event CSS.
