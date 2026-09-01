@@ -25,7 +25,7 @@ test.describe("E6 — resiliência da jornada (browser real)", () => {
     await seedAuthAnd(page, { "an-fail": { seq: ["failed"], idx: 0, retryAllowed: true } });
     await page.goto("/canonical/analyses/an-fail");
     await expect(page.getByRole("heading", { name: /Couldn't complete/i })).toBeVisible({ timeout: 15_000 });
-    await page.getByRole("button", { name: "Try again" }).click();
+    await page.getByRole("button", { name: "Run again" }).click();
     await expect(page.getByRole("heading", { name: "Completed" })).toBeVisible({ timeout: 40_000 });
   });
 
@@ -33,7 +33,7 @@ test.describe("E6 — resiliência da jornada (browser real)", () => {
     await seedAuthAnd(page, { "an-nofix": { seq: ["failed"], idx: 0, retryAllowed: false } });
     await page.goto("/canonical/analyses/an-nofix");
     await expect(page.getByRole("heading", { name: /Couldn't complete/i })).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Run again" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "New analysis" })).toBeVisible();
   });
 
@@ -44,7 +44,7 @@ test.describe("E6 — resiliência da jornada (browser real)", () => {
     });
     await seedAuthAnd(page, { "an-lost": { seq: ["failed"], idx: 0, retryAllowed: true } });
     await page.goto("/canonical/analyses/an-lost");
-    await page.getByRole("button", { name: "Try again" }).click();
+    await page.getByRole("button", { name: "Run again" }).click();
     // retry ACEITO pelo backend: o estado avança (recovering/running) — o store persistiu
     await expect(page.getByRole("heading", { name: /Recovering|Running/ })).toBeVisible({ timeout: 20_000 });
     // "perde" a resposta / descarta o estado em memória: reload reconstrói só a partir da URL

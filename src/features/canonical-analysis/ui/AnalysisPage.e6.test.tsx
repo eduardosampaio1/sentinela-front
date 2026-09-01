@@ -138,10 +138,19 @@ describe("E6 — apresentação por código (capacity/result/idempotency)", () =
     await waitFor(() => expect(screen.getByText(/at capacity|em capacidade|capacidade/i)).toBeTruthy());
     const alerts = screen.queryAllByRole("alert");
     expect(alerts.length, "capacity_wait não é erro vermelho").toBe(0);
-    // A barra de ETAPAS continua honesta durante espera de capacidade; o que não pode existir
-    // é uma porcentagem inventada de upload ou motor.
-    expect(screen.getByRole("progressbar", { name: /analysis stage progress|progresso das etapas/i }))
-      .toHaveAttribute("aria-valuemax", "4");
+    // A leitura de progresso não respondeu nesta massa. Desde que a verdade operacional passou
+    // a pertencer ao servidor, o Front não pode reconstruir quatro etapas a partir do status só
+    // para preencher a tela: ausência vira explicação explícita, nunca uma barra inventada.
+    expect(
+      screen.getByText(
+        /operational truth for this analysis is unavailable|verdade operacional.*indisponível/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("progressbar", {
+        name: /analysis stage progress|progresso das etapas/i,
+      }),
+    ).toBeNull();
     expect(screen.queryByRole("progressbar", { name: /dataset upload|envio da base/i })).toBeNull();
   });
 

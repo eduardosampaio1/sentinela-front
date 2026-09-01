@@ -49,7 +49,7 @@ export function PonteParaLeiturasAtuais({
       )}
     >
       <div className="max-w-3xl">
-        <p className="text-xs font-medium uppercase tracking-[0.16em] text-primary">
+        <p className="text-xs font-medium uppercase tracking-[0.16em] text-foreground">
           {t("canonicalAnalysis.result.currentViews.eyebrow")}
         </p>
         <h2
@@ -93,7 +93,7 @@ export function PonteParaLeiturasAtuais({
                       {titulo}
                     </span>
                     {item.recommended ? (
-                      <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary">
+                      <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-foreground">
                         {t("canonicalAnalysis.result.currentViews.recommended")}
                       </span>
                     ) : null}

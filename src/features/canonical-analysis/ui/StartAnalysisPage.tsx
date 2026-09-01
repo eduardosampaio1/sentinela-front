@@ -25,8 +25,17 @@ export function StartAnalysisPage() {
   // continua existindo no backend, mas acontece ao entrar e desemboca direto na tela de upload.
   useEffect(() => {
     if (!scope || iniciou.current) return;
-    iniciou.current = true;
-    iniciar();
+    // React 18 executa setup→cleanup→setup dos effects sob StrictMode em desenvolvimento. Disparar
+    // a mutation no primeiro setup desmontava o observer antes da resposta; o callback de sucesso
+    // era descartado, o ref permanecia `true` e a página ficava eternamente em "Starting…".
+    // Adiar uma tarefa e cancelá-la no cleanup faz o primeiro setup ser inerte e deixa somente o
+    // effect estável disparar a intenção. Em produção continua sendo exatamente um prepare.
+    const tarefa = window.setTimeout(() => {
+      if (iniciou.current) return;
+      iniciou.current = true;
+      iniciar();
+    }, 0);
+    return () => window.clearTimeout(tarefa);
   }, [scope, iniciar]);
 
   // Esta tela NÃO recebeu o arquétipo de composição, e o motivo é que não há o que compor: a

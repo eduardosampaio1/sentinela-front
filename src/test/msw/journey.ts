@@ -378,6 +378,63 @@ export function makeJourneyHandlers(base: string) {
       putEntry(id, { seq: ["preparing"], idx: 0, retryAllowed: false, instanceId: instancia });
       return HttpResponse.json({ analysis_id: id, status: "preparing" }, { status: 201 });
     }),
+    http.patch(`${b}/v1/analyses/:id`, async ({ params, request }) => {
+      const body = (await request.json()) as { name?: string };
+      return HttpResponse.json({
+        analysis_id: String(params.id),
+        display_name: body.name ?? null,
+      });
+    }),
+    http.get(`${b}/v1/analyses/:id/context`, ({ params }) =>
+      HttpResponse.json({
+        context_contract_version: "analysis-context-v1",
+        context_id: `ctx-${String(params.id)}`,
+        analysis_id: String(params.id),
+        version: 1,
+        state: "empty",
+        original_text: "",
+        structured: { items: [] },
+        privacy_clearance: "not_required",
+        privacy_policy_version: null,
+        sealed_at: null,
+      }),
+    ),
+    http.post(`${b}/v1/analyses/:id/context/seal`, ({ params }) =>
+      HttpResponse.json({
+        context_contract_version: "analysis-context-v1",
+        context_id: `ctx-${String(params.id)}`,
+        analysis_id: String(params.id),
+        version: 1,
+        state: "sealed",
+        original_text: "",
+        structured: { items: [] },
+        privacy_clearance: "not_required",
+        privacy_policy_version: null,
+        sealed_at: new Date().toISOString(),
+      }),
+    ),
+    http.post(`${b}/v1/analyses/:id/data/uploads`, ({ params }) =>
+      HttpResponse.json({
+        analysis_id: String(params.id),
+        status: "receiving",
+        upload_session_id: "up-e2e",
+        part_size_bytes: 5 * 1024 * 1024,
+        uploaded_parts: [],
+      }),
+    ),
+    http.put(`${b}/v1/analyses/:id/data/uploads/:upload/parts/:part`, ({ params }) =>
+      HttpResponse.json({
+        analysis_id: String(params.id),
+        upload_session_id: String(params.upload),
+        part_number: Number(params.part),
+        etag: `etag-${String(params.part)}`,
+      }),
+    ),
+    http.post(`${b}/v1/analyses/:id/data/uploads/:upload/complete`, ({ params }) => {
+      const id = String(params.id);
+      putEntry(id, { seq: ["receiving", "ready_to_submit"], idx: 0, retryAllowed: false });
+      return HttpResponse.json(view(id, "receiving"));
+    }),
     http.post(`${b}/v1/analyses/:id/data`, ({ params }) => {
       const id = String(params.id);
       // `["receiving", "ready_to_submit"]`, e nao `["receiving"]` sozinho.

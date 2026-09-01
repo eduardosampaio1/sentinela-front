@@ -57,20 +57,22 @@ for (const vp of VIEWPORTS) {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await enableAuth(page);
 
-    // entrada
+    // Entrar em `/analyses/new` já é a intenção. A reserva acontece automaticamente e leva à
+    // identidade durável; não há uma confirmação redundante "Start analysis".
     await page.goto("/canonical/analyses/new");
-    await expect(page.getByRole("button", { name: "Start analysis" })).toBeVisible();
+    await page.waitForURL(/\/analyses\/an-e2e/);
     await semOverflowHorizontal(page);
 
     // upload: dropzone utilizável + ação acessível
-    await page.getByRole("button", { name: "Start analysis" }).click();
     // `/analyses/…`, não `/canonical/analyses/…`: `f182e4b` (M24) tirou o nome de camada interna
     // da URL pública. A entrada acima segue pelo endereço antigo, que hoje é redirect.
-    await page.waitForURL(/\/analyses\/an-e2e/);
     await expect(page.getByText("Add your dataset")).toBeVisible(); // título da dropzone
     const enviar = page.getByRole("button", { name: "Send dataset" });
     await expect(enviar).toBeVisible();
-    await expect(enviar).toBeInViewport(); // ação alcançável na viewport
+    // O contexto opcional tornou a página deliberadamente mais longa. A prova relevante é que a
+    // ação continua alcançável sem overflow, não que caiba artificialmente na primeira dobra.
+    await enviar.scrollIntoViewIfNeeded();
+    await expect(enviar).toBeInViewport();
     await semOverflowHorizontal(page);
 
     // região de estado visível após enviar/submeter

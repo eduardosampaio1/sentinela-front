@@ -19,7 +19,9 @@ const JSONL = { name: "data.jsonl", mimeType: "application/x-ndjson", buffer: Bu
 test.describe("Jornada canônica autenticada (browser real + MSW stateful)", () => {
   test("happy: prepare→upload→submit→estados→completed, só /v1, sem 2º upload", async ({ page, baseURL }) => {
     const legacy: string[] = [];
-    let dataUploads = 0;
+    let uploadOpens = 0;
+    let uploadParts = 0;
+    let uploadCompletions = 0;
     let v1Calls = 0;
     page.on("request", (req) => {
       const u = new URL(req.url());
@@ -27,7 +29,11 @@ test.describe("Jornada canônica autenticada (browser real + MSW stateful)", () 
         if (/^\/(api|rest|graphql|auth)\//.test(u.pathname)) legacy.push(`${req.method()} ${u.pathname}`);
         if (u.pathname.startsWith("/v1/")) {
           v1Calls += 1;
-          if (u.pathname.endsWith("/data") && req.method() === "POST") dataUploads += 1;
+          if (u.pathname.endsWith("/data/uploads") && req.method() === "POST") uploadOpens += 1;
+          if (/\/data\/uploads\/[^/]+\/parts\/\d+$/.test(u.pathname) && req.method() === "PUT") uploadParts += 1;
+          if (/\/data\/uploads\/[^/]+\/complete$/.test(u.pathname) && req.method() === "POST") {
+            uploadCompletions += 1;
+          }
         }
       }
     });
@@ -35,9 +41,8 @@ test.describe("Jornada canônica autenticada (browser real + MSW stateful)", () 
     await enableAuth(page);
     await page.goto("/canonical/analyses/new");
 
-    // autenticado: NÃO redireciona p/ login; a entrada da jornada aparece
-    await expect(page.getByRole("button", { name: "Start analysis" })).toBeVisible();
-    await page.getByRole("button", { name: "Start analysis" }).click();
+    // Autenticado: NÃO redireciona para login. A URL já representa a intenção e a reserva é
+    // automática; esperar a identidade durável prova a entrada sem uma confirmação redundante.
 
     // Identidade durável: navega p/ `/analyses/an-e2e`.
     //
@@ -82,14 +87,15 @@ test.describe("Jornada canônica autenticada (browser real + MSW stateful)", () 
 
     expect(legacy, "nenhuma chamada legada (/api|/rest|/graphql|/auth)").toEqual([]);
     expect(v1Calls, "a jornada fala com o Gateway /v1").toBeGreaterThan(0);
-    expect(dataUploads, "submit NÃO refaz upload (exatamente 1 POST /data)").toBe(1);
+    expect(uploadOpens, "submit NÃO reabre a sessão multipart").toBe(1);
+    expect(uploadParts, "o arquivo pequeno é enviado em uma única parte").toBe(1);
+    expect(uploadCompletions, "a sessão multipart é concluída uma única vez").toBe(1);
     await expect(page.getByRole("progressbar")).toHaveCount(0); // sem indicador/percentual
   });
 
   test("refresh: em progresso → reload reconstrói por analysis_id (da URL) → completed", async ({ page }) => {
     await enableAuth(page);
     await page.goto("/canonical/analyses/new");
-    await page.getByRole("button", { name: "Start analysis" }).click();
     await page.waitForURL(/\/analyses\/an-e2e/); // rota pública pós-M24 — ver o comentário acima
     await page.setInputFiles("#canonical-file", JSONL);
     await page.getByRole("button", { name: "Send dataset" }).click();
