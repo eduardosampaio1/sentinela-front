@@ -35,6 +35,8 @@ ready -> listening -> understanding -> deciding -> responding -> complete
 
 The page-level parallax system adds four independent depth planes: distant ambient matter, narrative typography, interface content and the decision field. Pointer values are smoothed outside React's render cycle; scroll depth is driven by Motion values. Mobile keeps scroll-based depth but removes the 3D pointer tilt and shortens the visual stage so the prompt remains visible in the first viewport. Reduced-motion users receive the same decision model as a composed static frame.
 
+Desktop narrative sections use a capped spatial rhythm rather than stacking full-viewport scenes. The hero remains a deliberate stage, while the reveal, system, economics, comparison and final CTA use content-led heights and bounded vertical padding. This preserves cinematic whitespace without creating empty scroll zones on 1280 px to 1920 px displays.
+
 The narrative follows the pitch deck's customer-service positioning without reproducing slide copy. It first lets the visitor experience a controlled decision, then names the tension between lower operating cost and higher customer expectations. Sentinela is introduced as the steering system between the customer-service stack and its models. The operating loop is expressed as observe, decide, control and improve; the economic scene then explains bypass, context reduction and model routing before the Lisbon meeting request.
 
 Public claims distinguish cost from token consumption. The current proof point is an early deployment result of approximately 40% lower token consumption within 60 days. It is not presented as guaranteed cost savings, and the page states that results depend on workload, providers, policies and deployment configuration.

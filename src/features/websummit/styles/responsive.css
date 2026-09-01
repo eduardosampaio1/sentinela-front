@@ -52,6 +52,10 @@
   .ws-hero__visual-depth { transform: translate3d(var(--ws-far-x), var(--ws-far-y), 0); }
 }
 
+@media (min-width: 1600px) {
+  .ws-section { padding-block: 120px; }
+}
+
 @media (max-width: 600px) {
   .ws-section { width: min(100% - 36px, 1320px); padding: 92px 0; }
   .ws-hero { padding-inline: 18px; }

@@ -226,8 +226,8 @@
 .ws-trace__step strong { font-size: 0.9rem; }
 .ws-trace__step p { max-width: 48ch; margin: 5px 0 0; color: var(--ws-muted); font-size: 0.86rem; line-height: 1.5; }
 
-.ws-section { width: min(100% - 48px, 1320px); margin: 0 auto; padding: clamp(112px, 15vw, 220px) 0; }
-.ws-reveal { min-height: 92dvh; display: grid; align-content: center; gap: 34px; }
+.ws-section { width: min(100% - 48px, 1320px); margin: 0 auto; padding: clamp(80px, 8vw, 128px) 0; }
+.ws-reveal { min-height: min(78dvh, 720px); display: grid; align-content: center; gap: 34px; }
 .ws-reveal__statement { will-change: transform, opacity; }
 .ws-reveal h2,
 .ws-event-cta h2 { max-width: 980px; margin: 0; font-size: clamp(3rem, 7vw, 7.6rem); font-weight: 500; line-height: 0.96; letter-spacing: -0.07em; text-wrap: balance; }
@@ -239,7 +239,7 @@
   grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
   gap: clamp(58px, 10vw, 150px);
   align-items: end;
-  min-height: 96dvh;
+  min-height: min(82dvh, 760px);
   overflow: hidden;
 }
 .ws-system__word {
@@ -297,7 +297,7 @@
     "disclosure disclosure";
   gap: clamp(48px, 8vw, 110px) clamp(48px, 10vw, 150px);
   align-items: end;
-  min-height: 110dvh;
+  min-height: auto;
 }
 .ws-economics__intro { grid-area: intro; align-self: center; }
 .ws-economics__intro h2 { max-width: 10ch; margin: 0; font-size: clamp(2.8rem, 5.4vw, 6.3rem); font-weight: 500; line-height: 0.96; letter-spacing: -0.07em; }
@@ -327,7 +327,7 @@
 .ws-comparison__stage::after { content: ""; position: absolute; top: 0; bottom: 0; left: var(--ws-split); width: 1px; background: var(--ws-accent-bright); box-shadow: 0 0 26px rgba(82,168,232,0.48); pointer-events: none; }
 .ws-comparison__note { color: var(--ws-faint); font-size: 0.78rem; }
 
-.ws-event-cta { display: grid; justify-items: start; gap: 42px; min-height: 88dvh; align-content: center; }
+.ws-event-cta { display: grid; justify-items: start; gap: 42px; min-height: min(72dvh, 660px); align-content: center; }
 .ws-primary-action { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 22px; border: 0; border-radius: 12px; background: var(--ws-ink); color: #0a0d12; font-weight: 650; cursor: pointer; transition: transform 180ms ease, background 180ms ease; }
 .ws-primary-action:hover { background: var(--ws-accent-bright); }
 .ws-primary-action:active { transform: scale(0.98); }
