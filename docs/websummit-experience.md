@@ -76,4 +76,4 @@ Production-preview Lighthouse on 2026-09-01:
 - CLS: 0
 - TBT: 150 ms
 
-The 2026-09-01 living-field revision kept the Web Summit route isolated and added no dependency. The subsequent spatial-parallax revision produced a 54.33 kB gzip JavaScript chunk plus 5.25 kB gzip event CSS. The pitch-aligned narrative revision remains dependency-free; its production bundle is 54.83 kB gzip JavaScript plus 6.96 kB gzip event CSS.
+The 2026-09-01 living-field revision kept the Web Summit route isolated and added no dependency. The subsequent spatial-parallax revision produced a 54.33 kB gzip JavaScript chunk plus 5.25 kB gzip event CSS. The pitch-aligned narrative revision remains dependency-free. After the desktop spatial-rhythm adjustment, the production bundle is 54.83 kB gzip JavaScript plus 6.99 kB gzip event CSS.
