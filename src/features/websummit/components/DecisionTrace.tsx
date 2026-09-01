@@ -1,7 +1,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import type { ExperienceResult } from "../experience/types";
 
-export function DecisionTrace({ result }: { result: ExperienceResult }) {
+export function DecisionTrace({ result, activeStage = result.trace.length - 1 }: { result: ExperienceResult; activeStage?: number }) {
   const reduceMotion = useReducedMotion();
 
   return (
@@ -22,11 +22,13 @@ export function DecisionTrace({ result }: { result: ExperienceResult }) {
           <motion.div
             className="ws-trace__step"
             key={step.stage}
-            initial={reduceMotion ? false : { opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.09 }}
+            data-status={index < activeStage ? "complete" : index === activeStage ? "active" : "waiting"}
+            initial={false}
+            animate={{ opacity: index <= activeStage ? 1 : 0.3, x: index === activeStage ? 5 : 0 }}
+            transition={reduceMotion ? { duration: 0 } : { duration: 0.48, ease: [0.16, 1, 0.3, 1] }}
           >
             <span className="ws-trace__rail" aria-hidden="true" />
+            <span className="ws-trace__signal" aria-hidden="true" />
             <strong>{step.label}</strong>
             <p>{step.detail}</p>
           </motion.div>

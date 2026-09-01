@@ -5,29 +5,24 @@ import { DecisionTrace } from "./DecisionTrace";
 import { SentinelaDecisionField } from "./SentinelaDecisionField";
 
 const stages = ["UNDERSTAND", "DECIDE", "CONTROL", "RESPOND"] as const;
-const stageByState: Partial<Record<ExperienceState, number>> = {
-  understanding: 0,
-  deciding: 1,
-  responding: 2,
-  complete: 3,
-};
+const playbackStates: ExperienceState[] = ["understanding", "deciding", "responding", "complete"];
 
 export function DecisionReveal({ result }: { result: ExperienceResult }) {
   const reduceMotion = useReducedMotion();
-  const [playbackState, setPlaybackState] = useState<ExperienceState>(reduceMotion ? "complete" : "understanding");
-  const activeStage = stageByState[playbackState] ?? 0;
+  const [activeStage, setActiveStage] = useState(reduceMotion ? 3 : 0);
+  const playbackState = playbackStates[activeStage];
 
   useEffect(() => {
     if (reduceMotion) {
-      setPlaybackState("complete");
+      setActiveStage(3);
       return;
     }
 
-    setPlaybackState("understanding");
+    setActiveStage(0);
     const timers = [
-      window.setTimeout(() => setPlaybackState("deciding"), 680),
-      window.setTimeout(() => setPlaybackState("responding"), 1360),
-      window.setTimeout(() => setPlaybackState("complete"), 2140),
+      window.setTimeout(() => setActiveStage(1), 900),
+      window.setTimeout(() => setActiveStage(2), 1800),
+      window.setTimeout(() => setActiveStage(3), 2700),
     ];
     return () => timers.forEach(window.clearTimeout);
   }, [reduceMotion, result]);
@@ -55,14 +50,31 @@ export function DecisionReveal({ result }: { result: ExperienceResult }) {
         <div className="ws-decision-reveal__field" data-stage={activeStage}>
           <SentinelaDecisionField state={playbackState} decision={result.decision} />
           <div className="ws-decision-reveal__stages" aria-label={`Decision replay: ${stages[activeStage].toLowerCase()}`}>
+            <div className="ws-decision-reveal__stage-track" aria-hidden="true">
+              <motion.span
+                className="ws-decision-reveal__stage-progress"
+                initial={false}
+                animate={{ width: `${(activeStage / (stages.length - 1)) * 100}%` }}
+                transition={reduceMotion ? { duration: 0 } : { duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+              />
+              <motion.span
+                className="ws-decision-reveal__stage-packet"
+                initial={false}
+                animate={{ left: `${(activeStage / (stages.length - 1)) * 100}%` }}
+                transition={reduceMotion ? { duration: 0 } : { duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+              />
+            </div>
             {stages.map((stage, index) => (
-              <span key={stage} data-status={index < activeStage ? "complete" : index === activeStage ? "active" : "waiting"}>
-                {stage}
+              <span className="ws-decision-reveal__stage" key={stage} data-status={index < activeStage ? "complete" : index === activeStage ? "active" : "waiting"}>
+                <span className="ws-decision-reveal__stage-node" aria-hidden="true">
+                  {index < activeStage || (reduceMotion && index === activeStage) ? "✓" : index + 1}
+                </span>
+                <span className="ws-decision-reveal__stage-label">{stage}</span>
               </span>
             ))}
           </div>
         </div>
-        <DecisionTrace result={result} />
+        <DecisionTrace result={result} activeStage={activeStage} />
       </div>
     </motion.section>
   );

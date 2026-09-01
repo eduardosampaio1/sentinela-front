@@ -68,7 +68,8 @@
   .ws-decision-reveal__status { padding: 0; }
   .ws-decision-reveal__field { min-height: clamp(390px, 118vw, 520px); }
   .ws-decision-reveal__stages { gap: 4px; }
-  .ws-decision-reveal__stages span { font-size: 0.42rem; letter-spacing: 0.08em; }
+  .ws-decision-reveal__stage-label { font-size: 0.42rem; letter-spacing: 0.08em; }
+  .ws-decision-reveal__stage-node { width: 20px; height: 20px; font-size: 0.46rem; }
   .ws-composer__meta { align-items: flex-start; }
   .ws-composer__meta p { max-width: 31ch; }
   .ws-seeds__list { display: grid; justify-items: start; gap: 4px; }
@@ -122,6 +123,8 @@
   .ws-decision-field__sweep,
   .ws-decision-field__activities span { animation: none !important; }
   .ws-decision-reveal__field::before { animation: none !important; }
+  .ws-decision-reveal__stage-packet::after,
+  .ws-trace__step[data-status="active"] .ws-trace__signal { animation: none !important; }
   .ws-decision-field__activities span:first-child { opacity: 0.72; transform: none; }
 }
 
