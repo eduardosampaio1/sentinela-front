@@ -27,8 +27,11 @@ describe("etapas públicas da análise", () => {
       </LanguageProvider>,
     );
 
-    expect(screen.getByRole("progressbar", { name: "Progresso da proteção da base" }))
-      .toHaveAttribute("aria-valuenow", "75");
+    expect(
+      screen.getByRole("progressbar", {
+        name: "Progresso da proteção da base",
+      }),
+    ).toHaveAttribute("aria-valuenow", "75");
     expect(screen.getByText(/750 MB de 1 GB revisados/)).toBeInTheDocument();
     expect(screen.getByText(/300 conversas encontradas/)).toBeInTheDocument();
   });
@@ -76,18 +79,44 @@ describe("etapas públicas da análise", () => {
             next_action: "provide_mapping",
             last_progress_at: null,
             run_manifest: null,
+            runtime_evidence: {
+              attempt_number: 2,
+              state: "running",
+              started_at: "2026-08-31T12:00:00Z",
+              last_heartbeat_at: "2026-08-31T12:01:00Z",
+              finished_at: null,
+              duration_ms: null,
+              ownership_state: "healthy",
+              terminal_cause: null,
+            },
             core_milestones: [
-              { milestone: "dispatch", state: "done", observed_at: "2026-08-31T12:00:00Z" },
+              {
+                milestone: "dispatch",
+                state: "done",
+                observed_at: "2026-08-31T12:00:00Z",
+              },
               {
                 milestone: "calculation_output",
                 state: "active",
                 observed_at: null,
               },
-              { milestone: "result_assembly", state: "waiting", observed_at: null },
+              {
+                milestone: "result_assembly",
+                state: "waiting",
+                observed_at: null,
+              },
             ],
             follow_ups: [
-              { capability: "review", state: "not_applicable", observed_at: null },
-              { capability: "notification", state: "not_applicable", observed_at: null },
+              {
+                capability: "review",
+                state: "not_applicable",
+                observed_at: null,
+              },
+              {
+                capability: "notification",
+                state: "not_applicable",
+                observed_at: null,
+              },
             ],
             stages: [
               { stage: "upload", state: "done" },
@@ -100,16 +129,12 @@ describe("etapas públicas da análise", () => {
       </LanguageProvider>,
     );
 
-    expect(screen.getByText("Proteção dos dados").closest("li")).toHaveTextContent(
-      "Ação necessária",
-    );
-    expect(screen.getByTestId("operational-next-action")).toHaveTextContent(
-      "Sua ação: revise as colunas",
-    );
-    expect(screen.getByTestId("operational-milestones")).toHaveTextContent(
-      "Trabalho encaminhado",
-    );
+    expect(screen.getByText("Proteção dos dados").closest("li")).toHaveTextContent("Ação necessária");
+    expect(screen.getByTestId("operational-next-action")).toHaveTextContent("Sua ação: revise as colunas");
+    expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Trabalho encaminhado");
     expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Em andamento");
+    expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Execução observada");
+    expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Saudável");
     expect(screen.queryByText("Sentinela Review")).not.toBeInTheDocument();
   });
 });

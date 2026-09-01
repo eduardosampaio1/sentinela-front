@@ -133,8 +133,8 @@
         "expected_behavior": "Comportamento esperado",
         "risk": "Risco",
         "success_indicator": "Indicador de sucesso",
-        "operational_constraint": "Restrição operacional"
-        ,"model_configuration": "Configuração do modelo"
+        "operational_constraint": "Restrição operacional",
+        "model_configuration": "Configuração do modelo"
       }
     },
     "review": {
@@ -170,7 +170,12 @@
       "embeddingScenarios": "Ver cenários de embeddings",
       "economicsDisclaimer": "Preços do snapshot registrado no resultado. Custos de infraestrutura e equivalência funcional não estão incluídos.",
       "economicsModel": "Modelo",
-      "economicsStatus": { "exact": "Exato", "estimated": "Estimado", "not_enough_information": "Dados insuficientes", "unsupported_pricing_rule": "Regra não suportada" },
+      "economicsStatus": {
+        "exact": "Exato",
+        "estimated": "Estimado",
+        "not_enough_information": "Dados insuficientes",
+        "unsupported_pricing_rule": "Regra não suportada"
+      },
       "recommendations": "Recomendações",
       "actionPlan": "O que fazer agora",
       "configuration": "Configuração",
@@ -793,6 +798,7 @@
       "operational": {
         "title": "Por dentro desta execução",
         "help": "Fatos confirmados pelos serviços responsáveis. Review e e-mail não bloqueiam o resultado.",
+        "notMeasured": "Não medido",
         "item": {
           "dispatch": "Trabalho encaminhado",
           "calculation_output": "Cálculos entregues",
@@ -813,6 +819,28 @@
           "failed": "Falhou",
           "unavailable": "Indisponível",
           "unknown": "Sem confirmação"
+        },
+        "runtime": {
+          "title": "Execução observada",
+          "attempt": "Tentativa",
+          "duration": "Duração de cálculo",
+          "ownership": "Continuidade da execução",
+          "outcome": "Desfecho",
+          "inProgress": "Em andamento",
+          "ownershipState": {
+            "healthy": "Saudável",
+            "closed": "Encerrada com segurança",
+            "lost": "Interrompida após perder a reserva",
+            "fenced": "Execução anterior isolada",
+            "unknown": "Sem confirmação"
+          },
+          "terminalCause": {
+            "completed": "Concluída",
+            "worker_reported_failure": "Falha reportada no cálculo",
+            "cancelled": "Cancelada",
+            "lease_expired": "Reserva de execução expirou",
+            "capacity_requeued": "Reenfileirada por capacidade"
+          }
         }
       },
       "steps": {

@@ -103,13 +103,7 @@ export interface AnalysisIntake {
   /** Resultado da política de aceitação, separado da conclusão de privacidade. */
   accepted: boolean | null;
   /** Resultado seguro do Privacy Gate; não inclui conteúdo, campo nem regra detectada. */
-  privacy_clearance:
-    | "passed"
-    | "review_required"
-    | "rejected"
-    | "policy_violation"
-    | "scanner_failed"
-    | null;
+  privacy_clearance: "passed" | "review_required" | "rejected" | "policy_violation" | "scanner_failed" | null;
 }
 
 export interface AnalysisRejectedRecordReason {
@@ -514,18 +508,10 @@ export interface LanguagePreferenceView {
 export type EngineAxisState = "pending" | "running" | "ready" | "failed";
 
 /** Estados do eixo `analytics`. Único que conhece `partial` e `withheld`. */
-export type AnalyticsAxisState =
-  | "pending"
-  | "running"
-  | "ready"
-  | "partial"
-  | "withheld"
-  | "failed"
-  | "unknown";
+export type AnalyticsAxisState = "pending" | "running" | "ready" | "partial" | "withheld" | "failed" | "unknown";
 
 /** Estados do eixo `export`. Único que conhece `expired` e `unavailable`. */
-export type ExportAxisState =
-  "unavailable" | "preparing" | "ready" | "expired" | "failed" | "unknown";
+export type ExportAxisState = "unavailable" | "preparing" | "ready" | "expired" | "failed" | "unknown";
 
 /** Estados do eixo `final_result`. */
 export type FinalResultAxisState = "pending" | "ready" | "failed";
@@ -547,12 +533,7 @@ export type ProgressAxis = "engine" | "analytics" | "export" | "final_result";
  * contrato, e o lugar dele é a camada que fala contrato. A M34 tentou declarar esta lista dentro
  * da feature e o cadeado reprovou — corretamente.
  */
-export const PROGRESS_AXES: readonly ProgressAxis[] = [
-  "engine",
-  "analytics",
-  "export",
-  "final_result",
-] as const;
+export const PROGRESS_AXES: readonly ProgressAxis[] = ["engine", "analytics", "export", "final_result"] as const;
 
 /**
  * Uma entrada de progresso. União DISCRIMINADA pelo eixo: passar um estado de `export` onde se
@@ -625,6 +606,17 @@ export interface AnalysisOperationalTruthView {
   last_progress_at: string | null;
   /** `null` em análises legadas: a UI nunca reconstrói o passado com defaults atuais. */
   run_manifest: AnalysisRunManifestSummaryView | null;
+  runtime_evidence?: {
+    attempt_number: number | null;
+    state: string;
+    started_at: string | null;
+    last_heartbeat_at: string | null;
+    finished_at: string | null;
+    duration_ms: number | null;
+    ownership_state: "healthy" | "closed" | "lost" | "fenced" | "unknown";
+    terminal_cause:
+      "completed" | "worker_reported_failure" | "cancelled" | "lease_expired" | "capacity_requeued" | null;
+  } | null;
   core_milestones?: readonly {
     milestone: "dispatch" | "calculation_output" | "result_assembly";
     state: "waiting" | "active" | "done" | "failed" | "unknown";
@@ -660,8 +652,7 @@ export interface AnalysisProgressView {
 // ── Projeção analítica pública (M21) ────────────────────────────────────────────────────────
 
 /** `component_status` — o vocabulário da projeção. `partial` ≠ `failed`, `withheld` ≠ erro. */
-export type AnalyticsComponentStatus =
-  "ready" | "partial" | "withheld" | "failed" | "unknown";
+export type AnalyticsComponentStatus = "ready" | "partial" | "withheld" | "failed" | "unknown";
 
 /**
  * Retenção por privacidade. **Não é erro**: a medida existe e foi RETIDA por regra.
@@ -890,11 +881,7 @@ export interface CatalogActivationItem {
   status: "eligible" | "rejected_type";
   expected_value_type: string;
   observed_types: string[];
-  reason_code:
-    | "exact_contract_match"
-    | "canonical_field_mapped"
-    | "catalog_measure_promoted"
-    | "incompatible_type";
+  reason_code: "exact_contract_match" | "canonical_field_mapped" | "catalog_measure_promoted" | "incompatible_type";
   group: string;
   direction: "higher_is_worse" | "higher_is_better" | "context_only";
   detector_id: string | null;
@@ -942,12 +929,7 @@ export interface MappingConfirmedView {
 // medições oficiais, sem expor a identidade operacional do processamento assíncrono.
 export type ContextItemState = "suggested" | "accepted" | "edited" | "rejected";
 export type ContextCategory =
-  | "objective"
-  | "critical_journey"
-  | "expected_behavior"
-  | "risk"
-  | "success_indicator"
-  | "operational_constraint";
+  "objective" | "critical_journey" | "expected_behavior" | "risk" | "success_indicator" | "operational_constraint";
 
 export interface ContextItemView {
   item_id: string;
@@ -992,13 +974,7 @@ export interface ContextSuggestionView {
 }
 
 export type ReviewStatus =
-  | "not_requested"
-  | "unavailable"
-  | "queued"
-  | "investigating"
-  | "partial"
-  | "completed"
-  | "failed";
+  "not_requested" | "unavailable" | "queued" | "investigating" | "partial" | "completed" | "failed";
 
 export interface ReviewEvidenceView {
   evidence_id: string;

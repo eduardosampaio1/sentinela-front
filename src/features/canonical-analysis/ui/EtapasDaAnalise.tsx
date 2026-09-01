@@ -2,11 +2,7 @@ import { Check, CircleDashed, Loader2, Mail, TriangleAlert, X } from "lucide-rea
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRevelacao } from "@/design/motion";
 import { cn } from "@/lib/utils";
-import type {
-  AnalysisOperationalTruthView,
-  AnalysisStatusView,
-  IntakeProgressView,
-} from "@/lib/v1";
+import type { AnalysisOperationalTruthView, AnalysisStatusView, IntakeProgressView } from "@/lib/v1";
 import type { UploadProgress } from "../data/analysis";
 import type { EixoLido } from "../result/eixos";
 
@@ -34,10 +30,7 @@ const TOM: Record<EstadoDaEtapa, string> = {
   failed: "border-destructive/40 bg-destructive/10 text-foreground",
 };
 
-function estadoDoUpload(
-  status: AnalysisStatusView["status"],
-  progresso: UploadProgress | null,
-): EstadoDaEtapa {
+function estadoDoUpload(status: AnalysisStatusView["status"], progresso: UploadProgress | null): EstadoDaEtapa {
   if (progresso && progresso.state !== "done") return "active";
   if (status === "preparing") return progresso ? "active" : "waiting";
   // `receiving` só é publicado depois que o POST simples respondeu ou o multipart concluiu.
@@ -63,7 +56,8 @@ function estadoDaProtecao(view: AnalysisStatusView, progresso: UploadProgress | 
     view.status === "running" ||
     view.status === "recovering" ||
     view.status === "completed"
-  ) return "done";
+  )
+    return "done";
   if (view.intake) return "done";
   return "waiting";
 }
@@ -164,26 +158,37 @@ export function EtapasDaAnalise({
   );
   const etapas: Etapa[] = operationalTruth
     ? [
-        { chave: "upload", estado: estadoAutoritativo.get("upload") ?? "waiting" },
-        { chave: "privacy", estado: estadoAutoritativo.get("privacy") ?? "waiting" },
-        { chave: "measures", estado: estadoAutoritativo.get("measures") ?? "waiting" },
-        { chave: "result", estado: estadoAutoritativo.get("final_result") ?? "waiting" },
+        {
+          chave: "upload",
+          estado: estadoAutoritativo.get("upload") ?? "waiting",
+        },
+        {
+          chave: "privacy",
+          estado: estadoAutoritativo.get("privacy") ?? "waiting",
+        },
+        {
+          chave: "measures",
+          estado: estadoAutoritativo.get("measures") ?? "waiting",
+        },
+        {
+          chave: "result",
+          estado: estadoAutoritativo.get("final_result") ?? "waiting",
+        },
       ]
     : [
         // Compatibilidade durante rollout: análises servidas por uma versão anterior continuam
         // legíveis. Assim que `operational_truth` existe, nenhuma destas regras decide a tela.
-        { chave: "upload", estado: estadoDoUpload(view.status, uploadProgress) },
+        {
+          chave: "upload",
+          estado: estadoDoUpload(view.status, uploadProgress),
+        },
         { chave: "privacy", estado: estadoDaProtecao(view, uploadProgress) },
         { chave: "measures", estado: estadoDasMedidas(eixos, view.status) },
         { chave: "result", estado: estadoDoResultado(eixos, view.status) },
       ];
-  const raiz = useRevelacao<HTMLElement>(
-    etapas.map((etapa) => `${etapa.chave}:${etapa.estado}`).join("|"),
-  );
+  const raiz = useRevelacao<HTMLElement>(etapas.map((etapa) => `${etapa.chave}:${etapa.estado}`).join("|"));
   const concluidas = etapas.filter((etapa) => etapa.estado === "done").length;
-  const indiceDeAtencao = etapas.findIndex(
-    (etapa) => etapa.estado === "attention" || etapa.estado === "failed",
-  );
+  const indiceDeAtencao = etapas.findIndex((etapa) => etapa.estado === "attention" || etapa.estado === "failed");
   const indiceAtual = etapas.findIndex((etapa) => etapa.estado === "active");
   const indiceDaLeitura =
     indiceDeAtencao >= 0
@@ -200,9 +205,15 @@ export function EtapasDaAnalise({
       ? null
       : Math.max(0, Math.min(100, intakeProgress.percent));
   const marcosDoNucleo = operationalTruth?.core_milestones ?? [];
-  const acompanhamentos = (operationalTruth?.follow_ups ?? []).filter(
-    (item) => item.state !== "not_applicable",
-  );
+  const acompanhamentos = (operationalTruth?.follow_ups ?? []).filter((item) => item.state !== "not_applicable");
+  const runtime = operationalTruth?.runtime_evidence ?? null;
+  const formatarDuracao = (durationMs: number | null) => {
+    if (durationMs === null) return t("canonicalAnalysis.liveProgress.operational.notMeasured");
+    const seconds = Math.round(durationMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${remainingSeconds}s`;
+  };
   const formatarBytes = (valor: number) => {
     const emGigabytes = valor >= 1_000_000_000;
     return new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US", {
@@ -224,9 +235,7 @@ export function EtapasDaAnalise({
         <h2 id="analysis-live-steps" className="text-base font-semibold text-foreground">
           {t("canonicalAnalysis.liveProgress.title")}
         </h2>
-        <p className="text-sm text-muted-foreground">
-          {t("canonicalAnalysis.liveProgress.help")}
-        </p>
+        <p className="text-sm text-muted-foreground">{t("canonicalAnalysis.liveProgress.help")}</p>
         {operationalTruth ? (
           <p className="pt-2 text-sm font-medium text-foreground" data-testid="operational-next-action">
             {t(`canonicalAnalysis.liveProgress.nextAction.${operationalTruth.next_action}`)}
@@ -278,15 +287,11 @@ export function EtapasDaAnalise({
                     width:
                       etapa.chave === "upload" && uploadProgress
                         ? `${
-                            uploadProgress.percent < 0
-                              ? 0
-                              : uploadProgress.percent > 100
-                                ? 100
-                                : uploadProgress.percent
+                            uploadProgress.percent < 0 ? 0 : uploadProgress.percent > 100 ? 100 : uploadProgress.percent
                           }%`
                         : etapa.chave === "privacy" && percentualDoIntake !== null
                           ? `${percentualDoIntake}%`
-                        : "100%",
+                          : "100%",
                     transitionDuration: "var(--ds-duration-base)",
                     transitionTimingFunction: "var(--ds-easing-standard)",
                   }}
@@ -323,32 +328,21 @@ export function EtapasDaAnalise({
                 >
                   <Icone
                     aria-hidden="true"
-                    className={cn(
-                      "h-4 w-4",
-                      etapa.estado === "active" && "motion-safe:animate-spin",
-                    )}
+                    className={cn("h-4 w-4", etapa.estado === "active" && "motion-safe:animate-spin")}
                   />
                 </span>
                 {indice < etapas.length - 1 && (
-                  <span
-                    aria-hidden="true"
-                    data-revelar="barra"
-                    className="mt-2 h-full w-px origin-top bg-border"
-                  />
+                  <span aria-hidden="true" data-revelar="barra" className="mt-2 h-full w-px origin-top bg-border" />
                 )}
               </div>
               <div className="min-w-0 pb-2">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                  <p className="text-sm font-medium text-foreground">
-                    {tituloDaEtapa(t, etapa.chave)}
-                  </p>
+                  <p className="text-sm font-medium text-foreground">{tituloDaEtapa(t, etapa.chave)}</p>
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">
                     {rotuloDoEstado(t, etapa.estado)}
                   </p>
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {textoDaEtapa(t, etapa)}
-                </p>
+                <p className="mt-1 text-sm text-muted-foreground">{textoDaEtapa(t, etapa)}</p>
                 {etapa.chave === "upload" &&
                 etapa.estado === "active" &&
                 uploadProgress?.currentPart &&
@@ -357,12 +351,11 @@ export function EtapasDaAnalise({
                     {t("canonicalAnalysis.upload.uploadingPart", {
                       current: uploadProgress.currentPart,
                       total: uploadProgress.totalParts,
-                    })} · {uploadProgress.percent}%
+                    })}{" "}
+                    · {uploadProgress.percent}%
                   </p>
                 ) : null}
-                {etapa.chave === "privacy" &&
-                etapa.estado === "active" &&
-                intakeProgress ? (
+                {etapa.chave === "privacy" && etapa.estado === "active" && intakeProgress ? (
                   <div className="mt-3 max-w-xl space-y-2">
                     {percentualDoIntake !== null ? (
                       <div
@@ -398,9 +391,9 @@ export function EtapasDaAnalise({
                             processed: formatarBytes(intakeProgress.processed_bytes),
                           })}
                       {` · ${t("canonicalAnalysis.liveProgress.intakeConversations", {
-                        count: new Intl.NumberFormat(
-                          language === "pt" ? "pt-BR" : "en-US",
-                        ).format(intakeProgress.conversations_seen),
+                        count: new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US").format(
+                          intakeProgress.conversations_seen,
+                        ),
                       })}`}
                     </p>
                   </div>
@@ -410,14 +403,12 @@ export function EtapasDaAnalise({
           );
         })}
       </ol>
-      {marcosDoNucleo.length > 0 || acompanhamentos.length > 0 ? (
+      {marcosDoNucleo.length > 0 || acompanhamentos.length > 0 || runtime ? (
         <div className="mt-5 border-t border-border pt-4" data-testid="operational-milestones">
           <h3 className="text-sm font-semibold text-foreground">
             {t("canonicalAnalysis.liveProgress.operational.title")}
           </h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {t("canonicalAnalysis.liveProgress.operational.help")}
-          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("canonicalAnalysis.liveProgress.operational.help")}</p>
           <dl className="mt-3 grid gap-2 sm:grid-cols-2">
             {[...marcosDoNucleo, ...acompanhamentos].map((item) => {
               const key = "milestone" in item ? item.milestone : item.capability;
@@ -436,6 +427,47 @@ export function EtapasDaAnalise({
               );
             })}
           </dl>
+          {runtime ? (
+            <div className="mt-3 rounded-md border border-border/70 bg-background/40 px-3 py-3">
+              <h4 className="text-xs font-semibold text-foreground">
+                {t("canonicalAnalysis.liveProgress.operational.runtime.title")}
+              </h4>
+              <dl className="mt-2 grid gap-x-5 gap-y-2 text-xs sm:grid-cols-2">
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-muted-foreground">
+                    {t("canonicalAnalysis.liveProgress.operational.runtime.attempt")}
+                  </dt>
+                  <dd className="tabular-nums text-foreground">
+                    {runtime.attempt_number ?? t("canonicalAnalysis.liveProgress.operational.notMeasured")}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-muted-foreground">
+                    {t("canonicalAnalysis.liveProgress.operational.runtime.duration")}
+                  </dt>
+                  <dd className="tabular-nums text-foreground">{formatarDuracao(runtime.duration_ms)}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-muted-foreground">
+                    {t("canonicalAnalysis.liveProgress.operational.runtime.ownership")}
+                  </dt>
+                  <dd className="text-foreground">
+                    {t(`canonicalAnalysis.liveProgress.operational.runtime.ownershipState.${runtime.ownership_state}`)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-muted-foreground">
+                    {t("canonicalAnalysis.liveProgress.operational.runtime.outcome")}
+                  </dt>
+                  <dd className="text-foreground">
+                    {runtime.terminal_cause
+                      ? t(`canonicalAnalysis.liveProgress.operational.runtime.terminalCause.${runtime.terminal_cause}`)
+                      : t("canonicalAnalysis.liveProgress.operational.runtime.inProgress")}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </section>
