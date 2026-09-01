@@ -66,6 +66,9 @@ const TermsPage = lazy(() =>
 const SecurityPage = lazy(() =>
   import("@/features/legal/SecurityPage").then((m) => ({ default: m.SecurityPage }))
 );
+const WebSummitPage = lazy(() =>
+  import("@/features/websummit/WebSummitPage").then((m) => ({ default: m.WebSummitPage }))
+);
 
 // Dashboard sub-panels (route-accessible deep views)
 const DiagnosticsPanel = lazy(() =>
@@ -187,6 +190,10 @@ const routes: RouteObject[] = [
   {
     path: "/security",
     element: <PageSuspense><SecurityPage /></PageSuspense>,
+  },
+  {
+    path: "/websummit",
+    element: <PageSuspense><WebSummitPage /></PageSuspense>,
   },
 
   // ── Auth (public-only: redirect to /home if already logged in) ────────────
