@@ -75,6 +75,11 @@
   .ws-economics__disclosure { margin-top: -54px; }
   .ws-decision-field__signals span { font-size: 0.46rem; }
   .ws-decision-field__decision span { display: none; }
+  .ws-decision-field__activities span { padding: 5px 6px; font-size: 0.4rem; }
+  .ws-decision-field__activities span:nth-child(1) { left: 13%; top: 27%; }
+  .ws-decision-field__activities span:nth-child(2) { left: 27%; top: 16%; }
+  .ws-decision-field__activities span:nth-child(3) { right: 22%; top: 16%; }
+  .ws-decision-field__activities span:nth-child(4) { right: 8%; top: 43%; }
   .ws-decision-field__caption { font-size: 0.48rem; }
   .ws-comparison__stage { min-height: 460px; }
   .ws-comparison__side { padding: 26px 20px; }
@@ -103,7 +108,10 @@
   .ws-hero__visual-depth { transform: none !important; }
   .ws-decision-field__packet,
   .ws-decision-field__pulse,
-  .ws-decision-field__core { animation: none !important; }
+  .ws-decision-field__core,
+  .ws-decision-field__sweep,
+  .ws-decision-field__activities span { animation: none !important; }
+  .ws-decision-field__activities span:first-child { opacity: 0.72; transform: none; }
 }
 
 @media (prefers-reduced-transparency: reduce) {

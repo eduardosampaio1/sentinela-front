@@ -27,7 +27,7 @@ No Three.js, GSAP, Rive, smooth-scroll library or marketing analytics vendor was
 
 The public event narrative uses only the **Sentinela** name. Internal product names are deliberately absent from this first-contact experience.
 
-The visual centerpiece shows a request entering Sentinela, four decision signals converging (`intent`, `risk`, `context`, `cost`) and one controlled route leaving the system. Route illumination, signal pulses and information packets follow the real experience state:
+The visual centerpiece shows a request entering Sentinela, four decision signals converging (`intent`, `risk`, `context`, `cost`) and one controlled route leaving the system. A slow semantic sweep, sequenced activity receipts (`intent read`, `risk clear`, `context fit`, `route ready`), route illumination and information packets keep the system visibly active. Processing states accelerate the sweep and pulses without changing the meaning of the diagram:
 
 ```text
 ready -> listening -> understanding -> deciding -> responding -> complete

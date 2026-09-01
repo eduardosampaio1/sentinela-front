@@ -2,6 +2,7 @@ import { memo } from "react";
 import type { ExperienceState } from "../experience/types";
 
 const signals = ["INTENT", "RISK", "CONTEXT", "COST"] as const;
+const activities = ["INTENT READ", "RISK CLEAR", "CONTEXT FIT", "ROUTE READY"] as const;
 
 export const SentinelaDecisionField = memo(function SentinelaDecisionField({ state }: { state: ExperienceState }) {
   return (
@@ -65,6 +66,8 @@ export const SentinelaDecisionField = memo(function SentinelaDecisionField({ sta
         </g>
       </svg>
 
+      <div className="ws-decision-field__sweep" aria-hidden="true" />
+
       <span className="ws-decision-field__label ws-decision-field__label--request">REQUEST</span>
       <div className="ws-decision-field__signals" aria-hidden="true">
         {signals.map((signal) => <span key={signal}>{signal}</span>)}
@@ -72,6 +75,14 @@ export const SentinelaDecisionField = memo(function SentinelaDecisionField({ sta
       <div className="ws-decision-field__decision" aria-hidden="true">
         <span>AI ROUTE</span>
         <span>HUMAN REVIEW</span>
+      </div>
+      <div className="ws-decision-field__activities" aria-hidden="true">
+        {activities.map((activity, index) => (
+          <span key={activity} style={{ "--ws-activity-index": index } as React.CSSProperties}>
+            <i />
+            {activity}
+          </span>
+        ))}
       </div>
       <div className="ws-decision-field__caption" aria-hidden="true">
         <strong>ONE REQUEST</strong>
