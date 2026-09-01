@@ -796,6 +796,7 @@
         "failed": "Failed"
       },
       "operational": {
+        "unavailable": "Operational truth for this analysis is unavailable. Refresh the page; if it persists, contact support.",
         "title": "Inside this run",
         "help": "Facts confirmed by the responsible services. Review and email never block the result.",
         "notMeasured": "Not measured",

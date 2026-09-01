@@ -1,9 +1,28 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import type { AnalysisOperationalTruthView } from "@/lib/v1";
 import { statusView } from "@/test/fixtures/public-v1/analyses";
-import { lerEixos } from "../result/eixos";
 import { EtapasDaAnalise } from "./EtapasDaAnalise";
+
+const VERDADE_DA_PROTECAO: AnalysisOperationalTruthView = {
+  contract_version: "analysis-operational-truth-v2",
+  current_stage: "privacy",
+  current_state: "active",
+  owner: "sentinela",
+  next_action: "wait",
+  last_progress_at: "2026-08-28T01:00:00+00:00",
+  run_manifest: null,
+  runtime_evidence: null,
+  core_milestones: [],
+  follow_ups: [],
+  stages: [
+    { stage: "upload", state: "done" },
+    { stage: "privacy", state: "active" },
+    { stage: "measures", state: "waiting" },
+    { stage: "final_result", state: "waiting" },
+  ],
+};
 
 describe("etapas públicas da análise", () => {
   it("mostra o percentual medido pelo backend durante a proteção", () => {
@@ -12,7 +31,7 @@ describe("etapas públicas da análise", () => {
       <LanguageProvider>
         <EtapasDaAnalise
           view={statusView("receiving")}
-          eixos={lerEixos({ analysis_id: "an-abc", axes: [] })}
+          operationalTruth={VERDADE_DA_PROTECAO}
           intakeProgress={{
             stage: "protecting",
             processed_bytes: 750_000_000,
@@ -36,32 +55,21 @@ describe("etapas públicas da análise", () => {
     expect(screen.getByText(/300 conversas encontradas/)).toBeInTheDocument();
   });
 
-  it("não faz a proteção voltar a Waiting depois que a análise já está rodando", () => {
+  it("não reconstrói etapas quando a verdade operacional está ausente", () => {
     window.localStorage.setItem("sentinela:language", "en");
     render(
       <LanguageProvider>
-        <EtapasDaAnalise
-          view={statusView("running", { intake: null })}
-          eixos={lerEixos({
-            analysis_id: "an-abc",
-            axes: [
-              { axis: "engine", state: "running" },
-              { axis: "analytics", state: "ready" },
-              { axis: "export", state: "ready" },
-              { axis: "final_result", state: "pending" },
-            ],
-          })}
-        />
+        <EtapasDaAnalise view={statusView("running", { intake: null })} />
       </LanguageProvider>,
     );
 
-    const protecao = screen.getByText("Data protection").closest("li");
-    expect(protecao).toHaveTextContent("Done");
-    expect(protecao).not.toHaveTextContent("Waiting");
-    expect(screen.getByRole("progressbar", { name: "Analysis stage progress" })).toHaveAttribute(
-      "aria-valuetext",
-      expect.stringMatching(/Step 4 of 4.*Final result/),
-    );
+    expect(
+      screen.getByText(/Operational truth for this analysis is unavailable/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Data protection")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("progressbar", { name: "Analysis stage progress" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renderiza a verdade operacional do servidor sem reconstituir a etapa no Front", () => {
@@ -70,7 +78,6 @@ describe("etapas públicas da análise", () => {
       <LanguageProvider>
         <EtapasDaAnalise
           view={statusView("running")}
-          eixos={lerEixos({ analysis_id: "an-abc", axes: [] })}
           operationalTruth={{
             contract_version: "analysis-operational-truth-v2",
             current_stage: "privacy",
@@ -129,13 +136,27 @@ describe("etapas públicas da análise", () => {
       </LanguageProvider>,
     );
 
-    expect(screen.getByText("Proteção dos dados").closest("li")).toHaveTextContent("Ação necessária");
-    expect(screen.getByTestId("operational-next-action")).toHaveTextContent("Sua ação: revise as colunas");
-    expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Trabalho encaminhado");
-    expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Em andamento");
-    expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Execução observada");
-    expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Encerrada com segurança");
-    expect(screen.getByTestId("operational-milestones")).toHaveTextContent("Concluída");
+    expect(
+      screen.getByText("Proteção dos dados").closest("li"),
+    ).toHaveTextContent("Ação necessária");
+    expect(screen.getByTestId("operational-next-action")).toHaveTextContent(
+      "Sua ação: revise as colunas",
+    );
+    expect(screen.getByTestId("operational-milestones")).toHaveTextContent(
+      "Trabalho encaminhado",
+    );
+    expect(screen.getByTestId("operational-milestones")).toHaveTextContent(
+      "Em andamento",
+    );
+    expect(screen.getByTestId("operational-milestones")).toHaveTextContent(
+      "Execução observada",
+    );
+    expect(screen.getByTestId("operational-milestones")).toHaveTextContent(
+      "Encerrada com segurança",
+    );
+    expect(screen.getByTestId("operational-milestones")).toHaveTextContent(
+      "Concluída",
+    );
     expect(screen.queryByText("Sentinela Review")).not.toBeInTheDocument();
   });
 });

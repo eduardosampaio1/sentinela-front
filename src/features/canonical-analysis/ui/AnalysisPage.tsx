@@ -226,7 +226,9 @@ export function AnalysisPage() {
     ) {
       return (
         <div className="space-y-4">
-          {view.status === "preparing" ? <AnalysisContextPanel analysisId={analysisId} scope={scope} /> : null}
+          {view.status === "preparing" ? (
+            <AnalysisContextPanel analysisId={analysisId} scope={scope} />
+          ) : null}
           <UploadStep
             analysisId={analysisId}
             scope={scope}
@@ -237,7 +239,6 @@ export function AnalysisPage() {
           />
           <EtapasDaAnalise
             view={view}
-            eixos={eixos}
             uploadProgress={uploadProgress}
             intakeProgress={progresso.data?.intake}
             operationalTruth={progresso.data?.operational_truth}
@@ -263,7 +264,6 @@ export function AnalysisPage() {
             <StateBanner view={view} />
             <EtapasDaAnalise
               view={view}
-              eixos={eixos}
               uploadProgress={uploadProgress}
               intakeProgress={progresso.data?.intake}
               operationalTruth={progresso.data?.operational_truth}
@@ -296,7 +296,6 @@ export function AnalysisPage() {
             <StateBanner view={view} />
             <EtapasDaAnalise
               view={view}
-              eixos={eixos}
               intakeProgress={progresso.data?.intake}
               operationalTruth={progresso.data?.operational_truth}
             />
@@ -343,7 +342,6 @@ export function AnalysisPage() {
               <StateBanner view={view} />
               <EtapasDaAnalise
                 view={view}
-                eixos={eixos}
                 intakeProgress={progresso.data?.intake}
                 operationalTruth={progresso.data?.operational_truth}
               />
@@ -363,7 +361,6 @@ export function AnalysisPage() {
               <StateBanner view={view} />
               <EtapasDaAnalise
                 view={view}
-                eixos={eixos}
                 intakeProgress={progresso.data?.intake}
                 operationalTruth={progresso.data?.operational_truth}
               />
@@ -385,7 +382,6 @@ export function AnalysisPage() {
             <StateBanner view={view} />
             <EtapasDaAnalise
               view={view}
-              eixos={eixos}
               intakeProgress={progresso.data?.intake}
               operationalTruth={progresso.data?.operational_truth}
             />
@@ -420,7 +416,6 @@ export function AnalysisPage() {
             <StateBanner view={view} />
             <EtapasDaAnalise
               view={view}
-              eixos={eixos}
               intakeProgress={progresso.data?.intake}
               operationalTruth={progresso.data?.operational_truth}
             />
@@ -469,7 +464,6 @@ export function AnalysisPage() {
             <StateBanner view={view} />
             <EtapasDaAnalise
               view={view}
-              eixos={eixos}
               intakeProgress={progresso.data?.intake}
               operationalTruth={progresso.data?.operational_truth}
             />
@@ -551,7 +545,6 @@ export function AnalysisPage() {
             />
             <EtapasDaAnalise
               view={view}
-              eixos={eixos}
               intakeProgress={progresso.data?.intake}
               operationalTruth={progresso.data?.operational_truth}
             />

@@ -796,6 +796,7 @@
         "failed": "Falha"
       },
       "operational": {
+        "unavailable": "A verdade operacional desta análise está indisponível. Atualize a página; se persistir, procure o suporte.",
         "title": "Por dentro desta execução",
         "help": "Fatos confirmados pelos serviços responsáveis. Review e e-mail não bloqueiam o resultado.",
         "notMeasured": "Não medido",
