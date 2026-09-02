@@ -14,6 +14,9 @@ vi.mock("@/shell/AppShell", () => ({
   ),
 }));
 vi.mock("../../data/client", () => ({ useV1Client: () => currentClient }));
+vi.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ workspace: { id: "ws-1", name: "Workspace", role: "owner" } }),
+}));
 vi.mock("../scope", () => ({
   useCanonicalScope: () => ({ workspaceId: "ws-1" }),
 }));
@@ -239,6 +242,23 @@ describe("Sentinela Review", () => {
         assignee: "Product owner",
       }),
     );
+  });
+
+  it("copia somente o link interno e explicita que o acesso continua protegido", async () => {
+    const writeText = vi.fn(async () => undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+
+    renderPage();
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Copiar link interno" }),
+    );
+
+    expect(writeText).toHaveBeenCalledWith(window.location.href);
+    expect(screen.getByText(/precisa ter acesso a este workspace/i)).toBeVisible();
+    expect(screen.getByRole("button", { name: "Link copiado" })).toBeVisible();
   });
 
   it("permite reprocessar somente o Review quando o artefato é parcial", async () => {

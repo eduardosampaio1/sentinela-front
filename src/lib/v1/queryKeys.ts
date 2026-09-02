@@ -12,7 +12,7 @@ export const workspaceKeys = {
     workspaceId: string,
     // `instanceId` entra na CHAVE, e nao so na query: sem ele a lista filtrada leria do cache da
     // lista geral e mostraria analises de outra Instancia sem nenhuma requisicao acontecer.
-    params?: { limit?: number; cursor?: string | null; instanceId?: string },
+    params?: { limit?: number; cursor?: string | null; instanceId?: string; query?: string },
   ) =>
     ["workspace", workspaceId, "analyses", "list", params ?? {}] as const,
   detail: (workspaceId: string, analysisId: string) =>
@@ -79,6 +79,8 @@ export const workspaceKeys = {
     ["workspace", workspaceId, "analyses", "detail", analysisId, "review"] as const,
   reviewActions: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "review", "actions"] as const,
+  reviewFeedback: (workspaceId: string, analysisId: string) =>
+    ["workspace", workspaceId, "analyses", "detail", analysisId, "review", "feedback"] as const,
   result: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "result"] as const,
   /**

@@ -8,7 +8,7 @@
 // janela em que um cursor do workspace anterior é enviado ao novo — Codex E4 R1 [P2]).
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { AnalysisListItem, CanonicalScope } from "@/lib/v1";
@@ -177,6 +177,9 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
   // M39 · EVO-02 — escolher EXATAMENTE duas. A lista não compara: ela só reúne a intenção e
   // navega para a rota canônica, que é onde a comparação é reconstruída pelos dois ids.
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get("q")?.trim() ?? "";
+  const [draftQuery, setDraftQuery] = useState(query);
   const [selecionando, setSelecionando] = useState(false);
   const [escolhidas, setEscolhidas] = useState<string[]>([]);
   const alternar = (id: string) =>
@@ -196,17 +199,7 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
   const [cursor, setCursor] = useState<string | null>(null);
   const [prevStack, setPrevStack] = useState<(string | null)[]>([]);
 
-  /**
-   * Filtro por Instance — decisão de owner (2026-08-15), no lugar da busca por texto.
-   *
-   * A busca livre foi pedida e NÃO foi feita: `GET /v1/analyses` aceita `workspace_id`, `cursor`,
-   * `limit`, `instance_id`, `project_id`, `environment_id` e `baseline_eligible`, e mais nada. Um
-   * campo de texto só poderia filtrar a PÁGINA carregada — e diria "nada encontrado" para uma
-   * análise que está na página 3. Afirmação falsa sobre os dados de quem procura.
-   *
-   * `instance_id` é filtro de verdade, no servidor, e resolve o caso concreto: achar duas análises
-   * da mesma Instância para comparar. Fica registrado que a busca por texto exige contrato novo.
-   */
+  /** Filtro por Instance e busca textual são contratos do servidor, nunca recortes desta página. */
   const [instancia, setInstancia] = useState<string>("");
   const instancias = useInstancesList(scope);
 
@@ -224,7 +217,32 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
     setPrevStack([]);
   }
 
-  const list = useAnalysesList(scope, cursor, instancia || undefined);
+  const list = useAnalysesList(
+    scope,
+    cursor,
+    instancia || undefined,
+    query || undefined,
+  );
+
+  function aplicarBusca(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalized = draftQuery.trim();
+    const next = new URLSearchParams(searchParams);
+    if (normalized.length >= 2) next.set("q", normalized);
+    else next.delete("q");
+    setCursor(null);
+    setPrevStack([]);
+    setSearchParams(next, { replace: true });
+  }
+
+  function limparBusca() {
+    setDraftQuery("");
+    const next = new URLSearchParams(searchParams);
+    next.delete("q");
+    setCursor(null);
+    setPrevStack([]);
+    setSearchParams(next, { replace: true });
+  }
 
   /**
    * `instance_id → name`, montado da lista que o filtro JÁ carrega.
@@ -241,7 +259,7 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
   // observador preso à página anterior não veria as novas — a próxima página apareceria parada
   // enquanto a primeira teve movimento. É o mesmo motivo de incluir o estado de carga.
   const raizDaLista = useRevelacao<HTMLDivElement>(
-    `${cursor ?? ""}|${instancia}|${list.isFetching}`,
+    `${cursor ?? ""}|${instancia}|${query}|${list.isFetching}`,
   );
 
   function irProxima() {
@@ -318,16 +336,22 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
     // análises, só não nesta Instância. E o estado vazio devolve cedo, antes da barra — sem uma
     // saída própria, quem filtrasse e não achasse nada ficaria preso, sem nem o seletor na tela
     // para desfazer. É o mesmo beco que a M45.4 corrigiu na comparação.
-    if (instancia) {
+    if (instancia || query) {
       return (
         <EmptyState
           titulo={t("canonicalAnalysis.list.title")}
-          explicacao={t("canonicalAnalysis.list.emptyInstance")}
+          explicacao={t("canonicalAnalysis.list.emptyFiltered")}
           acao={
             // Chave PRÓPRIA para a ação. `allInstances` é a opção do seletor, onde o rótulo já
             // diz "Instância" e "Todas" basta; como BOTÃO isolado, "Todas" não diz o que faz.
-            <Button variant="outline" onClick={() => trocarInstancia("")}>
-              {t("canonicalAnalysis.list.showAll")}
+            <Button
+              variant="outline"
+              onClick={() => {
+                trocarInstancia("");
+                limparBusca();
+              }}
+            >
+              {t("canonicalAnalysis.list.clearFilters")}
             </Button>
           }
         />
@@ -430,6 +454,32 @@ function ListaCanonica({ scope }: { scope: CanonicalScope }) {
           }
         />
       )}
+      <form
+        className="flex flex-col gap-2 sm:flex-row sm:items-end"
+        onSubmit={aplicarBusca}
+        role="search"
+      >
+        <label className="min-w-0 flex-1 text-sm text-muted-foreground">
+          <span className="mb-1 block">{t("canonicalAnalysis.list.searchLabel")}</span>
+          <input
+            type="search"
+            value={draftQuery}
+            onChange={(event) => setDraftQuery(event.target.value)}
+            placeholder={t("canonicalAnalysis.list.searchPlaceholder")}
+            className="min-h-11 w-full rounded-md border border-border bg-card px-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </label>
+        <div className="flex gap-2">
+          <Button type="submit" variant="outline" disabled={draftQuery.trim().length === 1}>
+            {t("canonicalAnalysis.list.search")}
+          </Button>
+          {query ? (
+            <Button type="button" variant="ghost" onClick={limparBusca}>
+              {t("canonicalAnalysis.list.clear")}
+            </Button>
+          ) : null}
+        </div>
+      </form>
       {seletorDeInstancia}
       {selecionando && (
         <p className="text-sm text-muted-foreground">

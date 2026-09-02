@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { http, HttpResponse } from "msw";
 import axe from "axe-core";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -33,7 +33,12 @@ beforeEach(() => {
   auth.ws = { id: "ws-1" };
 });
 
-function renderList() {
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location-search">{location.search}</output>;
+}
+
+function renderList(initialEntry = "/analyses") {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -41,8 +46,9 @@ function renderList() {
     <LanguageProvider>
       <QueryClientProvider client={qc}>
         <CanonicalClientProvider client={client}>
-          <MemoryRouter>
+          <MemoryRouter initialEntries={[initialEntry]}>
             <AnalysesListPage />
+            <LocationProbe />
           </MemoryRouter>
         </CanonicalClientProvider>
       </QueryClientProvider>
@@ -172,12 +178,8 @@ describe("AnalysesListPage — estados distintos", () => {
     });
   });
 
-  // Decisão de owner (2026-08-15): filtro por Instance no lugar da busca por texto.
-  //
-  // O contrato não tem parâmetro de busca — `GET /v1/analyses` aceita `workspace_id`, `cursor`,
-  // `limit`, `instance_id`, `project_id`, `environment_id` e `baseline_eligible`. Um campo de texto
-  // só filtraria a PÁGINA carregada e diria "nada encontrado" para uma análise que está na página
-  // 3. `instance_id` filtra no SERVIDOR, sobre tudo.
+  // O filtro por Instance e a busca textual vivem no servidor. Nenhum deles recorta apenas a
+  // página carregada: isso mentiria sobre análises que estão depois do cursor.
   describe("M45.2 · filtro por Instância", () => {
     const comInstancias = () =>
       server.use(
@@ -260,13 +262,74 @@ describe("AnalysesListPage — estados distintos", () => {
 
       // Há análises — só não nesta Instância. Dizer "nenhuma análise ainda" seria falso.
       expect(
-        await screen.findByText(/No analyses in this instance yet/i),
+        await screen.findByText(/No analyses match these filters/i),
       ).toBeTruthy();
       expect(screen.queryByText(/No analyses yet\. Start one/i)).toBeNull();
       // E o vazio devolve cedo, antes do seletor: sem uma saída própria isto seria um beco.
       await userEvent.click(
-        screen.getByRole("button", { name: /Show every analysis/i }),
+        screen.getByRole("button", { name: /Clear filters/i }),
       );
+      expect(await screen.findByText("an-1")).toBeTruthy();
+    });
+  });
+
+  describe("ARGOS-UX-02 · busca canônica", () => {
+    it("envia a consulta normalizada ao servidor e a preserva na URL", async () => {
+      const pedidos: URL[] = [];
+      server.use(
+        http.get(`${MSW_BASE}/v1/analyses`, ({ request }) => {
+          const url = new URL(request.url);
+          pedidos.push(url);
+          return HttpResponse.json(
+            page(url.searchParams.get("query") ? [item("an-encontrada")] : [item("an-inicial")]),
+          );
+        }),
+      );
+      renderList();
+      expect(await screen.findByText("an-inicial")).toBeTruthy();
+
+      const campo = screen.getByRole("searchbox", { name: /Find an analysis/i });
+      await userEvent.type(campo, "  suporte  ");
+      await userEvent.click(screen.getByRole("button", { name: /^Search$/i }));
+
+      expect(await screen.findByText("an-encontrada")).toBeTruthy();
+      expect(pedidos.at(-1)?.searchParams.get("query")).toBe("suporte");
+      expect(screen.getByTestId("location-search")).toHaveTextContent("q=suporte");
+    });
+
+    it("restaura a busca da URL e limpar volta à lista completa", async () => {
+      const consultas: Array<string | null> = [];
+      server.use(
+        http.get(`${MSW_BASE}/v1/analyses`, ({ request }) => {
+          const query = new URL(request.url).searchParams.get("query");
+          consultas.push(query);
+          return HttpResponse.json(page([item(query ? "an-filtrada" : "an-todas")]));
+        }),
+      );
+      renderList("/analyses?q=risco");
+
+      expect(await screen.findByDisplayValue("risco")).toBeTruthy();
+      expect(await screen.findByText("an-filtrada")).toBeTruthy();
+      await userEvent.click(screen.getByRole("button", { name: /^Clear$/i }));
+
+      expect(await screen.findByText("an-todas")).toBeTruthy();
+      expect(consultas.at(-1)).toBeNull();
+      expect(screen.getByTestId("location-search")).not.toHaveTextContent("q=");
+    });
+
+    it("distingue resultado filtrado vazio de uma conta sem análises", async () => {
+      server.use(
+        http.get(`${MSW_BASE}/v1/analyses`, ({ request }) =>
+          HttpResponse.json(
+            page(new URL(request.url).searchParams.get("query") ? [] : [item("an-1")]),
+          ),
+        ),
+      );
+      renderList("/analyses?q=inexistente");
+
+      expect(await screen.findByText(/No analyses match these filters/i)).toBeTruthy();
+      expect(screen.queryByText(/No analyses yet\. Start one/i)).toBeNull();
+      await userEvent.click(screen.getByRole("button", { name: /Clear filters/i }));
       expect(await screen.findByText("an-1")).toBeTruthy();
     });
   });

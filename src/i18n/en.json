@@ -184,6 +184,27 @@
       "acceptAction": "Accept plan",
       "actionHistory": "Action history",
       "actionUpdateError": "This action could not be updated. Nothing was lost; try again.",
+      "feedback": {
+        "title": "Was this Review useful?",
+        "body": "Rate the interpretation, not the official metrics.",
+        "helpful": "Yes, it was useful",
+        "notHelpful": "It needs improvement",
+        "saved": "Feedback saved. Thank you.",
+        "reasonLabel": "What should improve?",
+        "reasonPlaceholder": "Select one reason",
+        "commentLabel": "Add context (optional)",
+        "send": "Send feedback",
+        "saving": "Saving…",
+        "error": "Feedback could not be saved. The Review was not changed; try again.",
+        "boundary": "Your feedback is recorded separately and never changes this Review, its evidence, or its metrics.",
+        "reason": {
+          "too_generic": "Too generic",
+          "not_actionable": "It does not help me decide what to do",
+          "missing_evidence": "Evidence is missing or unclear",
+          "incorrect_interpretation": "The interpretation does not match the operation",
+          "other": "Another reason"
+        }
+      },
       "actionStatus": {
         "accepted": "Accepted",
         "in_progress": "In progress",
@@ -204,6 +225,9 @@
       "export": "Download Review as Excel",
       "exporting": "Preparing Excel…",
       "exportError": "The Excel file could not be downloaded right now. The Review is still saved; try again.",
+      "copyLink": "Copy internal link",
+      "linkCopied": "Link copied",
+      "copyLinkHelp": "The recipient still needs access to this workspace.",
       "priority": { "now": "Now", "next": "Next", "later": "Later" },
       "blindSpots": "What Sentinela cannot conclude",
       "blindSpotsHelp": "Missing coverage is never turned into certainty.",
@@ -737,7 +761,13 @@
       "emptyInstance": "No analyses in this instance yet.",
       "showAll": "Show every analysis",
       "latest": "Latest",
-      "untitled": "Analysis from {{date}}"
+      "untitled": "Analysis from {{date}}",
+      "searchLabel": "Find an analysis",
+      "searchPlaceholder": "Search by name or analysis ID",
+      "search": "Search",
+      "clear": "Clear",
+      "emptyFiltered": "No analyses match these filters.",
+      "clearFilters": "Clear filters"
     },
     "palette": {
       "count": "{{n}} results",

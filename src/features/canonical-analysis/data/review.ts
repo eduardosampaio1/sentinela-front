@@ -4,6 +4,8 @@ import {
   type CanonicalScope,
   type ContextDraftInput,
   type ReviewActionStatus,
+  type ReviewFeedbackReason,
+  type ReviewFeedbackRating,
 } from "@/lib/v1";
 import { useV1Client } from "./client";
 
@@ -193,6 +195,55 @@ export function useTransitionReviewAction(
         void queryClient.invalidateQueries({
           queryKey: workspaceKeys.reviewActions(scope.workspaceId, analysisId),
         });
+    },
+  });
+}
+
+export function useReviewFeedback(
+  scope: CanonicalScope | null,
+  analysisId: string | null,
+  enabled = true,
+) {
+  const client = useV1Client();
+  return useQuery({
+    queryKey:
+      scope && analysisId
+        ? workspaceKeys.reviewFeedback(scope.workspaceId, analysisId)
+        : IDLE_KEY,
+    enabled: Boolean(scope && analysisId && enabled),
+    queryFn: ({ signal }) =>
+      client.getReviewFeedback(analysisId as string, scope as CanonicalScope, { signal }),
+  });
+}
+
+export function useSubmitReviewFeedback(
+  scope: CanonicalScope | null,
+  analysisId: string | null,
+) {
+  const client = useV1Client();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      reviewId: string;
+      reviewVersion: number;
+      rating: ReviewFeedbackRating;
+      reason?: ReviewFeedbackReason | null;
+      comment?: string | null;
+    }) =>
+      client.submitReviewFeedback(analysisId as string, scope as CanonicalScope, {
+        command_id: crypto.randomUUID(),
+        source_review_id: input.reviewId,
+        source_review_version: input.reviewVersion,
+        rating: input.rating,
+        reason: input.reason,
+        comment: input.comment,
+      }),
+    onSuccess: (feedback) => {
+      if (scope && analysisId)
+        queryClient.setQueryData(
+          workspaceKeys.reviewFeedback(scope.workspaceId, analysisId),
+          feedback,
+        );
     },
   });
 }

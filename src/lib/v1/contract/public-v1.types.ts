@@ -270,6 +270,8 @@ export interface PrepareParams extends CanonicalScope {
 export interface ListParams extends CanonicalScope {
   limit?: number;
   cursor?: string | null;
+  /** Busca tenant-scoped por nome da Instance ou identificador da análise. */
+  query?: string;
   /**
    * BD02 — filtra a listagem pela Instance. Ausente = listagem geral do workspace, o
    * comportamento de sempre.
@@ -1077,6 +1079,39 @@ export interface TransitionReviewActionInput {
   expected_version: number;
   target_status: ReviewActionStatus;
   reason?: string | null;
+}
+
+export type ReviewFeedbackRating = "helpful" | "not_helpful";
+export type ReviewFeedbackReason =
+  | "clear"
+  | "actionable"
+  | "well_supported"
+  | "too_generic"
+  | "not_actionable"
+  | "missing_evidence"
+  | "incorrect_interpretation"
+  | "other";
+
+export interface ReviewFeedbackView {
+  state?: "empty" | "unavailable";
+  feedback_id?: string;
+  analysis_id: string;
+  source_review_id?: string;
+  source_review_version?: number;
+  actor_id?: string;
+  rating?: ReviewFeedbackRating;
+  reason?: ReviewFeedbackReason | null;
+  comment?: string | null;
+  created_at?: string;
+}
+
+export interface SubmitReviewFeedbackInput {
+  command_id: string;
+  source_review_id: string;
+  source_review_version: number;
+  rating: ReviewFeedbackRating;
+  reason?: ReviewFeedbackReason | null;
+  comment?: string | null;
 }
 
 export interface ReviewRejectedClaimAuditView {

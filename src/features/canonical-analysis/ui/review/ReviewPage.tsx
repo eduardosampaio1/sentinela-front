@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 import type { ReviewClaimLineageView, ReviewClaimView, ReviewEvidenceView } from "@/lib/v1";
 import { AppShell } from "@/shell/AppShell";
 import { PageFrame } from "@/shell/PageFrame";
@@ -21,6 +22,8 @@ import {
   useAnalysisReview,
   useRequestReview,
   useReviewActions,
+  useReviewFeedback,
+  useSubmitReviewFeedback,
   useTransitionReviewAction,
 } from "../../data/review";
 import { ActionLifecycleCard } from "./ActionLifecycleCard";
@@ -30,6 +33,7 @@ import { useCanonicalScope } from "../scope";
 import type { EstadoPublico } from "@/design/patterns/estados";
 import { useV1Client } from "../../data/client";
 import { useState } from "react";
+import { ReviewFeedbackCard } from "./ReviewFeedbackCard";
 
 function Section({
   id,
@@ -162,11 +166,19 @@ function ScenarioTable({ rows }: { rows: readonly CostScenario[] }) {
 
 export function ReviewPage() {
   const { t, language } = useLanguage();
+  const { workspace } = useAuth();
   const analysisId = useParams().analysisId ?? null;
   const scope = useCanonicalScope();
+  const canSubmitFeedback = Boolean(workspace && workspace.role !== "viewer");
   const status = useAnalysisStatus(scope, analysisId);
   const review = useAnalysisReview(scope, analysisId);
   const actions = useReviewActions(scope, analysisId);
+  const feedback = useReviewFeedback(
+    scope,
+    analysisId,
+    Boolean(review.data?.review_id) && canSubmitFeedback,
+  );
+  const submitFeedback = useSubmitReviewFeedback(scope, analysisId);
   const acceptAction = useAcceptReviewAction(scope, analysisId);
   const transitionAction = useTransitionReviewAction(scope, analysisId);
   const economics = useAnalysisEconomics(scope, analysisId);
@@ -174,6 +186,7 @@ export function ReviewPage() {
   const client = useV1Client();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const title = t("canonicalAnalysis.review.title");
   const artifact = review.data;
   const evidence = new Map(
@@ -199,6 +212,16 @@ export function ReviewPage() {
       setExportError(true);
     } finally {
       setExporting(false);
+    }
+  }
+
+  async function copyRestrictedLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2500);
+    } catch {
+      setLinkCopied(false);
     }
   }
 
@@ -279,7 +302,8 @@ export function ReviewPage() {
       );
 
     return (
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="space-y-6">
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0 rounded-[var(--ds-radius-panel)] border border-border bg-card p-5 sm:p-8">
           {artifact.language && artifact.language !== language ? (
             <div
@@ -518,6 +542,19 @@ export function ReviewPage() {
             <Download className="h-4 w-4" aria-hidden />
             {exporting ? t("canonicalAnalysis.review.exporting") : t("canonicalAnalysis.review.export")}
           </Button>
+          <Button
+            variant="ghost"
+            className="mt-2 min-h-11 w-full gap-2"
+            onClick={() => void copyRestrictedLink()}
+          >
+            <Link2 className="h-4 w-4" aria-hidden />
+            {linkCopied
+              ? t("canonicalAnalysis.review.linkCopied")
+              : t("canonicalAnalysis.review.copyLink")}
+          </Button>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            {t("canonicalAnalysis.review.copyLinkHelp")}
+          </p>
           {exportError ? (
             <p role="alert" className="mt-3 text-xs leading-5 text-destructive">
               {t("canonicalAnalysis.review.exportError")}
@@ -568,6 +605,21 @@ export function ReviewPage() {
             </dl>
           </div>
         </aside>
+        </div>
+        {artifact.review_id && artifact.version && canSubmitFeedback ? (
+          <ReviewFeedbackCard
+            feedback={feedback.data}
+            pending={submitFeedback.isPending}
+            failed={submitFeedback.isError}
+            onSubmit={(input) =>
+              submitFeedback.mutate({
+                reviewId: artifact.review_id as string,
+                reviewVersion: artifact.version as number,
+                ...input,
+              })
+            }
+          />
+        ) : null}
       </div>
     );
   }

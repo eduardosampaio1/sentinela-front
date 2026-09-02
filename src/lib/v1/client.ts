@@ -44,6 +44,8 @@ import type {
   ReviewActionRecordView,
   AcceptReviewActionInput,
   TransitionReviewActionInput,
+  ReviewFeedbackView,
+  SubmitReviewFeedbackInput,
 } from "./contract/public-v1.types";
 import {
   normalizeProblem,
@@ -185,6 +187,17 @@ export interface V1Client {
     input: TransitionReviewActionInput,
     opts?: RequestOptions,
   ): Promise<ReviewActionRecordView>;
+  getReviewFeedback(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<ReviewFeedbackView>;
+  submitReviewFeedback(
+    analysisId: string,
+    scope: CanonicalScope,
+    input: SubmitReviewFeedbackInput,
+    opts?: RequestOptions,
+  ): Promise<ReviewFeedbackView>;
   queryAnalytics(
     analysisId: string,
     scope: CanonicalScope,
@@ -912,6 +925,21 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         opts,
         { body: JSON.stringify(input), contentType: "application/json" },
       ),
+    getReviewFeedback: (analysisId, scope, opts) =>
+      pedir<ReviewFeedbackView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/review/feedback`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
+    submitReviewFeedback: (analysisId, scope, input, opts) =>
+      pedir<ReviewFeedbackView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/review/feedback`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify(input), contentType: "application/json" },
+      ),
     queryAnalytics: (analysisId, scope, query, opts) =>
       pedir<AnalyticsQueryResultView>(
         "POST",
@@ -962,6 +990,7 @@ export function createV1Client(config: V1ClientConfig): V1Client {
           workspace_id: params.workspaceId,
           limit: params.limit,
           cursor: params.cursor,
+          query: params.query,
           // BD02: só viaja quando informado. O loop de query descarta vazios, então omitir mantém
           // a requisição byte a byte igual à de antes — consumidor da listagem geral não muda.
           instance_id: params.instanceId,

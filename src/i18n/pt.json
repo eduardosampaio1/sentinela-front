@@ -184,6 +184,27 @@
       "acceptAction": "Aceitar plano",
       "actionHistory": "Histórico da ação",
       "actionUpdateError": "Não foi possível atualizar esta ação. Nada foi perdido; tente novamente.",
+      "feedback": {
+        "title": "Este Review foi útil?",
+        "body": "Avalie a interpretação, não as métricas oficiais.",
+        "helpful": "Sim, foi útil",
+        "notHelpful": "Precisa melhorar",
+        "saved": "Feedback salvo. Obrigado.",
+        "reasonLabel": "O que precisa melhorar?",
+        "reasonPlaceholder": "Selecione um motivo",
+        "commentLabel": "Acrescente contexto (opcional)",
+        "send": "Enviar feedback",
+        "saving": "Salvando…",
+        "error": "Não foi possível salvar o feedback. O Review não foi alterado; tente novamente.",
+        "boundary": "Seu feedback é registrado separadamente e nunca altera este Review, suas evidências ou métricas.",
+        "reason": {
+          "too_generic": "Está genérico demais",
+          "not_actionable": "Não ajuda a decidir o que fazer",
+          "missing_evidence": "Faltam evidências ou elas não estão claras",
+          "incorrect_interpretation": "A interpretação não corresponde à operação",
+          "other": "Outro motivo"
+        }
+      },
       "actionStatus": {
         "accepted": "Aceita",
         "in_progress": "Em andamento",
@@ -204,6 +225,9 @@
       "export": "Baixar Review em Excel",
       "exporting": "Preparando Excel…",
       "exportError": "Não foi possível baixar o Excel agora. O Review continua salvo; tente novamente.",
+      "copyLink": "Copiar link interno",
+      "linkCopied": "Link copiado",
+      "copyLinkHelp": "Quem receber ainda precisa ter acesso a este workspace.",
       "priority": { "now": "Agora", "next": "Próximo", "later": "Depois" },
       "blindSpots": "O que o Sentinela não pode concluir",
       "blindSpotsHelp": "Ausência de cobertura não é transformada em certeza.",
@@ -737,7 +761,13 @@
       "emptyInstance": "Nenhuma análise nesta instância ainda.",
       "showAll": "Ver todas as análises",
       "latest": "Mais recente",
-      "untitled": "Análise de {{date}}"
+      "untitled": "Análise de {{date}}",
+      "searchLabel": "Encontrar uma análise",
+      "searchPlaceholder": "Busque por nome ou ID da análise",
+      "search": "Buscar",
+      "clear": "Limpar",
+      "emptyFiltered": "Nenhuma análise corresponde a estes filtros.",
+      "clearFilters": "Limpar filtros"
     },
     "palette": {
       "count": "{{n}} resultados",

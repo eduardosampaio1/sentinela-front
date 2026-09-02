@@ -25,14 +25,15 @@ export function useAnalysesList(
   cursor?: string | null,
   /** BD02 — filtra pela Instance NO SERVIDOR. Recortar aqui quebraria o cursor e a contagem. */
   instanceId?: string,
+  query?: string,
 ): UseQueryResult<AnalysisListPage> {
   const client = useV1Client();
   return useQuery({
-    queryKey: scope ? workspaceKeys.list(scope.workspaceId, { cursor: cursor ?? null, instanceId }) : IDLE_KEY,
+    queryKey: scope ? workspaceKeys.list(scope.workspaceId, { cursor: cursor ?? null, instanceId, query }) : IDLE_KEY,
     enabled: Boolean(scope),
     queryFn: ({ signal }) =>
       client.list(
-        { workspaceId: (scope as CanonicalScope).workspaceId, cursor: cursor ?? undefined, instanceId },
+        { workspaceId: (scope as CanonicalScope).workspaceId, cursor: cursor ?? undefined, instanceId, query },
         { signal },
       ),
   });
