@@ -6,6 +6,7 @@ import {
   type MappingConfirmedView,
   type MappingView,
   type OutcomeMappingInput,
+  type ModelUsageMappingInput,
   workspaceKeys,
   type AnalysisAnalyticsView,
   type AnalyticsQueryInput,
@@ -292,6 +293,7 @@ export function useConfirmMapping(): UseMutationResult<
     disabledCatalogMeasureIds: string[];
     disabledCatalogDimensionIds: string[];
     outcome?: OutcomeMappingInput;
+    modelUsage?: ModelUsageMappingInput;
   }
 > {
   const client = useV1Client();
@@ -306,11 +308,12 @@ export function useConfirmMapping(): UseMutationResult<
       disabledCatalogMeasureIds,
       disabledCatalogDimensionIds,
       outcome,
+      modelUsage,
     }) =>
       client.confirmAnalysisMapping(analysisId, scope, rules, groupBy, minValidRatio, {
         disabledMeasureIds: disabledCatalogMeasureIds,
         disabledDimensionIds: disabledCatalogDimensionIds,
-      }, outcome),
+      }, outcome, modelUsage),
   });
 }
 

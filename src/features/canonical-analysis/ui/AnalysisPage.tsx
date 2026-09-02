@@ -393,6 +393,7 @@ export function AnalysisPage() {
                 minimoDeValidos,
                 optOutDoCatalogo,
                 outcome,
+                modelUsage,
               ) => {
                 await confirmar.mutateAsync({
                   analysisId,
@@ -403,6 +404,7 @@ export function AnalysisPage() {
                   disabledCatalogMeasureIds: optOutDoCatalogo.measureIds,
                   disabledCatalogDimensionIds: optOutDoCatalogo.dimensionIds,
                   outcome,
+                  modelUsage,
                 });
                 // Revalida o ESTADO, não o mapeamento: a partir daqui a ingestão anda sozinha,
                 // e o que a tela precisa saber é para onde a análise foi.

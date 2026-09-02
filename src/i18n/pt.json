@@ -167,6 +167,13 @@
       "economicsTitle": "Cenários de custo para esta workload",
       "economicsUnknownModel": "O modelo atual não foi identificado. Os valores abaixo são simulações de mercado, não uma afirmação sobre quanto você gastou.",
       "economicsKnownModel": "O modelo foi identificado na fonte. Compare o cenário atual com rotas alternativas sem presumir equivalência de qualidade.",
+      "economicsCurrent": "Rota atual",
+      "economicsRouteMissing": "Rota comercial não confirmada",
+      "economicsIdentity": {
+        "declared": "Declarado pelo usuário",
+        "detected": "Detectado na base",
+        "inferred": "Inferido de metadados parciais"
+      },
       "embeddingScenarios": "Ver cenários de embeddings",
       "economicsDisclaimer": "Preços do snapshot registrado no resultado. Custos de infraestrutura e equivalência funcional não estão incluídos.",
       "economicsModel": "Modelo",
@@ -1397,6 +1404,22 @@
         "failureExample": "Ex.: abandonado, não resolvido",
         "boundary": "Valores não declarados ficam como desconhecidos. Eles nunca serão contados como zero ou insucesso.",
         "missing": "Escolha a coluna do desfecho e declare ao menos um valor de sucesso e um de insucesso."
+      },
+      "modelUsage": {
+        "title": "Modelo e uso faturável (opcional)",
+        "explain": "Declare o modelo usado em produção e mapeie os contadores do provedor quando existirem. Assim o Sentinela separa custo observado de simulação de mercado.",
+        "enable": "Eu sei qual modelo produziu esta base",
+        "provider": "Provedor",
+        "model": "Modelo ou versão exata",
+        "route": "Rota de preço (opcional)",
+        "input_tokens": "Tokens de entrada observados",
+        "output_tokens": "Tokens de saída observados",
+        "cache_read_tokens": "Tokens de leitura de cache observados",
+        "cache_write_tokens": "Tokens de escrita em cache observados",
+        "reasoning_tokens": "Tokens de raciocínio observados",
+        "notAvailable": "Não disponível nesta base",
+        "boundary": "Só contadores mapeados do provedor são observados. Tokens derivados pelo Sentinela continuam estimativas e ausência nunca vira zero.",
+        "missing": "Informe o modelo exato. As colunas de uso podem permanecer indisponíveis."
       },
       "implausible": {
         "repete_demais": "Esta coluna se repete demais para ser data e hora. Confira a escolha.",

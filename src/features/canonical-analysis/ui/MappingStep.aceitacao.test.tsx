@@ -51,6 +51,8 @@ function montarComMapa(
     g: unknown,
     m: number | undefined,
     o: { measureIds: string[]; dimensionIds: string[] },
+    outcome: unknown,
+    modelUsage: unknown,
   ) => Promise<void>,
 ) {
   return render(
@@ -66,6 +68,8 @@ function montar(
     g: unknown,
     m: number | undefined,
     o: { measureIds: string[]; dimensionIds: string[] },
+    outcome: unknown,
+    modelUsage: unknown,
   ) => Promise<void>,
 ) {
   return montarComMapa(mapa(), aoConfirmar);
@@ -229,6 +233,7 @@ describe("MappingStep · catálogo canônico", () => {
       0.95,
       { measureIds: ["response_time_ms"], dimensionIds: [] },
       undefined,
+      undefined,
     );
   });
 });
@@ -269,6 +274,49 @@ describe("MappingStep · desfecho declarado", () => {
         success_values: ["resolved", "converted"],
         failure_values: ["abandoned"],
         case_sensitive: false,
+      },
+      undefined,
+    );
+  });
+});
+
+describe("MappingStep · identidade e usage do modelo", () => {
+  it("envia apenas a declaração e as colunas escolhidas, sem inventar usage", async () => {
+    const usuario = userEvent.setup();
+    const aoConfirmar = vi.fn();
+    montarComMapa(
+      {
+        ...mapa(),
+        columns: [
+          ...mapa().columns,
+          { name: "prompt_tokens", name_redacted: false, types: ["number"], coverage: 1, distinct_values: 20 },
+          { name: "completion_tokens", name_redacted: false, types: ["number"], coverage: 1, distinct_values: 20 },
+        ],
+      },
+      aoConfirmar,
+    );
+
+    await usuario.click(screen.getByText(/model and billable usage/i));
+    await usuario.click(screen.getByRole("checkbox", { name: /know which model/i }));
+    await usuario.type(screen.getByLabelText(/^provider/i), "OpenAI");
+    await usuario.type(screen.getByLabelText(/^exact model/i), "gpt-5-mini");
+    await usuario.selectOptions(screen.getByLabelText(/input tokens/i), "prompt_tokens");
+    await usuario.selectOptions(screen.getByLabelText(/output tokens/i), "completion_tokens");
+    await usuario.click(screen.getByRole("button", { name: /confirm/i }));
+
+    expect(aoConfirmar).toHaveBeenCalledWith(
+      expect.anything(),
+      [],
+      0.95,
+      { measureIds: [], dimensionIds: [] },
+      undefined,
+      {
+        provider: "OpenAI",
+        model_id: "gpt-5-mini",
+        usage_columns: {
+          input_tokens: "prompt_tokens",
+          output_tokens: "completion_tokens",
+        },
       },
     );
   });

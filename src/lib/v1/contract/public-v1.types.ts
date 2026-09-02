@@ -941,6 +941,18 @@ export interface OutcomeMappingInput {
   case_sensitive?: boolean;
 }
 
+/** Identidade declarada e colunas de telemetria faturável; ausência permanece unknown. */
+export interface ModelUsageMappingInput {
+  provider?: string;
+  model_id: string;
+  pricing_route?: string;
+  usage_columns: Partial<Record<
+    "input_tokens" | "output_tokens" | "cache_read_tokens" |
+    "cache_write_tokens" | "reasoning_tokens",
+    string
+  >>;
+}
+
 // Analysis Context e Sentinela Review são projeções públicas opcionais. Elas interpretam as
 // medições oficiais, sem expor a identidade operacional do processamento assíncrono.
 export type ContextItemState = "suggested" | "accepted" | "edited" | "rejected";

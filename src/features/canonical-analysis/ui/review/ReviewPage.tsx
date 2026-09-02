@@ -155,11 +155,54 @@ function ScenarioTable({ rows }: { rows: readonly CostScenario[] }) {
           <tr className="border-t border-border" key={row.route_id}>
             <td className="px-4 py-3">{row.provider ?? "—"}</td>
             <td className="px-4 py-3 font-mono text-xs">{row.model_id ?? row.route_id}</td>
-            <td className="px-4 py-3 text-right font-mono tabular-nums">{new Intl.NumberFormat(locale, { style: "currency", currency: row.currency ?? "USD", maximumFractionDigits: 4 }).format(row.total_cost)}</td>
+            <td className="px-4 py-3 text-right font-mono tabular-nums">{row.total_cost == null ? "—" : new Intl.NumberFormat(locale, { style: "currency", currency: row.currency ?? "USD", maximumFractionDigits: 4 }).format(row.total_cost)}</td>
             <td className="px-4 py-3 text-xs text-muted-foreground">{t(`canonicalAnalysis.review.economicsStatus.${row.status}`)}</td>
           </tr>
         ))}</tbody>
       </table>
+    </div>
+  );
+}
+
+function CurrentModelCost({
+  model,
+  comparison,
+}: {
+  model: NonNullable<ReturnType<typeof useAnalysisEconomics>["data"]>["current_model"];
+  comparison: CostScenario | null | undefined;
+}) {
+  const { language, t } = useLanguage();
+  if (!model || model.status === "unknown") return null;
+  const locale = language === "pt" ? "pt-BR" : "en-US";
+  return (
+    <div className="mb-5 grid gap-3 rounded-xl border border-primary/25 bg-primary/[0.04] p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+          {t("canonicalAnalysis.review.economicsCurrent")}
+        </p>
+        <p className="mt-1 font-mono text-sm text-foreground">
+          {[model.provider, model.model_id].filter(Boolean).join(" / ")}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {t(`canonicalAnalysis.review.economicsIdentity.${model.status}`)}
+        </p>
+      </div>
+      <div className="sm:text-right">
+        <p className="text-xs text-muted-foreground">
+          {comparison
+            ? t(`canonicalAnalysis.review.economicsStatus.${comparison.status}`)
+            : t("canonicalAnalysis.review.economicsRouteMissing")}
+        </p>
+        <p className="mt-1 font-mono text-lg font-semibold tabular-nums text-foreground">
+          {comparison?.total_cost == null
+            ? "—"
+            : new Intl.NumberFormat(locale, {
+                style: "currency",
+                currency: comparison.currency ?? "USD",
+                maximumFractionDigits: 4,
+              }).format(comparison.total_cost)}
+        </p>
+      </div>
     </div>
   );
 }
@@ -446,6 +489,10 @@ export function ReviewPage() {
                   ? t("canonicalAnalysis.review.economicsUnknownModel")
                   : t("canonicalAnalysis.review.economicsKnownModel")}
               </p>
+              <CurrentModelCost
+                model={economics.data.current_model}
+                comparison={economics.data.current_model_comparison}
+              />
               <ScenarioTable rows={economics.data.inference_comparisons} />
               {economics.data.embedding_comparisons.length > 0 ? (
                 <details className="mt-4 rounded-xl border border-border p-4">

@@ -8,13 +8,21 @@ export interface CostScenario {
   model_id?: string;
   status: string;
   currency?: string;
-  total_cost: number;
+  total_cost: number | null;
   route_kind?: "inference" | "embedding";
 }
 
 export interface EconomicsView {
   availability: string;
-  current_model?: { status?: string; provider?: string | null; model_id?: string | null };
+  current_model?: {
+    status?: "detected" | "declared" | "inferred" | "unknown";
+    provider?: string | null;
+    model_id?: string | null;
+    pricing_route?: string | null;
+    coverage?: number;
+    reason?: string | null;
+  };
+  current_model_comparison?: CostScenario | null;
   inference_comparisons: CostScenario[];
   embedding_comparisons: CostScenario[];
   disclaimer?: string;
@@ -28,6 +36,7 @@ function economicsFromEnvelope(envelope: { result_schema_version: string; result
   return {
     availability: String(value.availability ?? "unavailable"),
     current_model: value.current_model as EconomicsView["current_model"],
+    current_model_comparison: value.current_model_comparison as EconomicsView["current_model_comparison"],
     inference_comparisons: Array.isArray(value.inference_comparisons) ? value.inference_comparisons as CostScenario[] : [],
     embedding_comparisons: Array.isArray(value.embedding_comparisons) ? value.embedding_comparisons as CostScenario[] : [],
     disclaimer: typeof value.disclaimer === "string" ? value.disclaimer : undefined,

@@ -35,7 +35,12 @@ import { Button } from "@/components/ui/button";
 import { Panel, Stack, Text } from "@/design/primitives";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProblemError } from "@/lib/v1";
-import type { ColunaDoArquivo, MappingView, OutcomeMappingInput } from "@/lib/v1";
+import type {
+  ColunaDoArquivo,
+  MappingView,
+  ModelUsageMappingInput,
+  OutcomeMappingInput,
+} from "@/lib/v1";
 import { motivoDeImplausibilidade } from "./plausibilidadeDoMapeamento";
 import { cn } from "@/lib/utils";
 
@@ -132,6 +137,7 @@ export function MappingStep({
     minimoDeValidos: number | undefined,
     optOutDoCatalogo: { measureIds: string[]; dimensionIds: string[] },
     outcome: OutcomeMappingInput | undefined,
+    modelUsage: ModelUsageMappingInput | undefined,
   ) => Promise<void>;
 }) {
   const { t } = useLanguage();
@@ -188,6 +194,11 @@ export function MappingStep({
   const [outcomeKind, setOutcomeKind] = useState<"boolean" | "categorical">("categorical");
   const [successValues, setSuccessValues] = useState("");
   const [failureValues, setFailureValues] = useState("");
+  const [temModelUsage, setTemModelUsage] = useState(false);
+  const [modelProvider, setModelProvider] = useState("");
+  const [modelId, setModelId] = useState("");
+  const [pricingRoute, setPricingRoute] = useState("");
+  const [usageColumns, setUsageColumns] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setEscolhas(inicial);
@@ -200,6 +211,11 @@ export function MappingStep({
     setOutcomeKind("categorical");
     setSuccessValues("");
     setFailureValues("");
+    setTemModelUsage(false);
+    setModelProvider("");
+    setModelId("");
+    setPricingRoute("");
+    setUsageColumns({});
   }, [inicial, chavesElegiveis]);
 
   const porNome = useMemo(
@@ -244,6 +260,10 @@ export function MappingStep({
       setErro(t("canonicalAnalysis.mapping.outcome.missing"));
       return;
     }
+    if (temModelUsage && !modelId.trim()) {
+      setErro(t("canonicalAnalysis.mapping.modelUsage.missing"));
+      return;
+    }
     setEnviando(true);
     setErro(null);
     try {
@@ -277,6 +297,16 @@ export function MappingStep({
               success_values: outcomeKind === "boolean" ? ["true"] : sucessos,
               failure_values: outcomeKind === "boolean" ? ["false"] : fracassos,
               case_sensitive: false,
+            }
+          : undefined,
+        temModelUsage
+          ? {
+              provider: modelProvider.trim() || undefined,
+              model_id: modelId.trim(),
+              pricing_route: pricingRoute.trim() || undefined,
+              usage_columns: Object.fromEntries(
+                Object.entries(usageColumns).filter(([, value]) => value),
+              ),
             }
           : undefined,
       );
@@ -583,6 +613,58 @@ export function MappingStep({
               ) : null}
               <p className="text-xs text-muted-foreground md:col-span-2">
                 {t("canonicalAnalysis.mapping.outcome.boundary")}
+              </p>
+            </div>
+          ) : null}
+        </details>
+
+        <details className="rounded-lg border border-border p-3">
+          <summary className="cursor-pointer text-sm font-medium">
+            {t("canonicalAnalysis.mapping.modelUsage.title")}
+          </summary>
+          <Text as="p" papel="micro" className="mt-2">
+            {t("canonicalAnalysis.mapping.modelUsage.explain")}
+          </Text>
+          <label className="mt-3 flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+              checked={temModelUsage}
+              disabled={enviando}
+              onChange={(event) => { setTemModelUsage(event.target.checked); setErro(null); }}
+            />
+            <span>{t("canonicalAnalysis.mapping.modelUsage.enable")}</span>
+          </label>
+          {temModelUsage ? (
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="flex flex-col gap-1.5 text-sm font-medium">
+                {t("canonicalAnalysis.mapping.modelUsage.provider")}
+                <input value={modelProvider} disabled={enviando} onChange={(e) => setModelProvider(e.target.value)}
+                  placeholder="openai" className="h-11 rounded-md border border-border bg-background px-3 text-sm" />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-medium">
+                {t("canonicalAnalysis.mapping.modelUsage.model")}
+                <input value={modelId} disabled={enviando} onChange={(e) => setModelId(e.target.value)}
+                  placeholder="gpt-5-mini" className="h-11 rounded-md border border-border bg-background px-3 text-sm" />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-medium md:col-span-2">
+                {t("canonicalAnalysis.mapping.modelUsage.route")}
+                <input value={pricingRoute} disabled={enviando} onChange={(e) => setPricingRoute(e.target.value)}
+                  placeholder="openai/gpt-5-mini" className="h-11 rounded-md border border-border bg-background px-3 text-sm" />
+              </label>
+              {(["input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "reasoning_tokens"] as const).map((field) => (
+                <label key={field} className="flex flex-col gap-1.5 text-sm font-medium">
+                  {t(`canonicalAnalysis.mapping.modelUsage.${field}`)}
+                  <select value={usageColumns[field] ?? ""} disabled={enviando}
+                    onChange={(e) => setUsageColumns((current) => ({ ...current, [field]: e.target.value }))}
+                    className="h-11 rounded-md border border-border bg-background px-3 text-sm">
+                    <option value="">{t("canonicalAnalysis.mapping.modelUsage.notAvailable")}</option>
+                    {mapa.columns.map((column) => <option key={column.name} value={column.name}>{column.name}</option>)}
+                  </select>
+                </label>
+              ))}
+              <p className="text-xs text-muted-foreground md:col-span-2">
+                {t("canonicalAnalysis.mapping.modelUsage.boundary")}
               </p>
             </div>
           ) : null}
