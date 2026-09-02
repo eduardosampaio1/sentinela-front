@@ -45,7 +45,7 @@
   .ws-hero__content { width: 100%; max-width: none; padding: 72px 0 54px; }
   .ws-hero h1 { max-width: 760px; font-size: clamp(3.3rem, 11vw, 6rem); }
   .ws-decision-reveal__body { grid-template-columns: 1fr; }
-  .ws-decision-reveal__field { min-height: min(68dvh, 620px); transform: translate3d(var(--ws-far-x), var(--ws-far-y), 0); }
+  .ws-decision-reveal__field { min-height: 0; aspect-ratio: 1.45; transform: translate3d(var(--ws-far-x), var(--ws-far-y), 0); }
   .ws-system { grid-template-columns: 1fr; gap: 58px; min-height: auto; }
   .ws-economics { grid-template-columns: 1fr; grid-template-areas: "intro" "value" "levers" "disclosure"; min-height: auto; }
   .ws-economics__intro h2 { max-width: 13ch; }
@@ -66,10 +66,22 @@
   .ws-decision-reveal__header { grid-template-columns: 1fr; gap: 18px; margin-bottom: 24px; }
   .ws-decision-reveal__header h2 { font-size: clamp(2.2rem, 10vw, 3.6rem); }
   .ws-decision-reveal__status { padding: 0; }
-  .ws-decision-reveal__field { min-height: clamp(390px, 118vw, 520px); }
+  .ws-decision-reveal__field { min-height: 520px; aspect-ratio: auto; }
   .ws-decision-reveal__stages { gap: 4px; }
   .ws-decision-reveal__stage-label { font-size: 0.42rem; letter-spacing: 0.08em; }
   .ws-decision-reveal__stage-node { width: 20px; height: 20px; font-size: 0.46rem; }
+  .ws-decision-reveal .ws-trace { grid-template-columns: 1fr 1fr; }
+  .ws-decision-reveal .ws-trace__step { min-height: 124px; }
+  .ws-decision-reveal .ws-trace__step:nth-of-type(4) { border-left: 0; }
+  .ws-decision-field__scene > svg { top: 84px; left: -42%; width: 184%; height: 340px; }
+  .ws-decision-field__architecture { opacity: 0.58; }
+  .ws-decision-field__checks { top: 22px; right: 18px; bottom: auto; left: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 13px 10px; }
+  .ws-decision-field__check,
+  .ws-decision-field__check:nth-child(n) { position: static; width: auto; }
+  .ws-decision-field__check { gap: 6px; }
+  .ws-decision-field__check span { font-size: 0.4rem; }
+  .ws-decision-field__edge { display: none; }
+  .ws-decision-field__decision { top: 50%; transform: translate(-50%, 88px); }
   .ws-composer__meta { align-items: flex-start; }
   .ws-composer__meta p { max-width: 31ch; }
   .ws-seeds__list { display: grid; justify-items: start; gap: 4px; }
@@ -126,6 +138,16 @@
   .ws-decision-reveal__stage-packet::after,
   .ws-trace__step[data-status="active"] .ws-trace__signal { animation: none !important; }
   .ws-decision-field__activities span:first-child { opacity: 0.72; transform: none; }
+  .ws-decision-field__architecture ellipse,
+  .ws-decision-field__aperture-aura,
+  .ws-decision-field__aperture-orbit,
+  .ws-decision-field__scan,
+  .ws-decision-field__check-aura,
+  .ws-decision-field__packet,
+  .ws-decision-field__check span,
+  .ws-decision-field__aperture-point,
+  .ws-decision-field__decision { animation: none !important; }
+  .ws-decision-field__check span { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-transparency: reduce) {

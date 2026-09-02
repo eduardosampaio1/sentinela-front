@@ -29,11 +29,13 @@ describe("DecisionReveal", () => {
     const { container } = render(<DecisionReveal result={riskyResult} />);
 
     expect(screen.getByRole("heading", { name: "One request. Four checks. One controlled route." })).toBeInTheDocument();
-    expect(screen.getByText("RISK HIGH")).toBeInTheDocument();
-    expect(screen.getByText("ROUTE CONTROLLED RESPONSE")).toBeInTheDocument();
+    expect(screen.getByText("RISK")).toBeInTheDocument();
+    expect(screen.getByText("HIGH")).toBeInTheDocument();
+    expect(screen.getByText("HUMAN REVIEW")).toBeInTheDocument();
     expect(container.querySelector(".ws-decision-field")).toHaveAttribute("data-risk", "high");
     expect(screen.getByLabelText("Decision replay: understand")).toBeInTheDocument();
     expect(container.querySelector(".ws-decision-reveal__stage-packet")).toBeInTheDocument();
+    expect(container.querySelector(".ws-decision-field__aperture")).toBeInTheDocument();
     expect(container.querySelectorAll('.ws-decision-reveal__stage[data-status="active"]')).toHaveLength(1);
   });
 

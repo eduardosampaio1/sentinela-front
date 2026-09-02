@@ -56,7 +56,7 @@ export function DecisionReveal({ result }: { result: ExperienceResult }) {
           <p>BEFORE THE ANSWER</p>
           <h2 id="ws-decision-reveal-title">One request. Four checks. One controlled route.</h2>
         </div>
-        <span className="ws-decision-reveal__status" aria-live="polite">{status}</span>
+        <span className="ws-decision-reveal__status" aria-hidden="true">{status}</span>
       </header>
 
       <div className="ws-decision-reveal__body">
