@@ -748,6 +748,38 @@
       "selected": "{{n}} of 2 selected",
       "sideA": "Analysis A",
       "sideB": "Analysis B",
+      "longitudinal": {
+        "eyebrow": "Comparability",
+        "loading": "Checking whether these numbers form a valid series…",
+        "unavailable": "The comparability check is unavailable right now. Values remain side by side, without calculated differences.",
+        "comparableTitle": "The numeric differences can be read",
+        "comparableBody": "A is the selected reference and B is the compared result. The contract, scale, and unit remained compatible.",
+        "blockedTitle": "Do not calculate differences between these analyses",
+        "blockedBody": "The measurement method changed. Values remain visible, but a difference between them would be misleading.",
+        "directionNote": "Up or down describes only how the number moved — it does not mean the result became better or worse.",
+        "caveatsTitle": "What this comparison still cannot prove",
+        "deltaLabel": "Difference B − A",
+        "direction": {
+          "increased": "the number increased",
+          "decreased": "the number decreased",
+          "stable": "no numeric change"
+        },
+        "reason": {
+          "method_version_changed": "This measure's method version changed; no difference was calculated.",
+          "document_contract_changed": "The measurement contract changed; no difference was calculated.",
+          "scale_changed": "The scale changed; no difference was calculated.",
+          "unit_changed": "The unit changed; no difference was calculated.",
+          "currency_changed": "The currency changed; no difference was calculated.",
+          "value_unavailable": "A measured value is missing; absence does not become zero."
+        },
+        "caveat": {
+          "partial_result": "At least one result is partial.",
+          "sample_size_changed_materially": "The conversation volume changed by at least two times.",
+          "sample_size_unavailable": "One analysis did not publish its conversation volume.",
+          "dataset_composition_not_provable": "The result does not prove that both datasets have equivalent composition.",
+          "model_identity_not_available": "The result does not identify the route or model used by the customer."
+        }
+      },
       "title": "Compare analyses"
     },
     "entry": {

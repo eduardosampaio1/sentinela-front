@@ -748,6 +748,38 @@
       "selected": "{{n}} de 2 selecionadas",
       "sideA": "Análise A",
       "sideB": "Análise B",
+      "longitudinal": {
+        "eyebrow": "Comparabilidade",
+        "loading": "Verificando se estes números formam uma série válida…",
+        "unavailable": "A verificação de comparabilidade está indisponível agora. Os valores continuam lado a lado, mas sem diferenças calculadas.",
+        "comparableTitle": "As diferenças numéricas podem ser lidas",
+        "comparableBody": "A é a referência escolhida e B é o resultado comparado. O contrato, a escala e a unidade permaneceram compatíveis.",
+        "blockedTitle": "Não calcule diferenças entre estas análises",
+        "blockedBody": "O método de medição mudou. Os valores continuam visíveis, mas uma diferença entre eles seria enganosa.",
+        "directionNote": "Subiu ou caiu descreve apenas o movimento do número — não significa que ficou melhor ou pior.",
+        "caveatsTitle": "O que esta comparação ainda não prova",
+        "deltaLabel": "Diferença B − A",
+        "direction": {
+          "increased": "o número aumentou",
+          "decreased": "o número diminuiu",
+          "stable": "sem mudança numérica"
+        },
+        "reason": {
+          "method_version_changed": "A versão do método desta medida mudou; não há diferença calculada.",
+          "document_contract_changed": "O contrato de medição mudou; não há diferença calculada.",
+          "scale_changed": "A escala mudou; não há diferença calculada.",
+          "unit_changed": "A unidade mudou; não há diferença calculada.",
+          "currency_changed": "A moeda mudou; não há diferença calculada.",
+          "value_unavailable": "Falta um valor medido; ausência não vira zero."
+        },
+        "caveat": {
+          "partial_result": "Pelo menos um resultado é parcial.",
+          "sample_size_changed_materially": "O volume de conversas mudou pelo menos duas vezes.",
+          "sample_size_unavailable": "O volume de uma das análises não foi publicado.",
+          "dataset_composition_not_provable": "O resultado não prova que a composição das bases é equivalente.",
+          "model_identity_not_available": "O resultado não identifica a rota ou o modelo usado pelo cliente."
+        }
+      },
       "title": "Comparar análises"
     },
     "entry": {

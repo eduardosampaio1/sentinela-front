@@ -181,6 +181,44 @@ export interface AnalysisResultView {
   result: unknown;
 }
 
+/** Comparação calculada pelo Gateway sobre dois resultados ARGOS v3 oficiais. */
+export interface LongitudinalIdentityView {
+  analysis_id: string;
+  analyzed_at: string | null;
+  record_count: number | null;
+  complete: boolean;
+  versions: Record<string, string>;
+}
+
+export interface LongitudinalPairView {
+  family: "indicators" | "dimensions";
+  metric_id: string;
+  status: "comparable" | "not_comparable" | "baseline_only" | "current_only";
+  reason_code: string | null;
+  baseline_value: number | null;
+  current_value: number | null;
+  delta: number | null;
+  direction: "increased" | "decreased" | "stable" | null;
+  scale_kind: string;
+  unit: string | null;
+}
+
+export interface LongitudinalComparisonView {
+  comparison_contract_version: "argos-longitudinal-comparison-v1";
+  baseline: LongitudinalIdentityView;
+  current: LongitudinalIdentityView;
+  verdict: "not_comparable" | "comparable_with_caveats" | "comparable";
+  blockers: string[];
+  caveats: string[];
+  change_attribution: {
+    sentinela_method: "stable" | "changed";
+    dataset_composition: "unknown";
+    model_route: "unknown";
+    temporal_order: "declared_by_caller";
+  };
+  pairs: LongitudinalPairView[];
+}
+
 /** Resposta de prepare, submit e reprocess; reprocess devolve a identidade da nova Analysis. */
 export interface AnalysisHandle {
   analysis_id: string;

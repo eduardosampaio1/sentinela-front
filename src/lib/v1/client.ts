@@ -56,6 +56,7 @@ import type {
   EconomicsReconciliationView,
   EconomicsReconciliationListView,
   PricingRegistryStatusView,
+  LongitudinalComparisonView,
 } from "./contract/public-v1.types";
 import {
   normalizeProblem,
@@ -320,6 +321,12 @@ export interface V1Client {
     opts?: RequestOptions,
     resultSchemaVersion?: string,
   ): Promise<AnalysisResultView>;
+  getLongitudinalComparison(
+    currentAnalysisId: string,
+    baselineAnalysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<LongitudinalComparisonView>;
   listEconomicsScenarios(
     analysisId: string,
     scope: CanonicalScope,
@@ -1064,6 +1071,16 @@ export function createV1Client(config: V1ClientConfig): V1Client {
           // CLIENTE escolher a versão em nome de quem não escolheu, que é exatamente o que a
           // decisão de negociação elimina.
           result_schema_version: resultSchemaVersion,
+        },
+        opts,
+      ),
+    getLongitudinalComparison: (currentAnalysisId, baselineAnalysisId, scope, opts) =>
+      pedir<LongitudinalComparisonView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(currentAnalysisId)}/longitudinal-comparison`,
+        {
+          workspace_id: scope.workspaceId,
+          baseline_analysis_id: baselineAnalysisId,
         },
         opts,
       ),

@@ -1,7 +1,7 @@
 // M39 · EVO-02 — a apresentação da comparação ARGOS.
 //
 // A UI apresenta o veredito da regra; ela não decide o que comparação significa. Tudo o que ela
-// mostra veio de `comparacao.ts` ou do documento publicado.
+// mostra veio de `comparacao.ts`, do documento publicado ou da projeção longitudinal oficial.
 //
 // ## As duas famílias são SEPARADAS na tela
 //
@@ -11,10 +11,11 @@
 //
 // ## O que a tela nunca escreve
 //
-// Nenhuma diferença, seta, percentual ou direção. **A e B são posições, não tempo**: a rota não
-// publica ordem cronológica, e nomear um de "anterior" seria inventá-la.
+// Nenhum julgamento de melhora ou piora. **A e B são posições, não tempo**: a rota longitudinal
+// publica apenas `B − A` e direção matemática para a ordem escolhida pelo usuário.
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import type { LongitudinalComparisonView, LongitudinalPairView } from "@/lib/v1";
 import type {
   ComparacaoArgos as Comparacao,
   MedicaoComparada,
@@ -85,9 +86,48 @@ function Lado({ medicao }: { readonly medicao: MedicaoComparada | null }) {
   );
 }
 
-function Par({ par, rotulo }: { readonly par: ParArgos; readonly rotulo: string }) {
-  const { t } = useLanguage();
+function Par({
+  par,
+  rotulo,
+  longitudinal,
+}: {
+  readonly par: ParArgos;
+  readonly rotulo: string;
+  readonly longitudinal?: LongitudinalPairView;
+}) {
+  const { t, language } = useLanguage();
   const incompativel = par.estado === "incompativel";
+  const directionText = (direction: LongitudinalPairView["direction"]) => {
+    switch (direction) {
+      case "increased":
+        return t("canonicalAnalysis.compare.longitudinal.direction.increased");
+      case "decreased":
+        return t("canonicalAnalysis.compare.longitudinal.direction.decreased");
+      case "stable":
+        return t("canonicalAnalysis.compare.longitudinal.direction.stable");
+      default:
+        return "";
+    }
+  };
+  const longitudinalReasonText = (reason: string | null) => {
+    switch (reason) {
+      case "method_version_changed":
+        return t("canonicalAnalysis.compare.longitudinal.reason.method_version_changed");
+      case "document_contract_changed":
+        return t("canonicalAnalysis.compare.longitudinal.reason.document_contract_changed");
+      case "scale_changed":
+        return t("canonicalAnalysis.compare.longitudinal.reason.scale_changed");
+      case "unit_changed":
+        return t("canonicalAnalysis.compare.longitudinal.reason.unit_changed");
+      case "currency_changed":
+        return t("canonicalAnalysis.compare.longitudinal.reason.currency_changed");
+      case "value_unavailable":
+        return t("canonicalAnalysis.compare.longitudinal.reason.value_unavailable");
+      default:
+        return null;
+    }
+  };
+  const longitudinalReason = longitudinalReasonText(longitudinal?.reason_code ?? null);
 
   return (
     <li
@@ -107,6 +147,24 @@ function Par({ par, rotulo }: { readonly par: ParArgos; readonly rotulo: string 
         </span>
         <Lado medicao={par.b} />
       </span>
+      {longitudinal?.status === "comparable" && longitudinal.delta !== null ? (
+        <span
+          className="text-xs font-medium tabular-nums text-foreground sm:col-span-3"
+          data-longitudinal-delta={longitudinal.direction}
+        >
+          {t("canonicalAnalysis.compare.longitudinal.deltaLabel")}: {longitudinal.delta > 0 ? "+" : ""}
+          {new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US", {
+            maximumFractionDigits: 3,
+          }).format(longitudinal.delta)}
+          {longitudinal.unit ? ` ${longitudinal.unit}` : ""} ·{" "}
+          {directionText(longitudinal.direction)}
+        </span>
+      ) : null}
+      {longitudinal?.status === "not_comparable" && longitudinalReason ? (
+        <span className="text-xs text-muted-foreground sm:col-span-3">
+          {longitudinalReason}
+        </span>
+      ) : null}
       {/* O motivo é o que separa "não comparável" de "vazio". Sem ele a linha vira um enigma. */}
       {incompativel && par.motivo ? (
         <span className="text-xs text-muted-foreground sm:col-span-3">
@@ -127,11 +185,13 @@ function Familia({
   titulo,
   pares,
   rotuloDe,
+  longitudinalById,
 }: {
   readonly id: string;
   readonly titulo: string;
   readonly pares: readonly ParArgos[];
   readonly rotuloDe: (par: ParArgos) => string;
+  readonly longitudinalById: ReadonlyMap<string, LongitudinalPairView>;
 }) {
   const { t } = useLanguage();
   return (
@@ -153,7 +213,12 @@ function Familia({
       ) : (
         <ul className="mt-1">
           {pares.map((p) => (
-            <Par key={p.id} par={p} rotulo={rotuloDe(p)} />
+            <Par
+              key={p.id}
+              par={p}
+              rotulo={rotuloDe(p)}
+              longitudinal={longitudinalById.get(p.id)}
+            />
           ))}
         </ul>
       )}
@@ -161,7 +226,13 @@ function Familia({
   );
 }
 
-export function ComparacaoArgos({ comparacao }: { readonly comparacao: Comparacao }) {
+export function ComparacaoArgos({
+  comparacao,
+  longitudinal,
+}: {
+  readonly comparacao: Comparacao;
+  readonly longitudinal?: LongitudinalComparisonView;
+}) {
   const { t } = useLanguage();
 
   if (!comparacao.documentosComparaveis) {
@@ -184,6 +255,9 @@ export function ComparacaoArgos({ comparacao }: { readonly comparacao: Comparaca
   /** Rótulo do indicador: publicado quando há descritor, `id` cru quando não há. */
   const rotuloDoIndicador = (p: ParArgos) =>
     descriptorDe(p.id) ? t(`canonicalAnalysis.result.indicator.${p.id}.label`) : p.id;
+  const longitudinalById = new Map(
+    (longitudinal?.pairs ?? []).map((pair) => [pair.metric_id, pair]),
+  );
 
   return (
     // A ORDEM É A MESMA DA VISÃO ARGOS: dimensões primeiro, indicadores depois.
@@ -199,12 +273,14 @@ export function ComparacaoArgos({ comparacao }: { readonly comparacao: Comparaca
         pares={comparacao.dimensoes}
         // As quatro são conjunto fechado do contrato — rótulo próprio é legítimo.
         rotuloDe={(p) => t(`canonicalAnalysis.argos.dimension.${p.id}`)}
+        longitudinalById={longitudinalById}
       />
       <Familia
         id="cmp-indicadores"
         titulo={t("canonicalAnalysis.argos.indicators")}
         pares={comparacao.indicadores}
         rotuloDe={rotuloDoIndicador}
+        longitudinalById={longitudinalById}
       />
     </div>
   );

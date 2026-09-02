@@ -6,7 +6,8 @@
 // de comparabilidade é do **documento** — mudou `indicator_registry_version`, nenhuma linha
 // conecta — e **não existe delta**, porque nada no `analysis-result-v1/v2` publica diferença entre
 // duas análises. Esta página lê dois resultados, entrega os dois à regra e renderiza o que ela
-// devolve. Se ela devolver `null`, a tela diz que não há comparação; não improvisa uma.
+// devolve. Diferença numérica vem exclusivamente de `argos-longitudinal-comparison-v1`; se a
+// projeção estiver ausente, a tela mantém o lado a lado e não improvisa uma.
 //
 // É por isso que o `RunComparePanel` legado não é reusado: ele subtrai localmente
 // (`delta: number`) e decide comparabilidade **por linha**, contrariando as duas decisões acima.
@@ -39,9 +40,11 @@ import { Button } from "@/components/ui/button";
 import { ProblemError } from "@/lib/v1/problem";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAnalysisArgos } from "../data/argos";
+import { useLongitudinalComparison } from "../data/longitudinal";
 import { resolverLeituraArgos } from "../result/adapterV3";
 import { compararArgos } from "../result/comparacao";
 import { ComparacaoArgos } from "./ComparacaoArgos";
+import { LongitudinalVerdict } from "./LongitudinalVerdict";
 import { problemCodeOf } from "./notices";
 import { useCanonicalScope } from "./scope";
 
@@ -73,6 +76,14 @@ export function CompareAnalysesPage() {
   // esta página é a ação. `habilitado` segue o escopo: sem workspace ativo não há o que pedir.
   const a = useAnalysisArgos(scope, analysisAId ?? null, Boolean(scope && analysisAId));
   const b = useAnalysisArgos(scope, analysisBId ?? null, Boolean(scope && analysisBId));
+  // A rota declara a semântica da ordem: A é a referência escolhida; B é o resultado comparado.
+  // Isto não afirma que A aconteceu antes. A URL define a escolha, e o card explica a limitação.
+  const longitudinal = useLongitudinalComparison(
+    scope,
+    analysisAId ?? null,
+    analysisBId ?? null,
+    Boolean(scope && analysisAId && analysisBId),
+  );
 
   // Os dois lados chegam em momentos diferentes, e a chave junta os dois: com um só, o segundo
   // lado a responder trocaria o corpo sem remontar o observador — e a comparação apareceria
@@ -164,7 +175,23 @@ export function CompareAnalysesPage() {
       return <SemArgos lado={rA.estado === "recusado" ? "A" : "B"} />;
     }
 
-    return <ComparacaoArgos comparacao={compararArgos(rA.documento, rB.documento)} />;
+    return (
+      <div className="space-y-8">
+        {longitudinal.data ? (
+          <LongitudinalVerdict comparison={longitudinal.data} />
+        ) : longitudinal.isError ? (
+          <div role="status" className="rounded-md border border-border p-4 text-sm text-muted-foreground">
+            {t("canonicalAnalysis.compare.longitudinal.unavailable")}
+          </div>
+        ) : (
+          <LoadingState rotulo={t("canonicalAnalysis.compare.longitudinal.loading")} />
+        )}
+        <ComparacaoArgos
+          comparacao={compararArgos(rA.documento, rB.documento)}
+          longitudinal={longitudinal.data}
+        />
+      </div>
+    );
   }
 
   return (
