@@ -11,6 +11,8 @@ import {
   type AnalysisAnalyticsView,
   type AnalyticsQueryInput,
   type AnalyticsQueryResultView,
+  type SavedAnalyticsView,
+  type SavedAnalyticsViewList,
   type AnalysisHandle,
   type AnalysisExportDownloadView,
   type AnalysisProgressView,
@@ -425,6 +427,47 @@ export function useAnalyticsPlayground(
         : IDLE_KEY,
     mutationFn: (query) =>
       client.queryAnalytics(analysisId as string, scope as CanonicalScope, query),
+  });
+}
+
+export function useSavedAnalyticsViews(
+  scope: CanonicalScope | null,
+  analysisId: string | null,
+): UseQueryResult<SavedAnalyticsViewList> {
+  const client = useV1Client();
+  return useQuery({
+    queryKey:
+      scope && analysisId
+        ? [...workspaceKeys.analyticsPlayground(scope.workspaceId, analysisId), "saved"]
+        : IDLE_KEY,
+    enabled: Boolean(scope && analysisId),
+    queryFn: ({ signal }) =>
+      client.listAnalyticsViews(analysisId as string, scope as CanonicalScope, { signal }),
+  });
+}
+
+export function useSaveAnalyticsView(
+  scope: CanonicalScope,
+  analysisId: string,
+): UseMutationResult<
+  SavedAnalyticsView,
+  Error,
+  { name: string; query: AnalyticsQueryInput }
+> {
+  const client = useV1Client();
+  return useMutation({
+    mutationFn: ({ name, query }) =>
+      client.saveAnalyticsView(analysisId, scope, name, query),
+  });
+}
+
+export function useExportAnalyticsView(
+  scope: CanonicalScope,
+  analysisId: string,
+): UseMutationResult<Blob, Error, string> {
+  const client = useV1Client();
+  return useMutation({
+    mutationFn: (viewId) => client.exportAnalyticsView(analysisId, viewId, scope),
   });
 }
 

@@ -716,6 +716,23 @@ export interface AnalyticsQueryResultView {
   results: readonly AnalyticsQueryMetricResult[];
 }
 
+export interface SavedAnalyticsView {
+  view_contract_version: "analytics-saved-view-v1";
+  view_id: string;
+  analysis_id: string;
+  name: string;
+  created_by: string;
+  projection_digest: string;
+  query: AnalyticsQueryInput;
+  result: AnalyticsQueryResultView;
+  created_at: string;
+}
+
+export interface SavedAnalyticsViewList {
+  view_contract_version: "analytics-saved-view-list-v1";
+  views: readonly SavedAnalyticsView[];
+}
+
 // ── Download do pacote de export (M22) ──────────────────────────────────────────────────────
 
 /**

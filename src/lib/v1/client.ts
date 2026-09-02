@@ -15,6 +15,8 @@ import type {
   AnalysisAnalyticsView,
   AnalyticsQueryInput,
   AnalyticsQueryResultView,
+  SavedAnalyticsView,
+  SavedAnalyticsViewList,
   AnalysisExportDownloadView,
   AnalysisProgressView,
   AnalysisResultView,
@@ -212,6 +214,24 @@ export interface V1Client {
     query: AnalyticsQueryInput,
     opts?: RequestOptions,
   ): Promise<AnalyticsQueryResultView>;
+  listAnalyticsViews(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<SavedAnalyticsViewList>;
+  saveAnalyticsView(
+    analysisId: string,
+    scope: CanonicalScope,
+    name: string,
+    query: AnalyticsQueryInput,
+    opts?: RequestOptions,
+  ): Promise<SavedAnalyticsView>;
+  exportAnalyticsView(
+    analysisId: string,
+    viewId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<Blob>;
   /**
    * Capability de download do pacote de export. **Uma chamada por intenção**, nunca especulativa:
    * a URL devolvida é assinada e curta, e pedi-la "por via das dúvidas" gastaria a validade antes
@@ -988,6 +1008,30 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         { workspace_id: scope.workspaceId },
         opts,
         { body: JSON.stringify(query), contentType: "application/json" },
+      ),
+    listAnalyticsViews: (analysisId, scope, opts) =>
+      pedir<SavedAnalyticsViewList>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics/views`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
+    saveAnalyticsView: (analysisId, scope, name, query, opts) =>
+      pedir<SavedAnalyticsView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics/views`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        {
+          body: JSON.stringify({ name, query }),
+          contentType: "application/json",
+        },
+      ),
+    exportAnalyticsView: (analysisId, viewId, scope, opts) =>
+      baixar(
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/analytics/views/${encodeURIComponent(viewId)}/export`,
+        { workspace_id: scope.workspaceId },
+        opts,
       ),
     getProgress: (analysisId, scope, opts) =>
       pedir<AnalysisProgressView>(
