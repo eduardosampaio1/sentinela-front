@@ -228,6 +228,48 @@ describe("MappingStep · catálogo canônico", () => {
       [],
       0.95,
       { measureIds: ["response_time_ms"], dimensionIds: [] },
+      undefined,
+    );
+  });
+});
+
+describe("MappingStep · desfecho declarado", () => {
+  it("envia coluna e vocabulário sem inferir valores desconhecidos", async () => {
+    const usuario = userEvent.setup();
+    const aoConfirmar = vi.fn();
+    montarComMapa(
+      {
+        ...mapa(),
+        columns: [
+          ...mapa().columns,
+          { name: "status_final", name_redacted: false, types: ["string"], coverage: 0.9, distinct_values: 4 },
+        ],
+      },
+      aoConfirmar,
+    );
+
+    await usuario.click(screen.getByText(/business outcome/i));
+    await usuario.click(screen.getByRole("checkbox", { name: /outcome column/i }));
+    await usuario.selectOptions(
+      screen.getByRole("combobox", { name: /^outcome column$/i }),
+      "status_final",
+    );
+    await usuario.type(screen.getByLabelText(/values that mean success/i), "resolved, converted");
+    await usuario.type(screen.getByLabelText(/values that mean failure/i), "abandoned");
+    await usuario.click(screen.getByRole("button", { name: /confirm/i }));
+
+    expect(aoConfirmar).toHaveBeenCalledWith(
+      expect.anything(),
+      [],
+      0.95,
+      { measureIds: [], dimensionIds: [] },
+      {
+        source_column: "status_final",
+        value_kind: "categorical",
+        success_values: ["resolved", "converted"],
+        failure_values: ["abandoned"],
+        case_sensitive: false,
+      },
     );
   });
 });

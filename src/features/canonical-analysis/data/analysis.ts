@@ -5,6 +5,7 @@ import { useMutation, useQuery, type UseMutationResult, type UseQueryResult } fr
 import {
   type MappingConfirmedView,
   type MappingView,
+  type OutcomeMappingInput,
   workspaceKeys,
   type AnalysisAnalyticsView,
   type AnalyticsQueryInput,
@@ -290,6 +291,7 @@ export function useConfirmMapping(): UseMutationResult<
     minValidRatio?: number;
     disabledCatalogMeasureIds: string[];
     disabledCatalogDimensionIds: string[];
+    outcome?: OutcomeMappingInput;
   }
 > {
   const client = useV1Client();
@@ -303,11 +305,12 @@ export function useConfirmMapping(): UseMutationResult<
       minValidRatio,
       disabledCatalogMeasureIds,
       disabledCatalogDimensionIds,
+      outcome,
     }) =>
       client.confirmAnalysisMapping(analysisId, scope, rules, groupBy, minValidRatio, {
         disabledMeasureIds: disabledCatalogMeasureIds,
         disabledDimensionIds: disabledCatalogDimensionIds,
-      }),
+      }, outcome),
   });
 }
 

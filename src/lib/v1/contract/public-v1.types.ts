@@ -927,6 +927,20 @@ export interface MappingConfirmedView {
   ingestion_state: string | null;
 }
 
+/**
+ * Declaração humana e versionável do desfecho de negócio.
+ *
+ * O Front não decide o que significa sucesso. Ele apenas transporta a coluna e o vocabulário
+ * que a pessoa responsável declarou; autoria e versão são anexadas pelos serviços.
+ */
+export interface OutcomeMappingInput {
+  source_column: string;
+  value_kind: "boolean" | "categorical";
+  success_values: string[];
+  failure_values: string[];
+  case_sensitive?: boolean;
+}
+
 // Analysis Context e Sentinela Review são projeções públicas opcionais. Elas interpretam as
 // medições oficiais, sem expor a identidade operacional do processamento assíncrono.
 export type ContextItemState = "suggested" | "accepted" | "edited" | "rejected";

@@ -1383,6 +1383,21 @@
         "dimension": "Dimensão",
         "version": "Catálogo {{version}}"
       },
+      "outcome": {
+        "title": "Desfecho de negócio (opcional)",
+        "explain": "Se a base registra o resultado real da conversa, diga onde ele está. O Sentinela não adivinha o que significa sucesso.",
+        "enable": "Esta base tem uma coluna de desfecho",
+        "column": "Coluna do desfecho",
+        "kind": "Como o valor é registrado",
+        "categorical": "Categorias ou códigos",
+        "boolean": "Verdadeiro ou falso",
+        "success": "Valores que significam sucesso",
+        "failure": "Valores que significam insucesso",
+        "successExample": "Ex.: resolvido, convertido",
+        "failureExample": "Ex.: abandonado, não resolvido",
+        "boundary": "Valores não declarados ficam como desconhecidos. Eles nunca serão contados como zero ou insucesso.",
+        "missing": "Escolha a coluna do desfecho e declare ao menos um valor de sucesso e um de insucesso."
+      },
       "implausible": {
         "repete_demais": "Esta coluna se repete demais para ser data e hora. Confira a escolha.",
         "poucos_valores": "Esta coluna tem valores distintos de menos para ser texto de conversa.",

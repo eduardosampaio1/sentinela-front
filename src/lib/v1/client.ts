@@ -8,6 +8,7 @@
 import type {
   MappingConfirmedView,
   MappingView,
+  OutcomeMappingInput,
   AnalysisHandle,
   AnalysisListPage,
   AnalysisAnalyticsView,
@@ -445,6 +446,7 @@ export interface V1Client {
       disabledMeasureIds: string[];
       disabledDimensionIds: string[];
     },
+    outcome?: OutcomeMappingInput,
     opts?: RequestOptions,
   ): Promise<MappingConfirmedView>;
 
@@ -1053,6 +1055,7 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       groupBy,
       minValidRatio,
       catalogOptOut,
+      outcome,
       opts,
     ) =>
       pedir<MappingConfirmedView>(
@@ -1078,6 +1081,7 @@ export function createV1Client(config: V1ClientConfig): V1Client {
             ...(minValidRatio === undefined
               ? {}
               : { min_valid_ratio: minValidRatio }),
+            ...(outcome === undefined ? {} : { outcome }),
           }),
           contentType: "application/json",
         },

@@ -35,7 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Panel, Stack, Text } from "@/design/primitives";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProblemError } from "@/lib/v1";
-import type { ColunaDoArquivo, MappingView } from "@/lib/v1";
+import type { ColunaDoArquivo, MappingView, OutcomeMappingInput } from "@/lib/v1";
 import { motivoDeImplausibilidade } from "./plausibilidadeDoMapeamento";
 import { cn } from "@/lib/utils";
 
@@ -131,6 +131,7 @@ export function MappingStep({
     agrupamento: string[],
     minimoDeValidos: number | undefined,
     optOutDoCatalogo: { measureIds: string[]; dimensionIds: string[] },
+    outcome: OutcomeMappingInput | undefined,
   ) => Promise<void>;
 }) {
   const { t } = useLanguage();
@@ -182,6 +183,11 @@ export function MappingStep({
     [mapa.catalog_activation],
   );
   const [catalogoAtivo, setCatalogoAtivo] = useState<Set<string>>(chavesElegiveis);
+  const [temOutcome, setTemOutcome] = useState(false);
+  const [outcomeSource, setOutcomeSource] = useState("");
+  const [outcomeKind, setOutcomeKind] = useState<"boolean" | "categorical">("categorical");
+  const [successValues, setSuccessValues] = useState("");
+  const [failureValues, setFailureValues] = useState("");
 
   useEffect(() => {
     setEscolhas(inicial);
@@ -189,6 +195,11 @@ export function MappingStep({
     setErro(null);
     setTentou(false);
     setCatalogoAtivo(chavesElegiveis);
+    setTemOutcome(false);
+    setOutcomeSource("");
+    setOutcomeKind("categorical");
+    setSuccessValues("");
+    setFailureValues("");
   }, [inicial, chavesElegiveis]);
 
   const porNome = useMemo(
@@ -209,6 +220,9 @@ export function MappingStep({
   const podeAgrupar = (mapa.groupable_fields ?? []).filter((c) => Boolean(escolhas[c]));
   const agrupamentoEfetivo = agrupar.filter((c) => podeAgrupar.includes(c));
 
+  const separarValores = (texto: string): string[] =>
+    [...new Set(texto.split(/[\n,]/).map((valor) => valor.trim()).filter(Boolean))];
+
   async function confirmar() {
     if (enviando) return;
     setTentou(true);
@@ -218,6 +232,16 @@ export function MappingStep({
           fields: faltando.map((c) => rotuloDoCampo(c, t)).join(", "),
         }),
       );
+      return;
+    }
+    const sucessos = separarValores(successValues);
+    const fracassos = separarValores(failureValues);
+    if (
+      temOutcome &&
+      (!nomesDeColunas.has(outcomeSource) ||
+        (outcomeKind === "categorical" && (!sucessos.length || !fracassos.length)))
+    ) {
+      setErro(t("canonicalAnalysis.mapping.outcome.missing"));
       return;
     }
     setEnviando(true);
@@ -246,6 +270,15 @@ export function MappingStep({
             .filter((item) => item.kind === "dimension")
             .map((item) => item.catalog_id),
         },
+        temOutcome
+          ? {
+              source_column: outcomeSource,
+              value_kind: outcomeKind,
+              success_values: outcomeKind === "boolean" ? ["true"] : sucessos,
+              failure_values: outcomeKind === "boolean" ? ["false"] : fracassos,
+              case_sensitive: false,
+            }
+          : undefined,
       );
     } catch (falha) {
       // A mensagem é NOSSA. O corpo do servidor pode carregar detalhe interno, e ecoá-lo faria
@@ -468,6 +501,92 @@ export function MappingStep({
             </p>
           </details>
         ) : null}
+
+        <details className="rounded-lg border border-border p-3">
+          <summary className="cursor-pointer text-sm font-medium">
+            {t("canonicalAnalysis.mapping.outcome.title")}
+          </summary>
+          <Text as="p" papel="micro" className="mt-2">
+            {t("canonicalAnalysis.mapping.outcome.explain")}
+          </Text>
+          <label className="mt-3 flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+              checked={temOutcome}
+              disabled={enviando}
+              onChange={(evento) => {
+                setTemOutcome(evento.target.checked);
+                setErro(null);
+              }}
+            />
+            <span>{t("canonicalAnalysis.mapping.outcome.enable")}</span>
+          </label>
+          {temOutcome ? (
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="flex flex-col gap-1.5 text-sm font-medium">
+                {t("canonicalAnalysis.mapping.outcome.column")}
+                <select
+                  value={outcomeSource}
+                  disabled={enviando}
+                  onChange={(evento) => {
+                    setOutcomeSource(evento.target.value);
+                    setErro(null);
+                  }}
+                  className="h-11 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">{t("canonicalAnalysis.mapping.chooseColumn")}</option>
+                  {mapa.columns.map((coluna) => (
+                    <option key={coluna.name} value={coluna.name}>{coluna.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-medium">
+                {t("canonicalAnalysis.mapping.outcome.kind")}
+                <select
+                  value={outcomeKind}
+                  disabled={enviando}
+                  onChange={(evento) =>
+                    setOutcomeKind(evento.target.value as "boolean" | "categorical")
+                  }
+                  className="h-11 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="categorical">{t("canonicalAnalysis.mapping.outcome.categorical")}</option>
+                  <option value="boolean">{t("canonicalAnalysis.mapping.outcome.boolean")}</option>
+                </select>
+              </label>
+              {outcomeKind === "categorical" ? (
+                <>
+                  <label className="flex flex-col gap-1.5 text-sm font-medium">
+                    {t("canonicalAnalysis.mapping.outcome.success")}
+                    <textarea
+                      rows={2}
+                      value={successValues}
+                      disabled={enviando}
+                      onChange={(evento) => setSuccessValues(evento.target.value)}
+                      placeholder={t("canonicalAnalysis.mapping.outcome.successExample")}
+                      className="min-h-20 resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1.5 text-sm font-medium">
+                    {t("canonicalAnalysis.mapping.outcome.failure")}
+                    <textarea
+                      rows={2}
+                      value={failureValues}
+                      disabled={enviando}
+                      onChange={(evento) => setFailureValues(evento.target.value)}
+                      placeholder={t("canonicalAnalysis.mapping.outcome.failureExample")}
+                      className="min-h-20 resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  </label>
+                </>
+              ) : null}
+              <p className="text-xs text-muted-foreground md:col-span-2">
+                {t("canonicalAnalysis.mapping.outcome.boundary")}
+              </p>
+            </div>
+          ) : null}
+        </details>
 
         {podeAgrupar.length ? (
           // Aparece só quando há por onde agrupar. Uma seção vazia com um texto explicando que

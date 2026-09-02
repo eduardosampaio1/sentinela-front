@@ -1383,6 +1383,21 @@
         "dimension": "Dimension",
         "version": "Catalog {{version}}"
       },
+      "outcome": {
+        "title": "Business outcome (optional)",
+        "explain": "If the dataset records the conversation's real result, tell Sentinela where it is. Sentinela will not guess what success means.",
+        "enable": "This dataset has an outcome column",
+        "column": "Outcome column",
+        "kind": "How the value is recorded",
+        "categorical": "Categories or codes",
+        "boolean": "True or false",
+        "success": "Values that mean success",
+        "failure": "Values that mean failure",
+        "successExample": "E.g. resolved, converted",
+        "failureExample": "E.g. abandoned, unresolved",
+        "boundary": "Undeclared values remain unknown. They are never counted as zero or failure.",
+        "missing": "Choose the outcome column and declare at least one success value and one failure value."
+      },
       "implausible": {
         "repete_demais": "This column repeats too much to be a date and time. Check the choice.",
         "poucos_valores": "This column has too few distinct values to be conversation text.",
