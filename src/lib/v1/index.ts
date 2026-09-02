@@ -14,7 +14,11 @@ export {
 export { problemToExperience } from "./problemMessages";
 export type { ProblemAction, ProblemExperience } from "./problemMessages";
 export { createV1Client } from "./client";
-export type { RequestOptions, V1Client, V1ClientConfig } from "./client";
+export type {
+  RequestOptions,
+  V1Client,
+  V1ClientConfig,
+} from "./client";
 export { CanonicalQueryProvider } from "./CanonicalQueryProvider";
 export type { CanonicalQueryProviderProps } from "./CanonicalQueryProvider";
 // `defaultClient` (getV1Client/resolveGatewayBaseUrl) NÃO é re-exportado aqui de PROPÓSITO:

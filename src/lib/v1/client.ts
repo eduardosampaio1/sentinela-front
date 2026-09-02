@@ -48,6 +48,12 @@ import type {
   TransitionReviewActionInput,
   ReviewFeedbackView,
   SubmitReviewFeedbackInput,
+  EconomicsScenarioScale,
+  SavedEconomicsScenarioView,
+  SavedEconomicsScenarioListView,
+  EconomicsReconciliationView,
+  EconomicsReconciliationListView,
+  PricingRegistryStatusView,
 } from "./contract/public-v1.types";
 import {
   normalizeProblem,
@@ -294,6 +300,37 @@ export interface V1Client {
     opts?: RequestOptions,
     resultSchemaVersion?: string,
   ): Promise<AnalysisResultView>;
+  listEconomicsScenarios(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<SavedEconomicsScenarioListView>;
+  saveEconomicsScenario(
+    analysisId: string,
+    scope: CanonicalScope,
+    input: { name: string; route_id: string; scale: EconomicsScenarioScale },
+    opts?: RequestOptions,
+  ): Promise<SavedEconomicsScenarioView>;
+  listEconomicsReconciliations(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<EconomicsReconciliationListView>;
+  saveEconomicsReconciliation(
+    analysisId: string,
+    scope: CanonicalScope,
+    input: {
+      source_kind: "invoice" | "billing_export" | "manual";
+      currency: string;
+      observed_total_cost: number;
+      source_reference?: string;
+    },
+    opts?: RequestOptions,
+  ): Promise<EconomicsReconciliationView>;
+  getPricingRegistryStatus(
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<PricingRegistryStatusView>;
   list(params: ListParams, opts?: RequestOptions): Promise<AnalysisListPage>;
   reprocess(
     analysisId: string,
@@ -984,6 +1021,43 @@ export function createV1Client(config: V1ClientConfig): V1Client {
           // decisão de negociação elimina.
           result_schema_version: resultSchemaVersion,
         },
+        opts,
+      ),
+    listEconomicsScenarios: (analysisId, scope, opts) =>
+      pedir<SavedEconomicsScenarioListView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/economics/scenarios`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
+    saveEconomicsScenario: (analysisId, scope, input, opts) =>
+      pedir<SavedEconomicsScenarioView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/economics/scenarios`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify(input), contentType: "application/json" },
+      ),
+    listEconomicsReconciliations: (analysisId, scope, opts) =>
+      pedir<EconomicsReconciliationListView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/economics/reconciliations`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
+    saveEconomicsReconciliation: (analysisId, scope, input, opts) =>
+      pedir<EconomicsReconciliationView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/economics/reconciliations`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify(input), contentType: "application/json" },
+      ),
+    getPricingRegistryStatus: (scope, opts) =>
+      pedir<PricingRegistryStatusView>(
+        "GET",
+        "/v1/economics/pricing/status",
+        { workspace_id: scope.workspaceId },
         opts,
       ),
     list: (params, opts) =>

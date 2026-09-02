@@ -183,6 +183,28 @@
         "not_enough_information": "Dados insuficientes",
         "unsupported_pricing_rule": "Regra não suportada"
       },
+      "economicsSavedTitle": "Cenários salvos",
+      "economicsSavedHelp": "Congele uma comparação com o preço, a fórmula e o volume usados neste resultado.",
+      "economicsScenarioName": "Nome do cenário",
+      "economicsRoute": "Rota comercial",
+      "economicsScale": "Volume",
+      "economicsScales": {
+        "dataset": "Esta base",
+        "per_1k": "Por 1 mil conversas",
+        "per_100k": "Por 100 mil conversas",
+        "per_1m": "Por 1 milhão de conversas"
+      },
+      "economicsSaveScenario": "Salvar cenário",
+      "economicsSaveError": "Não foi possível salvar. O resultado original não foi alterado.",
+      "economicsReconcileTitle": "Comparar com a cobrança real",
+      "economicsReconcileHelp": "Informe um total observado. Sem rota atual confirmada, ele fica registrado sem inventar uma diferença.",
+      "economicsObservedCost": "Custo observado (USD)",
+      "economicsReconcile": "Registrar e comparar",
+      "economicsVariance": "Diferença",
+      "economicsReconciliationStatus": {
+        "reconciled": "Reconciliado com a simulação",
+        "actual_only": "Custo observado; rota atual não comparável"
+      },
       "recommendations": "Recomendações",
       "actionPlan": "O que fazer agora",
       "configuration": "Configuração",

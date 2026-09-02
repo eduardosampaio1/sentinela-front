@@ -183,6 +183,28 @@
         "not_enough_information": "Not enough data",
         "unsupported_pricing_rule": "Unsupported rule"
       },
+      "economicsSavedTitle": "Saved scenarios",
+      "economicsSavedHelp": "Freeze a comparison with the price, formula, and volume used in this result.",
+      "economicsScenarioName": "Scenario name",
+      "economicsRoute": "Commercial route",
+      "economicsScale": "Volume",
+      "economicsScales": {
+        "dataset": "This dataset",
+        "per_1k": "Per 1K conversations",
+        "per_100k": "Per 100K conversations",
+        "per_1m": "Per 1M conversations"
+      },
+      "economicsSaveScenario": "Save scenario",
+      "economicsSaveError": "This could not be saved. The original result was not changed.",
+      "economicsReconcileTitle": "Compare with the actual bill",
+      "economicsReconcileHelp": "Enter an observed total. Without a confirmed current route, it is recorded without inventing a variance.",
+      "economicsObservedCost": "Observed cost (USD)",
+      "economicsReconcile": "Record and compare",
+      "economicsVariance": "Variance",
+      "economicsReconciliationStatus": {
+        "reconciled": "Reconciled with the simulation",
+        "actual_only": "Observed cost; current route is not comparable"
+      },
       "recommendations": "Recommendations",
       "actionPlan": "What to do now",
       "configuration": "Configuration",

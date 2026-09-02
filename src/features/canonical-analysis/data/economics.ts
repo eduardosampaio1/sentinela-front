@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CanonicalScope } from "@/lib/v1";
+import type { EconomicsScenarioScale } from "@/lib/v1";
 import { useV1Client } from "./client";
 
 export interface CostScenario {
@@ -52,5 +53,60 @@ export function useAnalysisEconomics(scope: CanonicalScope | null, analysisId: s
     queryFn: async ({ signal }) => economicsFromEnvelope(await client.getResult(
       analysisId as string, scope as CanonicalScope, { signal }, "4",
     )),
+  });
+}
+
+const operationsKey = (scope: CanonicalScope | null, analysisId: string | null, kind: string) =>
+  ["economics-operations", scope?.workspaceId, analysisId, kind] as const;
+
+export function useSavedEconomicsScenarios(scope: CanonicalScope | null, analysisId: string | null) {
+  const client = useV1Client();
+  return useQuery({
+    queryKey: operationsKey(scope, analysisId, "scenarios"),
+    enabled: Boolean(scope && analysisId),
+    retry: false,
+    queryFn: ({ signal }) => client.listEconomicsScenarios(
+      analysisId as string,
+      scope as CanonicalScope,
+      { signal },
+    ),
+  });
+}
+
+export function useSaveEconomicsScenario(scope: CanonicalScope | null, analysisId: string | null) {
+  const client = useV1Client();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { name: string; route_id: string; scale: EconomicsScenarioScale }) =>
+      client.saveEconomicsScenario(analysisId as string, scope as CanonicalScope, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: operationsKey(scope, analysisId, "scenarios") }),
+  });
+}
+
+export function useEconomicsReconciliations(scope: CanonicalScope | null, analysisId: string | null) {
+  const client = useV1Client();
+  return useQuery({
+    queryKey: operationsKey(scope, analysisId, "reconciliations"),
+    enabled: Boolean(scope && analysisId),
+    retry: false,
+    queryFn: ({ signal }) => client.listEconomicsReconciliations(
+      analysisId as string,
+      scope as CanonicalScope,
+      { signal },
+    ),
+  });
+}
+
+export function useSaveEconomicsReconciliation(scope: CanonicalScope | null, analysisId: string | null) {
+  const client = useV1Client();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      source_kind: "invoice" | "billing_export" | "manual";
+      currency: string;
+      observed_total_cost: number;
+      source_reference?: string;
+    }) => client.saveEconomicsReconciliation(analysisId as string, scope as CanonicalScope, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: operationsKey(scope, analysisId, "reconciliations") }),
   });
 }

@@ -68,6 +68,19 @@ describe("Sentinela Review", () => {
           },
         },
       })),
+      listEconomicsScenarios: vi.fn(async () => ({ items: [] })),
+      saveEconomicsScenario: vi.fn(async (_analysisId, _scope, input) => ({
+        scenario_id: "scenario-1",
+        ...input,
+        snapshot: { amount: 12.5, currency: "USD" },
+      })),
+      listEconomicsReconciliations: vi.fn(async () => ({ items: [] })),
+      saveEconomicsReconciliation: vi.fn(async () => ({
+        reconciliation_id: "reconciliation-1",
+        status: "actual_only",
+        snapshot: { observed: { amount: 14, currency: "USD", source_kind: "manual" } },
+        created_at: "2026-09-01T12:00:00Z",
+      })),
       downloadReview: vi.fn(async () => new Blob(["review"])),
       requestReview: vi.fn(async () => ({
         review_request_id: "request-1",
@@ -220,6 +233,9 @@ describe("Sentinela Review", () => {
   it("não introduz violações automáticas de acessibilidade", async () => {
     const { container } = renderPage();
     await screen.findByRole("heading", { name: /A operação é estável/ });
+    // Aguarda também as consultas assíncronas da área operacional antes de varrer o DOM.
+    // Sem isso, o React Query conclui durante o axe e produz um falso aviso de `act`.
+    await screen.findByRole("heading", { name: "Cenários salvos" });
     const result = await axe.run(container, {
       rules: { "color-contrast": { enabled: false } },
     });
@@ -241,6 +257,23 @@ describe("Sentinela Review", () => {
         source_action_id: "a-1",
         assignee: "Product owner",
       }),
+    );
+  });
+
+  it("salva um cenário apontando para a rota já materializada", async () => {
+    renderPage();
+    await screen.findByRole("heading", { name: "Cenários salvos" });
+    await userEvent.type(screen.getByLabelText("Nome do cenário"), "Volume esperado");
+    await userEvent.click(screen.getByRole("button", { name: "Salvar cenário" }));
+
+    expect(currentClient.saveEconomicsScenario).toHaveBeenCalledWith(
+      "an-1",
+      { workspaceId: "ws-1" },
+      {
+        name: "Volume esperado",
+        route_id: "provider/model-a",
+        scale: "dataset",
+      },
     );
   });
 

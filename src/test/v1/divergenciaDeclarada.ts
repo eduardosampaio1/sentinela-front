@@ -58,6 +58,10 @@
  * normaliza contrato e clientes do mesmo jeito. Trocá-lo é missão de harness, não daqui.
  */
 export const SEM_CLIENTE_NO_FRONT: readonly string[] = [
+  // O download do Review já possui cliente binário (`baixar`) e superfície. O inventário
+  // histórico reconhece apenas chamadas JSON `pedir<T>`; mantê-lo explícito aqui evita fingir
+  // que o endpoint não existe até o harness ganhar suporte a respostas binárias.
+  "GET /v1/analyses/{analysis_id}/review/export.xlsx",
   // A M36 entregou `listInstances` e `getInstance`, e as duas SAÍRAM daqui. A lista encolhe
   // junto com a dívida — se ficasse, viraria folclore, que é o que esta declaração existe para
   // impedir.

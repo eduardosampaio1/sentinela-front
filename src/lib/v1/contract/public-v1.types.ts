@@ -1196,3 +1196,57 @@ export interface ReviewRequestView {
   review_request_id: string;
   status: "queued" | "already_queued";
 }
+
+/** Snapshot operacional do catálogo de preços promovido pelo Sentinela. */
+export interface PricingRegistryStatusView {
+  registry: {
+    capture_id: string;
+    captured_at: string;
+    content_digest_sha256: string;
+    parser_version: string;
+    alert_count: number;
+    route_count: number;
+  } | null;
+  sync: Record<string, unknown>;
+}
+
+export type EconomicsScenarioScale = "dataset" | "per_1k" | "per_100k" | "per_1m";
+
+/** Cenário salvo a partir de uma rota já materializada no resultado oficial. */
+export interface SavedEconomicsScenarioView {
+  scenario_id: string;
+  name?: string;
+  route_id: string;
+  scale: EconomicsScenarioScale;
+  snapshot: {
+    amount: number;
+    currency: string;
+    provider?: string;
+    model_id?: string;
+    calculation_status?: string;
+    registry?: { capture_id?: string; content_digest_sha256?: string };
+  };
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SavedEconomicsScenarioListView {
+  items: SavedEconomicsScenarioView[];
+}
+
+/** Reconciliação imutável entre custo observado e simulação oficial, quando comparáveis. */
+export interface EconomicsReconciliationView {
+  reconciliation_id: string;
+  status: "reconciled" | "actual_only";
+  snapshot: {
+    observed: { amount: number; currency: string; source_kind: string };
+    simulated?: { total_cost?: number } | null;
+    variance_amount?: number | null;
+    variance_pct?: number | null;
+  };
+  created_at: string;
+}
+
+export interface EconomicsReconciliationListView {
+  items: EconomicsReconciliationView[];
+}

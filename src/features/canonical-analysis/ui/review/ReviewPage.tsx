@@ -34,6 +34,7 @@ import type { EstadoPublico } from "@/design/patterns/estados";
 import { useV1Client } from "../../data/client";
 import { useState } from "react";
 import { ReviewFeedbackCard } from "./ReviewFeedbackCard";
+import { EconomicsOperations } from "./EconomicsOperations";
 
 function Section({
   id,
@@ -499,6 +500,14 @@ export function ReviewPage() {
                   <summary className="cursor-pointer font-medium">{t("canonicalAnalysis.review.embeddingScenarios")}</summary>
                   <div className="mt-4"><ScenarioTable rows={economics.data.embedding_comparisons} /></div>
                 </details>
+              ) : null}
+              {analysisId && scope ? (
+                <EconomicsOperations
+                  analysisId={analysisId}
+                  scope={scope}
+                  rows={economics.data.inference_comparisons}
+                  canEdit={canSubmitFeedback}
+                />
               ) : null}
               <p className="mt-3 text-xs leading-5 text-muted-foreground">{t("canonicalAnalysis.review.economicsDisclaimer")}</p>
             </Section>
