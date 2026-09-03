@@ -173,8 +173,12 @@
 // Reselado ao publicar `reprocess_analysis` e manter `retry_analysis` como alias compatível.
 // Ambas as operações criam uma nova Analysis a partir do artefato imutável já validado; os read
 // models e todas as fixtures abaixo permanecem estruturalmente inalterados.
+// Reselado ao publicar as duas operações do Ask Sentinela (`get_analysis_ask_conversation` e
+// `ask_analysis`). A mudança é aditiva e restrita ao sub-recurso `/ask`; os read-models de
+// status, lista e resultado exercitados pelas fixtures não mudaram. As demais asserções deste
+// arquivo reconfirmam os campos obrigatórios e a cobertura das mesmas fixtures.
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "e670c87011655a7d95ee15731eb4afda69c4d17af51925cc9ed196c0c84ef972";
+  "a9fcaf27a0605b26efa29fb619752df4a2cdbdc2398e360bbd820d257831a069";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.
