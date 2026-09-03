@@ -6,9 +6,10 @@
 // por este layout. O que sobra aqui é só o portão — que continua sendo assunto da flag, porque
 // só ele decide se a jornada canônica substitui a viva.
 
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { isCanonicalAnalysisEnabled } from "../flag";
+import { AskSentinela } from "./ask/AskSentinela";
 
 /**
  * São DUAS perguntas, e confundi-las produz a mensagem errada.
@@ -28,6 +29,7 @@ import { isCanonicalAnalysisEnabled } from "../flag";
  */
 export function CanonicalAnalysisLayout() {
   const { capabilities, membershipsLoading } = useAuth();
+  const { analysisId } = useParams();
 
   if (!isCanonicalAnalysisEnabled()) {
     return <Navigate to="/home" replace />;
@@ -38,5 +40,10 @@ export function CanonicalAnalysisLayout() {
   if (capabilities.canonical_analysis_enabled === false) {
     return <Navigate to="/home" replace />;
   }
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      {analysisId ? <AskSentinela analysisId={analysisId} /> : null}
+    </>
+  );
 }

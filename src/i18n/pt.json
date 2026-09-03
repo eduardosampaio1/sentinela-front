@@ -1333,6 +1333,31 @@
         "review": "Sentinela Review"
       }
     },
+    "ask": {
+      "open": "Pergunte sobre esta análise",
+      "close": "Fechar Ask Sentinela",
+      "title": "Ask Sentinela",
+      "description": "Converse somente com os fatos, evidências e interpretações desta análise.",
+      "notReadyTitle": "O Review ainda não está pronto",
+      "notReadyBody": "O Ask Sentinela será liberado quando esta análise tiver um Review concluído ou parcial.",
+      "loading": "Recuperando esta conversa...",
+      "unavailable": "O Ask Sentinela está indisponível agora. A análise continua acessível.",
+      "empty": "Pergunte o que um número significa, onde o problema se concentra ou por que uma recomendação foi feita.",
+      "exampleMetric": "O que o Behavior Score revela aqui?",
+      "exampleProblem": "Onde está o principal problema desta análise?",
+      "exampleAction": "Qual é a primeira ação recomendada e por quê?",
+      "fact": "Fato",
+      "interpretation": "Interpretação",
+      "limitation": "Limitação",
+      "nextAction": "Próxima ação",
+      "evidence": "Ver evidências",
+      "partial": "Resposta parcial: uma parte da interpretação não pôde ser validada.",
+      "investigating": "Investigando as evidências desta análise...",
+      "error": "Não consegui responder agora. Sua pergunta foi preservada; tente novamente.",
+      "placeholder": "Pergunte sobre esta análise...",
+      "send": "Enviar pergunta",
+      "privacy": "Não inclua dados confidenciais. O Ask não acessa conversas brutas."
+    },
     "state": {
       "preparing": {
         "title": "Reservada",

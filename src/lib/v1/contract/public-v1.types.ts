@@ -1252,6 +1252,47 @@ export interface ReviewRequestView {
   status: "queued" | "already_queued";
 }
 
+export type AskAnswerStatus = "completed" | "partial" | "insufficient_evidence" | "failed";
+
+export interface AskAnswerView {
+  ask_contract_version: string;
+  answer_id: string;
+  category: string;
+  status: AskAnswerStatus;
+  fact?: string | null;
+  evidence_summary: string[];
+  interpretation?: string | null;
+  limitation: string;
+  next_action: string;
+  evidence: ReviewEvidenceView[];
+  partial_reasons: string[];
+}
+
+export interface AskTurnView {
+  turn_id: string;
+  analysis_id: string;
+  actor_id: string;
+  source_review_id: string;
+  source_review_version: number;
+  question: string;
+  answer: AskAnswerView;
+  created_at: string;
+}
+
+export interface AskConversationView {
+  analysis_id: string;
+  state?: "unavailable";
+  items: AskTurnView[];
+}
+
+export interface AskAnalysisInput {
+  command_id: string;
+  source_review_id: string;
+  source_review_version: number;
+  question: string;
+  language: "pt" | "en";
+}
+
 /** Snapshot operacional do catálogo de preços promovido pelo Sentinela. */
 export interface PricingRegistryStatusView {
   registry: {

@@ -44,6 +44,9 @@ import type {
   ContextSuggestionView,
   ReviewArtifactView,
   ReviewRequestView,
+  AskAnalysisInput,
+  AskConversationView,
+  AskTurnView,
   ReviewActionListView,
   ReviewActionRecordView,
   AcceptReviewActionInput,
@@ -175,6 +178,17 @@ export interface V1Client {
     language: "pt" | "en",
     opts?: RequestOptions,
   ): Promise<ReviewRequestView>;
+  getAskConversation(
+    analysisId: string,
+    scope: CanonicalScope,
+    opts?: RequestOptions,
+  ): Promise<AskConversationView>;
+  askAnalysis(
+    analysisId: string,
+    scope: CanonicalScope,
+    input: AskAnalysisInput,
+    opts?: RequestOptions,
+  ): Promise<AskTurnView>;
   downloadReview(
     analysisId: string,
     scope: CanonicalScope,
@@ -963,6 +977,21 @@ export function createV1Client(config: V1ClientConfig): V1Client {
         { workspace_id: scope.workspaceId },
         opts,
         { body: JSON.stringify({ language }), contentType: "application/json" },
+      ),
+    getAskConversation: (analysisId, scope, opts) =>
+      pedir<AskConversationView>(
+        "GET",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/ask`,
+        { workspace_id: scope.workspaceId },
+        opts,
+      ),
+    askAnalysis: (analysisId, scope, input, opts) =>
+      pedir<AskTurnView>(
+        "POST",
+        `/v1/analyses/${encodeAnalysisId(analysisId)}/ask`,
+        { workspace_id: scope.workspaceId },
+        opts,
+        { body: JSON.stringify(input), contentType: "application/json" },
       ),
     downloadReview: (analysisId, scope, opts) =>
       baixar(

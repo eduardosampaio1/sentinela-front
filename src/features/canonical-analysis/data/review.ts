@@ -247,3 +247,48 @@ export function useSubmitReviewFeedback(
     },
   });
 }
+
+export function useAskConversation(
+  scope: CanonicalScope | null,
+  analysisId: string | null,
+  enabled = true,
+) {
+  const client = useV1Client();
+  return useQuery({
+    queryKey:
+      scope && analysisId ? workspaceKeys.ask(scope.workspaceId, analysisId) : IDLE_KEY,
+    enabled: Boolean(scope && analysisId && enabled),
+    queryFn: ({ signal }) =>
+      client.getAskConversation(analysisId as string, scope as CanonicalScope, { signal }),
+  });
+}
+
+export function useAskAnalysis(scope: CanonicalScope | null, analysisId: string | null) {
+  const client = useV1Client();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      reviewId: string;
+      reviewVersion: number;
+      question: string;
+      language: "pt" | "en";
+    }) =>
+      client.askAnalysis(analysisId as string, scope as CanonicalScope, {
+        command_id: crypto.randomUUID(),
+        source_review_id: input.reviewId,
+        source_review_version: input.reviewVersion,
+        question: input.question,
+        language: input.language,
+      }),
+    onSuccess: (turn) => {
+      if (!scope || !analysisId) return;
+      queryClient.setQueryData(
+        workspaceKeys.ask(scope.workspaceId, analysisId),
+        (current: { analysis_id: string; items: Array<typeof turn> } | undefined) => ({
+          analysis_id: analysisId,
+          items: [...(current?.items ?? []), turn],
+        }),
+      );
+    },
+  });
+}

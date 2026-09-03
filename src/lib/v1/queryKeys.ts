@@ -81,6 +81,8 @@ export const workspaceKeys = {
     ["workspace", workspaceId, "analyses", "detail", analysisId, "review", "actions"] as const,
   reviewFeedback: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "review", "feedback"] as const,
+  ask: (workspaceId: string, analysisId: string) =>
+    ["workspace", workspaceId, "analyses", "detail", analysisId, "ask"] as const,
   result: (workspaceId: string, analysisId: string) =>
     ["workspace", workspaceId, "analyses", "detail", analysisId, "result"] as const,
   /**

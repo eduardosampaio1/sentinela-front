@@ -1333,6 +1333,31 @@
         "review": "Sentinela Review"
       }
     },
+    "ask": {
+      "open": "Ask about this analysis",
+      "close": "Close Ask Sentinela",
+      "title": "Ask Sentinela",
+      "description": "Chat only with the facts, evidence, and interpretations from this analysis.",
+      "notReadyTitle": "The Review is not ready yet",
+      "notReadyBody": "Ask Sentinela becomes available when this analysis has a completed or partial Review.",
+      "loading": "Restoring this conversation...",
+      "unavailable": "Ask Sentinela is unavailable right now. The analysis remains accessible.",
+      "empty": "Ask what a number means, where a problem is concentrated, or why a recommendation was made.",
+      "exampleMetric": "What does the Behavior Score reveal here?",
+      "exampleProblem": "Where is the main problem in this analysis?",
+      "exampleAction": "What is the first recommended action and why?",
+      "fact": "Fact",
+      "interpretation": "Interpretation",
+      "limitation": "Limitation",
+      "nextAction": "Next action",
+      "evidence": "View evidence",
+      "partial": "Partial answer: part of the interpretation could not be verified.",
+      "investigating": "Investigating the evidence in this analysis...",
+      "error": "I could not answer right now. Your question was preserved; try again.",
+      "placeholder": "Ask about this analysis...",
+      "send": "Send question",
+      "privacy": "Do not include confidential data. Ask cannot access raw conversations."
+    },
     "state": {
       "preparing": {
         "title": "Reserved",
