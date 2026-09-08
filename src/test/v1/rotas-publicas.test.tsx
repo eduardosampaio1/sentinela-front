@@ -121,9 +121,9 @@ describe("M24 · 3. navegação nova nunca produz `/canonical/*`", () => {
 });
 
 describe("M24 · 4-5. a fronteira pública/autenticada não se moveu", () => {
-  it("`/` continua sendo a landing pública", () => {
+  it("`/` continua sendo pública e agora usa a experiência oficial", () => {
     const limpo = semComentarios(router);
-    expect(limpo).toMatch(/path: "\/",\s*\n?\s*element: <PageSuspense><LandingPage/);
+    expect(limpo).toMatch(/path: "\/",\s*\n?\s*element: <PageSuspense><PublicExperiencePage variant="official"/);
   });
 
   it("`/home` continua sendo a Home autenticada", () => {

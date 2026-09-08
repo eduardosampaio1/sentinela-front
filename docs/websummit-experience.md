@@ -1,11 +1,18 @@
-# Sentinela Web Summit Lisbon 2026
+# Sentinela public experience and Web Summit Lisbon 2026
 
 ## Frontend boundary
 
-The public route `/websummit` is lazy-loaded and entirely contained in `src/features/websummit`.
-Direct event visits use a lightweight branch in `src/main.tsx`, so product providers, authentication
-and the dashboard router are not downloaded before the event experience can paint. Normal product
-routes retain their existing provider and router bootstrap.
+The official public route `/` and the event route `/websummit` share one implementation in
+`src/features/public-experience`. Both direct entries use a lightweight branch in `src/main.tsx`, so
+product providers, authentication and the dashboard router are not downloaded before the public
+experience can paint. Normal product routes retain their existing provider and router bootstrap.
+
+`PublicExperiencePage` receives an explicit variant:
+
+- `official`: permanent Sentinela narrative, product registration CTA and sign-in access.
+- `websummit`: the same product truth with the Lisbon-specific lead conversion.
+
+This keeps the event campaign available without allowing it to become a second, drifting landing page.
 
 ```text
 components/   visual and semantic composition
@@ -13,19 +20,19 @@ experience/   provider contracts, scenarios and fallback
 hooks/        state machine, pointer field, metadata and UTM parsing
 api/          lead transport and validation
 analytics/    vendor-neutral event contract
-content/      English copy
-styles/       event-scoped tokens, core, layout and responsive states
+content/      PT-BR and English product copy
+styles/       public-experience-scoped tokens, core, layout and responsive states
 ```
 
 ## Dependency
 
-- `motion`: state transitions, trace reveals and viewport entry choreography. It is isolated in the lazy Web Summit chunk and does not increase the initial product route bundle.
+- `motion`: state transitions, trace reveals and viewport entry choreography. It is isolated in the public experience chunk and does not increase the initial authenticated product route bundle.
 
 No Three.js, GSAP, Rive, smooth-scroll library or marketing analytics vendor was added. The centerpiece is an event-only semantic SVG and CSS decision field. It communicates the product contract directly and avoids a continuous JavaScript rendering loop.
 
 ## Visual direction
 
-The public event narrative uses only the **Sentinela** name. Internal product names are deliberately absent from this first-contact experience.
+The public narrative uses only the **Sentinela** name. Internal product names are deliberately absent from this first-contact experience.
 
 The visual centerpiece appears only after the visitor receives an answer. The initial hero stays focused on the Ask interaction; the completed response then reveals how a request entered Sentinela, how four decision signals converged (`intent`, `risk`, `context`, `cost`) and which controlled route left the system. A short playback moves through understand, decide, control and respond. Signal receipts use the decision's actual risk, context strategy and route instead of repeating generic labels. The field then settles into a slow semantic sweep with information packets, preserving ambient life without competing with the initial action:
 
@@ -37,7 +44,14 @@ The page-level parallax system adds four independent depth planes: distant ambie
 
 Desktop narrative sections use a capped spatial rhythm rather than stacking full-viewport scenes. The hero remains a deliberate stage, while the reveal, system, economics, comparison and final CTA use content-led heights and bounded vertical padding. This preserves cinematic whitespace without creating empty scroll zones on 1280 px to 1920 px displays.
 
-The narrative follows the pitch deck's customer-service positioning without reproducing slide copy. It first lets the visitor experience a controlled decision, then names the tension between lower operating cost and higher customer expectations. Sentinela is introduced as the steering system between the customer-service stack and its models. The operating loop is expressed as observe, decide, control and improve; the economic scene then explains bypass, context reduction and model routing before the Lisbon meeting request.
+The narrative follows the pitch deck's customer-service positioning without reproducing slide copy. It first lets the visitor experience a controlled decision, then names the tension between lower operating cost and higher customer expectations. Sentinela is introduced as the steering system between the customer-service stack and its models. The operating loop is expressed as observe, decide, control and improve; the economic scene then explains bypass, context reduction and model routing before the permanent product CTA or the Lisbon meeting request.
+
+## Language contract
+
+English is the initial language for `/websummit`. The official route follows a previously saved choice,
+then the browser language. Visitors can switch between `PT-BR` and `EN` in the public header. The
+selection updates copy, demo responses, validation, accessibility labels and page metadata without
+changing routes. The preference is stored only in local browser storage.
 
 Public claims distinguish cost from token consumption. The current proof point is an early deployment result of approximately 40% lower token consumption within 60 days. It is not presented as guaranteed cost savings, and the page states that results depend on workload, providers, policies and deployment configuration.
 
@@ -51,7 +65,9 @@ No database URL or provider secret is allowed in a `VITE_` variable.
 
 ## Analytics contract
 
-The feature dispatches `sentinela:analytics` `CustomEvent` messages. A future vendor adapter can subscribe without changing interaction components.
+The feature dispatches `sentinela:analytics` `CustomEvent` messages. Official interactions use the
+`sentinela_public_*` namespace; the event variant preserves the `websummit_*` namespace. A future
+vendor adapter can subscribe without changing interaction components.
 
 ## Accessibility and degradation
 

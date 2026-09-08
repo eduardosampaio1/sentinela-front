@@ -13,8 +13,8 @@ import { FundacaoV1 } from "./FundacaoV1";
 
 // ─── Lazy page imports ─────────────────────────────────────────────────────────
 
-const LandingPage = lazy(() =>
-  import("@/features/landing/LandingPage").then((m) => ({ default: m.LandingPage }))
+const PublicExperiencePage = lazy(() =>
+  import("@/features/public-experience/PublicExperiencePage").then((m) => ({ default: m.PublicExperiencePage }))
 );
 const LoginPage = lazy(() =>
   import("@/features/auth/LoginPage").then((m) => ({ default: m.LoginPage }))
@@ -69,9 +69,6 @@ const TermsPage = lazy(() =>
 );
 const SecurityPage = lazy(() =>
   import("@/features/legal/SecurityPage").then((m) => ({ default: m.SecurityPage }))
-);
-const WebSummitPage = lazy(() =>
-  import("@/features/websummit/WebSummitPage").then((m) => ({ default: m.WebSummitPage }))
 );
 
 // ── Jornada canônica /v1 ────────────────────────────────────────────────────────────────────────
@@ -232,7 +229,7 @@ const routes: RouteObject[] = [
   // ── Public landing ────────────────────────────────────────────────────────
   {
     path: "/",
-    element: <PageSuspense><LandingPage /></PageSuspense>,
+    element: <PageSuspense><PublicExperiencePage variant="official" /></PageSuspense>,
   },
   {
     path: "/aion",
@@ -252,7 +249,7 @@ const routes: RouteObject[] = [
   },
   {
     path: "/websummit",
-    element: <PageSuspense><WebSummitPage /></PageSuspense>,
+    element: <PageSuspense><PublicExperiencePage variant="websummit" /></PageSuspense>,
   },
 
   // ── Auth (public-only: redirect to /home if already logged in) ────────────

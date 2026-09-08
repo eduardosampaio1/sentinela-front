@@ -11,10 +11,11 @@ import { limparResultadosLegadosDoNavegador } from "./lib/legacyBrowserStorage";
 import "./design/tokens/tokens.css";
 import "./styles/globals.css";
 
-const isWebSummitEntry = window.location.pathname.replace(/\/+$/, "") === "/websummit";
+const publicPath = window.location.pathname.replace(/\/+$/, "") || "/";
+const isPublicExperienceEntry = publicPath === "/" || publicPath === "/websummit";
 
 // A limpeza pertence ao produto autenticado. A experiência pública não lê nem altera esse estado.
-if (!isWebSummitEntry) limparResultadosLegadosDoNavegador();
+if (!isPublicExperienceEntry) limparResultadosLegadosDoNavegador();
 
 window.addEventListener("vite:preloadError", () => {
   const key = "__chunk_reload__";
@@ -54,11 +55,12 @@ async function renderProductApp() {
   );
 }
 
-async function renderWebSummitApp() {
-  const { WebSummitPage } = await import("./features/websummit/WebSummitPage");
+async function renderPublicExperience() {
+  const { PublicExperiencePage } = await import("./features/public-experience/PublicExperiencePage");
+  const variant = publicPath === "/websummit" ? "websummit" : "official";
   root.render(
     <StrictMode>
-      <WebSummitPage />
+      <PublicExperiencePage variant={variant} />
     </StrictMode>,
   );
 }
@@ -77,8 +79,8 @@ async function arrancarMockSePedido(): Promise<void> {
   if (mockLigado()) await iniciarMockDoBrowser();
 }
 
-if (isWebSummitEntry) {
-  void renderWebSummitApp();
+if (isPublicExperienceEntry) {
+  void renderPublicExperience();
 } else {
   loadProductFonts();
   if (import.meta.env.DEV && import.meta.env.VITE_E2E === "true" && e2eAuthRequested()) {

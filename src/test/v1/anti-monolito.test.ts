@@ -121,9 +121,9 @@ describe("M07 · 1. a régua mede o que diz medir", () => {
   it("reproduz os números que o plano documenta", () => {
     // Se este caso quebrar, ou os arquivos mudaram (e a baseline precisa acompanhar) ou a régua
     // mudou (e a baseline inteira virou incomparável). Os dois exigem alguém olhar.
-    const landing = MEDIDOS.find((x) => x.rel === "src/features/landing/LandingPage.tsx");
     const aion = MEDIDOS.find((x) => x.rel === "src/features/aion/AionPage.tsx");
-    // M47 — os dois monólitos do plano DEIXARAM de ser monólitos.
+    // M47 decompôs os dois monólitos. A experiência pública permanente aposentou a landing
+    // antiga por completo; AionPage segue como composição pequena e continua sendo medida.
     //
     // O plano documentava 1215 e 1180. A M46 baixou para 1182 e 1167 extraindo os tokens; a M47
     // decompôs os dois de vez. Hoje são as composições, e nada mais.
@@ -131,7 +131,6 @@ describe("M07 · 1. a régua mede o que diz medir", () => {
     // Os números continuam EXATOS aqui de propósito. Se a régua mudar (contar linhas de outro
     // jeito), estes dois valores saem do lugar e a baseline inteira vira incomparável — que é a
     // falha que este caso existe para pegar, e ela não depende de o arquivo ser grande.
-    expect(landing?.linhas, "LandingPage divergiu do número do plano").toBe(52);
     expect(aion?.linhas, "AionPage divergiu do número do plano").toBe(51);
 
     // E a régua tem de continuar reconhecendo um arquivo GRANDE, senão ela só foi verificada
