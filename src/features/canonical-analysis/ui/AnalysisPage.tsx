@@ -59,22 +59,21 @@ export function AnalysisPage() {
   // escopo: os eixos existem independentemente do estado da análise, e condicioná-los ao status
   // faria a tela decidir quando o backend tem algo a dizer.
   const progresso = useAnalysisProgress(scope, analysisId);
-  // O status e o progresso sao read models independentes. Na transicao terminal, releia os
-  // eixos uma vez para trocar `running/pending` pelos estados finais. Fazer isso em cada tick
-  // duplicaria o polling enquanto a Engine ainda trabalha.
-  const estadoTerminal = status.data?.status;
+  // O status e o progresso sao read models independentes. Sempre que o ESTADO PUBLICO muda,
+  // releia a verdade operacional: ela pode trocar `upload_dataset` por `start_analysis` antes
+  // de qualquer estado terminal. Sem isso, o cabeçalho já dizia "Ready to analyze" enquanto o
+  // quadro ainda mostrava o snapshot anterior, "Dataset upload — waiting".
+  //
+  // A dependência é o valor do estado, não cada tick/dataUpdatedAt. Portanto há uma releitura
+  // por transição real e nenhum polling duplicado enquanto a Engine permanece no mesmo estado.
+  const estadoPublico = status.data?.status;
   const workspaceId = scope?.workspaceId;
   useEffect(() => {
-    if (
-      !workspaceId ||
-      !analysisId ||
-      !["completed", "failed"].includes(estadoTerminal ?? "")
-    )
-      return;
+    if (!workspaceId || !analysisId || !estadoPublico) return;
     void queryClient.invalidateQueries({
       queryKey: workspaceKeys.progress(workspaceId, analysisId),
     });
-  }, [analysisId, estadoTerminal, queryClient, workspaceId]);
+  }, [analysisId, estadoPublico, queryClient, workspaceId]);
   const eixos = lerEixos(progresso.data);
   // D13: `analytics` utilizável (`ready|partial`) aparece MESMO com `final_result` pendente. A
   // consulta só é feita quando o eixo autoriza — não se busca projeção de um componente que o

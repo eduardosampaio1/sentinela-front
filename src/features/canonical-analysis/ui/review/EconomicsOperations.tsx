@@ -40,6 +40,8 @@ export function EconomicsOperations({ analysisId, scope, rows, canEdit }: Props)
       currency,
       maximumFractionDigits: 4,
     }).format(amount);
+  const percentagePoints = (value: number) =>
+    `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(value)}%`;
 
   return (
     <div className="mt-6 grid gap-4 xl:grid-cols-2">
@@ -139,7 +141,7 @@ export function EconomicsOperations({ analysisId, scope, rows, canEdit }: Props)
                 <span className="font-medium text-foreground">{t(`canonicalAnalysis.review.economicsReconciliationStatus.${item.status}`)}</span>
                 <span className="font-mono tabular-nums text-foreground">{money(item.snapshot.observed.amount, item.snapshot.observed.currency)}</span>
               </div>
-              {item.snapshot.variance_pct != null ? <p className="mt-1 text-xs text-muted-foreground">{t("canonicalAnalysis.review.economicsVariance")}: {item.snapshot.variance_pct.toFixed(2)}%</p> : null}
+              {item.snapshot.variance_pct != null ? <p className="mt-1 text-xs text-muted-foreground">{t("canonicalAnalysis.review.economicsVariance")}: {percentagePoints(item.snapshot.variance_pct)}</p> : null}
             </li>
           ))}
         </ul>

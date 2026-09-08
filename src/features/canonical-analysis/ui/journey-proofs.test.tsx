@@ -7,7 +7,12 @@ import { http, HttpResponse } from "msw";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import en from "@/i18n/en.json";
-import { createV1Client, type V1Client, workspaceKeys } from "@/lib/v1";
+import {
+  createV1Client,
+  type AnalysisProgressView,
+  type V1Client,
+  workspaceKeys,
+} from "@/lib/v1";
 import { HANDLE, statusView, problem } from "@/test/fixtures/public-v1/analyses";
 import { MSW_BASE } from "@/test/msw/handlers";
 import { server, setupMsw } from "@/test/msw/server";
@@ -34,8 +39,8 @@ beforeAll(() => {
   client = createV1Client({ baseUrl: MSW_BASE, getAccessToken: async () => "tok" });
 });
 
-function wrap(children: ReactNode) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+function wrap(children: ReactNode, queryClient?: QueryClient) {
+  const qc = queryClient ?? new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   return (
     <LanguageProvider>
       <QueryClientProvider client={qc}>
@@ -47,6 +52,68 @@ function wrap(children: ReactNode) {
     </LanguageProvider>
   );
 }
+
+function progress(nextAction: "upload_dataset" | "start_analysis"): AnalysisProgressView {
+  const ready = nextAction === "start_analysis";
+  return {
+    analysis_id: "an-abc",
+    axes: [],
+    operational_truth: {
+      contract_version: "analysis-operational-truth-v2",
+      current_stage: ready ? "measures" : "upload",
+      current_state: ready ? "waiting" : "active",
+      owner: "user",
+      next_action: nextAction,
+      last_progress_at: "2026-09-08T12:00:00Z",
+      run_manifest: null,
+      runtime_evidence: null,
+      core_milestones: [],
+      follow_ups: [],
+      stages: [
+        { stage: "upload", state: ready ? "done" : "waiting" },
+        { stage: "privacy", state: "done" },
+        { stage: "measures", state: "waiting" },
+        { stage: "final_result", state: "waiting" },
+      ],
+    },
+  };
+}
+
+describe("verdade operacional acompanha toda transição pública", () => {
+  it("troca upload waiting por start analysis quando o status fica ready_to_submit", async () => {
+    let estado: "preparing" | "ready_to_submit" = "preparing";
+    let progressCalls = 0;
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses/:id`, () => HttpResponse.json(statusView(estado))),
+      http.get(`${MSW_BASE}/v1/analyses/:id/progress`, () => {
+        progressCalls += 1;
+        return HttpResponse.json(
+          progress(estado === "ready_to_submit" ? "start_analysis" : "upload_dataset"),
+        );
+      }),
+    );
+
+    render(wrap(<AnalysisPage />, qc));
+    expect(await screen.findByTestId("operational-next-action")).toHaveTextContent(
+      /upload the dataset|envie a base/i,
+    );
+
+    estado = "ready_to_submit";
+    await act(async () => {
+      await qc.invalidateQueries({ queryKey: workspaceKeys.status("ws-1", "an-abc") });
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("operational-next-action")).toHaveTextContent(
+        /start the calculations|inicie os cálculos/i,
+      ),
+    );
+    expect(progressCalls).toBeGreaterThanOrEqual(2);
+  });
+});
 
 describe("E3 item 15 — submit NÃO refaz upload", () => {
   it("dois submits recuperáveis não disparam nenhum POST /data", async () => {
