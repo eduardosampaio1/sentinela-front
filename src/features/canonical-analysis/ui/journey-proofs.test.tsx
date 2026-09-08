@@ -1,13 +1,13 @@
 import { type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { http, HttpResponse } from "msw";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import en from "@/i18n/en.json";
-import { createV1Client, type V1Client } from "@/lib/v1";
+import { createV1Client, type V1Client, workspaceKeys } from "@/lib/v1";
 import { HANDLE, statusView, problem } from "@/test/fixtures/public-v1/analyses";
 import { MSW_BASE } from "@/test/msw/handlers";
 import { server, setupMsw } from "@/test/msw/server";
@@ -137,6 +137,132 @@ describe("E3 item 14 — refresh/deep-link resume por analysis_id", () => {
     expect(
       screen.getByRole("link", { name: en.canonicalAnalysis.shell.view.analytics }),
     ).toBeTruthy();
+  });
+});
+
+describe("Upload longo — a leitura de status não pode derrubar o File", () => {
+  it("preserva o File na transição preparing → receiving e em falha transitória", async () => {
+    let estado: "preparing" | "receiving" = "preparing";
+    let falharLeituraDeStatus = false;
+    let liberarParte!: () => void;
+    let avisarParteIniciada!: () => void;
+    let avisarConclusao!: () => void;
+    const parteIniciada = new Promise<void>((resolve) => {
+      avisarParteIniciada = resolve;
+    });
+    const partePendente = new Promise<void>((resolve) => {
+      liberarParte = resolve;
+    });
+    const conclusaoRecebida = new Promise<void>((resolve) => {
+      avisarConclusao = resolve;
+    });
+
+    server.use(
+      http.get(`${MSW_BASE}/v1/analyses/:id`, () =>
+        falharLeituraDeStatus
+          ? HttpResponse.json(problem("temporarily_unavailable"), {
+              status: 503,
+              headers: { "content-type": "application/problem+json" },
+            })
+          : HttpResponse.json(statusView(estado)),
+      ),
+      http.patch(`${MSW_BASE}/v1/analyses/:id`, async ({ request }) => {
+        const body = (await request.json()) as { name: string };
+        return HttpResponse.json({ analysis_id: "an-abc", display_name: body.name });
+      }),
+      http.post(`${MSW_BASE}/v1/analyses/:id/data/uploads`, () => {
+        estado = "receiving";
+        return HttpResponse.json({
+          analysis_id: "an-abc",
+          status: "receiving",
+          upload_session_id: "up-long",
+          part_size_bytes: 5 * 1024 * 1024,
+          uploaded_parts: [],
+        });
+      }),
+      http.put(
+        `${MSW_BASE}/v1/analyses/:id/data/uploads/:upload/parts/:part`,
+        async () => {
+          avisarParteIniciada();
+          await partePendente;
+          return HttpResponse.json({
+            analysis_id: "an-abc",
+            upload_session_id: "up-long",
+            part_number: 1,
+            etag: '"etag-long-1"',
+          });
+        },
+      ),
+      http.post(
+        `${MSW_BASE}/v1/analyses/:id/data/uploads/:upload/complete`,
+        () => {
+          avisarConclusao();
+          return HttpResponse.json(statusView("receiving"));
+        },
+      ),
+    );
+
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    render(
+      <LanguageProvider>
+        <QueryClientProvider client={qc}>
+          <CanonicalClientProvider client={client}>
+            <MemoryRouter>
+              <AnalysisPage />
+            </MemoryRouter>
+          </CanonicalClientProvider>
+        </QueryClientProvider>
+      </LanguageProvider>,
+    );
+
+    expect(
+      await screen.findByText(/Tell Sentinela what this analysis is about|Conte ao Sentinela/i),
+    ).toBeTruthy();
+    const inputAntes = (await waitFor(() => {
+      const input = document.getElementById("canonical-file") as HTMLInputElement | null;
+      expect(input).not.toBeNull();
+      return input as HTMLInputElement;
+    }));
+    const arquivo = new File(["{}\n"], "base-grande.jsonl", {
+      type: "application/x-ndjson",
+    });
+    await userEvent.upload(inputAntes, arquivo);
+    await userEvent.click(
+      screen.getByRole("button", { name: /send dataset|enviar base/i }),
+    );
+    await parteIniciada;
+
+    await qc.invalidateQueries({
+      queryKey: workspaceKeys.status("ws-1", "an-abc"),
+    });
+    await waitFor(() =>
+      expect(
+        screen.queryByText(/Tell Sentinela what this analysis is about|Conte ao Sentinela/i),
+      ).not.toBeInTheDocument(),
+    );
+    await waitFor(() =>
+      expect(document.getElementById("canonical-file")).toBe(inputAntes),
+    );
+
+    const inputDepois = document.getElementById("canonical-file") as HTMLInputElement;
+    expect(inputDepois.files?.[0]).toBe(arquivo);
+
+    falharLeituraDeStatus = true;
+    await qc.invalidateQueries({
+      queryKey: workspaceKeys.status("ws-1", "an-abc"),
+    });
+    await screen.findByRole("alert");
+    expect(document.getElementById("canonical-file")).toBe(inputAntes);
+    expect(
+      (document.getElementById("canonical-file") as HTMLInputElement).files?.[0],
+    ).toBe(arquivo);
+
+    await act(async () => {
+      liberarParte();
+      await conclusaoRecebida;
+    });
   });
 });
 

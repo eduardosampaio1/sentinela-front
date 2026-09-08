@@ -162,6 +162,65 @@ export function AnalysisPage() {
         </p>
       );
     }
+
+    const view = status.data;
+    const uploadAindaNoNavegador =
+      uploadProgress !== null && uploadProgress.state !== "done";
+
+    // O upload e o File vivem no navegador. Por isso este ramo vem ANTES dos estados da
+    // leitura de status: uma falha transitória de GET não pode desmontar a transferência que já
+    // está enviando bytes. O servidor continua sendo a verdade das partes confirmadas; manter o
+    // componente montado preserva apenas o File/AbortController necessários para chegar à próxima
+    // parte sem pedir a base outra vez.
+    //
+    // As chaves também são funcionais. Quando abrir o multipart muda `preparing` para
+    // `receiving`, o painel de contexto sai da árvore. Sem keys, o React confundia o antigo
+    // primeiro/segundo filho, desmontava `UploadStep` e perdia a referência segura ao File no meio
+    // de uma base grande.
+    if (
+      analysisId &&
+      view &&
+      (view.status === "preparing" ||
+        (view.status === "receiving" &&
+          (uploadAindaNoNavegador || retomarUpload)))
+    ) {
+      return (
+        <div className="space-y-4">
+          {status.isError ? (
+            <ProblemFeedback
+              key="status-read-warning"
+              error={status.error}
+              onRetry={() => void status.refetch()}
+              retryDisabled={status.isFetching}
+            />
+          ) : null}
+          {view.status === "preparing" ? (
+            <AnalysisContextPanel
+              key="analysis-context"
+              analysisId={analysisId}
+              scope={scope}
+            />
+          ) : null}
+          <UploadStep
+            key="dataset-upload"
+            analysisId={analysisId}
+            scope={scope}
+            onUploaded={() => {
+              sealContext.mutate(undefined, { onSettled: revalidar });
+            }}
+            onProgressChange={setUploadProgress}
+          />
+          <EtapasDaAnalise
+            key="analysis-stages"
+            view={view}
+            uploadProgress={uploadProgress}
+            intakeProgress={progresso.data?.intake}
+            operationalTruth={progresso.data?.operational_truth}
+          />
+        </div>
+      );
+    }
+
     if (status.isLoading) {
       // M45.2 — o rótulo de CARREGANDO não pode ser o nome de um ESTADO.
       //
@@ -210,42 +269,7 @@ export function AnalysisPage() {
         />
       );
     }
-    const view = status.data;
     if (!view || !analysisId) return null;
-
-    // Abrir a sessao multipart faz o backend publicar `receiving` antes da ultima parte. A
-    // transferencia, porem, continua pertencendo a esta pagina. Manter o componente montado e
-    // uma garantia funcional: preserva o File, o AbortController e os controles de pausa. Sem
-    // isto a primeira consulta de status trocava a tela, escondia a porcentagem e removia a
-    // unica forma de continuar um envio em 197/198.
-    const uploadAindaNoNavegador =
-      uploadProgress !== null && uploadProgress.state !== "done";
-    if (
-      view.status === "preparing" ||
-      (view.status === "receiving" && (uploadAindaNoNavegador || retomarUpload))
-    ) {
-      return (
-        <div className="space-y-4">
-          {view.status === "preparing" ? (
-            <AnalysisContextPanel analysisId={analysisId} scope={scope} />
-          ) : null}
-          <UploadStep
-            analysisId={analysisId}
-            scope={scope}
-            onUploaded={() => {
-              sealContext.mutate(undefined, { onSettled: revalidar });
-            }}
-            onProgressChange={setUploadProgress}
-          />
-          <EtapasDaAnalise
-            view={view}
-            uploadProgress={uploadProgress}
-            intakeProgress={progresso.data?.intake}
-            operationalTruth={progresso.data?.operational_truth}
-          />
-        </div>
-      );
-    }
 
     switch (view.status) {
       case "receiving":
