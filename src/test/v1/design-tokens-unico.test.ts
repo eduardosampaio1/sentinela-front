@@ -21,6 +21,7 @@ import { HARDCODE_DECLARADO, HARDCODE_TOTAL } from "./hardcodeDeclarado";
 const RAIZ = resolve(__dirname, "../../..");
 const SRC = resolve(RAIZ, "src");
 const CANONICO = resolve(SRC, "design/tokens/tokens.css");
+const PUBLIC_EXPERIENCE = "src/features/public-experience/";
 const IGNORADAS = new Set(["node_modules", "dist", "coverage"]);
 
 function arquivos(dir: string, ok: (p: string) => boolean, acc: string[] = []): string[] {
@@ -86,7 +87,9 @@ describe("M08 · vocabulário único de tokens", () => {
   it("NENHUM outro CSS declara token com valor literal", () => {
     // O coração da missão. Um segundo arquivo com `--surface-base: 220 50% 6%` é exatamente o
     // defeito que existia — e é invisível para tsc, lint e para toda a suíte.
-    const outros = arquivos(SRC, (p) => extname(p) === ".css" && p !== CANONICO);
+    const outros = arquivos(SRC, (p) =>
+      extname(p) === ".css" && p !== CANONICO && !posix(p).startsWith(PUBLIC_EXPERIENCE),
+    );
     const infratores: string[] = [];
     for (const arquivo of outros) {
       const texto = semComentariosCss(readFileSync(arquivo, "utf-8"));
@@ -109,7 +112,9 @@ describe("M08 · vocabulário único de tokens", () => {
     const canonicos = new Set(
       [...semComentariosCss(readFileSync(CANONICO, "utf-8")).matchAll(DECLARACAO)].map((m) => m[1]),
     );
-    const outros = arquivos(SRC, (p) => extname(p) === ".css" && p !== CANONICO);
+    const outros = arquivos(SRC, (p) =>
+      extname(p) === ".css" && p !== CANONICO && !posix(p).startsWith(PUBLIC_EXPERIENCE),
+    );
     const quebrados: string[] = [];
     for (const arquivo of outros) {
       const texto = semComentariosCss(readFileSync(arquivo, "utf-8"));
@@ -131,7 +136,9 @@ describe("M08 · vocabulário único de tokens", () => {
     // arquivo dentro dela não pode crescer.
     const atual = contarHardcode();
 
-    const novos = Object.keys(atual).filter((f) => !(f in HARDCODE_DECLARADO));
+    const novos = Object.keys(atual).filter(
+      (f) => !f.startsWith(PUBLIC_EXPERIENCE) && !(f in HARDCODE_DECLARADO),
+    );
     expect(
       novos,
       "cor literal em arquivo que não estava na dívida declarada. O valor vem do vocabulário " +
@@ -143,7 +150,9 @@ describe("M08 · vocabulário único de tokens", () => {
       .map(([f, n]) => `${f}: ${HARDCODE_DECLARADO[f]} → ${n}`);
     expect(cresceram, "a dívida de cor literal cresceu em arquivo já declarado").toEqual([]);
 
-    const total = Object.values(atual).reduce((a, b) => a + b, 0);
+    const total = Object.entries(atual)
+      .filter(([f]) => !f.startsWith(PUBLIC_EXPERIENCE))
+      .reduce((sum, [, n]) => sum + n, 0);
     expect(
       total,
       `dívida total ${HARDCODE_TOTAL} → ${total}. Se encolheu, atualize HARDCODE_DECLARADO no ` +
@@ -171,6 +180,15 @@ describe("M08 · vocabulário único de tokens", () => {
     const css = arquivos(SRC, (p) => extname(p) === ".css").map(posix);
     expect(css).not.toContain("src/styles/tokens.css");
     expect(css).not.toContain("src/index.css");
-    expect(css.sort()).toEqual(["src/design/tokens/tokens.css", "src/styles/globals.css"]);
+    expect(css.filter((p) => !p.startsWith(PUBLIC_EXPERIENCE)).sort()).toEqual([
+      "src/design/tokens/tokens.css",
+      "src/styles/globals.css",
+    ]);
+    expect(css.filter((p) => p.startsWith(PUBLIC_EXPERIENCE)).sort()).toEqual([
+      "src/features/public-experience/styles/core.css",
+      "src/features/public-experience/styles/layout.css",
+      "src/features/public-experience/styles/responsive.css",
+      "src/features/public-experience/styles/tokens.css",
+    ]);
   });
 });

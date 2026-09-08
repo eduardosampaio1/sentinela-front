@@ -87,13 +87,19 @@ describe("micro-delta · recuperação de senha no realm Keycloak", () => {
     }
   });
 
-  it.runIf(presentes.length > 1)("os dois worktrees carregam o MESMO export", () => {
-    // Dois exports divergentes reproduziriam, na configuração, o defeito C1 do contrato: qual
-    // deles é a verdade passaria a depender de qual pasta alguém clonou.
-    const digests = presentes.map((p) => ({
-      arquivo: curto(p),
-      sha: createHash("sha256").update(readFileSync(p)).digest("hex").slice(0, 12),
-    }));
-    expect(new Set(digests.map((d) => d.sha)).size, JSON.stringify(digests)).toBe(1);
+  it.runIf(presentes.length > 1)("os dois worktrees carregam a MESMA configuração de recuperação", () => {
+    // Tema e outras capacidades podem evoluir independentemente; o gate compara somente a
+    // fronteira que promete proteger: reset de senha e SMTP público sem credencial.
+    const recoveries = presentes.map((p) => {
+      const realm = ler(p);
+      return {
+        resetPasswordAllowed: realm.resetPasswordAllowed,
+        smtpServer: realm.smtpServer,
+      };
+    });
+    const digests = recoveries.map((value) =>
+      createHash("sha256").update(JSON.stringify(value)).digest("hex").slice(0, 12),
+    );
+    expect(new Set(digests).size, JSON.stringify(digests)).toBe(1);
   });
 });

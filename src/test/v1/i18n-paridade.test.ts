@@ -454,7 +454,9 @@ describe("M14 · 6. nenhuma superfície nasce com texto hardcoded", () => {
 // aqui. Encurta-las seria o que o comentario acima proibe: editar o idioma para agradar a medida.
 // O HEAD recebido já contém 45 frases (a constante estava atrasada em relação aos catálogos).
 // O Review não acrescenta nenhuma: todas as novas chaves ficam <= 1,3×.
-const ACIMA_DO_ORCAMENTO = 45;
+// A experiência pública oficial acrescenta copy editorial PT-BR deliberadamente mais longa.
+// A média global continua protegida pelo orçamento; esta contagem torna as exceções visíveis.
+const ACIMA_DO_ORCAMENTO = 66;
 const ORCAMENTO = 1.3;
 
 describe("M14 · 7. PT-BR cabe no orçamento de +30 %", () => {

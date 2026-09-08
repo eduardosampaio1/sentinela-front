@@ -49,7 +49,9 @@ const contrato = JSON.parse(
   readFileSync(resolve(origem.escolhida!.caminho, "public-v1.json"), "utf-8"),
 ) as Record<string, unknown>;
 
-const FONTE_TIPOS = readFileSync(resolve(RAIZ, "src/lib/v1/contract/public-v1.types.ts"), "utf-8");
+const FONTE_TIPOS = ["public-v1.types.ts", "public-review.types.ts"]
+  .map((name) => readFileSync(resolve(RAIZ, "src/lib/v1/contract", name), "utf-8"))
+  .join("\n");
 const FONTE_CLIENTE = readFileSync(resolve(RAIZ, "src/lib/v1/client.ts"), "utf-8");
 const FONTE_DADOS = readFileSync(
   resolve(RAIZ, "src/features/canonical-analysis/data/analysis.ts"),

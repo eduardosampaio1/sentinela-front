@@ -127,9 +127,8 @@ describe("a parada de mapping chega na tela", () => {
     await waitFor(() =>
       expect(screen.getByText("Tell us which column is which")).toBeTruthy(),
     );
-    expect(
-      screen.getByRole("progressbar", { name: /analysis stage progress/i }),
-    ).toHaveAttribute("aria-valuetext", expect.stringMatching(/Step 2 of 4.*Data protection/i));
+    expect(screen.queryByRole("progressbar", { name: /analysis stage progress/i })).toBeNull();
+    expect(screen.getByText(/Operational truth for this analysis is unavailable/)).toBeTruthy();
 
     // A sugestão vem PREENCHIDA: obrigar a reconfirmar o que a máquina acertou transformaria
     // confirmação em digitação.

@@ -60,54 +60,7 @@ import { PlaygroundDeMedidas } from "./PlaygroundDeMedidas";
 import { Concentracoes, Series } from "./BlocosDeSerieEConcentracao";
 import { Suprimido } from "./EstadoDeSupressao";
 import type { AnalysisIntake } from "@/lib/v1";
-
-function Secao({
-  id,
-  titulo,
-  children,
-}: {
-  readonly id: string;
-  readonly titulo: string;
-  readonly children: React.ReactNode;
-}) {
-  return (
-    /* `painel reg` — a regiao é um PAINEL, e não um titulo com conteudo solto embaixo.
-
-       Antes cada regiao era um `<h2>` seguido de itens sem moldura: sete titulos numa coluna, e
-       nada dizendo onde uma acaba e a outra comeca. Numa tela de sete regioes com blocos
-       repetidos dentro, a moldura E a fronteira — sem ela a pessoa rola sem saber em qual
-       familia esta.
-
-       `data-revelar` fica: ele e o gancho da revelacao por rolagem, e nao tem nada a ver com o
-       desenho. */
-    <section data-revelar aria-labelledby={id} className="painel reg">
-      <header>
-        <h2 id={id}>{titulo}</h2>
-      </header>
-      <div className="corpo">{children}</div>
-    </section>
-  );
-}
-
-/** Nulos, inválidos e ausentes — contados pelo produtor, nunca somados aqui. */
-function Contagens({
-  itens,
-}: {
-  readonly itens: readonly { rotulo: string; valor: number | null }[];
-}) {
-  return (
-    <dl className="contagens">
-      {itens
-        .filter((i) => i.valor !== null)
-        .map((i) => (
-          <div key={i.rotulo}>
-            <dt>{i.rotulo}</dt>
-            <dd>{i.valor}</dd>
-          </div>
-        ))}
-    </dl>
-  );
-}
+import { AnalyticsSection as Secao, PublishedCounts as Contagens } from "./AnalyticsSection";
 
 /**
  * O denominador, em primeiro lugar — e o digest que ninguém via.

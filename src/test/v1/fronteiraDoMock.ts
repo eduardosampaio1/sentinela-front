@@ -66,7 +66,7 @@ export function ehMateriaDeTeste(especificador: string): boolean {
 }
 
 /**
- * As quatro famílias que o plano nomeia: `mock`, `fixture`, `scenario`, `MSW`.
+ * Famílias inequivocamente exclusivas de teste: `mock`, `fixture` e `MSW`.
  *
  * Exatamente essas quatro, sem inflar. `stub` e `seed` seriam defensáveis, mas não estão no
  * escopo autorizado e um gate que cresce por conta própria deixa de ser o que foi aprovado.
@@ -77,16 +77,14 @@ const PALAVRAS_DE_TESTE: readonly string[] = [
   "mocked",
   "fixture",
   "fixtures",
-  "scenario",
-  "scenarios",
   "msw",
 ];
 
 /**
  * Casa a palavra dentro de um identificador composto.
  *
- * `mockAnalises`, `MOCK_LISTA`, `dados-fixture` e `useScenario` são todos o mesmo problema escrito
- * de quatro jeitos. A quebra por camelCase, `-` e `_` normaliza os quatro antes de comparar.
+ * A quebra por camelCase, `-` e `_` normaliza as grafias antes de comparar. `scenario` ficou de
+ * fora: é conceito legítimo do Economics, não evidência suficiente de massa sintética.
  */
 export function temPalavraDeTeste(texto: string): string | null {
   const alvo = texto

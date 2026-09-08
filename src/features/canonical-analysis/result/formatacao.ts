@@ -73,6 +73,19 @@ export function formatarInstante(iso: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(d);
 }
 
+/** Formata duração operacional; recebe medição pronta e não cria métrica analítica. */
+export function formatarDuracaoOperacional(durationMs: number): string {
+  const seconds = Math.round(durationMs / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${remainingSeconds}s`;
+}
+
+/** Converte o percentual operacional publicado na escala usada pelo transform visual. */
+export function escalaDePercentualPublicado(percent: number): number {
+  return percent / 100;
+}
+
 /**
  * O início de uma janela temporal, escrito conforme a granularidade DECLARADA pela série.
  *

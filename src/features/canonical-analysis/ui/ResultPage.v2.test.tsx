@@ -120,14 +120,12 @@ describe("v2 ready — a tela mostra a Engine E o bloco analítico", () => {
     expect(secao?.textContent).toContain("month");
   });
 
-  it("declara os blocos que recebeu e não apresenta — nada some em silêncio", async () => {
+  it("não exibe aviso de bloco oculto quando todos os blocos são apresentados", async () => {
     servirV2(V2_READY);
     montar();
 
-    const notas = await screen.findByRole("heading", { name: "About this view" });
-    expect(notas.closest("section")?.textContent).toContain(
-      "carries 1 analytics block(s) that this page does not display",
-    );
+    expect(await screen.findByRole("heading", { name: "Volume concentration" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "About this view" })).not.toBeInTheDocument();
   });
 
   it("não inventa percentual: as contagens dos grupos são contagens", async () => {

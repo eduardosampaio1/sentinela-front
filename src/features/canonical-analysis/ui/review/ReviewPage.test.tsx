@@ -306,7 +306,7 @@ describe("Sentinela Review", () => {
 
     renderPage();
     await userEvent.click(
-      await screen.findByRole("button", { name: "Tentar de novo" }),
+      await screen.findByRole("button", { name: "Tentar novamente" }),
     );
 
     expect(currentClient.requestReview).toHaveBeenCalledTimes(1);

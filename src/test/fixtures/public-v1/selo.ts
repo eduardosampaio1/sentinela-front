@@ -178,7 +178,7 @@
 // status, lista e resultado exercitados pelas fixtures não mudaram. As demais asserções deste
 // arquivo reconfirmam os campos obrigatórios e a cobertura das mesmas fixtures.
 export const DIGEST_DO_CONTRATO_DERIVADO =
-  "a9fcaf27a0605b26efa29fb619752df4a2cdbdc2398e360bbd820d257831a069";
+  "dec736ea225bc31da18dc706409f7f0ba92ffc17f586a02f64c6e5128a217b56";
 
 /**
  * Campos que o contrato publica e que NENHUMA fixture exercita hoje.

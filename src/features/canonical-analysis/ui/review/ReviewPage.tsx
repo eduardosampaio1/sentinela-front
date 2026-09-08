@@ -32,6 +32,8 @@ import { AnalysisShell } from "../AnalysisShell";
 import { useCanonicalScope } from "../scope";
 import type { EstadoPublico } from "@/design/patterns/estados";
 import { useV1Client } from "../../data/client";
+import { downloadServerArtifact } from "@/lib/download";
+import { formatarPercentual } from "../../result/formatacao";
 import { useState } from "react";
 import { ReviewFeedbackCard } from "./ReviewFeedbackCard";
 import { EconomicsOperations } from "./EconomicsOperations";
@@ -84,7 +86,7 @@ function Claim({
   evidence: Map<string, ReviewEvidenceView>;
   lineage?: ReviewClaimLineageView;
 }) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   return (
     <article className="rounded-xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -92,7 +94,7 @@ function Claim({
           {t(`canonicalAnalysis.review.claim.${claim.kind}`)}
         </span>
         <span className="text-xs tabular-nums text-muted-foreground">
-          {Math.round(claim.confidence * 100)}%{" "}
+          {formatarPercentual(claim.confidence, language === "pt" ? "pt-BR" : "en-US", 0)}{" "}
           {t("canonicalAnalysis.review.confidence")}
         </span>
       </div>
@@ -150,7 +152,7 @@ function ScenarioTable({ rows }: { rows: readonly CostScenario[] }) {
     <div className="overflow-x-auto rounded-xl border border-border">
       <table className="w-full min-w-[560px] text-left text-sm">
         <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
-          <tr><th className="px-4 py-3">Provider</th><th className="px-4 py-3">{t("canonicalAnalysis.review.economicsModel")}</th><th className="px-4 py-3 text-right">Dataset</th><th className="px-4 py-3">Status</th></tr>
+          <tr><th className="px-4 py-3">{t("canonicalAnalysis.review.economicsProvider")}</th><th className="px-4 py-3">{t("canonicalAnalysis.review.economicsModel")}</th><th className="px-4 py-3 text-right">{t("canonicalAnalysis.review.economicsDataset")}</th><th className="px-4 py-3">{t("canonicalAnalysis.review.economicsStatusLabel")}</th></tr>
         </thead>
         <tbody>{rows.slice(0, 8).map((row) => (
           <tr className="border-t border-border" key={row.route_id}>
@@ -246,12 +248,7 @@ export function ReviewPage() {
     setExportError(false);
     try {
       const blob = await client.downloadReview(analysisId, scope);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `sentinela-review-${analysisId}.xlsx`;
-      link.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      downloadServerArtifact(blob, `sentinela-review-${analysisId}.xlsx`);
     } catch {
       setExportError(true);
     } finally {

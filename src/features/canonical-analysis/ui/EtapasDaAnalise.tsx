@@ -15,6 +15,10 @@ import type {
   IntakeProgressView,
 } from "@/lib/v1";
 import type { UploadProgress } from "../data/analysis";
+import {
+  escalaDePercentualPublicado,
+  formatarDuracaoOperacional,
+} from "../result/formatacao";
 
 type EstadoDaEtapa = "waiting" | "active" | "done" | "attention" | "failed";
 type ChaveDaEtapa = "upload" | "privacy" | "measures" | "result";
@@ -162,7 +166,7 @@ export function EtapasDaAnalise({
   const percentualDoIntake =
     intakeProgress?.percent === null || intakeProgress?.percent === undefined
       ? null
-      : Math.max(0, Math.min(100, intakeProgress.percent));
+      : intakeProgress.percent;
   const marcosDoNucleo = operationalTruth?.core_milestones ?? [];
   const acompanhamentos = (operationalTruth?.follow_ups ?? []).filter(
     (item) => item.state !== "not_applicable",
@@ -171,12 +175,7 @@ export function EtapasDaAnalise({
   const formatarDuracao = (durationMs: number | null) => {
     if (durationMs === null)
       return t("canonicalAnalysis.liveProgress.operational.notMeasured");
-    const seconds = Math.round(durationMs / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return minutes > 0
-      ? `${minutes}m ${remainingSeconds}s`
-      : `${remainingSeconds}s`;
+    return formatarDuracaoOperacional(durationMs);
   };
   const formatarDesfecho = () => {
     if (!runtime) return "";
@@ -396,7 +395,7 @@ export function EtapasDaAnalise({
                           aria-hidden="true"
                           className="block h-full rounded-full bg-primary transition-transform motion-reduce:transition-none"
                           style={{
-                            transform: `scaleX(${percentualDoIntake / 100})`,
+                            transform: `scaleX(${escalaDePercentualPublicado(percentualDoIntake)})`,
                             transformOrigin: "left",
                             transitionDuration: "var(--ds-duration-base)",
                             transitionTimingFunction:

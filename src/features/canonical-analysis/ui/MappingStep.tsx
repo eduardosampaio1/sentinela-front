@@ -45,6 +45,11 @@ import { motivoDeImplausibilidade } from "./plausibilidadeDoMapeamento";
 import { cn } from "@/lib/utils";
 
 const PROPORCAO_MINIMA_DE_REGISTROS_ANALISAVEIS = 0.95;
+const MODEL_USAGE_EXAMPLES = {
+  provider: "openai",
+  model: "gpt-5-mini",
+  route: "openai/gpt-5-mini",
+} as const;
 
 /**
  * O rótulo humano de cada campo canônico, em chave de texto LITERAL.
@@ -640,17 +645,17 @@ export function MappingStep({
               <label className="flex flex-col gap-1.5 text-sm font-medium">
                 {t("canonicalAnalysis.mapping.modelUsage.provider")}
                 <input value={modelProvider} disabled={enviando} onChange={(e) => setModelProvider(e.target.value)}
-                  placeholder="openai" className="h-11 rounded-md border border-border bg-background px-3 text-sm" />
+                  placeholder={MODEL_USAGE_EXAMPLES.provider} className="h-11 rounded-md border border-border bg-background px-3 text-sm" />
               </label>
               <label className="flex flex-col gap-1.5 text-sm font-medium">
                 {t("canonicalAnalysis.mapping.modelUsage.model")}
                 <input value={modelId} disabled={enviando} onChange={(e) => setModelId(e.target.value)}
-                  placeholder="gpt-5-mini" className="h-11 rounded-md border border-border bg-background px-3 text-sm" />
+                  placeholder={MODEL_USAGE_EXAMPLES.model} className="h-11 rounded-md border border-border bg-background px-3 text-sm" />
               </label>
               <label className="flex flex-col gap-1.5 text-sm font-medium md:col-span-2">
                 {t("canonicalAnalysis.mapping.modelUsage.route")}
                 <input value={pricingRoute} disabled={enviando} onChange={(e) => setPricingRoute(e.target.value)}
-                  placeholder="openai/gpt-5-mini" className="h-11 rounded-md border border-border bg-background px-3 text-sm" />
+                  placeholder={MODEL_USAGE_EXAMPLES.route} className="h-11 rounded-md border border-border bg-background px-3 text-sm" />
               </label>
               {(["input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "reasoning_tokens"] as const).map((field) => (
                 <label key={field} className="flex flex-col gap-1.5 text-sm font-medium">

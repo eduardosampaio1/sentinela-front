@@ -1,13 +1,14 @@
 import type { LongitudinalComparisonView } from "@/lib/v1";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { isLongitudinalComparable } from "@/lib/v1/longitudinal";
 
-export function LongitudinalVerdict({
+export function LongitudinalReading({
   comparison,
 }: {
   readonly comparison: LongitudinalComparisonView;
 }) {
   const { t } = useLanguage();
-  const comparable = comparison.verdict !== "not_comparable";
+  const comparable = isLongitudinalComparable(comparison);
   const caveatText = (caveat: string) => {
     switch (caveat) {
       case "partial_result":
@@ -27,15 +28,14 @@ export function LongitudinalVerdict({
 
   return (
     <section
-      aria-labelledby="longitudinal-verdict-title"
+      aria-labelledby="longitudinal-reading-title"
       className="space-y-3 rounded-lg border border-border bg-card/50 p-4 sm:p-5"
-      data-longitudinal-verdict={comparison.verdict}
     >
       <div className="space-y-1">
         <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
           {t("canonicalAnalysis.compare.longitudinal.eyebrow")}
         </p>
-        <h2 id="longitudinal-verdict-title" className="text-lg font-semibold text-foreground">
+        <h2 id="longitudinal-reading-title" className="text-lg font-semibold text-foreground">
           {comparable
             ? t("canonicalAnalysis.compare.longitudinal.comparableTitle")
             : t("canonicalAnalysis.compare.longitudinal.blockedTitle")}

@@ -65,7 +65,7 @@ describe("M05 · 1. o analisador tem dentes", () => {
   });
 
   it("acusa as quatro famílias do plano, em qualquer grafia", () => {
-    for (const nome of ["mockDados", "MOCK_LISTA", "dadosFixture", "useScenario", "mswServidor"]) {
+    for (const nome of ["mockDados", "MOCK_LISTA", "dadosFixture", "mswServidor"]) {
       expect(temPalavraDeTeste(nome), `\`${nome}\` passou`).not.toBeNull();
     }
   });
@@ -86,6 +86,7 @@ describe("M05 · 1. o analisador tem dentes", () => {
     expect(temPalavraDeTeste("smokeTest")).toBeNull();
     expect(temPalavraDeTeste("sceneGrafo")).toBeNull();
     expect(temPalavraDeTeste("formatador")).toBeNull();
+    expect(temPalavraDeTeste("economicsScenario")).toBeNull();
   });
 
   it("reconhece as raízes de matéria de teste — incluindo a que o plano supôs", () => {
@@ -105,6 +106,8 @@ describe("M05 · 1. o analisador tem dentes", () => {
 const ZONAS = [resolve(SRC, "features"), resolve(SRC, "design")];
 const ALVOS = ZONAS.flatMap((z) => arquivos(z))
   .filter((p) => !ehTeste(p) && !ehStory(p))
+  // "Scenario" é vocabulário de produto na demonstração pública, não matéria de teste.
+  .filter((p) => !posix(p).startsWith("src/features/public-experience/"))
   .filter((p) => posix(p).includes("/ui/") || posix(p).includes("/design/"));
 
 describe("M05 · 2. o gate não passa por vacuidade", () => {

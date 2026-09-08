@@ -19,6 +19,7 @@ import { SEM_CLIENTE_NO_FRONT, SEM_ENTRADA_NO_CONTRATO } from "./divergenciaDecl
 const RAIZ = resolve(__dirname, "../../..");
 const CLIENTE = resolve(RAIZ, "src/lib/v1/client.ts");
 const COPIA = resolve(RAIZ, "src/lib/v1/contract/public-v1.types.ts");
+const REVIEW_TYPES = resolve(RAIZ, "src/lib/v1/contract/public-review.types.ts");
 
 const resolucao = resolverOrigemDoContrato();
 const temOrigem = resolucao.escolhida !== null;
@@ -29,7 +30,10 @@ function inventario() {
   );
   const contrato = operacoesDoContrato(doc);
   const cliente = operacoesDoCliente(readFileSync(CLIENTE, "utf-8"));
-  const tipos = tiposDeclarados(readFileSync(COPIA, "utf-8"));
+    const tipos = tiposDeclarados(
+      `${readFileSync(COPIA, "utf-8")}\n${readFileSync(REVIEW_TYPES, "utf-8")}`,
+    );
+    tipos.add("Blob");
   return { doc, contrato, cliente, diff: compararOperacoes(contrato, cliente, tipos) };
 }
 

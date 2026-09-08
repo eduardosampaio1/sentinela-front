@@ -65,6 +65,7 @@ export function operacoesDoContrato(doc: { operations?: OperacaoDoContrato[] }):
 // O tipo genérico é a projeção da resposta; método e path são os dois primeiros argumentos.
 const CHAMADA =
   /\b(?:enviar|pedir)\s*<\s*([A-Za-z0-9_]+)\s*>\s*\(\s*"([A-Z]+)"\s*,\s*[`"]([^`"]+)[`"]/g;
+const DOWNLOAD = /\bbaixar\s*\(\s*[`"]([^`"]+)[`"]/g;
 
 /** Lê as operações que o CLIENTE do frontend realmente chama, do código-fonte dele. */
 export function operacoesDoCliente(fonte: string): OperacaoNormalizada[] {
@@ -83,6 +84,18 @@ export function operacoesDoCliente(fonte: string): OperacaoNormalizada[] {
       projecao,
     };
     // A MESMA operação pode ter dois chamadores (`list` e um futuro `listAll`). Uma entrada só.
+    if (!vistas.has(op.chave)) vistas.set(op.chave, op);
+  }
+  for (const m of semComentarios.matchAll(DOWNLOAD)) {
+    const caminho = m[1];
+    const op: OperacaoNormalizada = {
+      chave: chaveDe("GET", caminho),
+      metodo: "GET",
+      caminho: normalizarCaminho(caminho),
+      operationId: null,
+      queryObrigatoria: [],
+      projecao: "Blob",
+    };
     if (!vistas.has(op.chave)) vistas.set(op.chave, op);
   }
   return [...vistas.values()].sort((a, b) => a.chave.localeCompare(b.chave));
@@ -145,7 +158,7 @@ export function compararOperacoes(
 
 /** Nomes de interface/type declarados na cópia local do contrato. */
 export function tiposDeclarados(fonte: string): Set<string> {
-  const nomes = new Set<string>();
+  const nomes = new Set<string>(["Blob"]);
   for (const m of fonte.matchAll(/export\s+(?:interface|type)\s+([A-Za-z0-9_]+)/g)) nomes.add(m[1]);
   return nomes;
 }

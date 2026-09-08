@@ -151,7 +151,7 @@
       "investigatingBody": "O Sentinela está cruzando sinais, procurando contradições e verificando o que os dados permitem concluir.",
       "failedTitle": "A investigação não foi concluída",
       "failedBody": "As métricas permanecem íntegras. Tente gerar só o Review.",
-      "retry": "Tentar de novo",
+      "retry": "Tentar novamente",
       "executiveVerdict": "Veredito executivo",
       "noVerdict": "Não há evidência suficiente para um veredito executivo.",
       "partial": "Review parcial — consulte as limitações",
@@ -177,6 +177,9 @@
       "embeddingScenarios": "Ver cenários de embeddings",
       "economicsDisclaimer": "Preços do snapshot registrado no resultado. Custos de infraestrutura e equivalência funcional não estão incluídos.",
       "economicsModel": "Modelo",
+      "economicsProvider": "Provedor",
+      "economicsDataset": "Base analisada",
+      "economicsStatusLabel": "Status",
       "economicsStatus": {
         "exact": "Exato",
         "estimated": "Estimado",

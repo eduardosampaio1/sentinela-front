@@ -44,7 +44,7 @@ import { useLongitudinalComparison } from "../data/longitudinal";
 import { resolverLeituraArgos } from "../result/adapterV3";
 import { compararArgos } from "../result/comparacao";
 import { ComparacaoArgos } from "./ComparacaoArgos";
-import { LongitudinalVerdict } from "./LongitudinalVerdict";
+import { LongitudinalReading } from "./LongitudinalVerdict";
 import { problemCodeOf } from "./notices";
 import { useCanonicalScope } from "./scope";
 
@@ -178,7 +178,7 @@ export function CompareAnalysesPage() {
     return (
       <div className="space-y-8">
         {longitudinal.data ? (
-          <LongitudinalVerdict comparison={longitudinal.data} />
+          <LongitudinalReading comparison={longitudinal.data} />
         ) : longitudinal.isError ? (
           <div role="status" className="rounded-md border border-border p-4 text-sm text-muted-foreground">
             {t("canonicalAnalysis.compare.longitudinal.unavailable")}

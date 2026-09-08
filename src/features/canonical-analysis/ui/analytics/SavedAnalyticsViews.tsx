@@ -1,6 +1,7 @@
 import { Download, Save } from "lucide-react";
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { downloadServerArtifact } from "@/lib/download";
 import type {
   AnalyticsQueryInput,
   AnalyticsQueryResultView,
@@ -38,12 +39,10 @@ export function SavedAnalyticsViews({
 
   async function exportView(viewId: string, viewName: string) {
     const blob = await download.mutateAsync(viewId);
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${viewName.replace(/[^a-z0-9_-]+/gi, "-").toLowerCase() || "sentinela-view"}.csv`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    downloadServerArtifact(
+      blob,
+      `${viewName.replace(/[^a-z0-9_-]+/gi, "-").toLowerCase() || "sentinela-view"}.csv`,
+    );
   }
 
   return (

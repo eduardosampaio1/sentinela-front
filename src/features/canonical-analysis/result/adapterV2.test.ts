@@ -321,10 +321,9 @@ describe("backend-first: o navegador formata, e não calcula", () => {
 // ── o que veio e não é mostrado ─────────────────────────────────────────────
 
 describe("nada é descartado em silêncio", () => {
-  it("conta os blocos que o documento trouxe e esta versão não apresenta", () => {
-    // A massa `ready` traz um `flag_cross` publicável. "Não recebemos" e "não mostramos" são
-    // coisas diferentes para quem lê a tela.
-    expect(conteudo(V2_READY).notes.blocksNotPresented).toBe(1);
+  it("não acusa como oculto o cruzamento que a tela já apresenta", () => {
+    // Cruzamentos e séries passaram a ter apresentação própria; o contador precisa acompanhar.
+    expect(conteudo(V2_READY).notes.blocksNotPresented).toBe(0);
     expect(conteudo(V2_PARTIAL).notes.blocksNotPresented).toBe(0);
   });
 

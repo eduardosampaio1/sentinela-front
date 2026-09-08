@@ -239,6 +239,8 @@ const TOKENS_REL = "src/design/tokens/tokens.css";
 const MEDIDO = arquivos(resolve(RAIZ, "src"))
   .map((p) => posix(p))
   .filter((rel) => !/\.(test|spec|stories)\./.test(rel) && !rel.startsWith("src/test/"))
+  // Subsistema público isolado, com coreografia e tokens próprios no chunk lazy da rota.
+  .filter((rel) => !rel.startsWith("src/features/public-experience/"))
   // `tokens.css` é a ÚNICA origem autorizada de valor literal — é o que ele é.
   .filter((rel) => rel !== TOKENS_REL)
   .map((rel) => ({

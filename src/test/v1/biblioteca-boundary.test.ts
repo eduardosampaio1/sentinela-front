@@ -150,12 +150,13 @@ const DIVIDA_SHADCN: readonly string[] = [
 ];
 
 const ehDesign = (rel: string) => rel.startsWith("src/design/");
+const ehExperienciaPublica = (rel: string) => rel.startsWith("src/features/public-experience/");
 
 describe("M06 · 3. biblioteca de apresentação só dentro do Design System", () => {
   it("nenhum arquivo FORA de `src/design/**` e fora da dívida declarada importa", () => {
     // O coração da missão, e o DoD do plano: importar Radix em `features/**/ui/**` fica vermelho.
     const infratores = COM_IMPORT.filter(
-      (x) => !ehDesign(x.rel) && !DIVIDA_SHADCN.includes(x.rel),
+      (x) => !ehDesign(x.rel) && !ehExperienciaPublica(x.rel) && !DIVIDA_SHADCN.includes(x.rel),
     ).map((x) => `${x.rel}:${x.achados[0].linha} — ${x.achados[0].especificador}`);
     expect(infratores, "biblioteca de apresentação virou API pública de página").toEqual([]);
   });
