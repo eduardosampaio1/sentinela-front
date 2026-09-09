@@ -51,7 +51,7 @@ export type ReviewStatus =
 
 export interface ReviewEvidenceView {
   evidence_id: string;
-  source: "argos" | "analytics" | "context";
+  source: "argos" | "analytics" | "context" | "quality";
   pointer: string;
   label: string;
   excerpt?: string | null;
@@ -336,4 +336,3 @@ export interface EconomicsReconciliationView {
 export interface EconomicsReconciliationListView {
   items: EconomicsReconciliationView[];
 }
-

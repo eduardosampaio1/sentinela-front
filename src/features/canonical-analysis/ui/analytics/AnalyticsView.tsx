@@ -61,6 +61,8 @@ import { Concentracoes, Series } from "./BlocosDeSerieEConcentracao";
 import { Suprimido } from "./EstadoDeSupressao";
 import type { AnalysisIntake } from "@/lib/v1";
 import { AnalyticsSection as Secao, PublishedCounts as Contagens } from "./AnalyticsSection";
+import { useAnalysisEconomics } from "../../data/economics";
+import { EconomicsSnapshot } from "../economics/EconomicsSnapshot";
 
 /**
  * O denominador, em primeiro lugar — e o digest que ninguém via.
@@ -561,6 +563,7 @@ export function AnalyticsView() {
   // D13: a projeção é buscada SEM esperar o resultado final. Condicioná-la ao ARGOS faria a
   // visão que já pode responder ficar em branco esperando a outra.
   const analytics = useAnalysisAnalytics(scope, analysisId);
+  const economics = useAnalysisEconomics(scope, analysisId);
   // O eixo `export` de `/progress`, e ele apenas — mesma leitura que a rota legada faz. Tentar
   // o download para descobrir o estado usaria a ação como sonda.
   //
@@ -773,6 +776,14 @@ export function AnalyticsView() {
             <QualidadeDaBase intake={intake} />
             <Cabeca snapshot={snapshot} vista={vista} />
             <ResumoDaPublicacao snapshot={snapshot} intake={intake} />
+            {economics.data?.availability === "available" ? (
+              <Secao
+                id="anl-economics"
+                titulo={t("canonicalAnalysis.review.economicsTitle")}
+              >
+                <EconomicsSnapshot economics={economics.data} />
+              </Secao>
+            ) : null}
             <Secao
               id="anl-universal"
               titulo={t("canonicalAnalysis.universal.title")}
