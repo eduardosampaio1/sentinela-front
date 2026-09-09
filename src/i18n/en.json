@@ -86,7 +86,18 @@
     "sessionExpiredTitle": "Session expired",
     "sessionExpiredBody": "Your session expired due to inactivity. Sign in again to continue your work — your analysis data is still saved.",
     "sessionExpiredSignIn": "Sign in again",
-    "sessionExpiredReload": "Reload the page"
+    "sessionExpiredReload": "Reload the page",
+    "backHome": "Back to the Sentinela home page",
+    "languageAction": "Mudar para português",
+    "portalEyebrow": "Secure entry",
+    "portalTitle": "Understand your AI before it decides for you.",
+    "portalBody": "Sentinela turns real conversations into evidence about quality, risk, behavior and cost — then shows you where to act first.",
+    "portalFooter": "Authentication protected by the Sentinela identity provider.",
+    "signal": {
+      "observe": "Observe",
+      "decide": "Decide",
+      "control": "Control"
+    }
   },
   "baseline": {
     "candidateCreated": "Created on {{date}}",

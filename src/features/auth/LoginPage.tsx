@@ -93,15 +93,15 @@ export function LoginPage() {
   return (
     <AuthShell>
       <div ref={raiz}>
-        <div data-revelar className="mb-6 space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <div data-revelar className="mb-8 space-y-3">
+          <h1 className="text-balance text-[clamp(2.25rem,4vw,3.35rem)] font-medium leading-[0.98] tracking-[-0.055em] text-foreground">
             {t("auth.enterWorkspaceTitle")}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-[hsl(var(--ds-text-secondary))]">
             {t("auth.noAccount")}{" "}
             <Link
               to="/register"
-              className="text-[hsl(var(--ds-accent-ink))] underline underline-offset-2 transition-colors hover:text-foreground"
+              className="font-medium text-[hsl(var(--ds-brand-emission-bright))] underline decoration-[hsl(var(--ds-brand-emission-bright)/0.35)] underline-offset-4 transition-colors hover:text-[hsl(var(--ds-brand-emission-soft))]"
             >
               {t("auth.createOne")}
             </Link>
@@ -119,7 +119,7 @@ export function LoginPage() {
         {/* O aviso ANTES dos botões — os três saem do domínio. */}
         <p
           data-revelar
-          className="mb-5 rounded-lg border border-border bg-card px-4 py-3 text-xs text-muted-foreground"
+          className="mb-6 rounded-xl border border-[hsl(var(--ds-border-subtle))] bg-[hsl(var(--ds-surface-raised)/0.58)] px-4 py-3 text-xs leading-5 text-[hsl(var(--ds-text-secondary))] backdrop-blur-md"
         >
           {t("auth.signInNotice")}
         </p>
@@ -130,7 +130,7 @@ export function LoginPage() {
             variant="outline"
             onClick={() => void atravessar("google")}
             disabled={ocupado}
-            className="flex h-11 w-full items-center justify-center gap-2.5"
+            className="flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border-[hsl(var(--ds-border-default))] bg-[hsl(var(--ds-surface-base)/0.46)] text-foreground transition-[border-color,background,transform] hover:border-[hsl(var(--ds-brand-emission-bright)/0.36)] hover:bg-[hsl(var(--ds-surface-sunken)/0.72)] active:scale-[0.985]"
           >
             <GoogleIcon />
             {saindo === "google" ? t("auth.redirecting") : t("auth.continueGoogle")}
@@ -141,7 +141,7 @@ export function LoginPage() {
             variant="outline"
             onClick={() => void atravessar("github")}
             disabled={ocupado}
-            className="flex h-11 w-full items-center justify-center gap-2.5"
+            className="flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border-[hsl(var(--ds-border-default))] bg-[hsl(var(--ds-surface-base)/0.46)] text-foreground transition-[border-color,background,transform] hover:border-[hsl(var(--ds-brand-emission-bright)/0.36)] hover:bg-[hsl(var(--ds-surface-sunken)/0.72)] active:scale-[0.985]"
           >
             <GitHubIcon />
             {saindo === "github" ? t("auth.redirecting") : t("auth.continueGitHub")}
@@ -156,7 +156,7 @@ export function LoginPage() {
           type="button"
           onClick={() => void atravessar("email")}
           disabled={ocupado}
-          className="h-11 w-full font-semibold"
+          className="h-12 w-full rounded-xl bg-[hsl(var(--ds-brand-emission-soft))] font-semibold text-[hsl(var(--ds-text-on-accent))] shadow-[0_12px_36px_hsl(var(--ds-brand-emission)/0.14)] transition-[background,box-shadow,transform] hover:bg-foreground hover:shadow-[0_16px_42px_hsl(var(--ds-brand-emission)/0.22)] active:scale-[0.985]"
         >
           {saindo === "email" ? t("auth.redirecting") : t("auth.continueEmail")}
         </Button>

@@ -1,112 +1,95 @@
 import { type ReactNode } from "react";
-import { cn } from "@/lib/utils";
-import { SentinelaMark } from "@/components/brand/SentinelaMark";
+import { Link } from "react-router-dom";
+import { SentinelaLogo } from "@/components/brand/SentinelaLogo";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AuthShellProps {
   children: ReactNode;
-  /** Right side: form content */
-  formContent?: ReactNode;
-  /** Left side: value proposition */
+  /** Login, registration and recovery share this calm product context. */
   showValueProp?: boolean;
 }
 
+const SIGNALS = ["observe", "decide", "control"] as const;
+
 export function AuthShell({ children, showValueProp = true }: AuthShellProps) {
+  const { language, setLanguage, t } = useLanguage();
+  const nextLanguage = language === "pt" ? "en" : "pt";
+
   return (
-    // M46 — a estrutura de landmarks das superfícies de entrada.
-    //
-    // Login, criação de conta e recuperação de senha compartilham esta casca, e nenhuma das três
-    // tinha `<main>`: quem usa leitor de tela não tinha "pular para o conteúdo" em NENHUMA porta do
-    // produto. A coluna da esquerda é material de apoio (`aside`); o conteúdo é o formulário.
-    <div className="min-h-screen flex bg-[#070C18]">
-      {/* Left: Value Prop */}
-      {showValueProp && (
-        <aside className="hidden lg:flex lg:w-[45%] xl:w-[40%] flex-col justify-between p-12 bg-[#0D1525] border-r border-[rgba(255,255,255,0.06)] relative overflow-hidden">
-          {/* Background decoration */}
-          <div
-            className="absolute top-0 right-0 w-96 h-96 opacity-5 rounded-full blur-3xl"
-            style={{ background: "radial-gradient(circle, #4F5AE8 0%, transparent 70%)" }}
-            aria-hidden="true"
-          />
-          <div
-            className="absolute bottom-0 left-0 w-64 h-64 opacity-5 rounded-full blur-3xl"
-            style={{ background: "radial-gradient(circle, #6366F1 0%, transparent 70%)" }}
-            aria-hidden="true"
-          />
+    <div className="relative flex min-h-[100dvh] overflow-hidden bg-[#07090d] text-[#f3f6f8]">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-70 [background-image:radial-gradient(circle_at_18%_22%,rgba(82,168,232,0.12),transparent_27%),radial-gradient(circle_at_78%_72%,rgba(54,127,188,0.08),transparent_30%)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.13] [background-image:linear-gradient(rgba(207,226,242,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(207,226,242,0.08)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(to_bottom,black,transparent_78%)]"
+      />
 
-          {/* Logo */}
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-12">
-              <SentinelaMark size={34} className="text-[#4F5AE8]" />
-              <span className="text-lg font-semibold tracking-tight text-[#F1F5F9]">Sentinela</span>
-            </div>
+      <header className="absolute inset-x-0 top-0 z-20 flex min-h-[76px] items-center justify-between px-5 sm:px-8 lg:px-12">
+        <Link
+          to="/"
+          aria-label={t("auth.backHome")}
+          className="rounded-md text-[#f3f6f8] transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#86c9f4]"
+        >
+          <SentinelaLogo
+            luminous
+            markSize={28}
+            markClassName="text-[#86c9f4] drop-shadow-[0_0_10px_rgba(82,168,232,0.24)]"
+            wordmarkClassName="text-[0.72rem] font-semibold tracking-[0.25em]"
+          />
+        </Link>
+        <button
+          type="button"
+          onClick={() => setLanguage(nextLanguage)}
+          className="min-h-11 min-w-11 rounded-xl border border-transparent px-3 font-mono text-[0.68rem] font-medium tracking-[0.12em] text-[#748294] transition-colors hover:border-[rgba(134,201,244,0.3)] hover:bg-[rgba(20,29,40,0.65)] hover:text-[#f3f6f8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#86c9f4]"
+          aria-label={t("auth.languageAction")}
+        >
+          {nextLanguage.toUpperCase()}
+        </button>
+      </header>
 
-            {/* Headline */}
-            <h2 className="text-3xl font-bold tracking-tight text-[#F1F5F9] mb-4 leading-tight">
-              The decision layer for your AI system
+      {showValueProp ? (
+        <aside className="relative z-10 hidden w-[48%] flex-col justify-end border-r border-[rgba(207,226,242,0.1)] px-[clamp(3rem,6vw,7.5rem)] pb-[clamp(4rem,9vh,7rem)] pt-28 lg:flex xl:w-[52%]">
+          <div className="max-w-[42rem]">
+            <p className="mb-6 font-mono text-[0.66rem] font-medium uppercase tracking-[0.24em] text-[#86c9f4]">
+              {t("auth.portalEyebrow")}
+            </p>
+            <h2 className="max-w-[12ch] text-[clamp(3.4rem,5.2vw,6.4rem)] font-medium leading-[0.93] tracking-[-0.065em] text-balance">
+              {t("auth.portalTitle")}
             </h2>
-            <p className="text-[#94A3B8] text-base leading-relaxed mb-10">
-              Upload conversation data and get an instant assessment — risk level,
-              behavior score, economic impact, and prioritized actions. Built for
-              teams running AI in production.
+            <p className="mt-7 max-w-[54ch] text-base leading-7 text-[#9ca8b5]">
+              {t("auth.portalBody")}
             </p>
 
-            {/* Features */}
-            <div className="space-y-5">
-              {[
-                {
-                  icon: "M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z",
-                  title: "System health in seconds",
-                  description: "Know immediately if your AI is healthy, degraded, or at risk — before your users notice.",
-                },
-                {
-                  icon: "M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5",
-                  title: "Cost and efficiency analysis",
-                  description: "Quantify cost per useful outcome, token waste, and the real economic impact of AI failures.",
-                },
-                {
-                  icon: "M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126Z",
-                  title: "Actionable, not just observational",
-                  description: "Every finding comes with a ranked recommendation. Know what to fix and why.",
-                },
-              ].map((feature) => (
-                <div key={feature.title} className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[rgba(79,90,232,0.08)] border border-[rgba(79,90,232,0.12)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-4 h-4 text-[#4F5AE8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d={feature.icon} />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-[#F1F5F9]">{feature.title}</p>
-                    <p className="text-xs text-[#94A3B8] leading-relaxed">{feature.description}</p>
-                  </div>
+            <div className="mt-11 grid max-w-[36rem] grid-cols-3 border-y border-[rgba(207,226,242,0.12)] py-5">
+              {SIGNALS.map((signal, index) => (
+                <div
+                  key={signal}
+                  className="flex items-center gap-2.5 border-r border-[rgba(207,226,242,0.1)] px-3 first:pl-0 last:border-r-0"
+                >
+                  <span className="grid size-6 place-items-center rounded-full border border-[rgba(134,201,244,0.3)] font-mono text-[0.58rem] text-[#86c9f4]">
+                    {index + 1}
+                  </span>
+                  <span className="font-mono text-[0.6rem] uppercase tracking-[0.13em] text-[#9ca8b5]">
+                    {t(`auth.signal.${signal}`)}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Footer */}
-          {/* #475569 dava 2.57:1 sobre este fundo — abaixo de qualquer piso legível. */}
-          <p className="text-xs text-[#71809A] relative z-10">
-            AI observability · Built for production teams
-          </p>
         </aside>
-      )}
+      ) : null}
 
-      {/* Right: Form */}
-      <main
-        className={cn(
-          "flex-1 flex items-center justify-center p-6 sm:p-12",
-          !showValueProp && "w-full"
-        )}
-      >
-        <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <SentinelaMark size={30} className="text-[#4F5AE8]" />
-            <span className="text-base font-semibold text-[#F1F5F9]">Sentinela</span>
-          </div>
-
+      <main className="relative z-10 flex flex-1 items-center justify-center px-5 pb-10 pt-28 sm:px-12 lg:px-[clamp(3rem,7vw,8rem)]">
+        <div className="w-full max-w-[28rem]">
+          <p className="mb-8 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-[#748294] lg:hidden">
+            {t("auth.portalEyebrow")}
+          </p>
           {children}
+          <p className="mt-9 border-t border-[rgba(207,226,242,0.1)] pt-5 text-xs leading-5 text-[#748294]">
+            {t("auth.portalFooter")}
+          </p>
         </div>
       </main>
     </div>

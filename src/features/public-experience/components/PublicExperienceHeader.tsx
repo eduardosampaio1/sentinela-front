@@ -1,5 +1,6 @@
 import { trackPublicExperienceEvent } from "../analytics/events";
 import { usePublicExperience } from "../usePublicExperience";
+import { SentinelaLogo } from "@/components/brand/SentinelaLogo";
 
 export function PublicExperienceHeader() {
   const { copy, locale, setLocale, variant } = usePublicExperience();
@@ -7,7 +8,9 @@ export function PublicExperienceHeader() {
 
   return (
     <header className="ws-public-header">
-      <a className="ws-public-header__brand" href="/" aria-label={locale === "pt-BR" ? "Página inicial do Sentinela" : "Sentinela home"}>{copy.brand}</a>
+      <a className="ws-public-header__brand" href="/" aria-label={locale === "pt-BR" ? "Página inicial do Sentinela" : "Sentinela home"}>
+        <SentinelaLogo luminous markSize={26} markClassName="ws-brand-mark" wordmarkClassName="ws-brand-wordmark" />
+      </a>
       <nav className="ws-public-header__actions" aria-label={locale === "pt-BR" ? "Acesso e idioma" : "Access and language"}>
         <button
           type="button"

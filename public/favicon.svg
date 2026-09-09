@@ -1,8 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="269 332 284 284">
-  <!-- Background rounded square in brand dark -->
-  <rect x="269" y="332" width="284" height="284" rx="54" fill="#09090b"/>
+  <defs>
+    <linearGradient id="faviconSurface" x1="285" y1="348" x2="537" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111A25"/>
+      <stop offset="1" stop-color="#07090D"/>
+    </linearGradient>
+    <linearGradient id="faviconUpper" x1="330" y1="365" x2="505" y2="570" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A7DFFD"/>
+      <stop offset="1" stop-color="#4B9FE1"/>
+    </linearGradient>
+    <linearGradient id="faviconLower" x1="500" y1="370" x2="320" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#72C1F1"/>
+      <stop offset="1" stop-color="#367FBC"/>
+    </linearGradient>
+  </defs>
+  <rect x="269" y="332" width="284" height="284" rx="58" fill="url(#faviconSurface)"/>
+  <rect x="274" y="337" width="274" height="274" rx="53" fill="none" stroke="#9BD8FB" stroke-opacity=".18" stroke-width="3"/>
   <!-- S upper section -->
-  <path fill="#505FE7" d="M466.493774,502.432831
+  <path fill="url(#faviconUpper)" d="M466.493774,502.432831
     C446.252136,489.836243 426.272888,477.504974 406.397278,465.008911
     C396.680359,458.899841 395.120148,446.352753 402.765381,437.821777
     C407.455231,432.588562 416.148651,431.673706 423.503326,436.051300
@@ -24,7 +38,7 @@
     C482.861023,516.820312 482.781403,512.609802 477.804901,509.514557
     C474.130402,507.229126 470.467072,504.925720 466.493774,502.432831 z"/>
   <!-- S lower section -->
-  <path fill="#515FE8" d="M348.692810,429.655212
+  <path fill="url(#faviconLower)" d="M348.692810,429.655212
     C344.737427,431.923370 341.101288,433.752045 341.317169,439.072327
     C341.468933,442.812256 342.661469,445.169495 345.948059,447.122925
     C361.834351,456.564911 377.590027,466.226837 393.380920,475.828979
@@ -47,7 +61,7 @@
     C387.089081,406.201996 369.365906,417.116180 351.611359,427.978363
     C350.759491,428.499542 349.876160,428.969330 348.692810,429.655212 z"/>
   <!-- Center junction node -->
-  <path fill="#4F5DE2" d="M425.241577,504.392822
+  <path fill="#D9F1FF" d="M425.241577,504.392822
     C425.420227,510.724152 422.918701,515.218201 417.271637,517.188477
     C412.144135,518.977539 407.041077,518.574097 403.025055,514.241699
     C399.386108,510.316101 398.681671,504.286407 401.144257,499.357727

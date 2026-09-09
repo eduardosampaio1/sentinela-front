@@ -155,6 +155,12 @@
   /** Alias de `--ds-text-on-accent`. Um fato, um valor. */
   --ds-text-on-signal: 228 60% 5%;
 
+  /* Emissão da marca na nova porta pública e na autenticação. Não é uma segunda cor de ação:
+     comunica o sistema ativo; controles do produto continuam usando `--ds-accent`. */
+  --ds-brand-emission: 204 77% 62%;
+  --ds-brand-emission-bright: 203 83% 74%;
+  --ds-brand-emission-soft: 203 83% 93%;
+
   /* ── Bordas ──────────────────────────────────────────────────────────────────
      A V4 desenha borda com BRANCO E ARDÓSIA TRANSLÚCIDOS. Alfa não pode entrar num token que
      `hsl(var(--token))` consome, então cada uma foi COMPOSTA sobre a base e virou valor opaco.

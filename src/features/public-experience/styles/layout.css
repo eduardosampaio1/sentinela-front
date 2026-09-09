@@ -25,11 +25,28 @@
 }
 
 .ws-public-header__brand {
+  display: inline-flex;
+  align-items: center;
   color: var(--ws-ink);
-  font-size: 0.74rem;
-  font-weight: 650;
-  letter-spacing: 0.24em;
   text-decoration: none;
+}
+
+.ws-brand-mark {
+  position: relative;
+  color: var(--ws-accent-bright);
+  filter: drop-shadow(0 0 10px rgba(82, 168, 232, 0.2));
+  transition: filter 260ms ease, transform 260ms ease;
+}
+
+.ws-brand-wordmark {
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.25em;
+}
+
+.ws-public-header__brand:hover .ws-brand-mark {
+  filter: drop-shadow(0 0 14px rgba(82, 168, 232, 0.34));
+  transform: translateY(-1px);
 }
 
 .ws-public-header__actions { display: flex; align-items: center; gap: 10px; }
