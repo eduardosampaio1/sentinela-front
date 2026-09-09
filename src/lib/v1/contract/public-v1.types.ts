@@ -592,6 +592,16 @@ export interface IntakeProgressView {
   last_activity_at: string | null;
 }
 
+export interface UploadProcessingView {
+  received_bytes: number;
+  received_parts: number;
+  complete: boolean;
+  first_part_at: string | null;
+  privacy_processing_started: boolean;
+  overlap_active: boolean;
+  privacy_start_mode: "during_upload" | "after_upload";
+}
+
 export type OperationalStage = "upload" | "privacy" | "measures" | "final_result";
 export type OperationalStageState = "waiting" | "active" | "done" | "attention" | "failed";
 export type OperationalOwner = "user" | "sentinela" | "sentinela_support" | "none";
@@ -674,6 +684,8 @@ export interface AnalysisProgressView {
   analysis_id: string;
   axes: readonly ProgressEntry[];
   intake?: IntakeProgressView;
+  /** Evidência do Ingestion; permite mostrar upload e proteção ativos ao mesmo tempo. */
+  upload?: UploadProcessingView;
   /** A projeção autoritativa que a tela renderiza sem recompor lifecycle, owner ou ação. */
   operational_truth?: AnalysisOperationalTruthView;
 }

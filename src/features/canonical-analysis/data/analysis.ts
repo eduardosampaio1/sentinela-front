@@ -376,6 +376,7 @@ export function useAnalysisProgress(
   scope: CanonicalScope | null,
   analysisId: string | null,
   habilitado = true,
+  status?: AnalysisStatus,
 ): UseQueryResult<AnalysisProgressView> {
   const client = useV1Client();
   return useQuery({
@@ -384,6 +385,11 @@ export function useAnalysisProgress(
     enabled: Boolean(scope && analysisId) && habilitado,
     queryFn: ({ signal }) =>
       client.getProgress(analysisId as string, scope as CanonicalScope, { signal }),
+    // Upload e Privacy Gate agora podem avançar simultaneamente. O read model precisa ser
+    // relido no mesmo ritmo do status enquanto o produtor trabalha; uma leitura única deixaria
+    // a sobreposição correta no backend, porém invisível na tela até a próxima navegação.
+    refetchInterval: intervaloDePolling(status),
+    refetchIntervalInBackground: false,
   });
 }
 

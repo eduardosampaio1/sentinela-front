@@ -25,6 +25,46 @@ const VERDADE_DA_PROTECAO: AnalysisOperationalTruthView = {
 };
 
 describe("etapas públicas da análise", () => {
+  it("mostra upload e proteção ativos ao mesmo tempo quando o servidor comprova overlap", () => {
+    window.localStorage.setItem("sentinela:language", "pt");
+    render(
+      <LanguageProvider>
+        <EtapasDaAnalise
+          view={statusView("receiving")}
+          operationalTruth={{
+            ...VERDADE_DA_PROTECAO,
+            current_stage: "upload",
+            stages: [
+              { stage: "upload", state: "active" },
+              { stage: "privacy", state: "waiting" },
+              { stage: "measures", state: "waiting" },
+              { stage: "final_result", state: "waiting" },
+            ],
+          }}
+          serverUpload={{
+            received_bytes: 8_388_608,
+            received_parts: 1,
+            complete: false,
+            first_part_at: "2026-09-09T12:00:00Z",
+            privacy_processing_started: true,
+            overlap_active: true,
+            privacy_start_mode: "during_upload",
+          }}
+        />
+      </LanguageProvider>,
+    );
+
+    expect(screen.getByText("Envio da base").closest("li")).toHaveTextContent(
+      "Agora",
+    );
+    expect(
+      screen.getByText("Proteção dos dados").closest("li"),
+    ).toHaveTextContent("Agora");
+    expect(
+      screen.getByText(/A proteção dos dados já está rodando/),
+    ).toBeInTheDocument();
+  });
+
   it("mostra o percentual medido pelo backend durante a proteção", () => {
     window.localStorage.setItem("sentinela:language", "pt");
     render(

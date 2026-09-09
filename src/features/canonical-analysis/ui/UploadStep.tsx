@@ -34,13 +34,20 @@ import { AvisoDaJornada } from "./AvisoDaJornada";
 // vitrine o que o produto aceita na porta.
 const ACEITOS = [
   ".csv",
+  ".csv.gz",
+  ".json",
+  ".json.gz",
   ".jsonl",
+  ".jsonl.gz",
   ".ndjson",
+  ".ndjson.gz",
   ".parquet",
   ".xlsx",
   "text/csv",
   "application/x-ndjson",
   "application/jsonl",
+  "application/json",
+  "application/gzip",
 ].join(",");
 
 export function UploadStep({

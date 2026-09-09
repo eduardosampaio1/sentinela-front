@@ -917,6 +917,7 @@
       "stageProgressValue": "Etapa {{current}} de {{total}} · {{title}}",
       "stageProgressComplete": "As 4 etapas foram concluídas",
       "intakeProgressLabel": "Progresso da proteção da base",
+      "overlapActive": "A proteção dos dados já está rodando enquanto as partes restantes chegam.",
       "intakePercent": "{{percent}}% da base revisada",
       "intakeBytes": "{{processed}} de {{total}} revisados",
       "intakeBytesUnknown": "{{processed}} revisados",
@@ -1412,7 +1413,7 @@
     },
     "upload": {
       "title": "Adicione sua base",
-      "help": "Escolha o arquivo com as conversas. Aceitamos CSV, JSONL, NDJSON, Parquet e Excel. O arquivo ê enviado como está; nada ê lido no seu navegador.",
+      "help": "Escolha o arquivo com as conversas. Aceitamos CSV, JSON/JSONL, gzip, Parquet e Excel. O arquivo é enviado como está; nada é lido no seu navegador.",
       "choose": "Escolher arquivo",
       "send": "Enviar base",
       "dropHint": "Arraste um arquivo aqui ou escolha um",

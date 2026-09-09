@@ -13,6 +13,7 @@ import type {
   AnalysisOperationalTruthView,
   AnalysisStatusView,
   IntakeProgressView,
+  UploadProcessingView,
 } from "@/lib/v1";
 import type { UploadProgress } from "../data/analysis";
 import {
@@ -96,11 +97,13 @@ export function EtapasDaAnalise({
   uploadProgress = null,
   intakeProgress,
   operationalTruth,
+  serverUpload,
 }: {
   view: AnalysisStatusView;
   uploadProgress?: UploadProgress | null;
   intakeProgress?: IntakeProgressView;
   operationalTruth?: AnalysisOperationalTruthView;
+  serverUpload?: UploadProcessingView;
 }) {
   const { language, t } = useLanguage();
   const raiz = useRevelacao<HTMLElement>(
@@ -133,11 +136,28 @@ export function EtapasDaAnalise({
   const estadoAutoritativo = new Map(
     operationalTruth.stages.map((entry) => [entry.stage, entry.state] as const),
   );
+  const estadoDoUpload = estadoAutoritativo.get("upload") ?? "waiting";
+  const estadoDaPrivacidade = estadoAutoritativo.get("privacy") ?? "waiting";
   const etapas: Etapa[] = [
-    { chave: "upload", estado: estadoAutoritativo.get("upload") ?? "waiting" },
+    {
+      chave: "upload",
+      estado:
+        estadoDoUpload === "failed" || estadoDoUpload === "attention"
+          ? estadoDoUpload
+          : serverUpload?.complete
+            ? "done"
+            : (serverUpload?.received_parts ?? 0) > 0
+              ? "active"
+              : estadoDoUpload,
+    },
     {
       chave: "privacy",
-      estado: estadoAutoritativo.get("privacy") ?? "waiting",
+      estado:
+        estadoDaPrivacidade === "failed" || estadoDaPrivacidade === "attention"
+          ? estadoDaPrivacidade
+          : serverUpload?.overlap_active
+            ? "active"
+            : estadoDaPrivacidade,
     },
     {
       chave: "measures",
@@ -368,6 +388,13 @@ export function EtapasDaAnalise({
                       total: uploadProgress.totalParts,
                     })}{" "}
                     · {uploadProgress.percent}%
+                  </p>
+                ) : null}
+                {etapa.chave === "privacy" &&
+                etapa.estado === "active" &&
+                serverUpload?.overlap_active ? (
+                  <p className="mt-2 text-xs font-medium text-primary">
+                    {t("canonicalAnalysis.liveProgress.overlapActive")}
                   </p>
                 ) : null}
                 {etapa.chave === "privacy" &&

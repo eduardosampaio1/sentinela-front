@@ -58,7 +58,7 @@ export function AnalysisPage() {
   // M34 — AN-03 é a primeira superfície a consumir `/progress`. O progresso é lido SEMPRE que há
   // escopo: os eixos existem independentemente do estado da análise, e condicioná-los ao status
   // faria a tela decidir quando o backend tem algo a dizer.
-  const progresso = useAnalysisProgress(scope, analysisId);
+  const progresso = useAnalysisProgress(scope, analysisId, true, status.data?.status);
   // O status e o progresso sao read models independentes. Sempre que o ESTADO PUBLICO muda,
   // releia a verdade operacional: ela pode trocar `upload_dataset` por `start_analysis` antes
   // de qualquer estado terminal. Sem isso, o cabeçalho já dizia "Ready to analyze" enquanto o
@@ -180,8 +180,9 @@ export function AnalysisPage() {
       analysisId &&
       view &&
       (view.status === "preparing" ||
+        uploadAindaNoNavegador ||
         (view.status === "receiving" &&
-          (uploadAindaNoNavegador || retomarUpload)))
+          retomarUpload))
     ) {
       return (
         <div className="space-y-4">
@@ -214,6 +215,7 @@ export function AnalysisPage() {
             view={view}
             uploadProgress={uploadProgress}
             intakeProgress={progresso.data?.intake}
+            serverUpload={progresso.data?.upload}
             operationalTruth={progresso.data?.operational_truth}
           />
         </div>
@@ -289,6 +291,7 @@ export function AnalysisPage() {
               view={view}
               uploadProgress={uploadProgress}
               intakeProgress={progresso.data?.intake}
+              serverUpload={progresso.data?.upload}
               operationalTruth={progresso.data?.operational_truth}
             />
             <section className="rounded-[var(--ds-radius-panel)] border border-border bg-card/70 p-4">
@@ -320,6 +323,7 @@ export function AnalysisPage() {
             <EtapasDaAnalise
               view={view}
               intakeProgress={progresso.data?.intake}
+              serverUpload={progresso.data?.upload}
               operationalTruth={progresso.data?.operational_truth}
             />
             <Button
@@ -366,6 +370,7 @@ export function AnalysisPage() {
               <EtapasDaAnalise
                 view={view}
                 intakeProgress={progresso.data?.intake}
+                serverUpload={progresso.data?.upload}
                 operationalTruth={progresso.data?.operational_truth}
               />
               {/* Rotulo PROPRIO, e nao o titulo do editor: dizer *Diga qual coluna e qual* enquanto
@@ -385,6 +390,7 @@ export function AnalysisPage() {
               <EtapasDaAnalise
                 view={view}
                 intakeProgress={progresso.data?.intake}
+                serverUpload={progresso.data?.upload}
                 operationalTruth={progresso.data?.operational_truth}
               />
               <p className="text-sm text-muted-foreground">
@@ -406,6 +412,7 @@ export function AnalysisPage() {
             <EtapasDaAnalise
               view={view}
               intakeProgress={progresso.data?.intake}
+              serverUpload={progresso.data?.upload}
               operationalTruth={progresso.data?.operational_truth}
             />
             <MappingStep
@@ -444,6 +451,7 @@ export function AnalysisPage() {
             <EtapasDaAnalise
               view={view}
               intakeProgress={progresso.data?.intake}
+              serverUpload={progresso.data?.upload}
               operationalTruth={progresso.data?.operational_truth}
             />
             {/* OS EIXOS ENTRAM AQUI TAMBÉM, pela mesma simetria que a M35 usou em `failed`.
@@ -492,6 +500,7 @@ export function AnalysisPage() {
             <EtapasDaAnalise
               view={view}
               intakeProgress={progresso.data?.intake}
+              serverUpload={progresso.data?.upload}
               operationalTruth={progresso.data?.operational_truth}
             />
             {/* O QUE ACONTECEU COM O ARQUIVO, em numeros.
@@ -573,6 +582,7 @@ export function AnalysisPage() {
             <EtapasDaAnalise
               view={view}
               intakeProgress={progresso.data?.intake}
+              serverUpload={progresso.data?.upload}
               operationalTruth={progresso.data?.operational_truth}
             />
             <DisponibilidadeDasVisoes
