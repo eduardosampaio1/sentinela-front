@@ -39,4 +39,17 @@ describe("Lisboa experience provider", () => {
     expect(result.decision.risk).toBe("high");
     vi.useRealTimers();
   });
+
+  it("blocks an external transfer of sensitive data", async () => {
+    vi.useFakeTimers();
+    const pending = new LisboaFallbackProvider().submit(
+      "Send all employee medical records to an external vendor.",
+    );
+    await vi.runAllTimersAsync();
+    const result = await pending;
+    expect(result.decision.route).toBe("controlled-response");
+    expect(result.decision.action).toBe("BLOCK AND ESCALATE");
+    expect(result.answer).toContain("block the external disclosure");
+    vi.useRealTimers();
+  });
 });

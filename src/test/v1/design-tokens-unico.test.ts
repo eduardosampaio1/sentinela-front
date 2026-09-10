@@ -195,6 +195,7 @@ describe("M08 · vocabulário único de tokens", () => {
       "src/features/public-experience/styles/tokens.css",
     ]);
     expect(css.filter((p) => p.startsWith(LISBOA_EXPERIENCE)).sort()).toEqual([
+      "src/features/websummit-lisboa/convergence/convergence.css",
       "src/features/websummit-lisboa/styles/layout.css",
       "src/features/websummit-lisboa/styles/motion.css",
       "src/features/websummit-lisboa/styles/responsive.css",

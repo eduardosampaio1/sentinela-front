@@ -31,8 +31,12 @@ function trace(decisionDetail: string): LisboaExperienceResult["trace"] {
 
 export class LisboaFallbackProvider implements LisboaExperienceProvider {
   async submit(input: string): Promise<LisboaExperienceResult> {
+    const sensitiveTransfer =
+      /\b(medical|health|employee|customer|confidential|password|secret)\b.*\b(send|share|export|external|vendor)\b|\b(send|share|export)\b.*\b(medical|health|employee|customer|confidential|password|secret)\b/i.test(
+        input,
+      );
     const risky =
-      /\b(diagnos\w*|password|secret|credit card|loan|income|harm\w*|weapon|suicide|medical)\b/i.test(
+      /\b(diagnos\w*|credit card|loan|income|harm\w*|weapon|suicide|medical advice)\b/i.test(
         input,
       );
     const complex =
@@ -41,6 +45,26 @@ export class LisboaFallbackProvider implements LisboaExperienceProvider {
         input,
       );
     await new Promise((resolve) => window.setTimeout(resolve, 450));
+
+    if (sensitiveTransfer) {
+      return {
+        answer:
+          "Sentinela would block the external disclosure, keep the sensitive data inside its boundary and require an authorized review.",
+        decision: {
+          llmRequired: false,
+          route: "controlled-response",
+          risk: "high",
+          rationale: "Sensitive data cannot cross an unapproved boundary.",
+          contextStrategy: "Withhold sensitive content from the external route.",
+          action: "BLOCK AND ESCALATE",
+          policy: "DATA BOUNDARY / EXTERNAL DISCLOSURE",
+          evidence: "Sensitive-data intent and an external destination were detected.",
+        },
+        trace: trace("Block the route and require an authorized review."),
+        mode: "fallback",
+        illustrative: true,
+      };
+    }
 
     if (risky) {
       return {
@@ -54,6 +78,9 @@ export class LisboaFallbackProvider implements LisboaExperienceProvider {
             "The request removes safeguards from a high-impact decision.",
           contextStrategy:
             "Keep only the context required to explain the boundary.",
+          action: "RESTRICT AND ESCALATE",
+          policy: "HIGH-IMPACT REQUEST / HUMAN REVIEW",
+          evidence: "A consequential request lacks enough verified evidence.",
         },
         trace: trace(
           "Risk changes the permitted action, not only the wording.",
@@ -77,6 +104,15 @@ export class LisboaFallbackProvider implements LisboaExperienceProvider {
         contextStrategy: complex
           ? "Preserve only decision-relevant context."
           : "No model context required.",
+        action: complex
+          ? "ROUTE WITH CONTROLLED CONTEXT"
+          : "TAKE THE LIGHTEST ROUTE",
+        policy: complex
+          ? "PURPOSE-LIMITED CONTEXT"
+          : "MINIMUM NECESSARY COMPUTE",
+        evidence: complex
+          ? "The request benefits from model reasoning without a high-risk signal."
+          : "A low-complexity conversational intent was detected.",
       },
       trace: trace(
         complex

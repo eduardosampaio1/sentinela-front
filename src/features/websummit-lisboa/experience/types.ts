@@ -19,6 +19,9 @@ export interface LisboaDecision {
   risk: "low" | "medium" | "high";
   rationale: string;
   contextStrategy: string;
+  action?: string;
+  policy?: string;
+  evidence?: string;
 }
 
 export interface LisboaTraceStep {

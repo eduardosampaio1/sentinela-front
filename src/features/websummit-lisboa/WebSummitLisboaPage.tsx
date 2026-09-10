@@ -1,9 +1,7 @@
 import { useEffect } from "react";
-import { LisboaHeader } from "./components/LisboaHeader";
-import { LisboaHero } from "./components/LisboaHero";
-import { NarrativeFlow } from "./components/NarrativeFlow";
-import { RealityComparison } from "./components/RealityComparison";
-import { LisbonCTA } from "./components/LisbonCTA";
+import { ConvergenceHeader } from "./convergence/ConvergenceHeader";
+import { ConvergenceHero } from "./convergence/ConvergenceHero";
+import { ConvergenceStory } from "./convergence/ConvergenceStory";
 import { useExperienceMachine } from "./hooks/useExperienceMachine";
 import { useLisboaMetadata } from "./hooks/useLisboaMetadata";
 import { usePointerField } from "./hooks/usePointerField";
@@ -12,10 +10,11 @@ import "./styles/tokens.css";
 import "./styles/layout.css";
 import "./styles/motion.css";
 import "./styles/responsive.css";
+import "./convergence/convergence.css";
 
 export function WebSummitLisboaPage() {
   const pageRef = usePointerField<HTMLDivElement>();
-  const { state, result, submit } = useExperienceMachine();
+  const { state, result, submit, reset } = useExperienceMachine();
   useLisboaMetadata();
   useEffect(() => trackLisboaEvent("page_view"), []);
   useEffect(() => {
@@ -24,18 +23,29 @@ export function WebSummitLisboaPage() {
   }, [result]);
 
   return (
-    <div className="lx-page" ref={pageRef} data-state={state}>
+    <div
+      className="lx-page wsl-page"
+      ref={pageRef}
+      data-state={state}
+      data-route={result?.decision.route ?? "none"}
+    >
       <a className="lx-skip-link" href="#lx-main">
         Skip to the experience
       </a>
-      <div className="lx-grain" aria-hidden="true" />
-      <LisboaHeader />
+      <ConvergenceHeader />
       <main id="lx-main">
-        <LisboaHero state={state} result={result} onSubmit={submit} />
-        <NarrativeFlow />
-        <RealityComparison />
-        <LisbonCTA />
+        <ConvergenceHero
+          state={state}
+          result={result}
+          onSubmit={submit}
+          onReset={reset}
+        />
+        <ConvergenceStory />
       </main>
+      <footer className="wsl-footer">
+        <span>SENTINELA © 2026</span>
+        <span>CONTROL BEFORE CONSEQUENCE.</span>
+      </footer>
     </div>
   );
 }
