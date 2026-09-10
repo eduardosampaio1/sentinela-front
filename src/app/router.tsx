@@ -16,6 +16,9 @@ import { FundacaoV1 } from "./FundacaoV1";
 const PublicExperiencePage = lazy(() =>
   import("@/features/public-experience/PublicExperiencePage").then((m) => ({ default: m.PublicExperiencePage }))
 );
+const WebSummitLisboaPage = lazy(() =>
+  import("@/features/websummit-lisboa/WebSummitLisboaPage").then((m) => ({ default: m.WebSummitLisboaPage }))
+);
 const LoginPage = lazy(() =>
   import("@/features/auth/LoginPage").then((m) => ({ default: m.LoginPage }))
 );
@@ -250,6 +253,10 @@ const routes: RouteObject[] = [
   {
     path: "/websummit",
     element: <PageSuspense><PublicExperiencePage variant="websummit" /></PageSuspense>,
+  },
+  {
+    path: "/websummitlisboa",
+    element: <PageSuspense><WebSummitLisboaPage /></PageSuspense>,
   },
 
   // ── Auth (public-only: redirect to /home if already logged in) ────────────

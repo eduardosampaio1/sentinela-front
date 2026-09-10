@@ -12,7 +12,7 @@ import "./design/tokens/tokens.css";
 import "./styles/globals.css";
 
 const publicPath = window.location.pathname.replace(/\/+$/, "") || "/";
-const isPublicExperienceEntry = publicPath === "/" || publicPath === "/websummit";
+const isPublicExperienceEntry = publicPath === "/" || publicPath === "/websummit" || publicPath === "/websummitlisboa";
 
 // A limpeza pertence ao produto autenticado. A experiência pública não lê nem altera esse estado.
 if (!isPublicExperienceEntry) limparResultadosLegadosDoNavegador();
@@ -56,6 +56,15 @@ async function renderProductApp() {
 }
 
 async function renderPublicExperience() {
+  if (publicPath === "/websummitlisboa") {
+    const { WebSummitLisboaPage } = await import("./features/websummit-lisboa/WebSummitLisboaPage");
+    root.render(
+      <StrictMode>
+        <WebSummitLisboaPage />
+      </StrictMode>,
+    );
+    return;
+  }
   const { PublicExperiencePage } = await import("./features/public-experience/PublicExperiencePage");
   const variant = publicPath === "/websummit" ? "websummit" : "official";
   root.render(

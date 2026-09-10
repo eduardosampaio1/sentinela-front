@@ -1,0 +1,74 @@
+.lx-page {
+  --lx-bg: #efefe9;
+  --lx-surface: #e7e8df;
+  --lx-ink: #171a17;
+  --lx-muted: #61665e;
+  --lx-line: rgba(23, 26, 23, 0.18);
+  --lx-faint: rgba(23, 26, 23, 0.08);
+  --lx-accent: #84c71f;
+  --lx-accent-soft: #c8f18a;
+  --lx-danger: #8c3a32;
+  --lx-radius: 18px;
+  --lx-content: min(100% - 48px, 1440px);
+  --lx: 0.5;
+  --ly: 0.5;
+  color: var(--lx-ink);
+  color-scheme: light;
+  background: var(--lx-bg);
+  font-family: Arial, Helvetica, system-ui, sans-serif;
+}
+
+.lx-page *,
+.lx-page *::before,
+.lx-page *::after {
+  box-sizing: border-box;
+}
+.lx-page button,
+.lx-page input,
+.lx-page textarea {
+  font: inherit;
+}
+.lx-page a,
+.lx-page button,
+.lx-page input,
+.lx-page textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+.lx-page :focus-visible {
+  outline: 3px solid var(--lx-ink);
+  outline-offset: 4px;
+}
+.lx-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.lx-primary {
+  min-height: 50px;
+  border: 1px solid var(--lx-ink);
+  border-radius: 999px;
+  padding: 0 24px;
+  background: var(--lx-ink);
+  color: var(--lx-bg);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+.lx-primary:hover {
+  background: #303530;
+}
+.lx-primary:active {
+  transform: scale(0.98);
+}
+.lx-primary:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}

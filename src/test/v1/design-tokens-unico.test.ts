@@ -22,6 +22,7 @@ const RAIZ = resolve(__dirname, "../../..");
 const SRC = resolve(RAIZ, "src");
 const CANONICO = resolve(SRC, "design/tokens/tokens.css");
 const PUBLIC_EXPERIENCE = "src/features/public-experience/";
+const LISBOA_EXPERIENCE = "src/features/websummit-lisboa/";
 const IGNORADAS = new Set(["node_modules", "dist", "coverage"]);
 
 function arquivos(dir: string, ok: (p: string) => boolean, acc: string[] = []): string[] {
@@ -35,6 +36,8 @@ function arquivos(dir: string, ok: (p: string) => boolean, acc: string[] = []): 
 }
 
 const posix = (p: string) => relative(RAIZ, p).split("\\").join("/");
+const isEventExperience = (p: string) =>
+  p.startsWith(PUBLIC_EXPERIENCE) || p.startsWith(LISBOA_EXPERIENCE);
 
 /** Remove comentários CSS — o cabeçalho canônico CITA nomes de token ao explicar as regras, e
  *  contar citação como declaração faria a documentação violar a própria regra. */
@@ -59,7 +62,8 @@ function contarHardcode(): Record<string, number> {
   const alvos = arquivos(SRC, (p) => {
     const rel = posix(p);
     if (![".tsx", ".ts"].includes(extname(p))) return false;
-    return !rel.includes("/test/") && !rel.includes(".test.") && !rel.includes("/e2e/");
+    return !rel.includes("/test/") && !rel.includes(".test.") && !rel.includes("/e2e/") &&
+      !rel.startsWith(LISBOA_EXPERIENCE);
   });
   const fora: Record<string, number> = {};
   for (const arquivo of alvos) {
@@ -88,7 +92,7 @@ describe("M08 · vocabulário único de tokens", () => {
     // O coração da missão. Um segundo arquivo com `--surface-base: 220 50% 6%` é exatamente o
     // defeito que existia — e é invisível para tsc, lint e para toda a suíte.
     const outros = arquivos(SRC, (p) =>
-      extname(p) === ".css" && p !== CANONICO && !posix(p).startsWith(PUBLIC_EXPERIENCE),
+      extname(p) === ".css" && p !== CANONICO && !isEventExperience(posix(p)),
     );
     const infratores: string[] = [];
     for (const arquivo of outros) {
@@ -113,7 +117,7 @@ describe("M08 · vocabulário único de tokens", () => {
       [...semComentariosCss(readFileSync(CANONICO, "utf-8")).matchAll(DECLARACAO)].map((m) => m[1]),
     );
     const outros = arquivos(SRC, (p) =>
-      extname(p) === ".css" && p !== CANONICO && !posix(p).startsWith(PUBLIC_EXPERIENCE),
+      extname(p) === ".css" && p !== CANONICO && !isEventExperience(posix(p)),
     );
     const quebrados: string[] = [];
     for (const arquivo of outros) {
@@ -180,7 +184,7 @@ describe("M08 · vocabulário único de tokens", () => {
     const css = arquivos(SRC, (p) => extname(p) === ".css").map(posix);
     expect(css).not.toContain("src/styles/tokens.css");
     expect(css).not.toContain("src/index.css");
-    expect(css.filter((p) => !p.startsWith(PUBLIC_EXPERIENCE)).sort()).toEqual([
+    expect(css.filter((p) => !isEventExperience(p)).sort()).toEqual([
       "src/design/tokens/tokens.css",
       "src/styles/globals.css",
     ]);
@@ -189,6 +193,12 @@ describe("M08 · vocabulário único de tokens", () => {
       "src/features/public-experience/styles/layout.css",
       "src/features/public-experience/styles/responsive.css",
       "src/features/public-experience/styles/tokens.css",
+    ]);
+    expect(css.filter((p) => p.startsWith(LISBOA_EXPERIENCE)).sort()).toEqual([
+      "src/features/websummit-lisboa/styles/layout.css",
+      "src/features/websummit-lisboa/styles/motion.css",
+      "src/features/websummit-lisboa/styles/responsive.css",
+      "src/features/websummit-lisboa/styles/tokens.css",
     ]);
   });
 });

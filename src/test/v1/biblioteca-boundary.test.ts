@@ -150,7 +150,9 @@ const DIVIDA_SHADCN: readonly string[] = [
 ];
 
 const ehDesign = (rel: string) => rel.startsWith("src/design/");
-const ehExperienciaPublica = (rel: string) => rel.startsWith("src/features/public-experience/");
+const ehExperienciaPublica = (rel: string) =>
+  rel.startsWith("src/features/public-experience/") ||
+  rel.startsWith("src/features/websummit-lisboa/");
 
 describe("M06 · 3. biblioteca de apresentação só dentro do Design System", () => {
   it("nenhum arquivo FORA de `src/design/**` e fora da dívida declarada importa", () => {

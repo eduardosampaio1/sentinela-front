@@ -241,6 +241,8 @@ const MEDIDO = arquivos(resolve(RAIZ, "src"))
   .filter((rel) => !/\.(test|spec|stories)\./.test(rel) && !rel.startsWith("src/test/"))
   // Subsistema público isolado, com coreografia e tokens próprios no chunk lazy da rota.
   .filter((rel) => !rel.startsWith("src/features/public-experience/"))
+  // Segunda experiência de evento, igualmente isolada e com linguagem de motion própria.
+  .filter((rel) => !rel.startsWith("src/features/websummit-lisboa/"))
   // `tokens.css` é a ÚNICA origem autorizada de valor literal — é o que ele é.
   .filter((rel) => rel !== TOKENS_REL)
   .map((rel) => ({
