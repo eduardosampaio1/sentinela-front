@@ -8,6 +8,7 @@ import {
   type RouteObject,
 } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { WorkspaceRequiredRoute } from "./WorkspaceRequiredRoute";
 import { LoadingState } from "@/shared/states/LoadingState";
 import { FundacaoV1 } from "./FundacaoV1";
 
@@ -327,6 +328,10 @@ const routes: RouteObject[] = [
       // Workspaces
       { path: "/workspaces", element: <PageSuspense><WorkspacesPage /></PageSuspense> },
 
+      {
+      element: <WorkspaceRequiredRoute />,
+      children: [
+
       // M38 · EVO-01. `/dashboard/history` era a SEGUNDA implementação do histórico: uma página
       // própria, com estados próprios, lendo o mesmo `GET /v1/analyses` que a rota canônica já
       // lia. O Discovery registrou a duplicidade desde a Etapa 0; a M38 a encerra em vez de
@@ -392,6 +397,8 @@ const routes: RouteObject[] = [
       { path: "/dashboard/diagnostics", element: <Navigate to="/dashboard" replace /> },
       { path: "/dashboard/guardrails", element: <Navigate to="/dashboard" replace /> },
       { path: "/dashboard/optimization", element: <Navigate to="/dashboard" replace /> },
+      ],
+      },
     ],
     }],
   },

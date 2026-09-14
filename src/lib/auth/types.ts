@@ -21,6 +21,8 @@ export interface AuthClient {
   provider: AuthProviderName;
   getSession(): Promise<AuthSession | null>;
   getAccessToken(): Promise<string | null>;
+  /** Força a renovação OIDC para que claims recém-concedidas sejam projetadas sem logout. */
+  refreshSession(): Promise<AuthSession | null>;
   /** Assina mudanças de sessão; devolve unsubscribe. */
   onAuthStateChange(cb: (session: AuthSession | null) => void): () => void;
   signOut(): Promise<void>;

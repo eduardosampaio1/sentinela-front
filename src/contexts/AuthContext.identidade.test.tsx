@@ -18,6 +18,7 @@ const meMock = vi.fn();
 vi.mock("@/lib/v1/defaultClient", () => ({ getV1Client: () => ({ me: meMock }) }));
 
 const signOutMock = vi.fn(async () => {});
+const refreshSessionMock = vi.fn(async () => sessaoInicial as never);
 let sessaoInicial: unknown = null;
 
 // Ouvintes REAIS do provider: sem eles, a troca de usuario nunca acontece no teste, e o race
@@ -32,6 +33,7 @@ function emitirSessao(s: unknown) {
 vi.mock("@/lib/auth/index", () => ({
   getAuthClient: () => ({
     getSession: async () => sessaoInicial,
+    refreshSession: refreshSessionMock,
     onAuthStateChange: (cb: (s: unknown) => void) => {
       ouvintes.push(cb);
       return () => {
@@ -49,7 +51,7 @@ const WS_A = { id: "ws-a", name: "Alpha", role: "owner" as const };
 const WS_B = { id: "ws-b", name: "Beta", role: "member" as const };
 
 function Sonda() {
-  const { workspace, memberships, membershipsLoading, membershipsError, switchWorkspace, user } =
+  const { workspace, memberships, membershipsLoading, membershipsError, switchWorkspace, activateWorkspace, user } =
     useAuth();
   return (
     <div>
@@ -61,6 +63,7 @@ function Sonda() {
       <p data-testid="lista">{memberships.map((m) => m.id).join(",") || "vazia"}</p>
       <button onClick={() => switchWorkspace("ws-b")}>trocar-permitido</button>
       <button onClick={() => switchWorkspace("ws-intruso")}>trocar-proibido</button>
+      <button onClick={() => void activateWorkspace("ws-b")}>ativar-novo</button>
     </div>
   );
 }
@@ -77,6 +80,7 @@ beforeEach(() => {
   ouvintes = [];
   meMock.mockReset();
   signOutMock.mockClear();
+  refreshSessionMock.mockClear();
   window.localStorage.clear();
   sessaoInicial = { user: { id: "u1", email: "a@b.c" }, accessToken: "tok" };
 });
@@ -150,6 +154,20 @@ describe("AuthContext — memberships de /v1/me", () => {
     montar();
     await waitFor(() => expect(screen.getByTestId("estado")).toHaveTextContent("erro"));
     expect(screen.getByTestId("ativo")).toHaveTextContent("nenhum");
+  });
+
+  it("renova a sessão e só ativa o Workspace confirmado por /v1/me", async () => {
+    meMock
+      .mockResolvedValueOnce({ user: { id: "u1" }, workspaces: [], capabilities: {} })
+      .mockResolvedValueOnce({ user: { id: "u1" }, workspaces: [WS_B], capabilities: {} });
+    montar();
+    await waitFor(() => expect(screen.getByTestId("lista")).toHaveTextContent("vazia"));
+
+    await userEvent.click(screen.getByText("ativar-novo"));
+
+    await waitFor(() => expect(screen.getByTestId("ativo")).toHaveTextContent("ws-b"));
+    expect(refreshSessionMock).toHaveBeenCalledTimes(1);
+    expect(window.localStorage.getItem("sentinela:workspace")).toBe("ws-b");
   });
 });
 

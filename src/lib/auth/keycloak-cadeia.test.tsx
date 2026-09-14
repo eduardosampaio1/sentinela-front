@@ -48,6 +48,7 @@ function clienteKeycloak(overrides: Partial<AuthClient> = {}): AuthClient {
     provider: "keycloak",
     getSession: async () => null,
     getAccessToken: async () => null,
+    refreshSession: async () => null,
     onAuthStateChange: () => () => {},
     signOut: async () => {},
     startLogin: async (next) => {

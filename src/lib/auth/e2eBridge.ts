@@ -77,6 +77,9 @@ export function createE2EAuthClient(initial: AuthSession): AuthClient {
     async getAccessToken() {
       return current?.accessToken ?? null;
     },
+    async refreshSession() {
+      return current;
+    },
     onAuthStateChange(cb) {
       listeners.add(cb);
       return () => {

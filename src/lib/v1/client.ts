@@ -773,7 +773,7 @@ export function createV1Client(config: V1ClientConfig): V1Client {
       enviar<WorkspaceView>("POST", "/v1/workspaces", {}, opts, {
         body: JSON.stringify({ name }),
         contentType: "application/json",
-      }),
+      }, true),
     renameWorkspace: (workspaceId, name, opts) =>
       enviar<WorkspaceView>(
         "PATCH",

@@ -65,6 +65,8 @@ export interface AuthContextValue {
   workspace: WorkspaceMembershipView | null;
   /** Troca para um workspace PERMITIDO. Id fora da projeção é rejeitado (retorna `false`). */
   switchWorkspace: (workspaceId: string) => boolean;
+  /** Renova as claims e ativa o Workspace somente se `/v1/me` confirmar a membership. */
+  activateWorkspace: (workspaceId: string) => Promise<boolean>;
   signOut: () => Promise<void>;
 }
 
@@ -228,6 +230,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [memberships],
   );
 
+  const activateWorkspace = useCallback(async (alvo: string): Promise<boolean> => {
+    setMembershipsLoading(true);
+    setMembershipsError(null);
+    try {
+      const renovada = await getAuthClient().refreshSession();
+      if (!renovada) return false;
+      setSession(renovada);
+      setUser(renovada.user);
+
+      // A renovação apenas obtém um token novo. A autorização continua vindo da projeção
+      // pública e verificada do Gateway; nunca ativamos o id devolvido pelo create diretamente.
+      const me = await getV1Client().me();
+      const lista = Array.isArray(me.workspaces) ? me.workspaces : [];
+      const confirmado = lista.find((membership) => membership.id === alvo);
+      setMemberships(lista);
+      setCapabilities(me.capabilities ?? null);
+      if (!confirmado) {
+        const anterior = escolherWorkspace(lista, preferenciaLocal());
+        setWorkspaceId(anterior?.id ?? null);
+        return false;
+      }
+      setWorkspaceId(confirmado.id);
+      gravarPreferencia(confirmado.id);
+      return true;
+    } catch (erro: unknown) {
+      setMembershipsError(erro instanceof Error ? erro : new Error(String(erro)));
+      return false;
+    } finally {
+      setMembershipsLoading(false);
+    }
+  }, []);
+
   const signOut = useCallback(async () => {
     await getAuthClient().signOut();
     gravarPreferencia(null);
@@ -249,6 +283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       capabilities,
       workspace,
       switchWorkspace,
+      activateWorkspace,
       signOut,
     }),
     [
@@ -261,6 +296,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       capabilities,
       workspace,
       switchWorkspace,
+      activateWorkspace,
       signOut,
     ],
   );

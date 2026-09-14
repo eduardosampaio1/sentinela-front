@@ -2146,10 +2146,10 @@
     "createEmptyError": "Dê um nome ao workspace para continuar.",
     "createFailed": "Não foi possível criar o workspace. Tente novamente em instantes.",
     "createdTitle": "Workspace criado",
-    "createdBody": "“{{name}}” está pronto. Entre novamente para abri-lo: seu acesso ê carregado no login.",
+    "createdBody": "“{{name}}” foi criado, mas ainda não conseguimos atualizar seu acesso. Entre novamente para continuar.",
     "createdCta": "Entrar novamente",
     "emptyCanCreate": "Você ainda não participa de nenhum workspace. Crie o primeiro e ele aparece aqui.",
-    "createdLater": "Depois",
+    "createdLater": "Ficar aqui",
     "switcherCreate": "Criar workspace"
   },
   "notifications": {

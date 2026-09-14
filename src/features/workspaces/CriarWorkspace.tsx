@@ -1,9 +1,8 @@
 // Criar workspace — o fluxo INTEIRO, num componente só.
 //
 // Ele existe porque a criação tem DOIS passos que precisam viver juntos: pedir o nome e,
-// depois, explicar por que o espaço recém-criado ainda não está na lista. Separá-los faria a
-// segunda metade depender de quem chamou — e a chamada vem de dois lugares agora, o seletor da
-// barra lateral e a própria página de workspaces.
+// depois, renovar as claims e confirmar a membership pela projeção pública. Separá-los faria a
+// ativação depender de quem chamou — e a chamada vem do seletor e da página de workspaces.
 //
 // A primeira versão punha a confirmação como painel na página. Funcionava lá e não funcionaria
 // no seletor, que é estreito: quem criasse pela barra receberia o sucesso sem a instrução, e a
@@ -11,16 +10,16 @@
 //
 // ## Por que a confirmação é um diálogo, e não um toast
 //
-// Ela carrega uma ação que a pessoa PRECISA executar — entrar de novo. Toast some sozinho, e
-// sumiria levando a única explicação de por que o espaço não aparece. Um diálogo espera.
+// O diálogo só aparece no fallback: quando o Workspace nasceu, mas a renovação silenciosa não
+// confirmou a membership. Ele preserva uma saída explícita em vez de fingir sucesso completo.
 //
 // ## Por que não navegamos para dentro do espaço criado
 //
-// O token em mãos foi emitido antes de ele existir e não fala dele: o acesso é gravado no
-// provedor de identidade, e a claim só entra num token novo. Entrar agora bateria em `403`, que
-// a pessoa leria como defeito — e não como "seu acesso ainda não foi carregado".
+// O token em mãos foi emitido antes de o Workspace existir. Por isso renovamos a sessão e só
+// navegamos depois que `/v1/me` confirmar a nova claim.
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -43,19 +42,34 @@ export function CriarWorkspace({
   aoFechar: () => void;
 }) {
   const { t } = useLanguage();
-  const { signOut } = useAuth();
+  const { activateWorkspace, signOut } = useAuth();
+  const navigate = useNavigate();
   const cliente = useV1Client();
   // O nome do que nasceu. A confirmação PRECISA dizê-lo de volta: sem ele, "workspace criado"
   // não confirma nada — poderia ser qualquer um.
   const [criado, setCriado] = useState<string | null>(null);
+  const operacao = useRef<{ name: string; key: string } | null>(null);
 
   const criar = async (nome: string) => {
-    const ws = await cliente.createWorkspace(nome);
+    if (!operacao.current || operacao.current.name !== nome) {
+      operacao.current = { name: nome, key: crypto.randomUUID() };
+    }
+    const ws = await cliente.createWorkspace(nome, { idempotencyKey: operacao.current.key });
+    const ativado = await activateWorkspace(ws.workspace_id);
+    if (ativado) {
+      operacao.current = null;
+      aoFechar();
+      navigate("/home", { replace: true });
+      return;
+    }
+    // Fallback honesto: o recurso existe, mas a nova claim ainda não foi confirmada.
+    // Mantemos o nome e oferecemos o login novamente; não fingimos que a ativação ocorreu.
     setCriado(ws.name);
   };
 
   const fechar = () => {
     setCriado(null);
+    operacao.current = null;
     aoFechar();
   };
 

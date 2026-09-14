@@ -10,9 +10,8 @@
 // que o vínculo NÃO nasce no navegador: `POST /v1/workspaces` grava o espaço e o Gateway concede
 // o acesso no provedor de identidade, que segue sendo a autoridade única.
 //
-// A consequência para esta tela é uma só, e ela é visível: o token em mãos foi emitido antes do
-// espaço existir e não fala dele. Por isso o sucesso não navega para dentro — ele explica que o
-// acesso entra no próximo login e oferece o caminho. Navegar levaria a um 403 que pareceria bug.
+// O token em mãos foi emitido antes do espaço existir. A criação agora renova as claims, confirma
+// a membership em `/v1/me` e só então navega. Login manual fica como fallback honesto.
 //
 // `project` e `environment` sumiram junto: nunca foram identidade — eram o eixo de escopo do
 // caminho de análise legado, que saiu com ele.

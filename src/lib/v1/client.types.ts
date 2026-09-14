@@ -479,9 +479,8 @@ export interface V1Client {
    * O identificador **não** vai no corpo: ele nasce no Gateway, que é quem o correlaciona com a
    * concessão de acesso no provedor de identidade.
    *
-   * ⚠️ **O token em mãos não enxerga o espaço recém-criado.** O acesso é gravado no provedor de
-   * identidade, e a claim só entra num token novo — quem chamar precisa renovar a sessão antes de
-   * navegar para dentro dele.
+   * ⚠️ **O token em mãos não enxerga o espaço recém-criado.** Quem chamar precisa renovar a
+   * sessão e confirmar a membership por `/v1/me` antes de navegar para dentro dele.
    */
   createWorkspace(name: string, opts?: RequestOptions): Promise<WorkspaceView>;
 

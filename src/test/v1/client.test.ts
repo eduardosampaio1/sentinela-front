@@ -40,6 +40,14 @@ describe("V1 client — as 7 operações canônicas", () => {
     expect(url).not.toContain("tenant_id"); // nunca tenant_id livre
   });
 
+  it("createWorkspace envia a Idempotency-Key estável da intenção", async () => {
+    const body = { workspace_id: "ws-created", name: "First", created_at: null };
+    const { client, fetchImpl } = makeClient(() => jsonResponse(body, 201));
+    await client.createWorkspace("First", { idempotencyKey: "workspace-intent-1" });
+    const headers = fetchImpl.mock.calls[0]![1]!.headers as Record<string, string>;
+    expect(headers["Idempotency-Key"]).toBe("workspace-intent-1");
+  });
+
   it("submit/retry enviam Idempotency-Key; a chave do chamador é reusada", async () => {
     const { client, fetchImpl } = makeClient(() => jsonResponse(HANDLE));
     await client.submit("an-abc", SCOPE, { idempotencyKey: "k-user" });

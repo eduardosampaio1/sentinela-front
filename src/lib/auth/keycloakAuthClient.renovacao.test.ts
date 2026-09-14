@@ -44,6 +44,18 @@ function gerente(over: Partial<Record<string, unknown>> = {}) {
 }
 
 describe("keycloakAuthClient · renovação sob demanda", () => {
+  it("refreshSession força signinSilent mesmo com token atual válido", async () => {
+    const gm = gerente({
+      signinSilent: vi.fn(async () => usuario({ access_token: "tok-com-claims-novas" })),
+    });
+    const cliente = createKeycloakAuthClient({ userManager: gm, issuer: "https://kc.test" });
+
+    const refreshed = await cliente.refreshSession();
+
+    expect(refreshed?.accessToken).toBe("tok-com-claims-novas");
+    expect(gm.signinSilent).toHaveBeenCalledTimes(1);
+  });
+
   it("token válido NÃO dispara renovação", async () => {
     // A renovação é o caminho de exceção. Chamá-la sempre gastaria um round-trip ao IdP em toda
     // requisição — e um upload longo faz dezenas.

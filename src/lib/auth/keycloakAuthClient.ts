@@ -142,6 +142,7 @@ export function createKeycloakAuthClient(opts: {
       // novo; só devolvemos `null` quando não há token usável.
       return atual?.accessToken ?? null;
     },
+    refreshSession: renovar,
     onAuthStateChange(cb) {
       const onLoaded = (u: OidcUserLike) => cb(toSession(u));
       const onUnloaded = () => cb(null);

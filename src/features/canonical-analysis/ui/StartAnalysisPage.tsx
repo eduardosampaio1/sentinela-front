@@ -56,9 +56,12 @@ export function StartAnalysisPage() {
             <p className="mt-1 text-muted-foreground">{t("canonicalAnalysis.entry.subtitle")}</p>
           </div>
           {!scope && (
-            <p role="alert" className="text-sm text-muted-foreground">
-              {t("canonicalAnalysis.entry.workspaceMissing")}
-            </p>
+            <div role="alert" className="space-y-3 text-sm text-muted-foreground">
+              <p>{t("canonicalAnalysis.entry.workspaceMissing")}</p>
+              <Button asChild>
+                <Link to="/workspaces">{t("workspacesPage.createCta")}</Link>
+              </Button>
+            </div>
           )}
           {conflito ? (
             <AvisoDaJornada

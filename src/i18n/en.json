@@ -2146,10 +2146,10 @@
     "createEmptyError": "Name the workspace to continue.",
     "createFailed": "We could not create the workspace right now. Try again in a moment.",
     "createdTitle": "Workspace created",
-    "createdBody": "“{{name}}” is ready. Sign in again to open it: your access is loaded at sign-in.",
+    "createdBody": "“{{name}}” was created, but we could not refresh your access yet. Sign in again to continue.",
     "createdCta": "Sign in again",
     "emptyCanCreate": "You are not in any workspace yet. Create the first one and it shows up here.",
-    "createdLater": "Later",
+    "createdLater": "Stay here",
     "switcherCreate": "Create workspace"
   },
   "notifications": {
