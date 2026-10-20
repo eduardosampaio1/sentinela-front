@@ -2,7 +2,6 @@ export interface LisboaLead {
   email: string;
   name?: string;
   company?: string;
-  role?: string;
   consent: boolean;
   website?: string;
 }

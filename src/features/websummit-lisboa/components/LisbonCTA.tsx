@@ -17,13 +17,13 @@ export function LisbonCTA() {
         <i />
       </div>
       <p>Web Summit Lisbon 2026</p>
-      <h2>Meet the system that decides before AI does.</h2>
+      <h2>Analyze 1 million conversations. Free.</h2>
       <button
         className="lx-primary lx-final-action"
         type="button"
         onClick={show}
       >
-        Meet Sentinela <ArrowUpRight aria-hidden="true" />
+        Get my free analysis <ArrowUpRight aria-hidden="true" />
       </button>
       <footer>
         <span>Sentinela</span>

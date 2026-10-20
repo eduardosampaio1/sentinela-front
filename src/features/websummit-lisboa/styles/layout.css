@@ -849,22 +849,15 @@
   position: absolute;
   left: -9999px;
 }
-.lx-consent {
-  display: flex;
-  align-items: flex-start;
-  gap: 11px;
-  margin: 24px 0 12px;
+.lx-privacy-notice {
+  margin: 12px 0 0;
   color: var(--lx-muted);
   font-size: 0.78rem;
   line-height: 1.45;
 }
-.lx-consent input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--lx-ink);
-}
-.lx-consent a {
+.lx-privacy-notice a {
   color: var(--lx-ink);
+  text-decoration: underline;
 }
 .lx-lead-surface .lx-primary {
   margin-top: 18px;

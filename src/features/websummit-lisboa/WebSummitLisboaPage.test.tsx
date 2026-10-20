@@ -34,7 +34,7 @@ describe("Web Summit Lisboa experience", () => {
       "href",
       "/login",
     );
-    expect(screen.getByRole("button", { name: /Meet Sentinela in Lisbon/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Get my free analysis/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Sentinela Web Summit Lisbon home" })).toHaveAttribute("href", "/websummit");
     expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute("href", `${window.location.origin}/websummit`);
   });

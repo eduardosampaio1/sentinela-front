@@ -94,8 +94,9 @@ export function ConvergenceStory() {
 
       <section className="wsl-close" id="meet">
         <span>WEB SUMMIT · LISBON · 2026</span>
-        <h2>SEE THE<br />DECISION.<br /><em>CONTROL THE<br />CONSEQUENCE.</em></h2>
-        <button type="button" onClick={openLead}>Meet Sentinela in Lisbon <i>↗</i></button>
+        <h2>1 MILLION<br />CONVERSATIONS.<br /><em>ONE FREE<br />ANALYSIS.</em></h2>
+        <p>Get a free batch analysis with AI Observability by Sentinela.</p>
+        <button type="button" onClick={openLead}>Get my free analysis <i>↗</i></button>
         <nav aria-label="Legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
       </section>
       <LeadCaptureDialog open={leadOpen} onOpenChange={setLeadOpen} />

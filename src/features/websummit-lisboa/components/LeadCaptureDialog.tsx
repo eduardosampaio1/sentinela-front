@@ -17,8 +17,6 @@ export function LeadCaptureDialog({ open, onOpenChange }: Props) {
     email: "",
     name: "",
     company: "",
-    role: "",
-    consent: false,
     website: "",
   });
   const [errors, setErrors] = useState({ email: "", consent: "" });
@@ -38,13 +36,14 @@ export function LeadCaptureDialog({ open, onOpenChange }: Props) {
   };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    const next = validateLisboaLead(form);
+    const next = validateLisboaLead({ ...form, consent: true });
     setErrors(next);
     if (next.email || next.consent) return;
     setStatus("submitting");
     trackLisboaEvent("lead_submit");
     try {
-      await submitLisboaLead(form);
+      // The visitor accepts the visible privacy notice by submitting this request.
+      await submitLisboaLead({ ...form, consent: true });
       setStatus("success");
       trackLisboaEvent("lead_success");
     } catch {
@@ -72,16 +71,16 @@ export function LeadCaptureDialog({ open, onOpenChange }: Props) {
         {status === "success" ? (
           <div className="lx-lead-success" role="status">
             <Check aria-hidden="true" />
-            <h2 id="lx-lead-title">You're on our Lisbon list.</h2>
-            <p>We'll see you at Web Summit.</p>
+            <h2 id="lx-lead-title">You're registered for your free analysis.</h2>
+            <p>We'll email you the next steps to analyze 1 million conversations.</p>
             <button type="button" className="lx-primary" onClick={close}>
               Done
             </button>
           </div>
         ) : (
           <form onSubmit={submit} noValidate>
-            <h2 id="lx-lead-title">Meet Sentinela in Lisbon.</h2>
-            <p>Leave one useful detail. We'll take it from there.</p>
+            <h2 id="lx-lead-title">Analyze 1 million conversations. Free.</h2>
+            <p>Register for a batch analysis with AI Observability by Sentinela. We'll email you the next steps.</p>
             <LeadField label="Work email" error={errors.email} required>
               <input
                 type="email"
@@ -110,14 +109,6 @@ export function LeadCaptureDialog({ open, onOpenChange }: Props) {
                   onChange={(e) => update("company", e.target.value)}
                 />
               </LeadField>
-              <LeadField label="Role">
-                <input
-                  value={form.role}
-                  autoComplete="organization-title"
-                  maxLength={120}
-                  onChange={(e) => update("role", e.target.value)}
-                />
-              </LeadField>
             </div>
             <input
               className="lx-honeypot"
@@ -127,24 +118,6 @@ export function LeadCaptureDialog({ open, onOpenChange }: Props) {
               value={form.website}
               onChange={(e) => update("website", e.target.value)}
             />
-            <label className="lx-consent">
-              <input
-                type="checkbox"
-                required
-                aria-invalid={Boolean(errors.consent)}
-                checked={form.consent}
-                onChange={(e) => update("consent", e.target.checked)}
-              />
-              <span>
-                I agree to be contacted by Sentinela about this request. Read
-                our <a href="/privacy">privacy policy</a>.
-              </span>
-            </label>
-            {errors.consent && (
-              <p className="lx-field-error" role="alert">
-                {errors.consent}
-              </p>
-            )}
             {status === "error" && (
               <p className="lx-submit-error" role="alert">
                 Something went wrong. Your details are still here. Try again in
@@ -153,9 +126,12 @@ export function LeadCaptureDialog({ open, onOpenChange }: Props) {
             )}
             <button className="lx-primary" disabled={status === "submitting"}>
               {status === "submitting"
-                ? "Preparing your invitation"
-                : "Join the Lisbon list"}
+                ? "Saving your request…"
+                : "Get my free analysis"}
             </button>
+            <p className="lx-privacy-notice">
+              By clicking “Get my free analysis”, you agree to our <a href="/privacy">privacy policy</a>.
+            </p>
           </form>
         )}
       </div>
