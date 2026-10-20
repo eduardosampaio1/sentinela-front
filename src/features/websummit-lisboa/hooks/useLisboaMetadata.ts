@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 
-const title = "Sentinela | AI control, experienced | Web Summit Lisbon 2026";
+const title = "Sentinela | Web Summit Lisbon 2026";
 const description =
-  "Experience how Sentinela evaluates, routes and controls AI before an answer reaches your customer.";
+  "Experience AI control and get a free batch analysis of 1 million conversations with AI Observability by Sentinela.";
 
 function meta(selector: string, attributes: Record<string, string>) {
   let node = document.head.querySelector<HTMLMetaElement>(selector);
@@ -38,12 +38,16 @@ export function useLisboaMetadata() {
     });
     meta('meta[property="og:image"]', {
       property: "og:image",
-      content: "/websummitlisboa/social-card.svg",
+      content: `${window.location.origin}/websummitlisboa/social-card-en.png`,
     });
     meta('meta[name="twitter:card"]', {
       name: "twitter:card",
       content: "summary_large_image",
     });
+    meta('meta[name="twitter:title"]', { name: "twitter:title", content: title });
+    meta('meta[name="twitter:description"]', { name: "twitter:description", content: description });
+    meta('meta[name="twitter:image"]', { name: "twitter:image", content: `${window.location.origin}/websummitlisboa/social-card-en.png` });
+    meta('meta[property="og:locale"]', { property: "og:locale", content: "en_US" });
     meta('meta[name="theme-color"]', {
       name: "theme-color",
       content: "#efefe9",

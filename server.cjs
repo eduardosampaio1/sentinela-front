@@ -13,6 +13,46 @@ const path = require("path");
 const DIST = path.join(__dirname, "dist");
 const PORT = process.env.PORT || 8080;
 const INDEX = path.join(DIST, "index.html");
+const WEB_SUMMIT_ORIGIN = process.env.RAILWAY_ENVIRONMENT_NAME === "homol"
+  ? "https://front-homol-homol.up.railway.app" : "https://sentinelahq.com";
+const WEB_SUMMIT_TITLE = "Sentinela | Web Summit Lisbon 2026";
+const WEB_SUMMIT_DESCRIPTION = "Experience AI control and get a free batch analysis of 1 million conversations with AI Observability by Sentinela.";
+let webSummitHtml;
+
+function sendWebSummit(res) {
+  // Share crawlers do not run React effects. Serve complete event metadata in
+  // the initial HTML, for every visitor. Request headers never enter this HTML.
+  if (!webSummitHtml) {
+    const url = `${WEB_SUMMIT_ORIGIN}/websummit`;
+    const image = `${WEB_SUMMIT_ORIGIN}/websummitlisboa/social-card-en.png`;
+    webSummitHtml = fs.readFileSync(INDEX, "utf8")
+      .replace(/<html\b[^>]*>/i, '<html lang="en">')
+      .replace(/<title>[^<]*<\/title>/i, `<title>${WEB_SUMMIT_TITLE}</title>`)
+      .replace(/<meta\b[^>]*(?:name|property)="(?:author|description|og:[^"]+|twitter:[^"]+)"[^>]*>/gi, "")
+      .replace(/<link\b[^>]*rel="canonical"[^>]*>/gi, "")
+      .replace("</head>", `
+    <meta name="author" content="Sentinela" />
+    <meta name="description" content="${WEB_SUMMIT_DESCRIPTION}" />
+    <meta property="og:title" content="${WEB_SUMMIT_TITLE}" />
+    <meta property="og:description" content="${WEB_SUMMIT_DESCRIPTION}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="${url}" />
+    <meta property="og:image" content="${image}" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Sentinela at Web Summit Lisbon 2026. AI shouldn't answer everything." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${WEB_SUMMIT_TITLE}" />
+    <meta name="twitter:description" content="${WEB_SUMMIT_DESCRIPTION}" />
+    <meta name="twitter:image" content="${image}" />
+    <link rel="canonical" href="${url}" />
+  </head>`);
+  }
+  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Content-Language": "en", "Cache-Control": "no-cache" });
+  res.end(webSummitHtml);
+}
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -80,6 +120,10 @@ const server = http.createServer((req, res) => {
   // Second layer: no single request may ever take the process down. Anything
   // unexpected becomes a 500 for that one client, not a container restart.
   try {
+    const requestPath = (req.url || "/").split("?")[0].replace(/\/+$/, "");
+    if ((requestPath === "/websummit" || requestPath === "/websummitlisboa") && isFile(INDEX)) {
+      return sendWebSummit(res);
+    }
     const hit = resolve(req.url || "/");
     if (hit) return send(res, hit);
     // SPA fallback: let the React router handle client-side routes

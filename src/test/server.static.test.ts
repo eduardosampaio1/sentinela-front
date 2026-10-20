@@ -34,6 +34,17 @@ function get(reqPath: string): Promise<number | string> {
   });
 }
 
+function getHtml(reqPath: string, host = "untrusted.example") {
+  return new Promise<{ status: number; html: string; headers: http.IncomingHttpHeaders }>((resolve, reject) => {
+    http.get({ host: "127.0.0.1", port: PORT, path: reqPath, headers: { "User-Agent": "WhatsApp/2.0", Host: host } }, res => {
+      let html = "";
+      res.setEncoding("utf8");
+      res.on("data", chunk => { html += chunk; });
+      res.on("end", () => resolve({ status: res.statusCode ?? 0, html, headers: res.headers }));
+    }).on("error", reject);
+  });
+}
+
 async function waitForBoot() {
   for (let i = 0; i < 50; i++) {
     const r = await get("/");
@@ -46,7 +57,7 @@ async function waitForBoot() {
 beforeAll(async () => {
   child = spawn(process.execPath, ["server.cjs"], {
     cwd: ROOT,
-    env: { ...process.env, PORT: String(PORT) },
+    env: { ...process.env, PORT: String(PORT), RAILWAY_ENVIRONMENT_NAME: "production" },
   });
   child.on("exit", (code, signal) => {
     exited = { code, signal };
@@ -89,5 +100,29 @@ describe("server.cjs — resiliência a URLs hostis", () => {
     // traversal deve cair no fallback da SPA (index.html), nunca vazar /etc/passwd
     const status = await get("/%2e%2e%2f%2e%2e%2fetc%2fpasswd");
     expect([200, 400, 404]).toContain(status);
+  });
+});
+
+describe("Web Summit share previews without JavaScript", () => {
+  it.each(["/websummit", "/websummit/", "/websummit?utm_source=whatsapp", "/websummitlisboa"])("serves English event metadata at %s", async route => {
+    const response = await getHtml(route);
+    expect(response.status).toBe(200);
+    expect(response.headers["content-language"]).toBe("en");
+    expect(response.html).toContain('<html lang="en">');
+    expect(response.html).toContain('<meta property="og:title" content="Sentinela | Web Summit Lisbon 2026"');
+    expect(response.html).toContain('content="Experience AI control and get a free batch analysis of 1 million conversations');
+    expect(response.html).toContain('<meta property="og:url" content="https://sentinelahq.com/websummit"');
+    expect(response.html).toContain('https://sentinelahq.com/websummitlisboa/social-card-en.png');
+    expect(response.html).toContain('<meta name="twitter:description"');
+    expect(response.html).not.toContain("Diagnóstico");
+    expect(response.html).not.toContain("untrusted.example");
+    expect(response.html.match(/property="og:description"/g)).toHaveLength(1);
+  });
+
+  it("preserves the regular SPA metadata outside the event", async () => {
+    const response = await getHtml("/");
+    expect(response.html).toContain('<html lang="pt-br">');
+    expect(response.html).toContain("Diagnóstico avançado");
+    expect(response.html).not.toContain('property="og:locale" content="en_US"');
   });
 });
