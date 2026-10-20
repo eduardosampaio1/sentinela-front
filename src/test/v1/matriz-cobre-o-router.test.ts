@@ -54,7 +54,7 @@ const FORA_DA_MATRIZ: Readonly<Record<string, string>> = {
   // Rota de compatibilidade que resolve para o detalhe de uma análise. O destino tem journey (J2);
   // a rota em si é um adaptador.
   "/dashboard": "adaptador de compatibilidade → detalhe de análise",
-  "/websummit": "alias preservado da experiência pública oficial já coberta pela journey de /",
+  "/websummit": "URL canônica da experiência Web Summit Lisboa com captura de leads",
   "/websummitlisboa": "experiência pública experimental isolada do Web Summit Lisboa",
 
   // A dívida que estava aqui — `/analyses/compare/:a/:b` — foi PAGA na M46 (journey J35).

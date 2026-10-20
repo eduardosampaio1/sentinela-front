@@ -21,7 +21,7 @@ export function useLisboaMetadata() {
     const previousLang = document.documentElement.lang;
     document.title = title;
     document.documentElement.lang = "en";
-    const url = `${window.location.origin}/websummitlisboa`;
+    const url = `${window.location.origin}/websummit`;
     meta('meta[name="description"]', {
       name: "description",
       content: description,

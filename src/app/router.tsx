@@ -253,7 +253,7 @@ const routes: RouteObject[] = [
   },
   {
     path: "/websummit",
-    element: <PageSuspense><PublicExperiencePage variant="websummit" /></PageSuspense>,
+    element: <PageSuspense><WebSummitLisboaPage /></PageSuspense>,
   },
   {
     path: "/websummitlisboa",

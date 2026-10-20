@@ -56,7 +56,7 @@ async function renderProductApp() {
 }
 
 async function renderPublicExperience() {
-  if (publicPath === "/websummitlisboa") {
+  if (publicPath === "/websummit" || publicPath === "/websummitlisboa") {
     const { WebSummitLisboaPage } = await import("./features/websummit-lisboa/WebSummitLisboaPage");
     root.render(
       <StrictMode>

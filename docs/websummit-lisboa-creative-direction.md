@@ -137,7 +137,7 @@ Every effect has a semantic role: convergence means decision, compression means 
 - `analytics/` emits vendor-neutral browser events without prompt contents.
 - `LeadCaptureDialog` calls the existing isolated Web Summit lead API with source
   `websummit_lisboa_2026`.
-- The existing `/websummit` feature is not imported or modified by this experience.
+- `/websummit` is the canonical URL of this experience, both for direct entry and product-router navigation. `/websummitlisboa` remains a compatible alias with the same content and lead capture.
 
 The lead service accepts both event sources. Its second migration scopes deduplication by normalized
 email plus source, so one contact can intentionally join both event lists without producing duplicates

@@ -48,5 +48,7 @@ export async function submitLisboaLead(lead: LisboaLead, signal?: AbortSignal) {
     signal,
   });
   if (!response.ok) throw new Error(`Lead API returned ${response.status}`);
-  return (await response.json()) as { success: true };
+  const result = await response.json();
+  if (result?.success !== true) throw new Error("Lead API did not confirm capture");
+  return result as { success: true };
 }

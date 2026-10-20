@@ -3,7 +3,7 @@ export function LisboaHeader() {
     <header className="lx-header">
       <a
         className="lx-brand"
-        href="/websummitlisboa"
+        href="/websummit"
         aria-label="Sentinela Web Summit Lisbon home"
       >
         <img src="/sentinela-icon.svg" alt="" width="28" height="28" />

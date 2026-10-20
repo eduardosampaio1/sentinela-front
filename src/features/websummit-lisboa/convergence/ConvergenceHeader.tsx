@@ -1,7 +1,7 @@
 export function ConvergenceHeader() {
   return (
     <header className="wsl-nav">
-      <a className="wsl-brand" href="/websummitlisboa" aria-label="Sentinela Web Summit Lisbon home">
+      <a className="wsl-brand" href="/websummit" aria-label="Sentinela Web Summit Lisbon home">
         <img src="/sentinela-icon.svg" alt="" width="26" height="26" />
         <span>SENTINELA</span>
       </a>
