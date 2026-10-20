@@ -231,6 +231,7 @@
   .wsl-reality-stage { height: 62vh; }
   .wsl-without, .wsl-with { padding: 28px; }
   .wsl-close h2 { font-size: 16.5vw; }
+  .wsl-close h2 .wsl-offer-subject { font-size: 0.56em; letter-spacing: -0.055em; }
   .wsl-footer { align-items: flex-start; flex-direction: column; justify-content: center; gap: 10px; }
 }
 
