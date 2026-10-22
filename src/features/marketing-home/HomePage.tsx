@@ -300,12 +300,14 @@ function ProductDiagram({ kind, labels }: { kind: string; labels: string[] }) {
               className="sh-route-option"
             />
             <path className="sh-data-line" d="M50 130H430" />
+            <circle cx="50" cy="130" r="5" className="sh-control-packet" />
             <circle cx="155" cy="130" r="38" className="sh-policy-ring" />
             <circle cx="155" cy="130" r="28" className="sh-node" />
             <path
               d="M145 130l7 7 13-15"
               className="sh-check sh-control-check"
             />
+            <rect x="280" y="107" width="120" height="46" rx="3" className="sh-route-backplate" />
             <rect
               x="280"
               y="107"
@@ -322,7 +324,6 @@ function ProductDiagram({ kind, labels }: { kind: string; labels: string[] }) {
             >
               {labels[2]}
             </text>
-            <circle cx="50" cy="130" r="5" className="sh-control-packet" />
           </>
         ) : (
           <>

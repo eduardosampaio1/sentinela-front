@@ -471,6 +471,9 @@
   stroke: #ffffff;
   stroke-width: 2;
 }
+.sh-route-backplate {
+  fill: #0d1210;
+}
 .sh-route {
   stroke: var(--sh-accent);
   fill: #7c3aed12;
