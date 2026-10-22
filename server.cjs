@@ -18,6 +18,33 @@ const WEB_SUMMIT_ORIGIN = process.env.RAILWAY_ENVIRONMENT_NAME === "homol"
 const WEB_SUMMIT_TITLE = "Sentinela | Web Summit Lisbon 2026";
 const WEB_SUMMIT_DESCRIPTION = "Experience AI control and get a free batch analysis of 1 million conversations with AI Observability by Sentinela.";
 let webSummitHtml;
+let homeHtml;
+
+function sendHome(res) {
+  if (!homeHtml) {
+    const title = "Sentinela | Entenda, controle e acompanhe sua IA";
+    const description = "Entenda suas operações de IA, controle a execução e acompanhe como os modelos apresentam sua marca.";
+    homeHtml = fs.readFileSync(INDEX, "utf8")
+      .replace(/<title>[^<]*<\/title>/i, `<title>${title}</title>`)
+      .replace(/<meta\b[^>]*(?:name|property)="(?:author|description|og:[^"]+|twitter:[^"]+)"[^>]*>/gi, "")
+      .replace(/<link\b[^>]*rel="canonical"[^>]*>/gi, "")
+      .replace("</head>", `<meta name="author" content="Sentinela" />
+<meta name="description" content="${description}" />
+<meta property="og:title" content="${title}" />
+<meta property="og:description" content="${description}" />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="pt_BR" />
+<meta property="og:url" content="${WEB_SUMMIT_ORIGIN}/" />
+<meta property="og:image" content="${WEB_SUMMIT_ORIGIN}/sentinela/home-social.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${title}" />
+<meta name="twitter:description" content="${description}" />
+<meta name="twitter:image" content="${WEB_SUMMIT_ORIGIN}/sentinela/home-social.png" />
+<link rel="canonical" href="${WEB_SUMMIT_ORIGIN}/" /></head>`);
+  }
+  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Content-Language": "pt-BR", "Cache-Control": "no-cache" });
+  res.end(homeHtml);
+}
 
 function sendWebSummit(res) {
   // Share crawlers do not run React effects. Serve complete event metadata in
@@ -121,6 +148,7 @@ const server = http.createServer((req, res) => {
   // unexpected becomes a 500 for that one client, not a container restart.
   try {
     const requestPath = (req.url || "/").split("?")[0].replace(/\/+$/, "");
+    if (requestPath === "" && isFile(INDEX)) return sendHome(res);
     if ((requestPath === "/websummit" || requestPath === "/websummitlisboa") && isFile(INDEX)) {
       return sendWebSummit(res);
     }

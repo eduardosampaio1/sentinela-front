@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { HomePage } from "../marketing-home/HomePage";
 import { AmbientField } from "./components/AmbientField";
 import { HeroExperience } from "./components/HeroExperience";
 import { ProductReveal } from "./components/ProductReveal";
@@ -22,7 +23,7 @@ import "./styles/responsive.css";
 export function PublicExperiencePage({ variant = "official" }: { variant?: PublicExperienceVariant }) {
   return (
     <PublicExperienceConfigProvider variant={variant}>
-      <PublicExperienceSurface />
+      {variant === "official" ? <HomePage /> : <PublicExperienceSurface />}
     </PublicExperienceConfigProvider>
   );
 }

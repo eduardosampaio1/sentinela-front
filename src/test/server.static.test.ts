@@ -70,6 +70,17 @@ afterAll(() => {
 });
 
 describe("server.cjs — resiliência a URLs hostis", () => {
+  it("serves home portfolio metadata before JavaScript without reflecting Host", async () => {
+    const { status, html, headers } = await getHtml("/?utm_source=preview");
+    expect(status).toBe(200);
+    expect(headers["content-language"]).toBe("pt-BR");
+    expect(html).toContain("Entenda, controle e acompanhe sua IA");
+    expect(html).toContain('href="https://sentinelahq.com/"');
+    expect(html).toContain("/sentinela/home-social.png");
+    expect(html).not.toContain("untrusted.example");
+    expect(html).not.toContain("sentinela.baluarte.io");
+    expect((html.match(/property="og:description"/g) || [])).toHaveLength(1);
+  });
   // Estes são exatamente os formatos que scanners de internet disparam contra
   // a URL pública, e que apareceram nos HTTP logs do front-prod.
   const HOSTILE = [
@@ -119,8 +130,8 @@ describe("Web Summit share previews without JavaScript", () => {
     expect(response.html.match(/property="og:description"/g)).toHaveLength(1);
   });
 
-  it("preserves the regular SPA metadata outside the event", async () => {
-    const response = await getHtml("/");
+  it("preserves the regular SPA metadata on product routes", async () => {
+    const response = await getHtml("/login");
     expect(response.html).toContain('<html lang="pt-br">');
     expect(response.html).toContain("Diagnóstico avançado");
     expect(response.html).not.toContain('property="og:locale" content="en_US"');

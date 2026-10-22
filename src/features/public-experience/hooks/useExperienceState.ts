@@ -42,6 +42,7 @@ export function useExperienceState(locale: PublicExperienceLocale = "en") {
   useEffect(() => {
     activeRequest.current?.abort();
     dispatch({ type: "RESET" });
+    return () => activeRequest.current?.abort();
   }, [locale]);
 
   const submit = useCallback(async (input: string) => {
@@ -50,11 +51,11 @@ export function useExperienceState(locale: PublicExperienceLocale = "en") {
     activeRequest.current = request;
     dispatch({ type: "PHASE", phase: "understanding" });
 
-    const decisionTimer = window.setTimeout(() => dispatch({ type: "PHASE", phase: "deciding" }), 420);
-    const responseTimer = window.setTimeout(() => dispatch({ type: "PHASE", phase: "responding" }), 820);
+    const decisionTimer = window.setTimeout(() => { if (!request.signal.aborted) dispatch({ type: "PHASE", phase: "deciding" }); }, 420);
+    const responseTimer = window.setTimeout(() => { if (!request.signal.aborted) dispatch({ type: "PHASE", phase: "responding" }); }, 820);
     try {
       const result = await provider.submit(input, request.signal);
-      dispatch({ type: "RESULT", result });
+      if (!request.signal.aborted) dispatch({ type: "RESULT", result });
     } catch {
       if (!request.signal.aborted) {
         dispatch({ type: "ERROR", message: locale === "pt-BR" ? "O Sentinela não conseguiu concluir esta análise. Tente novamente." : "Sentinela could not complete this pass. Try again." });
