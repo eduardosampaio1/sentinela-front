@@ -30,21 +30,16 @@ describe("Sentinela portfolio home", () => {
     for (const name of ["AI Observability", "AI Control", "Brand Radar"]) {
       expect(
         screen.getByRole("link", {
-          name: new RegExp(`0[123].*${name}.*by Sentinela`),
+          name: new RegExp(`0[123].*${name}`),
         }),
       ).toHaveAttribute("href", expect.stringMatching(/^#/));
-      expect(
-        screen
-          .getByRole("link", { name: `Conversar sobre ${name}` })
-          .getAttribute("href"),
-      ).toContain("mailto:");
+      expect(screen.getByRole("button", { name: `Conversar sobre ${name}` })).toBeInTheDocument();
     }
     expect(
       screen.getByRole("link", { name: "Criar minha conta" }),
     ).toHaveAttribute("href", "/register");
-    expect(
-      screen.getByRole("link", { name: /Conversar sobre o AI Assessment/ }),
-    ).toHaveAttribute("href", expect.stringContaining("AI%20Assessment"));
+    expect(screen.getByRole("button", { name: /Conversar sobre o AI Assessment/ })).toBeInTheDocument();
+    expect(screen.queryByText("by Sentinela")).not.toBeInTheDocument();
     expect(screen.getAllByText(/REPRESENTAÇÃO ILUSTRATIVA/)).toHaveLength(3);
   });
 

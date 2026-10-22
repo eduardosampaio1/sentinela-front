@@ -66,7 +66,6 @@ export const homeContent = {
       },
     ],
     example: "REPRESENTAÇÃO ILUSTRATIVA · SEM DADOS DE CLIENTES",
-    by: "by Sentinela",
     evidenceLabel: "O MESMO COMPROMISSO",
     evidenceTitle: "VEJA O SINAL.\nENCONTRE A\nEVIDÊNCIA.",
     evidenceBody:
@@ -184,7 +183,6 @@ export const homeContent = {
       },
     ],
     example: "ILLUSTRATIVE VIEW · NO CUSTOMER DATA",
-    by: "by Sentinela",
     evidenceLabel: "ONE SHARED COMMITMENT",
     evidenceTitle: "SEE THE SIGNAL.\nFIND THE\nEVIDENCE.",
     evidenceBody:

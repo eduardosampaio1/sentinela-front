@@ -3,6 +3,8 @@ import { usePublicExperience } from "../public-experience/usePublicExperience";
 import { useExperienceState } from "../public-experience/hooks/useExperienceState";
 import { homeContent } from "./content";
 import "./home.css";
+import { HomeLeadDialog } from "./HomeLeadDialog";
+import type { HomeProduct } from "./homeLeadApi";
 
 const contact = (subject: string) =>
   `mailto:hello@sentinela.ai?subject=${encodeURIComponent(subject)}`;
@@ -13,6 +15,12 @@ const Arrow = () => <span aria-hidden="true">↗</span>;
 export function HomePage() {
   const { locale, setLocale } = usePublicExperience();
   const c = homeContent[locale];
+  const [leadOpen, setLeadOpen] = useState(false);
+  const [leadProducts, setLeadProducts] = useState<HomeProduct[]>([]);
+  const openLead = (products: HomeProduct[] = []) => {
+    setLeadProducts(products);
+    setLeadOpen(true);
+  };
   useEffect(() => {
     const title =
       locale === "pt-BR"
@@ -142,10 +150,7 @@ export function HomePage() {
                 <span className="sh-label">
                   0{i + 1} / {p.verb}
                 </span>
-                <span>
-                  {p.name}
-                  <small>{c.by}</small>
-                </span>
+                <span>{p.name}</span>
                 <Arrow />
               </a>
             ))}
@@ -161,7 +166,7 @@ export function HomePage() {
           >
             <div className="sh-product-copy">
               <span className="sh-label">
-                0{i + 1} / {p.name} {c.by}
+                0{i + 1} / {p.name}
               </span>
               <h2 id={`${p.id}-title`}>{p.title}</h2>
               <p>{p.description}</p>
@@ -170,9 +175,21 @@ export function HomePage() {
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <a className="sh-text-link" href={contact(p.action)}>
+              <button
+                type="button"
+                className="sh-text-link"
+                onClick={() =>
+                  openLead([
+                    {
+                      observability: "ai_observability",
+                      control: "ai_control",
+                      radar: "brand_radar",
+                    }[p.id] as HomeProduct,
+                  ])
+                }
+              >
                 {p.action} <Arrow />
-              </a>
+              </button>
             </div>
             <figure className="sh-instrument">
               <div className="sh-instrument-top">
@@ -207,9 +224,13 @@ export function HomePage() {
           <h2 id="assessment-title">{c.assessmentTitle}</h2>
           <div>
             <p>{c.assessmentBody}</p>
-            <a className="sh-button" href={contact(c.assessmentAction)}>
+            <button
+              type="button"
+              className="sh-button"
+              onClick={() => openLead()}
+            >
               {c.assessmentAction} <Arrow />
-            </a>
+            </button>
             <p className="sh-register">
               {c.assessmentSecondary}{" "}
               <a href="/register">
@@ -219,6 +240,11 @@ export function HomePage() {
           </div>
         </section>
       </main>
+      <HomeLeadDialog
+        open={leadOpen}
+        initialProducts={leadProducts}
+        onClose={() => setLeadOpen(false)}
+      />
       <footer className="sh-footer">
         <a className="sh-brand" href="/" aria-label="Sentinela">
           <img src="/sentinela/mark-purple.svg" width="28" height="28" alt="" />
@@ -307,7 +333,14 @@ function ProductDiagram({ kind, labels }: { kind: string; labels: string[] }) {
               d="M145 130l7 7 13-15"
               className="sh-check sh-control-check"
             />
-            <rect x="280" y="107" width="120" height="46" rx="3" className="sh-route-backplate" />
+            <rect
+              x="280"
+              y="107"
+              width="120"
+              height="46"
+              rx="3"
+              className="sh-route-backplate"
+            />
             <rect
               x="280"
               y="107"
