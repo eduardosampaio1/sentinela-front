@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { usePublicExperience } from "../public-experience/usePublicExperience";
 import { useExperienceState } from "../public-experience/hooks/useExperienceState";
 import { homeContent } from "./content";
@@ -9,7 +9,7 @@ const contact = (subject: string) =>
 const Arrow = () => <span aria-hidden="true">↗</span>;
 
 // Marketing exception approved by the owner: Web Summit display fonts,
-// mineral paper, mint and chartreuse. Product interfaces keep their own tokens.
+// mineral paper and contrasting chapters. Signal Purple remains the brand accent.
 export function HomePage() {
   const { locale, setLocale } = usePublicExperience();
   const c = homeContent[locale];
@@ -40,7 +40,7 @@ export function HomePage() {
       </a>
       <header className="sh-nav">
         <a className="sh-brand" href="/" aria-label="Sentinela">
-          <img src="/sentinela-icon.svg" width="29" height="29" alt="" />
+          <img src="/sentinela/mark-purple.svg" width="29" height="29" alt="" />
           <span>SENTINELA</span>
         </a>
         <nav aria-label={c.solutions}>
@@ -70,7 +70,12 @@ export function HomePage() {
             <div className="sh-orbit-ring" />
             <div className="sh-orbit-ring" />
             <div className="sh-orbit-ring" />
-            <img src="/sentinela-icon.svg" width="100" height="100" alt="" />
+            <img
+              src="/sentinela/mark-purple.svg"
+              width="100"
+              height="100"
+              alt=""
+            />
             <i />
             <i />
             <i />
@@ -216,7 +221,7 @@ export function HomePage() {
       </main>
       <footer className="sh-footer">
         <a className="sh-brand" href="/" aria-label="Sentinela">
-          <img src="/sentinela-icon.svg" width="28" height="28" alt="" />
+          <img src="/sentinela/mark-purple.svg" width="28" height="28" alt="" />
           <span>SENTINELA</span>
         </a>
         <p>{c.footer}</p>
@@ -236,8 +241,24 @@ export function HomePage() {
 }
 
 function ProductDiagram({ kind, labels }: { kind: string; labels: string[] }) {
+  const element = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (!element.current || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { threshold: 0.15 },
+    );
+    observer.observe(element.current);
+    return () => observer.disconnect();
+  }, []);
   return (
-    <div className={`sh-diagram sh-diagram-${kind}`} aria-hidden="true">
+    <div
+      ref={element}
+      data-animate={visible}
+      className={`sh-diagram sh-diagram-${kind}`}
+      aria-hidden="true"
+    >
       <svg viewBox="0 0 480 260" fill="none">
         <path
           className="sh-diagram-grid"
@@ -262,9 +283,29 @@ function ProductDiagram({ kind, labels }: { kind: string; labels: string[] }) {
               className="sh-data-line sh-data-line-muted"
               d="M50 130H155L250 55H430M155 130L250 205H430"
             />
+            <rect
+              x="325"
+              y="37"
+              width="110"
+              height="36"
+              rx="3"
+              className="sh-route-option"
+            />
+            <rect
+              x="325"
+              y="187"
+              width="110"
+              height="36"
+              rx="3"
+              className="sh-route-option"
+            />
             <path className="sh-data-line" d="M50 130H430" />
+            <circle cx="155" cy="130" r="38" className="sh-policy-ring" />
             <circle cx="155" cy="130" r="28" className="sh-node" />
-            <path d="M145 130l7 7 13-15" className="sh-check" />
+            <path
+              d="M145 130l7 7 13-15"
+              className="sh-check sh-control-check"
+            />
             <rect
               x="280"
               y="107"
@@ -273,6 +314,15 @@ function ProductDiagram({ kind, labels }: { kind: string; labels: string[] }) {
               rx="3"
               className="sh-route"
             />
+            <text
+              x="340"
+              y="133"
+              textAnchor="middle"
+              className="sh-route-label"
+            >
+              {labels[2]}
+            </text>
+            <circle cx="50" cy="130" r="5" className="sh-control-packet" />
           </>
         ) : (
           <>
@@ -280,7 +330,31 @@ function ProductDiagram({ kind, labels }: { kind: string; labels: string[] }) {
             <circle cx="240" cy="130" r="65" className="sh-radar-ring" />
             <circle cx="240" cy="130" r="30" className="sh-radar-ring" />
             <path className="sh-guide" d="M240 15V245M125 130H355" />
-            <path className="sh-data-line" d="M240 130L320 60" />
+            <g className="sh-radar-sweep">
+              <path
+                className="sh-radar-sector"
+                d="M240 130L240 30A100 100 0 0 1 290 43.4Z"
+              />
+              <path className="sh-data-line" d="M240 130V30" />
+            </g>
+            <circle
+              cx="287"
+              cy="89"
+              r="12"
+              className="sh-radar-hit sh-radar-hit-a"
+            />
+            <circle
+              cx="180"
+              cy="155"
+              r="12"
+              className="sh-radar-hit sh-radar-hit-b"
+            />
+            <circle
+              cx="260"
+              cy="205"
+              r="12"
+              className="sh-radar-hit sh-radar-hit-c"
+            />
             <circle cx="287" cy="89" r="7" className="sh-node" />
             <circle cx="180" cy="155" r="5" className="sh-node" />
             <circle cx="260" cy="205" r="4" className="sh-node" />

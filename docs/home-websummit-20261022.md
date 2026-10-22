@@ -8,7 +8,9 @@ Owner direction: evolve the main Sentinela home from the Web Summit visual langu
 - Three direct products: AI Observability by Sentinela, AI Control by Sentinela, Brand Radar by Sentinela. AI Assessment is an offer; Sentinela Review is contextual investigation.
 - Portuguese and English copy, chapter navigation, contextual product contact links, account registration and accessible comparison buttons.
 - SVG diagrams are labeled as illustrative, with no fabricated customer metrics. The AI Control demo reuses the existing remote/fallback provider and exposes its evidence trace and illustrative state.
-- Marketing exception explicitly authorized: Archivo Black / Manrope / IBM Plex Mono, mineral paper, mint, chartreuse and contrasting chapters. Product design tokens are unchanged.
+- Marketing exception explicitly authorized: Archivo Black / Manrope / IBM Plex Mono, mineral paper and contrasting chapters. Owner's review restored Signal Purple `#7C3AED` as the accent; primary actions use white text. Product design tokens are unchanged.
+- AI Control illustrates the request passing through a policy check and the authorized route. Brand Radar illustrates scanning and discovering signals. Animations pause offscreen and become static with reduced motion. They do not represent live customer telemetry.
+- Transparent purple canonical mark and versioned SVG/ICO favicon assets replace the framed legacy favicon, avoiding its long-lived browser cache.
 - Home metadata is emitted in initial server HTML; event metadata remains separate.
 
 ## Contact and capture boundaries
